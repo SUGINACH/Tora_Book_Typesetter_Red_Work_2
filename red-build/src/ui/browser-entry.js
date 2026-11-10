@@ -94,6 +94,7 @@ function boot() {
     : null;
   const app = createApp(document, {
     engineClient: engine,
+    engineVersion: ASSET_VERSION, // **S1-ה/U-2:** מזהה גרסת הנכסים (שתי החבילות נבנות יחד) — מוצג במידע הריצה
     settingsPersistence, // **S6.1 (פער 2):** השתמרות הגדרות (SRS §17.1)
     fontStatus: (typeof document !== 'undefined' && document.fonts) ? 'loading' : 'ready',
     // **03.11:** ייצוא PDF/ZIP במנוע ה־Worker + הורדה בפועל בדפדפן

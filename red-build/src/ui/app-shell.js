@@ -111,7 +111,13 @@ function createApp(doc, opts = {}) {
   const engine = opts.engineClient || new WorkerEngineClient(opts.transport || makeDefaultTransport());
 
   // ================= חלקי ה־UI =================
-  const status = buildStatusStrip(doc, { onExplicitRetypeset: () => onExplicitRetypeset() });
+  // **S1-ה (אודיט תפעולי סוכן 1):** onCancel — נתיב הביטול המפורש למשתמש (U-1);
+  // engineVersion — מזהה גרסת הנכסים המוצג במידע הריצה (U-2).
+  const engineVersion = opts.engineVersion || null;
+  const status = buildStatusStrip(doc, {
+    onExplicitRetypeset: () => onExplicitRetypeset(),
+    onCancel: () => onCancelTypeset()
+  });
 
   const editor = buildEditorTab(doc, {
     onTextChange: (t) => { text = t; markHeavyDirty('טקסט השתנה'); },
@@ -300,17 +306,25 @@ function createApp(doc, opts = {}) {
     status.setPending({ light: false, heavy: false });
     status.setEngineState('working', { label: 'מתחיל עימוד…' });
     const started = perf.now();
-    const { promise } = engine.requestTypeset({
+    const req = engine.requestTypeset({
       text, settings,
       onProgress: (m) => status.setEngineState('working', m) // "עמוד X מתוך Y"
     });
-    promise.then((res) => {
+    const jobId = req && req.jobId ? req.jobId : null; // **S1-ה/U-2:** מזהה הריצה לתצוגה
+    req.promise.then((res) => {
       if (res && res.cancelled) return;
       result = res;
       typesetGen++; // **S5.2 (5):** +1 על כל עימוד שהושלם (בדיוק במקום ההשמה ל-result) — ביטול/החלפה אינם נספרים
       applyResultToViews();
       status.setEngineState('idle');
       status.setPages(result.pages.length);
+      // **S1-ה/U-2 (תכנית אב §7.1):** כל תוצאת עימוד מציגה hash, שימור, עמודים
+      // וזמן ריצה; הפרטים המלאים (מזהה ריצה, hash קלט, גרסה) ב-tooltip של הצ'יפ.
+      status.setRunInfo({
+        jobId, layoutHash: result.layoutHash, contentHashIn: result.contentHashIn || null,
+        pages: result.pages.length, ms: perf.now() - started,
+        contentPreserved: result.contentPreserved, engineVersion
+      });
     }).catch((e) => {
       const msg = e && e.message ? e.message : String(e);
       // **S5.2:** בקשה שהוחלפה/בוטלה (single-flight) — ה-Worker הוזרם מחדש והבקשה
@@ -319,6 +333,15 @@ function createApp(doc, opts = {}) {
       status.setEngineState('error', { message: msg });
     });
     return started;
+  }
+
+  /** **S1-ה/U-1:** ביטול מפורש של העימוד הפעיל — כפתור ⏹ בפס המצב (גלוי רק בזמן
+   * עבודה). המנגנון ב-worker-client (terminate+respawn בדפדפן; סימון ב-inline)
+   * — כאן רק הקריאה והחזרת המצב לפנוי. התוצאה המבוטלת אינה מיושמת (ההבטחה
+   * נדחית ב-RESTART_ERROR או נפרדת כ-cancelled — שני הנתיבים שקטים ב-S5.2). */
+  function onCancelTypeset() {
+    try { if (engine && typeof engine.cancel === 'function') engine.cancel(); } catch (e) { /* best-effort */ }
+    status.setEngineState('idle');
   }
 
   /** פעולות מסמך מפורשות — הדבקה / ייבוא TXT / פתיחה. פעולה שלמה ⇒ עימוד מיידי. */
@@ -338,6 +361,7 @@ function createApp(doc, opts = {}) {
       status.setPages(0);
       status.setPending({ light: false, heavy: false });
       status.setEngineState('idle');
+      status.setRunInfo({}); // **S1-ה/U-2:** ניקוי המסמך מרוקן גם את מידע הריצה
       return;
     }
     if (action === 'paste' || action === 'import-txt' || action === 'open') {
@@ -695,6 +719,7 @@ function createApp(doc, opts = {}) {
   return {
     root, switchTab, editor, settingsPanel, preview, testing, status, engine, extensions,
     onExplicitRetypeset, onDocumentAction, onSettingChanged, onResetField,
+    onCancelTypeset, // **S1-ה/U-1:** נתיב ביטול מפורש (לבדיקות/אבחון)
     scheduleLightRefresh, activateFinding, saveTemplateJson, loadTemplateJson, buildDebugJson,
     importDocxFile, applyRecommendation, // **S11:** ייבוא DOCX + החלת המלצות
     exportRequest: onExportRequest, // **S12:** ייצוא (html/pdf/zip) — קריאה בלבד
