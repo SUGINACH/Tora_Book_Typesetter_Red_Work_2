@@ -484,6 +484,7 @@ function boot() {
     : null;
   const app = createApp(document, {
     engineClient: engine,
+    engineVersion: ASSET_VERSION, // **S1-ה/U-2:** מזהה גרסת הנכסים (שתי החבילות נבנות יחד) — מוצג במידע הריצה
     settingsPersistence, // **S6.1 (פער 2):** השתמרות הגדרות (SRS §17.1)
     fontStatus: (typeof document !== 'undefined' && document.fonts) ? 'loading' : 'ready',
     // **03.11:** ייצוא PDF/ZIP במנוע ה־Worker + הורדה בפועל בדפדפן
@@ -726,7 +727,13 @@ function createApp(doc, opts = {}) {
   const engine = opts.engineClient || new WorkerEngineClient(opts.transport || makeDefaultTransport());
 
   // ================= חלקי ה־UI =================
-  const status = buildStatusStrip(doc, { onExplicitRetypeset: () => onExplicitRetypeset() });
+  // **S1-ה (אודיט תפעולי סוכן 1):** onCancel — נתיב הביטול המפורש למשתמש (U-1);
+  // engineVersion — מזהה גרסת הנכסים המוצג במידע הריצה (U-2).
+  const engineVersion = opts.engineVersion || null;
+  const status = buildStatusStrip(doc, {
+    onExplicitRetypeset: () => onExplicitRetypeset(),
+    onCancel: () => onCancelTypeset()
+  });
 
   const editor = buildEditorTab(doc, {
     onTextChange: (t) => { text = t; markHeavyDirty('טקסט השתנה'); },
@@ -915,17 +922,25 @@ function createApp(doc, opts = {}) {
     status.setPending({ light: false, heavy: false });
     status.setEngineState('working', { label: 'מתחיל עימוד…' });
     const started = perf.now();
-    const { promise } = engine.requestTypeset({
+    const req = engine.requestTypeset({
       text, settings,
       onProgress: (m) => status.setEngineState('working', m) // "עמוד X מתוך Y"
     });
-    promise.then((res) => {
+    const jobId = req && req.jobId ? req.jobId : null; // **S1-ה/U-2:** מזהה הריצה לתצוגה
+    req.promise.then((res) => {
       if (res && res.cancelled) return;
       result = res;
       typesetGen++; // **S5.2 (5):** +1 על כל עימוד שהושלם (בדיוק במקום ההשמה ל-result) — ביטול/החלפה אינם נספרים
       applyResultToViews();
       status.setEngineState('idle');
       status.setPages(result.pages.length);
+      // **S1-ה/U-2 (תכנית אב §7.1):** כל תוצאת עימוד מציגה hash, שימור, עמודים
+      // וזמן ריצה; הפרטים המלאים (מזהה ריצה, hash קלט, גרסה) ב-tooltip של הצ'יפ.
+      status.setRunInfo({
+        jobId, layoutHash: result.layoutHash, contentHashIn: result.contentHashIn || null,
+        pages: result.pages.length, ms: perf.now() - started,
+        contentPreserved: result.contentPreserved, engineVersion
+      });
     }).catch((e) => {
       const msg = e && e.message ? e.message : String(e);
       // **S5.2:** בקשה שהוחלפה/בוטלה (single-flight) — ה-Worker הוזרם מחדש והבקשה
@@ -934,6 +949,15 @@ function createApp(doc, opts = {}) {
       status.setEngineState('error', { message: msg });
     });
     return started;
+  }
+
+  /** **S1-ה/U-1:** ביטול מפורש של העימוד הפעיל — כפתור ⏹ בפס המצב (גלוי רק בזמן
+   * עבודה). המנגנון ב-worker-client (terminate+respawn בדפדפן; סימון ב-inline)
+   * — כאן רק הקריאה והחזרת המצב לפנוי. התוצאה המבוטלת אינה מיושמת (ההבטחה
+   * נדחית ב-RESTART_ERROR או נפרדת כ-cancelled — שני הנתיבים שקטים ב-S5.2). */
+  function onCancelTypeset() {
+    try { if (engine && typeof engine.cancel === 'function') engine.cancel(); } catch (e) { /* best-effort */ }
+    status.setEngineState('idle');
   }
 
   /** פעולות מסמך מפורשות — הדבקה / ייבוא TXT / פתיחה. פעולה שלמה ⇒ עימוד מיידי. */
@@ -953,6 +977,7 @@ function createApp(doc, opts = {}) {
       status.setPages(0);
       status.setPending({ light: false, heavy: false });
       status.setEngineState('idle');
+      status.setRunInfo({}); // **S1-ה/U-2:** ניקוי המסמך מרוקן גם את מידע הריצה
       return;
     }
     if (action === 'paste' || action === 'import-txt' || action === 'open') {
@@ -1310,6 +1335,7 @@ function createApp(doc, opts = {}) {
   return {
     root, switchTab, editor, settingsPanel, preview, testing, status, engine, extensions,
     onExplicitRetypeset, onDocumentAction, onSettingChanged, onResetField,
+    onCancelTypeset, // **S1-ה/U-1:** נתיב ביטול מפורש (לבדיקות/אבחון)
     scheduleLightRefresh, activateFinding, saveTemplateJson, loadTemplateJson, buildDebugJson,
     importDocxFile, applyRecommendation, // **S11:** ייבוא DOCX + החלת המלצות
     exportRequest: onExportRequest, // **S12:** ייצוא (html/pdf/zip) — קריאה בלבד
@@ -1731,8 +1757,11 @@ __modules["src/ui/status-strip.js"] = function (require, module, exports) {
 
 /**
  * רצועת מצב עליונה: מצב מנוע + התקדמות ("עמוד X מתוך Y"), מחוון שינויים
- * ממתינים (קלים/כבדים), כפתור ⚡ מהבהב (כבדים — F-06), שומר נתק־מהרשת,
- * מצב טעינת גופנים. נגישות: aria-live להתקדמות; הכפתור עם תווית מלאה.
+ * ממתינים (קלים/כבדים), כפתור ⚡ מהבהב (כבדים — F-06), כפתור ⏹ ביטול העבודה
+ * הפעילה (אודיט תפעולי S1-ה/U-1: המנגנון קיים ב-worker-client אך לא היה
+ * נגיש למשתמש כפעולה מפורשת), צ'יפ מידע ריצה (S1-ה/U-2: hash פריסה/קלט,
+ * מזהה ריצה, זמן ריצה — תכנית אב §7.1), שומר נתק־מהרשת, מצב טעינת גופנים.
+ * נגישות: aria-live להתקדמות; הכפתורים עם תווית מלאה.
  */
 
 function buildStatusStrip(doc, opts) {
@@ -1765,6 +1794,18 @@ function buildStatusStrip(doc, opts) {
   bolt.addEventListener('click', () => opts.onExplicitRetypeset && opts.onExplicitRetypeset());
   let blinking = false;
 
+  // ---- כפתור ביטול העבודה הפעילה (S1-ה/U-1 — אודיט תפעולי סוכן 1) ----
+  // גלוי רק כשהמנוע עמל (setEngineState מסתיר/מציג). הביטול עצמו חי ב-app-shell
+  // (engine.cancel — terminate+respawn בדפדפן; סימון+הודעה ב-inline) — כאן רק UI.
+  const cancelBtn = doc.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'btn btn--cancel';
+  cancelBtn.textContent = '⏹ בטל';
+  cancelBtn.setAttribute('aria-label', 'ביטול העימוד הפעיל');
+  cancelBtn.title = 'קטיעת העימוד הרץ — המנוע יופעל מחדש אוטומטית בפעולה הבאה';
+  cancelBtn.style.display = 'none';
+  cancelBtn.addEventListener('click', () => opts.onCancel && opts.onCancel());
+
   // ---- שומר נתק־מהרשת ----
   const offline = doc.createElement('span');
   offline.className = 'chip chip--offline';
@@ -1780,6 +1821,16 @@ function buildStatusStrip(doc, opts) {
   pages.className = 'chip chip--pages';
   pages.textContent = '📄 0 עמודים';
 
+  // ---- מידע ריצה (S1-ה/U-2 — תכנית אב §7.1: "כל תוצאת עימוד מציגה hash,
+  // סטטוס שימור תוכן, מספר עמודים, זמן ריצה") ----
+  // גלוי לאחר כל עימוד שהושלם; הפרטים המלאים (מזהה ריצה, hash קלט/פריסה
+  // במלואם, גרסת נכסים) ב-tooltip (title). מתרוקן בניקוי המסמך.
+  const runInfo = doc.createElement('span');
+  runInfo.className = 'chip chip--runinfo';
+  runInfo.setAttribute('role', 'status');
+  runInfo.setAttribute('aria-live', 'polite');
+  runInfo.textContent = '';
+
   // ---- הודעות חולפות (S11: ייבוא/סירוב פורמט/החלת המלצה — חוק 14 בלי חלונות) ----
   const notice = doc.createElement('span');
   notice.className = 'chip chip--notice';
@@ -1788,20 +1839,23 @@ function buildStatusStrip(doc, opts) {
   notice.textContent = '';
   let noticeTimer = null;
 
-  for (const el of [engine, progress, pending, bolt, offline, fonts, pages, notice]) root.appendChild(el);
+  for (const el of [engine, progress, pending, bolt, cancelBtn, offline, fonts, pages, runInfo, notice]) root.appendChild(el);
 
   return {
-    root, bolt,
+    root, bolt, cancelBtn,
     setEngineState(state, info) {
       if (state === 'working') {
         engine.textContent = '⚙️ מנוע: עמל…';
         progress.textContent = info && info.label ? info.label : '';
+        cancelBtn.style.display = ''; // **S1-ה/U-1:** הביטול נגיש רק בזמן עבודה
       } else if (state === 'error') {
         engine.textContent = '❌ מנוע: שגיאה';
         progress.textContent = (info && info.message) || '';
+        cancelBtn.style.display = 'none';
       } else {
         engine.textContent = '⏳ מנוע: פנוי';
         progress.textContent = '';
+        cancelBtn.style.display = 'none';
       }
     },
     setPending({ light, heavy }) {
@@ -1826,6 +1880,32 @@ function buildStatusStrip(doc, opts) {
       fonts.textContent = map[status] || map.ready;
     },
     setPages(n) { pages.textContent = `📄 ${n} עמודים`; },
+    /** **S1-ה/U-2:** מידע הריצה שהושלמה — hash מקוצר + שימור + עמודים + זמן בצ'יפ;
+     * הפרטים המלאים ב-tooltip. אובייקט ריק/בלי layoutHash ⇒ פינוי הצ'יפ. */
+    setRunInfo(info) {
+      info = info || {};
+      if (!info.layoutHash) {
+        runInfo.textContent = '';
+        runInfo.title = '';
+        runInfo.classList.remove('chip--warn');
+        return;
+      }
+      const short = String(info.layoutHash).slice(0, 8);
+      const parts = [`🔒 ${short}`];
+      if (info.contentPreserved != null) parts.push(info.contentPreserved ? 'שימור ✓' : 'שימור ✗');
+      if (info.pages != null) parts.push(`${info.pages} עמ׳`);
+      if (info.ms != null && Number.isFinite(info.ms)) {
+        parts.push(info.ms < 1000 ? `${Math.max(1, Math.round(info.ms))} מ״ש` : `${(info.ms / 1000).toFixed(1)} שנ׳`);
+      }
+      runInfo.textContent = parts.join(' · ');
+      runInfo.classList.toggle('chip--warn', info.contentPreserved === false);
+      const tip = [];
+      if (info.jobId) tip.push(`מזהה ריצה: ${info.jobId}`);
+      tip.push(`hash פריסה: ${info.layoutHash}`);
+      if (info.contentHashIn) tip.push(`hash קלט: ${info.contentHashIn}`);
+      if (info.engineVersion) tip.push(`גרסת נכסים: ${info.engineVersion}`);
+      runInfo.title = tip.join('\n');
+    },
     /** הודעה חולפת (8 שניות) — ייבוא, סירוב פורמט, החלת המלצה. */
     setNotice(text) {
       notice.textContent = String(text != null ? text : '');

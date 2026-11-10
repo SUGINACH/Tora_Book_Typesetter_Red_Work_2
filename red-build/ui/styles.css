@@ -41,6 +41,11 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
 .btn--bolt.blink { animation: bolt-blink 1s steps(2, start) infinite; }
 @keyframes bolt-blink { 0% { background: var(--accent); color: #1d1d1b; } 50% { background: var(--panel); color: var(--accent); } }
 
+/* ---- כפתור ביטול + צ'יפ מידע ריצה (S1-ה — אודיט תפעולי סוכן 1) ---- */
+.btn--cancel { font-weight: 700; border-color: var(--err, #e03131); color: var(--err, #e03131); }
+.chip--runinfo { font-variant-numeric: tabular-nums; cursor: help; white-space: pre-line; }
+.chip--runinfo:empty { display: none; }
+
 /* ---- עזרת מדיניות ---- */
 .policy-help { margin-top: 6px; font-size: .78rem; color: var(--ink-dim); }
 .policy-help summary { cursor: pointer; color: var(--accent-2); }
