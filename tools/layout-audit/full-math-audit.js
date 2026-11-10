@@ -55,6 +55,7 @@
   //   page = { i, t, pw, ph, header:{text,top,bottom}|null, folio:{text,top,bottom}|null,
   //            gates, cols:[{x,y,w,h,lines:[line]}], bands:[{cls,x,y,w,h,ink,align,text}],
   //            tocRows:[{x,y,w,h,text}], tocInContainer, fns:[{x,y,w,h,markers,text,fs}],
+  //            sideNotes:[{x,y,w,h,text}] (S66), enTitle:{x,y,w,h,text}+enNotes:[{x,y,w,h,text}] בעמודי endnotes (S66),
   //            fnAreaN, fnRuleN, marginWords, words, dirOk, dirBad }
   //   line = { y,h,x,w, last,head,winWrap,custom, ink:{x,y,r,b}|null, wrapSpread,
   //            spanWraps:[{cls,spread}], style:{ta,tal,ws,fs,fam,dir}, words,
@@ -298,6 +299,71 @@
         if (fr.b > pg.ph + 2) cnt('FN_BELOW_PAGE', { type: 'FN_BELOW_PAGE', severity: 'high', page: idx, dy: Math.round(fr.b - pg.ph) });
       }
       for (const f of fns) accAdd(S.fnFs, f.fs);
+
+      // **S66 (R9-אודיט — סגירת עיוורון):** הערות צד — משפחות בדיקה חדשות.
+      // בעבר האודיט לא בדק אותן כלל (רק ספירת מילים). חוקיות: הערת צד יושבת
+      // בשוליים החיצוניים (מחוץ לתיבות הטורים), בתחומי העמוד, עם טקסט; הערות
+      // סמוכות באותם שוליים אינן חופפות (מנוע המקור מרווח אותן STACK_GAP_PX=8).
+      {
+        const sns = pg.sideNotes || [];
+        for (const sn of sns) {
+          const b = sn.y + sn.h, r = sn.x + sn.w;
+          if (!(sn.text || '').trim()) cnt('SIDE_NOTE_EMPTY', { type: 'SIDE_NOTE_EMPTY', severity: 'medium', page: idx, detail: 'הערת צד ללא טקסט' });
+          if (sn.x < -2 || r > pg.pw + 2 || sn.y < -2 || b > pg.ph + 2) {
+            cnt('SIDE_NOTE_OUTSIDE_PAGE', { type: 'SIDE_NOTE_OUTSIDE_PAGE', severity: 'high', page: idx, dx: Math.round(Math.max(-sn.x, r - pg.pw)), dy: Math.round(Math.max(-sn.y, b - pg.ph)), text: (sn.text || '').slice(0, 20) });
+          }
+          for (const c of cols) {
+            const ox = Math.min(r, c.x + c.w) - Math.max(sn.x, c.x);
+            const oy = Math.min(b, c.y + c.h) - Math.max(sn.y, c.y);
+            if (ox > 1 && oy > 1) {
+              cnt('SIDE_NOTE_IN_COLUMN', { type: 'SIDE_NOTE_IN_COLUMN', severity: 'high', page: idx, ox: Math.round(ox), oy: Math.round(oy), text: (sn.text || '').slice(0, 20), detail: 'הערת צד חודרת לתיבת טור התוכן' });
+              break;
+            }
+          }
+        }
+        for (let i = 0; i < sns.length; i++) {
+          for (let j = i + 1; j < sns.length; j++) {
+            const a = sns[i], b2 = sns[j];
+            const ox = Math.min(a.x + a.w, b2.x + b2.w) - Math.max(a.x, b2.x);
+            const oy = Math.min(a.y + a.h, b2.y + b2.h) - Math.max(a.y, b2.y);
+            if (ox > 1 && oy > 1) {
+              cnt('SIDE_NOTE_OVERLAP', { type: 'SIDE_NOTE_OVERLAP', severity: 'high', page: idx, px: Math.round(Math.min(ox, oy)), detail: 'שתי הערות צד חופפות בשוליים' });
+            }
+          }
+        }
+      }
+
+      // **S66 (R9-אודיט — סגירת עיוורון):** עמודי הערות-סיום — לא נבדקו כלל.
+      // חוקיות: כל הערה בתחומי העמוד, אינה חופפת הערה אחרת ואינה חופפת את
+      // כותרת העמוד; הערה ריקה היא ממצא (המנוע אינו מייצר הערות ריקות).
+      if (/endnotes/.test(pg.t)) {
+        const ttl = pg.enTitle || null;
+        const ens = pg.enNotes || [];
+        for (const n of ens) {
+          const b = n.y + n.h, r = n.x + n.w;
+          if (!(n.text || '').trim()) cnt('ENDNOTE_EMPTY', { type: 'ENDNOTE_EMPTY', severity: 'medium', page: idx, detail: 'הערת-סיום ריקה' });
+          if (n.x < -2 || r > pg.pw + 2 || n.y < -2 || b > pg.ph + 2) {
+            cnt('ENDNOTE_OUTSIDE_PAGE', { type: 'ENDNOTE_OUTSIDE_PAGE', severity: 'high', page: idx, dy: Math.round(Math.max(-n.y, b - pg.ph)), text: (n.text || '').slice(0, 20) });
+          }
+          if (ttl) {
+            const ox = Math.min(r, ttl.x + ttl.w) - Math.max(n.x, ttl.x);
+            const oy = Math.min(b, ttl.y + ttl.h) - Math.max(n.y, ttl.y);
+            if (ox > 1 && oy > 1) {
+              cnt('ENDNOTE_TITLE_OVERLAP', { type: 'ENDNOTE_TITLE_OVERLAP', severity: 'high', page: idx, text: (n.text || '').slice(0, 20), detail: 'הערה-סיום חופפת את כותרת העמוד' });
+            }
+          }
+        }
+        for (let i = 0; i < ens.length; i++) {
+          for (let j = i + 1; j < ens.length; j++) {
+            const a = ens[i], b2 = ens[j];
+            const ox = Math.min(a.x + a.w, b2.x + b2.w) - Math.max(a.x, b2.x);
+            const oy = Math.min(a.y + a.h, b2.y + b2.h) - Math.max(a.y, b2.y);
+            if (ox > 1 && oy > 1) {
+              cnt('ENDNOTE_OVERLAP', { type: 'ENDNOTE_OVERLAP', severity: 'high', page: idx, px: Math.round(Math.min(ox, oy)), detail: 'שתי הערות-סיום חופפות' });
+            }
+          }
+        }
+      }
 
       if (pg.t === 'regular' && totalLines === 0 && fns.length === 0) cnt('EMPTY_PAGE', { type: 'EMPTY_PAGE', severity: 'high', page: idx });
 
@@ -561,7 +627,7 @@ if (typeof document !== 'undefined') {
 
   const report = { url: location.href, started: new Date().toISOString(), ua: navigator.userAgent, dpr: devicePixelRatio, vp: [innerWidth, innerHeight], assets: null, fonts: null, virtualized: null, sweep: null, problems: [], pages: [], stats: null, summary: null };
   // **S5.2:** רשימת משפחות הבדיקה — מופיעה בדוח עצמו (machine-readable) ולא רק בהערת הקובץ
-  report.checkFamilies = ['LINE_OVERLAP', 'INK_NOT_JUSTIFIED', 'LINE_OUTSIDE_COLUMN', 'LINE_BELOW_COLUMN', 'LINE_ABOVE_COLUMN', 'GUTTER_OVERLAP', 'LINE_OUT_OF_ORDER', 'WINDOW_WRONG_SIDE', 'WINDOW_NOT_FIRST', 'LAST_LINE_JUSTIFIED', 'LAST_NOT_CENTERED', 'LAST_RIGHT_GAP', 'HEAD_JUSTIFIED', 'HEAD_NOT_CENTERED', 'HEADER_POSITION', 'FOLIO_POSITION', 'FOLIO_MISSING', 'FOLIO_SEQUENCE', 'FN_OVERLAP', 'FN_OVERLAPS_BODY', 'FN_BELOW_PAGE', 'FN_RULE_PRESENT', 'EMPTY_PAGE', 'BAND_BOX_OUTSIDE_PAGE', 'BAND_INK_OUTSIDE', 'BAND_NOT_CENTERED', 'TOC_ROWS', 'PITCH_UNIFORMITY', 'BODY_FONT_UNIFORMITY', 'MARKER_NOTE_MATCH', 'TYPE_UNKNOWN', 'COLUMN_TOPS_ALIGN', 'COLUMN_ORDER_RTL', 'COLUMN_WIDTH_MISMATCH', 'COLUMN_OUTSIDE_PAGE', 'SINGLE_TYPE_TWO_CONTENT_COLS', 'NOWRAP_BODY_LINE', 'STYLE_NOT_JUSTIFIED', 'WRAPPED_LINE', 'DIR_RTL_MISSING', 'PLACEHOLDER_GEOMETRY', 'PAGE_INDEX_MISSING', 'NO_SCROLLER', 'COVERAGE', 'NO_PAGES', 'SHAAR_ORDER', 'NO_SHAAR_SUB', 'SHAAR_EMPTY', 'BODY_PAGES_WITHOUT_HEADER', 'COLUMN_BOTTOMS_BALANCE'];
+  report.checkFamilies = ['LINE_OVERLAP', 'INK_NOT_JUSTIFIED', 'LINE_OUTSIDE_COLUMN', 'LINE_BELOW_COLUMN', 'LINE_ABOVE_COLUMN', 'GUTTER_OVERLAP', 'LINE_OUT_OF_ORDER', 'WINDOW_WRONG_SIDE', 'WINDOW_NOT_FIRST', 'LAST_LINE_JUSTIFIED', 'LAST_NOT_CENTERED', 'LAST_RIGHT_GAP', 'HEAD_JUSTIFIED', 'HEAD_NOT_CENTERED', 'HEADER_POSITION', 'FOLIO_POSITION', 'FOLIO_MISSING', 'FOLIO_SEQUENCE', 'FN_OVERLAP', 'FN_OVERLAPS_BODY', 'FN_BELOW_PAGE', 'FN_RULE_PRESENT', 'SIDE_NOTE_OVERLAP', 'SIDE_NOTE_IN_COLUMN', 'SIDE_NOTE_OUTSIDE_PAGE', 'SIDE_NOTE_EMPTY', 'ENDNOTE_OVERLAP', 'ENDNOTE_OUTSIDE_PAGE', 'ENDNOTE_TITLE_OVERLAP', 'ENDNOTE_EMPTY', 'EMPTY_PAGE', 'BAND_BOX_OUTSIDE_PAGE', 'BAND_INK_OUTSIDE', 'BAND_NOT_CENTERED', 'TOC_ROWS', 'PITCH_UNIFORMITY', 'BODY_FONT_UNIFORMITY', 'MARKER_NOTE_MATCH', 'TYPE_UNKNOWN', 'COLUMN_TOPS_ALIGN', 'COLUMN_ORDER_RTL', 'COLUMN_WIDTH_MISMATCH', 'COLUMN_OUTSIDE_PAGE', 'SINGLE_TYPE_TWO_CONTENT_COLS', 'NOWRAP_BODY_LINE', 'STYLE_NOT_JUSTIFIED', 'WRAPPED_LINE', 'DIR_RTL_MISSING', 'PLACEHOLDER_GEOMETRY', 'PAGE_INDEX_MISSING', 'NO_SCROLLER', 'COVERAGE', 'NO_PAGES', 'SHAAR_ORDER', 'NO_SHAAR_SUB', 'SHAAR_EMPTY', 'BODY_PAGES_WITHOUT_HEADER', 'COLUMN_BOTTOMS_BALANCE'];
   const collectionProblems = [];
 
   try { await document.fonts.ready; } catch (e) {}
@@ -760,9 +826,30 @@ if (typeof document !== 'undefined') {
       info.fnMkList.push(...markers);
       info.words += wc(f.textContent);
     }
-    // הערות צד — נספרות לספירת המילים בלבד
-    for (const mn of pg.querySelectorAll('.margin-note')) info.words += wc(mn.textContent);
-    info.marginWords = 0;
+    // הערות צד — **S66 (R9-אודיט):** בעבר נספרו לספירת המילים בלבד (עיוורון
+    // מוחלט לחפיפות/חריגות בשוליים); כעת נאספות בגיאומטריה מלאה לבדיקה בשכבה
+    // הטהורה (SIDE_NOTE_OVERLAP / IN_COLUMN / OUTSIDE_PAGE / EMPTY).
+    info.sideNotes = [];
+    for (const sn of pg.querySelectorAll('.side-note, .margin-note')) {
+      const sr = rel(R(sn), origin);
+      info.sideNotes.push({ x: sr.x, y: sr.y, w: sr.w, h: sr.h, text: (sn.textContent || '').slice(0, 24) });
+      info.words += wc(sn.textContent);
+    }
+    // **S66 (R9-אודיט):** עמודי הערות-סיום — ההערות והכותרת שלהן לא נאספו כלל;
+    // כעת נאספות לבדיקת ENDNOTE_OVERLAP / OUTSIDE_PAGE / TITLE_OVERLAP / EMPTY.
+    info.enNotes = [];
+    if (/endnotes/.test(info.t)) {
+      const ttl = pg.querySelector('.endnote-title');
+      if (ttl) {
+        const tr2 = rel(R(ttl), origin);
+        info.enTitle = { x: tr2.x, y: tr2.y, w: tr2.w, h: tr2.h, text: (ttl.textContent || '').slice(0, 24) };
+      }
+      for (const en of pg.querySelectorAll('.endnote-note')) {
+        const er = rel(R(en), origin);
+        info.enNotes.push({ x: er.x, y: er.y, w: er.w, h: er.h, text: (en.textContent || '').slice(0, 24) });
+        info.words += wc(en.textContent);
+      }
+    }
   }
 
   // ── סריקה ──

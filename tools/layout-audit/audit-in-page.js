@@ -329,6 +329,58 @@
         }
       }
     });
+    // **S66 (R9-אודיט — סגירת עיוורון):** הערות צד ועמודי הערות-סיום — בדיקות
+    // גיאומטריה באודיט החי (בעבר לא נבדקו כאן כלל). אותן משפחות וספים כמו
+    // ב-full-math-audit.js — השוואה בין האודיטים (P-7).
+    {
+      const sns = [...pg.querySelectorAll('.side-note, .margin-note')].map((el) => ({ r: R(el), text: (el.textContent || '').trim() }));
+      info.sideNotes = sns.length;
+      for (const sn of sns) {
+        if (!sn.text) problems.push({ page: idx, type: 'SIDE_NOTE_EMPTY', severity: 'medium', detail: 'הערת צד ללא טקסט' });
+        if (sn.r.x < pgR.x - 2 || sn.r.r > pgR.r + 2 || sn.r.y < pgR.y - 2 || sn.r.b > pgR.b + 2) {
+          problems.push({ page: idx, type: 'SIDE_NOTE_OUTSIDE_PAGE', severity: 'high', dx: Math.round(Math.max(pgR.x - sn.r.x, sn.r.r - pgR.r)), dy: Math.round(Math.max(pgR.y - sn.r.y, sn.r.b - pgR.b)) });
+        }
+        for (const c of cols) {
+          const cr = R(c);
+          const ox = Math.min(sn.r.r, cr.r) - Math.max(sn.r.x, cr.x);
+          const oy = Math.min(sn.r.b, cr.b) - Math.max(sn.r.y, cr.y);
+          if (ox > 1 && oy > 1) { problems.push({ page: idx, type: 'SIDE_NOTE_IN_COLUMN', severity: 'high', ox: Math.round(ox), oy: Math.round(oy), text: sn.text.slice(0, 20), detail: 'הערת צד חודרת לתיבת טור התוכן' }); break; }
+        }
+      }
+      for (let i = 0; i < sns.length; i++) {
+        for (let j = i + 1; j < sns.length; j++) {
+          const a = sns[i].r, b = sns[j].r;
+          const ox = Math.min(a.r, b.r) - Math.max(a.x, b.x);
+          const oy = Math.min(a.b, b.b) - Math.max(a.y, b.y);
+          if (ox > 1 && oy > 1) problems.push({ page: idx, type: 'SIDE_NOTE_OVERLAP', severity: 'high', px: Math.round(Math.min(ox, oy)), detail: 'שתי הערות צד חופפות בשוליים' });
+        }
+      }
+      if (info.type === 'endnotes') {
+        const ttl = pg.querySelector('.endnote-title');
+        const ttlR = ttl ? R(ttl) : null;
+        const ens = [...pg.querySelectorAll('.endnote-note')].map((el) => ({ r: R(el), text: (el.textContent || '').trim() }));
+        info.enNotes = ens.length;
+        for (const n of ens) {
+          if (!n.text) problems.push({ page: idx, type: 'ENDNOTE_EMPTY', severity: 'medium', detail: 'הערת-סיום ריקה' });
+          if (n.r.x < pgR.x - 2 || n.r.r > pgR.r + 2 || n.r.y < pgR.y - 2 || n.r.b > pgR.b + 2) {
+            problems.push({ page: idx, type: 'ENDNOTE_OUTSIDE_PAGE', severity: 'high', dy: Math.round(Math.max(pgR.y - n.r.y, n.r.b - pgR.b)) });
+          }
+          if (ttlR) {
+            const ox = Math.min(n.r.r, ttlR.r) - Math.max(n.r.x, ttlR.x);
+            const oy = Math.min(n.r.b, ttlR.b) - Math.max(n.r.y, ttlR.y);
+            if (ox > 1 && oy > 1) problems.push({ page: idx, type: 'ENDNOTE_TITLE_OVERLAP', severity: 'high', text: n.text.slice(0, 20), detail: 'הערה-סיום חופפת את כותרת העמוד' });
+          }
+        }
+        for (let i = 0; i < ens.length; i++) {
+          for (let j = i + 1; j < ens.length; j++) {
+            const a = ens[i].r, b = ens[j].r;
+            const ox = Math.min(a.r, b.r) - Math.max(a.x, b.x);
+            const oy = Math.min(a.b, b.b) - Math.max(a.y, b.y);
+            if (ox > 1 && oy > 1) problems.push({ page: idx, type: 'ENDNOTE_OVERLAP', severity: 'high', px: Math.round(Math.min(ox, oy)), detail: 'שתי הערות-סיום חופפות' });
+          }
+        }
+      }
+    }
     info.fonts = [...fonts];
   }
 

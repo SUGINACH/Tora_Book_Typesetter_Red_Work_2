@@ -343,6 +343,102 @@ describe('audit-sensitivity — הוכחת רגישות הגלאים (S5.2)', ()
     assertEq(sevTotal, total, 'bySeverity = הספירה המלאה (בעבר חושב מהרשימה הקצוצה)');
     assert(rep.problemsCapped.length <= 2000, 'רשימת הדוח נשארת קצוצה לצורך גודל');
   });
+
+  // ═════════ S66 (R9-אודיט): הערות צד ועמודי הערות-סיום — סגירת עיוורון האודיט ═════════
+  // בעבר לא נבדקו כלל בשכבה הטהורה. כאן מוכחות המשפחות החדשות: גלאי יורה
+  // על ליקוי ידוע-מראש, ושותק על פריסה חוקית (אין אזעקות שווא).
+  // מבחנת הערות-הצד: עמוד recto עם שוליים חיצוניים ריאליים (המבחנה הסטנדרטית
+  // מציבה את הטור הימני עד קצה העמוד — אין בה שוליים להערות צד כלל).
+  const SN_R_MARGIN = { x: 740.7, w: 53 };  // שוליים חיצוניים ימניים: 734.4..793.7
+  function snPage(sideNotes) {
+    const line = (y, x) => mkLine({ y, x });
+    return mkPage({
+      i: 4, t: 'regular', folio: { text: 'ב׳', top: 1040.5, bottom: 1058.5 }, words: 30, lines: 6, sideNotes,
+      cols: [
+        { x: 465, y: FLOW_TOP, w: COL_W, h: 915, lines: [line(FLOW_TOP, 465), line(FLOW_TOP + LINE_H, 465), line(FLOW_TOP + 2 * LINE_H, 465)] },
+        { x: 126.5, y: FLOW_TOP, w: COL_W, h: 915, lines: [line(FLOW_TOP, 126.5), line(FLOW_TOP + LINE_H, 126.5), line(FLOW_TOP + 2 * LINE_H, 126.5)] }
+      ]
+    });
+  }
+
+  it('(S66-א) הערות צד חוקיות בשוליים החיצוניים ⇒ אפס ממצאים חדשים', () => {
+    const book = cleanBook();
+    // עמוד 4 (recto) מוחלף בעמוד עם שוליים חיצוניים: שתי הערות מורווחות מימין
+    book[4] = snPage([
+      { x: SN_R_MARGIN.x, y: 200, w: SN_R_MARGIN.w, h: 40, text: 'הערת צד ראשונה' },
+      { x: SN_R_MARGIN.x, y: 248, w: SN_R_MARGIN.w, h: 30, text: 'הערת צד שניה' }
+    ]);
+    // עמוד 5 (verso): שוליים חיצוניים משמאל — הערה אחת
+    book[5] = snPage([{ x: 0, y: 300, w: 53, h: 36, text: 'הערה בצד שמאל' }]);
+    book[5].i = 5;
+    book[5].folio = { text: 'ג׳', top: 1040.5, bottom: 1058.5 };
+    const { summary, codes } = runBook(book);
+    assertEq(summary.problems, 0, 'side notes legitimately placed, got: ' + codes.join(','));
+  });
+
+  it('(S66-ב) שתי הערות צד חופפות באותם שוליים ⇒ SIDE_NOTE_OVERLAP יורה', () => {
+    const book = cleanBook();
+    book[4] = snPage([
+      { x: SN_R_MARGIN.x, y: 200, w: SN_R_MARGIN.w, h: 40, text: 'הערה עליונה' },
+      { x: SN_R_MARGIN.x, y: 220, w: SN_R_MARGIN.w, h: 40, text: 'הערה חופפת' } // חפיפה אנכית של 20px
+    ]);
+    const { codes } = runBook(book);
+    assert(codes.includes('SIDE_NOTE_OVERLAP'), 'SIDE_NOTE_OVERLAP must fire, got: ' + codes.join(','));
+  });
+
+  it('(S66-ג) הערת צד חודרת לתיבת טור התוכן ⇒ SIDE_NOTE_IN_COLUMN יורה', () => {
+    const book = cleanBook();
+    // הטור הימני: 465..734.4 — הערה שנכנסת אליו ב-~26px (708..761)
+    book[4] = snPage([{ x: 708, y: 200, w: 53, h: 40, text: 'הערה פולשת' }]);
+    const { codes } = runBook(book);
+    assert(codes.includes('SIDE_NOTE_IN_COLUMN'), 'SIDE_NOTE_IN_COLUMN must fire, got: ' + codes.join(','));
+  });
+
+  it('(S66-ד) הערת צד חורגת מתחומי העמוד / ריקה ⇒ SIDE_NOTE_OUTSIDE_PAGE + SIDE_NOTE_EMPTY יורים', () => {
+    const book = cleanBook();
+    book[4] = snPage([
+      { x: SN_R_MARGIN.x, y: 200, w: SN_R_MARGIN.w, h: 40, text: '' },            // ריקה
+      { x: SN_R_MARGIN.x, y: 1100, w: SN_R_MARGIN.w, h: 60, text: 'חורגת למטה' }   // 1160 > 1122.5+2
+    ]);
+    const { codes } = runBook(book);
+    assert(codes.includes('SIDE_NOTE_EMPTY'), 'SIDE_NOTE_EMPTY must fire, got: ' + codes.join(','));
+    assert(codes.includes('SIDE_NOTE_OUTSIDE_PAGE'), 'SIDE_NOTE_OUTSIDE_PAGE must fire, got: ' + codes.join(','));
+  });
+
+  it('(S66-ה) עמוד הערות-סיום חוקי ⇒ אפס ממצאים (כותרת + הערות מורווחות בתוך העמוד)', () => {
+    const book = cleanBook();
+    book.push(mkPage({
+      i: 6, t: 'endnotes', folio: { text: 'ד׳', top: 1040.5, bottom: 1058.5 },
+      cols: [], lines: 0, words: 24,
+      enTitle: { x: 241.4, y: 107.2, w: 552.3, h: 30, text: 'הערות' },
+      enNotes: [
+        { x: 241.4, y: 160, w: 552.3, h: 28, text: '(א) הערה ראשונה' },
+        { x: 241.4, y: 196, w: 552.3, h: 28, text: '(ב) הערה שניה' }
+      ]
+    }));
+    const { summary, codes } = runBook(book);
+    assertEq(summary.problems, 0, 'legit endnote page must be green, got: ' + codes.join(','));
+  });
+
+  it('(S66-ו) הערות-סיום חופפות / חופפות כותרת / ריקות / חורגות ⇒ כל ארבע המשפחות יורות', () => {
+    const book = cleanBook();
+    book.push(mkPage({
+      i: 6, t: 'endnotes', folio: { text: 'ד׳', top: 1040.5, bottom: 1058.5 },
+      cols: [], lines: 0, words: 12,
+      enTitle: { x: 241.4, y: 107.2, w: 552.3, h: 30, text: 'הערות' },
+      enNotes: [
+        { x: 241.4, y: 120, w: 552.3, h: 28, text: 'חופפת כותרת' },   // 120 < 137.2 ⇒ חפיפה עם הכותרת
+        { x: 241.4, y: 130, w: 552.3, h: 28, text: 'חופפת את הקודמת' }, // חפיפה בין הערות
+        { x: 241.4, y: 400, w: 552.3, h: 28, text: '' },                 // ריקה
+        { x: 241.4, y: 1110, w: 552.3, h: 40, text: 'חורגת מהעמוד' }    // 1150 > 1122.5+2
+      ]
+    }));
+    const { codes } = runBook(book);
+    assert(codes.includes('ENDNOTE_TITLE_OVERLAP'), 'ENDNOTE_TITLE_OVERLAP must fire, got: ' + codes.join(','));
+    assert(codes.includes('ENDNOTE_OVERLAP'), 'ENDNOTE_OVERLAP must fire, got: ' + codes.join(','));
+    assert(codes.includes('ENDNOTE_EMPTY'), 'ENDNOTE_EMPTY must fire, got: ' + codes.join(','));
+    assert(codes.includes('ENDNOTE_OUTSIDE_PAGE'), 'ENDNOTE_OUTSIDE_PAGE must fire, got: ' + codes.join(','));
+  });
 });
 
 report('audit-sensitivity');
