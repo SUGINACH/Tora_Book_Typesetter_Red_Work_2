@@ -14147,6 +14147,20 @@ function legacyTypeset(rawText, settings, env) {
   // ---- תוצאה ----
   const tokensOut = tokens.map(t => ({ id: 'lt' + t.id, type: t.type, level: t.level, text: t.text, num: t.num || null }));
   const layoutHashValue = 'legacy-' + legacyLayoutHashDigest(pages);
+  // **U-5 (S1-ה; השלמת חוזה ui-result-v1 — נמצא באודיט ה-UI):** נתיב המורשת
+  // לא החזיר contentHashIn — serializeTypesetResult/buildReport וה-tooltip
+  // של צ'יפ מידע-הריצה קיבלו undefined, בניגוד לנתיב ה-DP (hashIn של CP1).
+  // כאן: hash קלט = מטא-דאטה + טוקנים בלבד (בלי מזהים פנימיים ובלי הגדרות)
+  // — דטרמיניסטי, תלוי-קלט בלבד (שינוי הגדרות אינו משנה אותו), ואינו
+  // משתתף ב-legacyLayoutHashDigest (שדה נלווה חוזי — אפס השפעת פריסה;
+  // הוכחה בבדיקת הרגרסיה: layoutHash זהה פנימית ומול נעילת ה-determinism).
+  const contentHashInValue = crypto
+    .createHash('sha256')
+    .update(JSON.stringify({
+      meta,
+      tokens: tokensOut.map(t => [t.type, t.level == null ? null : String(t.level), t.text, t.num])
+    }), 'utf8')
+    .digest('hex');
   // **תיקון S4.10 (חוזה התוצאה בנתיב החי):** לפני כן הוחזרו ledger: null, events: null
   // ופגעו ב-serializeTypesetResult/buildReport של ה-worker — כל בקשת עימוד
   // באפליקציה החיה קרסה ("Cannot read properties of undefined (reading 'length')")
@@ -14342,6 +14356,7 @@ function legacyTypeset(rawText, settings, env) {
     tocPages: [], numberingAudit: null, settings,
     contentPreserved: contentPreservedFlag,
     contentStats: { sourceWords: contentStats.sourceWords, outputWords: contentStats.outputWords, missingCount: contentStats.missing.length, missingSample: contentStats.missing.slice(0, 8) },
+    contentHashIn: contentHashInValue,
     layoutHash: layoutHashValue,
     plannedLayoutHash: null, geometryNeutralVerified: true,
     ornaments: ornPass.planted ? { planted: ornPass.planted, rejected: ornPass.rejected.length } : null,
@@ -19920,7 +19935,8 @@ const DESIGN_FILES = {
 
 function createImudLibrary(engine) {
   const fontCatalog = { loaded: false, loading: null, families: [], byFamily: new Map(), bytesB64: new Map(), faces: new Set(), extended: [], extendedByFamily: new Map() };
-  const designs = new Map(); // collection → {loaded, items:[{id,name,box}]}
+  const designs = new Map(); // collection → {loaded, items:[{id,name,box}], raw:Map|null, registered:Set}
+  const designLoads = new Map(); // **P-1:** collection → Promise (משיכת הקובץ המלא — single-flight)
   const appliedFontsReady = new Map(); // family → Promise<ArrayBuffer|null>
 
   async function fetchJson(path) {
@@ -20061,25 +20077,69 @@ function createImudLibrary(engine) {
     return null;
   }
 
-  /** רשימת עיצובי אוסף (מזהה+שם) — טעינה עצלה של הקובץ. */
+  /** רשימת עיצובי אוסף (מזהה+שם+תיבה) — **P-1 (S1-ו): טעינת אינדקס קל בלבד.**
+   * הבוררים בפאנל ההגדרות קוראים לכאן בעליית האפליקציה לכל האוספים; עד כאן
+   * נמשך הקובץ המלא (SVG-ב-JSON — 7.4MB סה״כ, 92% מהעברת העלייה — דוח
+   * PERFORMANCE_BASELINE P-1). כעת נמשך `<קובץ>.index.json` ({id,name,box}
+   * בלבד, ~68K סה״כ); ה-SVG עצמו נמשך על-ידי ensureDesign רק כשנבחר
+   * עיצוב בפועל (או על-ידי ערכת נושא באתחול — shaar בלבד).
+   * נפילה שקופה לאחור: אין אינדקס (404/שגיאה) ⇒ הקובץ המלא כמקודם —
+   * התנהגות זהה לספריות ישנות/חסרות אינדקס. */
   async function listDesigns(collection) {
     const meta = designs.get(collection);
     if (meta && meta.loaded) return meta.items;
     const file = DESIGN_FILES[collection];
     if (!file) return [];
-    const raw = await fetchJson(`${BASE}/${file}`);
-    const items = (raw || []).map(d => ({ id: d.id, name: d.name || d.id, box: d.box || null }));
-    designs.set(collection, { loaded: true, items, raw: new Map((raw || []).map(d => [d.id, d])) });
+    let items = null;
+    try {
+      const idx = await fetchJson(`${BASE}/${file.replace(/\.json$/, '.index.json')}`);
+      if (Array.isArray(idx)) items = idx.map(d => ({ id: d.id, name: d.name || d.id, box: d.box || null }));
+    } catch (e) { /* אין אינדקס — נפילה לקובץ המלא */ }
+    if (!items) {
+      const raw = await fetchJson(`${BASE}/${file}`);
+      items = (raw || []).map(d => ({ id: d.id, name: d.name || d.id, box: d.box || null }));
+      designs.set(collection, { loaded: true, items, raw: new Map((raw || []).map(d => [d.id, d])), registered: new Set() });
+      return items;
+    }
+    // מצב אינדקס: ה-raw (ה-SVG) טרם נטען — ensureDesign ימשוך את הקובץ המלא לפי דרישה.
+    designs.set(collection, { loaded: true, items, raw: null, registered: new Set() });
     return items;
   }
 
-  /** רישום פריט עיצוב בשני הצדדים (UI + Worker) והחזרת ההפניה המלאה. */
+  /** **P-1:** משיכת הקובץ המלא של אוסף (ה-SVG) — לפי דרישה בלבד, פעם אחת
+   * לאוסף (single-flight: קריאות מקבילות ממתינות לאותה הבטחה). שומר על
+   * רשימת הפריטים שכבר נטענה מהאינדקס — הבוררים אינם מתרוקנים. */
+  async function loadFullCollection(collection) {
+    const cur = designs.get(collection);
+    if (cur && cur.raw) return; // כבר נטען (נתיב היסטורי/נפילה לאחור)
+    if (designLoads.has(collection)) return designLoads.get(collection);
+    const p = (async () => {
+      const file = DESIGN_FILES[collection];
+      if (!file) throw new Error(`imud-library: unknown collection ${collection}`);
+      const raw = await fetchJson(`${BASE}/${file}`);
+      const m = designs.get(collection) || { loaded: false, items: [], registered: new Set() };
+      if (!m.items || !m.items.length) {
+        m.items = (raw || []).map(d => ({ id: d.id, name: d.name || d.id, box: d.box || null }));
+        m.loaded = true;
+      }
+      m.raw = new Map((raw || []).map(d => [d.id, d]));
+      designs.set(collection, m);
+    })();
+    designLoads.set(collection, p);
+    try { await p; } finally { designLoads.delete(collection); }
+  }
+
+  /** רישום פריט עיצוב בשני הצדדים (UI + Worker) והחזרת ההפניה המלאה.
+   * **P-1:** במצב אינדקס (ה-raw לא נטען) — משיכת הקובץ המלא של האוסף רק
+   * כעת, פעם אחת; שאר המנגנון לא השתנה (רישום דו-צדדי זהה). */
   async function ensureDesign(collection, id) {
-    const meta = designs.get(collection);
-    if (meta && meta.raw && meta.raw.has(id) && meta.registered && meta.registered.has(id)) {
+    const meta0 = designs.get(collection);
+    if (meta0 && meta0.raw && meta0.raw.has(id) && meta0.registered && meta0.registered.has(id)) {
       return `imud:${collection}:${id}`;
     }
-    if (!meta || !meta.raw) await listDesigns(collection);
+    if (!meta0 || !meta0.loaded) { await listDesigns(collection); }
+    const meta1 = designs.get(collection);
+    if (!meta1 || !meta1.raw) { await loadFullCollection(collection); }
     const m = designs.get(collection);
     const item = m.raw && m.raw.get(id);
     if (!item) return null;
