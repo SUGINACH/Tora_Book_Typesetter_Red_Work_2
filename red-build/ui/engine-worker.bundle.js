@@ -8709,6 +8709,20 @@ function legacyTypeset(rawText, settings, env) {
   // ---- תוצאה ----
   const tokensOut = tokens.map(t => ({ id: 'lt' + t.id, type: t.type, level: t.level, text: t.text, num: t.num || null }));
   const layoutHashValue = 'legacy-' + legacyLayoutHashDigest(pages);
+  // **U-5 (S1-ה; השלמת חוזה ui-result-v1 — נמצא באודיט ה-UI):** נתיב המורשת
+  // לא החזיר contentHashIn — serializeTypesetResult/buildReport וה-tooltip
+  // של צ'יפ מידע-הריצה קיבלו undefined, בניגוד לנתיב ה-DP (hashIn של CP1).
+  // כאן: hash קלט = מטא-דאטה + טוקנים בלבד (בלי מזהים פנימיים ובלי הגדרות)
+  // — דטרמיניסטי, תלוי-קלט בלבד (שינוי הגדרות אינו משנה אותו), ואינו
+  // משתתף ב-legacyLayoutHashDigest (שדה נלווה חוזי — אפס השפעת פריסה;
+  // הוכחה בבדיקת הרגרסיה: layoutHash זהה פנימית ומול נעילת ה-determinism).
+  const contentHashInValue = crypto
+    .createHash('sha256')
+    .update(JSON.stringify({
+      meta,
+      tokens: tokensOut.map(t => [t.type, t.level == null ? null : String(t.level), t.text, t.num])
+    }), 'utf8')
+    .digest('hex');
   // **תיקון S4.10 (חוזה התוצאה בנתיב החי):** לפני כן הוחזרו ledger: null, events: null
   // ופגעו ב-serializeTypesetResult/buildReport של ה-worker — כל בקשת עימוד
   // באפליקציה החיה קרסה ("Cannot read properties of undefined (reading 'length')")
@@ -8904,6 +8918,7 @@ function legacyTypeset(rawText, settings, env) {
     tocPages: [], numberingAudit: null, settings,
     contentPreserved: contentPreservedFlag,
     contentStats: { sourceWords: contentStats.sourceWords, outputWords: contentStats.outputWords, missingCount: contentStats.missing.length, missingSample: contentStats.missing.slice(0, 8) },
+    contentHashIn: contentHashInValue,
     layoutHash: layoutHashValue,
     plannedLayoutHash: null, geometryNeutralVerified: true,
     ornaments: ornPass.planted ? { planted: ornPass.planted, rejected: ornPass.rejected.length } : null,
