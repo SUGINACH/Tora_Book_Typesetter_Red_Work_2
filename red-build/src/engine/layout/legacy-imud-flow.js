@@ -1347,7 +1347,11 @@ function legacyTypeset(rawText, settings, env) {
          * לפיצול) — כמו 5 העמודים המגבלים בייחוס המקור עצמו. */
         const balanceAndReport = (why) => {
           balanceBlock(blk, availH);
-          const eff = effCols(blk);
+          // **S1-ב:** הן התנאי והן הנתונים ברשומה — ברמת העמוד (pageEffCols),
+          // לא ברמת הבלוק הנסגר. בלוק קצר שנסגר בטור ימני בלבד באמצע עמוד
+          // מלא הוא טיפוגרפיה תקינה ואינו מדווח; עמוד שטורו השמאלי ריק באמת
+          // ממשיך להיות מדווח וממופה לאינדקס הסופי.
+          const eff = pageEffCols();
           const aH = colHeightUnits(eff[0]);
           const bH = colHeightUnits(eff[1]);
           // **S6.3:** הסף מההגדרות (imbalance-max-delta-px; היה 60px קשיח —
@@ -1471,6 +1475,25 @@ function legacyTypeset(rawText, settings, env) {
       /** הטורים האפקטיביים של בלוק — אחרי איזון ה-split הם הסמכות (layoutStack
        * קורא מהם); מתיחה/כיווץ/משיכה חייבות לפעול על אותן יחידות בדיוק. */
       const effCols = (blk) => blk.split ? [blk.split.r, blk.split.l] : [blk.cols[0], blk.cols[1]];
+      /** **S1-ב (אמת-דיווח ברמת העמוד):** עמודות אפקטיביות מאוחדות של כל
+       * הבלוקים במחסנית העמוד. רשומות אי-האיזון נקראות על-ידי המשתמש, ה-UI
+       * והבדיקות כטענה על **העמוד** ("טור שמאלי ריק לחלוטין" — בקשת המשתמש
+       * המפורשת), אך נמדדו עד כה על **הבלוק הנסגר בלבד**: בעמוד רב-בלוקים
+       * נרשם emptyCol=true על עמוד שטורו השמאלי מלא מבלוקים קודמים (הוכחה:
+       * מסמך הבדיקה הקבוע לאחר D-98 — רשומות שהצביעו על עמודים עם 13/29/21
+       * שורות בטור השמאלי). המדידה עוברת לרמת העמוד; לוגיקת האיזון
+       * עצמה (balanceBlock, סעיף 3 של המקור) אינה מושפעת — השינוי בדיווח
+       * בלבד, וה-layoutHash אינו כולל את ה-ledger (הוכחה בבדיקת הרצה). */
+      const pageEffCols = () => {
+        const r = [], l = [];
+        for (const b of stack) {
+          if (b.type === 'span') continue;
+          const e = effCols(b);
+          r.push(...e[0]);
+          l.push(...e[1]);
+        }
+        return [r, l];
+      };
 
       /** v21 columnStretchCapacity: כמה px אפשר למתוח טור — ריווח-פסקה עד
        * JUSTIFY_MAX_GAP + תוספת פס עד JUSTIFY_MAX_LH_EXTRA (האחרון של הטור
