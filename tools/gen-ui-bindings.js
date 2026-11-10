@@ -94,6 +94,7 @@ const L = {
   'background-inset-mm': 'שקיעת רקע מהשוליים (מ״מ)',
   // ADVANCED
   'trace-verbosity': 'רמת תיעוד מסלול (trace)', 'diagnostics-enabled': 'אבחון מופעל',
+  'audit-stage-snapshots': 'צילומי-מצב בנקודות הביקורת (אבחון סיבתי)',
   'offline-guard': 'שומר נתק־מהרשת (exit 7)', 'debounce-light-change-ms': 'השהיית שינויים קלים (ms)',
   // **S4.5/EXT-14 (03.11):** נכסי IMUD + מזהי טקסט מוגדרים
   'imud-shaar-main': 'עיצוב שער ראשי (ספריית IMUD)', 'imud-shaar-sub': 'עיצוב שער משנה (ספריית IMUD)',

@@ -80,15 +80,27 @@ function buildReport(result, opts = {}) {
   }
   const deterministic = recomputed === result.layoutHash;
   const findings = [];
+  // **S1-ח (§2.4):** הקשר-עמוד לכל ממצא — רק כשצילומי-המצב פעילים (opt-in).
+  // ההקשר מתעד את מצבם של הרכיבים ה**אחרים** בעמוד הממצא מאז הופעתו —
+  // נדרש במפורש בתוכנית האב §2.4; במצב compact (diagnostics-enabled=false)
+  // מצומצם למונים בלבד כדי לשמר נפח.
+  const snapCtx = result.stageSnapshots && result.stageSnapshots.findingsContext ? result.stageSnapshots.findingsContext : null;
   for (const rec of result.ledger.issues.values()) {
     if (NON_FINDINGS.has(rec.kind)) continue;
-    findings.push({
+    const f = {
       id: rec.issue_id, kind: rec.kind, kindHe: GEOM_KIND_NAMES[rec.kind] || rec.kind,
       target: rec.target, page: rec.page, status: rec.status,
       predicate_before: rec.predicate_before, predicate_after: rec.predicate_after,
       capacity_before: rec.capacity_before, capacity_after: rec.capacity_after,
       transitions: compact ? undefined : rec.transitions.map(t => ({ state: t.state, stage: t.stage, note: t.note }))
-    });
+    };
+    if (snapCtx && snapCtx[rec.issue_id]) {
+      const c = snapCtx[rec.issue_id];
+      f.page_context = compact
+        ? { page: c.page, since_checkpoint: c.since_checkpoint, others_changed_count: c.others_changed.length, truncated: c.truncated }
+        : c;
+    }
+    findings.push(f);
   }
   return {
     schema: 'diagnostics-v2',
@@ -99,6 +111,13 @@ function buildReport(result, opts = {}) {
     geometry_neutral_verified: result.geometryNeutralVerified,
     dropped_events: result.events.droppedEvents, // חייב 0
     retreat: result.retreat,
+    // **S1-ח:** אבחון צילומי-המצב — מטא בלבד בראש הדוח (ה-deltas המלאים ב-result.stageSnapshots)
+    stage_snapshots: result.stageSnapshots ? {
+      checkpoints: result.stageSnapshots.checkpoints,
+      totals: result.stageSnapshots.deltas.map(d => ({ from: d.from, to: d.to, ...d.totals })),
+      final_stable: result.stageSnapshots.final_stable,
+      gold_causality: result.stageSnapshots.gold_causality
+    } : null,
     counts: tally(findings),
     findings: compact ? findings.filter(f => f.status !== 'resolved') : findings
   };

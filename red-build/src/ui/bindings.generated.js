@@ -3328,6 +3328,20 @@ const BINDINGS = [
     "note": null
   },
   {
+    "id": "audit-stage-snapshots",
+    "control": "chk-audit-stage-snapshots",
+    "panel": "מתקדם/מנוע",
+    "panelKey": "ADVANCED",
+    "labelHe": "צילומי-מצב בנקודות הביקורת (אבחון סיבתי)",
+    "type": "bool",
+    "def": false,
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "אבחון: צילומי-מצב בנקודות הביקורת (cp3-dp→cp5-final) + delta + הקשר-עמוד לממצאים — שקוף לפריסה; מיועד לריצות אודיט"
+  },
+  {
     "id": "offline-guard",
     "control": "chk-offline-guard",
     "panel": "מתקדם/מנוע",

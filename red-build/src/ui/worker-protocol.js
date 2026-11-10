@@ -48,6 +48,9 @@ function serializeTypesetResult(result) {
     numberingAudit: result.numberingAudit,
     tokens: result.tokens.map(t => ({ id: t.id, type: t.type, level: t.level || null, raw: t.raw || '' })),
     droppedEvents: result.events.droppedEvents,
+    // **S1-ח (gap-Gold-V21):** אבחון צילומי-מצב — additive; null כשכובה
+    // (ברירת מחדל). חוזה ui-result-v1 נשמר: שדה חדש עם ברירת-מחדל ריקה.
+    stageSnapshots: result.stageSnapshots || null,
     recommendations: result.recommendations || null,   // **S11:** המלצות עריכה עם הוכחות (plain)
     customStyles: result.customStyles ? { ok: result.customStyles.ok, count: result.customStyles.styles.length, errors: result.customStyles.errors } : null
   };
