@@ -8,6 +8,12 @@
  * balance/AQ → notes-budget → re-fit pass → CP4 decorations (geometry-neutral!) →
  * headers/folio/toc → ledger-finalize → CP5 render.
  *
+ * **S1-ח (gap-Gold-V21):** צילומי-מצב אופציונליים ב-4 נקודות הביקורת
+ * (‏audit/stage-snapshots — opt-in בלבד, טהור ודטרמיניסטי): cp3-dp ← אחרי
+ * ה-DP; cp3-structural ← בסיס CP4; cp4-decorations ← אחרי העיטורים;
+ * cp5-final ← המצב שממנו נגזר layoutHash. ה-deltas והקשר-העמוד לממצאים
+ * מוחזרים ב-result.stageSnapshots (ראה שם).
+ *
  * **תיקוני סגירת S7 (ראו audits/02_S7_CLOSURE_REPORT.md):**
  *  - P0-1/P0-2: חשבונאות שימור תוכן identity-by-construction (D-30) — צד src וצד out
  *    נספרים מאותו ייצוג מחושב; ההערות נספרות ממקום הצגתן בפועל.
@@ -572,10 +578,19 @@ function typeset(rawText, settingsIn, env = {}) {
   eventLog.emit('measure', 'cp2-measured', { blocks: blocks.length, cache: api.cacheStats(), firstWordDecorated: fwCount, parenScale });
   prog('measure', 25, 'מדידה ושבירת שורות', { blocks: blocks.length });
 
+  // **S1-ח (gap-Gold-V21):** עוקב צילומי-מצב — opt-in בלבד (settings['audit-stage-snapshots']).
+  // טהור: קריאה בלבד; הוכחת no-op בבדיקה (hash זהה עם/בלי). ראה src/audit/stage-snapshots.js.
+  const { createSnapshotTracker } = require('../../audit/stage-snapshots');
+  const snapTracker = settings['audit-stage-snapshots'] === true ? createSnapshotTracker() : null;
+
   // ---- CP3: page plan (DP) + protections + retreat loop ----
   const planned = planPages(blocks, settings, eventLog, ledger, { measure: (t2, s2) => api.measureTextWidth(t2, s2), onProgress });
   let { pages } = planned;
   prog('page-plan', 70, 'הפריסה הושלמה', { totalPages: pages.length, pageIndex: pages.length });
+  if (snapTracker) {
+    snapTracker.capture(pages, 'cp3-dp', 'page-plan');
+    eventLog.emit('page-plan', 'stage-snapshot-captured', { checkpoint: 'cp3-dp', pageCount: pages.length });
+  }
 
   // **S8 — עמודי שער + עמודים מותאמים (PT-01/02/03/09):** הכנסה מבנית
   // מיד אחרי ה‑DP ולפני צילום ה‑hash של CP4 — השערים חלק מהבסיס שנמדד
@@ -676,6 +691,12 @@ function typeset(rawText, settingsIn, env = {}) {
     prog('toc', 78, 'תוכן העניינים', { totalPages: pages.length, tocPages: tocPagesAll.length });
   }
 
+  // **S1-ח:** צילום cp3-structural — בסיס הוכחת הניטרליות של CP4 (cp4BodyBefore נלקח מיד).
+  if (snapTracker) {
+    snapTracker.capture(pages, 'cp3-structural', 'toc');
+    eventLog.emit('toc', 'stage-snapshot-captured', { checkpoint: 'cp3-structural', pageCount: pages.length });
+  }
+
   // ---- CP4: decorations pass — geometry-neutral (invariant T1; D-47) ----
   const cp4PageCount = pages.length;
   const cp4BodyBefore = bodyGeometryHash(pages);
@@ -739,6 +760,13 @@ function typeset(rawText, settingsIn, env = {}) {
     sideNotesDeferred: sideNotePlacement.deferred.length,
     endnotePages: endnotePagesInfo.count
   });
+
+  // **S1-ח:** צילום cp4-decorations — אחרי פאס העיטורים ועמודי ההערות (הפעם עם כל
+  // התוספות המבניות שהוכחו ניטרליות לשורות הקיימות).
+  if (snapTracker) {
+    snapTracker.capture(pages, 'cp4-decorations', 'decorations');
+    eventLog.emit('decorations', 'stage-snapshot-captured', { checkpoint: 'cp4-decorations', pageCount: pages.length });
+  }
 
   // S7.1.3: אימות המרת H7 — מחובר לצינור (בעבר פונקציה יתומה)
   const h7Mismatches = verifyH7Conversion(tokens, pages, sideNotePlacement);
@@ -1110,6 +1138,12 @@ function typeset(rawText, settingsIn, env = {}) {
   }
 
   // ---- ledger finalize + CP5 ----
+  // **S1-ח:** צילום cp5-final — המצב שממנו נגזר layoutHash; delta ריק מול
+  // cp4-decorations הוא הוכחה פר-שורה שאף שלב מאוחר לא הזיז שורות.
+  if (snapTracker) {
+    snapTracker.capture(pages, 'cp5-final', 'render');
+    eventLog.emit('render', 'stage-snapshot-captured', { checkpoint: 'cp5-final', pageCount: pages.length });
+  }
   eventLog.emit('ledger-finalize', 'summary', ledger.summary());
   const finalHash = layoutHash(pages); // hash \u05e9\u05dc \u05d4\u05de\u05e6\u05d1 \u05d4\u05e1\u05d5\u05e4\u05d9 (\u05d3\u05d8\u05e8\u05de\u05d9\u05e0\u05d9\u05d6\u05dd \u05d1\u05d9\u05df\u05be\u05e8\u05d9\u05e6\u05d5\u05ea)
   eventLog.emit('render', 'cp5-render-ready', { layoutHash: finalHash });
@@ -1125,6 +1159,10 @@ function typeset(rawText, settingsIn, env = {}) {
       { force: !!(env && env.wantRecommendations === true) }
     );
   }
+
+  // **S1-ח:** אסוף צילומי-המצב לאובייקט אבחוני קומפקטי (deltas + הקשר-עמוד
+  // + סיכום סיבתי Gold) — או null כשהמנגנון כבוי (ברירת מחדל).
+  const stageSnapshots = snapTracker ? snapTracker.finalize(ledger) : null;
 
   return {
     metadata, tokens, pages, ledger, events: eventLog,
@@ -1145,6 +1183,7 @@ function typeset(rawText, settingsIn, env = {}) {
     endnotePagesInfo,
     scope,
     customStyles: customStylesRes,  // **S11:** הסגנונות שהופעלו בפועל (כולל שגיאות אימות)
+    stageSnapshots,                 // **S1-ח:** צילומי-מצב/deltas/הקשר-עמוד (או null)
     recommendations                 // **S11:** המלצות עריכה עם הוכחות (או null אם כובו)
   };
 }

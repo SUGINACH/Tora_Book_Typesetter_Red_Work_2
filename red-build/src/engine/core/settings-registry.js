@@ -252,6 +252,11 @@ const registry = [
   // D-43 (P1-4): diagnostics-enabled אינו רשאי לדכא רישום ממצאים ("לא להשבית אבחון").
   // הוא שולט ברמת הפירוט בדוח בלבד (buildReport compact) — לעולם לא ברישום עצמו.
   K('diagnostics-enabled', 'bool', true, P.ADVANCED, 'chk-diag', ['audit/report-schema'], 'fx:diag-on'),
+  // **S1-ח (gap-Gold-V21, תוכנית האב §2.2/§2.5):** צילומי-מצב של מודל הפריסה
+  // ב-4 נקודות הביקורת + delta ביניהן + הקשר-עמוד לממצאים (§2.4) + מיפוי
+  // סיבתי מלא מול Gold V21 (§2.3). אופט-אין: כבוי בברירת מחדל — אפס תקורה
+  // בריצה רגילה; טהור (קריאה בלבד) — לא משנה hash פריסה (מוכח בבדיקה).
+  K('audit-stage-snapshots', 'bool', false, P.ADVANCED, 'chk-audit-stage-snapshots', ['audit/stage-snapshots'], 'fx:stage-snapshots', { note: 'אבחון: צילומי-מצב בנקודות הביקורת (cp3-dp→cp5-final) + delta + הקשר-עמוד לממצאים — שקוף לפריסה; מיועד לריצות אודיט' }),
   K('offline-guard', 'bool', true, P.ADVANCED, 'chk-offline-guard', ['output/html-export'], 'fx:offline-guard', { note: 'exit 7 על בקשה חיצונית (Orange ✓)' }),
   // **S10 — סגירת הבטחת D-44:** debounce-light-change-ms חוזר עם צרכן אמיתי —
   // ui/retypeset-policy קורא אותו בפועל (רענון קל מרוכז; בדיקת אפקט fx:debounce ב־s10).

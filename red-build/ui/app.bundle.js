@@ -1612,6 +1612,11 @@ const registry = [
   // D-43 (P1-4): diagnostics-enabled אינו רשאי לדכא רישום ממצאים ("לא להשבית אבחון").
   // הוא שולט ברמת הפירוט בדוח בלבד (buildReport compact) — לעולם לא ברישום עצמו.
   K('diagnostics-enabled', 'bool', true, P.ADVANCED, 'chk-diag', ['audit/report-schema'], 'fx:diag-on'),
+  // **S1-ח (gap-Gold-V21, תוכנית האב §2.2/§2.5):** צילומי-מצב של מודל הפריסה
+  // ב-4 נקודות הביקורת + delta ביניהן + הקשר-עמוד לממצאים (§2.4) + מיפוי
+  // סיבתי מלא מול Gold V21 (§2.3). אופט-אין: כבוי בברירת מחדל — אפס תקורה
+  // בריצה רגילה; טהור (קריאה בלבד) — לא משנה hash פריסה (מוכח בבדיקה).
+  K('audit-stage-snapshots', 'bool', false, P.ADVANCED, 'chk-audit-stage-snapshots', ['audit/stage-snapshots'], 'fx:stage-snapshots', { note: 'אבחון: צילומי-מצב בנקודות הביקורת (cp3-dp→cp5-final) + delta + הקשר-עמוד לממצאים — שקוף לפריסה; מיועד לריצות אודיט' }),
   K('offline-guard', 'bool', true, P.ADVANCED, 'chk-offline-guard', ['output/html-export'], 'fx:offline-guard', { note: 'exit 7 על בקשה חיצונית (Orange ✓)' }),
   // **S10 — סגירת הבטחת D-44:** debounce-light-change-ms חוזר עם צרכן אמיתי —
   // ui/retypeset-policy קורא אותו בפועל (רענון קל מרוכז; בדיקת אפקט fx:debounce ב־s10).
@@ -6408,6 +6413,20 @@ const BINDINGS = [
     "max": null,
     "step": null,
     "note": null
+  },
+  {
+    "id": "audit-stage-snapshots",
+    "control": "chk-audit-stage-snapshots",
+    "panel": "מתקדם/מנוע",
+    "panelKey": "ADVANCED",
+    "labelHe": "צילומי-מצב בנקודות הביקורת (אבחון סיבתי)",
+    "type": "bool",
+    "def": false,
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "אבחון: צילומי-מצב בנקודות הביקורת (cp3-dp→cp5-final) + delta + הקשר-עמוד לממצאים — שקוף לפריסה; מיועד לריצות אודיט"
   },
   {
     "id": "offline-guard",
@@ -15995,15 +16014,27 @@ function buildReport(result, opts = {}) {
   }
   const deterministic = recomputed === result.layoutHash;
   const findings = [];
+  // **S1-ח (§2.4):** הקשר-עמוד לכל ממצא — רק כשצילומי-המצב פעילים (opt-in).
+  // ההקשר מתעד את מצבם של הרכיבים ה**אחרים** בעמוד הממצא מאז הופעתו —
+  // נדרש במפורש בתוכנית האב §2.4; במצב compact (diagnostics-enabled=false)
+  // מצומצם למונים בלבד כדי לשמר נפח.
+  const snapCtx = result.stageSnapshots && result.stageSnapshots.findingsContext ? result.stageSnapshots.findingsContext : null;
   for (const rec of result.ledger.issues.values()) {
     if (NON_FINDINGS.has(rec.kind)) continue;
-    findings.push({
+    const f = {
       id: rec.issue_id, kind: rec.kind, kindHe: GEOM_KIND_NAMES[rec.kind] || rec.kind,
       target: rec.target, page: rec.page, status: rec.status,
       predicate_before: rec.predicate_before, predicate_after: rec.predicate_after,
       capacity_before: rec.capacity_before, capacity_after: rec.capacity_after,
       transitions: compact ? undefined : rec.transitions.map(t => ({ state: t.state, stage: t.stage, note: t.note }))
-    });
+    };
+    if (snapCtx && snapCtx[rec.issue_id]) {
+      const c = snapCtx[rec.issue_id];
+      f.page_context = compact
+        ? { page: c.page, since_checkpoint: c.since_checkpoint, others_changed_count: c.others_changed.length, truncated: c.truncated }
+        : c;
+    }
+    findings.push(f);
   }
   return {
     schema: 'diagnostics-v2',
@@ -16014,6 +16045,13 @@ function buildReport(result, opts = {}) {
     geometry_neutral_verified: result.geometryNeutralVerified,
     dropped_events: result.events.droppedEvents, // חייב 0
     retreat: result.retreat,
+    // **S1-ח:** אבחון צילומי-המצב — מטא בלבד בראש הדוח (ה-deltas המלאים ב-result.stageSnapshots)
+    stage_snapshots: result.stageSnapshots ? {
+      checkpoints: result.stageSnapshots.checkpoints,
+      totals: result.stageSnapshots.deltas.map(d => ({ from: d.from, to: d.to, ...d.totals })),
+      final_stable: result.stageSnapshots.final_stable,
+      gold_causality: result.stageSnapshots.gold_causality
+    } : null,
     counts: tally(findings),
     findings: compact ? findings.filter(f => f.status !== 'resolved') : findings
   };

@@ -1,6 +1,6 @@
 // ui/engine-worker.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת ה־Worker (המנוע המלא — אין לטעון בחוט ה־UI)
-// מודולים: 63 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 64 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -318,6 +318,7 @@ var __paths = {
   "src/engine/core/pipeline.js|../extensions/style-schema": "src/engine/extensions/style-schema.js",
   "src/engine/core/pipeline.js|../extensions/apply-styles": "src/engine/extensions/apply-styles.js",
   "src/engine/core/pipeline.js|../decoration/ornament-fit": "src/engine/decoration/ornament-fit.js",
+  "src/engine/core/pipeline.js|../../audit/stage-snapshots": "src/audit/stage-snapshots.js",
   "src/engine/core/pipeline.js|../decoration/shaar-pages": "src/engine/decoration/shaar-pages.js",
   "src/engine/core/pipeline.js|../decoration/custom-pages": "src/engine/decoration/custom-pages.js",
   "src/engine/core/pipeline.js|../decoration/toc-builder": "src/engine/decoration/toc-builder.js",
@@ -558,6 +559,12 @@ __modules["src/engine/core/pipeline.js"] = function (require, module, exports) {
  * CP2 fonts-ready → measure/line-plan (KP) → CP3 page-plan (DP) + protections + retreat →
  * balance/AQ → notes-budget → re-fit pass → CP4 decorations (geometry-neutral!) →
  * headers/folio/toc → ledger-finalize → CP5 render.
+ *
+ * **S1-ח (gap-Gold-V21):** צילומי-מצב אופציונליים ב-4 נקודות הביקורת
+ * (‏audit/stage-snapshots — opt-in בלבד, טהור ודטרמיניסטי): cp3-dp ← אחרי
+ * ה-DP; cp3-structural ← בסיס CP4; cp4-decorations ← אחרי העיטורים;
+ * cp5-final ← המצב שממנו נגזר layoutHash. ה-deltas והקשר-העמוד לממצאים
+ * מוחזרים ב-result.stageSnapshots (ראה שם).
  *
  * **תיקוני סגירת S7 (ראו audits/02_S7_CLOSURE_REPORT.md):**
  *  - P0-1/P0-2: חשבונאות שימור תוכן identity-by-construction (D-30) — צד src וצד out
@@ -1123,10 +1130,19 @@ function typeset(rawText, settingsIn, env = {}) {
   eventLog.emit('measure', 'cp2-measured', { blocks: blocks.length, cache: api.cacheStats(), firstWordDecorated: fwCount, parenScale });
   prog('measure', 25, 'מדידה ושבירת שורות', { blocks: blocks.length });
 
+  // **S1-ח (gap-Gold-V21):** עוקב צילומי-מצב — opt-in בלבד (settings['audit-stage-snapshots']).
+  // טהור: קריאה בלבד; הוכחת no-op בבדיקה (hash זהה עם/בלי). ראה src/audit/stage-snapshots.js.
+  const { createSnapshotTracker } = require('../../audit/stage-snapshots');
+  const snapTracker = settings['audit-stage-snapshots'] === true ? createSnapshotTracker() : null;
+
   // ---- CP3: page plan (DP) + protections + retreat loop ----
   const planned = planPages(blocks, settings, eventLog, ledger, { measure: (t2, s2) => api.measureTextWidth(t2, s2), onProgress });
   let { pages } = planned;
   prog('page-plan', 70, 'הפריסה הושלמה', { totalPages: pages.length, pageIndex: pages.length });
+  if (snapTracker) {
+    snapTracker.capture(pages, 'cp3-dp', 'page-plan');
+    eventLog.emit('page-plan', 'stage-snapshot-captured', { checkpoint: 'cp3-dp', pageCount: pages.length });
+  }
 
   // **S8 — עמודי שער + עמודים מותאמים (PT-01/02/03/09):** הכנסה מבנית
   // מיד אחרי ה‑DP ולפני צילום ה‑hash של CP4 — השערים חלק מהבסיס שנמדד
@@ -1227,6 +1243,12 @@ function typeset(rawText, settingsIn, env = {}) {
     prog('toc', 78, 'תוכן העניינים', { totalPages: pages.length, tocPages: tocPagesAll.length });
   }
 
+  // **S1-ח:** צילום cp3-structural — בסיס הוכחת הניטרליות של CP4 (cp4BodyBefore נלקח מיד).
+  if (snapTracker) {
+    snapTracker.capture(pages, 'cp3-structural', 'toc');
+    eventLog.emit('toc', 'stage-snapshot-captured', { checkpoint: 'cp3-structural', pageCount: pages.length });
+  }
+
   // ---- CP4: decorations pass — geometry-neutral (invariant T1; D-47) ----
   const cp4PageCount = pages.length;
   const cp4BodyBefore = bodyGeometryHash(pages);
@@ -1290,6 +1312,13 @@ function typeset(rawText, settingsIn, env = {}) {
     sideNotesDeferred: sideNotePlacement.deferred.length,
     endnotePages: endnotePagesInfo.count
   });
+
+  // **S1-ח:** צילום cp4-decorations — אחרי פאס העיטורים ועמודי ההערות (הפעם עם כל
+  // התוספות המבניות שהוכחו ניטרליות לשורות הקיימות).
+  if (snapTracker) {
+    snapTracker.capture(pages, 'cp4-decorations', 'decorations');
+    eventLog.emit('decorations', 'stage-snapshot-captured', { checkpoint: 'cp4-decorations', pageCount: pages.length });
+  }
 
   // S7.1.3: אימות המרת H7 — מחובר לצינור (בעבר פונקציה יתומה)
   const h7Mismatches = verifyH7Conversion(tokens, pages, sideNotePlacement);
@@ -1661,6 +1690,12 @@ function typeset(rawText, settingsIn, env = {}) {
   }
 
   // ---- ledger finalize + CP5 ----
+  // **S1-ח:** צילום cp5-final — המצב שממנו נגזר layoutHash; delta ריק מול
+  // cp4-decorations הוא הוכחה פר-שורה שאף שלב מאוחר לא הזיז שורות.
+  if (snapTracker) {
+    snapTracker.capture(pages, 'cp5-final', 'render');
+    eventLog.emit('render', 'stage-snapshot-captured', { checkpoint: 'cp5-final', pageCount: pages.length });
+  }
   eventLog.emit('ledger-finalize', 'summary', ledger.summary());
   const finalHash = layoutHash(pages); // hash \u05e9\u05dc \u05d4\u05de\u05e6\u05d1 \u05d4\u05e1\u05d5\u05e4\u05d9 (\u05d3\u05d8\u05e8\u05de\u05d9\u05e0\u05d9\u05d6\u05dd \u05d1\u05d9\u05df\u05be\u05e8\u05d9\u05e6\u05d5\u05ea)
   eventLog.emit('render', 'cp5-render-ready', { layoutHash: finalHash });
@@ -1676,6 +1711,10 @@ function typeset(rawText, settingsIn, env = {}) {
       { force: !!(env && env.wantRecommendations === true) }
     );
   }
+
+  // **S1-ח:** אסוף צילומי-המצב לאובייקט אבחוני קומפקטי (deltas + הקשר-עמוד
+  // + סיכום סיבתי Gold) — או null כשהמנגנון כבוי (ברירת מחדל).
+  const stageSnapshots = snapTracker ? snapTracker.finalize(ledger) : null;
 
   return {
     metadata, tokens, pages, ledger, events: eventLog,
@@ -1696,6 +1735,7 @@ function typeset(rawText, settingsIn, env = {}) {
     endnotePagesInfo,
     scope,
     customStyles: customStylesRes,  // **S11:** הסגנונות שהופעלו בפועל (כולל שגיאות אימות)
+    stageSnapshots,                 // **S1-ח:** צילומי-מצב/deltas/הקשר-עמוד (או null)
     recommendations                 // **S11:** המלצות עריכה עם הוכחות (או null אם כובו)
   };
 }
@@ -1958,6 +1998,11 @@ const registry = [
   // D-43 (P1-4): diagnostics-enabled אינו רשאי לדכא רישום ממצאים ("לא להשבית אבחון").
   // הוא שולט ברמת הפירוט בדוח בלבד (buildReport compact) — לעולם לא ברישום עצמו.
   K('diagnostics-enabled', 'bool', true, P.ADVANCED, 'chk-diag', ['audit/report-schema'], 'fx:diag-on'),
+  // **S1-ח (gap-Gold-V21, תוכנית האב §2.2/§2.5):** צילומי-מצב של מודל הפריסה
+  // ב-4 נקודות הביקורת + delta ביניהן + הקשר-עמוד לממצאים (§2.4) + מיפוי
+  // סיבתי מלא מול Gold V21 (§2.3). אופט-אין: כבוי בברירת מחדל — אפס תקורה
+  // בריצה רגילה; טהור (קריאה בלבד) — לא משנה hash פריסה (מוכח בבדיקה).
+  K('audit-stage-snapshots', 'bool', false, P.ADVANCED, 'chk-audit-stage-snapshots', ['audit/stage-snapshots'], 'fx:stage-snapshots', { note: 'אבחון: צילומי-מצב בנקודות הביקורת (cp3-dp→cp5-final) + delta + הקשר-עמוד לממצאים — שקוף לפריסה; מיועד לריצות אודיט' }),
   K('offline-guard', 'bool', true, P.ADVANCED, 'chk-offline-guard', ['output/html-export'], 'fx:offline-guard', { note: 'exit 7 על בקשה חיצונית (Orange ✓)' }),
   // **S10 — סגירת הבטחת D-44:** debounce-light-change-ms חוזר עם צרכן אמיתי —
   // ui/retypeset-policy קורא אותו בפועל (רענון קל מרוכז; בדיקת אפקט fx:debounce ב־s10).
@@ -9697,6 +9742,289 @@ module.exports = {
 };
 
 };
+__modules["src/audit/stage-snapshots.js"] = function (require, module, exports) {
+// src/audit/stage-snapshots.js — צילומי-מצב של מודל הפריסה בנקודות הביקורת (S1-ח, gap-Gold-V21)
+'use strict';
+
+/**
+ * **רקע (משימת הפתיחה של סוכן 2, תוכנית האב §2.2/§מקבץ C):**
+ * השלמת יכולת snapshot/diff בסגנון step-by-step-audit של Gold V21
+ * (‏`work_doc/step-by-step-audit-Method.md`), מותאמת לארכיטקטורת RED —
+ * מודל מחושב חד-כיווני, לא DOM מתחלף:
+ *
+ *  | Gold V21 (DOM)                    | RED (מודל מחושב)                       |
+ *  |-----------------------------------|----------------------------------------|
+ *  | collectPageSignatures             | חתימת שורה יציבה: tokenId#lineIdx      |
+ *  | computeDelta (added/removed/changed) | diffSnapshots — זהה מבחינה סמנטית   |
+ *  | pageMetrics (bodyFlow/pageCount)  | pageCount + lineCount + סוגי עמודים   |
+ *  | pageElements בעמוד הממצא          | findingsContext (§2.4) — רכיבים אחרים  |
+ *  | 7 קטגוריות סיבתיות                | goldCausalityOf — מיפוי מלא מ-10 מצבים |
+ *
+ * **נקודות הלכידה** (מוגדרות ב-pipeline.js, לכל אחת stage מתועד):
+ *  cp3-dp          — אחרי planPages (DP+הגנות+נסיגה; לפני שערים/TOC)
+ *  cp3-structural  — אחרי שערים+AQ+TOC (בסיס הוכחת הניטרליות של CP4)
+ *  cp4-decorations — אחרי פאס העיטורים (הערות צד/עיטורים/עמודי הערות)
+ *  cp5-final       — המצב הסופי שממנו נגזר layoutHash
+ *
+ * **אינווריאנטים (תוכנית האב §2.5):**
+ *  - טהור: קריאה בלבד מהמודל — אין כתיבה; המכשור אינו יכול לשנות פריסה
+ *    (‏no-op proof בבדיקה: hash זהה עם ובלי המנגנון).
+ *  - דטרמיניסטי: אין Date.now/אקראיות; סדר איטרציה קבוע; שני ריצות זהות
+ *    מפיקות אובייקט זהה ביטים.
+ *  - immutable: ה-snapshots נבנים כעצמים חדשים; המודל וה-ledger אינם
+ *    מוטצים על-ידי המנגנון.
+ *  - opt-in: פעיל רק כש-settings['audit-stage-snapshots']=true (ברירת
+ *    מחדל כבויה — אפס תקורה בריצה רגילה).
+ *  - נפח: התוצאה נושאת את ה-deltas וההקשרים בלבד (לא צילומים מלאים
+ *    של הספר) — המודל המלא ניתן לשחזור דטרמיניסטי ממילא.
+ */
+
+/** שלב ← מדד נקודת הביקורת שבה/אחריה נלכד השלב (לא מוכר = מוקדם ⇒ 0). */
+const STAGE_TO_CP = {
+  parse: 0, 'scope-map': 0, 'style-prepass': 0, 'fonts-ready': 0, measure: 0,
+  'line-plan': 0, 'page-plan': 0, protections: 0, balance: 0, justify: 0,
+  'notes-budget': 0, refit: 0, 'candidate-gen': 0,
+  toc: 1,
+  decorations: 2,
+  headers: 3, folio: 3, 'ledger-finalize': 3, render: 3
+};
+
+/** שורות העמוד לפי סדר הקריאה — הפס החוצה-טורים ואז הטורים (FWD-1). */
+function pageLinesOf(pg) {
+  const out = [];
+  if (pg.spanning && pg.spanning.lines) out.push(...pg.spanning.lines);
+  for (const col of (pg.columns || [])) out.push(...col);
+  return out;
+}
+
+/** מזהה יציב של שורה: tokenId#lineIdx (או seq/תוכן כגיבוי) — עוגן לוגי
+ *  חוצה-checkpoints, מקביל ל-data-token-id ב-Gold. */
+function lineKeyOf(ln, counter) {
+  const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId != null ? ln.meta.tokenId : 'x');
+  const li = ln.meta && ln.meta.lineIdx != null ? ln.meta.lineIdx : (ln.seq != null ? `s${ln.seq}` : null);
+  let key = li != null ? `${tok}#${li}` : `${tok}|${(ln.words || []).join('§')}`;
+  if (counter) {
+    let n = counter.get(key) || 0;
+    counter.set(key, n + 1);
+    if (n > 0) key = `${key}~${n + 1}`; // התנגשות נדירה בתוך אותו צילום — סיומת דטרמיניסטית
+  }
+  return key;
+}
+
+/**
+ * לכידת צילום-מצב קומפקטי של מודל העמודים.
+ * @returns {{checkpoint:string, pageCount:number, lineCount:number, pages:Array, lines:Object}}
+ *   pages: לכל עמוד {i,type,fn} (‏fn = סמני הערות); lines: key → {p,c,k,w}
+ *   (עמוד, טור, kind, מספר מילים) — מיקום+תוכן במינימום נפח.
+ */
+function takeSnapshot(pages, checkpoint, stage) {
+  const counter = new Map();
+  const lines = {};
+  const pageMeta = [];
+  let lineCount = 0;
+  for (const pg of (pages || [])) {
+    const i = pg.index != null ? pg.index : pageMeta.length;
+    pageMeta.push({
+      i, t: pg.type || 'regular',
+      fn: (pg.footnotes || []).map(n => n.marker || '').filter(Boolean)
+    });
+    if (pg.spanning && pg.spanning.lines) {
+      for (const ln of pg.spanning.lines) {
+        lines[lineKeyOf(ln, counter)] = { p: i, c: -1, k: ln.kind || 'spanning', w: (ln.words || []).length };
+        lineCount++;
+      }
+    }
+    const cols = pg.columns || [];
+    for (let c = 0; c < cols.length; c++) {
+      for (const ln of cols[c]) {
+        lines[lineKeyOf(ln, counter)] = { p: i, c, k: ln.kind || 'line', w: (ln.words || []).length };
+        lineCount++;
+      }
+    }
+  }
+  return { checkpoint, stage, pageCount: pageMeta.length, lineCount, pages: pageMeta, lines };
+}
+
+/**
+ * delta בין שני צילומים רצופים (מקביל computeDelta ב-Gold):
+ * added (חדשות), removed (נעלמו), changed (מיקום/טור/תוכן השתנו).
+ * מפתח לפי עמוד היעד של הרשומה (after) וגם עמוד המקור (before) — כך
+ * המשתמש רואה גם "מאיפה זה בא" וגם "לאן זה הלך".
+ */
+function diffSnapshots(prev, curr) {
+  const byPage = {};
+  const touch = (page, entry) => {
+    const key = String(page);
+    (byPage[key] = byPage[key] || { added: [], removed: [], changed: [] });
+    byPage[key][entry.op].push(entry);
+  };
+  const prevKeys = new Set(Object.keys(prev.lines));
+  const currKeys = new Set(Object.keys(curr.lines));
+  let added = 0, removed = 0, changed = 0;
+  for (const key of currKeys) {
+    if (!prevKeys.has(key)) {
+      const a = { op: 'added', key, before: null, after: curr.lines[key] };
+      touch(curr.lines[key].p, a); added++;
+    } else {
+      const b = prev.lines[key], a = curr.lines[key];
+      if (b.p !== a.p || b.c !== a.c || b.k !== a.k || b.w !== a.w) {
+        const ch = { op: 'changed', key, before: b, after: a };
+        touch(a.p, ch); if (b.p !== a.p) touch(b.p, ch);
+        changed++;
+      }
+    }
+  }
+  for (const key of prevKeys) {
+    if (!currKeys.has(key)) {
+      const r = { op: 'removed', key, before: prev.lines[key], after: null };
+      touch(prev.lines[key].p, r); removed++;
+    }
+  }
+  return {
+    from: prev.checkpoint, to: curr.checkpoint,
+    fromPageCount: prev.pageCount, toPageCount: curr.pageCount,
+    totals: { added, removed, changed },
+    pages: byPage
+  };
+}
+
+/**
+ * §2.4 בתוכנית האב — הקשר-עמוד לכל ממצא: מצבם של הרכיבים ה**אחרים** בעמוד
+ * שנוספו/הוסרו/שינו מיקום מנקודת הביקורת שבה נראה הממצא לראשונה ועד הסוף.
+ * הממצא עצמו (שורות הטוקן שלו) מוחרג — ההקשר הוא הסביבה, לא הממצא.
+ * הערת ייחוס: מדדי העמודים ב-delta הם של הצילום שבו נמדדו (לפני/אחרי
+ * הזזות מבניות); רשומה נכנסת אם היא נוגעת בעמוד הממצא בצילום כלשהו מאז הופעתו.
+ */
+function buildFindingsContext(ledger, deltas, opts = {}) {
+  const maxPerFinding = opts.maxPerFinding || 24;
+  const ctx = {};
+  for (const rec of ledger.issues.values()) {
+    if (rec.page == null) continue;
+    const cpIdx = STAGE_TO_CP[rec.first_seen_stage] != null ? STAGE_TO_CP[rec.first_seen_stage] : 0;
+    const targetTok = String(rec.target || '');
+    const others = [];
+    for (let k = cpIdx; k < deltas.length && others.length < maxPerFinding; k++) {
+      const d = deltas[k];
+      for (const [pageIdx, ops] of Object.entries(d.pages)) {
+        if (Number(pageIdx) !== rec.page) continue;
+        for (const op of ['added', 'removed', 'changed']) {
+          for (const e of ops[op]) {
+            // הממצא עצמו — שורות הטוקן של היעד — מוחרג מההקשר
+            if (targetTok && e.key.startsWith(targetTok + '#')) continue;
+            others.push({ from: d.from, to: d.to, op: e.op, key: e.key, before: e.before, after: e.after });
+            if (others.length >= maxPerFinding) break;
+          }
+          if (others.length >= maxPerFinding) break;
+        }
+        if (others.length >= maxPerFinding) break;
+      }
+    }
+    ctx[rec.issue_id] = {
+      page: rec.page,
+      since_checkpoint: cpIdx,
+      first_seen_stage: rec.first_seen_stage,
+      others_changed: others,
+      truncated: others.length >= maxPerFinding
+    };
+  }
+  return ctx;
+}
+
+/**
+ * §2.3 בתוכנית האב — מיפוי מלא של 10 מצבי החיים של RED אל 7 קטגוריות הסיבתיות
+ * של Gold V21 (§4 ב-step-by-step-audit-Method.md). פונקציה טהורה — ללא ריצה.
+ *
+ *  RED (ledger-v2)                → Gold V21
+ *  ---------------------------------------------------------------
+ *  correction-reverted            → correction-reverted
+ *  reintroduced                   → correction-reverted (נתקן וחזר)
+ *  competing-repair-side-effect   → correction-reverted (ריפוי התנגש בריפוי
+ *                                   אחר — תיקון בוטל ע"י תיקון אחר)
+ *  resolved (סופי)                → fixed-by-stage
+ *  became-observable-later        → couldnt-appear-before
+ *  created + העמוד לא היה קיים    → couldnt-appear-before
+ *  created בצילום הראשון          → created-at-first-checkpoint
+ *  created מאוחר (העמוד קיים)     → created-by-stage
+ *  correction-blocked             → לפי מקור היצירה (created-*) — חסימת
+ *                                   התיקון אינה משנה את מועד היצירה
+ *                                   (המידע על החסימה נשאר במצבי RED)
+ *  unresolved / not-comparable    → unresolved
+ *  never-appeared (Gold)          → לא מצב ריצה ב-RED — מכוסה ב-negative
+ *                                   controls (audit-sensitivity מוכיח גילוי)
+ */
+function goldCausalityOf(rec, checkpointsMeta) {
+  const states = rec.transitions.map(t => t.state);
+  if (states.includes('correction-reverted') || states.includes('reintroduced') ||
+      states.includes('competing-repair-side-effect')) return 'correction-reverted';
+  if (rec.status === 'resolved') return 'fixed-by-stage';
+  if (rec.status === 'unresolved' || rec.status === 'not-comparable') return 'unresolved';
+  if (states.includes('became-observable-later')) return 'couldnt-appear-before';
+  const first = rec.transitions[0];
+  const cpIdx = first && STAGE_TO_CP[first.stage] != null ? STAGE_TO_CP[first.stage] : 0;
+  if (checkpointsMeta && checkpointsMeta.length && rec.page != null && cpIdx > 0) {
+    const prev = checkpointsMeta[cpIdx - 1];
+    if (prev && rec.page >= prev.pageCount) return 'couldnt-appear-before'; // העמוד לא היה קיים עדיין
+  }
+  if (cpIdx === 0) return 'created-at-first-checkpoint';
+  return 'created-by-stage';
+}
+
+/**
+ * עוקב לכידות לאורך ה-pipeline. העצם אינו נוגע במודל — ה-pipeline מזרים לו
+ * את מצב העמודים בכל נקודת ביקורת והוא בונה את האבחון הסופי.
+ */
+function createSnapshotTracker() {
+  const snapshots = [];
+  return {
+    capture(pages, checkpoint, stage) {
+      snapshots.push(takeSnapshot(pages, checkpoint, stage));
+      return snapshots[snapshots.length - 1];
+    },
+    /** האסוף הסופי: מטא-נתונים, deltas, הקשר-עמוד לממצאים וסיכום סיבתי Gold. */
+    finalize(ledger) {
+      if (!snapshots.length) return null;
+      const deltas = [];
+      for (let i = 1; i < snapshots.length; i++) deltas.push(diffSnapshots(snapshots[i - 1], snapshots[i]));
+      const checkpoints = snapshots.map(s => ({
+        checkpoint: s.checkpoint, stage: s.stage,
+        pageCount: s.pageCount, lineCount: s.lineCount
+      }));
+      const findingsContext = ledger ? buildFindingsContext(ledger, deltas) : {};
+      const goldSummary = {};
+      if (ledger) {
+        for (const rec of ledger.issues.values()) {
+          const g = goldCausalityOf(rec, checkpoints);
+          goldSummary[g] = (goldSummary[g] || 0) + 1;
+        }
+      }
+      // אינווריאנט נוסף שנגזר חינם: יציבות השורות בין הצילום האחרון לפני הסוף
+      // לבין הסופי — גרסה פר-שורה של הוכחת bodyGeometryHash (D-47).
+      const last = deltas[deltas.length - 1];
+      const finalStable = last
+        ? last.totals.added === 0 && last.totals.removed === 0 && last.totals.changed === 0
+        : true;
+      return {
+        schema: 'stage-snapshots-v1',
+        checkpoints, deltas, findingsContext,
+        gold_causality: { summary: goldSummary },
+        final_stable: finalStable
+      };
+    }
+  };
+}
+
+module.exports = {
+  STAGE_TO_CP,
+  pageLinesOf,
+  lineKeyOf,
+  takeSnapshot,
+  diffSnapshots,
+  buildFindingsContext,
+  goldCausalityOf,
+  createSnapshotTracker
+};
+
+};
 __modules["src/engine/decoration/shaar-pages.js"] = function (require, module, exports) {
 // src/engine/decoration/shaar-pages.js — Structural shaar page insertion: PT-01/02/03 (S8)
 'use strict';
@@ -11504,6 +11832,9 @@ function serializeTypesetResult(result) {
     numberingAudit: result.numberingAudit,
     tokens: result.tokens.map(t => ({ id: t.id, type: t.type, level: t.level || null, raw: t.raw || '' })),
     droppedEvents: result.events.droppedEvents,
+    // **S1-ח (gap-Gold-V21):** אבחון צילומי-מצב — additive; null כשכובה
+    // (ברירת מחדל). חוזה ui-result-v1 נשמר: שדה חדש עם ברירת-מחדל ריקה.
+    stageSnapshots: result.stageSnapshots || null,
     recommendations: result.recommendations || null,   // **S11:** המלצות עריכה עם הוכחות (plain)
     customStyles: result.customStyles ? { ok: result.customStyles.ok, count: result.customStyles.styles.length, errors: result.customStyles.errors } : null
   };
@@ -11649,15 +11980,27 @@ function buildReport(result, opts = {}) {
   }
   const deterministic = recomputed === result.layoutHash;
   const findings = [];
+  // **S1-ח (§2.4):** הקשר-עמוד לכל ממצא — רק כשצילומי-המצב פעילים (opt-in).
+  // ההקשר מתעד את מצבם של הרכיבים ה**אחרים** בעמוד הממצא מאז הופעתו —
+  // נדרש במפורש בתוכנית האב §2.4; במצב compact (diagnostics-enabled=false)
+  // מצומצם למונים בלבד כדי לשמר נפח.
+  const snapCtx = result.stageSnapshots && result.stageSnapshots.findingsContext ? result.stageSnapshots.findingsContext : null;
   for (const rec of result.ledger.issues.values()) {
     if (NON_FINDINGS.has(rec.kind)) continue;
-    findings.push({
+    const f = {
       id: rec.issue_id, kind: rec.kind, kindHe: GEOM_KIND_NAMES[rec.kind] || rec.kind,
       target: rec.target, page: rec.page, status: rec.status,
       predicate_before: rec.predicate_before, predicate_after: rec.predicate_after,
       capacity_before: rec.capacity_before, capacity_after: rec.capacity_after,
       transitions: compact ? undefined : rec.transitions.map(t => ({ state: t.state, stage: t.stage, note: t.note }))
-    });
+    };
+    if (snapCtx && snapCtx[rec.issue_id]) {
+      const c = snapCtx[rec.issue_id];
+      f.page_context = compact
+        ? { page: c.page, since_checkpoint: c.since_checkpoint, others_changed_count: c.others_changed.length, truncated: c.truncated }
+        : c;
+    }
+    findings.push(f);
   }
   return {
     schema: 'diagnostics-v2',
@@ -11668,6 +12011,13 @@ function buildReport(result, opts = {}) {
     geometry_neutral_verified: result.geometryNeutralVerified,
     dropped_events: result.events.droppedEvents, // חייב 0
     retreat: result.retreat,
+    // **S1-ח:** אבחון צילומי-המצב — מטא בלבד בראש הדוח (ה-deltas המלאים ב-result.stageSnapshots)
+    stage_snapshots: result.stageSnapshots ? {
+      checkpoints: result.stageSnapshots.checkpoints,
+      totals: result.stageSnapshots.deltas.map(d => ({ from: d.from, to: d.to, ...d.totals })),
+      final_stable: result.stageSnapshots.final_stable,
+      gold_causality: result.stageSnapshots.gold_causality
+    } : null,
     counts: tally(findings),
     findings: compact ? findings.filter(f => f.status !== 'resolved') : findings
   };
