@@ -1,0 +1,9 @@
+input: very_long_test_text.txt — 1.84MB, 363,232 מילים
+typeset: 836 pages in 1041ms | layoutHash=legacy-94ce3fcb49b3d97c
+contentPreserved = true
+ledger content-loss records: 0
+consecutive heading lines in very_long (real corpus): 431
+same-level consecutive headings (real corpus): 0 (כל 431 הרציפויות בין-רמות; סינתטי: 27)
+note-only heading lines (real corpus): 0
+הפקה: node scripts/…/verify-verylong-legacy.js — legacyTypeset + הגדרות IMUD (הנתיב החי), commit בסיס fb114a2f, 10.11.2026
+מסקנה (D-98/S0-ג): ממצא "שתי המילים" אינו קיים במסמך הבדיקה הראשי.
