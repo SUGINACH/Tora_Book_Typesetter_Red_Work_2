@@ -128,9 +128,12 @@ describe('S62.1 שאלה 4 — איזון טורים בזרימת המקור (ס
     const corpus = fs.readFileSync(corpusPath, 'utf8');
     const rCorpus = legacyTypeset(corpus, imudSettings(), {});
     assertEq(rCorpus.contentPreserved, true, 'שימור תוכן על הקורפוס האמיתי');
-    // מסמך הבדיקה הקבוע מכיל הערות-ענק חוצות-עמודים — פגם 2-מילים
-    // **קיים מלפני התיקון** (נמדד גם על הקוד הקודם) ומדווח ב-ledger
-    // כ-content-loss — הדרישה: שהפגם לא התרחב בעקבות האיזון.
+    // מסמך הבדיקה הקבוע: היסטוריית פגם 2-המילים — הטריגר (רצף כותרות
+    // מאותה רמה בגבול טור — מבנה לא-ריאליסטי) הוסר מהמחולל מכוח D-98
+    // (S1-ב): המסמך הקבוע החדש — contentPreserved=true, 0 רשומות
+    // content-loss. השורש במנוע (rollback fall-through, מתועד ב-ISSUE_REGISTRY
+    // כ-P2) נותר מוסתר ולא נרדף מכוח D-98. הרשומה נשארת כתריס: אם הפגם
+    // יחזור בעקבות שינוי עתידי — הבדיקה תיכשל מעבר לחסם ההיסטורי.
     const loss = [...result.ledger.issues.values()].filter(x => x.kind === 'content-loss');
     const missing = loss.length ? (loss[0].predicate_before && loss[0].predicate_before.missing) || 0 : 0;
     assert(missing <= 2, `הפסד המילים המדווח התרחב מעבר לקיים-מקודם (2): ${missing}`);

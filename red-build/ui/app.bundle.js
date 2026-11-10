@@ -2070,9 +2070,21 @@ function chapterLines(rng, opts, chapterIdx) {
 
     // ציר 3 — כותרת משנה מובטחת בעמדה האמצעית (רוטציה 4/5/6 בין פרקים)
     if (i === guaranteedAt) {
+      // **D-98 (מבנה ריאליסטי — השלמה):** הענף יורה בעמדה קבועה בלי תלות
+      // בשורה הקודמת; אם האיטרציה הקודמת הסתיימה בכותרת מאותה רמה (מוגרלת
+      // או escort), נוצר רצף מאותה רמה ללא טקסט גוף — מבנה שאינו קיים באף
+      // קורפוס אמיתי. מפרידים פסקת גוף קצרה; הכיסוי המובטח של הרמה נשמר.
+      const lastGuar = lines[lines.length - 1] || '';
+      if (lastGuar.startsWith(`כותרת ${guaranteedLvl} - `)) {
+        lines.push(paragraphText(rng, randInt(rng, 12, 25)));
+      }
       lines.push(`כותרת ${guaranteedLvl} - ${subHeadingText(rng, guaranteedLvl)}`);
-      if (chance(rng, 0.25)) { // רצף כותרות — עקת escort
-        lines.push(`כותרת ${Math.min(6, guaranteedLvl + 1)} - ${subHeadingText(rng, Math.min(6, guaranteedLvl + 1))}`);
+      // **D-98 (מבנה ריאליסטי — אין רצף מאותה רמה):** רצף כותרות (עקת escort)
+      // רק כשקיימת רמת-בן אמיתית בטווח 4..6. בעבר Math.min(6, lvl+1) קרס
+      // לרמה 6 כשההורה 6 ⇒ זוג 6+6 צמוד ללא טקסט גוף — מבנה שאינו קיים
+      // באף קורפוס אמיתי (very_long: 431 רצפים, כולם בין-רמות, 0 מאותה רמה).
+      if (guaranteedLvl < 6 && chance(rng, 0.25)) {
+        lines.push(`כותרת ${guaranteedLvl + 1} - ${subHeadingText(rng, guaranteedLvl + 1)}`);
       }
       blocksSinceHeading = 0;
       continue;
@@ -2082,8 +2094,10 @@ function chapterLines(rng, opts, chapterIdx) {
     if (blocksSinceHeading >= 2 && r < 0.22) {
       const lvl = isTop ? randInt(rng, 4, 5) : isBottom ? randInt(rng, 5, 6) : randInt(rng, 4, 6);
       lines.push(`כותרת ${lvl} - ${subHeadingText(rng, lvl)}`);
-      if (chance(rng, 0.25)) { // רצף כותרות — עקת escort
-        lines.push(`כותרת ${Math.min(6, lvl + 1)} - ${subHeadingText(rng, lvl + 1)}`);
+      // **D-98 (מבנה ריאליסטי — אין רצף מאותה רמה):** כמו בכותרת המובטחת —
+      // escort רק עם רמת-בן אמיתית (lvl<6); זוג 6+6 צמוד הוא מבנה לא-ריאליסטי.
+      if (lvl < 6 && chance(rng, 0.25)) {
+        lines.push(`כותרת ${lvl + 1} - ${subHeadingText(rng, lvl + 1)}`);
       }
       blocksSinceHeading = 0;
       continue;
@@ -12623,7 +12637,11 @@ function legacyTypeset(rawText, settings, env) {
          * לפיצול) — כמו 5 העמודים המגבלים בייחוס המקור עצמו. */
         const balanceAndReport = (why) => {
           balanceBlock(blk, availH);
-          const eff = effCols(blk);
+          // **S1-ב:** הן התנאי והן הנתונים ברשומה — ברמת העמוד (pageEffCols),
+          // לא ברמת הבלוק הנסגר. בלוק קצר שנסגר בטור ימני בלבד באמצע עמוד
+          // מלא הוא טיפוגרפיה תקינה ואינו מדווח; עמוד שטורו השמאלי ריק באמת
+          // ממשיך להיות מדווח וממופה לאינדקס הסופי.
+          const eff = pageEffCols();
           const aH = colHeightUnits(eff[0]);
           const bH = colHeightUnits(eff[1]);
           // **S6.3:** הסף מההגדרות (imbalance-max-delta-px; היה 60px קשיח —
@@ -12747,6 +12765,25 @@ function legacyTypeset(rawText, settings, env) {
       /** הטורים האפקטיביים של בלוק — אחרי איזון ה-split הם הסמכות (layoutStack
        * קורא מהם); מתיחה/כיווץ/משיכה חייבות לפעול על אותן יחידות בדיוק. */
       const effCols = (blk) => blk.split ? [blk.split.r, blk.split.l] : [blk.cols[0], blk.cols[1]];
+      /** **S1-ב (אמת-דיווח ברמת העמוד):** עמודות אפקטיביות מאוחדות של כל
+       * הבלוקים במחסנית העמוד. רשומות אי-האיזון נקראות על-ידי המשתמש, ה-UI
+       * והבדיקות כטענה על **העמוד** ("טור שמאלי ריק לחלוטין" — בקשת המשתמש
+       * המפורשת), אך נמדדו עד כה על **הבלוק הנסגר בלבד**: בעמוד רב-בלוקים
+       * נרשם emptyCol=true על עמוד שטורו השמאלי מלא מבלוקים קודמים (הוכחה:
+       * מסמך הבדיקה הקבוע לאחר D-98 — רשומות שהצביעו על עמודים עם 13/29/21
+       * שורות בטור השמאלי). המדידה עוברת לרמת העמוד; לוגיקת האיזון
+       * עצמה (balanceBlock, סעיף 3 של המקור) אינה מושפעת — השינוי בדיווח
+       * בלבד, וה-layoutHash אינו כולל את ה-ledger (הוכחה בבדיקת הרצה). */
+      const pageEffCols = () => {
+        const r = [], l = [];
+        for (const b of stack) {
+          if (b.type === 'span') continue;
+          const e = effCols(b);
+          r.push(...e[0]);
+          l.push(...e[1]);
+        }
+        return [r, l];
+      };
 
       /** v21 columnStretchCapacity: כמה px אפשר למתוח טור — ריווח-פסקה עד
        * JUSTIFY_MAX_GAP + תוספת פס עד JUSTIFY_MAX_LH_EXTRA (האחרון של הטור
