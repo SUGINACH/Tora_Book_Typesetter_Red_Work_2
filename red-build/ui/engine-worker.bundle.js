@@ -418,6 +418,8 @@ var __paths = {
   "src/engine/output/geometry-projector.js|./line-font": "src/engine/output/line-font.js",
   "src/engine/output/geometry-projector.js|./shaar-content": "src/engine/output/shaar-content.js",
   "src/engine/output/geometry-projector.js|../decoration/ornament-ink": "src/engine/decoration/ornament-ink.js",
+  "src/engine/output/geometry-projector.js|../extensions/style-schema": "src/engine/extensions/style-schema.js",
+  "src/engine/output/geometry-projector.js|../extensions/apply-styles": "src/engine/extensions/apply-styles.js",
   "src/engine/output/legacy-projector.js|../layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
   "src/engine/output/legacy-projector.js|./line-font": "src/engine/output/line-font.js",
   "src/engine/output/legacy-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
@@ -16467,11 +16469,51 @@ function lastAlignOf(ln, settings) {
  * הקרנת שורה בודדת: מילים עם מיקומי x מפורשים (RTL — מימין לשמאל).
  * @param {string} align — 'justify' | 'right' | 'center'
  */
+/** **S68 (R2-M6):** מפת גורמי גודל של סגנונות inline מותאמים — עם מטמון
+ *  פר-settings (WeakMap) כדי שלא לפרסר את ה-JSON בכל שורה מוקרנת.
+ *  אותו חישוב כמו בפענוח (pipeline→inlineSizeFactor) — מקור יחיד לגורם. */
+const _csFactorCache = new WeakMap();
+function customFactorMapOf(settings) {
+  if (!settings || !settings._customStyles) return null;
+  let m = _csFactorCache.get(settings);
+  if (!m) {
+    m = new Map();
+    try {
+      const { parseCustomStyles } = require('../extensions/style-schema');
+      const { inlineSizeFactor } = require('../extensions/apply-styles');
+      const res = parseCustomStyles(settings._customStyles);
+      for (const st of (res.styles || [])) {
+        const f = inlineSizeFactor(st.style, settings['body-font-size-pt']);
+        if (Number.isFinite(f) && f > 0) m.set(st.id, f);
+      }
+    } catch (e) { /* סגנונות שבורים — גורם 1 במקום קריסה */ }
+    _csFactorCache.set(settings, m);
+  }
+  return m;
+}
+
 function projectLine(ln, colX, y, colW, settings, measure, align) {
   const sizePt = lineFontSizePt(ln, settings);
+  // **S68 (R2-M6 — סגירת פער PDF↔DOM):** גודל אפקטיבי פר-מילה. המודל נמדד
+  // בסקאלות אלה בזמן הפענוח (measureWithParen: paren×scale, custom×factor)
+  // וה-DOM מציג אותן כך (span.w--paren / span.w--custom); ההקרנה ל-PDF חייבת
+  // למדוד ולהציג באותם גדלים — אחרת מילות הסוגריים/הסגנון חורגות מה-DOM
+  // ומהמודל שנמדד. ה-pdf-writer מכבד w.sizePt פר-מילה ממילא.
+  const parenScale = Number(settings['paren-style-scale']) || 1;
+  const csFactors = (ln.customSpans && ln.customSpans.length) ? customFactorMapOf(settings) : null;
+  const parenSet = (ln.parenSpans && ln.parenSpans.length && parenScale !== 1) ? new Set(ln.parenSpans) : null;
+  const effSizeOf = (i) => {
+    let s = sizePt;
+    if (csFactors) {
+      const cs = ln.customSpans.find((c) => c.wi === i);
+      if (cs) { const f = csFactors.get(cs.styleId); if (f != null) s *= f; }
+    }
+    if (parenSet && parenSet.has(i)) s *= parenScale;
+    return s;
+  };
   const words = (ln.words || []).map(w => scrubPUAText(String(w).replace(/\u00A0/g, ' '))).filter(Boolean);
   const spaceW = measure.measureTextWidth(' ', sizePt, 0);
-  const widths = words.map(w => measure.measureTextWidth(w, sizePt));
+  const widths = words.map((w, i) => measure.measureTextWidth(w, effSizeOf(i)));
   const sumW = widths.reduce((s, w) => s + w, 0);
   const gaps = Math.max(0, words.length - 1);
 
@@ -16493,8 +16535,11 @@ function projectLine(ln, colX, y, colW, settings, measure, align) {
   const wordPos = [];
   let cursor = xRight;
   for (let i = 0; i < words.length; i++) {
+    const eff = effSizeOf(i);
     cursor -= widths[i];
-    wordPos.push({ text: words[i], x: cursor, w: widths[i] });
+    // **S68:** סמן גודל פר-מילה רק כשהוא שונה מגודל השורה — שורות רגילות
+    // (ברירת מחדל, בלי סוגריים/סגנון) נשארות בדיוק כפי שהיו (נייטרליות).
+    wordPos.push({ text: words[i], x: cursor, w: widths[i], ...(eff !== sizePt ? { sizePt: eff } : {}) });
     cursor -= gapW;
   }
 
