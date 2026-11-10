@@ -319,6 +319,7 @@ var __paths = {
   "src/engine/core/pipeline.js|../extensions/apply-styles": "src/engine/extensions/apply-styles.js",
   "src/engine/core/pipeline.js|../decoration/ornament-fit": "src/engine/decoration/ornament-fit.js",
   "src/engine/core/pipeline.js|../../audit/stage-snapshots": "src/audit/stage-snapshots.js",
+  "src/engine/core/pipeline.js|../notes/markers": "src/engine/notes/markers.js",
   "src/engine/core/pipeline.js|../decoration/shaar-pages": "src/engine/decoration/shaar-pages.js",
   "src/engine/core/pipeline.js|../decoration/custom-pages": "src/engine/decoration/custom-pages.js",
   "src/engine/core/pipeline.js|../decoration/toc-builder": "src/engine/decoration/toc-builder.js",
@@ -1139,6 +1140,22 @@ function typeset(rawText, settingsIn, env = {}) {
   const planned = planPages(blocks, settings, eventLog, ledger, { measure: (t2, s2) => api.measureTextWidth(t2, s2), onProgress });
   let { pages } = planned;
   prog('page-plan', 70, 'הפריסה הושלמה', { totalPages: pages.length, pageIndex: pages.length });
+
+  // **S67 (R2-M4 — סגירת no-op):** מדיניות איפוס פר-עמוד — הסמנים הוקצו בפענוח
+  // (בטרם נודעו העמודים), ולכן מחדש-מספור לפי עמוד ההופעה הראשון מתבצע כאן,
+  // אחרי התכנון ולפני כל צילום-מצב/עיטור/מדידה של CP4. הסמנים רק מתקצרים
+  // (מספר פר-עמוד ≤ הרציף) ⇒ אין סיכון עטיפה מחדש. ברירת המחדל (section) —
+  // המעבר אינו פועל כלל; במצב endnotes אין מרזב פר-עמוד ואין טעם באיפוס.
+  if (resetPolicy === 'page' && notesMode === 'footnotes') {
+    const customMarks = new Set(customFootnoteMarkers.values());
+    const { renumbered, skipped } = require('../notes/markers').renumberPageScopedMarkers(pages, {
+      markerStyle, markersByToken, customMarks, blocks, eventLog,
+    });
+    if (renumbered > 0) {
+      eventLog.emit('notes', 'fn-reset-page-applied', { renumbered, skipped: skipped || null });
+    }
+  }
+
   if (snapTracker) {
     snapTracker.capture(pages, 'cp3-dp', 'page-plan');
     eventLog.emit('page-plan', 'stage-snapshot-captured', { checkpoint: 'cp3-dp', pageCount: pages.length });
@@ -5044,7 +5061,115 @@ function makeCounter(policy, start = 0) {
 // היה מבתק שעות (12:30) אם אי־פעם היה נעשה בו שימוש חוזר; ה-placeholder
 // האמיתי של D-30 משתמש ב-U+E000 (ראה explodePlaceholderWord ב-pipeline).
 
-module.exports = { markerFor, makeCounter, hebrewMarkFinish, HEB_LETTERS, MARK_TAG: '\uE102' };
+/**
+ * **S67 (R2-M4 — סגירת no-op):** מחדש-מספור סמני הערות-שוליים במדיניות
+ * footnote-reset-policy='page'. הרקע: הסמנים מוקצים בזמן הפענוח — בטרם
+ * ידוע לאיזה עמוד כל הערה תיפול — ולכן המונה במדיניות 'page' קיבל תמיד
+ * את אותו מפתח-היקף ('?') והתנהג כ-continuous (no-op). הפתרון: הקצאה
+ * עקבית-מסמך בפענוח (סמנים ישנים ייחודיים), ולאחר תכנון העמודים — כשכל
+ * הערה כבר קשורה לעמוד — מעבר מחדש-מספור לפי עמוד הופעתה הראשון.
+ *
+ * בטיחות גיאומטרית: מספר פר-עמוד תמיד ≤ המספר הרציף ⇒ הסמן רק מתקצר
+ * (או נשאר) ⇒ שום שורה לא מתארכת ואין סיכון עטיפה מחדש; שברי המשך
+ * ('split-rest') והצגות חוזרות יורשים את סמן ההופעה הראשונה (סמן אחיד — D-30).
+ *
+ * @param {Array} pages - עמודי המודל (לאחר planPages; footnotes מצורפות)
+ * @param {object} opts - { markerStyle, markersByToken, customMarks, blocks, eventLog }
+ *   markersByToken: Map tokenId→[{noteIndex,marker}] (הסמנים הישנים — מהפענוח)
+ *   customMarks: Set של סמני סגנונות-מותאמים — בהתנגשות עם סמן ישן מדלגים
+ *                בבטחה (אין דריסה עיוורת של סמן מותאם).
+ * @returns {{renumbered:number, skipped:string|null}} — כמה סמנים הוחלפו; אם דילוג — סיבתו.
+ */
+function renumberPageScopedMarkers(pages, opts) {
+  const { markerStyle, markersByToken, customMarks, blocks, eventLog } = opts || {};
+  const tokenMark = new Map(); // tokenId → סמן חדש (מופע ראשון)
+
+  // שלב א (תכנון בלבד — בלי מוטציה): מספור פר-עמוד לפי סדר הופעה ראשון
+  let anyChange = false;
+  for (const pg of pages) {
+    let seq = 0;
+    for (const n of (pg.footnotes || [])) {
+      if (!n || n.tokenId == null) continue;
+      if (!tokenMark.has(n.tokenId)) {
+        seq += 1;
+        tokenMark.set(n.tokenId, markerFor(seq, markerStyle));
+      }
+      if (n.marker !== tokenMark.get(n.tokenId)) anyChange = true;
+    }
+  }
+  if (!anyChange) return { renumbered: 0, skipped: null };
+
+  // שלב ב: מפת סמן-ישן→סמן-חדש (הסמנים הישנים ייחודיים — הקצאה רציפה).
+  // הבדיקה קודמת לכל מוטציה: התנגשות עם סמן מותאם ⇒ דילוג מלא ונקי.
+  const oldToNew = new Map();
+  for (const [tokenId, assigns] of (markersByToken || new Map())) {
+    const nm = tokenMark.get(tokenId);
+    if (nm == null) continue;
+    for (const a of assigns) {
+      if (a.marker !== nm) oldToNew.set(a.marker, nm);
+    }
+  }
+  for (const oldM of oldToNew.keys()) {
+    if (customMarks && customMarks.has(oldM)) {
+      if (eventLog) eventLog.emit('notes', 'fn-renumber-page-skip', { reason: 'custom-marker-collision', marker: oldM });
+      return { renumbered: 0, skipped: 'custom-marker-collision' };
+    }
+  }
+  if (!oldToNew.size) return { renumbered: 0, skipped: null };
+
+  // שלב ג (החלה): מרזב — כל מופע/שבר/הצגה-חוזרת מקבל את סמן המופע הראשון
+  let renumbered = 0;
+  for (const pg of pages) {
+    for (const n of (pg.footnotes || [])) {
+      if (!n || n.tokenId == null) continue;
+      const nm = tokenMark.get(n.tokenId);
+      if (nm != null && n.marker !== nm) { n.marker = nm; renumbered++; }
+    }
+  }
+
+  // שלב ד: החלפה בגוף המסמך — שתי תבניות מילה:
+  //   (1) סמן מתויג (D-53): …\uE102סמן (לפני NBSP או בסוף המילה)
+  //   (2) הערה שנדחתה לגוף: סמן\uE000טקסט (בראש המילה)
+  const esc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const res = [];
+  for (const [oldM, newM] of oldToNew) {
+    res.push([new RegExp('\\uE102' + esc(oldM) + '(?=\\u00A0|$)', 'g'), '\uE102' + newM]);
+    res.push([new RegExp('^' + esc(oldM) + '\\uE000'), newM + '\uE000']);
+  }
+  let touchedWords = 0;
+  for (const pg of pages) {
+    for (const col of (pg.columns || [])) {
+      for (const ln of col) {
+        if (!Array.isArray(ln.words)) continue;
+        for (let wi = 0; wi < ln.words.length; wi++) {
+          const w = ln.words[wi];
+          if (typeof w !== 'string') continue;
+          let out = w;
+          for (const [re, to] of res) out = out.replace(re, to);
+          if (out !== w) { ln.words[wi] = out; touchedWords++; }
+        }
+      }
+    }
+  }
+
+  // שלב ה: עדכון הרישומים (noteAssignments/rejectedNotes של הבלוקים) — אמת-דיווח
+  for (const [, assigns] of (markersByToken || new Map())) {
+    for (const a of assigns) {
+      const nm = oldToNew.get(a.marker);
+      if (nm != null) a.marker = nm;
+    }
+  }
+  for (const b of (blocks || [])) {
+    for (const n of (b.rejectedNotes || [])) {
+      const nm = oldToNew.get(n.marker);
+      if (nm != null) n.marker = nm;
+    }
+  }
+  if (eventLog) eventLog.emit('notes', 'fn-renumber-page', { renumbered, touchedWords });
+  return { renumbered, touchedWords, skipped: null };
+}
+
+module.exports = { markerFor, makeCounter, hebrewMarkFinish, HEB_LETTERS, renumberPageScopedMarkers, MARK_TAG: '\uE102' };
 
 };
 __modules["src/engine/layout/retreat-loop.js"] = function (require, module, exports) {

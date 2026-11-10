@@ -587,6 +587,22 @@ function typeset(rawText, settingsIn, env = {}) {
   const planned = planPages(blocks, settings, eventLog, ledger, { measure: (t2, s2) => api.measureTextWidth(t2, s2), onProgress });
   let { pages } = planned;
   prog('page-plan', 70, 'הפריסה הושלמה', { totalPages: pages.length, pageIndex: pages.length });
+
+  // **S67 (R2-M4 — סגירת no-op):** מדיניות איפוס פר-עמוד — הסמנים הוקצו בפענוח
+  // (בטרם נודעו העמודים), ולכן מחדש-מספור לפי עמוד ההופעה הראשון מתבצע כאן,
+  // אחרי התכנון ולפני כל צילום-מצב/עיטור/מדידה של CP4. הסמנים רק מתקצרים
+  // (מספר פר-עמוד ≤ הרציף) ⇒ אין סיכון עטיפה מחדש. ברירת המחדל (section) —
+  // המעבר אינו פועל כלל; במצב endnotes אין מרזב פר-עמוד ואין טעם באיפוס.
+  if (resetPolicy === 'page' && notesMode === 'footnotes') {
+    const customMarks = new Set(customFootnoteMarkers.values());
+    const { renumbered, skipped } = require('../notes/markers').renumberPageScopedMarkers(pages, {
+      markerStyle, markersByToken, customMarks, blocks, eventLog,
+    });
+    if (renumbered > 0) {
+      eventLog.emit('notes', 'fn-reset-page-applied', { renumbered, skipped: skipped || null });
+    }
+  }
+
   if (snapTracker) {
     snapTracker.capture(pages, 'cp3-dp', 'page-plan');
     eventLog.emit('page-plan', 'stage-snapshot-captured', { checkpoint: 'cp3-dp', pageCount: pages.length });
