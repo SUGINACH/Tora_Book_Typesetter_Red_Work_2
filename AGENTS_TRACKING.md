@@ -2,7 +2,7 @@
 
 > **מסמך:** טבלת המעקב האחת המחייבת של חמשת הסוכנים — תוצר חובה של סוכן 5
 > (תוכנית האב §9.2, תוכנית ההפעלה §6 משימה 3).
-> **עודכן:** 11.11.2026, מחזור S1-ז · **בסיס:** ‏4dbadce (main).
+> **עודכן:** 11.11.2026, מחזור S1-ח · **בסיס:** ‏34208e9 (main).
 > מקורות משנה: WORKLOG (יומן מלא), ISSUE_REGISTRY (ממצאים), DECISIONS (D-92–D-100),
 > audits/IMPLEMENTATION_STATUS.md (מיפוי 98 פריטי התוכניות).
 
@@ -11,7 +11,7 @@
 | סוכן | תפקיד | ענף בפועל | משימת הפתיחה (תוכנית ההפעלה) | מצב | תוצרים / ראיות |
 |---|---|---|---|---|---|
 | 1 — UI ותפעול | הממשק ככלי עבודה למנוע | `feature/agent-1-ui-orange` | אודיט תפעולי של ה-UI הקיים | **בוצע** (S1-ה, ‏PR #8) | `audits/UI_OPERATIONAL_AUDIT.md` — 3 רמות ראיה; ‏U-1/U-2 תוקנו (כפתור ⏹, צ'יפ מידע-ריצה); ‏s63 ‏7/7 |
-| 2 — מנוע ואבחון סיבתי | תיקון כשלים מוכחים במנוע + השלמת אבחון | `feature/agent-2-debug-gold` | מפת pipeline + מיפוי EventLog/Ledger/trace מול Gold V21 | **חלקי** | מפת pipeline קיימת (LAYOUT_DEPENDENCY_MAP.md); שימור תוכן אומת; ‏P6/P7 נסגרו (D-99/D-100); **U-5 תוקן** (S1-ז); gap analysis מול Gold V21 — פתוח |
+| 2 — מנוע ואבחון סיבתי | תיקון כשלים מוכחים במנוע + השלמת אבחון | `feature/agent-2-debug-gold` | מפת pipeline + מיפוי EventLog/Ledger/trace מול Gold V21 | **בוצע** (S1-ח) | מפת pipeline קיימת (LAYOUT_DEPENDENCY_MAP.md); שימור תוכן אומת; ‏P6/P7 ‏נסגרו; ‏U-5 ‏תוקן; ‏**gap-Gold-V21 נסגר** — דוח `audits/GOLD_V21_GAP_ANALYSIS.md` + מימוש stage-snapshots (חתימות/deltas/הקשר-עמוד/סיווג Gold); ‏18 ‏בדידות רגרסיה; ‏no-op proof |
 | 3 — גופנים וביצועים | מדידה ואופטימיזציה מוכחת בלבד | `feature/agent-3-font-yellow` | אודיט ביצועים ומפת גופנים | **בוצע** (S1-ו, ‏PR #9) | `audits/PERFORMANCE_BASELINE.md` + ‏perf-baseline.json; ‏P-1 צוואר מוכח; **P-1 מומש** (S1-ז — אינדקס עיצובים) |
 | 4 — בדיקות ואימות | הראיות: baseline, fixtures, רגרסיה | `feature/agent-4-testing-green` | baseline מלא על commit מזוהה | **בוצע** (S0, ‏PR #1) | `audits/baseline_S0/` ‏(6f80156, ‏672/33/0); ‏fixtures אמיתיים; ‏negative-controls ‏19 |
 | 5 — תיעוד ואינטגרציה | מקור אמת תיעודי, תיאום, שערים | `feature/agent-5-docs-release` | מפת מסמכי אמת + טבלת מעקב | **בוצע** (S1-ד → ‏S1-ז) | מסמכי האמת מסונכרנים; `audits/IMPLEMENTATION_STATUS.md` (98 פריטים); **מסמך זה** |
@@ -20,6 +20,7 @@
 
 | מחזור | תאריך | סוכנים | תוכן | ענף/PR |
 |---|---|---|---|---|
+| S1-ח | 11.11 | 2, 4, 5 | **gap-Gold-V21** — דוח ניתוח הפערים מול Gold V21 (`audits/GOLD_V21_GAP_ANALYSIS.md` — מיפוי 15 יכולות, החלטות לא-רלוונטי מנומקות) + מימוש מלא של snapshot/diff: ‏`src/audit/stage-snapshots.js` (חתימות tokenId#lineIdx, ‏diffSnapshots, ‏buildFindingsContext, ‏goldCausalityOf) חובר ל-4 נקודות ביקורת ב-pipeline; ‏opt-in ‏audit-stage-snapshots; ‏page_context בדוח; ‏stageSnapshots ב-Worker; ‏D-101; ‏18 בדידות חדשות; ‏710/710; ‏קנוני 80f9ed6c זהה לנעילה | PR מחזור זה |
 | S1-ז | 11.11 | 2, 3, 4, 5 | **U-5** — השלמת חוזה ‏contentHashIn בנתיב המורשת (נייטרליות hash הוכחה: `legacy-21a784893acc0201` זהה); **P-1** — אינדקס עיצובים קל ‏(7.41MB→68.3K, ‏92% מהעלייה) + ‏SVG לפי דרישה (נייטרליות הוכחה: קנוני `80f9ed6c…`, ‏very_long ‏DP `531f2154…`, מורשת `legacy-94ce3fcb…` — זהים); שתי סוויטות רגרסיה חדשות (6+7 בדידות); טבלת מעקב זו; רענון IMPLEMENTATION_STATUS | ‏PRs של מחזור זה |
 | S1-ו | 11.11 | 3 | דוח ביצועים בסיסי — 5 מסמכים + נתיב מורשת + ייצוא + עלייה בדפדפן; צוואר P-1 מוכח + הצעה יחידה; P-2/P-3/P-4 מתועדים | PR #9 |
 | S1-ה | 11.11 | 1 | אודיט תפעולי UI — שני חסמים תוקנו (U-1 ביטול, U-2 מידע ריצה); ‏U-3/U-4/U-5 תועדו; נייטרליות מנוע הוכחה | PR #8 |
@@ -35,7 +36,7 @@
 
 | מזהה | בעלים | חומרה | תיאור | תלות |
 |---|---|---|---|---|
-| gap-Gold-V21 | סוכן 2 | בינוני | gap analysis כתוב: אבחון RED (EventLog/Ledger/trace/CP1–CP5) מול step-by-step audit של Gold V21 — קיים/חסר/חלקי/לא רלוונטי | גישה למאגר Gold (מקור עיון) |
+| ~~gap-Gold-V21~~ | סוכן 2 | **נסגר (S1-ח)** | דוח `audits/GOLD_V21_GAP_ANALYSIS.md` הופק מול הקוד בפועל של Gold V21; ‏הפערים שהוכחו מומשו (stage-snapshots); ‏נותר פתוח-משותף אחד: השוואת gold_causality בין קומיטים ב-CI (‏P3, ‏גם ב-Gold TBD) | — |
 | SRS-12-2 | סוכן 1/2 | P3 | split-book-title (SRS §12.2) — אין מימוש; לא נתבקש מעולם על ידי המשתמש; ייסגר בעת סגירת שער SRS אם יידרש | הכרעת משתמש אם תידרש |
 | U-3, U-4 | סוכן 1 | נמוך | מתועדים בלבד (ledger כטבלה; ‏commit מנוע בזמן בנייה) — אין צורך מוכח | — |
 | P-2, P-3 | סוכן 2 | בינוני (מנועי) | scanBrackets ‏257ms; ‏layoutLines ‏556ms — מועמדים למטמון; רק אם יידרש | מדידה נוספת לפני מימוש |

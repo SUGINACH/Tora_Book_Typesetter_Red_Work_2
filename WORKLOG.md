@@ -2951,3 +2951,50 @@ sha256, דטרמיניזם, רגישות קלט, אי-תלות בהגדרות, �
 **עדכוני מסמכים:** ‏ISSUE_REGISTRY ‏(U-5→תוקן, ‏P-1→מומש); ‏WORKLOG
 (רשומה זו); ‏AGENTS_TRACKING.md (חדש); ‏IMPLEMENTATION_STATUS.md (רענון
 סעיפים שהושפעו).
+
+## S1-ח (11.11 — gap-Gold-V21: ניתוח הפערים מול Gold V21 + מימוש snapshot/diff; סגירת משימת הפתיחה של סוכן 2)
+
+**מטרה (תוכנית הפעלה §3, סוכן 2; תוכנית האב §2.2–§2.4, מקבץ C):** gap
+analysis כתוב של אבחון RED מול step-by-step-audit של Gold V21 — וסגירת
+הפערים שהוכחו באותו מחזור. דוח: ‏`audits/GOLD_V21_GAP_ANALYSIS.md`
+(מיפוי 15 יכולות: קיים/חלקי/לא-רלוונטי/חסר; הבדל ארכיטקטוני מכריע —
+DOM-מתחלף מול חישובי-תחילה; החלטות "לא רלוונטי" מנומקות ומתועדות).
+
+**מימוש הפערים שהוכחו חסרים (5 יכולות):** מודול חדש
+`red-build/src/audit/stage-snapshots.js` + חיווט ב-pipeline:
+- **חתימות שורה יציבות** ‏(tokenId#lineIdx — מקביל data-token-id ‏ב-Gold)
+  ב-4 נקודות ביקורת: ‏cp3-dp (אחרי ה-DP) → cp3-structural (בסיס CP4,
+  אחרי שערים+AQ+TOC) → cp4-decorations (אחרי פאס העיטורים+עמודי ההערות)
+  → cp5-final (המצב שממנו נגזר layoutHash).
+- **diffSnapshots** — ‏added/removed/changed בין checkpoints רצופים
+  (מקביל computeDelta; רשומות נוגעות גם בעמוד המקור וגם ביעד).
+- **buildFindingsContext** (§2.4) — לכל ממצא עם עמוד: מצב הרכיבים
+  ה**אחרים** בעמוד שנוספו/הוסרו/הוזזו מנקודת הביקורת שבה נראה לראשונה
+  ועד הסוף; הממצא עצמו מוחרז.
+- **goldCausalityOf** (§2.3) — מיפוי מלא מתועד של 10 מצבי ledger-v2 אל
+  7 קטגוריות Gold ‏(כולל כלל pageCount ‏ל-couldnt-appear-before; ‏
+  competing-repair-side-effect→correction-reverted; ‏never-appeared מכוסה
+  ב-negative-controls).
+- **אינווריאנט נגזר** ‏final_stable — ‏delta ריק cp4→cp5 הוא הוכחה
+  פר-שורה של T1 ‏(המקביל המפורט ל-bodyGeometryHash, ‏D-47).
+
+**חוזים:** ‏opt-in ‏`audit-stage-snapshots` (ברירת מחדל כבוי — אפס
+תקורה; נרשם ב-registry עם צרכן אמיתי + פקד UI ‏מחודש); ‏report-schema
+מוסיף page_context לכל ממצא עם עמוד + ‏stage_snapshots מטא בראש הדוח;
+worker-protocol מעביר stageSnapshots ‏(additive, ‏null כשכבוי — חוזה
+ui-result-v1 נשמר). הדוחות עדיין טהורים: ‏compact ‏(diagnostics-enabled=false)
+מצמצם את ההקשר למונים בלבד.
+
+**אימות מלא (לפני/אחרי):** ‏npm test ‏**37/37 סוויטות, ‏710/710 בדידות**,
+0 כשלים (נוספו 18 בדידות ב-stage-snapshots: ‏יחידה+negative-control,
+אינטגרציה, ‏no-op, ‏דטרמיניזם, ‏חוזי דוח/Worker); ‏scan-control ‏0 הפרות;
+‏determinism ‏עבר — קנוני **80f9ed6c82ea3855 זהה לנעילה**; ‏no-op proof
+על הקנוני: hash זהה עם המנגנון דלוק; נתוני צילומים על הקנוני:
+25→36→36→36 עמודים, ‏deltas ‏604/0/0 ‏(הכנסה מבנית הזיזה שורות; פאס
+העיטורים והשלבים המאוחרים לא הזיזו אף שורה), ‏final_stable=true.
+שתי החבילות נבנו מחדש (worker-protocol השתנה).
+
+**עדכוני מסמכים:** ‏GOLD_V21_GAP_ANALYSIS.md ‏(חדש — תוצר משימת הפתיחה
+של סוכן 2); ‏IMPLEMENTATION_STATUS (סגירת שלב 2.2/2.3/2.4, ‏מקבץ C, נושא
+15, ‏SRS §19, סוכן 2 — 98→חדש; רענון מספרים); ‏AGENTS_TRACKING (מחזור
+S1-ח; ‏gap-Gold-V21→סגור); ‏DECISIONS ‏(D-101 — החלטות "לא רלוונטי").
