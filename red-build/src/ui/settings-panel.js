@@ -1,4 +1,4 @@
-// src/ui/settings-panel.js — פאנל ההגדרות: 12 פאנלים (Z2), אקורדיון, חיפוש, איפוס, תבניות (REQ-UI-01/07)
+// src/ui/settings-panel.js — פאנל ההגדרות: פאנלים מהרישום (Z2; הספירה דינמית מ-PANELS), אקורדיון, חיפוש, איפוס, תבניות (REQ-UI-01/07)
 'use strict';
 
 /**
@@ -123,7 +123,7 @@ function buildSettingsTab(doc, opts) {
   bar.appendChild(search); bar.appendChild(saveBtn); bar.appendChild(loadBtn);
   root.appendChild(bar);
 
-  // ---- אקורדיון 12 הפאנלים ----
+  // ---- אקורדיון הפאנלים (מ-PANELS; לא מספר קבוע — S0) ----
   const accordion = doc.createElement('div');
   accordion.className = 'accordion';
   const fieldRows = []; // לסינון חיפוש: {row, label, id, control, panelBody, header}
@@ -285,7 +285,7 @@ function buildSettingsTab(doc, opts) {
     }
   }
 
-  root.appendChild(Object.assign(doc.createElement('div'), { className: 'settings-count', textContent: `${BINDINGS.length} הגדרות ב־12 פאנלים` }));
+  root.appendChild(Object.assign(doc.createElement('div'), { className: 'settings-count', textContent: `${BINDINGS.length} הגדרות ב־${PANELS.length} פאנלים` }));
 
   return { root, refreshValues, refreshFontCatalog, searchInput: search, getSearchHits: () => searchHits };
 }

@@ -470,7 +470,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-10-s6.3'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-10-s0'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -2555,7 +2555,7 @@ module.exports = {
 
 };
 __modules["src/ui/settings-panel.js"] = function (require, module, exports) {
-// src/ui/settings-panel.js — פאנל ההגדרות: 12 פאנלים (Z2), אקורדיון, חיפוש, איפוס, תבניות (REQ-UI-01/07)
+// src/ui/settings-panel.js — פאנל ההגדרות: פאנלים מהרישום (Z2; הספירה דינמית מ-PANELS), אקורדיון, חיפוש, איפוס, תבניות (REQ-UI-01/07)
 'use strict';
 
 /**
@@ -2680,7 +2680,7 @@ function buildSettingsTab(doc, opts) {
   bar.appendChild(search); bar.appendChild(saveBtn); bar.appendChild(loadBtn);
   root.appendChild(bar);
 
-  // ---- אקורדיון 12 הפאנלים ----
+  // ---- אקורדיון הפאנלים (מ-PANELS; לא מספר קבוע — S0) ----
   const accordion = doc.createElement('div');
   accordion.className = 'accordion';
   const fieldRows = []; // לסינון חיפוש: {row, label, id, control, panelBody, header}
@@ -2842,7 +2842,7 @@ function buildSettingsTab(doc, opts) {
     }
   }
 
-  root.appendChild(Object.assign(doc.createElement('div'), { className: 'settings-count', textContent: `${BINDINGS.length} הגדרות ב־12 פאנלים` }));
+  root.appendChild(Object.assign(doc.createElement('div'), { className: 'settings-count', textContent: `${BINDINGS.length} הגדרות ב־${PANELS.length} פאנלים` }));
 
   return { root, refreshValues, refreshFontCatalog, searchInput: search, getSearchHits: () => searchHits };
 }
