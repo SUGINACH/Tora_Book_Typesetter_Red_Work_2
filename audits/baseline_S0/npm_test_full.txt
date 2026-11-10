@@ -1,0 +1,110 @@
+
+> tora-book-typesetter-red@0.1.0 test
+> node tests/unit/parser.test.js && node tests/unit/typography.test.js && node tests/integration/registry.test.js && node tests/integration/imud-migration.test.js && node tests/integration/setting-sets.test.js && node tests/integration/source-variants.test.js && node tests/layout/s5-s6.test.js && node tests/layout/ext8-optimal-balance.test.js && node tests/e2e/pipeline.test.js && node tests/e2e/s7-notes.test.js && node tests/e2e/s8-decoration.test.js && node tests/e2e/s9-headers.test.js && node tests/e2e/s10-ui.test.js && node tests/e2e/s11-extensions.test.js && node tests/e2e/s12-export.test.js && node tests/e2e/real-fonts.test.js && node tests/e2e/d89-visual-fixes.test.js && node tests/e2e/s15-view-justify.test.js && node tests/e2e/s24-fullmath-fixes.test.js && node tests/e2e/pdf-targets.test.js && node tests/e2e/s13-acceptance.test.js && node tests/e2e/s14-layout-audit.test.js && node tests/e2e/canonical.test.js && node tests/e2e/long-real-text.test.js && node tests/audit/negative-controls.test.js && node tests/audit/s13-security-a11y.test.js && node tests/e2e/s52-dp-fixes.test.js && node tests/e2e/s52-ui-fixes.test.js && node tests/e2e/audit-sensitivity.test.js && node tests/e2e/s53-dp-notes-export.test.js && node tests/e2e/s60-monster-fixes.test.js && node tests/e2e/s61-gap-fixes.test.js && node tests/e2e/s62-user-questions.test.js && node ../tools/scan-control-triggers.js
+
+
+== parser: 25/25 passed, 0 failed, 0 skipped ==
+
+== typography: 16/16 passed, 0 failed, 0 skipped ==
+
+== registry-integration: 8/8 passed, 0 failed, 0 skipped ==
+  dispositions: mapped=106 merged=16 ui-state=140 removed=2 (מתוך 264)
+
+== imud-migration: 11/11 passed, 0 failed, 0 skipped ==
+  [set:תלמוד] mapped=94 merged=16 ui-state=137 removed=2
+  [set:פרשנות] mapped=94 merged=16 ui-state=137 removed=2
+  [set:קונטרס] mapped=94 merged=16 ui-state=137 removed=2
+  [set:תלמוד] legacy: pages=7 hash=legacy-285e3 back-shaar=0
+  [set:פרשנות] legacy: pages=7 hash=legacy-1d339 back-shaar=0
+  [set:קונטרס] legacy: pages=7 hash=legacy-1d339 back-shaar=0
+  [set:תלמוד] DP: pages=7 hash=241af41ea88a h0=22pt
+  [set:פרשנות] DP: pages=7 hash=5d67410a6fbc h0=24pt
+  [set:קונטרס] DP: pages=7 hash=a205e6a11fcb h0=30pt
+
+== setting-sets: 5/5 passed, 0 failed, 0 skipped ==
+  [variant:v19-baseline] keys=250 mapped=95 merged=16 ui-state=137 removed=2
+  [variant:v20.4-tip] keys=242 mapped=95 merged=16 ui-state=129 removed=2
+  [variant:v21-glm] keys=264 mapped=106 merged=16 ui-state=140 removed=2
+  [variant:makom-bina-v20.5] keys=249 mapped=94 merged=16 ui-state=137 removed=2
+  [variant:v19-baseline] typeset: pages=7 hash=legacy-e6654
+  [variant:v20.4-tip] typeset: pages=10 hash=legacy-21a78
+  [variant:v21-glm] typeset: pages=10 hash=legacy-21a78
+  [variant:makom-bina-v20.5] typeset: pages=7 hash=legacy-1d339
+
+== source-variants: 6/6 passed, 0 failed, 0 skipped ==
+
+== layout-s5-s6: 17/17 passed, 0 failed, 0 skipped ==
+
+== ext8-optimal-balance: 5/5 passed, 0 failed, 0 skipped ==
+
+== e2e-pipeline: 14/14 passed, 0 failed, 0 skipped ==
+
+== s7-gate: 15/15 passed, 0 failed, 0 skipped ==
+
+== s8-decoration: 48/48 passed, 0 failed, 0 skipped ==
+
+== s9-headers: 25/25 passed, 0 failed, 0 skipped ==
+
+== s10-ui: 43/43 passed, 0 failed, 0 skipped ==
+
+== s11-extensions: 50/50 passed, 0 failed, 0 skipped ==
+
+== s12-export: 26/26 passed, 0 failed, 0 skipped ==
+  [real-fonts] catalog: 451 entries, 443 unique files, 432 unique families (19 משפחות-כפולות מקור + כפל-שמות אחד מתועד)
+  [real-fonts] parsed 450/451 in 75ms (חריג מתועד: Guttman-Logo1-Regular.ttf)
+  [real-fonts] extended catalog: 1315 families (catalog-only, woff2) + 432 embedded — סיווג אמת ללא כפילויות
+  [real-fonts] ספר-אמת בגופן Frank Ruhl Libre: pages=55 hash=legacy-086d2
+  [real-fonts] real=55 עמודים, table=63 עמודים — המדידה האמיתית פעילה
+  [real-fonts] PDF: pages=36 pdf=218KB (מקור גופן 174KB, תת-גופן מצומצם בתוך הקובץ)
+
+== real-fonts: 14/14 passed, 0 failed, 0 skipped ==
+
+== d89-visual-fixes: 75/75 passed, 0 failed ==
+
+== s15-view-justify: 3/3 passed, 0 failed, 0 skipped ==
+
+== s24-fullmath-fixes: 16/16 passed, 0 failed, 0 skipped ==
+
+== pdf-targets: 4/4 passed, 0 failed, 0 skipped ==
+
+== s13-acceptance: 11/11 passed, 0 failed, 0 skipped ==
+• A. שערים כברירת מחדל בסדר המקור: ראשי → אחורי → תוכן־עניינים → גוף (עם שער־משנה לפני החלק)
+• A2. תוכן השער המובנה מגיע ל-DOM (נתיב התצוגה) ולהקרנת ה-PDF
+• B. כותרות עליונות בכל עמודי התוכן — בנתיב החי (renderPage בלי header מפורש) ובייצוא HTML
+• C. יישור שורות הגוף — justify/inter-word ב-BASE_CSS (מקור ה-CSS של התצוגה והייצוא)
+• D. גיאומטריה מהקוד: אין חפיפות שורות בהקרנה ואף מילה לא חורגת מתיבת הטור
+• E. גופני ברירת המחדל של המקור מוטמעים: David Libre / Frank Ruhl Libre / Bellefair / Noto Serif Hebrew
+• F. ייבוא ברירות המקור: מתגי השערים ופתרון מחסניות הגופן מול הקטלוג
+• G. רגישות הגדרות→פלט: שינוי גוף/כותרת/שער משנה את הרינדור בפועל
+• H. fontStack: מחסנית מרובת־משפחות מהמקור נשמרת עם fallback עברי
+
+== s14-layout-audit: 52 passed, 0 failed ==
+
+== canonical: 6/6 passed, 0 failed, 0 skipped ==
+  [real] no_long_test_text.txt: words=24401 pages=96 hash=cc51f2d7eea1
+  [real] mid_long_test_text.txt: words=70716 pages=227 hash=54f052e1e761
+  [real] long_test_text.txt: words=291719 pages=1038 hash=010f9b35c2c3
+  [real] very_long: words=363232 pages=1335 hash=531f215433a8 2587ms
+  [real] orange-historical: words=361243 DP=1394pages/1ca3611635 legacy=836pages/legacy-7d0 2233ms
+
+== long-real-text: 6/6 passed, 0 failed, 0 skipped ==
+
+== negative-controls: 19/19 passed, 0 failed, 0 skipped ==
+
+== s13-security-a11y: 12/12 passed, 0 failed, 0 skipped ==
+
+== s52-dp-fixes: 23/23 passed, 0 failed, 0 skipped ==
+
+== s52-ui-fixes: 18/18 passed, 0 failed, 0 skipped ==
+
+== audit-sensitivity: 24/24 passed, 0 failed, 0 skipped ==
+
+== s53-dp-notes-export: 18/18 passed, 0 failed, 0 skipped ==
+
+== s60-monster-fixes: 17/17 passed, 0 failed, 0 skipped ==
+
+== s61-gap-fixes: 27/27 passed, 0 failed, 0 skipped ==
+
+== s62-user-questions: 13/13 passed, 0 failed, 0 skipped ==
+scan-control-triggers: 19 files · 3 engine-call edges · 3 allowed (נתיבים מפורשים) · 0 violations
+artifact → tests/artifacts/s10-callgraph.json
