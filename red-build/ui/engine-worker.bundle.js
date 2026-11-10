@@ -1774,7 +1774,8 @@ const K = (id, type, dflt, panel, control, consumers, testId, extra = {}) =>
 
 // **S9 (D-61):** מקורות כותרת עליונה — כולל book-name-rest (החלק שאחרי המקף) ופורט
 // fillHeaderFirstLastWords המאוחד (first-last-words). משותף ל‑6 סלוטים + 3 סלוטי פתיחה.
-const HDR_SOURCES = ['none', 'book-name', 'book-name-rest', 'h1', 'h2', 'page-num', 'first-word', 'last-word', 'first-last-words', 'custom'];
+// **S65 (SRS §12.2):** book-name-split — חצי שם הספר לפי הצד הפיזי: ראשון ב‑Recto, שני ב‑Verso.
+const HDR_SOURCES = ['none', 'book-name', 'book-name-rest', 'book-name-split', 'h1', 'h2', 'page-num', 'first-word', 'last-word', 'first-last-words', 'custom'];
 
 const registry = [
   // ---- רשת העמוד ומספור (GRID) ----
@@ -1845,6 +1846,11 @@ const registry = [
   K('header-verso-center-source', 'enum', 'h2', P.HEADERS, 'sel-hv-center', ['decoration/headers-builder'], 'fx:hv-center', { enum: HDR_SOURCES }),
   K('header-verso-left-source', 'enum', 'book-name', P.HEADERS, 'sel-hv-left', ['decoration/headers-builder'], 'fx:hv-left', { enum: HDR_SOURCES }),
   K('header-verso-same-as-recto', 'bool', false, P.HEADERS, 'chk-hv-same', ['decoration/headers-builder'], 'fx:hv-same', { note: 'same_as_even + גידוע מעגליות (Orange c49b79e) — resolveSameAs עם seen-set' }),
+  // **S65 (SRS-12-2):** פיצול שם הספר בין העמודים — החצי הראשון בעמוד ימין (Recto),
+  // השני בעמוד שמאל (Verso). כשהמתג פעיל הוא דורס אפשרויות כותרת דינמיות סותרות:
+  // סלוטים שמקורם book-name/book-name-rest מציגים את החצי לפי הצד הפיזי בלבד,
+  // וירושת verso-same-as-recto אינה חלה עליהם (הפיצול נשמר גם בעמודי verso).
+  K('split-book-title', 'bool', false, P.HEADERS, 'chk-split-title', ['decoration/headers-builder'], 'fx:split-title', { note: 'SRS §12.2: חציו הראשון של שם הספר ב-Recto, שניו ב-Verso; דורס מקורות שם-ספר סותרים' }),
   K('header-separator-line', 'enum', 'gray', P.HEADERS, 'sel-header-sep', ['decoration/headers-builder'], 'fx:header-sep', { enum: ['none', 'gray', 'black'] }),
   // **S9 (REQ-HDR-02):** כותרת ייעודית לעמודים הפותחים בכותרת H2/H3 — סלוטי מקור נפרדים
   // (יישור/רוחב/גופן/גודל יורשים מהצד הפיזי של העמוד — D-61).
@@ -5507,6 +5513,18 @@ function extractTitleRest(text) {
   return parts.length > 1 ? parts.slice(1).join(' – ') : '';
 }
 
+/** **S65 (SRS §12.2):** פיצול שם הספר לשני חצאים לפי אמצע מילים —
+ *  זהה לנוסחת המורשת (legacy-imud-flow: tw.slice(0, Math.ceil(len/2))):
+ *  first = החצי הראשון (Recto), second = השני (Verso).
+ *  שם ריק/מילה אחת ⇒ שני החצאים זהים לשם המקורי (השני ריק כשאין מה לפצל). */
+function splitBookTitleHalves(text) {
+  const t = String(text == null ? '' : text).trim();
+  const words = t ? t.split(/\s+/) : [];
+  if (words.length <= 1) return { first: t, second: '' };
+  const mid = Math.ceil(words.length / 2);
+  return { first: words.slice(0, mid).join(' '), second: words.slice(mid).join(' ') };
+}
+
 /** גידוע מעגליות same_as (Orange c49b79e): מפת ירושה חד‑כיוונית + seen-set.
  *  ב‑Red הירושה היחידה היא verso→recto (header-verso-same-as-recto), כך שמבנית
  *  אין מעגל — אך הגידוע מפורש ונבדק כך שהוספת ירושה עתידית לא תוכל ליצור לולאה. */
@@ -5542,6 +5560,11 @@ function resolveSlot(source, ctx, settings, slotKey) {
     case 'none': return '';
     case 'book-name': return extractH1TitleMain(ctx.bookName || '', 'main');
     case 'book-name-rest': return extractTitleRest(ctx.bookName || '');
+    // **S65 (SRS §12.2):** חצי שם הספר לפי הצד הפיזי של העמוד — ראשון ב‑Recto, שני ב‑Verso.
+    case 'book-name-split': {
+      const halves = splitBookTitleHalves(ctx.bookName || '');
+      return ctx.side === 'verso' ? halves.second : halves.first;
+    }
     case 'h1': return extractH1TitleMain(ctx.h1 || '', settings['hdr-h1-title-mode']);
     case 'h2': return ctx.h2 || '';
     case 'page-num': return ctx.pageNumber || '';
@@ -5583,15 +5606,27 @@ function buildHeader(page, settings, ctx) {
   const sourceSide = dedicated ? 'opening' : resolveSameAs(physical, settings);
   // טקסט מותאם תמיד מהצד הפיזי של העמוד (סלוטי הפתיחה יורשים — D-61)
   const customSide = dedicated ? physical : sourceSide;
-  const out = { side: physical, dedicated, slots: {} };
+  // **S65 (SRS §12.2):** מתג פיצול שם הספר — כשפעיל, כל סלוט שמקורו שם־הספר
+  // (book-name / book-name-rest) מציג את החצי לפי הצד הפיזי בלבד, וזאת דורסת
+  // אפשרויות דינמיות סותרות: ירושת verso-same-as-recto אינה חלה על סלוטים אלה
+  // (החצי השני מופיע ב‑verso גם אם הצד יורש מקורות מה‑recto), ו‑book-name-rest
+  // אינו מפצל במקף אלא לפי החצי הפיזי. מקורות דינמיים אחרים (h2/מילים) אינם סותרים
+  // ואינם מוספים.
+  const splitTitle = settings['split-book-title'] === true;
+  const out = { side: physical, dedicated, splitTitle, slots: {} };
   for (const pos of ['right', 'center', 'left']) {
     // מקור: מהצד החל על העמוד (opening/recto/verso אחרי ירושה); גופן/גודל/יישור/רוחב — תמיד מהצד הפיזי (D-61)
-    const source = settings[`header-${sourceSide}-${pos}-source`];
+    let source = settings[`header-${sourceSide}-${pos}-source`];
+    if (splitTitle && (source === 'book-name' || source === 'book-name-rest')) {
+      source = 'book-name-split'; // דריסה לפי הצד הפיזי (להלן) — SRS §12.2 סעיף 2
+    }
     const customText = settings[`header-${customSide}-${pos}-custom-text`];
     out.slots[pos] = {
       source,
+      // בפיצול: הצד לצורך resolveSlot הוא הפיזי תמיד (דריסת ירושה); אחרת — ללא תלות בצד למקורות אלה
       text: resolveSlot(source, {
         ...ctx,
+        side: physical,
         pageNumber: page.pageNumberDisplay,
         firstWord: page.firstWord,
         lastWord: page.lastWord,
@@ -5611,6 +5646,7 @@ function buildHeader(page, settings, ctx) {
 module.exports = {
   buildHeader, extractH1TitleMain, extractTitleRest, resolveSlot,
   resolveSameAs, firstLastWordsText, pageOpensWithH2H3, trimEdgePunctuation,
+  splitBookTitleHalves,
 };
 
 };

@@ -28,7 +28,8 @@ const K = (id, type, dflt, panel, control, consumers, testId, extra = {}) =>
 
 // **S9 (D-61):** מקורות כותרת עליונה — כולל book-name-rest (החלק שאחרי המקף) ופורט
 // fillHeaderFirstLastWords המאוחד (first-last-words). משותף ל‑6 סלוטים + 3 סלוטי פתיחה.
-const HDR_SOURCES = ['none', 'book-name', 'book-name-rest', 'h1', 'h2', 'page-num', 'first-word', 'last-word', 'first-last-words', 'custom'];
+// **S65 (SRS §12.2):** book-name-split — חצי שם הספר לפי הצד הפיזי: ראשון ב‑Recto, שני ב‑Verso.
+const HDR_SOURCES = ['none', 'book-name', 'book-name-rest', 'book-name-split', 'h1', 'h2', 'page-num', 'first-word', 'last-word', 'first-last-words', 'custom'];
 
 const registry = [
   // ---- רשת העמוד ומספור (GRID) ----
@@ -99,6 +100,11 @@ const registry = [
   K('header-verso-center-source', 'enum', 'h2', P.HEADERS, 'sel-hv-center', ['decoration/headers-builder'], 'fx:hv-center', { enum: HDR_SOURCES }),
   K('header-verso-left-source', 'enum', 'book-name', P.HEADERS, 'sel-hv-left', ['decoration/headers-builder'], 'fx:hv-left', { enum: HDR_SOURCES }),
   K('header-verso-same-as-recto', 'bool', false, P.HEADERS, 'chk-hv-same', ['decoration/headers-builder'], 'fx:hv-same', { note: 'same_as_even + גידוע מעגליות (Orange c49b79e) — resolveSameAs עם seen-set' }),
+  // **S65 (SRS-12-2):** פיצול שם הספר בין העמודים — החצי הראשון בעמוד ימין (Recto),
+  // השני בעמוד שמאל (Verso). כשהמתג פעיל הוא דורס אפשרויות כותרת דינמיות סותרות:
+  // סלוטים שמקורם book-name/book-name-rest מציגים את החצי לפי הצד הפיזי בלבד,
+  // וירושת verso-same-as-recto אינה חלה עליהם (הפיצול נשמר גם בעמודי verso).
+  K('split-book-title', 'bool', false, P.HEADERS, 'chk-split-title', ['decoration/headers-builder'], 'fx:split-title', { note: 'SRS §12.2: חציו הראשון של שם הספר ב-Recto, שניו ב-Verso; דורס מקורות שם-ספר סותרים' }),
   K('header-separator-line', 'enum', 'gray', P.HEADERS, 'sel-header-sep', ['decoration/headers-builder'], 'fx:header-sep', { enum: ['none', 'gray', 'black'] }),
   // **S9 (REQ-HDR-02):** כותרת ייעודית לעמודים הפותחים בכותרת H2/H3 — סלוטי מקור נפרדים
   // (יישור/רוחב/גופן/גודל יורשים מהצד הפיזי של העמוד — D-61).

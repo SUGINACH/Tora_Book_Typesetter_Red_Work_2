@@ -40,6 +40,7 @@ const L = {
   'header-recto-right-source': 'עמוד ימני — מקור ימין', 'header-recto-center-source': 'עמוד ימני — מקור מרכז', 'header-recto-left-source': 'עמוד ימני — מקור שמאל',
   'header-verso-right-source': 'עמוד שמאלי — מקור ימין', 'header-verso-center-source': 'עמוד שמאלי — מקור מרכז', 'header-verso-left-source': 'עמוד שמאלי — מקור שמאל',
   'header-verso-same-as-recto': 'עמוד שמאלי זהה לימני', 'header-separator-line': 'קו הפרדה בכותרת עליונה',
+  'split-book-title': 'פיצול שם הספר בין העמודים (חצי בכל צד)',
   'header-opening-dedicated': 'כותרת ייעודית לעמודי פתיחה',
   'header-opening-right-source': 'פתיחה — מקור ימין', 'header-opening-center-source': 'פתיחה — מקור מרכז', 'header-opening-left-source': 'פתיחה — מקור שמאל',
   // NOTES
