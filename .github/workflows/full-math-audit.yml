@@ -19,7 +19,7 @@ on:
     branches: [ main ]
   # **S5.1 (W1):** גם על PRs — האודיט המחמיר רץ גם *לפני* המיזוג; בעבר רגרסיה
   # במשפחות ש-audit-in-page חסר נכנסה ל-main ירוקה והאדימה רק אחרי המיזוג.
-  # **S5.2 (P-11):** UNIFIED כמו ב-ci.yml/layout-parity.yml — ענף האינטגרציה
+  # **S5.2 (P-11):** UNIFIED כמו ב-ci.yml/corpus-invariants (לשעבר layout-parity.yml) — ענף האינטגרציה
   # נבדק באותה חומרה לפני המיזוג ל-main.
   pull_request:
     branches: [ main, UNIFIED ]
