@@ -57,6 +57,17 @@ function buildEndnotePages(endnotes, settings, measure, lineHeightPx, hooks = {}
   const continuous = settings['footnote-reset-policy'] === 'continuous';
   let globalSeq = 0;
   const perPartSeq = new Map();
+  // **S69 (R2-M7 — סמנים כפולים ב-endnotes מעורבים):** קבוצת הסמנים בשימוש
+  // לפי היקף (continuous ⇒ סט גלובלי אחד; אחרת סט פר-חלק). המונה האוטומטי
+  // מדלג על מספרים שנתפסו ע"י הערות ממוספרות מפורש (n.num) או מסמני inline
+  // שכבר הוקצו; סמן מפורש כפול (טעות מקור) מדווח ל-ledger ואינו נדרס בשקט.
+  const usedMark = continuous ? new Set() : null;
+  const usedMarkByPart = new Map();
+  const usedSetOf = (part) => {
+    if (usedMark) return usedMark;
+    if (!usedMarkByPart.has(part)) usedMarkByPart.set(part, new Set());
+    return usedMarkByPart.get(part);
+  };
 
   const style = settings['footnote-marker-style'];
   const cols = settings['endnote-columns'] === 2 ? 2 : 1;
@@ -73,7 +84,10 @@ function buildEndnotePages(endnotes, settings, measure, lineHeightPx, hooks = {}
   const colW = cols === 2
     ? (settings._endnoteColWidthPx || enTpl.columns[0].w || 300)
     : fullW;
-  const fontFactor = NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1;
+  // **S70 (R7-M4):** פקטור הגופן — בורית אפקטיבית רק ב-impl A (טבלה);
+  // ב-impl B (font-metrics) המטריקות מדויקות והפקטור מולד.
+  const fontFactor = (measure && measure.impl === 'font-metrics')
+    ? 1 : (NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1);
 
   /**
    * גובה כותרת העמוד (`.endnote-title`: h2 בגודל 1.2em עם שולי 8px) —
@@ -92,18 +106,40 @@ function buildEndnotePages(endnotes, settings, measure, lineHeightPx, hooks = {}
     page.titleBandPx = titleBandPx; // הטורים מתחילים מתחת לפס הכותרת
     let colIdx = 0;                 // טור נוכחי (0..cols-1) — מילוי 1 ואז 2
     let usedY = titleBandPx;        // גובה תפוס בטור הנוכחי (מתחת לפס)
+    // **S69 (R2-M7):** סריקה מקדימה — מספרים מפורשים (n.num) ומסמני inline של
+    // החלק נרשמים כתפוסים לפני ההקצאה, כך שהמונה האוטומטי לעולם אינו
+    // מתנגש איתם — גם כשהם מופיעים אחרי הערות אוטומטיות בסדר המסמך.
+    const usedPart = usedSetOf(part);
+    const explicitSeen = new Set();
+    for (const n0 of notes) {
+      if (n0.num != null) usedPart.add(markerFor(n0.num, style));
+      if (n0.marker) usedPart.add(n0.marker);
+    }
     for (let ni = 0; ni < notes.length; ni++) {
       const n = notes[ni];
       // סמן: מהגוף (inline-refs — marker שהוקצה בpipeline) או לפי מספר המקור/מיקום
       let marker = n.marker;
       if (!marker) {
-        if (continuous) { globalSeq++; marker = markerFor(globalSeq, style); }
-        else {
-          const s = (perPartSeq.get(part) || 0) + 1;
+        if (n.num != null) {
+          // הערה ממוספרת מפורש (הערת סיום-N): המספר של המקור; כפילות (טעות
+          // מקור) מדווחת — הסמן אינו מומצא מחדש כדי לא לנתק את הגוף מההערה
+          marker = markerFor(n.num, style);
+          if (explicitSeen.has(n.num) && ledger) {
+            ledger.create('endnote-duplicate-marker', `part${part}:num${n.num}`, null, { part, num: n.num, marker }, 'endnote-pages');
+          }
+          explicitSeen.add(n.num);
+        } else if (continuous) {
+          globalSeq++;
+          while (usedPart.has(markerFor(globalSeq, style))) globalSeq++;
+          marker = markerFor(globalSeq, style);
+        } else {
+          let s = (perPartSeq.get(part) || 0) + 1;
+          while (usedPart.has(markerFor(s, style))) s++;
           perPartSeq.set(part, s);
-          marker = markerFor(n.num != null ? n.num : s, style);
+          marker = markerFor(s, style);
         }
       }
+      usedPart.add(marker);
       const h = estimateNoteHeight(n.text, settings, measure, lineHeightPx, colW, fontFactor);
       // אין מקום בטור הנוכחי (והוא אינו ריק) — התקדמות לטור הבא / לעמוד הבא.
       // טור "ריק" (usedY === titleBandPx) מקבל את ההערה תמיד — התקדמות מובטחת

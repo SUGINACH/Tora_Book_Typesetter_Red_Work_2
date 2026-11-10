@@ -27,8 +27,36 @@ class WorkerEngineClient {
     this.activeJob = null;      // {jobId, resolve, reject, onProgress, cancelled}
     this.pending = new Map();   // **03.11:** עבודות צד (ייצוא/רישום גופן) — מקבילות לעימוד
     this._errorCbs = [];       // **S5.2:** מאזיני כשל של התעבורה (worker.onerror)
+    // **S70 (R8-M2):** רישומים שהועברו ל-Worker לאורך החיים — לניגון חוזר אחרי
+    // respawn (terminate/קריסה): המופע החדש מתחיל עם זיכרון ריק, ובלי רישום
+    // מחדש המדידה היתה נופלת בשקט לגופני fallback (סחף מדידה שקט).
+    this._registeredFonts = new Map();   // name → bytes
+    this._registeredAssets = new Map(); // collection → items
+    this._workerGeneration = typeof transport.getGeneration === 'function' ? transport.getGeneration() : null;
     transport.setHandler((m) => this._onMessage(m));
     if (typeof transport.setOnError === 'function') transport.setOnError((e) => this._onTransportError(e));
+  }
+
+  /** **S70 (R8-M2):** ניגון רישומים אחרי respawn. קודם מוודאים שהמופע חי
+   *  (ensureAlive מקים מופע חדש אם הקודם מת — ה-respawn קורה כאן, לפני
+   *  קריאת הדור), ואז — אם הדור השתנה — מפרסמים את הרישומים מחדש. סדר
+   *  ההודעות ב-Worker טורי ⇒ הרישום מקדים בפועל את הבקשה שאחריו.
+   *  בתעבורה בלי דור (inline) — אין respawn והפונקציה דוממת. */
+  _maybeReplayRegistrations() {
+    if (typeof this.transport.ensureAlive !== 'function') return;
+    const gen = this.transport.ensureAlive();
+    if (gen === this._workerGeneration) return;
+    this._workerGeneration = gen;
+    for (const [name, bytes] of this._registeredFonts) {
+      const { jobId, promise } = this._newPendingJob('font-replay');
+      this.transport.post({ type: 'register-font', jobId, name, bytes });
+      promise.catch(() => {}); // כשל רישום-חוזר יצוף בתוצאת הריצה הבאה — לא תולה את הלקוח
+    }
+    for (const [collection, items] of this._registeredAssets) {
+      const { jobId, promise } = this._newPendingJob('assets-replay');
+      this.transport.post({ type: 'register-assets', jobId, collection, items });
+      promise.catch(() => {});
+    }
   }
 
   /** **S5.2:** רישום מאזין לכשל/קריסה של ה־Worker (למשל דפדפן: הודעת מצב עברית).
@@ -113,22 +141,31 @@ class WorkerEngineClient {
     return { jobId, promise };
   }
 
-  /** **03.11:** רישום גופן TTF במנוע (למדידת גופן אמיתי בעימוד הבא). */
+  /** **03.11:** רישום גופן TTF במנוע (למדידת גופן אמיתי בעימוד הבא).
+   *  **S70 (R8-M2):** רישום מוצלח נשמר לניגון חוזר אחרי respawn של ה-Worker. */
   registerFont({ name, bytes }) {
     const { jobId, promise } = this._newPendingJob('font');
     this.transport.post({ type: 'register-font', jobId, name, bytes });
-    return promise;
+    return promise.then((res) => {
+      this._registeredFonts.set(name, bytes);
+      return res;
+    });
   }
 
-  /** **03.11:** רישום אוסף נכסי עיצוב ברישום שבמנוע (שני הצדדים פותרים imud:...). */
+  /** **03.11:** רישום אוסף נכסי עיצוב ברישום שבמנוע (שני הצדדים פותרים imud:...).
+   *  **S70 (R8-M2):** נשמר לניגון חוזר אחרי respawn. */
   registerAssets({ collection, items }) {
     const { jobId, promise } = this._newPendingJob('assets');
     this.transport.post({ type: 'register-assets', jobId, collection, items });
-    return promise;
+    return promise.then((res) => {
+      this._registeredAssets.set(collection, items);
+      return res;
+    });
   }
 
   /** **03.11:** בקשת ייצוא PDF/ZIP במנוע המלא שב־Worker. bytes חוזר כ-Uint8Array. */
   requestExport({ kind, text, settings, fontBytes, fontName, extensions }) {
+    this._maybeReplayRegistrations(); // **S70 (R8-M2):** הייצוא מודד כמו העימוד — גופנים חייבים להיות רשומים
     const { jobId, promise } = this._newPendingJob('export');
     this.transport.post({ type: 'export-request', jobId, kind, text, settings, fontBytes: fontBytes || null, fontName: fontName || null, extensions: extensions || null });
     return promise;
@@ -140,6 +177,7 @@ class WorkerEngineClient {
    */
   requestTypeset({ text, settings, onProgress }) {
     if (this.activeJob) this.cancel();
+    this._maybeReplayRegistrations(); // **S70 (R8-M2):** רישום חוזר לפני העימוד אחרי respawn
     const jobId = `job-${Date.now().toString(36)}-${++jobSeq}`;
     let resolve, reject;
     const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
@@ -190,6 +228,7 @@ function workerTransport(factory) {
   let terminated = false; // **S5.2:** דגל מוות — true עד respawn בפוסט הבא
   let handler = null;     // פונקציית ההודעות של הלקוח
   let errorSink = null;   // **S5.2:** worker.onerror → הלקוח (דחיית בטיסה + הודעה)
+  let generation = 0;     // **S70 (R8-M2):** דור המופע — עולה בכל respawn; הלקוח מנגן מחדש רישומים בהחלפת דור
 
   function attach(w) {
     w.onmessage = (ev) => { if (handler) handler(ev.data); };
@@ -205,6 +244,7 @@ function workerTransport(factory) {
     if (worker && !terminated) return worker;
     worker = factory();       // respawn — אותו URL (?v=) כמו בעלייה הראשונה
     terminated = false;
+    generation++;             // **S70:** דור חדש — הלקוח יזהה וירשום מחדש גופנים/נכסים
     attach(worker);
     return worker;
   }
@@ -216,6 +256,11 @@ function workerTransport(factory) {
       if (worker && !terminated) attach(worker); // רישום חוזר — מחדש גם על מופע קיים
     },
     setOnError: (cb) => { errorSink = cb; }, // **S5.2:** אופציונלי — inline אין לו
+    // **S70 (R8-M2):** דור המופע הנוכחי — לזיהוי respawn מצד הלקוח
+    getGeneration: () => generation,
+    // **S70 (R8-M2):** הקמת המופע אם מת (respawn) *כעת* — והחזרת הדור;
+    // הלקוח קורא לכך לפני פרסום רישומים חוזרים כדי שהדור ייקרא אחרי ה-respawn.
+    ensureAlive: () => { ensure(); return generation; },
     terminate: () => {
       if (worker && !terminated) { try { worker.terminate(); } catch (e) { /* כבר מת */ } }
       terminated = true; // הפוסט הבא יבנה מחדש (respawn)

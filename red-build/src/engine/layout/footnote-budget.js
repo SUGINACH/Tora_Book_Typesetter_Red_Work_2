@@ -19,7 +19,10 @@ function noteHeight(note, settings, measure) {
   const lh = Math.round(size * (96 / 72) * 1.25);
   const words = String(note.text).replace(/\uE000/g, ' ').split(/\s+/).filter(Boolean);
   const colW = laneWidth(settings);
-  const factor = NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1;
+  // **S70 (R7-M4):** הפקטור מתקן את טבלת impl A בלבד; ב-impl B
+  // (font-metrics) המטריקות מדויקות והכפלה הייתה מנפיחת את תקציב ההערות.
+  const factor = (measure && measure.impl === 'font-metrics')
+    ? 1 : (NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1);
   // **S6.0 (R3-C3 — אומדן ללא רווחים):** ההקרנה (wrapNoteTokens) שוברת
   // את ההערה **עם** רוחבי רווח בין מילים — האומדן כאן סכם מילים בלבד
   // ⇒ כל הערה הגובלת בשבירת-שורה נמדדה שורה אחת פחות (19–21px) וההערה

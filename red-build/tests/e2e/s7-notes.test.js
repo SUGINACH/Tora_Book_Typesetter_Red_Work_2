@@ -49,7 +49,9 @@ function makeDoc() {
   }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function cssKey(k) { return k.replace(/[A-Z]/g, m => '-' + m.toLowerCase()); }
-  return { createElement: (t) => new El(t) };
+  // **S70 (fn-continuous ב-DP):** צוות טקסט פשוטים (רווח-כפול בין הערות בזרימה) — עוגד בתור אלמנט טקסט עם תוכן בלבד
+  class Txt { constructor(t) { this._text = String(t); } get textContent() { return this._text; } outerHTML() { return esc(this._text); } }
+  return { createElement: (t) => new El(t), createTextNode: (t) => new Txt(t) };
 }
 
 /** מסמך רב־חלקים לשער S7: כותרות מחלקה, הערות ממוספרות, inline-refs, פסקאות. */

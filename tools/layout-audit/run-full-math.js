@@ -312,9 +312,11 @@ const gotoView = async () => {
   // ≥0.98 — תופס מנוע שמדלג תוכן שלם בשקט.
   const floorFail = [];
   if (!(pages1 >= EXPECTED_PAGES_MIN)) floorFail.push(`עמודים ${pages1} < רצפת המינימום ${EXPECTED_PAGES_MIN}`);
-  const totalWords = s.totalWords || 0;
-  if (!(totalWords >= EXPECTED_WORDS_MIN_RATIO * fixtureWords)) {
-    floorFail.push(`מילים מרונדרות ${totalWords.toLocaleString()} < ${Math.round(EXPECTED_WORDS_MIN_RATIO * fixtureWords).toLocaleString()} (= ${EXPECTED_WORDS_MIN_RATIO} × ${fixtureWords.toLocaleString()} מילות ה-fixture)`);
+  // **S70 (R9):** הרצפה מודדת על מילות הגוף בלבד (bodyWords) — בעבר נכללו שורות ה-TOC
+  // (כפילות של כותרות הגוף) והרצפה הוחלשה: ספר שקצר תוכן יכול היה לעבור בזכות מילות ה-TOC.
+  const bodyWords = s.bodyWords != null ? s.bodyWords : (s.totalWords || 0);
+  if (!(bodyWords >= EXPECTED_WORDS_MIN_RATIO * fixtureWords)) {
+    floorFail.push(`מילים מרונדרות ${bodyWords.toLocaleString()} < ${Math.round(EXPECTED_WORDS_MIN_RATIO * fixtureWords).toLocaleString()} (= ${EXPECTED_WORDS_MIN_RATIO} × ${fixtureWords.toLocaleString()} מילות ה-fixture)`);
   }
   if (floorFail.length) {
     console.error('✗ רצפת הנפח נכשלה — הספר התקצר בשקט (ספר שחסר תוכן אינו יכול להיות "0 בעיות"):');

@@ -16,7 +16,12 @@
     if (!Number.isFinite(idx) || audited.has(idx)) return;
     const rec = { i: idx, t: typeOf(pg), cols: [] };
     for (const c of pg.querySelectorAll('.column')) {
-      rec.cols.push([...c.children].map((l) => Math.round(l.getBoundingClientRect().top * 10)));
+      // **S70 (R9):** טביעה דו-צירית (x+y) — בעבר y-בלבד הייתה החלקה
+      // אופקית של שורה בלתי-נראית לגליאה.
+      rec.cols.push([...c.children].map((l) => {
+        const r2 = l.getBoundingClientRect();
+        return [Math.round(r2.left * 10), Math.round(r2.top * 10)];
+      }));
     }
     audited.set(idx, rec);
   };

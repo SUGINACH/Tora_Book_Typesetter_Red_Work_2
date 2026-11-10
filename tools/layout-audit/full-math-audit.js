@@ -586,6 +586,8 @@
         bodyPagesWithHeader: (function () { const bp = seq.filter((p) => /regular|sign-open|preface|h3-spread|toc/.test(p.t)); return bp.filter((p) => p.header && p.header.text).length + '/' + bp.length; })(),
         totalLines: seq.reduce((s, p) => s + (p.lines || 0), 0),
         totalWords: seq.reduce((s, p) => s + (p.words || 0), 0),
+        // **S70 (R9):** מילות גוף בלבד (ללא שורות ה-TOC המכפילות כותרות) — לרצפת הנפח
+        bodyWords: seq.reduce((s, p) => s + ((p.words || 0) - (p.tocWords || 0)), 0),
         observedFonts: fontsUsedSet, problems: totalProblems, bySeverity, sweepMs: meta.sweepMs || null
       };
       return { problems, problemsCapped: P, CNT, S, stats, summary, seq };
@@ -709,6 +711,9 @@ if (typeof document !== 'undefined') {
       const rr = rel(R(rowEl), origin);
       info.tocRows.push({ x: rr.x, y: rr.y, w: rr.w, h: rr.h, text: (rowEl.textContent || '').slice(0, 24) });
       info.words += wc(rowEl.textContent);
+      // **S70 (R9):** מילות ה-TOC נספרות בנפרד — הן כפילות של כותרות הגוף;
+      // רצפת הנפח משתמשת ב-bodyWords כדש לא להיחלש את הבדיקה.
+      info.tocWords = (info.tocWords || 0) + wc(rowEl.textContent);
     }
 
     // אזור הערות מודרני (.footnotes) + קו מפריד (.fn-rule)

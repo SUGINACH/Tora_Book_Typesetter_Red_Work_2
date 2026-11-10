@@ -156,6 +156,9 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
 .book-title-main--back{font-size:36pt}
 .cs-counter{display:inline-block;min-width:1.4em;margin-inline-end:6px;font-weight:700;opacity:.7;font-size:.85em}
 .footnote{margin:1px 0}
+/* **S70 (fn-continuous ב-DP): זרימה רציפה של הערות המרזב — הערה באותה שורה שבה הסתיימה קודמתה */
+.footnotes-flow{direction:rtl;text-align:justify}
+.footnotes-flow .footnote.fn--inline{display:inline}
 `;
 
 /** בניית מסמך HTML עצמאי מעמודי ה‑DOM שכבר רוכמו (string-level; עובד גם Node-side). */

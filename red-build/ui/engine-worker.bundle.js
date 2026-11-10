@@ -739,6 +739,13 @@ function typeset(rawText, settingsIn, env = {}) {
   // **S12 (REQ-LB-01 impl B):** measure-impl = table (ברירת מחדל — רציפות S1–S11) | font-metrics
   // (טבלאות אמת מגופן רשום — hmtx/cmap/kern/GPOS; registerFont מפורש, אין רשת).
   const api = new MeasureAPI(settings, resolveMeasureImpl(settings));
+  // **S70 (R7-M4):** עטיפת מדידה משותפת עם סימון המימוש. פקטורי הגופן
+  // (NOTE_FONT_FACTORS וכו') הם תיקון לטבלה של impl A ('table'); ב-impl B
+  // ('font-metrics') המטריקות מדויקות והכפלה הייתה מנפחת רוחבים ומסיטה
+  // תקציבי הערות. הצרכנים (footnote-budget/endnote-pages/projector)
+  // בודקים את measure.impl ומדלגים על הפקטור ב-impl B.
+  const measureWithImpl = (t, s) => api.measureTextWidth(t, s);
+  measureWithImpl.impl = api.impl;
   void env;
 
   const FONT_WIDTH_PROFILES = {
@@ -1139,7 +1146,7 @@ function typeset(rawText, settingsIn, env = {}) {
   const snapTracker = settings['audit-stage-snapshots'] === true ? createSnapshotTracker() : null;
 
   // ---- CP3: page plan (DP) + protections + retreat loop ----
-  const planned = planPages(blocks, settings, eventLog, ledger, { measure: (t2, s2) => api.measureTextWidth(t2, s2), onProgress });
+  const planned = planPages(blocks, settings, eventLog, ledger, { measure: measureWithImpl, onProgress });
   let { pages } = planned;
   prog('page-plan', 70, 'הפריסה הושלמה', { totalPages: pages.length, pageIndex: pages.length });
 
@@ -1275,13 +1282,13 @@ function typeset(rawText, settingsIn, env = {}) {
   // S7.1.2: הערות צד — עיגון לפסקה, cascade, מיכל 20px, מעבר לעמוד הבא
   const { placeSideNotes, verifyH7Conversion } = require('../layout/side-notes');
   for (const pg of pages) pg.isRecto = pg.index % 2 === 0;
-  const sideNotePlacement = placeSideNotes(pages, settings, (t2, s2) => api.measureTextWidth(t2, s2), { ledger, eventLog });
+  const sideNotePlacement = placeSideNotes(pages, settings, measureWithImpl, { ledger, eventLog });
 
   // **S8 — פאס העיטורים (L5):** כל העיטורים overlay-rects על העמודים;
   // אסור לגעת בשורות (invariant T1 — מוכח מיד לאחר מכן ב‑bodyGeometryHash).
   // סוגר: REQ-ORN-01..04 + אודיט ornament-* במייצרים אמיתיים.
   const { planPageOrnaments } = require('../decoration/ornament-plan');
-  const ornamentPass = planPageOrnaments(pages, settings, (t2, s2) => api.measureTextWidth(t2, s2), { ledger, eventLog });
+  const ornamentPass = planPageOrnaments(pages, settings, measureWithImpl, { ledger, eventLog });
 
   // S7.1.1: עמודי הערות per-part — טוקנים גלויים + inline-refs (endnotes mode)
   settings._endnoteTitleByPart = endnoteTitleByPart;
@@ -1298,7 +1305,7 @@ function typeset(rawText, settingsIn, env = {}) {
   let endnotePagesInfo = { count: 0, pages: [] };
   if (notesMode === 'endnotes' && endnoteBlocks.length) {
     const { buildEndnotePages } = require('../layout/endnote-pages');
-    endnotePagesInfo = { count: 0, pages: buildEndnotePages(endnoteBlocks, settings, (t2, s2) => api.measureTextWidth(t2, s2), (s2) => api.lineHeightPx(s2), { ledger, eventLog }) };
+    endnotePagesInfo = { count: 0, pages: buildEndnotePages(endnoteBlocks, settings, measureWithImpl, (s2) => api.lineHeightPx(s2), { ledger, eventLog }) };
     endnotePagesInfo.count = endnotePagesInfo.pages.length;
   }
 
@@ -3761,7 +3768,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
    */
   function recomputeFnBudget(page) {
     if (!settings['footnotes-enabled'] || !page.footnotes.length) { page.fnReservedHeightPx = 0; return 0; }
-    const reserved = getFootnotesReservedHeight(page.footnotes, settings, (t, s) => measureFn(t, s));
+    const reserved = getFootnotesReservedHeight(page.footnotes, settings, measureFn) // **S70:** העברת הפונקציה עצמה שומרת על סימון ה-impl (להתאמת פקטורים);
     page.fnReservedHeightPx = reserved;
     return reserved;
   }
@@ -4487,26 +4494,36 @@ const CHECKS = {
       const col = page.columns[c];
       if (!col.length) continue;
       const first = col[0], last = col[col.length - 1];
-      if (first.meta && first.meta.part === 'rest' && col.length >= 1) {
-        if (settings['prevent-orphans-top'] && settings['widow-strictness'] !== 'relaxed') {
-          violations.push({ kind: 'orphan-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { colLen: col.length }, ledgerRef: ledger.create('orphan-top', `p${page.index}c${c}`, page.index, { colLen: col.length }, 'protections').issue_id });
+      // **S70 (R3-M2 — כיול אמת, לא החלשה):** בעבר 'orphan-top' דווח על **כל**
+      // 'rest' בראש הטור — גם כשרצף ההמשך בן 2+ שורות (חוקי לחלוטין; SRS §5.1.1
+      // אוסר רק "פחות משתי שורות של פסקה ממשיכה"). very_long: 791 דיווחים שכולם
+      // פרט ליחידים היו חיתוכים חוקיים. כעת נספר רצף השורות של אותה פסקה מראש
+      // הטור, והפרה נרשמת רק ברצף בודד. שורת המשך בודדת היא בהכרח גם סוף
+      // הפסקה ⇒ עדיפות ל-widow-top (אותה גיאומטריה; לא דיווח כפול).
+      if (first.meta && first.meta.part === 'rest') {
+        let run = 0;
+        for (const l of col) { if (l.meta && l.meta.tokenId === first.meta.tokenId) run++; else break; }
+        if (run < 2) {
+          if (settings['prevent-widows-top'] && first.isLast) {
+            violations.push({ kind: 'widow-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { run }, ledgerRef: ledger.create('widow-top', `p${page.index}c${c}`, page.index, { run }, 'protections').issue_id });
+          } else if (settings['prevent-orphans-top'] && settings['widow-strictness'] !== 'relaxed') {
+            violations.push({ kind: 'orphan-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { run }, ledgerRef: ledger.create('orphan-top', `p${page.index}c${c}`, page.index, { run }, 'protections').issue_id });
+          }
         }
       }
+      // **S70 (R3-M3 — כיול אמת, לא החלשה):** בעבר 'widow-bottom' דווח על **כל**
+      // חיתוך-פסקה בתחתית הטור (part='first' גם עם 2+ שורות של אותה פסקה בטור —
+      // חוקי; SRS §5.1.2 דורש שתי שורות לפחות). very_long: 1205 דיווחים, מהם 29
+      // אמיתיים (שורת פתיחה בודדת). כעת: הפרה רק בשורה בודדת; orphan-bottom
+      // (אותה גיאומטריה) בעדיפות כששני המתגים דלוקים — לא דיווח כפול.
       if (last.meta && last.meta.part === 'first') {
         const sameTokenInCol = col.filter(x => x.meta && x.meta.tokenId === last.meta.tokenId).length;
-        const alsoOrphanBottom = settings['prevent-orphans-bottom'] && sameTokenInCol === 1;
-        if (settings['prevent-widows-bottom'] && !alsoOrphanBottom) {
-          violations.push({ kind: 'widow-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { colLen: col.length }, ledgerRef: ledger.create('widow-bottom', `p${page.index}c${c}`, page.index, { colLen: col.length }, 'protections').issue_id });
-        }
-      }
-      if (first.meta && first.meta.part === 'rest' && first.isLast) {
-        if (settings['prevent-widows-top']) {
-          violations.push({ kind: 'widow-top', target: `page#${page.index}c${c}`, page: page.index, evidence: {}, ledgerRef: ledger.create('widow-top', `p${page.index}c${c}`, page.index, {}, 'protections').issue_id });
-        }
-      }
-      if (last.meta && last.meta.part === 'first' && col.filter(x => x.meta && x.meta.tokenId === last.meta.tokenId).length === 1) {
-        if (settings['prevent-orphans-bottom']) {
-          violations.push({ kind: 'orphan-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: {}, ledgerRef: ledger.create('orphan-bottom', `p${page.index}c${c}`, page.index, {}, 'protections').issue_id });
+        if (sameTokenInCol === 1) {
+          if (settings['prevent-orphans-bottom']) {
+            violations.push({ kind: 'orphan-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { sameTokenInCol }, ledgerRef: ledger.create('orphan-bottom', `p${page.index}c${c}`, page.index, { sameTokenInCol }, 'protections').issue_id });
+          } else if (settings['prevent-widows-bottom']) {
+            violations.push({ kind: 'widow-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { sameTokenInCol }, ledgerRef: ledger.create('widow-bottom', `p${page.index}c${c}`, page.index, { sameTokenInCol }, 'protections').issue_id });
+          }
         }
       }
     }
@@ -5428,7 +5445,10 @@ function noteHeight(note, settings, measure) {
   const lh = Math.round(size * (96 / 72) * 1.25);
   const words = String(note.text).replace(/\uE000/g, ' ').split(/\s+/).filter(Boolean);
   const colW = laneWidth(settings);
-  const factor = NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1;
+  // **S70 (R7-M4):** הפקטור מתקן את טבלת impl A בלבד; ב-impl B
+  // (font-metrics) המטריקות מדויקות והכפלה הייתה מנפיחת את תקציב ההערות.
+  const factor = (measure && measure.impl === 'font-metrics')
+    ? 1 : (NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1);
   // **S6.0 (R3-C3 — אומדן ללא רווחים):** ההקרנה (wrapNoteTokens) שוברת
   // את ההערה **עם** רוחבי רווח בין מילים — האומדן כאן סכם מילים בלבד
   // ⇒ כל הערה הגובלת בשבירת-שורה נמדדה שורה אחת פחות (19–21px) וההערה
@@ -11726,6 +11746,17 @@ function buildEndnotePages(endnotes, settings, measure, lineHeightPx, hooks = {}
   const continuous = settings['footnote-reset-policy'] === 'continuous';
   let globalSeq = 0;
   const perPartSeq = new Map();
+  // **S69 (R2-M7 — סמנים כפולים ב-endnotes מעורבים):** קבוצת הסמנים בשימוש
+  // לפי היקף (continuous ⇒ סט גלובלי אחד; אחרת סט פר-חלק). המונה האוטומטי
+  // מדלג על מספרים שנתפסו ע"י הערות ממוספרות מפורש (n.num) או מסמני inline
+  // שכבר הוקצו; סמן מפורש כפול (טעות מקור) מדווח ל-ledger ואינו נדרס בשקט.
+  const usedMark = continuous ? new Set() : null;
+  const usedMarkByPart = new Map();
+  const usedSetOf = (part) => {
+    if (usedMark) return usedMark;
+    if (!usedMarkByPart.has(part)) usedMarkByPart.set(part, new Set());
+    return usedMarkByPart.get(part);
+  };
 
   const style = settings['footnote-marker-style'];
   const cols = settings['endnote-columns'] === 2 ? 2 : 1;
@@ -11742,7 +11773,10 @@ function buildEndnotePages(endnotes, settings, measure, lineHeightPx, hooks = {}
   const colW = cols === 2
     ? (settings._endnoteColWidthPx || enTpl.columns[0].w || 300)
     : fullW;
-  const fontFactor = NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1;
+  // **S70 (R7-M4):** פקטור הגופן — בורית אפקטיבית רק ב-impl A (טבלה);
+  // ב-impl B (font-metrics) המטריקות מדויקות והפקטור מולד.
+  const fontFactor = (measure && measure.impl === 'font-metrics')
+    ? 1 : (NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1);
 
   /**
    * גובה כותרת העמוד (`.endnote-title`: h2 בגודל 1.2em עם שולי 8px) —
@@ -11761,18 +11795,40 @@ function buildEndnotePages(endnotes, settings, measure, lineHeightPx, hooks = {}
     page.titleBandPx = titleBandPx; // הטורים מתחילים מתחת לפס הכותרת
     let colIdx = 0;                 // טור נוכחי (0..cols-1) — מילוי 1 ואז 2
     let usedY = titleBandPx;        // גובה תפוס בטור הנוכחי (מתחת לפס)
+    // **S69 (R2-M7):** סריקה מקדימה — מספרים מפורשים (n.num) ומסמני inline של
+    // החלק נרשמים כתפוסים לפני ההקצאה, כך שהמונה האוטומטי לעולם אינו
+    // מתנגש איתם — גם כשהם מופיעים אחרי הערות אוטומטיות בסדר המסמך.
+    const usedPart = usedSetOf(part);
+    const explicitSeen = new Set();
+    for (const n0 of notes) {
+      if (n0.num != null) usedPart.add(markerFor(n0.num, style));
+      if (n0.marker) usedPart.add(n0.marker);
+    }
     for (let ni = 0; ni < notes.length; ni++) {
       const n = notes[ni];
       // סמן: מהגוף (inline-refs — marker שהוקצה בpipeline) או לפי מספר המקור/מיקום
       let marker = n.marker;
       if (!marker) {
-        if (continuous) { globalSeq++; marker = markerFor(globalSeq, style); }
-        else {
-          const s = (perPartSeq.get(part) || 0) + 1;
+        if (n.num != null) {
+          // הערה ממוספרת מפורש (הערת סיום-N): המספר של המקור; כפילות (טעות
+          // מקור) מדווחת — הסמן אינו מומצא מחדש כדי לא לנתק את הגוף מההערה
+          marker = markerFor(n.num, style);
+          if (explicitSeen.has(n.num) && ledger) {
+            ledger.create('endnote-duplicate-marker', `part${part}:num${n.num}`, null, { part, num: n.num, marker }, 'endnote-pages');
+          }
+          explicitSeen.add(n.num);
+        } else if (continuous) {
+          globalSeq++;
+          while (usedPart.has(markerFor(globalSeq, style))) globalSeq++;
+          marker = markerFor(globalSeq, style);
+        } else {
+          let s = (perPartSeq.get(part) || 0) + 1;
+          while (usedPart.has(markerFor(s, style))) s++;
           perPartSeq.set(part, s);
-          marker = markerFor(n.num != null ? n.num : s, style);
+          marker = markerFor(s, style);
         }
       }
+      usedPart.add(marker);
       const h = estimateNoteHeight(n.text, settings, measure, lineHeightPx, colW, fontFactor);
       // אין מקום בטור הנוכחי (והוא אינו ריק) — התקדמות לטור הבא / לעמוד הבא.
       // טור "ריק" (usedY === titleBandPx) מקבל את ההערה תמיד — התקדמות מובטחת
@@ -13146,6 +13202,30 @@ function renderFootnoteArea(page, settings, doc) {
     el.textContent = `${cont ? '(המשך) ' : ''}${marker}\u200F ${scrubPUAText(n.text || n)}`;
     return el;
   };
+  // **S70 (fn-continuous ב-DP — סגירת שארית S5.4):** גרסת inline של ההערה —
+  // לזרימה רציפה: הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה (רווח-
+  // כפול בין הערות — כמו המורשת). המודל כבר תיקצב במצב זה בלי הצמדת
+  // תקרה פר-הערה (D-34); התצוגה משלימה את החזות בלבד — הגיאומטריה לא זזה.
+  const mkNoteInline = (n) => {
+    const marker = n.marker || markerFor(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings['footnote-marker-style']);
+    const el = doc.createElement('span');
+    const cont = n.isContinuation || n.mode === 'split-rest';
+    el.className = 'footnote fn--inline' + (cont ? ' fn--continuation' : '') + (n.customStyle ? ' footnote--custom' : '');
+    if (n.customStyle) el.dataset.style = n.customStyle;
+    el.textContent = `${cont ? '(המשך) ' : ''}${marker}\u200F ${scrubPUAText(n.text || n)}`;
+    return el;
+  };
+  const continuous = settings['fn-layout-mode'] === 'continuous';
+  const flowOf = (notes) => {
+    const flow = doc.createElement('div');
+    flow.className = 'footnotes-flow';
+    flow.dir = 'rtl';
+    notes.forEach((n, i) => {
+      if (i > 0) flow.appendChild(doc.createTextNode('\u00A0 ')); // רווח-כפול בין הערות
+      flow.appendChild(mkNoteInline(n));
+    });
+    return flow;
+  };
   // **S5.4 (תצוגה=ייצוא):** שני נתיבים לפי footnote-columns — חלוקת הערות
   // זהה לתקציב/פרויקטור (LPT דטרמיניסטית) — התצוגה וה-PDF מציגים את אותן
   // הערות באותם נתיבים. הנתיב הראשון מימין (RTL).
@@ -13168,10 +13248,17 @@ function renderFootnoteArea(page, settings, doc) {
       laneEl.className = 'footnotes-lane';
       laneEl.style.flex = '1 1 0';
       laneEl.style.minWidth = '0';
-      for (const n of lane) laneEl.appendChild(mkNote(n));
+      // **S70:** זרימה רציפה בתוך כל נתיב (עצמאית פר-נתיב — כמו התקציב)
+      if (continuous) laneEl.appendChild(flowOf(lane));
+      else for (const n of lane) laneEl.appendChild(mkNote(n));
       row.appendChild(laneEl);
     }
     area.appendChild(row);
+  } else if (continuous) {
+    // **S70 (fn-continuous ב-DP):** כל הערות העמוד זורמות בבלוק אחד — במקום
+    // בלוקים נפרדים. הזרימה צפופה מסכום הבלוקים ⇒ הרצועה השמורה נשארת
+    // חוקית (שמרנית); שום שורת גוף אינה זזה.
+    area.appendChild(flowOf(page.footnotes));
   } else {
     for (const n of page.footnotes) area.appendChild(mkNote(n));
   }
@@ -14867,11 +14954,40 @@ function parseSvgPaint(svg) {
   if (!vbH && hm) vbH = parseFloat(hm[1]);
   if (!vbW || !vbH) return null;
 
-  // transform של <g> — תומך ב-translate(a,b) scale(sx,sy) (צורת הקטלוגים)
+  // transform של <g> — **S70 (R6):** תמיכה מלאה ב-translate/scale/matrix
+  // (כולל רשימות) עם הרכבה לפי סדר SVG: הפונקציה השמאלית מוחלת אחרונה.
   let tx = 0, ty = 0, sx = 1, sy = 1;
+  let mtx = null; // [a,b,c,d,e,f] כאשר x' = a·x + c·y + e ; y' = b·x + d·y + f
   const gt = /<g\b[^>]*transform\s*=\s*"([^"]+)"/.exec(s);
   if (gt) {
     const tr = gt[1];
+    const funcs = [];
+    const fre = /(matrix|translate|scale)\s*\(\s*([^)]+)\)/g;
+    let fm;
+    while ((fm = fre.exec(tr))) {
+      const a = fm[2].split(/[\s,]+/).map(Number);
+      if (fm[1] === 'matrix' && a.length >= 6) funcs.push([a[0], a[1], a[2], a[3], a[4], a[5]]);
+      else if (fm[1] === 'translate') funcs.push([1, 0, 0, 1, a[0] || 0, a[1] || 0]);
+      else if (fm[1] === 'scale') {
+        const kx = a[0] != null ? a[0] : 1, ky = a[1] != null ? a[1] : (a[0] != null ? a[0] : 1);
+        funcs.push([kx, 0, 0, ky, 0, 0]);
+      }
+    }
+    // הרכבה לפי סדר SVG: השמאלית חיצונית (מוחלת אחרונה) — acc_new = acc ∘ F
+    // (אימות: "translate(10,0) scale(2)" ⇒ x'=2x+10 ✓)
+    let acc = [1, 0, 0, 1, 0, 0];
+    for (const F of funcs) {
+      acc = [
+        acc[0] * F[0] + acc[2] * F[1],
+        acc[1] * F[0] + acc[3] * F[1],
+        acc[0] * F[2] + acc[2] * F[3],
+        acc[1] * F[2] + acc[3] * F[3],
+        acc[0] * F[4] + acc[2] * F[5] + acc[4],
+        acc[1] * F[4] + acc[3] * F[5] + acc[5],
+      ];
+    }
+    mtx = acc;
+    // תאימות לאחור: טרנספורמציה בודדת translate/scale — שמירת tx/ty/sx/sy
     const tm = /translate\(\s*([-\d.]+)[\s,]+([-\d.]+)/.exec(tr);
     if (tm) { tx = parseFloat(tm[1]); ty = parseFloat(tm[2]); }
     const sm = /scale\(\s*([-\d.]+)(?:[\s,]+([-\d.]+))?\)/.exec(tr);
@@ -14880,7 +14996,11 @@ function parseSvgPaint(svg) {
   const transform = (pts) => {
     const out = [];
     for (let i = 0; i + 1 < pts.length; i += 2) {
-      out.push(pts[i] * sx + tx, pts[i + 1] * sy + ty);
+      if (mtx) {
+        out.push(mtx[0] * pts[i] + mtx[2] * pts[i + 1] + mtx[4], mtx[1] * pts[i] + mtx[3] * pts[i + 1] + mtx[5]);
+      } else {
+        out.push(pts[i] * sx + tx, pts[i + 1] * sy + ty);
+      }
     }
     return out;
   };
@@ -14933,6 +15053,24 @@ function parseSvgPaint(svg) {
     if (!w || !h) continue;
     const fill = /fill\s*=\s*"([^"]+)"/.exec(at);
     pushShape(`M ${x0} ${y0} L ${x0 + w} ${y0} L ${x0 + w} ${y0 + h} L ${x0} ${y0 + h} Z`, fill ? fill[1] : '#000', 'none');
+  }
+  // **S70 (R6):** <polygon>/<polyline> — points לנתיב; polygon נסגר (Z)
+  // וממולא כברירת מחדל; polyline נצבע רק אם יש לו fill מפורש (קו-בלבד
+  // מחוץ לתת-הקבוצה — כמו stroked paths — תיעוד בראש המודול).
+  const polyRe = /<(polygon|polyline)\b([^>]*)>/g;
+  while ((m = polyRe.exec(s))) {
+    const at = m[2];
+    const ptsM = /points\s*=\s*"([^"]+)"/.exec(at);
+    if (!ptsM) continue;
+    const nums = ptsM[1].trim().split(/[\s,]+/).map(Number).filter((v) => Number.isFinite(v));
+    if (nums.length < 4) continue;
+    const fill = /fill\s*=\s*"([^"]+)"/.exec(at);
+    const stroke = /stroke\s*=\s*"([^"]+)"/.exec(at);
+    if (m[1] === 'polyline' && !fill && !gFill) continue;
+    let d = `M ${nums[0]} ${nums[1]}`;
+    for (let i = 2; i + 1 < nums.length; i += 2) d += ` L ${nums[i]} ${nums[i + 1]}`;
+    if (m[1] === 'polygon') d += ' Z';
+    pushShape(d, fill ? fill[1] : (gFill ? gFill[1] : '#000'), stroke ? stroke[1] : (gStroke ? gStroke[1] : 'none'));
   }
   if (!shapes.length) return null;
   return { vbW, vbH, shapes };
@@ -15350,6 +15488,9 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
 .book-title-main--back{font-size:36pt}
 .cs-counter{display:inline-block;min-width:1.4em;margin-inline-end:6px;font-weight:700;opacity:.7;font-size:.85em}
 .footnote{margin:1px 0}
+/* **S70 (fn-continuous ב-DP): זרימה רציפה של הערות המרזב — הערה באותה שורה שבה הסתיימה קודמתה */
+.footnotes-flow{direction:rtl;text-align:justify}
+.footnotes-flow .footnote.fn--inline{display:inline}
 `;
 
 /** בניית מסמך HTML עצמאי מעמודי ה‑DOM שכבר רוכמו (string-level; עובד גם Node-side). */
@@ -16080,17 +16221,27 @@ function projectPage(page, settings, api) {
     // **S5.1 (תיקון C5):** מיקום לפי page-num-position מההגדרות — בעבר מוקשה
     // bottom-center וכל ערך אחר הוגדר בשקט. 'outer' מודע-זוגיות כמו המקור
     // (recto=index זוגי ⇒ שמאל; verso ⇒ ימין) — כמו folio--outer ב-CSS.
+    // **S69 (R4-M3 — סגירת קירוב):** העוגן האנכי מה-CSS החי (.folio{bottom:25px})
+    // ולא קירוב contentBox.bottom+2 שסטה מה-DOM בכ~17px. הבסיס = תחתית
+    // תיבת הגיליון − half-leading − descent (line-height: normal ≈ 1.2 —
+    // חסר הגדרה מפורשת ב-CSS); אותה נוסחה משמרת גם את top:4px/6px.
+    const FOLIO_BOTTOM_PX = 25; // styles.css: .folio{bottom:25px}
+    const folioPx = 10 * (96 / 72);
+    const folioLineH = Math.round(folioPx * 1.2);
+    const ascEm = measure.ascentEm(), descEm = measure.descentEm();
+    const halfLead = Math.max(0, (folioLineH - (ascEm + descEm) * folioPx) / 2);
     const pos = String((settings && settings['page-num-position']) || 'bottom-center');
     if (pos === 'none') { out.folio = null; }
     else {
       const recto = (page.index % 2 === 0);
       let fx = Math.round((tpl.width - fw) / 2);
-      let fy = tpl.contentBox.bottom + 2;
+      let boxTop = tpl.height - FOLIO_BOTTOM_PX - folioLineH; // ראש תיבת הגיליון (כמו ה-DOM)
+      let baselineY = boxTop + halfLead + ascEm * folioPx;
       if (pos === 'outer-left' || (pos === 'outer' && recto)) fx = 8;
       else if (pos === 'outer-right' || (pos === 'outer' && !recto)) fx = Math.max(8, Math.round(tpl.width - fw - 8));
-      else if (pos === 'top') fy = 4;
-      else if (pos === 'in-header') fy = 6;
-      out.folio = { y: fy, x: fx, w: fw, sizePt: 10, text: ft };
+      else if (pos === 'top') { boxTop = 4; baselineY = boxTop + halfLead + ascEm * folioPx; } // styles.css: .folio--top{top:4px}
+      else if (pos === 'in-header') { boxTop = 6; baselineY = boxTop + halfLead + ascEm * folioPx; } // styles.css: .folio--in-header{top:6px}
+      out.folio = { y: boxTop, baselineY, x: fx, w: fw, sizePt: 10, text: ft };
     }
   }
 
@@ -16235,7 +16386,8 @@ function noteMarkerOf(n, settings) {
 function projectFootnoteGutter(page, settings, measure, out) {
   const tpl = page.template;
   const fnSize = fnNoteSizePt(settings);
-  const factor = NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1;
+  // **S70 (R7-M4):** פקטורי הגופן הם תיקון טבלת impl A; ב-impl B מדויקות המטריקות והפקטור מולד.
+  const factor = (measure && measure.impl === 'font-metrics') ? 1 : (NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1);
   const fullX = colLeftOf(tpl), fullW = colWidthOf(tpl);
   let laneW = settings._fnColWidthPx || Math.round(fullW);
   if (!(laneW > 0) || laneW > fullW) laneW = Math.round(fullW);
@@ -16357,7 +16509,9 @@ function projectEndnotePage(page, settings, measure, out) {
 function projectSideNotes(page, settings, measure, out) {
   const sizePt = settings['body-font-size-pt'] * 0.75;
   const fontName = settings['s-note-body-font'];
-  const factor = SIDE_NOTE_FONT_FACTORS[fontName] || (fontName && fontName !== settings['body-font'] ? 1.08 : 1);
+  // **S70 (R7-M4):** בם-בו הפקטור מולד (מטריקות אמת)
+  const factor = (measure && measure.impl === 'font-metrics')
+    ? 1 : (SIDE_NOTE_FONT_FACTORS[fontName] || (fontName && fontName !== settings['body-font'] ? 1.08 : 1));
   for (const sn of page.sideNotes) {
     if (sn.yTop == null) continue; // רק המוקמות בפועל (placeSideNotes)
     const pitch = Math.round(sizePt * (96 / 72) * 1.15);
@@ -16570,7 +16724,7 @@ function attachBaselines(page, settings, measure) {
     // כנפילה בלבד להערות בלי מילים.
     for (const fn of page.footnotes) { if (!fn.words || !fn.words.length) fn.baselineY = fn.y + ascent * 11 * (96 / 72); }
   }
-  if (page.folio) page.folio.baselineY = page.folio.y + 10;
+  if (page.folio) page.folio.baselineY = page.folio.baselineY != null ? page.folio.baselineY : page.folio.y + 10; // **S69:** נוסחת הנפילה רק אם לא חושב בקרן
   if (page.header) page.header.baselineY = page.header.y + 10;
 }
 

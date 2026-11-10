@@ -234,6 +234,30 @@ function renderFootnoteArea(page, settings, doc) {
     el.textContent = `${cont ? '(המשך) ' : ''}${marker}\u200F ${scrubPUAText(n.text || n)}`;
     return el;
   };
+  // **S70 (fn-continuous ב-DP — סגירת שארית S5.4):** גרסת inline של ההערה —
+  // לזרימה רציפה: הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה (רווח-
+  // כפול בין הערות — כמו המורשת). המודל כבר תיקצב במצב זה בלי הצמדת
+  // תקרה פר-הערה (D-34); התצוגה משלימה את החזות בלבד — הגיאומטריה לא זזה.
+  const mkNoteInline = (n) => {
+    const marker = n.marker || markerFor(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings['footnote-marker-style']);
+    const el = doc.createElement('span');
+    const cont = n.isContinuation || n.mode === 'split-rest';
+    el.className = 'footnote fn--inline' + (cont ? ' fn--continuation' : '') + (n.customStyle ? ' footnote--custom' : '');
+    if (n.customStyle) el.dataset.style = n.customStyle;
+    el.textContent = `${cont ? '(המשך) ' : ''}${marker}\u200F ${scrubPUAText(n.text || n)}`;
+    return el;
+  };
+  const continuous = settings['fn-layout-mode'] === 'continuous';
+  const flowOf = (notes) => {
+    const flow = doc.createElement('div');
+    flow.className = 'footnotes-flow';
+    flow.dir = 'rtl';
+    notes.forEach((n, i) => {
+      if (i > 0) flow.appendChild(doc.createTextNode('\u00A0 ')); // רווח-כפול בין הערות
+      flow.appendChild(mkNoteInline(n));
+    });
+    return flow;
+  };
   // **S5.4 (תצוגה=ייצוא):** שני נתיבים לפי footnote-columns — חלוקת הערות
   // זהה לתקציב/פרויקטור (LPT דטרמיניסטית) — התצוגה וה-PDF מציגים את אותן
   // הערות באותם נתיבים. הנתיב הראשון מימין (RTL).
@@ -256,10 +280,17 @@ function renderFootnoteArea(page, settings, doc) {
       laneEl.className = 'footnotes-lane';
       laneEl.style.flex = '1 1 0';
       laneEl.style.minWidth = '0';
-      for (const n of lane) laneEl.appendChild(mkNote(n));
+      // **S70:** זרימה רציפה בתוך כל נתיב (עצמאית פר-נתיב — כמו התקציב)
+      if (continuous) laneEl.appendChild(flowOf(lane));
+      else for (const n of lane) laneEl.appendChild(mkNote(n));
       row.appendChild(laneEl);
     }
     area.appendChild(row);
+  } else if (continuous) {
+    // **S70 (fn-continuous ב-DP):** כל הערות העמוד זורמות בבלוק אחד — במקום
+    // בלוקים נפרדים. הזרימה צפופה מסכום הבלוקים ⇒ הרצועה השמורה נשארת
+    // חוקית (שמרנית); שום שורת גוף אינה זזה.
+    area.appendChild(flowOf(page.footnotes));
   } else {
     for (const n of page.footnotes) area.appendChild(mkNote(n));
   }

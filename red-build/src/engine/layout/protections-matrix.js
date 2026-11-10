@@ -56,26 +56,36 @@ const CHECKS = {
       const col = page.columns[c];
       if (!col.length) continue;
       const first = col[0], last = col[col.length - 1];
-      if (first.meta && first.meta.part === 'rest' && col.length >= 1) {
-        if (settings['prevent-orphans-top'] && settings['widow-strictness'] !== 'relaxed') {
-          violations.push({ kind: 'orphan-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { colLen: col.length }, ledgerRef: ledger.create('orphan-top', `p${page.index}c${c}`, page.index, { colLen: col.length }, 'protections').issue_id });
+      // **S70 (R3-M2 — כיול אמת, לא החלשה):** בעבר 'orphan-top' דווח על **כל**
+      // 'rest' בראש הטור — גם כשרצף ההמשך בן 2+ שורות (חוקי לחלוטין; SRS §5.1.1
+      // אוסר רק "פחות משתי שורות של פסקה ממשיכה"). very_long: 791 דיווחים שכולם
+      // פרט ליחידים היו חיתוכים חוקיים. כעת נספר רצף השורות של אותה פסקה מראש
+      // הטור, והפרה נרשמת רק ברצף בודד. שורת המשך בודדת היא בהכרח גם סוף
+      // הפסקה ⇒ עדיפות ל-widow-top (אותה גיאומטריה; לא דיווח כפול).
+      if (first.meta && first.meta.part === 'rest') {
+        let run = 0;
+        for (const l of col) { if (l.meta && l.meta.tokenId === first.meta.tokenId) run++; else break; }
+        if (run < 2) {
+          if (settings['prevent-widows-top'] && first.isLast) {
+            violations.push({ kind: 'widow-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { run }, ledgerRef: ledger.create('widow-top', `p${page.index}c${c}`, page.index, { run }, 'protections').issue_id });
+          } else if (settings['prevent-orphans-top'] && settings['widow-strictness'] !== 'relaxed') {
+            violations.push({ kind: 'orphan-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { run }, ledgerRef: ledger.create('orphan-top', `p${page.index}c${c}`, page.index, { run }, 'protections').issue_id });
+          }
         }
       }
+      // **S70 (R3-M3 — כיול אמת, לא החלשה):** בעבר 'widow-bottom' דווח על **כל**
+      // חיתוך-פסקה בתחתית הטור (part='first' גם עם 2+ שורות של אותה פסקה בטור —
+      // חוקי; SRS §5.1.2 דורש שתי שורות לפחות). very_long: 1205 דיווחים, מהם 29
+      // אמיתיים (שורת פתיחה בודדת). כעת: הפרה רק בשורה בודדת; orphan-bottom
+      // (אותה גיאומטריה) בעדיפות כששני המתגים דלוקים — לא דיווח כפול.
       if (last.meta && last.meta.part === 'first') {
         const sameTokenInCol = col.filter(x => x.meta && x.meta.tokenId === last.meta.tokenId).length;
-        const alsoOrphanBottom = settings['prevent-orphans-bottom'] && sameTokenInCol === 1;
-        if (settings['prevent-widows-bottom'] && !alsoOrphanBottom) {
-          violations.push({ kind: 'widow-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { colLen: col.length }, ledgerRef: ledger.create('widow-bottom', `p${page.index}c${c}`, page.index, { colLen: col.length }, 'protections').issue_id });
-        }
-      }
-      if (first.meta && first.meta.part === 'rest' && first.isLast) {
-        if (settings['prevent-widows-top']) {
-          violations.push({ kind: 'widow-top', target: `page#${page.index}c${c}`, page: page.index, evidence: {}, ledgerRef: ledger.create('widow-top', `p${page.index}c${c}`, page.index, {}, 'protections').issue_id });
-        }
-      }
-      if (last.meta && last.meta.part === 'first' && col.filter(x => x.meta && x.meta.tokenId === last.meta.tokenId).length === 1) {
-        if (settings['prevent-orphans-bottom']) {
-          violations.push({ kind: 'orphan-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: {}, ledgerRef: ledger.create('orphan-bottom', `p${page.index}c${c}`, page.index, {}, 'protections').issue_id });
+        if (sameTokenInCol === 1) {
+          if (settings['prevent-orphans-bottom']) {
+            violations.push({ kind: 'orphan-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { sameTokenInCol }, ledgerRef: ledger.create('orphan-bottom', `p${page.index}c${c}`, page.index, { sameTokenInCol }, 'protections').issue_id });
+          } else if (settings['prevent-widows-bottom']) {
+            violations.push({ kind: 'widow-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { sameTokenInCol }, ledgerRef: ledger.create('widow-bottom', `p${page.index}c${c}`, page.index, { sameTokenInCol }, 'protections').issue_id });
+          }
         }
       }
     }

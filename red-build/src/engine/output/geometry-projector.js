@@ -182,17 +182,27 @@ function projectPage(page, settings, api) {
     // **S5.1 (תיקון C5):** מיקום לפי page-num-position מההגדרות — בעבר מוקשה
     // bottom-center וכל ערך אחר הוגדר בשקט. 'outer' מודע-זוגיות כמו המקור
     // (recto=index זוגי ⇒ שמאל; verso ⇒ ימין) — כמו folio--outer ב-CSS.
+    // **S69 (R4-M3 — סגירת קירוב):** העוגן האנכי מה-CSS החי (.folio{bottom:25px})
+    // ולא קירוב contentBox.bottom+2 שסטה מה-DOM בכ~17px. הבסיס = תחתית
+    // תיבת הגיליון − half-leading − descent (line-height: normal ≈ 1.2 —
+    // חסר הגדרה מפורשת ב-CSS); אותה נוסחה משמרת גם את top:4px/6px.
+    const FOLIO_BOTTOM_PX = 25; // styles.css: .folio{bottom:25px}
+    const folioPx = 10 * (96 / 72);
+    const folioLineH = Math.round(folioPx * 1.2);
+    const ascEm = measure.ascentEm(), descEm = measure.descentEm();
+    const halfLead = Math.max(0, (folioLineH - (ascEm + descEm) * folioPx) / 2);
     const pos = String((settings && settings['page-num-position']) || 'bottom-center');
     if (pos === 'none') { out.folio = null; }
     else {
       const recto = (page.index % 2 === 0);
       let fx = Math.round((tpl.width - fw) / 2);
-      let fy = tpl.contentBox.bottom + 2;
+      let boxTop = tpl.height - FOLIO_BOTTOM_PX - folioLineH; // ראש תיבת הגיליון (כמו ה-DOM)
+      let baselineY = boxTop + halfLead + ascEm * folioPx;
       if (pos === 'outer-left' || (pos === 'outer' && recto)) fx = 8;
       else if (pos === 'outer-right' || (pos === 'outer' && !recto)) fx = Math.max(8, Math.round(tpl.width - fw - 8));
-      else if (pos === 'top') fy = 4;
-      else if (pos === 'in-header') fy = 6;
-      out.folio = { y: fy, x: fx, w: fw, sizePt: 10, text: ft };
+      else if (pos === 'top') { boxTop = 4; baselineY = boxTop + halfLead + ascEm * folioPx; } // styles.css: .folio--top{top:4px}
+      else if (pos === 'in-header') { boxTop = 6; baselineY = boxTop + halfLead + ascEm * folioPx; } // styles.css: .folio--in-header{top:6px}
+      out.folio = { y: boxTop, baselineY, x: fx, w: fw, sizePt: 10, text: ft };
     }
   }
 
@@ -337,7 +347,8 @@ function noteMarkerOf(n, settings) {
 function projectFootnoteGutter(page, settings, measure, out) {
   const tpl = page.template;
   const fnSize = fnNoteSizePt(settings);
-  const factor = NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1;
+  // **S70 (R7-M4):** פקטורי הגופן הם תיקון טבלת impl A; ב-impl B מדויקות המטריקות והפקטור מולד.
+  const factor = (measure && measure.impl === 'font-metrics') ? 1 : (NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1);
   const fullX = colLeftOf(tpl), fullW = colWidthOf(tpl);
   let laneW = settings._fnColWidthPx || Math.round(fullW);
   if (!(laneW > 0) || laneW > fullW) laneW = Math.round(fullW);
@@ -459,7 +470,9 @@ function projectEndnotePage(page, settings, measure, out) {
 function projectSideNotes(page, settings, measure, out) {
   const sizePt = settings['body-font-size-pt'] * 0.75;
   const fontName = settings['s-note-body-font'];
-  const factor = SIDE_NOTE_FONT_FACTORS[fontName] || (fontName && fontName !== settings['body-font'] ? 1.08 : 1);
+  // **S70 (R7-M4):** בם-בו הפקטור מולד (מטריקות אמת)
+  const factor = (measure && measure.impl === 'font-metrics')
+    ? 1 : (SIDE_NOTE_FONT_FACTORS[fontName] || (fontName && fontName !== settings['body-font'] ? 1.08 : 1));
   for (const sn of page.sideNotes) {
     if (sn.yTop == null) continue; // רק המוקמות בפועל (placeSideNotes)
     const pitch = Math.round(sizePt * (96 / 72) * 1.15);
@@ -672,7 +685,7 @@ function attachBaselines(page, settings, measure) {
     // כנפילה בלבד להערות בלי מילים.
     for (const fn of page.footnotes) { if (!fn.words || !fn.words.length) fn.baselineY = fn.y + ascent * 11 * (96 / 72); }
   }
-  if (page.folio) page.folio.baselineY = page.folio.y + 10;
+  if (page.folio) page.folio.baselineY = page.folio.baselineY != null ? page.folio.baselineY : page.folio.y + 10; // **S69:** נוסחת הנפילה רק אם לא חושב בקרן
   if (page.header) page.header.baselineY = page.header.y + 10;
 }
 

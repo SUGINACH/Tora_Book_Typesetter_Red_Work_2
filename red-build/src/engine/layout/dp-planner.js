@@ -145,7 +145,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
    */
   function recomputeFnBudget(page) {
     if (!settings['footnotes-enabled'] || !page.footnotes.length) { page.fnReservedHeightPx = 0; return 0; }
-    const reserved = getFootnotesReservedHeight(page.footnotes, settings, (t, s) => measureFn(t, s));
+    const reserved = getFootnotesReservedHeight(page.footnotes, settings, measureFn) // **S70:** העברת הפונקציה עצמה שומרת על סימון ה-impl (להתאמת פקטורים);
     page.fnReservedHeightPx = reserved;
     return reserved;
   }

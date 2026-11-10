@@ -8910,6 +8910,30 @@ function renderFootnoteArea(page, settings, doc) {
     el.textContent = `${cont ? '(המשך) ' : ''}${marker}\u200F ${scrubPUAText(n.text || n)}`;
     return el;
   };
+  // **S70 (fn-continuous ב-DP — סגירת שארית S5.4):** גרסת inline של ההערה —
+  // לזרימה רציפה: הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה (רווח-
+  // כפול בין הערות — כמו המורשת). המודל כבר תיקצב במצב זה בלי הצמדת
+  // תקרה פר-הערה (D-34); התצוגה משלימה את החזות בלבד — הגיאומטריה לא זזה.
+  const mkNoteInline = (n) => {
+    const marker = n.marker || markerFor(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings['footnote-marker-style']);
+    const el = doc.createElement('span');
+    const cont = n.isContinuation || n.mode === 'split-rest';
+    el.className = 'footnote fn--inline' + (cont ? ' fn--continuation' : '') + (n.customStyle ? ' footnote--custom' : '');
+    if (n.customStyle) el.dataset.style = n.customStyle;
+    el.textContent = `${cont ? '(המשך) ' : ''}${marker}\u200F ${scrubPUAText(n.text || n)}`;
+    return el;
+  };
+  const continuous = settings['fn-layout-mode'] === 'continuous';
+  const flowOf = (notes) => {
+    const flow = doc.createElement('div');
+    flow.className = 'footnotes-flow';
+    flow.dir = 'rtl';
+    notes.forEach((n, i) => {
+      if (i > 0) flow.appendChild(doc.createTextNode('\u00A0 ')); // רווח-כפול בין הערות
+      flow.appendChild(mkNoteInline(n));
+    });
+    return flow;
+  };
   // **S5.4 (תצוגה=ייצוא):** שני נתיבים לפי footnote-columns — חלוקת הערות
   // זהה לתקציב/פרויקטור (LPT דטרמיניסטית) — התצוגה וה-PDF מציגים את אותן
   // הערות באותם נתיבים. הנתיב הראשון מימין (RTL).
@@ -8932,10 +8956,17 @@ function renderFootnoteArea(page, settings, doc) {
       laneEl.className = 'footnotes-lane';
       laneEl.style.flex = '1 1 0';
       laneEl.style.minWidth = '0';
-      for (const n of lane) laneEl.appendChild(mkNote(n));
+      // **S70:** זרימה רציפה בתוך כל נתיב (עצמאית פר-נתיב — כמו התקציב)
+      if (continuous) laneEl.appendChild(flowOf(lane));
+      else for (const n of lane) laneEl.appendChild(mkNote(n));
       row.appendChild(laneEl);
     }
     area.appendChild(row);
+  } else if (continuous) {
+    // **S70 (fn-continuous ב-DP):** כל הערות העמוד זורמות בבלוק אחד — במקום
+    // בלוקים נפרדים. הזרימה צפופה מסכום הבלוקים ⇒ הרצועה השמורה נשארת
+    // חוקית (שמרנית); שום שורת גוף אינה זזה.
+    area.appendChild(flowOf(page.footnotes));
   } else {
     for (const n of page.footnotes) area.appendChild(mkNote(n));
   }
@@ -11199,11 +11230,40 @@ function parseSvgPaint(svg) {
   if (!vbH && hm) vbH = parseFloat(hm[1]);
   if (!vbW || !vbH) return null;
 
-  // transform של <g> — תומך ב-translate(a,b) scale(sx,sy) (צורת הקטלוגים)
+  // transform של <g> — **S70 (R6):** תמיכה מלאה ב-translate/scale/matrix
+  // (כולל רשימות) עם הרכבה לפי סדר SVG: הפונקציה השמאלית מוחלת אחרונה.
   let tx = 0, ty = 0, sx = 1, sy = 1;
+  let mtx = null; // [a,b,c,d,e,f] כאשר x' = a·x + c·y + e ; y' = b·x + d·y + f
   const gt = /<g\b[^>]*transform\s*=\s*"([^"]+)"/.exec(s);
   if (gt) {
     const tr = gt[1];
+    const funcs = [];
+    const fre = /(matrix|translate|scale)\s*\(\s*([^)]+)\)/g;
+    let fm;
+    while ((fm = fre.exec(tr))) {
+      const a = fm[2].split(/[\s,]+/).map(Number);
+      if (fm[1] === 'matrix' && a.length >= 6) funcs.push([a[0], a[1], a[2], a[3], a[4], a[5]]);
+      else if (fm[1] === 'translate') funcs.push([1, 0, 0, 1, a[0] || 0, a[1] || 0]);
+      else if (fm[1] === 'scale') {
+        const kx = a[0] != null ? a[0] : 1, ky = a[1] != null ? a[1] : (a[0] != null ? a[0] : 1);
+        funcs.push([kx, 0, 0, ky, 0, 0]);
+      }
+    }
+    // הרכבה לפי סדר SVG: השמאלית חיצונית (מוחלת אחרונה) — acc_new = acc ∘ F
+    // (אימות: "translate(10,0) scale(2)" ⇒ x'=2x+10 ✓)
+    let acc = [1, 0, 0, 1, 0, 0];
+    for (const F of funcs) {
+      acc = [
+        acc[0] * F[0] + acc[2] * F[1],
+        acc[1] * F[0] + acc[3] * F[1],
+        acc[0] * F[2] + acc[2] * F[3],
+        acc[1] * F[2] + acc[3] * F[3],
+        acc[0] * F[4] + acc[2] * F[5] + acc[4],
+        acc[1] * F[4] + acc[3] * F[5] + acc[5],
+      ];
+    }
+    mtx = acc;
+    // תאימות לאחור: טרנספורמציה בודדת translate/scale — שמירת tx/ty/sx/sy
     const tm = /translate\(\s*([-\d.]+)[\s,]+([-\d.]+)/.exec(tr);
     if (tm) { tx = parseFloat(tm[1]); ty = parseFloat(tm[2]); }
     const sm = /scale\(\s*([-\d.]+)(?:[\s,]+([-\d.]+))?\)/.exec(tr);
@@ -11212,7 +11272,11 @@ function parseSvgPaint(svg) {
   const transform = (pts) => {
     const out = [];
     for (let i = 0; i + 1 < pts.length; i += 2) {
-      out.push(pts[i] * sx + tx, pts[i + 1] * sy + ty);
+      if (mtx) {
+        out.push(mtx[0] * pts[i] + mtx[2] * pts[i + 1] + mtx[4], mtx[1] * pts[i] + mtx[3] * pts[i + 1] + mtx[5]);
+      } else {
+        out.push(pts[i] * sx + tx, pts[i + 1] * sy + ty);
+      }
     }
     return out;
   };
@@ -11265,6 +11329,24 @@ function parseSvgPaint(svg) {
     if (!w || !h) continue;
     const fill = /fill\s*=\s*"([^"]+)"/.exec(at);
     pushShape(`M ${x0} ${y0} L ${x0 + w} ${y0} L ${x0 + w} ${y0 + h} L ${x0} ${y0 + h} Z`, fill ? fill[1] : '#000', 'none');
+  }
+  // **S70 (R6):** <polygon>/<polyline> — points לנתיב; polygon נסגר (Z)
+  // וממולא כברירת מחדל; polyline נצבע רק אם יש לו fill מפורש (קו-בלבד
+  // מחוץ לתת-הקבוצה — כמו stroked paths — תיעוד בראש המודול).
+  const polyRe = /<(polygon|polyline)\b([^>]*)>/g;
+  while ((m = polyRe.exec(s))) {
+    const at = m[2];
+    const ptsM = /points\s*=\s*"([^"]+)"/.exec(at);
+    if (!ptsM) continue;
+    const nums = ptsM[1].trim().split(/[\s,]+/).map(Number).filter((v) => Number.isFinite(v));
+    if (nums.length < 4) continue;
+    const fill = /fill\s*=\s*"([^"]+)"/.exec(at);
+    const stroke = /stroke\s*=\s*"([^"]+)"/.exec(at);
+    if (m[1] === 'polyline' && !fill && !gFill) continue;
+    let d = `M ${nums[0]} ${nums[1]}`;
+    for (let i = 2; i + 1 < nums.length; i += 2) d += ` L ${nums[i]} ${nums[i + 1]}`;
+    if (m[1] === 'polygon') d += ' Z';
+    pushShape(d, fill ? fill[1] : (gFill ? gFill[1] : '#000'), stroke ? stroke[1] : (gStroke ? gStroke[1] : 'none'));
   }
   if (!shapes.length) return null;
   return { vbW, vbH, shapes };
@@ -16351,7 +16433,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
    */
   function recomputeFnBudget(page) {
     if (!settings['footnotes-enabled'] || !page.footnotes.length) { page.fnReservedHeightPx = 0; return 0; }
-    const reserved = getFootnotesReservedHeight(page.footnotes, settings, (t, s) => measureFn(t, s));
+    const reserved = getFootnotesReservedHeight(page.footnotes, settings, measureFn) // **S70:** העברת הפונקציה עצמה שומרת על סימון ה-impl (להתאמת פקטורים);
     page.fnReservedHeightPx = reserved;
     return reserved;
   }
@@ -16895,26 +16977,36 @@ const CHECKS = {
       const col = page.columns[c];
       if (!col.length) continue;
       const first = col[0], last = col[col.length - 1];
-      if (first.meta && first.meta.part === 'rest' && col.length >= 1) {
-        if (settings['prevent-orphans-top'] && settings['widow-strictness'] !== 'relaxed') {
-          violations.push({ kind: 'orphan-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { colLen: col.length }, ledgerRef: ledger.create('orphan-top', `p${page.index}c${c}`, page.index, { colLen: col.length }, 'protections').issue_id });
+      // **S70 (R3-M2 — כיול אמת, לא החלשה):** בעבר 'orphan-top' דווח על **כל**
+      // 'rest' בראש הטור — גם כשרצף ההמשך בן 2+ שורות (חוקי לחלוטין; SRS §5.1.1
+      // אוסר רק "פחות משתי שורות של פסקה ממשיכה"). very_long: 791 דיווחים שכולם
+      // פרט ליחידים היו חיתוכים חוקיים. כעת נספר רצף השורות של אותה פסקה מראש
+      // הטור, והפרה נרשמת רק ברצף בודד. שורת המשך בודדת היא בהכרח גם סוף
+      // הפסקה ⇒ עדיפות ל-widow-top (אותה גיאומטריה; לא דיווח כפול).
+      if (first.meta && first.meta.part === 'rest') {
+        let run = 0;
+        for (const l of col) { if (l.meta && l.meta.tokenId === first.meta.tokenId) run++; else break; }
+        if (run < 2) {
+          if (settings['prevent-widows-top'] && first.isLast) {
+            violations.push({ kind: 'widow-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { run }, ledgerRef: ledger.create('widow-top', `p${page.index}c${c}`, page.index, { run }, 'protections').issue_id });
+          } else if (settings['prevent-orphans-top'] && settings['widow-strictness'] !== 'relaxed') {
+            violations.push({ kind: 'orphan-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { run }, ledgerRef: ledger.create('orphan-top', `p${page.index}c${c}`, page.index, { run }, 'protections').issue_id });
+          }
         }
       }
+      // **S70 (R3-M3 — כיול אמת, לא החלשה):** בעבר 'widow-bottom' דווח על **כל**
+      // חיתוך-פסקה בתחתית הטור (part='first' גם עם 2+ שורות של אותה פסקה בטור —
+      // חוקי; SRS §5.1.2 דורש שתי שורות לפחות). very_long: 1205 דיווחים, מהם 29
+      // אמיתיים (שורת פתיחה בודדת). כעת: הפרה רק בשורה בודדת; orphan-bottom
+      // (אותה גיאומטריה) בעדיפות כששני המתגים דלוקים — לא דיווח כפול.
       if (last.meta && last.meta.part === 'first') {
         const sameTokenInCol = col.filter(x => x.meta && x.meta.tokenId === last.meta.tokenId).length;
-        const alsoOrphanBottom = settings['prevent-orphans-bottom'] && sameTokenInCol === 1;
-        if (settings['prevent-widows-bottom'] && !alsoOrphanBottom) {
-          violations.push({ kind: 'widow-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { colLen: col.length }, ledgerRef: ledger.create('widow-bottom', `p${page.index}c${c}`, page.index, { colLen: col.length }, 'protections').issue_id });
-        }
-      }
-      if (first.meta && first.meta.part === 'rest' && first.isLast) {
-        if (settings['prevent-widows-top']) {
-          violations.push({ kind: 'widow-top', target: `page#${page.index}c${c}`, page: page.index, evidence: {}, ledgerRef: ledger.create('widow-top', `p${page.index}c${c}`, page.index, {}, 'protections').issue_id });
-        }
-      }
-      if (last.meta && last.meta.part === 'first' && col.filter(x => x.meta && x.meta.tokenId === last.meta.tokenId).length === 1) {
-        if (settings['prevent-orphans-bottom']) {
-          violations.push({ kind: 'orphan-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: {}, ledgerRef: ledger.create('orphan-bottom', `p${page.index}c${c}`, page.index, {}, 'protections').issue_id });
+        if (sameTokenInCol === 1) {
+          if (settings['prevent-orphans-bottom']) {
+            violations.push({ kind: 'orphan-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { sameTokenInCol }, ledgerRef: ledger.create('orphan-bottom', `p${page.index}c${c}`, page.index, { sameTokenInCol }, 'protections').issue_id });
+          } else if (settings['prevent-widows-bottom']) {
+            violations.push({ kind: 'widow-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { sameTokenInCol }, ledgerRef: ledger.create('widow-bottom', `p${page.index}c${c}`, page.index, { sameTokenInCol }, 'protections').issue_id });
+          }
         }
       }
     }
@@ -17765,7 +17857,10 @@ function noteHeight(note, settings, measure) {
   const lh = Math.round(size * (96 / 72) * 1.25);
   const words = String(note.text).replace(/\uE000/g, ' ').split(/\s+/).filter(Boolean);
   const colW = laneWidth(settings);
-  const factor = NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1;
+  // **S70 (R7-M4):** הפקטור מתקן את טבלת impl A בלבד; ב-impl B
+  // (font-metrics) המטריקות מדויקות והכפלה הייתה מנפיחת את תקציב ההערות.
+  const factor = (measure && measure.impl === 'font-metrics')
+    ? 1 : (NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1);
   // **S6.0 (R3-C3 — אומדן ללא רווחים):** ההקרנה (wrapNoteTokens) שוברת
   // את ההערה **עם** רוחבי רווח בין מילים — האומדן כאן סכם מילים בלבד
   // ⇒ כל הערה הגובלת בשבירת-שורה נמדדה שורה אחת פחות (19–21px) וההערה
@@ -17845,8 +17940,36 @@ class WorkerEngineClient {
     this.activeJob = null;      // {jobId, resolve, reject, onProgress, cancelled}
     this.pending = new Map();   // **03.11:** עבודות צד (ייצוא/רישום גופן) — מקבילות לעימוד
     this._errorCbs = [];       // **S5.2:** מאזיני כשל של התעבורה (worker.onerror)
+    // **S70 (R8-M2):** רישומים שהועברו ל-Worker לאורך החיים — לניגון חוזר אחרי
+    // respawn (terminate/קריסה): המופע החדש מתחיל עם זיכרון ריק, ובלי רישום
+    // מחדש המדידה היתה נופלת בשקט לגופני fallback (סחף מדידה שקט).
+    this._registeredFonts = new Map();   // name → bytes
+    this._registeredAssets = new Map(); // collection → items
+    this._workerGeneration = typeof transport.getGeneration === 'function' ? transport.getGeneration() : null;
     transport.setHandler((m) => this._onMessage(m));
     if (typeof transport.setOnError === 'function') transport.setOnError((e) => this._onTransportError(e));
+  }
+
+  /** **S70 (R8-M2):** ניגון רישומים אחרי respawn. קודם מוודאים שהמופע חי
+   *  (ensureAlive מקים מופע חדש אם הקודם מת — ה-respawn קורה כאן, לפני
+   *  קריאת הדור), ואז — אם הדור השתנה — מפרסמים את הרישומים מחדש. סדר
+   *  ההודעות ב-Worker טורי ⇒ הרישום מקדים בפועל את הבקשה שאחריו.
+   *  בתעבורה בלי דור (inline) — אין respawn והפונקציה דוממת. */
+  _maybeReplayRegistrations() {
+    if (typeof this.transport.ensureAlive !== 'function') return;
+    const gen = this.transport.ensureAlive();
+    if (gen === this._workerGeneration) return;
+    this._workerGeneration = gen;
+    for (const [name, bytes] of this._registeredFonts) {
+      const { jobId, promise } = this._newPendingJob('font-replay');
+      this.transport.post({ type: 'register-font', jobId, name, bytes });
+      promise.catch(() => {}); // כשל רישום-חוזר יצוף בתוצאת הריצה הבאה — לא תולה את הלקוח
+    }
+    for (const [collection, items] of this._registeredAssets) {
+      const { jobId, promise } = this._newPendingJob('assets-replay');
+      this.transport.post({ type: 'register-assets', jobId, collection, items });
+      promise.catch(() => {});
+    }
   }
 
   /** **S5.2:** רישום מאזין לכשל/קריסה של ה־Worker (למשל דפדפן: הודעת מצב עברית).
@@ -17931,22 +18054,31 @@ class WorkerEngineClient {
     return { jobId, promise };
   }
 
-  /** **03.11:** רישום גופן TTF במנוע (למדידת גופן אמיתי בעימוד הבא). */
+  /** **03.11:** רישום גופן TTF במנוע (למדידת גופן אמיתי בעימוד הבא).
+   *  **S70 (R8-M2):** רישום מוצלח נשמר לניגון חוזר אחרי respawn של ה-Worker. */
   registerFont({ name, bytes }) {
     const { jobId, promise } = this._newPendingJob('font');
     this.transport.post({ type: 'register-font', jobId, name, bytes });
-    return promise;
+    return promise.then((res) => {
+      this._registeredFonts.set(name, bytes);
+      return res;
+    });
   }
 
-  /** **03.11:** רישום אוסף נכסי עיצוב ברישום שבמנוע (שני הצדדים פותרים imud:...). */
+  /** **03.11:** רישום אוסף נכסי עיצוב ברישום שבמנוע (שני הצדדים פותרים imud:...).
+   *  **S70 (R8-M2):** נשמר לניגון חוזר אחרי respawn. */
   registerAssets({ collection, items }) {
     const { jobId, promise } = this._newPendingJob('assets');
     this.transport.post({ type: 'register-assets', jobId, collection, items });
-    return promise;
+    return promise.then((res) => {
+      this._registeredAssets.set(collection, items);
+      return res;
+    });
   }
 
   /** **03.11:** בקשת ייצוא PDF/ZIP במנוע המלא שב־Worker. bytes חוזר כ-Uint8Array. */
   requestExport({ kind, text, settings, fontBytes, fontName, extensions }) {
+    this._maybeReplayRegistrations(); // **S70 (R8-M2):** הייצוא מודד כמו העימוד — גופנים חייבים להיות רשומים
     const { jobId, promise } = this._newPendingJob('export');
     this.transport.post({ type: 'export-request', jobId, kind, text, settings, fontBytes: fontBytes || null, fontName: fontName || null, extensions: extensions || null });
     return promise;
@@ -17958,6 +18090,7 @@ class WorkerEngineClient {
    */
   requestTypeset({ text, settings, onProgress }) {
     if (this.activeJob) this.cancel();
+    this._maybeReplayRegistrations(); // **S70 (R8-M2):** רישום חוזר לפני העימוד אחרי respawn
     const jobId = `job-${Date.now().toString(36)}-${++jobSeq}`;
     let resolve, reject;
     const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
@@ -18008,6 +18141,7 @@ function workerTransport(factory) {
   let terminated = false; // **S5.2:** דגל מוות — true עד respawn בפוסט הבא
   let handler = null;     // פונקציית ההודעות של הלקוח
   let errorSink = null;   // **S5.2:** worker.onerror → הלקוח (דחיית בטיסה + הודעה)
+  let generation = 0;     // **S70 (R8-M2):** דור המופע — עולה בכל respawn; הלקוח מנגן מחדש רישומים בהחלפת דור
 
   function attach(w) {
     w.onmessage = (ev) => { if (handler) handler(ev.data); };
@@ -18023,6 +18157,7 @@ function workerTransport(factory) {
     if (worker && !terminated) return worker;
     worker = factory();       // respawn — אותו URL (?v=) כמו בעלייה הראשונה
     terminated = false;
+    generation++;             // **S70:** דור חדש — הלקוח יזהה וירשום מחדש גופנים/נכסים
     attach(worker);
     return worker;
   }
@@ -18034,6 +18169,11 @@ function workerTransport(factory) {
       if (worker && !terminated) attach(worker); // רישום חוזר — מחדש גם על מופע קיים
     },
     setOnError: (cb) => { errorSink = cb; }, // **S5.2:** אופציונלי — inline אין לו
+    // **S70 (R8-M2):** דור המופע הנוכחי — לזיהוי respawn מצד הלקוח
+    getGeneration: () => generation,
+    // **S70 (R8-M2):** הקמת המופע אם מת (respawn) *כעת* — והחזרת הדור;
+    // הלקוח קורא לכך לפני פרסום רישומים חוזרים כדי שהדור ייקרא אחרי ה-respawn.
+    ensureAlive: () => { ensure(); return generation; },
     terminate: () => {
       if (worker && !terminated) { try { worker.terminate(); } catch (e) { /* כבר מת */ } }
       terminated = true; // הפוסט הבא יבנה מחדש (respawn)
@@ -18990,6 +19130,9 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
 .book-title-main--back{font-size:36pt}
 .cs-counter{display:inline-block;min-width:1.4em;margin-inline-end:6px;font-weight:700;opacity:.7;font-size:.85em}
 .footnote{margin:1px 0}
+/* **S70 (fn-continuous ב-DP): זרימה רציפה של הערות המרזב — הערה באותה שורה שבה הסתיימה קודמתה */
+.footnotes-flow{direction:rtl;text-align:justify}
+.footnotes-flow .footnote.fn--inline{display:inline}
 `;
 
 /** בניית מסמך HTML עצמאי מעמודי ה‑DOM שכבר רוכמו (string-level; עובד גם Node-side). */

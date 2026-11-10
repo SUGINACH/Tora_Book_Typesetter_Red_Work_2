@@ -317,11 +317,40 @@ function parseSvgPaint(svg) {
   if (!vbH && hm) vbH = parseFloat(hm[1]);
   if (!vbW || !vbH) return null;
 
-  // transform של <g> — תומך ב-translate(a,b) scale(sx,sy) (צורת הקטלוגים)
+  // transform של <g> — **S70 (R6):** תמיכה מלאה ב-translate/scale/matrix
+  // (כולל רשימות) עם הרכבה לפי סדר SVG: הפונקציה השמאלית מוחלת אחרונה.
   let tx = 0, ty = 0, sx = 1, sy = 1;
+  let mtx = null; // [a,b,c,d,e,f] כאשר x' = a·x + c·y + e ; y' = b·x + d·y + f
   const gt = /<g\b[^>]*transform\s*=\s*"([^"]+)"/.exec(s);
   if (gt) {
     const tr = gt[1];
+    const funcs = [];
+    const fre = /(matrix|translate|scale)\s*\(\s*([^)]+)\)/g;
+    let fm;
+    while ((fm = fre.exec(tr))) {
+      const a = fm[2].split(/[\s,]+/).map(Number);
+      if (fm[1] === 'matrix' && a.length >= 6) funcs.push([a[0], a[1], a[2], a[3], a[4], a[5]]);
+      else if (fm[1] === 'translate') funcs.push([1, 0, 0, 1, a[0] || 0, a[1] || 0]);
+      else if (fm[1] === 'scale') {
+        const kx = a[0] != null ? a[0] : 1, ky = a[1] != null ? a[1] : (a[0] != null ? a[0] : 1);
+        funcs.push([kx, 0, 0, ky, 0, 0]);
+      }
+    }
+    // הרכבה לפי סדר SVG: השמאלית חיצונית (מוחלת אחרונה) — acc_new = acc ∘ F
+    // (אימות: "translate(10,0) scale(2)" ⇒ x'=2x+10 ✓)
+    let acc = [1, 0, 0, 1, 0, 0];
+    for (const F of funcs) {
+      acc = [
+        acc[0] * F[0] + acc[2] * F[1],
+        acc[1] * F[0] + acc[3] * F[1],
+        acc[0] * F[2] + acc[2] * F[3],
+        acc[1] * F[2] + acc[3] * F[3],
+        acc[0] * F[4] + acc[2] * F[5] + acc[4],
+        acc[1] * F[4] + acc[3] * F[5] + acc[5],
+      ];
+    }
+    mtx = acc;
+    // תאימות לאחור: טרנספורמציה בודדת translate/scale — שמירת tx/ty/sx/sy
     const tm = /translate\(\s*([-\d.]+)[\s,]+([-\d.]+)/.exec(tr);
     if (tm) { tx = parseFloat(tm[1]); ty = parseFloat(tm[2]); }
     const sm = /scale\(\s*([-\d.]+)(?:[\s,]+([-\d.]+))?\)/.exec(tr);
@@ -330,7 +359,11 @@ function parseSvgPaint(svg) {
   const transform = (pts) => {
     const out = [];
     for (let i = 0; i + 1 < pts.length; i += 2) {
-      out.push(pts[i] * sx + tx, pts[i + 1] * sy + ty);
+      if (mtx) {
+        out.push(mtx[0] * pts[i] + mtx[2] * pts[i + 1] + mtx[4], mtx[1] * pts[i] + mtx[3] * pts[i + 1] + mtx[5]);
+      } else {
+        out.push(pts[i] * sx + tx, pts[i + 1] * sy + ty);
+      }
     }
     return out;
   };
@@ -383,6 +416,24 @@ function parseSvgPaint(svg) {
     if (!w || !h) continue;
     const fill = /fill\s*=\s*"([^"]+)"/.exec(at);
     pushShape(`M ${x0} ${y0} L ${x0 + w} ${y0} L ${x0 + w} ${y0 + h} L ${x0} ${y0 + h} Z`, fill ? fill[1] : '#000', 'none');
+  }
+  // **S70 (R6):** <polygon>/<polyline> — points לנתיב; polygon נסגר (Z)
+  // וממולא כברירת מחדל; polyline נצבע רק אם יש לו fill מפורש (קו-בלבד
+  // מחוץ לתת-הקבוצה — כמו stroked paths — תיעוד בראש המודול).
+  const polyRe = /<(polygon|polyline)\b([^>]*)>/g;
+  while ((m = polyRe.exec(s))) {
+    const at = m[2];
+    const ptsM = /points\s*=\s*"([^"]+)"/.exec(at);
+    if (!ptsM) continue;
+    const nums = ptsM[1].trim().split(/[\s,]+/).map(Number).filter((v) => Number.isFinite(v));
+    if (nums.length < 4) continue;
+    const fill = /fill\s*=\s*"([^"]+)"/.exec(at);
+    const stroke = /stroke\s*=\s*"([^"]+)"/.exec(at);
+    if (m[1] === 'polyline' && !fill && !gFill) continue;
+    let d = `M ${nums[0]} ${nums[1]}`;
+    for (let i = 2; i + 1 < nums.length; i += 2) d += ` L ${nums[i]} ${nums[i + 1]}`;
+    if (m[1] === 'polygon') d += ' Z';
+    pushShape(d, fill ? fill[1] : (gFill ? gFill[1] : '#000'), stroke ? stroke[1] : (gStroke ? gStroke[1] : 'none'));
   }
   if (!shapes.length) return null;
   return { vbW, vbH, shapes };

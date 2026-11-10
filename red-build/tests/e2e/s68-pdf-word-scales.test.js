@@ -144,4 +144,48 @@ describe('S68-2 — אינטגרציה: הקורפוס עם paren-scale — הה
   });
 });
 
+// =====================================================================
+describe('S69 (R4-M3) — עוגן הגיליון בהקרנה: מה-CSS החי (bottom:25px), לא קירוב', () => {
+  it('הבסיס נגזר מתחתית העמוד במקום קירוב contentBox.bottom+2', () => {
+    const s = getDefaultSettings();
+    const r = typeset(CORPUS, s);
+    const proj = projectDocument(r, s);
+    const withFolio = proj.pages.filter((p) => p.folio);
+    assert(withFolio.length > 0, 'corpus has folio pages');
+    for (const pl of withFolio) {
+      const f = pl.folio;
+      // הקירוב הישן היה מציב בסיס ב-~1114.5 (contentBox.bottom+2+10); ה-CSS החי
+      // מציב את תיבת הגיליון ב-25px מתחתית ⇒ הבסיס נמוך מ-~1105
+      assert(f.baselineY < 1106, `baseline from CSS bottom:25px anchor, got ${f.baselineY}`);
+      assert(f.baselineY > 1070, `baseline still in the folio band (audit ≥1022.2), got ${f.baselineY}`);
+      // תיבת הגיליון: ראשה ב-pageH-25-lineH
+      const lineH = Math.round((10 * 96 / 72) * 1.2);
+      assert(Math.abs(f.y - (pl.height - 25 - lineH)) < 0.51, `box top anchored to CSS, got ${f.y}`);
+    }
+  });
+
+  it('top/in-header נעוגים ל-4px/6px מראש העמוד כמו ה-CSS', () => {
+    for (const pos of ['top', 'in-header']) {
+      const s = { ...getDefaultSettings(), 'page-num-position': pos };
+      const r = typeset(CORPUS, s);
+      const proj = projectDocument(r, s);
+      const withFolio = proj.pages.filter((p) => p.folio);
+      assert(withFolio.length > 0, `folio present in ${pos}`);
+      for (const pl of withFolio) {
+        const cssTop = pos === 'top' ? 4 : 6;
+        assert(Math.abs(pl.folio.y - cssTop) < 0.01, `${pos}: box top at ${cssTop}px, got ${pl.folio.y}`);
+        assert(pl.folio.baselineY > cssTop && pl.folio.baselineY < cssTop + 24, `${pos}: baseline inside the line box`);
+      }
+    }
+  });
+
+  it('דטרמיניזם: בסיס הגיליון זהה בין הקרנות', () => {
+    const s = getDefaultSettings();
+    const r = typeset(CORPUS, s);
+    const a = projectDocument(r, s), b = projectDocument(r, s);
+    const key = (p) => JSON.stringify(p.pages.map((pg) => pg.folio && [pg.folio.x, pg.folio.y, pg.folio.baselineY]));
+    assertEq(key(a), key(b), 'folio anchor deterministic');
+  });
+});
+
 report('s68-pdf-word-scales');

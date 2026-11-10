@@ -184,6 +184,13 @@ function typeset(rawText, settingsIn, env = {}) {
   // **S12 (REQ-LB-01 impl B):** measure-impl = table (ברירת מחדל — רציפות S1–S11) | font-metrics
   // (טבלאות אמת מגופן רשום — hmtx/cmap/kern/GPOS; registerFont מפורש, אין רשת).
   const api = new MeasureAPI(settings, resolveMeasureImpl(settings));
+  // **S70 (R7-M4):** עטיפת מדידה משותפת עם סימון המימוש. פקטורי הגופן
+  // (NOTE_FONT_FACTORS וכו') הם תיקון לטבלה של impl A ('table'); ב-impl B
+  // ('font-metrics') המטריקות מדויקות והכפלה הייתה מנפחת רוחבים ומסיטה
+  // תקציבי הערות. הצרכנים (footnote-budget/endnote-pages/projector)
+  // בודקים את measure.impl ומדלגים על הפקטור ב-impl B.
+  const measureWithImpl = (t, s) => api.measureTextWidth(t, s);
+  measureWithImpl.impl = api.impl;
   void env;
 
   const FONT_WIDTH_PROFILES = {
@@ -584,7 +591,7 @@ function typeset(rawText, settingsIn, env = {}) {
   const snapTracker = settings['audit-stage-snapshots'] === true ? createSnapshotTracker() : null;
 
   // ---- CP3: page plan (DP) + protections + retreat loop ----
-  const planned = planPages(blocks, settings, eventLog, ledger, { measure: (t2, s2) => api.measureTextWidth(t2, s2), onProgress });
+  const planned = planPages(blocks, settings, eventLog, ledger, { measure: measureWithImpl, onProgress });
   let { pages } = planned;
   prog('page-plan', 70, 'הפריסה הושלמה', { totalPages: pages.length, pageIndex: pages.length });
 
@@ -720,13 +727,13 @@ function typeset(rawText, settingsIn, env = {}) {
   // S7.1.2: הערות צד — עיגון לפסקה, cascade, מיכל 20px, מעבר לעמוד הבא
   const { placeSideNotes, verifyH7Conversion } = require('../layout/side-notes');
   for (const pg of pages) pg.isRecto = pg.index % 2 === 0;
-  const sideNotePlacement = placeSideNotes(pages, settings, (t2, s2) => api.measureTextWidth(t2, s2), { ledger, eventLog });
+  const sideNotePlacement = placeSideNotes(pages, settings, measureWithImpl, { ledger, eventLog });
 
   // **S8 — פאס העיטורים (L5):** כל העיטורים overlay-rects על העמודים;
   // אסור לגעת בשורות (invariant T1 — מוכח מיד לאחר מכן ב‑bodyGeometryHash).
   // סוגר: REQ-ORN-01..04 + אודיט ornament-* במייצרים אמיתיים.
   const { planPageOrnaments } = require('../decoration/ornament-plan');
-  const ornamentPass = planPageOrnaments(pages, settings, (t2, s2) => api.measureTextWidth(t2, s2), { ledger, eventLog });
+  const ornamentPass = planPageOrnaments(pages, settings, measureWithImpl, { ledger, eventLog });
 
   // S7.1.1: עמודי הערות per-part — טוקנים גלויים + inline-refs (endnotes mode)
   settings._endnoteTitleByPart = endnoteTitleByPart;
@@ -743,7 +750,7 @@ function typeset(rawText, settingsIn, env = {}) {
   let endnotePagesInfo = { count: 0, pages: [] };
   if (notesMode === 'endnotes' && endnoteBlocks.length) {
     const { buildEndnotePages } = require('../layout/endnote-pages');
-    endnotePagesInfo = { count: 0, pages: buildEndnotePages(endnoteBlocks, settings, (t2, s2) => api.measureTextWidth(t2, s2), (s2) => api.lineHeightPx(s2), { ledger, eventLog }) };
+    endnotePagesInfo = { count: 0, pages: buildEndnotePages(endnoteBlocks, settings, measureWithImpl, (s2) => api.lineHeightPx(s2), { ledger, eventLog }) };
     endnotePagesInfo.count = endnotePagesInfo.pages.length;
   }
 
