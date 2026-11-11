@@ -31,6 +31,19 @@
 704/704/0/IDENTICAL. **נפתח ב-ISSUE_REGISTRY:** חדירת טור-ראשון לאזור
 ההערות ב-DP (16 עמודים, פרה-קיים) — לסוכן 2.
 
+**⚠️ מצב Actions בסוף סשן S72 (11.11, ~15:30 UTC):** תקלת תשתית
+גלובלית של GitHub Actions — הרצים אינם מצליחים לפענח DNS לשרתי
+Ubuntu ("Temporary failure resolving security.ubuntu.com") ⇒ כל שלבי
+ה-apt (Poppler/agent-browser/גופנים) נכשלים והבדיקות מבוטלות טרם ריצתן.
+נכשלו: CI (3 מטלות setup), full-math-audit (local+live), gh-pages-audit
+(×2) — **גם על הקומיט של הסוכנים (f529aa3) — לפני S72** — כלומר אין
+קשר לשינוי. הצליחו: pages build + deploy-pages (האתר החי פרוס עם
+‏?v=2026-11-11-s7) ו-corpus-invariants (C1-C12 — 100%). הוכחות מקומיות
+מלאות: 42/42 סוויטות 0 כשלים; cross-check PASSED (3 נעילות+באנדלים);
+verify-corpus 11/11; run-full-math 704/704/0/IDENTICAL; scan-control 0.
+**צעד ראשון בסשן הבא:** re-run לכשהתקלה תחלוף (gh run rerun) — אין
+צורך בשום שינוי קוד.
+
 ---
 
 **היסטוריה — עדכון קודם (S6.3, 10.11):** ייבוא מלא של גופני המקור +
