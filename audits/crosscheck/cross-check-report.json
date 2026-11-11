@@ -1,8 +1,8 @@
 {
   "tool": "cross-check",
   "schema": 1,
-  "started": "2026-11-11T00:06:47.530Z",
-  "commit": "1c0ea40",
+  "started": "2026-11-11T00:30:10.786Z",
+  "commit": "bd38000",
   "node": "v24.22.2",
   "corpora": [
     {
@@ -14,7 +14,7 @@
       "lockHash": "80f9ed6c",
       "contentPreserved": true,
       "hashOk": true,
-      "ms": 56
+      "ms": 61
     },
     {
       "name": "very_long (DP)",
@@ -25,7 +25,7 @@
       "lockHash": "531f2154",
       "contentPreserved": true,
       "hashOk": true,
-      "ms": 2473
+      "ms": 2677
     },
     {
       "name": "very_long (legacy, run-ours = corpus-invariants CI)",
@@ -37,7 +37,7 @@
       "lockHash": "legacy-3ff0b",
       "contentPreserved": true,
       "hashOk": true,
-      "ms": 4960
+      "ms": 5042
     }
   ],
   "bundles": [
@@ -53,22 +53,7 @@
     }
   ],
   "live": null,
-  "causality": {
-    "current": {
-      "summary": {
-        "created-at-first-checkpoint": 8,
-        "correction-reverted": 9
-      }
-    },
-    "final_stable": true,
-    "comparison": {
-      "prevCommit": "1c0ea40",
-      "prevHash": "80f9ed6c82ea3855",
-      "curHash": "80f9ed6c82ea3855",
-      "sameLayout": true,
-      "categoriesChanged": {}
-    }
-  },
+  "causality": null,
   "ok": true,
   "failures": []
 }
