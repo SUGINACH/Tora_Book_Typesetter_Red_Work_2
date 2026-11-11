@@ -1,0 +1,38 @@
+{
+  "schema": "stage-snapshots-v1",
+  "commit": "1c0ea40",
+  "layoutHash": "80f9ed6c82ea3855",
+  "gold_causality": {
+    "summary": {
+      "created-at-first-checkpoint": 8,
+      "correction-reverted": 9
+    }
+  },
+  "final_stable": true,
+  "checkpoints": [
+    {
+      "checkpoint": "cp3-dp",
+      "stage": "page-plan",
+      "pageCount": 25,
+      "lineCount": 604
+    },
+    {
+      "checkpoint": "cp3-structural",
+      "stage": "toc",
+      "pageCount": 36,
+      "lineCount": 604
+    },
+    {
+      "checkpoint": "cp4-decorations",
+      "stage": "decorations",
+      "pageCount": 36,
+      "lineCount": 604
+    },
+    {
+      "checkpoint": "cp5-final",
+      "stage": "render",
+      "pageCount": 36,
+      "lineCount": 604
+    }
+  ]
+}

@@ -35,6 +35,12 @@ jobs:
         run: cd red-build && npm test
       - name: Determinism check
         run: cd red-build && npm run test:determinism
+      # **S71 (הצלבה שיטתית מקומי↔CI↔חי):** אותן נעילות, אותו כלי, אותה פקודה —
+      # מקומית (node tools/cross-check.js) וב-CI. קורפוסים מול נעילות (קנוני 80f9ed6c,
+      # very_long DP 531f2154, מורשת run-ours=corpus-invariants) + sha256 באנדלים.
+      # ההשוואה מול האתר החי נשארת ב-gh-pages-audit (דפדפן) וכאן רק ההצלבה המקומית.
+      - name: Cross-check (corpora vs locks + bundles; the same command as local runs)
+        run: node tools/cross-check.js
 
   # **03.11(ד) — אודיט עימוד בדפדפן אמיתי (שקיפות עימוד מהקוד):** בדיקות ה-Node
   # מאמתות את המודל, אבל דיווח משתמש 3 הוכיח שהן לא תופסות ניתוקים בנתיב החי

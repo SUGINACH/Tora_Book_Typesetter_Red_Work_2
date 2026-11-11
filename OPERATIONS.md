@@ -38,6 +38,23 @@ npm run test:scan       # סריקת F-06 (עימוד אוטומטי מבקרו�
 `.github/workflows/ci.yml` מריץ את השרשרת בכל push. מדיניות: להפעיל, למסור קישורים,
 לא להמתין — המשתמש יודיע על סיום; אז סוקרים logs+artifacts (כלל 0.1.5).
 
+## הצלבה שיטתית מקומי↔CI↔חי (**S71**)
+
+`node tools/cross-check.js` — אותה פקודה מקומית וב-CI (step ייעודי ב-ci.yml):
+
+- **קורפוסים מול נעילות** (`tools/cross-check-locks.json`): קנוני DP (80f9ed6c),
+  very_long DP (531f2154), very_long מורשת — דרך הפעלת run-ours הזהה
+  ל-workflow corpus-invariants. חריגה מנעילה = יציאה 1 (שער, לא תיעוד).
+- **באנדלים**: sha256 של app/engine-worker — בסיס להשוואת החי.
+- `--live <URL>`: מושך את הבאנדלים הפרוסים מהאתר ומשווה מול המקומי
+  (משלים את gh-pages-audit שמריץ אודיט חי מלא).
+- `--with-causality`: מצלם stage-snapshots + gold_causality ומשווה מול
+  הארטיפקט הקודם (`audits/crosscheck/causality-*.json`) — השוואת
+  סיווג סיבתי בין קומיטים.
+- הדוח: `audits/crosscheck/cross-check-report.json` (commit, Node, hash-ים, זמנים).
+- **עדכון נעילה** = commit מפורש עם הצדקה (שינוי מנוע מכוון שאושר בבדיקות) —
+  לא תופעת לוואי של ריצה.
+
 ## ייצוא
 
 מה־UI (לשונית תצוגה): HTML עצמאי / PDF / חבילת ZIP. PDF מלא דורש סביבת Node
