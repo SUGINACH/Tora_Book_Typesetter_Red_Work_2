@@ -1,8 +1,8 @@
 {
   "tool": "cross-check",
   "schema": 1,
-  "started": "2026-11-11T01:25:02.342Z",
-  "commit": "382c685",
+  "started": "2026-11-11T01:30:18.202Z",
+  "commit": "dd02efa",
   "node": "v24.22.2",
   "corpora": [
     {
@@ -14,7 +14,7 @@
       "lockHash": "80f9ed6c",
       "contentPreserved": true,
       "hashOk": true,
-      "ms": 56
+      "ms": 65
     },
     {
       "name": "very_long (DP)",
@@ -25,7 +25,7 @@
       "lockHash": "531f2154",
       "contentPreserved": true,
       "hashOk": true,
-      "ms": 2571
+      "ms": 2578
     },
     {
       "name": "very_long (legacy, run-ours = corpus-invariants CI)",
@@ -37,7 +37,7 @@
       "lockHash": "legacy-3ff0b",
       "contentPreserved": true,
       "hashOk": true,
-      "ms": 5217
+      "ms": 5119
     }
   ],
   "bundles": [
