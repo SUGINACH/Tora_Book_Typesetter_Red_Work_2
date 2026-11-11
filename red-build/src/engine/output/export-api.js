@@ -370,6 +370,59 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         }
       }
     }
+    // **S73 (תצוגה=ייצוא בגופנים — תיקון שורש):** גופני משפחה דינמיים. המקרנים
+    // (legacy+DP) מסמנים מילים ב-fontKey = שם משפחה מההגדרות (כותרות
+    // AlphaBlack/Lia Sgula, שורות שער Livorna/David Libre, כותרות עליונות,
+    // גיליון וכו') — כמו שה-DOM מציר. כאן נבנה תת-גופן ייעודי לכל משפחה
+    // רשומה שבשימוש בפועל (מילים/גיליון/סלוטים), ונעביר לכותב ה-PDF
+    // (/F7, /F8… בסדר ממוין — דטרמיניסטי: ייצוא כפול ⇒ בתים זהים).
+    // משפחה שאינה רשומה — המילים שלה נופלות לגוף הטקסט (/F1) בכותב (מתועד).
+    const ROLE_KEYS = new Set(['window', 'heading', 'fnbody', 'margin']);
+    const famWords = new Map(); // family → Set<word>
+    const collectFam = (text, fontKey) => {
+      if (!fontKey || ROLE_KEYS.has(fontKey) || !registeredFontsRef.has(fontKey)) return;
+      if (!famWords.has(fontKey)) famWords.set(fontKey, new Set());
+      famWords.get(fontKey).add(String(text));
+    };
+    for (const pg of projected.pages) {
+      for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
+        for (const w of ln.words) collectFam(w.text, w.fontKey);
+      }
+      for (const fn of (pg.footnotes || [])) {
+        for (const w of (fn.words || [])) collectFam(w.text, w.fontKey);
+        if (fn.marker) collectFam(fn.marker, 'fnbody');
+      }
+      if (pg.folio && pg.folio.text && pg.folio.fontKey) collectFam(pg.folio.text, pg.folio.fontKey);
+      if (pg.header) for (const s of (pg.header.slots || [])) for (const w of (s.words || [])) collectFam(w.text, w.fontKey);
+    }
+    const extraFonts = [];
+    for (const fam of [...famWords.keys()].sort()) {
+      const profile = registeredFontsRef.get(fam);
+      if (!profile) continue; // נבדק ב-collectFam — הגנה כפולה
+      const words = [...famWords.get(fam)].join(' ');
+      const sub = buildSubset(profile, charInventory(words));
+      if (!sub.ok) continue; // נפילה שקטה ל-/F1 — מתועם בכותב (משפחה בלי תווי המילה)
+      const c2g = subsetNewCmap(sub);
+      extraFonts.push({
+        key: fam,
+        font: {
+          subsetBytes: sub.bytes,
+          widthsUnits: sub.widthsUnits,
+          unitsPerEm: sub.unitsPerEm,
+          cidOf: (ch) => {
+            const g = c2g.get(ch);
+            return g != null ? g : glyphIdOf(parseSubsetCache(sub), ch);
+          },
+          charToGidEntries: () => [...c2g.entries()]
+        },
+        // **S73:** מטריקות אמת מפרופיל הגופן הרשום (hhea ascender/descender ÷
+        // unitsPerEm — ל-FontDescriptor); נפילה 0.8/0.2 (כמו הגוף) כשחסר.
+        ascentEm: Number.isFinite(profile.ascender) && profile.unitsPerEm
+          ? profile.ascender / profile.unitsPerEm : 0.8,
+        descentEm: Number.isFinite(profile.descender) && profile.unitsPerEm
+          ? Math.abs(profile.descender) / profile.unitsPerEm : 0.2
+      });
+    }
     const bytes = writePdf({
       pages: projected.pages,
       pageSizeMm,
@@ -379,6 +432,7 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
       font4: fontForWriter4,
       font5: fontForWriter5,
       font6: fontForWriter6,
+      extraFonts,
       settings,
       outline,
       tocLinks

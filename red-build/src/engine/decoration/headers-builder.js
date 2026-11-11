@@ -147,6 +147,9 @@ function buildHeader(page, settings, ctx) {
       widthPct: settings[`header-${physical}-${pos}-width-pct`],
       font: settings[`header-${physical}-${pos}-font`],
       sizePt: settings[`header-${physical}-${pos}-size-pt`],
+      // **S73 (צבע פר-סלוט):** header-{recto,verso}-{right,center,left}-color —
+      // ברירת מחדל שחורה לכולם (בקשת משתמש). ה-DOM והמקרן קוראים את אותו שדה.
+      color: settings[`header-${physical}-${pos}-color`] || null,
       customText,
     };
   }

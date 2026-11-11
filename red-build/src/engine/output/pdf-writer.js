@@ -199,6 +199,11 @@ function buildToUnicode(font) {
  *   'fnbody'): אותה צורה; /F5. בלעדיו — הערות ב-/F1 (התנהגות קודמת).
  * @param {object} [opts.font6] — **S5.1:** הערות-צד (Hadassah Friedlaender —
  *   fontKey 'margin'): אותה צורה; /F6. בלעדיו — הערות-צד ב-/F1.
+ * @param {Array} [opts.extraFonts] — **S73 (תצוגה=ייצוא בגופנים):** גופנים
+ *   דינמיים לפי משפחה — [{key, font, ascentEm?, descentEm?}]. מילה שה-fontKey
+ *   שלה שווה ל-key מצוירת בגופן זה (/F7, /F8, … לפי הסדר). מיועד למשפחות
+ *   הכותרות/השער/הכותרות-העליונות מההגדרות — כמו שה-DOM מציג. משפחה
+ *   שלא סופקה כאן נופלת ל-/F1 (גוף הטקסט) — התנהגות קודמת.
  * @param {object} opts.settings — pdf-crop-marks, export-bleed-mm
  * @param {Array} [opts.outline] — [{title, page, level}] — סימניות מכותרות
  * @param {Array} [opts.tocLinks] — [{page, x, y, w, h, targetPage}] — קישורי TOC (px מהמקרן)
@@ -264,6 +269,22 @@ function writePdf(opts) {
     ID.fontFilef = pdf.reserve();
     ID.toUnicodef = pdf.reserve();
   }
+  // **S73 (גופנים דינמיים — תצוגה=ייצוא):** משפחות נוספות (כותרות/שער/כותרות
+  // עליונות מההגדרות). מזהים דטרמיניסטיים — 5 ברצף לכל גופן, בסדר המערך
+  // שנקבע מראש ב-export-api (מיון לפי key) — ייצוא כפול ⇒ בתים זהים.
+  const extraFonts = [];
+  for (const ef of (opts.extraFonts || [])) {
+    if (!ef || !ef.font) continue;
+    extraFonts.push({
+      key: String(ef.key),
+      font: ef.font,
+      ascentEm: Number.isFinite(ef.ascentEm) ? ef.ascentEm : 0.8,
+      descentEm: Number.isFinite(ef.descentEm) ? ef.descentEm : 0.2,
+      ids: { type0: pdf.reserve(), cidFont: pdf.reserve(), fontDescriptor: pdf.reserve(), fontFile: pdf.reserve(), toUnicode: pdf.reserve() }
+    });
+  }
+  /** מפת key → {font, name} לציור מיידי ב-emitWord (נתיב יחיד). */
+  const extraByKeys = new Map(extraFonts.map((ef, i) => [ef.key, { font: ef.font, name: `F${7 + i}` }]));
   const pageIds = pages.map(() => pdf.reserve());
   const contentIds = pages.map(() => pdf.reserve());
   const linkIds = new Map(); // pageIndex → [ids]
@@ -320,12 +341,17 @@ function writePdf(opts) {
       // (הדפדפן הציג אותו — תצוגה ≠ ייצוא). פורמט ה-bytes של המקרים
       // הקיימים נשמר בדיוק (מסלול יחיד = המסלול הפשוט הקודם;
       // מסלול מרובה = פורמט ה-F4 הקודם).
-      const useF2 = font2 && fontKey === 'window';
-      const useF3 = font3 && fontKey === 'heading';
-      const useF5 = font5 && fontKey === 'fnbody';
-      const useF6 = font6 && fontKey === 'margin';
-      const f = useF2 ? font2 : (useF3 ? font3 : (useF5 ? font5 : (useF6 ? font6 : font)));
-      const fName = useF2 ? 'F2' : (useF3 ? 'F3' : (useF5 ? 'F5' : (useF6 ? 'F6' : 'F1')));
+      // **S73 (תצוגה=ייצוא בגופנים):** משפחה דינמית — ה-fontKey של המילה הוא
+      // שם המשפחה מההגדרות (למשל 'Lia Sgula' בכותרת השער); היא נמדדת
+      // באותו גופן במקרן ומצוירת כאן בתת-הגופן הייעודי (/F7…) — כמו ה-DOM.
+      // משפחה שלא סופקה ⇒ המשך לשרשרת הקיימת (window/heading/fnbody/margin/F1).
+      const ex = fontKey != null ? extraByKeys.get(fontKey) : null;
+      const useF2 = !ex && font2 && fontKey === 'window';
+      const useF3 = !ex && font3 && fontKey === 'heading';
+      const useF5 = !ex && font5 && fontKey === 'fnbody';
+      const useF6 = !ex && font6 && fontKey === 'margin';
+      const f = ex ? ex.font : (useF2 ? font2 : (useF3 ? font3 : (useF5 ? font5 : (useF6 ? font6 : font))));
+      const fName = ex ? ex.name : (useF2 ? 'F2' : (useF3 ? 'F3' : (useF5 ? 'F5' : (useF6 ? 'F6' : 'F1'))));
       const chars = [...String(text)].filter(ch => {
         const cp = ch.codePointAt(0);
         return cp >= 0x20 && cp !== 0x7F;
@@ -397,7 +423,8 @@ function writePdf(opts) {
       const fs = 11;
       const baseY = fn.baselineY != null ? fn.baselineY : fn.y + 9;
       let x = fn.x + fn.w - 4;
-      if (fn.marker) { emitWord(fn.marker, x - 14, baseY, fs); x -= 18; }
+      // **S73:** צבע סמן ההערה — כצבע גוף ההערה מההגדרות (ברירת מחדל שחור)
+      if (fn.marker) { emitWord(fn.marker, x - 14, baseY, fs, null, fn.color); x -= 18; }
       let cx = x;
       for (const w of fn.text.split(/\s+/).filter(Boolean)) {
         cx -= 8.2;
@@ -405,11 +432,13 @@ function writePdf(opts) {
       }
     }
     // גיליון — מקור יחיד (D-81): מיקום/רוחב מהקרן; נפילה לנוסחה הישנה רק אם חסר
+    // **S73:** גופן/צבע הגיליון מההגדרות (page-num-font/page-num-color) —
+    // כמו ה-DOM; fontKey של משפחה רשומה מצויר בגופן שלה, אחרת גוף הטקסט.
     if (pg.folio && pg.folio.text) {
       const fw = pg.folio.w != null ? pg.folio.w : pg.folio.text.length * 6;
       const fx = pg.folio.x != null ? pg.folio.x : pg.width / 2 - fw / 2;
       const fy = pg.folio.baselineY != null ? pg.folio.baselineY : pg.folio.y + 10;
-      emitWord(pg.folio.text, fx, fy, pg.folio.sizePt || 10);
+      emitWord(pg.folio.text, fx, fy, pg.folio.sizePt || 10, pg.folio.fontKey || null, pg.folio.color);
     }
     // כותרת עליונה — סלוטים לפי מיקום פיזי מהקרן (D-81); נפילה מתועדת לנוסחה הישנה
     if (pg.header) {
@@ -619,6 +648,39 @@ function writePdf(opts) {
     pdf.put(ID.toUnicodef, `<< /Length ${toUni6.length} >>\nstream\n${toUni6}\nendstream`);
   }
 
+  // **S73 (גופנים דינמיים):** כתיבת אובייקטי המשפחות הנוספות — אותם חמישה
+  // אובייקטים כמו שאר הגופנים (Type0/CIDFontType2/FontDescriptor/FontFile2/
+  // ToUnicode). שם ה-BaseFont נגזר מהאינדקס (ToraEx1, ToraEx2, …) — שמות
+  // משפחה עלולים להכיל רווחים/תווים בלתי-חוקיים בשם PDF. מטריקות ה-Ascent/
+  // Descent מפרופיל הגופן הרשום (נפילה 800/−200 — כמו הגוף).
+  extraFonts.forEach((ef, i) => {
+    const wArrE = [];
+    let runE = null;
+    let prevGidE = -10;
+    for (const g of [...ef.font.widthsUnits.keys()].sort((a, b) => a - b)) {
+      const wv = Math.round((ef.font.widthsUnits.get(g) / ef.font.unitsPerEm) * 1000);
+      if (g === prevGidE + 1 && runE) runE.push(wv);
+      else { if (runE) wArrE.push(runE); runE = [g, wv]; }
+      prevGidE = g;
+    }
+    if (runE) wArrE.push(runE);
+    const wStrE = wArrE.map(r => `${r[0]} [${r.slice(1).join(' ')}]`).join(' ');
+    const baseName = `ToraEx${i + 1}`;
+    const ascE = Math.round(ef.ascentEm * 1000);
+    const descE = -Math.round(Math.abs(ef.descentEm) * 1000);
+    pdf.put(ef.ids.type0, `<< /Type /Font /Subtype /Type0 /BaseFont /${baseName} /Encoding /Identity-H /DescendantFonts [${ef.ids.cidFont} 0 R] /ToUnicode ${ef.ids.toUnicode} 0 R >>`);
+    pdf.put(ef.ids.cidFont, `<< /Type /Font /Subtype /CIDFontType2 /BaseFont /${baseName} /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor ${ef.ids.fontDescriptor} 0 R /DW 1000 /W [${wStrE}] >>`);
+    pdf.put(ef.ids.fontDescriptor, `<< /Type /FontDescriptor /FontName /${baseName} /Flags 4 /FontBBox [-200 -300 1200 1000] /ItalicAngle 0 /Ascent ${ascE} /Descent ${descE} /CapHeight ${Math.round(ef.ascentEm * 700)} /StemV 80 /FontFile2 ${ef.ids.fontFile} 0 R >>`);
+    const ffE = Buffer.concat([
+      Buffer.from(`<< /Length ${ef.font.subsetBytes.length} /Length1 ${ef.font.subsetBytes.length} >>\nstream\n`, 'latin1'),
+      ef.font.subsetBytes,
+      Buffer.from('\nendstream', 'latin1')
+    ]);
+    pdf.put(ef.ids.fontFile, ffE);
+    const toUniE = buildToUnicode(ef.font);
+    pdf.put(ef.ids.toUnicode, `<< /Length ${toUniE.length} >>\nstream\n${toUniE}\nendstream`);
+  });
+
   // ---- עמודים ----
   // **S6.0 (R5-M6 — תיבות עמוד חוקיות):** TrimBox = גודל העמוד; BleedBox
   // בתוך ה-MediaBox (בעבר ה-BleedBox חרג **מחוץ** ל-MediaBox — הפרה של
@@ -645,6 +707,8 @@ function writePdf(opts) {
     if (font4) fontPairs.push(['/F4', ID.type0d]);
     if (font5) fontPairs.push(['/F5', ID.type0e]);
     if (font6) fontPairs.push(['/F6', ID.type0f]);
+    // **S73:** הגופנים הדינמיים באותם משאבים לכל עמוד — סדר קבוע (דטרמיניזם)
+    extraFonts.forEach((ef, i) => fontPairs.push([`/F${7 + i}`, ef.ids.type0]));
     const fontRes = `/Font << ${fontPairs.map(([n, id]) => `${n} ${id} 0 R`).join(' ')} >>`;
     pdf.put(pageIds[i], `<< /Type /Page /Parent ${ID.pages} 0 R /MediaBox ${mediabox} /TrimBox ${trimbox} /BleedBox ${bleedbox} /Resources << ${fontRes} >> /Contents ${contentIds[i]} 0 R${annotsStr} >>`);
     pdf.put(contentIds[i], Buffer.concat([

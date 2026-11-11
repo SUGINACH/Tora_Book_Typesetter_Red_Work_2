@@ -232,6 +232,48 @@ const BINDINGS = [
     "note": "שוחזר מ‑V1 (REQ-HDR-03)"
   },
   {
+    "id": "page-num-font",
+    "control": "sel-page-num-font",
+    "panel": "רשת העמוד ומספור",
+    "panelKey": "GRID",
+    "labelHe": "גופן מספר העמוד (ריק = גוף)",
+    "type": "font",
+    "def": "",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S73: גופן הגיליון (מספר העמוד); ריק = גוף הטקסט (התנהגות קודמת)"
+  },
+  {
+    "id": "page-num-size-pt",
+    "control": "rng-page-num-size",
+    "panel": "רשת העמוד ומספור",
+    "panelKey": "GRID",
+    "labelHe": "גודל מספר העמוד (pt)",
+    "type": "number",
+    "def": 10,
+    "enum": null,
+    "min": 6,
+    "max": 20,
+    "step": null,
+    "note": "S73: גודל הגיליון בפט\"; 10 = ההתנהגות הקודמת"
+  },
+  {
+    "id": "page-num-color",
+    "control": "inp-page-num-color",
+    "panel": "רשת העמוד ומספור",
+    "panelKey": "GRID",
+    "labelHe": "צבע מספר העמוד",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S73: צבע הגיליון — ברירת מחדל שחורה (כמו כל הגופנים)"
+  },
+  {
     "id": "page-num-start-idx",
     "control": "inp-page-num-start-idx",
     "panel": "רשת העמוד ומספור",
@@ -300,6 +342,20 @@ const BINDINGS = [
     "max": null,
     "step": null,
     "note": "font-picker preserve-missing-value (IMUD port)"
+  },
+  {
+    "id": "body-color",
+    "control": "inp-body-color",
+    "panel": "טיפוגרפיה וגוף הטקסט",
+    "panelKey": "TYPO",
+    "labelHe": "צבע גוף הטקסט",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S73: צבע גוף הטקסט — שחור כברירת מחדל"
   },
   {
     "id": "body-font-size-pt",
@@ -436,6 +492,20 @@ const BINDINGS = [
     "note": "S4.5: גופן נפרד למילה הראשונה (המקור: font-first-word=FrankReal); ריק = גופן הגוף"
   },
   {
+    "id": "first-word-color",
+    "control": "inp-fw-color",
+    "panel": "טיפוגרפיה וגוף הטקסט",
+    "panelKey": "TYPO",
+    "labelHe": "צבע מילה ראשונה",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S73: צבע המילה הראשונה/מילת-החלון — שחור כברירת מחדל"
+  },
+  {
     "id": "dh-auto-detect",
     "control": "chk-dh-detect",
     "panel": "טיפוגרפיה וגוף הטקסט",
@@ -462,6 +532,20 @@ const BINDINGS = [
     "max": null,
     "step": null,
     "note": null
+  },
+  {
+    "id": "dh-color",
+    "control": "inp-dh-color",
+    "panel": "טיפוגרפיה וגוף הטקסט",
+    "panelKey": "TYPO",
+    "labelHe": "צבע דיבור־המתחיל",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S73: צבע דיבור-המתחיל — שחור כברירת מחדל (מוצמד למודל כמו dh-font)"
   },
   {
     "id": "heading-0-body-font",
@@ -543,6 +627,20 @@ const BINDINGS = [
     "note": null
   },
   {
+    "id": "heading-0-color",
+    "control": "inp-h0-color",
+    "panel": "כותרות 0–7",
+    "panelKey": "HEADINGS",
+    "labelHe": "כותרת אפס — צבע",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
     "id": "heading-0-size-pt",
     "control": "rng-h0-size",
     "panel": "כותרות 0–7",
@@ -583,6 +681,20 @@ const BINDINGS = [
     "labelHe": "כותרת 1 — גופן",
     "type": "font",
     "def": "David HB",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
+    "id": "heading-1-color",
+    "control": "inp-h1-color",
+    "panel": "כותרות 0–7",
+    "panelKey": "HEADINGS",
+    "labelHe": "כותרת 1 — צבע",
+    "type": "color",
+    "def": "#000000",
     "enum": null,
     "min": null,
     "max": null,
@@ -637,6 +749,20 @@ const BINDINGS = [
     "note": null
   },
   {
+    "id": "heading-2-color",
+    "control": "inp-h2-color",
+    "panel": "כותרות 0–7",
+    "panelKey": "HEADINGS",
+    "labelHe": "כותרת 2 — צבע",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
     "id": "heading-2-size-pt",
     "control": "rng-h2-size",
     "panel": "כותרות 0–7",
@@ -677,6 +803,20 @@ const BINDINGS = [
     "labelHe": "כותרת 3 — גופן",
     "type": "font",
     "def": "David HB",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
+    "id": "heading-3-color",
+    "control": "inp-h3-color",
+    "panel": "כותרות 0–7",
+    "panelKey": "HEADINGS",
+    "labelHe": "כותרת 3 — צבע",
+    "type": "color",
+    "def": "#000000",
     "enum": null,
     "min": null,
     "max": null,
@@ -731,6 +871,20 @@ const BINDINGS = [
     "note": null
   },
   {
+    "id": "heading-4-color",
+    "control": "inp-h4-color",
+    "panel": "כותרות 0–7",
+    "panelKey": "HEADINGS",
+    "labelHe": "כותרת 4 — צבע",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
     "id": "heading-4-size-pt",
     "control": "rng-h4-size",
     "panel": "כותרות 0–7",
@@ -771,6 +925,20 @@ const BINDINGS = [
     "labelHe": "כותרת 5 — גופן",
     "type": "font",
     "def": "David HB",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
+    "id": "heading-5-color",
+    "control": "inp-h5-color",
+    "panel": "כותרות 0–7",
+    "panelKey": "HEADINGS",
+    "labelHe": "כותרת 5 — צבע",
+    "type": "color",
+    "def": "#000000",
     "enum": null,
     "min": null,
     "max": null,
@@ -825,6 +993,20 @@ const BINDINGS = [
     "note": null
   },
   {
+    "id": "heading-6-color",
+    "control": "inp-h6-color",
+    "panel": "כותרות 0–7",
+    "panelKey": "HEADINGS",
+    "labelHe": "כותרת 6 — צבע",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
     "id": "heading-6-size-pt",
     "control": "rng-h6-size",
     "panel": "כותרות 0–7",
@@ -865,6 +1047,20 @@ const BINDINGS = [
     "labelHe": "כותרת 7 — גופן",
     "type": "font",
     "def": "David HB",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
+    "id": "heading-7-color",
+    "control": "inp-h7-color",
+    "panel": "כותרות 0–7",
+    "panelKey": "HEADINGS",
+    "labelHe": "כותרת 7 — צבע",
+    "type": "color",
+    "def": "#000000",
     "enum": null,
     "min": null,
     "max": null,
@@ -1257,6 +1453,20 @@ const BINDINGS = [
     "note": null
   },
   {
+    "id": "header-recto-right-color",
+    "control": "inp-hrright-color",
+    "panel": "כותרות עליונות",
+    "panelKey": "HEADERS",
+    "labelHe": "עמוד ימני — סלוט ימין — צבע",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
     "id": "header-recto-right-size-pt",
     "control": "rng-hrright-size",
     "panel": "כותרות עליונות",
@@ -1324,6 +1534,20 @@ const BINDINGS = [
     "labelHe": "עמוד ימני — סלוט מרכז — גופן",
     "type": "font",
     "def": "David HB",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
+    "id": "header-recto-center-color",
+    "control": "inp-hrcenter-color",
+    "panel": "כותרות עליונות",
+    "panelKey": "HEADERS",
+    "labelHe": "עמוד ימני — סלוט מרכז — צבע",
+    "type": "color",
+    "def": "#000000",
     "enum": null,
     "min": null,
     "max": null,
@@ -1405,6 +1629,20 @@ const BINDINGS = [
     "note": null
   },
   {
+    "id": "header-recto-left-color",
+    "control": "inp-hrleft-color",
+    "panel": "כותרות עליונות",
+    "panelKey": "HEADERS",
+    "labelHe": "עמוד ימני — סלוט שמאל — צבע",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
     "id": "header-recto-left-size-pt",
     "control": "rng-hrleft-size",
     "panel": "כותרות עליונות",
@@ -1472,6 +1710,20 @@ const BINDINGS = [
     "labelHe": "עמוד שמאלי — סלוט ימין — גופן",
     "type": "font",
     "def": "David HB",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
+    "id": "header-verso-right-color",
+    "control": "inp-hvright-color",
+    "panel": "כותרות עליונות",
+    "panelKey": "HEADERS",
+    "labelHe": "עמוד שמאלי — סלוט ימין — צבע",
+    "type": "color",
+    "def": "#000000",
     "enum": null,
     "min": null,
     "max": null,
@@ -1553,6 +1805,20 @@ const BINDINGS = [
     "note": null
   },
   {
+    "id": "header-verso-center-color",
+    "control": "inp-hvcenter-color",
+    "panel": "כותרות עליונות",
+    "panelKey": "HEADERS",
+    "labelHe": "עמוד שמאלי — סלוט מרכז — צבע",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
     "id": "header-verso-center-size-pt",
     "control": "rng-hvcenter-size",
     "panel": "כותרות עליונות",
@@ -1620,6 +1886,20 @@ const BINDINGS = [
     "labelHe": "עמוד שמאלי — סלוט שמאל — גופן",
     "type": "font",
     "def": "David HB",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
+    "id": "header-verso-left-color",
+    "control": "inp-hvleft-color",
+    "panel": "כותרות עליונות",
+    "panelKey": "HEADERS",
+    "labelHe": "עמוד שמאלי — סלוט שמאל — צבע",
+    "type": "color",
+    "def": "#000000",
     "enum": null,
     "min": null,
     "max": null,
@@ -1846,6 +2126,34 @@ const BINDINGS = [
     "labelHe": "גופן גוף הערת־צד",
     "type": "font",
     "def": "Frank Ruhl Libre",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
+    "id": "f-note-body-color",
+    "control": "inp-fnote-body-color",
+    "panel": "הערות שוליים וסיום",
+    "panelKey": "NOTES",
+    "labelHe": "צבע גוף הערת־שוליים",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": null
+  },
+  {
+    "id": "s-note-body-color",
+    "control": "inp-snote-body-color",
+    "panel": "הערות שוליים וסיום",
+    "panelKey": "NOTES",
+    "labelHe": "צבע גוף הערת־צד",
+    "type": "color",
+    "def": "#000000",
     "enum": null,
     "min": null,
     "max": null,
@@ -3024,6 +3332,20 @@ const BINDINGS = [
     "note": "מקור: f-sh-title=\"'Lia Sgula', 'Bellefair', serif\" — Lia Sgula אינה זמינה; Bellefair המוטמע"
   },
   {
+    "id": "shaar-title-color",
+    "control": "inp-shaar-title-color",
+    "panel": "ערכות נושא, שערים ורקעים",
+    "panelKey": "THEMES",
+    "labelHe": "שער — צבע כותרת הספר",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S73: צבע כותרת הספר בשער — שחור כברירת מחדל"
+  },
+  {
     "id": "shaar-title-size-pt",
     "control": "rng-shaar-title-size",
     "panel": "ערכות נושא, שערים ורקעים",
@@ -3050,6 +3372,20 @@ const BINDINGS = [
     "max": null,
     "step": null,
     "note": "מקור: f-sh-sub=\"'Livorna', 'David Libre', serif\""
+  },
+  {
+    "id": "shaar-subtitle-color",
+    "control": "inp-shaar-subtitle-color",
+    "panel": "ערכות נושא, שערים ורקעים",
+    "panelKey": "THEMES",
+    "labelHe": "שער — צבע כותרת־משנה",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S73: צבע כותרת-המשנה בשער — שחור כברירת מחדל"
   },
   {
     "id": "shaar-subtitle-size-pt",
@@ -3080,6 +3416,20 @@ const BINDINGS = [
     "note": "מקור: f-sh-desc=\"'Livorna', 'Frank Ruhl Libre', serif\""
   },
   {
+    "id": "shaar-desc-color",
+    "control": "inp-shaar-desc-color",
+    "panel": "ערכות נושא, שערים ורקעים",
+    "panelKey": "THEMES",
+    "labelHe": "שער — צבע התיאור",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S73: צבע התיאור בשער — שחור כברירת מחדל"
+  },
+  {
     "id": "shaar-desc-size-pt",
     "control": "rng-shaar-desc-size",
     "panel": "ערכות נושא, שערים ורקעים",
@@ -3106,6 +3456,20 @@ const BINDINGS = [
     "max": null,
     "step": null,
     "note": "מקור: f-sh-sec=\"'David Libre', serif\""
+  },
+  {
+    "id": "shaar-sections-color",
+    "control": "inp-shaar-sections-color",
+    "panel": "ערכות נושא, שערים ורקעים",
+    "panelKey": "THEMES",
+    "labelHe": "שער — צבע פרטי מהדורא",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S73: צבע פרטי המהדורה בשער — שחור כברירת מחדל"
   },
   {
     "id": "shaar-sections-size-pt",
@@ -3136,6 +3500,20 @@ const BINDINGS = [
     "note": "מקור: f-sh-author=\"'David Libre', serif\""
   },
   {
+    "id": "shaar-author-color",
+    "control": "inp-shaar-author-color",
+    "panel": "ערכות נושא, שערים ורקעים",
+    "panelKey": "THEMES",
+    "labelHe": "שער — צבע שם המחבר",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S73: צבע שם המחבר בשער — שחור כברירת מחדל"
+  },
+  {
     "id": "shaar-author-size-pt",
     "control": "rng-shaar-author-size",
     "panel": "ערכות נושא, שערים ורקעים",
@@ -3164,6 +3542,20 @@ const BINDINGS = [
     "note": "מקור: f-sh-year=\"'David Libre', serif\""
   },
   {
+    "id": "shaar-year-color",
+    "control": "inp-shaar-year-color",
+    "panel": "ערכות נושא, שערים ורקעים",
+    "panelKey": "THEMES",
+    "labelHe": "שער — צבע מקום ושנה",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S73: צבע בס״ד/מקום-ושנה בשער — שחור כברירת מחדל"
+  },
+  {
     "id": "shaar-year-size-pt",
     "control": "rng-shaar-year-size",
     "panel": "ערכות נושא, שערים ורקעים",
@@ -3190,6 +3582,20 @@ const BINDINGS = [
     "max": null,
     "step": null,
     "note": "גוף טקסט השער האחורי (שורות שמירת־זכויות) — מקור: David Libre"
+  },
+  {
+    "id": "shaar-back-text-color",
+    "control": "inp-shaar-back-text-color",
+    "panel": "ערכות נושא, שערים ורקעים",
+    "panelKey": "THEMES",
+    "labelHe": "שער אחורי — צבע הטקסט",
+    "type": "color",
+    "def": "#000000",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S73: צבע טקסט השער האחורי — שחור כברירת מחדל"
   },
   {
     "id": "shaar-back-text-size-pt",

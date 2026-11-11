@@ -41,4 +41,19 @@ function ptToPx(pt) {
   return Math.round(Number(pt) * (96 / 72) * 100) / 100;
 }
 
-module.exports = { lineFontSizePt, lineFontFamily, ptToPx };
+/** **S73 (צבע פר-גופן מההגדרות):** '#RRGGBB'/'#RGB' → [r,g,b] בטווח 0..1
+ * ל-pdf-writer (rg) ול-DOM. ערך חסר/בלתי-תקין ⇒ null (=שחור, ברירת המחדל
+ * של כל ההגדרות — ברירת מחדל שחורה פולטת 0 בתים ב-PDF: אין אופרטור rg). */
+function hexColorToRgb(hex) {
+  const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex || '').trim());
+  if (!m) return null;
+  let h = m[1];
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  return [
+    parseInt(h.slice(0, 2), 16) / 255,
+    parseInt(h.slice(2, 4), 16) / 255,
+    parseInt(h.slice(4, 6), 16) / 255
+  ];
+}
+
+module.exports = { lineFontSizePt, lineFontFamily, ptToPx, hexColorToRgb };

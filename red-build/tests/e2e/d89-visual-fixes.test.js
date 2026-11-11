@@ -188,7 +188,16 @@ it('D-89/4: שער-משנה — פאנל מ-55% וגל; שער אחורי — פ
   const backPanel = (back.decorations || []).find(d => d.kind === 'shaar-panel');
   assert(backPanel && backPanel.x === 0 && Math.abs(backPanel.w - 0.45 * 793.7) < 1, 'פאנל שער אחורי: 0..45% (כמו הייחוס: 0-268pt)');
   const frameKinds = (main.decorations || []).filter(d => String(d.kind).startsWith('frame'));
-  assertEq(frameKinds.length, 8, 'מסגרת שער ראשי: 2 אנכיים + 2 פסים + 2 שרשראות-עלים + 2 כללים');
+  // **S73 (דיווח משתמש — "קווים על הטקסט של השער הראשי"):** הכללים האופקיים
+  // חולקו למקטעי-שוליים (0..96px ו-697.33..793.7px — כמו הייחוס המקורי, שבו
+  // מלבן לבן מכסה את האזור המרכזי): 2 אנכיים + 2 פסים + 2 שרשראות + 4 מקטעים.
+  assertEq(frameKinds.length, 10, 'מסגרת שער ראשי: 2 אנכיים + 2 פסים + 2 שרשראות-עלים + 4 מקטעי-כלל בשוליים (S73)');
+  const hRules = frameKinds.filter(d => d.kind === 'frame-h');
+  assertEq(hRules.length, 4, 'הכללים האופקיים — 4 מקטעי שוליים בלבד (אין חציית טקסט)');
+  for (const hr of hRules) {
+    const inMargin = (hr.x <= 96.01 && hr.x + hr.w <= 97) || (hr.x >= 697.32 && hr.x + hr.w >= 793);
+    assert(inMargin, `מקטע כלל אופקי בשוליים בלבד (x=${hr.x.toFixed(1)}, w=${hr.w.toFixed(1)}) — לא על הטקסט`);
+  }
   const chains = (main.decorations || []).filter(d => d.kind === 'frame-chain');
   assertEq(chains.length, 2, 'שרשרת העלים בשני צידי המסגרת (דפוס הנושא של הייחוס)');
   const bodyPg = r.pages.find(p => p.type === 'regular' && p.headerSlots);

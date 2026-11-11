@@ -116,6 +116,15 @@ function renderLine(ln, doc, settings = {}) {
   if (Number.isFinite(lnPt) && lnPt > 0) el.style.fontSize = `${ptToPx(lnPt)}px`;
   const lnFont = lineFontFamily(ln, settings);
   if (lnFont) el.style.fontFamily = fontStack(lnFont);
+  // **S73 (צבע פר-גופן — נתיב DP):** כותרת ⇒ heading-N-color; גוף ⇒ body-color.
+  // שחור ⇒ אין style (ירושת ברירת המחדל) — תצוגה=ייצוא (אפס אופרטורי rg ב-PDF).
+  if (ln.kind === 'heading' && ln.level != null) {
+    const hc = nonBlack(settings[`heading-${ln.level}-color`]);
+    if (hc) el.style.color = hc;
+  } else {
+    const bc = nonBlack(settings['body-color']);
+    if (bc) el.style.color = bc;
+  }
   // **EXT-20 (AQ אנכי אמיתי):** מקדם ה-AQ הוא מקדם גובה-שורה — כאן הוא
   // מיושם כ-line-height מפורש (px) כמו בפרויקטור וב-PDF. בעבר הוחל כאן
   // wordSpacing אופקי (‏(factor−1)×4px) — שלושה נתיבים, שלוש פרשנויות,
@@ -298,11 +307,19 @@ function renderFootnoteArea(page, settings, doc) {
 }
 
 /** **S9 (D-61):** גיליון עמוד — מקור יחיד לכל סוגי העמודים (בעבר 4 העתקים).
- * מסגרות CSS (circle/square) מרונדרות כ‑badge עם מחלקה; הטקסטואליות כבר בתוך התצוגה. */
+ * מסגרות CSS (circle/square) מרונדרות כ‑badge עם מחלקה; הטקסטואליות כבר בתוך התצוגה.
+ * **S73:** גופן/גודל/צבע הגיליון מההגדרות (page-num-font/size/color) — כמו המקרנים. */
 function renderFolio(page, settings, doc) {
   if (!page.folioDisplay || settings['page-num-position'] === 'none') return null;
   const folio = doc.createElement('footer');
   folio.className = `folio folio--${settings['page-num-position']} folio--frame-${settings['page-num-frame']}`;
+  // **S73:** גופן/גודל/צבע מההגדרות — ריק/10/שחור = ההתנהגות הקודמת
+  const pnFont = settings['page-num-font'] || '';
+  if (pnFont) folio.style.fontFamily = fontStack(pnFont);
+  const pnSize = Number(settings['page-num-size-pt']);
+  if (Number.isFinite(pnSize) && pnSize > 0) folio.style.fontSize = `${Math.round(pnSize * (96 / 72) * 100) / 100}px`;
+  const pnColor = settings['page-num-color'];
+  if (pnColor && pnColor !== '#000000') folio.style.color = pnColor;
   if (isCssFrame(settings['page-num-frame'])) {
     const badge = doc.createElement('span');
     badge.className = `page-num-badge page-num-frame-${settings['page-num-frame'] === 'circle' ? 'circle' : 'box'}`;
@@ -330,6 +347,8 @@ function renderHeader(header, doc) {
     slot.style.width = `${s.widthPct}%`;
     if (s.font) slot.style.fontFamily = s.font;
     if (s.sizePt) slot.style.fontSize = `${Math.round(s.sizePt * (96 / 72) * 100) / 100}px`;
+    // **S73:** צבע הסלוט מהמודל (headers-builder — מההגדרות; שחור כברירת מחדל)
+    if (s.color) slot.style.color = s.color;
     slot.textContent = scrubPUAText(s.text || '');
     el.appendChild(slot);
   }
@@ -624,11 +643,32 @@ function renderShaarContent(page, settings, doc, metadata) {
     if (b.sizePt > 0) el.style.fontSize = px(b.sizePt);
     if (b.bold) el.style.fontWeight = '700';
     if (b.letterSpacingPx) el.style.letterSpacing = `${b.letterSpacingPx}px`;
+    // **S73 (צבע פר-בלוק מההגדרות):** כמו המקרן — ברירת מחדל שחורה.
+    const col = shaarColorOfCls(b.cls, settings);
+    if (col) el.style.color = col;
     el.textContent = scrubPUAText(String(b.text == null ? '' : b.text));
     wrap.appendChild(el);
   }
   els.push(wrap);
   return els;
+}
+
+/** **S73:** צבע בלוק שער לפי מחלקתו — הגדרת הצבע של הגופן המצוין לו
+ * (מקור יחיד סמנטי עם המקרן; גישה מילולית — דרישת סורק phantom-key). */
+function shaarColorOfCls(cls, settings) {
+  if (cls.includes('bsd-header') || cls.includes('publication-footer')) return nonBlack(settings['shaar-year-color']);
+  if (cls.includes('book-title-main')) return nonBlack(settings['shaar-title-color']);
+  if (cls.includes('book-subtitle')) return nonBlack(settings['shaar-subtitle-color']);
+  if (cls.includes('book-description')) return nonBlack(settings['shaar-desc-color']);
+  if (cls.includes('book-sections-summary')) return nonBlack(settings['shaar-sections-color']);
+  if (cls.includes('author-block')) return nonBlack(settings['shaar-author-color']);
+  if (cls.includes('back-shaar-text-line')) return nonBlack(settings['shaar-back-text-color']);
+  return null;
+}
+
+/** **S73:** החזרת צבע שאינו שחור (ערך כהה/חסר ⇒ null — ירושת שחור ב-CSS). */
+function nonBlack(hex) {
+  return (hex && /^#[0-9a-f]{6}$/i.test(hex) && hex.toLowerCase() !== '#000000') ? hex : null;
 }
 
 /**
@@ -670,6 +710,9 @@ function renderLegacyPage(pg, settings, doc) {
   root.style.overflow = 'hidden';
   const bf = settings['body-font'];
   if (bf) root.style.fontFamily = fontStack(bf);
+  // **S73:** צבע גוף הטקסט מההגדרות (body-color; שחור ⇒ ירושת ברירת מחדל)
+  const bodyColS = nonBlack(settings['body-color']);
+  if (bodyColS) root.style.color = bodyColS;
   const pt2px = (pt) => pt * (96 / 72);
   const position = (el, x, y, w, h) => {
     el.style.position = 'absolute';
@@ -720,15 +763,17 @@ function renderLegacyPage(pg, settings, doc) {
     // ומשקל 700 מפורש (פנים ה-Bold הרשומים). מרכז = מרכז הדף (כמו ה-PDF),
     // לא מרכז space-between.
     position(hdr, GEO.COL_L_X + 33, 52, (GEO.COL_R_X + GEO.COL_W - 33) - (GEO.COL_L_X + 33), 22);
-    hdr.style.color = 'rgb(15,23,73)';
     const HDR_BASELINE_Y = 71.9;
     const DLB_BASELINE_FACTOR = 0.5 + (0.7461 - 0.2192) / 2; // DavidLibre-Bold, line-height:1
+    // **S73 (צבע כותרת עליונה מההגדרות):** header-recto-{right,center,left}-color —
+    // ברירת מחדל שחורה (הכחול הקבוע #0F1749 של D-89 הוחלף בהגדרה — בקשת
+    // משתמש מפורשת: ברירת המחדל של כל הגופנים ללא יוצא מן הכלל = שחור).
     const slots = [
-      ['rh rh--r', hs.right, SZ.hdrR, 'header-recto-right-font', 'right'],
-      ['rh rh--c', hs.center, SZ.hdrC, 'header-recto-center-font', 'center'],
-      ['rh rh--l', hs.left, SZ.hdrL, 'header-recto-left-font', 'left']
+      ['rh rh--r', hs.right, SZ.hdrR, 'header-recto-right-font', 'header-recto-right-color', 'right'],
+      ['rh rh--c', hs.center, SZ.hdrC, 'header-recto-center-font', 'header-recto-center-color', 'center'],
+      ['rh rh--l', hs.left, SZ.hdrL, 'header-recto-left-font', 'header-recto-left-color', 'left']
     ];
-    for (const [cls, txt, sz, fk, posKind] of slots) {
+    for (const [cls, txt, sz, fk, ck, posKind] of slots) {
       if (!txt) continue;
       const s = doc.createElement('span');
       s.className = cls;
@@ -738,6 +783,8 @@ function renderLegacyPage(pg, settings, doc) {
       const ff = fontOf(fk);
       if (ff) s.style.fontFamily = ff; // **S4.26:** גופן הסלוט מההגדרות (ברירת מחדל: David Libre)
       s.style.fontWeight = '700';
+      const sc = nonBlack(settings[ck]);
+      if (sc) s.style.color = sc; // **S73:** צבע הסלוט מההגדרות
       s.style.position = 'absolute';
       s.style.lineHeight = '1';
       s.style.top = `${(HDR_BASELINE_Y - 52) - szPx * DLB_BASELINE_FACTOR}px`;
@@ -758,6 +805,12 @@ function renderLegacyPage(pg, settings, doc) {
     const hLv = HEADING_LEVEL_OF_BAND[b.kind];
     const bf = b.font ? fontStack(b.font) : (hLv != null ? headingFontOf(hLv) : null);
     if (bf) { el.style.fontFamily = bf; if (hLv != null) el.style.fontWeight = '700'; }
+    // **S73:** צבע הפס מההגדרות — כותרת עמודי ההערות ⇒ endnote-title-color;
+    // רמה ⇒ heading-N-color; כמו המקרן (ברירת מחדל שחורה).
+    const bc = b.kind === 'endnote-title'
+      ? nonBlack(settings['endnote-title-color'])
+      : (hLv != null ? nonBlack(settings[`heading-${hLv}-color`]) : null);
+    if (bc) el.style.color = bc;
     position(el, BAND_X, b.y, BAND_W, b.h);
     root.appendChild(el);
   }
@@ -875,6 +928,9 @@ function renderLegacyPage(pg, settings, doc) {
       if (ln.kind === 'heading' && ln.level != null) {
         const hf = headingFontOf(ln.level);
         if (hf) { el.style.fontFamily = hf; el.style.fontWeight = '700'; }
+        // **S73:** צבע הכותרת מההגדרות (heading-N-color) — כמו המקרן
+        const hc = nonBlack(settings[`heading-${ln.level}-color`]);
+        if (hc) el.style.color = hc;
       }
       // **S4.26 (חלון קלאסי שקוע — שורה 1 עוטפת את החלון):** במקור מילת-החלון
       // מרחפת (float:right, height:1.25em) והטקסט עוטף אותה בשתי השורות
@@ -896,6 +952,9 @@ function renderLegacyPage(pg, settings, doc) {
         win.className = 'w w--window';
         win.textContent = scrubPUAText(ln.windowWords.join(' ')) + ' ';
         win.style.fontSize = `${pt2px((ln.sizePt || SZ.body) * 1.5)}px`;
+        // **S73:** צבע מילת-החלון — first-word-color (ברירת מחדל שחורה) — כמו המקרן
+        const winCol = nonBlack(settings['first-word-color']);
+        if (winCol) win.style.color = winCol;
         // **S5.1:** בסיס החלון 2px מתחת לבסיס שורת הטקסט — כמו winBase=baseY+2
         // במקרן (מכויל מהייחוס: חלון 155.25 מול שורה 153.75, ~1.5pt). בלי זה
         // החלון יושב על בסיס משותף עם הגוף וגבוה ב-2px ב-PDF.
@@ -1030,12 +1089,15 @@ function renderLegacyPage(pg, settings, doc) {
   // — כמו המדידה במנוע וכמו הייחוס); עד כאן ירשו את גופן הגוף.
   {
     const mnFont = fontOf('heading-7-font');
+    // **S73:** צבע הערות-צד — heading-7-color (הגופן בפועל); שחור כברירת מחדל
+    const mnCol = nonBlack(settings['heading-7-color']);
     for (const mn of (pg.marginNotes || [])) {
       const x = mn.side === 'right' ? GEO.MARGIN_R_X : GEO.MARGIN_L_X;
       for (const l of (mn.lines || [])) {
         const el = mkLine(l.text, SZ.marginNote, 'right', GEO.MN_PITCH);
         el.className += ' margin-note';
         if (mnFont) el.style.fontFamily = mnFont;
+        if (mnCol) el.style.color = mnCol;
         position(el, x, l.y, GEO.MARGIN_W, GEO.MN_PITCH);
         root.appendChild(el);
       }
@@ -1051,6 +1113,8 @@ function renderLegacyPage(pg, settings, doc) {
   // (f-note-body — Frank Ruhl Libre) — כמו המדידה (fnApi) במנוע.
   {
     const fnFont = fontOf('f-note-body-font') || fontOf('body-font');
+    // **S73:** צבע גוף ההערה — f-note-body-color (ברירת מחדל שחורה) — כמו המקרן
+    const fnCol = nonBlack(settings['f-note-body-color']);
     const listingSz = Number(imudSetAll['note-listing-num-size']) || 8;
     for (const fn of (pg.footnotes || [])) {
       // **S4.26:** זרימה שפותחת בהמשך — מסומנת fn--continuation (כמו block)
@@ -1066,6 +1130,7 @@ function renderLegacyPage(pg, settings, doc) {
       el.style.fontSize = `${pt2px(SZ.fnBody)}px`;
       el.style.lineHeight = `${GEO.FN_PITCH}px`;
       if (fnFont) el.style.fontFamily = fnFont;
+      if (fnCol) el.style.color = fnCol; // **S73:** צבע גוף ההערה
       el.style.textAlign = 'justify';
       el.style.textAlignLast = 'right';
       el.style.whiteSpace = 'normal';
@@ -1137,6 +1202,10 @@ function renderLegacyPage(pg, settings, doc) {
         // באותו גופן) + הדגשה — כמו הייחוס (DavidLibre-Bold).
         const tf = r.font ? fontStack(r.font) : headingFontOf(r.level != null ? r.level : 2);
         if (tf) { row.style.fontFamily = tf; row.style.fontWeight = '700'; }
+        // **S73:** צבע שורת ה-TOC — heading-N-color של הרמה — כמו המקרן
+        const tocLvl = r.level != null ? r.level : 2;
+        const tcol = nonBlack(settings[`heading-${tocLvl}-color`]);
+        if (tcol) row.style.color = tcol;
         const t = doc.createElement('span');
         t.className = 'toc-text';
         t.style.marginRight = `${Math.max(0, 560 - (r.x1 || 560))}px`; // מדרגות לפי רמה
@@ -1161,7 +1230,15 @@ function renderLegacyPage(pg, settings, doc) {
     folio.setAttribute('dir', 'rtl');
     position(folio, 0, GEO.FOLIO_BASELINE - 14, GEO.PAGE_W, 18);
     folio.style.textAlign = 'center';
-    folio.style.fontSize = `${pt2px(SZ.folio)}px`;
+    // **S73 (גופן/גודל/צבע גיליון מההגדרות):** page-num-font ('' = גוף הטקסט —
+    // התנהגות קודמת), page-num-size-pt (ברירת מחדל 10 = SZ.folio), page-num-color
+    // (ברירת מחדל שחורה) — כמו המקרן. התיבה והבסיס נשארים מכוילים (FOLIO_BASELINE).
+    const pnFam = settings['page-num-font'] || '';
+    if (pnFam) folio.style.fontFamily = fontStack(pnFam);
+    const pnSz = Number(settings['page-num-size-pt']);
+    folio.style.fontSize = `${pt2px(pnSz > 0 ? pnSz : SZ.folio)}px`;
+    const pnCol = nonBlack(settings['page-num-color']);
+    if (pnCol) folio.style.color = pnCol;
     // **S5.1:** line-height מכויל כך שהבסיס יורד בדיוק ל-FOLIO_BASELINE (1054.5)
     // תחת מודל תיבת-השורה (A≈0.925, D≈0.388 בגופן הגוף ⇒ lh≈21.4px) — כמו
     // המקרן, שמצייר את הגיליון בבסיס 1054.5 בדיוק. בעבר ירש normal וישב ~3.5px גבוה.
@@ -1220,8 +1297,11 @@ function renderPage(page, settings, doc, header) {
   root.dir = 'rtl';
   // **03.11(ג):** גופן/גודל הגוף על שורש העמוד — התצוגה והייצוא יחד מגיבים
   // להגדרות body-font/body-font-size-pt (השורות דורסות לפי סוגן — כותרות וכו').
+  // **S73:** צבע הגוף (body-color; שחור ⇒ אין style — ירושת ברירת המחדל).
   const bf = settings['body-font'];
   if (bf) root.style.fontFamily = fontStack(bf);
+  const bodyCol = nonBlack(settings['body-color']);
+  if (bodyCol) root.style.color = bodyCol;
   const bsPt = Number(settings['body-font-size-pt']);
   if (Number.isFinite(bsPt) && bsPt > 0) root.style.fontSize = `${ptToPx(bsPt)}px`;
 

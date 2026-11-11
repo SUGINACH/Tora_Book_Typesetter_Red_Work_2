@@ -21,6 +21,13 @@ const L = {
   'column-divider-style': 'סגנון מפריד טורים', 'page-num-format': 'תבנית מספור עמודים',
   'page-num-frame': 'מסגרת מספר עמוד', 'page-num-position': 'מיקום מספר עמוד',
   'page-num-initial-value': 'ערך התחלתי של מספור', 'page-num-start-idx': 'עמוד תחילת התצוגה (סוד)',
+  // **S73 (גופן/גודל/צבע גיליון + צבע פר-גופן):** תוויות ההגדרות החדשות
+  'page-num-font': 'גופן מספר העמוד (ריק = גוף)', 'page-num-size-pt': 'גודל מספר העמוד (pt)',
+  'page-num-color': 'צבע מספר העמוד',
+  'body-color': 'צבע גוף הטקסט', 'first-word-color': 'צבע מילה ראשונה',
+  'dh-color': 'צבע דיבור־המתחיל', 'heading-0-body-color': 'צבע גוף ההקדמה',
+  'endnote-title-color': 'צבע כותרת עמודי ההערות',
+  'f-note-body-color': 'צבע גוף הערת־שוליים', 's-note-body-color': 'צבע גוף הערת־צד',
   'count-shaar-pages': 'מניית עמודי שער במספור', 'count-toc-pages': 'מניית עמודי תוכן־עניינים',
   'count-endnote-pages': 'מניית עמודי הערות־סיום',
   // TYPO
@@ -79,12 +86,19 @@ const L = {
   // **03.11(ד):** שערים כברירת מחדל + תוכן שערים מובנה (דיווח משתמש 3)
   'shaar-main-enabled': 'שער ראשי מופעל (כמקור)', 'shaar-sub-enabled': 'שער־משנה לכל חלק (כמקור)',
   'shaar-title-font': 'שער — גופן כותרת הספר', 'shaar-title-size-pt': 'שער — גודל כותרת הספר (pt)',
+  'shaar-title-color': 'שער — צבע כותרת הספר',
   'shaar-subtitle-font': 'שער — גופן כותרת־משנה', 'shaar-subtitle-size-pt': 'שער — גודל כותרת־משנה (pt)',
+  'shaar-subtitle-color': 'שער — צבע כותרת־משנה',
   'shaar-desc-font': 'שער — גופן התיאור', 'shaar-desc-size-pt': 'שער — גודל התיאור (pt)',
+  'shaar-desc-color': 'שער — צבע התיאור',
   'shaar-sections-font': 'שער — גופן פרטי מהדורא', 'shaar-sections-size-pt': 'שער — גודל פרטי מהדורא (pt)',
+  'shaar-sections-color': 'שער — צבע פרטי מהדורא',
   'shaar-author-font': 'שער — גופן שם המחבר', 'shaar-author-size-pt': 'שער — גודל שם המחבר (pt)',
+  'shaar-author-color': 'שער — צבע שם המחבר',
   'shaar-year-font': 'שער — גופן מקום ושנה', 'shaar-year-size-pt': 'שער — גודל מקום ושנה (pt)',
+  'shaar-year-color': 'שער — צבע מקום ושנה',
   'shaar-back-text-font': 'שער אחורי — גופן הטקסט', 'shaar-back-text-size-pt': 'שער אחורי — גודל הטקסט (pt)',
+  'shaar-back-text-color': 'שער אחורי — צבע הטקסט',
   'imud-book-title': 'שם הספר (שער)', 'imud-book-subtitle': 'כותרת־משנה (שער)',
   'imud-book-desc': 'תיאור (שער — נושא מפורט)', 'imud-book-sections': 'פרטי מהדורא (שער)',
   'imud-book-author': 'שם המחבר (שער)', 'imud-book-year': 'מקום ושנת הוצאה (שער)',
@@ -112,14 +126,14 @@ const HEB_NUM = ['אפס', '1', '2', '3', '4', '5', '6', '7'];
 function labelFor(id) {
   if (L[id]) return L[id];
   let m;
-  if ((m = id.match(/^heading-(\d)-(mode|font|size-pt)$/))) {
-    const what = { 'mode': 'אופן', 'font': 'גופן', 'size-pt': 'גודל (pt)' }[m[2]];
+  if ((m = id.match(/^heading-(\d)-(mode|font|size-pt|color)$/))) {
+    const what = { 'mode': 'אופן', 'font': 'גופן', 'size-pt': 'גודל (pt)', 'color': 'צבע' }[m[2]];
     return `כותרת ${HEB_NUM[+m[1]]} — ${what}`;
   }
-  if ((m = id.match(/^header-(recto|verso)-(right|center|left)-(align|width-pct|font|size-pt|custom-text)$/))) {
+  if ((m = id.match(/^header-(recto|verso)-(right|center|left)-(align|width-pct|font|size-pt|custom-text|color)$/))) {
     const side = { recto: 'עמוד ימני', verso: 'עמוד שמאלי' }[m[1]];
     const pos = { right: 'ימין', center: 'מרכז', left: 'שמאל' }[m[2]];
-    const what = { 'align': 'יישור', 'width-pct': 'רוחב (%)', 'font': 'גופן', 'size-pt': 'גודל (pt)', 'custom-text': 'טקסט מותאם' }[m[3]];
+    const what = { 'align': 'יישור', 'width-pct': 'רוחב (%)', 'font': 'גופן', 'size-pt': 'גודל (pt)', 'custom-text': 'טקסט מותאם', 'color': 'צבע' }[m[3]];
     return `${side} — סלוט ${pos} — ${what}`;
   }
   if ((m = id.match(/^toc-level-(\d)-(show|inline)$/))) {

@@ -23,6 +23,9 @@ const crypto = require('crypto');
 const { MeasureAPI, registeredFonts: registeredMeasureFonts, registerFont: registerMeasureFont, resolveMeasureImpl } = require('../typography/measure-api');
 const { EventLog } = require('../core/events');
 const { Ledger } = require('../core/ledger');
+// **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
+// מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
+const { hexColorToRgb } = require('../output/line-font');
 
 // ---------- גיאומטריה (px @96dpi; PDF = px×0.75) — מכויל מהייחוס ----------
 const GEO = {
@@ -1031,6 +1034,13 @@ function legacyTypeset(rawText, settings, env) {
   //  shaar-back: זכויות/פרטים; shaar-sub: כותרת ה-h1 ב-36pt + המשך ב-21pt).
   function gateLinesFor(type, h1Token) {
     const pt = (v) => v / 0.75;
+    // **S73 (צבע פר-גופן מההגדרות — ברירת מחדל שחורה):** צבע כל שורת שער
+    // מההגדרה המשויכת לה (shaar-title-color לכותרת וכו'). עד כאן היו צבעים
+    // קבועים מהייחוס (#0F172A/#0F1749) שלא ניתנו לשינוי; בקשת משתמש
+    // מפורשת: ברירת המחדל של כל הגופנים — ללא יוצא מן הכלל — שחורה.
+    // ה-DOM וה-PDF קוראים את אותו שדה (g.color). הגישה מילולית —
+    // דרישת סורק ה-phantom-key (REQ-GOV-05).
+    const colOf = (hex) => (hex ? hexColorToRgb(hex) : null); // שחור/חסר ⇒ null — ברירת מחדל שחורה ברינדור
     // **D-89 (עטיפת שורות שער):** במקור תיבות השער הן div-ים ברוחב קבוע —
     // טקסט ארוך נעטף אוטומטית. כאן השורה נמדדת ונחתכת לשורות במקום לגלוש
     // מהתיבה (כותרת-המשנה של השער בקורפוס ההשוואה רחבה מהתיבה במדידת
@@ -1079,18 +1089,18 @@ function legacyTypeset(rawText, settings, env) {
       const subY = Math.max(pt(225.2), titleBottom + 25);
       titleLines.forEach((l, i) => out.push({
         text: l, sizePt: cfg.shTitle, y: pt(128.1) + i * lineHOf(cfg.shTitle),
-        color: [15 / 255, 23 / 255, 42 / 255], font: settings['shaar-title-font'] || null
+        color: colOf(settings['shaar-title-color']), font: settings['shaar-title-font'] || null
       }));
       wrapGate(meta.subject, cfg.shSub, mainBoxW, shSubFontApi).forEach((l, i) => out.push({
         text: l, sizePt: cfg.shSub, y: subY + i * lineHOf(cfg.shSub),
-        color: [15 / 255, 23 / 255, 73 / 255], font: settings['shaar-subtitle-font'] || null
+        color: colOf(settings['shaar-subtitle-color']), font: settings['shaar-subtitle-font'] || null
       }));
       wrapGate(meta.desc, cfg.shDesc, mainBoxW, shDescFontApi).forEach((l, i) => out.push({
         text: l, sizePt: cfg.shDesc, y: pt(410.3) + i * cfg.shDesc * (96 / 72) * 1.3,
-        color: [15 / 255, 23 / 255, 73 / 255], font: settings['shaar-desc-font'] || null
+        color: colOf(settings['shaar-desc-color']), font: settings['shaar-desc-font'] || null
       }));
-      out.push({ text: meta.edition || '', sizePt: cfg.shSec, y: pt(558.0), singleOp: true, color: [15 / 255, 23 / 255, 42 / 255], font: settings['shaar-sections-font'] || null });
-      out.push({ text: meta.author || '', sizePt: cfg.shAuthor, y: pt(713.5), singleOp: true, color: [15 / 255, 23 / 255, 42 / 255], font: settings['shaar-author-font'] || null });
+      out.push({ text: meta.edition || '', sizePt: cfg.shSec, y: pt(558.0), singleOp: true, color: colOf(settings['shaar-sections-color']), font: settings['shaar-sections-font'] || null });
+      out.push({ text: meta.author || '', sizePt: cfg.shAuthor, y: pt(713.5), singleOp: true, color: colOf(settings['shaar-author-color']), font: settings['shaar-author-font'] || null });
       return out.filter(g => g.text);
     }
     if (type === 'shaar-back') {
@@ -1107,18 +1117,18 @@ function legacyTypeset(rawText, settings, env) {
       const contact = cfg.backContact || meta.contact || '';
       const extra = cfg.backExtra || meta.extra || '';
       const out = [];
-      if (copyright) out.push({ text: 'כל הזכויות שמורות', sizePt: 13.5, y: pt(191.8), color: [17 / 255, 17 / 255, 17 / 255] });
+      if (copyright) out.push({ text: 'כל הזכויות שמורות', sizePt: 13.5, y: pt(191.8), color: colOf(settings['shaar-back-text-color']) });
       wrapGate(copyright, 10, backBoxW).forEach((l, i) => out.push({
-        text: l, sizePt: 10, y: pt(216.4) + i * 10 * (96 / 72) * 1.3, color: [34 / 255, 34 / 255, 34 / 255]
+        text: l, sizePt: 10, y: pt(216.4) + i * 10 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color'])
       }));
       wrapGate(publisher, 11, backBoxW).forEach((l, i) => out.push({
-        text: l, sizePt: 11, y: pt(357.3) + i * 11 * (96 / 72) * 1.3, color: [30 / 255, 58 / 255, 138 / 255]
+        text: l, sizePt: 11, y: pt(357.3) + i * 11 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color'])
       }));
       wrapGate(contact, 10, backBoxW).forEach((l, i) => out.push({
-        text: l, sizePt: 10, y: pt(500.9) + i * 10 * (96 / 72) * 1.3, color: [51 / 255, 65 / 255, 85 / 255]
+        text: l, sizePt: 10, y: pt(500.9) + i * 10 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color'])
       }));
       wrapGate(extra, 9.5, backBoxW).forEach((l, i) => out.push({
-        text: l, sizePt: 9.5, y: pt(644.3) + i * 9.5 * (96 / 72) * 1.3, color: [100 / 255, 116 / 255, 139 / 255]
+        text: l, sizePt: 9.5, y: pt(644.3) + i * 9.5 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color'])
       }));
       return out.filter(g => g.text);
     }
@@ -1139,10 +1149,10 @@ function legacyTypeset(rawText, settings, env) {
       const restY = Math.max(pt(469.7), h1Bottom + 25);
       const out = h1Lines.map((l, i) => ({
         text: l, sizePt: cfg.h1Size, y: pt(345.7) + i * h1LineH,
-        color: [15 / 255, 23 / 255, 42 / 255], font: settings['heading-1-font'] || null
+        color: colOf(settings['heading-1-color']), font: settings['heading-1-font'] || null
       }));
       wrapGate(rest, cfg.h1SubSize, subBoxW, h1SubFontApi).forEach((l, i) => out.push({
-        text: l, sizePt: cfg.h1SubSize, y: restY + i * cfg.h1SubSize * (96 / 72) * 1.3, font: 'David Libre'
+        text: l, sizePt: cfg.h1SubSize, y: restY + i * cfg.h1SubSize * (96 / 72) * 1.3, color: colOf(settings['shaar-subtitle-color']), font: 'David Libre'
       }));
       return out.filter(g => g.text);
     }
@@ -3123,8 +3133,17 @@ function legacyTypeset(rawText, settings, env) {
         // x≈84.5pt ⇒ מרכז הפס 112px; ימין משוקף)
         dec(p, { x: 97.33, y: 0, w: 29.33, h: GEO.PAGE_H, kind: 'frame-chain', kindStyle: 'shaar-frame-chain' });
         dec(p, { x: 668, y: 0, w: 29.33, h: GEO.PAGE_H, kind: 'frame-chain', kindStyle: 'shaar-frame-chain' });
-        dec(p, { x: 0, y: 224, w: GEO.PAGE_W, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
-        dec(p, { x: 0, y: 898.67, w: GEO.PAGE_W, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
+        // **S73 (דיווח משתמש — "קווים על הטקסט של השער הראשי"):** הכללים
+        // האופקיים צוירו ברוחב מלא — וחצו את כותרת השער (46pt ב-y≈170-250px;
+        // הקו ב-224px עבר בתוך האותיות). במקור (הייחוס, עמ' 1) הכללים האופקיים
+        // **נראים בשוליים בלבד** — מלבן לבן מכסה את האזור המרכזי (x=72..523pt)
+        // שמעל הקווים האנכיים: הקו מהקצה עד הקו האנכי ומהקו האנכי עד הקצה
+        // (נמדד ברסטר: 0..72pt ו-523.2..594.7pt). כעת — שני מקטעים לכל קו,
+        // בדיוק כמקור: אף קו לא נכנס לאזור הטקסט המרכזי.
+        dec(p, { x: 0, y: 224, w: 96, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
+        dec(p, { x: 697.33, y: 224, w: GEO.PAGE_W - 697.33, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
+        dec(p, { x: 0, y: 898.67, w: 96, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
+        dec(p, { x: 697.33, y: 898.67, w: GEO.PAGE_W - 697.33, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
         // **D-89:** עיטור השער הראשי המובנה (עיגול+כנפיים) מתחת לנושא —
         // נמדד בייחוס עמ' 1: דיו x 231.5-363.3pt, y 265-272pt (מרכז 297.4pt).
         dec(p, { x: 306.6, y: 346, w: 180, h: 24, kind: 'shaar-ornament', kindStyle: 'shaar-main-orn' });

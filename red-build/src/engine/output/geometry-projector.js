@@ -20,9 +20,30 @@ const { MeasureAPI } = require('../typography/measure-api');
 const { NOTE_FONT_FACTORS } = require('../layout/footnote-budget');
 const { markerFor } = require('../notes/markers');
 const { SIDE_NOTE_FONT_FACTORS } = require('../layout/side-notes');
-const { lineFontSizePt } = require('./line-font'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
-const { buildShaarBlocks } = require('./shaar-content');
+const { lineFontSizePt, hexColorToRgb } = require('./line-font'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
+// **S73:** גופן השערים לפי מחלקת בלוק — מקור יחיד לשני הנתיבים (DOM+PDF)
+const { buildShaarBlocks, shaarFontOf } = require('./shaar-content');
 const { ornamentInk, parseSvgPaint, svgToPdfOps, svgInkBBox } = require('../decoration/ornament-ink'); // **EXT-4:** הדיו — מקור יחיד לכל הנתיבים // **03.11(ד):** תוכן השערים — אותו מודל כמו ה-DOM
+
+/** **S73 (צבע פר-גופן — גישה מילולית לסורק phantom-key):** '#RRGGBB' → [r,g,b]
+ * או null (=שחור — ברירת המחדל של כל הגדרות הצבע; אפס אופרטורי rg ב-PDF). */
+function colorOfSetting(hex) {
+  return hex ? hexColorToRgb(hex) : null;
+}
+
+/** **S73:** מפתח משפחת הגופן לכותב ה-PDF — כמו fontKeyOf של המקרן המורשת:
+ * משפחה רשומה ⇒ המשפחה עצמה (תת-גופן ייעודי בייצוא); אחרת null (גוף הטקסט).
+ * התפקידים הפונקציונליים (window/fnbody/margin) נשארים בטיפול הקיים. */
+function familyFontKeyOf(fam, settings) {
+  if (!fam) return null;
+  const { registeredFonts } = require('../typography/measure-api');
+  if (!registeredFonts.has(fam)) return null;
+  if (fam === 'Frank Ruhl Libre') return 'fnbody';
+  if (fam === 'Hadassah Friedlaender') return 'margin';
+  if (fam === 'FrankReal-Bold' || fam === 'FrankReal') return 'window';
+  if (fam === 'David Libre' || fam === 'DavidLibre-Bold') return 'heading';
+  return fam;
+}
 
 /**
  * הקרנת עמוד בודד לגיאומטריה מפורשת.
@@ -95,21 +116,44 @@ function projectPage(page, settings, api) {
       const b = model.box;
       const boxX = b.left, boxW = Math.max(40, tpl.width - b.left - b.right);
       const boxY = b.top, boxH = Math.max(60, tpl.height - b.top - b.bottom);
+      // **S73 (תצוגה=ייצוא בגופני השער — נתיב DP):** ה-DOM מציג כל בלוק במשפחת
+      // הגופן שלו (shaarFontOf) ובצבעו; עד כאן ההקרנה מדדה וציירה הכול בגוף
+      // הטקסט (/F1). כעת: מדידה בגופן הבלוק + fontKey פר-בלוק (משפחה רשומה
+      // ⇒ תת-גופן ייעודי) + צבע פר-בלוק מההגדרות (ברירת מחדל שחורה).
+      const shaarColorOf = (cls) => {
+        if (cls.includes('bsd-header') || cls.includes('publication-footer')) return colorOfSetting(settings['shaar-year-color']);
+        if (cls.includes('book-title-main')) return colorOfSetting(settings['shaar-title-color']);
+        if (cls.includes('book-subtitle')) return colorOfSetting(settings['shaar-subtitle-color']);
+        if (cls.includes('book-description')) return colorOfSetting(settings['shaar-desc-color']);
+        if (cls.includes('book-sections-summary')) return colorOfSetting(settings['shaar-sections-color']);
+        if (cls.includes('author-block')) return colorOfSetting(settings['shaar-author-color']);
+        if (cls.includes('back-shaar-text-line')) return colorOfSetting(settings['shaar-back-text-color']);
+        return null;
+      };
+      // מדידה בגופן הבלוק — כמו ה-DOM (רגיסטרציה נבדקת בזמן ריצה)
+      const shaarMeasureOf = (fam) => {
+        const { registeredFonts: rf } = require('../typography/measure-api');
+        return (fam && rf.has(fam))
+          ? new MeasureAPI({ ...settings, 'body-font': fam }, 'font-metrics')
+          : measure;
+      };
       // גובה כל בלוק: גלישת שורות לרוחב התיבה + גובה שורה לפי הגודל
       const blocks = model.blocks.map(bl => {
         if (bl.graphic) return { ...bl, lines: [], h: 24 };
+        const blFam = shaarFontOf(bl.cls, settings) || null;
+        const blMeasure = shaarMeasureOf(blFam);
         const words = String(bl.text || '').split(/\s+/).filter(Boolean);
         const lines = [];
         let cur = [], curW = 0;
         for (const w of words) {
-          const ww = measure.measureTextWidth(w, bl.sizePt, 0);
-          const add = cur.length ? measure.measureTextWidth(' ', bl.sizePt, 0) + ww : ww;
+          const ww = blMeasure.measureTextWidth(w, bl.sizePt, 0);
+          const add = cur.length ? blMeasure.measureTextWidth(' ', bl.sizePt, 0) + ww : ww;
           if (cur.length && curW + add > boxW) { lines.push(cur); cur = [w]; curW = ww; }
           else { cur.push(w); curW += add; }
         }
         if (cur.length) lines.push(cur);
         const lh = Math.max(12, Math.round((bl.sizePt * (96 / 72)) * 1.25));
-        return { ...bl, lines, h: lines.length * lh };
+        return { ...bl, lines, h: lines.length * lh, _fam: blFam, _measure: blMeasure };
       });
       let y;
       if (model.mode === 'between') {
@@ -131,12 +175,13 @@ function projectPage(page, settings, api) {
       }
       function pushCentered(bl, yTop) {
         const lh = bl.h / bl.lines.length;
+        // **S73:** גופן+צבע פר-בלוק — כמו ה-DOM (renderShaarContent)
+        const fk = familyFontKeyOf(bl._fam, settings);
+        const color = shaarColorOf(bl.cls);
         bl.lines.forEach((words, li) => {
           const text = words.join(' ');
-          const tw = Math.max(1, measure.measureTextWidth(text, bl.sizePt, 0));
           const lineH = Math.max(12, Math.round((bl.sizePt * (96 / 72)) * 1.25));
-          out.lines.push(centeredLine(text, boxX, yTop + li * lh, boxW, lineH, bl.sizePt, measure, bl.cls));
-          void tw;
+          out.lines.push(centeredLine(text, boxX, yTop + li * lh, boxW, lineH, bl.sizePt, bl._measure, bl.cls, fk, color));
         });
       }
     }
@@ -178,7 +223,14 @@ function projectPage(page, settings, api) {
   if (page.folioDisplay) {
     // **D-81:** מיקום/רוחב מהמקור היחיד (הקרן, מדידה 10pt) — הכותב וה-ink-bbox צורכים אותו.
     const ft = scrubPUAText(String(page.folioDisplay));
-    const fw = Math.max(1, Math.round(measure.measureTextWidth(ft, 10)));
+    // **S73 (גופן/גודל/צבע גיליון מההגדרות — נתיב DP):** page-num-font ('' = גוף
+    // הטקסט — התנהגות קודמת), page-num-size-pt (ברירת מחדל 10) ו-page-num-color
+    // (ברירת מחדל שחורה) — כמו ה-DOM. המדידה בגופן הגיליון כשרשום.
+    const folioSz = Number(settings['page-num-size-pt']) > 0 ? Number(settings['page-num-size-pt']) : 10;
+    const folioFam = settings['page-num-font'] || '';
+    const folioMeasure = (folioFam && familyFontKeyOf(folioFam, settings))
+      ? new MeasureAPI({ ...settings, 'body-font': folioFam }, 'font-metrics') : measure;
+    const fw = Math.max(1, Math.round(folioMeasure.measureTextWidth(ft, folioSz)));
     // **S5.1 (תיקון C5):** מיקום לפי page-num-position מההגדרות — בעבר מוקשה
     // bottom-center וכל ערך אחר הוגדר בשקט. 'outer' מודע-זוגיות כמו המקור
     // (recto=index זוגי ⇒ שמאל; verso ⇒ ימין) — כמו folio--outer ב-CSS.
@@ -187,9 +239,9 @@ function projectPage(page, settings, api) {
     // תיבת הגיליון − half-leading − descent (line-height: normal ≈ 1.2 —
     // חסר הגדרה מפורשת ב-CSS); אותה נוסחה משמרת גם את top:4px/6px.
     const FOLIO_BOTTOM_PX = 25; // styles.css: .folio{bottom:25px}
-    const folioPx = 10 * (96 / 72);
+    const folioPx = folioSz * (96 / 72);
     const folioLineH = Math.round(folioPx * 1.2);
-    const ascEm = measure.ascentEm(), descEm = measure.descentEm();
+    const ascEm = folioMeasure.ascentEm(), descEm = folioMeasure.descentEm();
     const halfLead = Math.max(0, (folioLineH - (ascEm + descEm) * folioPx) / 2);
     const pos = String((settings && settings['page-num-position']) || 'bottom-center');
     if (pos === 'none') { out.folio = null; }
@@ -202,7 +254,9 @@ function projectPage(page, settings, api) {
       else if (pos === 'outer-right' || (pos === 'outer' && !recto)) fx = Math.max(8, Math.round(tpl.width - fw - 8));
       else if (pos === 'top') { boxTop = 4; baselineY = boxTop + halfLead + ascEm * folioPx; } // styles.css: .folio--top{top:4px}
       else if (pos === 'in-header') { boxTop = 6; baselineY = boxTop + halfLead + ascEm * folioPx; } // styles.css: .folio--in-header{top:6px}
-      out.folio = { y: boxTop, baselineY, x: fx, w: fw, sizePt: 10, text: ft };
+      const folioKey = (folioFam && familyFontKeyOf(folioFam, settings)) || null;
+      const folioColor = colorOfSetting(settings['page-num-color']);
+      out.folio = { y: boxTop, baselineY, x: fx, w: fw, sizePt: folioSz, text: ft, ...(folioKey ? { fontKey: folioKey } : {}), ...(folioColor ? { color: folioColor } : {}) };
     }
   }
 
@@ -214,13 +268,19 @@ function projectPage(page, settings, api) {
     if (slots.length) {
       // **D-81:** סלוט כותרת עליונה — מיקום/רוחב מפורשים מהמקור היחיד (9pt):
       // הכותב, הכותב החי ותיבת הדיו צורכים את אותם מספרים — לא עוד נוסחאות מקומיות.
+      // **S73:** גופן הסלוט מהמודל (s.font — headers-builder מצרף את המשפחה
+      // מההגדרות) ⇒ fontKey לכותב ה-PDF (משפחה רשומה ⇒ תת-גופן ייעודי);
+      // צבע — s.color מהמודל (ברירת מחדל שחורה). מדידה בגופן הסלוט כשרשום.
       out.header = {
         y: Math.max(0, tpl.contentBox.top - 18),
         slots: slots.map(s => {
           const t = scrubPUAText(String(s.text || ''));
-          const w = Math.max(1, Math.round(measure.measureTextWidth(t, 9)));
+          const sKey = familyFontKeyOf(s.font, settings);
+          const sMeasure = sKey && sKey !== 'heading' && sKey !== 'fnbody' && sKey !== 'margin' && sKey !== 'window'
+            ? new MeasureAPI({ ...settings, 'body-font': s.font }, 'font-metrics') : measure;
+          const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, 9)));
           const x = s.pos === 'right' ? tpl.width - 60 - w : s.pos === 'center' ? Math.round((tpl.width - w) / 2) : 60;
-          return { pos: s.pos, align: s.align, text: t, x, w, sizePt: 9 };
+          return { pos: s.pos, align: s.align, text: t, x, w, sizePt: 9, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
         })
       };
     }
@@ -281,7 +341,7 @@ function fnNoteSizePt(settings) { return settings['body-font-size-pt'] * 0.8; }
  * @param {Array} tokens — [{text, sizePt?, wFactor?}] (wFactor — פקטור רוחב הגופן)
  * @returns {{lines:Array, words:Array, lineCount:number, firstTop:number, firstBaseline:number, h:number}|null}
  */
-function wrapNoteTokens(tokens, x, w, yTop, pitch, sizePt, measure, fontKey) {
+function wrapNoteTokens(tokens, x, w, yTop, pitch, sizePt, measure, fontKey, color) {
   const live = tokens.filter(t => t.text && String(t.text).trim());
   if (!live.length) return null;
   const spaceW = measure.measureTextWidth(' ', sizePt, 0);
@@ -314,7 +374,7 @@ function wrapNoteTokens(tokens, x, w, yTop, pitch, sizePt, measure, fontKey) {
     let cursor = x + w; // RTL — מימין לשמאל
     for (const t of row) {
       cursor -= t.w;
-      const wd = { text: t.text, x: cursor, w: t.w, sizePt: t.sizePt, baselineY, fontKey };
+      const wd = { text: t.text, x: cursor, w: t.w, sizePt: t.sizePt, baselineY, fontKey, ...(color ? { color } : {}) };
       words.push(wd);
       flat.push(wd);
       cursor -= gapW;
@@ -389,7 +449,7 @@ function projectFootnoteGutter(page, settings, measure, out) {
         const t = scrubPUAText(w);
         if (t) tokens.push({ text: t, wFactor: factor });
       }
-      const rec = wrapNoteTokens(tokens, laneX[li], laneW, y, pitch, fnSize, measure, 'fnbody');
+      const rec = wrapNoteTokens(tokens, laneX[li], laneW, y, pitch, fnSize, measure, 'fnbody', colorOfSetting(settings['f-note-body-color']));
       if (rec) {
         out.footnotes.push({
           y: rec.firstTop, x: laneX[li], w: laneW,
@@ -451,7 +511,7 @@ function projectEndnotePage(page, settings, measure, out) {
         const t = scrubPUAText(w);
         if (t) tokens.push({ text: t, wFactor: factor });
       }
-      const rec = wrapNoteTokens(tokens, col.x, col.w, y, pitch, notePt, measure, 'fnbody');
+      const rec = wrapNoteTokens(tokens, col.x, col.w, y, pitch, notePt, measure, 'fnbody', colorOfSetting(settings['f-note-body-color']));
       if (rec) {
         rec.lines.forEach((line) => {
           out.lines.push({
@@ -487,7 +547,7 @@ function projectSideNotes(page, settings, measure, out) {
       const t = scrubPUAText(w);
       if (t) tokens.push({ text: t, wFactor: factor });
     }
-    const rec = wrapNoteTokens(tokens, sn.x, sn.colWidth, sn.yTop, pitch, sizePt, measure, 'margin');
+    const rec = wrapNoteTokens(tokens, sn.x, sn.colWidth, sn.yTop, pitch, sizePt, measure, 'margin', colorOfSetting(settings['s-note-body-color']));
     if (!rec) continue;
     rec.lines.forEach((line) => {
       out.lines.push({
@@ -614,6 +674,14 @@ function customFactorMapOf(settings) {
 
 function projectLine(ln, colX, y, colW, settings, measure, align) {
   const sizePt = lineFontSizePt(ln, settings);
+  // **S73 (תצוגה=ייצוא בגופני כותרות — נתיב DP):** ה-DOM מציג כותרות inline
+  // בגופן הרמה מההגדרות (heading-N-font) ובצבען (heading-N-color); עד כאן
+  // ההקרנה ציירה הכול בגוף הטקסט (/F1). כעת: fontKey משפחה + צבע — כמו ה-DOM.
+  // וכן צבע גוף (body-color; שחור ⇒ אפס אופרטורי rg).
+  const isHeadingLine = ln.kind === 'heading' && ln.level != null;
+  const hFontKey = isHeadingLine ? familyFontKeyOf(settings[`heading-${ln.level}-font`], settings) : null;
+  const hColor = isHeadingLine ? colorOfSetting(settings[`heading-${ln.level}-color`]) : null;
+  const bodyColor = colorOfSetting(settings['body-color']);
   // **S68 (R2-M6 — סגירת פער PDF↔DOM):** גודל אפקטיבי פר-מילה. המודל נמדד
   // בסקאלות אלה בזמן הפענוח (measureWithParen: paren×scale, custom×factor)
   // וה-DOM מציג אותן כך (span.w--paren / span.w--custom); ההקרנה ל-PDF חייבת
@@ -659,7 +727,13 @@ function projectLine(ln, colX, y, colW, settings, measure, align) {
     cursor -= widths[i];
     // **S68:** סמן גודל פר-מילה רק כשהוא שונה מגודל השורה — שורות רגילות
     // (ברירת מחדל, בלי סוגריים/סגנון) נשארות בדיוק כפי שהיו (נייטרליות).
-    wordPos.push({ text: words[i], x: cursor, w: widths[i], ...(eff !== sizePt ? { sizePt: eff } : {}) });
+    wordPos.push({
+      text: words[i], x: cursor, w: widths[i],
+      ...(eff !== sizePt ? { sizePt: eff } : {}),
+      ...(hFontKey ? { fontKey: hFontKey } : {}),
+      ...(hColor ? { color: hColor } : {}),
+      ...(!hColor && bodyColor ? { color: bodyColor } : {})
+    });
     cursor -= gapW;
   }
 
@@ -703,7 +777,8 @@ function attachBaselines(page, settings, measure) {
 /** **03.11(ד):** שורת שער ממורכזת — מילים ממוקמות מהמרכז החוצה (RTL). */
 /* **S5.4 (P-5):** fakeLine הורחבה — sizePt/fontKey/kind נתונים לכותרת עמודי
    ההערות (1.2× הגוף, /F3) בלי לשנות את הקריאות הקיימות. */
-function centeredLine(text, x, y, w, h, sizePt, measure, cls) {
+/* **S73:** centeredLine — גופן (fontKey משפחה) וצבע פר-בלוק כמו ה-DOM. */
+function centeredLine(text, x, y, w, h, sizePt, measure, cls, fontKey, color) {
   const words = String(text || '').split(/\s+/).filter(Boolean).map(w2 => scrubPUAText(w2));
   const widths = words.map(w2 => measure.measureTextWidth(w2, sizePt, 0));
   const gapW = measure.measureTextWidth(' ', sizePt, 0);
@@ -713,7 +788,7 @@ function centeredLine(text, x, y, w, h, sizePt, measure, cls) {
   const wordPos = [];
   for (let i = 0; i < words.length; i++) {
     cursor -= widths[i];
-    wordPos.push({ text: words[i], x: cursor, w: widths[i] });
+    wordPos.push({ text: words[i], x: cursor, w: widths[i], ...(fontKey ? { fontKey } : {}), ...(color ? { color } : {}) });
     cursor -= gapW;
   }
   return { x, y, w, h, words: wordPos, align: 'center', kind: 'shaar-content', level: null, isLast: false, sizePt, baselineY: null, tokenId: null, cls: cls || '' };

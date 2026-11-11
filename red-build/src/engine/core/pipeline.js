@@ -382,7 +382,9 @@ function typeset(rawText, settingsIn, env = {}) {
       const flat = t.parts.filter(p => p.kind === 'text').map(p => p.value).join(' ');
       dh = detectDh(flat, true);
     }
-    if (dh) { dh.font = settings['dh-font']; }
+    // **S73 (צבע פר-גופן):** צבע דיבור-המתחיל מההגדרות — מוצמד למודל
+    // (כמו dh.font; שחור כברירת מחדל — null ⇒ ירושת ברירת מחדל ברינדור).
+    if (dh) { dh.font = settings['dh-font']; dh.color = settings['dh-color'] || null; }
 
     // **D-42 (P1-2): pre-pass of parentheses before measurement** — ranges of (...) on the body text;
     // Words inside the parentheses are measured in the paren-style-scale scale (1.0 = off) before
