@@ -1,12 +1,29 @@
 {
-  "_comment": "S71: נעילות ההצלבה השיטתית. עדכון נעילה = commit מפורש עם הצדקה. מקור הערכים: (1) קנוני DP — נעילת baseline S0, מאומת בכל npm test; (2) very_long DP — נעילת S1-ז; (3) very_long מורשת — הפעלת run-ours.js הזהה ל-workflow corpus-invariants (פרופיל imud-legacy + הגדרות IMUD + מתיחה). שים לב: הנעילה legacy-94ce3fcb (S1-ז, 836 עמ') תועדה בהקשר פרופיל אפליקציה אחר — כל נעילה שייכת להפעלה שלה.",
+  "_comment": "S71: נעילות ההצלבה השיטתית. עדכון נעילה = commit מפורש עם הצדקה. מקור הערכים: (1) קנוני DP — נעילת baseline S0, מאומת בכל npm test; (2) very_long DP — נעול מחדש ב-S72 (D-106): מעבר יישור-התחתיות משנה את גיאומטריית העמודים ⇒ הערת-צד אחת (\"שמירתו\") הוסטה במפל בין עמ' 119←120 — תוכן נשמר במלואו, 2/1335 עמודים; קודם 531f2154 (S1-ז); (3) very_long מורשת — הפעלת run-ours.js הזהה ל-workflow corpus-invariants (פרופיל imud-legacy + הגדרות IMUD + מתיחה). נעילה מחדש ב-S72 (D-106): מעבר היישור משנה את הרכב מתיחה+משיכת-יתום (המתיחה מעניקה למשיכה קיבולת כיווץ נוספת ⇒ זנבות-יתום נוספים נמשכים חוקר לעמודם); אינווריאנטים C1-C12 11/11 (100%); איזון תחת הפרופיל: 42.7%→8.4% עמודים לא-מאוזנים; קודם legacy-3ff0b (S71). שים לב: הנעילה legacy-94ce3fcb (S1-ז, 836 עמ') תועדה בהקשר פרופיל אפליקציה אחר — כל נעילה שייכת להפעלה שלה.",
   "corpora": [
-    { "name": "canonical (DP)", "file": "red-build/tests/fixtures/canonical_corpus.txt", "lockHash": "80f9ed6c" },
-    { "name": "very_long (DP)", "file": "audits/very_long_test_text.txt", "lockHash": "531f2154" },
-    { "name": "very_long (legacy, run-ours = corpus-invariants CI)", "file": "audits/very_long_test_text.txt", "legacy": true, "lockHash": "legacy-3ff0b" }
+    {
+      "name": "canonical (DP)",
+      "file": "red-build/tests/fixtures/canonical_corpus.txt",
+      "lockHash": "80f9ed6c"
+    },
+    {
+      "name": "very_long (DP)",
+      "file": "audits/very_long_test_text.txt",
+      "lockHash": "77d5d5d3"
+    },
+    {
+      "name": "very_long (legacy, run-ours = corpus-invariants CI)",
+      "file": "audits/very_long_test_text.txt",
+      "legacy": true,
+      "lockHash": "legacy-1bf0a"
+    }
   ],
   "bundles": [
-    { "file": "red-build/ui/app.bundle.js" },
-    { "file": "red-build/ui/engine-worker.bundle.js" }
+    {
+      "file": "red-build/ui/app.bundle.js"
+    },
+    {
+      "file": "red-build/ui/engine-worker.bundle.js"
+    }
   ]
 }

@@ -43,7 +43,7 @@ npm run test:scan       # סריקת F-06 (עימוד אוטומטי מבקרו�
 `node tools/cross-check.js` — אותה פקודה מקומית וב-CI (step ייעודי ב-ci.yml):
 
 - **קורפוסים מול נעילות** (`tools/cross-check-locks.json`): קנוני DP (80f9ed6c),
-  very_long DP (531f2154), very_long מורשת — דרך הפעלת run-ours הזהה
+  very_long DP (77d5d5d3 — נעילת S72), very_long מורשת — דרך הפעלת run-ours הזהה
   ל-workflow corpus-invariants. חריגה מנעילה = יציאה 1 (שער, לא תיעוד).
 - **באנדלים**: sha256 של app/engine-worker — בסיס להשוואת החי.
 - `--live <URL>`: מושך את הבאנדלים הפרוסים מהאתר ומשווה מול המקומי

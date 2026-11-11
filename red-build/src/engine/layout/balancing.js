@@ -115,6 +115,81 @@ function balancePage(page, maxDelta) {
 }
 
 /**
+ * **S72 (שיפור 3 — יישור תחתיות טורים ככלל עימוד; הוראת משתמש מפורשת 11.11):**
+ * בכל עמוד דו-טורי — אחרי שכל הזזות השורות גמרו (planPages + retreat +
+ * שערים + chapter-end) — אם הפרש תחתיות-הטקסט מעל הסף, הטור הקצר נמתח
+ * במקדם מדויק (aqStretch = יעד/נוכחי) עד תחתית הטור הארוך, בכפוף
+ * לגבולות ה-AQ. "הכלי עובד רק במקרה הנצרץ לו": דלג כשכבר מאוזן,
+ * כשטור ריק (אין מה למתוח), בעמודי הערות — היעד אינו חודר לאזור
+ * ההערות (תקרה = cap−fn; דילוג על חדירות קיימות — תחום ה-containment),
+ * ובעמודי סוף-פרק כשbalance-chapter-end=natural (K-4 — אין מתיחה
+ * מלאכותית של פרק קצר). שום שורה אינה זזה — המקדם בלבד; לכן גם
+ * layoutHash (מבוסס-תוכן) אינו משתנה — נייטרליות מוכחת.
+ * @returns {{aligned:number, skipped:number}}
+ */
+function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
+  const maxDelta = settings['imbalance-max-delta-px'];
+  const hi = settings['aq-word-spacing-max'];
+  const skip = opts.skipPages || null;
+  let aligned = 0, skipped = 0;
+  for (const page of pages) {
+    if (skip && skip.has(page)) { skipped++; continue; }
+    const cols = page.columns || [];
+    if (cols.length !== 2) continue;
+    const c0 = cols[0], c1 = cols[1];
+    if (!c0.length || !c1.length) { skipped++; continue; } // טור ריק — אין מה למתוח
+    const hh = (c) => c.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1), 0);
+    const h0 = hh(c0), h1 = hh(c1);
+    const delta = Math.abs(h0 - h1);
+    if (delta <= maxDelta) continue; // כבר מאוזן — אין התערבות
+    // תקרת בטיחות בעמודי הערות: הטקסט לא נכנס לאזור ההערות (R3-C2 —
+    // האזור חוצה-רוחב); חדירה קיימת (pre-existing containment) — לא לנו,
+    // דילוג מלא כדי לא להחריף
+    const capAll = colCapacityOf(page, { fnBudget: false }); // כולל פס חוצה-טורים
+    let target = Math.max(h0, h1);
+    if (page.fnReservedHeightPx > 0) {
+      const fnCeil = capAll - page.fnReservedHeightPx;
+      if (Math.max(h0, h1) > fnCeil + 0.5) { skipped++; continue; } // חדירה קיימת
+      target = Math.min(target, fnCeil);
+    } else if (target > capAll + 0.5) { skipped++; continue; } // גלישה קיימת
+    const shortI = h0 < h1 ? 0 : 1;
+    const shortCol = cols[shortI];
+    const usedS = Math.min(h0, h1);
+    const raw = usedS > 0.5 ? target / usedS : 1; // **S72 (שיפור 4):** מקדם מדויק — יעד/נוכחי
+    if (!(raw > 1 + 1e-4)) continue;
+    const lo = settings['aq-word-spacing-min'];
+    const tallCol = cols[1 - shortI];
+    // **S72 (עומס משותף):** כשהמקדם החד-צדדי נחתך בתקרת ה-AQ, הפער
+    // מתחלק בין שני הטורים — הקצר נמתח והארוך מכווץ לנקודת האמצע —
+    // ושני המקדמים בגבולות המוגדרים [lo,hi]. רק אם גם זה אינו אפשרי
+    // (פער גדול על טורים קצרים) — מתיחה חד-צדדית עד התקרה ושארית
+    // מדווחת באירוע (clamped=true).
+    const mid = (Math.max(h0, h1) + usedS) / 2;
+    const fShort = usedS > 0.5 ? mid / usedS : 1;
+    const fTall = Math.max(h0, h1) > 0.5 ? mid / Math.max(h0, h1) : 1;
+    let factor, shared = false;
+    if (raw > hi + 1e-9 && fShort <= hi + 1e-9 && fTall >= lo - 1e-9) {
+      factor = fShort; shared = true;
+    } else {
+      factor = Math.min(hi, raw);
+      if (!(factor > 1 + 1e-4)) continue;
+    }
+    for (const ln of shortCol) ln.aqStretch = factor;
+    if (shared) for (const ln of tallCol) ln.aqStretch = fTall;
+    aligned++;
+    const afterShort = usedS * factor;
+    const afterTall = shared ? Math.max(h0, h1) * fTall : Math.max(h0, h1);
+    eventLog.emit('balance', 'bottom-align', {
+      page: page.index, col: shortI, factor: Number(factor.toFixed(4)),
+      factorTall: shared ? Number(fTall.toFixed(4)) : null,
+      deltaBefore: Number(delta.toFixed(1)), deltaAfter: Number(Math.abs(afterShort - afterTall).toFixed(1)),
+      shared, clamped: !shared && raw > hi + 1e-9
+    }, page.index);
+  }
+  return { aligned, skipped };
+}
+
+/**
  * balance-chapter-end mode ∈ {balance, stretch, natural} (REQ-BAL-03):
  * - balance: איזון רגיל
  * - stretch: איזון + AQ word-spacing (עד cap)
@@ -170,8 +245,11 @@ function autoQualityPass(pages, settings, eventLog) {
       const cap = colCapacityOf(page, { colIndex: c });
       const deficit = cap - used;
       if (deficit > 4 && mayStretch) {
-        const perLine = deficit / lines.length;
-        const rawFactor = 1 + perLine / (lines[0].heightPx || 1);
+        // **S72 (שיפור 4 — מקדם מדויק):** rawFactor = cap/used — מגיע
+        // ליעד בדיוק גם בטורים מעורבי-גבהים (כותרות+גוף). בעבר חושב
+        // 1+(deficit/n)/h(שורה-ראשונה) — קירוב שהחטיא את היעד בכל טור
+        // שאינו אחיד (נמדד: פספוס של עד ~10px בטור עם 2 כותרות).
+        const rawFactor = used > 0.5 ? cap / used : 1;
         for (const stage of AQ_STAGES) {
           const [lo, hi] = stageBounds(settings, stage);
           const factor = Math.min(hi, Math.max(lo, rawFactor));
@@ -188,9 +266,9 @@ function autoQualityPass(pages, settings, eventLog) {
         }
       } else if (deficit < -4 && compressFirst) {
         // עודף מעל התקרה ⇒ כיווץ עד min (כיווץ לפני מתיחה — compress-first)
-        const overflow = -deficit;
-        const perLine = overflow / lines.length;
-        const rawFactor = Math.max(0.8, 1 - perLine / (lines[0].heightPx || 1));
+        // **S72 (שיפור 4):** מקדם מדויק גם בכיווץ — cap/used (היה קירוב
+        // first-line שהחטיא את היעד בטורים מעורבי-גבהים).
+        const rawFactor = used > 0.5 ? cap / used : 1;
         for (const stage of AQ_STAGES) {
           const [lo, hi] = stageBounds(settings, stage);
           const factor = Math.max(lo, Math.min(hi, rawFactor));
@@ -206,4 +284,4 @@ function autoQualityPass(pages, settings, eventLog) {
   return { applied };
 }
 
-module.exports = { balancePage, optimalSplit, pageImbalance, applyChapterEndMode, autoQualityPass, usedHeight };
+module.exports = { balancePage, optimalSplit, pageImbalance, applyChapterEndMode, autoQualityPass, alignColumnBottoms, usedHeight };

@@ -34,7 +34,7 @@ const { planPages, layoutHash, bodyGeometryHash } = require('../layout/dp-planne
 const { buildPageTemplate, PAGE_TYPES } = require('../layout/page-templates');
 const { assignNumbers } = require('../decoration/folio');
 const { buildHeader } = require('../decoration/headers-builder');
-const { autoQualityPass, applyChapterEndMode } = require('../layout/balancing');
+const { autoQualityPass, applyChapterEndMode, alignColumnBottoms } = require('../layout/balancing');
 const { applyHeadingModes } = require('../layout/headings-escort');
 // **S5.2 (תיקון 11):** splitPlaceholder הוסר מ-markers — קוד מת מלכודתי
 // (פיצול על ':' היה מבתק שעות כמו 12:30; ה-placeholder האמיתי משתמש ב-U+E000).
@@ -656,6 +656,16 @@ function typeset(rawText, settingsIn, env = {}) {
     for (const pi of [...endsAt].sort((a, b) => a - b)) {
       applyChapterEndMode(pages[pi], settings['balance-chapter-end'], settings, eventLog);
     }
+    // **S72 (שיפור 3 — סדר החלה נכון):** יישור תחתיות הטורים אחרי שכל
+    // הזזות השורות הסתיימו (planPages+retreat ← שערים ← chapter-end
+    // ‏[איזון/כיסוי]) ולפני הכל — AQ האופציונלי (מילוי עד התחתית),
+    // תוכן-העניינים, פאס העיטורים וה-hash: המתיחה היא הגיאומטריה הסופית
+    // ואסור ששלב מאוחר יותר יזיז שורות מתחתיה. עמודי סוף-פרק במצב
+    // natural מדולגים (K-4 — הוראת המשתמש המפורשת היא על הברירה הרגילה).
+    const naturalEnds = settings['balance-chapter-end'] === 'natural'
+      ? new Set([...endsAt].map((pi) => pages[pi])) : null;
+    const alignInfo = alignColumnBottoms(pages, settings, eventLog, { skipPages: naturalEnds });
+    eventLog.emit('balance', 'bottom-align-pass', { aligned: alignInfo.aligned, skipped: alignInfo.skipped });
     if (settings['aq-enabled']) autoQualityPass(pages, settings, eventLog);
   }
 

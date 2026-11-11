@@ -715,13 +715,20 @@ const GAP_COMPRESS_FLOOR = parseFloat(
 const RECLAIM_COMPRESS_MAX = parseFloat(
   (typeof process !== 'undefined' && process.env && process.env.RED_RECLAIM_COMPRESS_MAX) || '0'
 );
-// **S4.17 (מתג ראשי):** כל מנגנון המתיחה/המשיכה כבוי כברירת מחדל — opt-in
-// מפורש בלבד (RED_ENABLE_STRETCH_RECLAIM=1). סיבה: הנתיב החי של האפליקציה
-// מעמד במדידת טבלאות (794 עמודים ל-very_long מול 678 במדידת גופן-אמת)
-// ולכן מגיע למצבי עמוד שבהם המתיחה/המשיכה כן נורות גם כשגג הכיווץ 0 —
-// והן עלולות להוציא שורות מתיבת הטור ב-DOM (LINE_BELOW_COLUMN באודיט
-// החי, עמ' 192/439). עד שרעש המילוי ייסגר והכיוול ייעשה — המנגנון מופעל
-// רק בניסויים מפורשים.
+// **S72 (שיפור 1 — עומס משותף ליישור תחתיות):** גג כיווץ-מתחת-לבסיס בכיווץ
+// היישור (2px לשורה, עד 30px לעמוד — הסדר הגודל שנמדד בייחוס המקור:
+// 74 זוגות פסים ב-19-20px מול בסיס 21.44). נפרד מ-RECLAIM_COMPRESS_MAX
+// (הרדום=0) של משיכת-היתום — כאן הכלי עובד רק כשהמתיחה לבדה לא סגרה.
+const ALIGN_COMPRESS_MAX = parseFloat(
+  (typeof process !== 'undefined' && process.env && process.env.RED_ALIGN_COMPRESS_MAX) || '30'
+);
+// **S4.17 (מתג ראשי) / **S72 (שיפור 2 — D-101) עדכון:** מתיחת סוף-העמוד
+// (stretchLastBlockToBottom) מופעלת כעת כברירת מחדל בגוף הזרימה — הוראת
+// המשתמש המפורשת (11.11) ליישור תחתיות הטורים + הוכחת ההיסטוגרם מהייחוס
+// (~230 פסים ב-23-24.4px). מה שנותר מאחורי הדגל הסביבתי
+// RED_ENABLE_STRETCH_RECLAIM: משיכת זנב-היתום (tryReclaimOrphanTail) בלבד —
+// היא המזיזה שורות בין עמודים (מקור הסיכון שתואר ב-S4.17 — LINE_BELOW_COLUMN
+// באודיט החי), ואינה נחוצה ליישור התחתיות. דריסות הניסויים נשארות בתוקף.
 const STRETCH_RECLAIM_ENABLED = (
   (typeof process !== 'undefined' && process.env && process.env.RED_ENABLE_STRETCH_RECLAIM === '1')
 );
@@ -1330,12 +1337,18 @@ function legacyTypeset(rawText, settings, env) {
         return seen.size;
       };
 
+      // **S72:** דגל דיווח אי-איזון לעמוד הנוכחי — מונע דיווח כפול בין
+      // finalizeBlock (סגירות מוקדמות) לבין הדיווח שאחרי מתיחת סוף-העמוד.
+      let imbalanceReported = false;
+
       // **S4.13 (היגיון סיום בלוק — העתק מהמקור, שורות 3946-3997):** במקור כל
       // בלוק מסתיים באחד מארבעה: (1) סוף פרק → איזון תמיד; (2) הטוקן הבא
       // כותרת-רוחבית (span_1col) → איזון; (3) הטור הימני גולש לגובה הפנוי או
       // הפרש הטורים > 60px → איזון; (4) אחרת — המילוי נשמר (במקור: מתיחה
       // אנכית עדינה של הטור הקצר, שאינה מזיזה נקודות חיתוך ולכן לא ממומשת
-      // כאן). ה-S4.12 איזן בלי-תנאי בכל נקודות היציאה — עכשיו נאמן למקור.
+      // כאן — **S72 (שיפור 1): כעת מיושמת** ב-alignBlockBottoms, לכל
+      // הסעיפים, אחרי הפיצול ולפני המדידה). ה-S4.12 איזן בלי-תנאי
+      // בכל נקודות היציאה — עכשיו נאמן למקור.
       const finalizeBlock = (blk, nextTok, sectionEnd, pageClose = false, reason = '') => {
         if (!blk || isH0) return;
         if (!(blk.cols[0].length || blk.cols[1].length)) return;
@@ -1347,22 +1360,29 @@ function legacyTypeset(rawText, settings, env) {
          * לפיצול) — כמו 5 העמודים המגבלים בייחוס המקור עצמו. */
         const balanceAndReport = (why) => {
           balanceBlock(blk, availH);
+          // **S72 (שיפור 1 — סדר החלה נכון):** מתיחת יישור-התחתיות אחרי
+          // הפיצול ולפני המדידה — ה-ledger מדווח רק את השארית האמיתית
+          // אחרי שני הכלים (הזזת שורות ← מתיחה עדינה), לא שארית ביניים.
+          alignBlockBottoms(blk);
           // **S1-ב:** הן התנאי והן הנתונים ברשומה — ברמת העמוד (pageEffCols),
           // לא ברמת הבלוק הנסגר. בלוק קצר שנסגר בטור ימני בלבד באמצע עמוד
           // מלא הוא טיפוגרפיה תקינה ואינו מדווח; עמוד שטורו השמאלי ריק באמת
           // ממשיך להיות מדווח וממופה לאינדקס הסופי.
           const eff = pageEffCols();
-          const aH = colHeightUnits(eff[0]);
-          const bH = colHeightUnits(eff[1]);
+          const aH = colVisualH(eff[0]);
+          const bH = colVisualH(eff[1]);
           // **S6.3:** הסף מההגדרות (imbalance-max-delta-px; היה 60px קשיח —
           // שלוש שורות ומעלה לא דווחו כלל). הגרנולריות של איזון בגבולות שורה
           // היא פיץ' אחד (~16px) — מה שנותר מעל הסף אחרי הפיצול האופטימלי
-          // הוא אי-איזון אמיתי בלתי-פתיר (אלמנה/יתום min-2) ומדווח.
+          // והמתיחה העדינה הוא אי-איזון אמיתי בלתי-פתיר (אלמנה/יתום min-2,
+          // או קיבולת מתיחה שאזלה) ומדווח. **S72:** המדידה בגובה-דיו —
+          // תחתית הטקסט הנראה, כהגדרת המשתמש.
           if (eff[1].length === 0 || Math.abs(aH - bH) > cfg.imbalanceMax) {
+            imbalanceReported = true;
             const rec = ledger.create('column-imbalance', `balance@p${pages.length - 1}`, pages.length - 1,
               { emptyCol: eff[1].length === 0, deltaPx: Math.round(Math.abs(aH - bH)), reason: why }, 'legacy-flow');
             ledger.transition(rec.issue_id, 'persists', 'legacy-flow',
-              `unfixable after optimal split (reason=${why})`);
+              `unfixable after split+stretch (reason=${why})`);
           }
         };
         if (sectionEnd) { balanceAndReport('section-end'); return; }
@@ -1493,6 +1513,85 @@ function legacyTypeset(rawText, settings, env) {
           l.push(...e[1]);
         }
         return [r, l];
+      };
+
+      /** **S72 (שיפור 1 — יישור תחתיות בסיום בלוק; השלמת סעיף 4 של S4.13):**
+       * המקור מסיים כל בלוק באחד מארבעה; בסעיף 4 ("אחרת — המילוי נשמר")
+       * הוא מבצע "מתיחה אנכית עדינה של הטור הקצר" — שלא מומשה בפורט
+       * (ראה ההערה ב-S4.13 לעיל). הוראת המשתמש המפורשת (11.11): "שבכל
+       * בלוק של שני טורים, קצה התחתון של הטקסט שבשני הטורים יהיה שווה"
+       * — כאן היא מומשה, וגם לאחר איזון הפיצול (סעיפים 1-3) לסגירת
+       * שארית הקוונטיזציה (פיץ' שלם אחד שחלוקת שורות אינה יכולה לסגור).
+       * תנאי ההפעלה ("הכלי עובד רק במקרה הנצרך לו"): בלוק דו-טורי סופי,
+       * שני הטורים לא-ריקים, ו-Δ מעל הסף (imbalance-max-delta-px).
+       * המכניקה — justifyColUnits של v21 (ריווח-פסקה עד 9 + פס עד +3px
+       * לשורה) — מוכוונת אל תחתית הטור הארוך ואינה עוברת אותה לעולם:
+       * blockBottom()=max(cursor) אינו משתנה (רק הסמן הקצר עולה), ולכן
+       * span/בלוק/עמוד/תקציב-הערות שאחרי אינם זזים; אף שורה אינה עוברת
+       * בין טורים — הוכחת נייטרליות: layoutHash זהה ביט-לביט (נאמד ב-S722). */
+      const alignBlockBottoms = (blk, opts = {}) => {
+        if (!blk || blk.type === 'span') return { stretched: false, delta: 0 };
+        const cols = effCols(blk);
+        if (!(cols[0].length && cols[1].length)) {
+          return {
+            stretched: false, emptyCol: true,
+            delta: Math.abs(colVisualH(cols[0]) - colVisualH(cols[1]))
+          };
+        }
+        // **S72:** מדידת גובה-דיו (בלי מרווח-הזנב) — ההגדרה שנתן המשתמש
+        // היא שוויון תחתיות הטקסט הנראה, לא של תיבות-השוליים.
+        const rV = colVisualH(cols[0]);
+        const lV = colVisualH(cols[1]);
+        const delta = Math.abs(rV - lV);
+        if (delta <= cfg.imbalanceMax) return { stretched: false, delta, within: true };
+        const shortI = rV < lV ? 0 : 1;
+        const shortCol = cols[shortI];
+        const tGapShort = trailingGapOf(shortCol);
+        const tGapTall = trailingGapOf(cols[1 - shortI]);
+        // **S72 (נייטרליות מלאה — opts.keepMax):** בקריאה היחידה שבה המילוי
+        // ממשיך אחרי הבלוק (איזון שלפני span שנכנס), תחתית-המודל של הבלוק
+        // (max cursor — הבסיס להחלטות כניסת-span/שער-תקציב/שבירה) חייבת
+        // להישאר זהה ביט-לביט: היעד חסום כך שגובה-המודל של הטור הקצר
+        // (כולל מרווח-הזנב שלו) לא יעבור את תחתית-המודל המקורית. בשאר
+        // הקריאות (סגירות עמוד — העמוד נסגר מיד) אין צרכן ל-cursor והיעד
+        // חופשי. תקרה נוספת בשני המצבים: תחתית הזרימה/התקציב (colBottom).
+        const maxBefore = Math.max(blk.cursor[0], blk.cursor[1]);
+        const visCeilKeepMax = Math.max(rV, lV) + Math.max(0, tGapTall - tGapShort);
+        const targetVis = Math.min(
+          Math.max(rV, lV),
+          colBottom() - blk.yTop,
+          opts.keepMax ? visCeilKeepMax : Number.POSITIVE_INFINITY
+        );
+        const targetAbs = blk.yTop + targetVis + tGapShort;
+        justifyColUnits(shortCol, blk.yTop, targetAbs, delta + 1, JUSTIFY_MAX_LH_EXTRA);
+        // **S72 (עומס משותף — v21 compressColumnBy):** אם המתיחה לבדה לא סגרה
+        // (קיבולת 3px/שורה אזלה — טורים קצרים של 3-6 שורות), הטור הארוך
+        // מכווץ בחזרה לקראת הקצר במנגנון הכיווץ של המקור: מרווח→פס-עד-
+        // הבסיס→2px מתחת לבסיס לשורה, בגג כולל 30px לעמוד (כפי שנמדד
+        // בייחוס — 74 זוגות פסים ב-19-20px = בסיס−2). הגנות: מרווח-הזנב
+        // של היחידה האחרונה מוחלף זמנית ב-0 (אינו דיו — כיווצו אינו מזיז
+        // את תחתית הטקסט) ומוחזר; הכמות המשוחררת מדויקת לפער בלבד.
+        let afterStretch = Math.abs(colVisualH(cols[0]) - colVisualH(cols[1]));
+        if (afterStretch > cfg.imbalanceMax) {
+          const tallCol = cols[1 - shortI];
+          const lastU = tallCol[tallCol.length - 1];
+          const savedGap = lastU && lastU.kind === 'para'
+            ? (lastU.gapPx != null ? lastU.gapPx : 7) : null;
+          if (savedGap != null) lastU.gapPx = 0;
+          compressColUnits(tallCol, afterStretch, RECLAIM_BELOW_BASE, ALIGN_COMPRESS_MAX);
+          if (savedGap != null) lastU.gapPx = savedGap;
+        }
+        const nR = colHeightUnits(cols[0]);
+        const nL = colHeightUnits(cols[1]);
+        if (opts.keepMax) {
+          // תחתית-המודל נשמרת בדיוק (ההחלטות בזרימה אינן מושפעות כלל)
+          blk.cursor[0] = maxBefore;
+          blk.cursor[1] = maxBefore;
+        } else {
+          blk.cursor[0] = blk.yTop + nR;
+          blk.cursor[1] = blk.yTop + nL;
+        }
+        return { stretched: true, delta, deltaAfter: Math.abs(colVisualH(cols[0]) - colVisualH(cols[1])) };
       };
 
       /** v21 columnStretchCapacity: כמה px אפשר למתוח טור — ריווח-פסקה עד
@@ -1627,16 +1726,21 @@ function legacyTypeset(rawText, settings, env) {
         if (!lastBlk || lastBlk.type === 'span') return;
         const cols = effCols(lastBlk);
         if (!(cols[0].length || cols[1].length)) return;
-        const rH = colHeightUnits(cols[0]);
-        const lH = colHeightUnits(cols[1]);
-        const topH = Math.max(rH, lH);
-        const free = (colBottom() - (lastBlk.yTop + topH)) - 1;
+        // **S72 (שיפור 2 — יעד בגובה-דיו):** שני הטורים נמתחים עד אותה
+        // תחתית-דיו; היעד של כל טור במונחי המודל כולל את מרווח-הזנב שלו
+        // (פסקה=7px, כותרת=0) — כך התחתיות הנראות מתיישרות גם כשהמילוי
+        // התפרס בלי איזור וגם כשסוגי היחידות האחרונות שונים.
+        const tR = trailingGapOf(cols[0]), tL = trailingGapOf(cols[1]);
+        const rV = colHeightUnits(cols[0]) - tR;
+        const lV = colHeightUnits(cols[1]) - tL;
+        const topV = Math.max(rV, lV);
+        const free = (colBottom() - (lastBlk.yTop + topV)) - 1;
         if (!(free > 0.5 && free <= PAGE_STRETCH_MAX)) return;
-        const reach = Math.min(rH + colStretchCap(cols[0]), lH + colStretchCap(cols[1]));
-        const target = Math.min(topH + free - 2, reach);
-        if (target - topH < 0.5) return;
-        justifyColUnits(cols[0], lastBlk.yTop, lastBlk.yTop + target, PAGE_STRETCH_MAX + 40, JUSTIFY_MAX_LH_EXTRA);
-        justifyColUnits(cols[1], lastBlk.yTop, lastBlk.yTop + target, PAGE_STRETCH_MAX + 40, JUSTIFY_MAX_LH_EXTRA);
+        const reach = Math.min(rV + colStretchCap(cols[0]), lV + colStretchCap(cols[1]));
+        const target = Math.min(topV + free - 2, reach);
+        if (target - topV < 0.5) return;
+        justifyColUnits(cols[0], lastBlk.yTop, lastBlk.yTop + target + tR, PAGE_STRETCH_MAX + 40, JUSTIFY_MAX_LH_EXTRA);
+        justifyColUnits(cols[1], lastBlk.yTop, lastBlk.yTop + target + tL, PAGE_STRETCH_MAX + 40, JUSTIFY_MAX_LH_EXTRA);
         lastBlk.cursor[0] = lastBlk.yTop + colHeightUnits(cols[0]);
         lastBlk.cursor[1] = lastBlk.yTop + colHeightUnits(cols[1]);
       };
@@ -1723,6 +1827,11 @@ function legacyTypeset(rawText, settings, env) {
           // הבלוק בכל יציאה מלולאת המילוי לפני החלטת המשך/עצירה.
           if (block && !isH0 && (block.cols[0].length || block.cols[1].length)) {
             balanceBlock(block, colBottom() - block.yTop);
+            // **S72 (שיפור 1):** יישור תחתיות גם באיזון שלפני span — הבלוק
+            // סופי (בלוק חדש נפתח מתחת לפס). **keepMax:** המילוי ממשיך
+            // בעמוד (ה-span נבדק ונכנס) — תחתית-המודל נשמרת ביט-לביט
+            // והחלטת הכניסה של ה-span (colBottom−curY) זהה בדיוק.
+            alignBlockBottoms(block, { keepMax: true });
           }
           const curY = block ? blockBottom() : top;
           // **S4.13:** סף 60px — כמו המקור (if (currentAvailH < 60) break
@@ -1993,6 +2102,13 @@ function legacyTypeset(rawText, settings, env) {
             // השמאלי = העמוד התמלא; המקור מותח את הבלוק לתחתית ושובר עמוד
             // (הוכחה מבנית: אין בלוק-המשך בלי span בכל הייחוס).
             finalizeBlock(block, tok, false);
+            // **S72 (שיפור 1 — השלמה לסגירות p-cut):** finalizeBlock שומר את
+            // המילוי כאן (נאמן למקור — pageClose=false), ומתיחת סוף-העמוד
+            // אינה רצה כשfree>48 (עמוד שנסגר מוקדם מרעש מדידה/מגבלות
+            // אלמנה). כאן יישור התחתיות בלבד — מתיחת הטור הקצר אל הארוך
+            // (+עומס משותף במידת הצורך), בלי הזזת שורות ובלי מילוי מלאכותי
+            // (K-4): "הכלי עובד רק במקרה הנצרץ לו".
+            alignBlockBottoms(block);
             break fillPage;
           }
           else {
@@ -2007,10 +2123,42 @@ function legacyTypeset(rawText, settings, env) {
       // delete+insert השכנים שנצפו ב-P7 (עמ' 14 שמאל: 45 שורות בייחוס מול 44).
       let sectionEnded = ti >= toks.length && !pending;
       let reclaimed = false;
-      if (STRETCH_RECLAIM_ENABLED && !isH0 && !sectionEnded) {
+      // **S72 (שיפור 2 — D-101):** מתיחת סוף-העמוד (stretchPageToBottom של
+      // v21) מופעלת כברירת מחדל. עד כאן הייתה כבויה מאחורי
+      // RED_ENABLE_STRETCH_RECLAIM (S4.17) בגלל רעש מדידת-טבלאות; אך:
+      // (א) הוראת המשתמש המפורשת (11.11) — "קצה התחתון של הטקסט שבשני
+      // הטורים יהיה שווה" — היא בדיוק המכניקה של המקור לסגירות "עמוד
+      // מלא" (ההוכחה מהייחוס: ~230 פסים ב-23-24.4px = בסיס 21.44 + עד
+      // 3px מתיחה — JUSTIFY_MAX_LH_EXTRA);
+      // (ב) הסיכון שתואר ב-S4.17 (LINE_BELOW_COLUMN באודיט החי) נבע
+      // ממשיכת-הזנב (tryReclaimOrphanTail) שמזיזה שורות בין עמודים —
+      // והיא נותרת כבויה (opt-in) — כאן מופעלת המתיחה בלבד;
+      // (ג) המתיחה עצמה אינה מזיזה אף שורה וחסומה מוכחות: free≤48
+      // (PAGE_STRETCH_MAX), יעד≤colBottom−3, קיבולת colStretchCap
+      // נמדדת לפני ההחלה, ושני הטורים נמתחים לאותו יעד (התחתיות מתיישרות
+      // גם אם המילוי התפרס בלי איזון — "הכלי עובד רק במקרה הנצרץ לו").
+      if (!isH0 && !sectionEnded) {
         stretchLastBlockToBottom();
-        reclaimed = tryReclaimOrphanTail();
-        if (reclaimed) sectionEnded = ti >= toks.length; // pending כבר null
+        if (STRETCH_RECLAIM_ENABLED) {
+          reclaimed = tryReclaimOrphanTail();
+          if (reclaimed) sectionEnded = ti >= toks.length; // pending כבר null
+        }
+        // **S72 (אמת דיווח):** שארית נדירה אחרי המתיחה — ברמת העמוד
+        // (pageEffCols), באותו פורמט רשומה כמו שאר רשומות אי-האיזון.
+        // רק אם finalizeBlock לא דיווח כבר על העמוד הזה (מניעת כפילות).
+        if (!imbalanceReported) {
+          const eff = pageEffCols();
+          if (eff[0].length && eff[1].length) {
+            const aH = colVisualH(eff[0]);
+            const bH = colVisualH(eff[1]);
+            if (Math.abs(aH - bH) > cfg.imbalanceMax) {
+              const rec = ledger.create('column-imbalance', `balance@p${pages.length - 1}`, pages.length - 1,
+                { emptyCol: false, deltaPx: Math.round(Math.abs(aH - bH)), reason: 'page-stretch-residual' }, 'legacy-flow');
+              ledger.transition(rec.issue_id, 'persists', 'legacy-flow',
+                `post page-stretch residual (caps exhausted or free>${PAGE_STRETCH_MAX})`);
+            }
+          }
+        }
       }
       // סגירת הבלוק האחרון: אם המקטע נגמר — איזון. אחרי משיכת-יתום שסגרה
       // את המקטע המקור אינו מאזן מחדש — המשיכה עצמה היא סוף הפרק.
@@ -2361,6 +2509,25 @@ function legacyTypeset(rawText, settings, env) {
     let h = 0;
     for (const u of units) h += unitH(u);
     return h;
+  }
+
+  /** **S72 (שיפורים 1+2 — מדידת גובה-דיו):** מרווח-הפסקה שאחרי היחידה
+   * האחרונה של הטור (7px, או 0 לכותרת) הוא חלק מגובה המודל/DOM
+   * (scrollHeight של המקור) אך **אינו נראה לעין** — הדיו מסתיים שורה
+   * אחת קודם. יעדי יישור-התחתיות מוגדרים לכן בגובה-דיו: שני טורים
+   * שאחד מסתיים בפסקה והשני בכותרת/חיתוך מקבלים יעדים שונים במונחי
+   * המודל (הפרש מרווח-הזנב) ותחתית-דיו זהה בפועל — ההגדרה
+   * שנתן המשתמש: "קצה התחתון של הטקסט שבשני הטורים יהיה שווה". */
+  function trailingGapOf(units) {
+    if (!units || !units.length) return 0;
+    const last = units[units.length - 1];
+    if (!last || last.kind !== 'para') return 0;
+    return last.gapPx != null ? last.gapPx : 7;
+  }
+
+  /** **S72:** גובה-דיו של טור — גובה המודל בלי מרווח-הזנב הבלתי-נראה. */
+  function colVisualH(units) {
+    return colHeightUnits(units) - trailingGapOf(units);
   }
 
   /** פריסת המחסנית: כותבת שורות עם y מפורש לטורי העמוד. */
