@@ -567,8 +567,12 @@ describe('S12.2 שערים 1+2 — PDF: טקסט אמיתי, סימניות, ק�
         merged.push(s);
       }
       const pg = exp.projected.pages[pgIdx];
+      // **S71.1:** חיזוי ראש הדיו לפי גובה cap מדד-אמת (capPx — OS/2 sCapHeight
+      // ב-impl B; 0.70 בטבלה) ולא ascent×0.9: אותיות עברית/לטינית מגיעות לקו
+      // ה-cap, לא ל-ascender — הכיול הקודם (מיועד ל-ascent 0.80 של הטבלה)
+      // נעשה גס במימוש B (ascent אמיתי ~0.96em). הספים ±3/±6 נותרו ללא שינוי.
       const modelTops = [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]
-        .map(l => Math.round(l.baselineY - l.ascentPx * 0.9));
+        .map(l => Math.round(l.baselineY - (l.capPx != null ? l.capPx : l.ascentPx * 0.9)));
       // מיזוג צמרות מודל קרובות (±2px — שורות מקבילות בשני טורים באותו גובה)
       const distinctModelTops = [];
       for (const t of [...new Set(modelTops)].sort((a, b) => a - b)) {
@@ -581,7 +585,7 @@ describe('S12.2 שערים 1+2 — PDF: טקסט אמיתי, סימניות, ק�
       // גסה לכותרות גדולות (אות עברית אינה מגיעה לקו ה־ascender).
       const kindByTop = new Map();
       [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines].forEach(l => {
-        const t = Math.round(l.baselineY - l.ascentPx * 0.9);
+        const t = Math.round(l.baselineY - (l.capPx != null ? l.capPx : l.ascentPx * 0.9));
         kindByTop.set(t, l.kind);
       });
       let bandWorst = 0;

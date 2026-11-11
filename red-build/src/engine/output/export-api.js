@@ -92,7 +92,7 @@ function exportHtml(result, settings, doc, meta = {}) {
 function exportPdf(text, settingsIn, fontBytes, fontName, env) {
   if (typeof Buffer === 'undefined') return { ok: false, error: 'no-buffer' }; // דפדפן — נתיב Node בלבד (מתועד)
   /* node-only */ const { typeset } = require('../core/pipeline');
-  /* node-only */ const { registerFont, unregisterFont, restoreFontRegistration, registeredFonts: registeredFontsRef } = require('../typography/measure-api');
+  /* node-only */ const { registerFont, unregisterFont, restoreFontRegistration, registeredFonts: registeredFontsRef, MeasureAPI, resolveMeasureImpl } = require('../typography/measure-api');
   /* node-only */ const { parseFont, glyphIdOf } = require('../typography/font-metrics');
   /* node-only */ const { buildSubset, charInventory } = require('../typography/font-subset');
   /* node-only */ const { projectDocument } = require('./geometry-projector');
@@ -121,9 +121,20 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
     };
     const result = typeset(text, settings, { noRecommendations: true, ...(env || {}) });
     // **S4.9:** פרופיל IMUD — הקרנה ממקרן ה-legacy (גיאומטריה מפורשת מהייחוס)
+    // **S71.1 (double-check — projection measurement consistency):** the
+    // projection must measure with the SAME impl that built the model
+    // (impl B — registered-font metrics). Until now projectDocument built
+    // itself a MeasureAPI(settings,'table') when no api was passed, so word
+    // x-positions followed the table while line breaks followed real font
+    // metrics: with Frank Ruhl Libre (the default font) 168 lines overflowed
+    // the column box in the exported PDF (up to 32.5px into the neighbouring
+    // column) and 97.8% of words diverged from the display (avg 111.8px) —
+    // display≠export, exactly the class EXT-13 closed for live↔export on the
+    // typeset side. resolveMeasureImpl = the same single source as pipeline;
+    // with no registered font it falls back to 'table' (previous behaviour).
     const projected = result.legacyProfile
       ? require('./legacy-projector').projectLegacyDocument(result, settings)
-      : projectDocument(result, settings);
+      : projectDocument(result, settings, new MeasureAPI(settings, resolveMeasureImpl(settings)));
     const drawnParts = [];
     for (const pg of projected.pages) {
       for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) for (const w of ln.words) drawnParts.push(w.text);

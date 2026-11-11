@@ -244,7 +244,11 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         // כלל במצבים אלה (הpipeline לא שם אותן ב‑blk.notes). שומר בטוח: continue.
         continue;
       }
-      const h = noteHeight(n, settings, (t, s) => measureFn(t, s));
+      // **S71.1 (R7-M4 שארית — בדיקה כפולה):** מעבר ישיר של measureFn — עטיפת
+      // החץ שהייתה כאן איבדה את סימון ה-impl (measureWithImpl.impl), וב-impl B
+      // (ייצוא PDF) הופעל פקטור הגופן שנועד לטבלת impl A בלבד ⇒ תקציב מרזב
+      // מנופח והחלטות split/move-whole מוטות בגבול התקרה. כמו recomputeFnBudget.
+      const h = noteHeight(n, settings, measureFn);
       const isCont = n.isContinuation === true;
       // הערה ארוכה מתקרת המרזב ⇒ מדיניות (block mode בלבד; continuous אין תקרה — D-34)
       if (Number.isFinite(barMax) && h > barMax && settings['long-footnote-policy'] !== 'allow') {

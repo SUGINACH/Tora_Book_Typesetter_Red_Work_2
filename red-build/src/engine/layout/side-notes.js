@@ -19,7 +19,11 @@ function estimateSideNoteHeight(text, settings, measureFn) {
   const words = String(text || '').split(/\s+/).filter(Boolean);
   const colW = settings._sideNoteColWidthPx || Math.max(60, Math.round(settings._outerMarginPx || 120) - 12);
   const fontName = settings['s-note-body-font'];
-  const factor = SIDE_NOTE_FONT_FACTORS[fontName] || (fontName && fontName !== settings['body-font'] ? 1.08 : 1);
+  // **S71.1 (R7-M4 שארית — בדיקה כפולה):** הפקטור מתקן את טבלת impl A בלבד;
+  // ב-impl B (font-metrics — נתיב ייצוא PDF) המטריקות מדויקות והכפלה מנפחת
+  // את אומדן גובה הערת-הצד ⇒ דחיפות cascade/מעבר-עמוד מוטות מול התצוגה.
+  const factor = (measureFn && measureFn.impl === 'font-metrics')
+    ? 1 : (SIDE_NOTE_FONT_FACTORS[fontName] || (fontName && fontName !== settings['body-font'] ? 1.08 : 1));
   // **S6.0 (R3-C3):** רווחים בין מילים נכללים — כמו ההקרנה בפועל.
   const spaceW = (measureFn ? measureFn(' ', size) : size * 0.6) * factor;
   let lines = 1, w = 0;

@@ -3867,7 +3867,11 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         // כלל במצבים אלה (הpipeline לא שם אותן ב‑blk.notes). שומר בטוח: continue.
         continue;
       }
-      const h = noteHeight(n, settings, (t, s) => measureFn(t, s));
+      // **S71.1 (R7-M4 שארית — בדיקה כפולה):** מעבר ישיר של measureFn — עטיפת
+      // החץ שהייתה כאן איבדה את סימון ה-impl (measureWithImpl.impl), וב-impl B
+      // (ייצוא PDF) הופעל פקטור הגופן שנועד לטבלת impl A בלבד ⇒ תקציב מרזב
+      // מנופח והחלטות split/move-whole מוטות בגבול התקרה. כמו recomputeFnBudget.
+      const h = noteHeight(n, settings, measureFn);
       const isCont = n.isContinuation === true;
       // הערה ארוכה מתקרת המרזב ⇒ מדיניות (block mode בלבד; continuous אין תקרה — D-34)
       if (Number.isFinite(barMax) && h > barMax && settings['long-footnote-policy'] !== 'allow') {
@@ -11019,7 +11023,11 @@ function estimateSideNoteHeight(text, settings, measureFn) {
   const words = String(text || '').split(/\s+/).filter(Boolean);
   const colW = settings._sideNoteColWidthPx || Math.max(60, Math.round(settings._outerMarginPx || 120) - 12);
   const fontName = settings['s-note-body-font'];
-  const factor = SIDE_NOTE_FONT_FACTORS[fontName] || (fontName && fontName !== settings['body-font'] ? 1.08 : 1);
+  // **S71.1 (R7-M4 שארית — בדיקה כפולה):** הפקטור מתקן את טבלת impl A בלבד;
+  // ב-impl B (font-metrics — נתיב ייצוא PDF) המטריקות מדויקות והכפלה מנפחת
+  // את אומדן גובה הערת-הצד ⇒ דחיפות cascade/מעבר-עמוד מוטות מול התצוגה.
+  const factor = (measureFn && measureFn.impl === 'font-metrics')
+    ? 1 : (SIDE_NOTE_FONT_FACTORS[fontName] || (fontName && fontName !== settings['body-font'] ? 1.08 : 1));
   // **S6.0 (R3-C3):** רווחים בין מילים נכללים — כמו ההקרנה בפועל.
   const spaceW = (measureFn ? measureFn(' ', size) : size * 0.6) * factor;
   let lines = 1, w = 0;
@@ -12547,7 +12555,7 @@ function exportHtml(result, settings, doc, meta = {}) {
 function exportPdf(text, settingsIn, fontBytes, fontName, env) {
   if (typeof Buffer === 'undefined') return { ok: false, error: 'no-buffer' }; // דפדפן — נתיב Node בלבד (מתועד)
   /* node-only */ const { typeset } = require('../core/pipeline');
-  /* node-only */ const { registerFont, unregisterFont, restoreFontRegistration, registeredFonts: registeredFontsRef } = require('../typography/measure-api');
+  /* node-only */ const { registerFont, unregisterFont, restoreFontRegistration, registeredFonts: registeredFontsRef, MeasureAPI, resolveMeasureImpl } = require('../typography/measure-api');
   /* node-only */ const { parseFont, glyphIdOf } = require('../typography/font-metrics');
   /* node-only */ const { buildSubset, charInventory } = require('../typography/font-subset');
   /* node-only */ const { projectDocument } = require('./geometry-projector');
@@ -12576,9 +12584,20 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
     };
     const result = typeset(text, settings, { noRecommendations: true, ...(env || {}) });
     // **S4.9:** פרופיל IMUD — הקרנה ממקרן ה-legacy (גיאומטריה מפורשת מהייחוס)
+    // **S71.1 (double-check — projection measurement consistency):** the
+    // projection must measure with the SAME impl that built the model
+    // (impl B — registered-font metrics). Until now projectDocument built
+    // itself a MeasureAPI(settings,'table') when no api was passed, so word
+    // x-positions followed the table while line breaks followed real font
+    // metrics: with Frank Ruhl Libre (the default font) 168 lines overflowed
+    // the column box in the exported PDF (up to 32.5px into the neighbouring
+    // column) and 97.8% of words diverged from the display (avg 111.8px) —
+    // display≠export, exactly the class EXT-13 closed for live↔export on the
+    // typeset side. resolveMeasureImpl = the same single source as pipeline;
+    // with no registered font it falls back to 'table' (previous behaviour).
     const projected = result.legacyProfile
       ? require('./legacy-projector').projectLegacyDocument(result, settings)
-      : projectDocument(result, settings);
+      : projectDocument(result, settings, new MeasureAPI(settings, resolveMeasureImpl(settings)));
     const drawnParts = [];
     for (const pg of projected.pages) {
       for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) for (const w of ln.words) drawnParts.push(w.text);
@@ -16458,7 +16477,12 @@ function projectEndnotePage(page, settings, measure, out) {
   const tpl = page.template;
   const bodyPt = settings['body-font-size-pt'];
   const notePt = bodyPt * 0.8;
-  const factor = NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1;
+  // **S71.1 (R7-M4 שארית — בדיקה כפולה):** כמו המרזב והערות-הצד — הפקטור
+  // הוא תיקון טבלת impl A; ב-impl B (ייצוא PDF) הוא מנפח את רוחבי המילים
+  // בהקרנה ⇒ שבירה מוקדמת מזו שהמודל תיקצב (estimateNoteHeight ללא פקטור)
+  // ⇒ הערות-סיום חופפות ב-PDF המיוצא.
+  const factor = (measure && measure.impl === 'font-metrics')
+    ? 1 : (NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1);
   if (page.heading) {
     const sizePt = bodyPt * 1.2;
     const bandH = (page.titleBandPx && page.titleBandPx > 16) ? page.titleBandPx - 16 : (measure.lineHeightPx ? measure.lineHeightPx(sizePt) : Math.round(sizePt * (96 / 72) * 1.34));
@@ -16711,6 +16735,10 @@ function projectLine(ln, colX, y, colW, settings, measure, align) {
 /** השלמת baselineY לכל שורות העמוד (לאחר ההקרנה) — מקור מדידה אחד. */
 function attachBaselines(page, settings, measure) {
   const ascent = measure.ascentEm(), descent = measure.descentEm();
+  // **S71.1:** גובה cap לפי מדד אמת (OS/2 sCapHeight ב-impl B; 0.70 בטבלה) —
+  // כמו ב-dropword. אותיות עברית/לטינית מגיעות לקו ה-cap, לא ל-ascender
+  // (למעט למ"ד/גרשיים) — חיזוי ראש הדיו לפי ascent מנפח בכותרות.
+  const capEm = measure.capHeightEm ? measure.capHeightEm() : 0.7;
   for (const ln of [...(page.spanning ? page.spanning.lines : []), ...page.lines]) {
     const sizePx = ln.sizePt * (96 / 72);
     const contentH = (ascent + descent) * sizePx;
@@ -16718,6 +16746,7 @@ function attachBaselines(page, settings, measure) {
     ln.baselineY = ln.y + Math.max(0, halfLeading) + ascent * sizePx;
     ln.ascentPx = ascent * sizePx;
     ln.descentPx = descent * sizePx;
+    ln.capPx = capEm * sizePx;
   }
   if (page.footnotes) {
     // **S5.4:** להערה עם מילים יש כבר בסיס פר-מילה מההקרנה; הנוסחה נשארת

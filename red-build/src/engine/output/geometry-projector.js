@@ -419,7 +419,12 @@ function projectEndnotePage(page, settings, measure, out) {
   const tpl = page.template;
   const bodyPt = settings['body-font-size-pt'];
   const notePt = bodyPt * 0.8;
-  const factor = NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1;
+  // **S71.1 (R7-M4 שארית — בדיקה כפולה):** כמו המרזב והערות-הצד — הפקטור
+  // הוא תיקון טבלת impl A; ב-impl B (ייצוא PDF) הוא מנפח את רוחבי המילים
+  // בהקרנה ⇒ שבירה מוקדמת מזו שהמודל תיקצב (estimateNoteHeight ללא פקטור)
+  // ⇒ הערות-סיום חופפות ב-PDF המיוצא.
+  const factor = (measure && measure.impl === 'font-metrics')
+    ? 1 : (NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1);
   if (page.heading) {
     const sizePt = bodyPt * 1.2;
     const bandH = (page.titleBandPx && page.titleBandPx > 16) ? page.titleBandPx - 16 : (measure.lineHeightPx ? measure.lineHeightPx(sizePt) : Math.round(sizePt * (96 / 72) * 1.34));
@@ -672,6 +677,10 @@ function projectLine(ln, colX, y, colW, settings, measure, align) {
 /** השלמת baselineY לכל שורות העמוד (לאחר ההקרנה) — מקור מדידה אחד. */
 function attachBaselines(page, settings, measure) {
   const ascent = measure.ascentEm(), descent = measure.descentEm();
+  // **S71.1:** גובה cap לפי מדד אמת (OS/2 sCapHeight ב-impl B; 0.70 בטבלה) —
+  // כמו ב-dropword. אותיות עברית/לטינית מגיעות לקו ה-cap, לא ל-ascender
+  // (למעט למ"ד/גרשיים) — חיזוי ראש הדיו לפי ascent מנפח בכותרות.
+  const capEm = measure.capHeightEm ? measure.capHeightEm() : 0.7;
   for (const ln of [...(page.spanning ? page.spanning.lines : []), ...page.lines]) {
     const sizePx = ln.sizePt * (96 / 72);
     const contentH = (ascent + descent) * sizePx;
@@ -679,6 +688,7 @@ function attachBaselines(page, settings, measure) {
     ln.baselineY = ln.y + Math.max(0, halfLeading) + ascent * sizePx;
     ln.ascentPx = ascent * sizePx;
     ln.descentPx = descent * sizePx;
+    ln.capPx = capEm * sizePx;
   }
   if (page.footnotes) {
     // **S5.4:** להערה עם מילים יש כבר בסיס פר-מילה מההקרנה; הנוסחה נשארת

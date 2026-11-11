@@ -428,4 +428,119 @@ describe('S70 (R7-M4 + fn-continuous) — פקטורי גופן רק ב-impl A; 
   });
 });
 
+// =====================================================================
+describe('S71.1 (בדיקה כפולה — R7-M4 שאריות) — נטרול הפקטור ב-impl B בנתיבי הקריאה בפועל', () => {
+  // רקע: התיקון המקורי (S70/R7-M4) נבדק רק מול noteHeight בקריאה ישירה;
+  // הבדיקה הכפולה גילתה שלוש נקודות שבהן הפקטור עדיין פעל ב-impl B (נתיב
+  // ייצוא ה-PDF, measure-impl=font-metrics): עטיפת-החץ ב-reserveNotes איבדה
+  // את סימון ה-impl; estimateSideNoteHeight והקרנת עמודי ה-endnotes לא בדקו
+  // כלל. גופן עם פקטור ('David' ×1.04) בנתיב הייצוא הפעיל תקציב מרזב מנופח,
+  // אומדן הערות-צד מוגזם והקרנת הערות-סיום שנשברה מוקדם מהתקציב (חפיפה).
+  // כאן ננעלים שלושת הנתיבים בנפרד, עם מדידה קבועה (אורך×10) שמבודדת את
+  // השפעת הפקטור ממטריקות הגופן.
+
+  it('R7-M4-1 (dp-planner/reserveNotes): heightPx המאוחסן ב-impl B = חישוב ללא פקטור', () => {
+    const { planPages } = require('../../src/engine/layout/dp-planner');
+    const { noteHeight } = require('../../src/engine/layout/footnote-budget');
+    const { EventLog } = require('../../src/engine/core/events');
+    const { Ledger } = require('../../src/engine/core/ledger');
+    // רוחב נתיב 155px, סמן '1', 4 מילים × 7 תווים (70px; ×1.04 ⇒ 72.8px):
+    // ללא פקטור — 3 שורות (20+80=100, +80=180>155 ⇒ שורה; 70+80=150≤155; 150+80>155 ⇒ שורה);
+    // עם פקטור — 4 שורות (20.8+83.2=104; +83.2=187.2>155 ⇒ שורה; 72.8+83.2=156>155 ⇒ שורה ×2).
+    const S = { ...getDefaultSettings(), 'f-note-body-font': 'David', _fnColWidthPx: 155 };
+    const mkMeasure = (impl) => { const f = (t) => t.length * 10; if (impl) f.impl = impl; return f; };
+    const NOTE = 'aaaaaaa bbbbbbb ccccccc ddddddd';
+    const mkBlock = () => ({
+      kind: 'paragraph', tokenId: 't-s711', part: 0,
+      lines: [{ words: ['טקסט'], heightPx: 20 }, { words: ['טקסט'], heightPx: 20 }],
+      notes: [{ text: NOTE, marker: '1', tokenId: 'n-s711' }],
+    });
+    const run = (impl) => {
+      const r = planPages([mkBlock()], S, new EventLog('full'), new Ledger(), { measure: mkMeasure(impl) });
+      const fns = r.pages.flatMap((p) => p.footnotes || []);
+      assert(fns.length > 0, 'ההערה הוצבה במרזב');
+      return fns[0].heightPx;
+    };
+    const hA = run(undefined);              // impl A (טבלה) — הפקטור פועל
+    const hB = run('font-metrics');         // impl B (ייצוא) — הפקטור מנוטרל
+    const manualA = noteHeight({ text: NOTE, marker: '1' }, S, mkMeasure(undefined));
+    const manualB = noteHeight({ text: NOTE, marker: '1' }, S, mkMeasure('font-metrics'));
+    assertEq(hA, manualA, 'impl A דרך planPages = חישוב ידני עם פקטור David');
+    assertEq(hB, manualB, 'impl B דרך planPages = חישוב ידני ללא פקטור');
+    assert(manualA !== manualB, `פקטור David 1.04 חייב לשנות את מספר השורות (${manualA} מול ${manualB})`);
+  });
+
+  it('R7-M4-2 (side-notes/estimateSideNoteHeight): הפקטור מנוטרל ב-impl B', () => {
+    const { estimateSideNoteHeight } = require('../../src/engine/layout/side-notes');
+    // רוחב טור 150px, 4 מילים × 7 תווים (70px; ×1.04 ⇒ 72.8px), רווח 10px (10.4px):
+    // ללא פקטור — 2 שורות (70+80=150≤150); עם פקטור — 4 שורות (72.8+83.2=156>150).
+    const S = { ...getDefaultSettings(), 's-note-body-font': 'David', _sideNoteColWidthPx: 150 };
+    const mk = (impl) => { const f = (t) => t.length * 10; if (impl) f.impl = impl; return f; };
+    const txt = 'aaaaaaa aaaaaaa aaaaaaa aaaaaaa';
+    const hA = estimateSideNoteHeight(txt, S, mk(undefined));
+    const hB = estimateSideNoteHeight(txt, S, mk('font-metrics'));
+    const lh = Math.round(S['body-font-size-pt'] * 0.75 * (96 / 72) * 1.15);
+    assertEq(hA, lh * 4, `impl A: פקטור 1.04 ⇒ 4 שורות (קיבלנו ${hA / lh})`);
+    assertEq(hB, lh * 2, `impl B: ללא פקטור ⇒ 2 שורות (קיבלנו ${hB / lh})`);
+  });
+
+  it('R7-M4-3 (geometry-projector/projectEndnotePage): שבירת הערות-סיום ב-impl B ללא פקטור', () => {
+    const { projectDocument } = require('../../src/engine/output/geometry-projector');
+    // תבנית חד-טורית ברוחב 150px (colWidthOf), סמן '1' (10px, בלי wFactor),
+    // 4 מילים × 7 תווים (70px; ×1.04 ⇒ 72.8px), רווח 10px (לא מוכפל):
+    // impl A — [סמן+מ1]=92.8, +82.8=175.6>150 ⇒ שורה; כל מילה בשורה משלה ⇒ 4 שורות.
+    // impl B — [סמן+מ1]=90, +80=170>150 ⇒ שורה; [מ2+מ3]=150≤150 ⇒ שורה; [מ4] ⇒ 3 שורות.
+    const S = { ...getDefaultSettings(), 'f-note-body-font': 'David' };
+    const tpl = {
+      width: 200, height: 400,
+      contentBox: { top: 20, bottom: 380, left: 25, right: 175 },
+      columns: [{ x: 25, w: 150 }],
+    };
+    const mkPage = () => ({
+      type: 'endnotes', template: JSON.parse(JSON.stringify(tpl)),
+      heading: null, titleBandPx: 0,
+      columns: [[{ marker: '1', text: 'aaaaaaa bbbbbbb ccccccc ddddddd', heightPx: 48, tokenId: 'n-s711' }]],
+      footnotes: [], sideNotes: [], decorations: [],
+    });
+    const mkApi = (impl) => ({
+      impl,
+      measureTextWidth: (t) => t.length * 10,
+      ascentEm: () => 0.8, descentEm: () => 0.2,
+      lineHeightPx: (pt) => Math.round(pt * (96 / 72) * 1.34),
+    });
+    const noteLineCount = (impl) => {
+      const proj = projectDocument({ pages: [mkPage()], layoutHash: 's711' }, S, mkApi(impl));
+      return proj.pages[0].lines.filter((l) => l.kind === 'endnote-note').length;
+    };
+    assertEq(noteLineCount(undefined), 4, 'impl A: פקטור 1.04 ⇒ 4 שורות מוקרנות');
+    assertEq(noteLineCount('font-metrics'), 3, 'impl B: ללא פקטור ⇒ 3 שורות מוקרנות (כמו התקציב)');
+  });
+  it('R7-M4-4 (export-api/S71.1 — עקביות מדידת ההקרנה): אפס חריגות טור בייצוא בגופן אמיתי', () => {
+    const { exportPdf } = require('../../src/engine/output/export-api');
+    const fs2 = require('fs');
+    const path2 = require('path');
+    // גופן המאגר (ברירת המחדל של המערכת) — תמיד קיים ב-repo, אין תלות בסביבה
+    const FONT_PATH = path2.join(__dirname, '..', '..', 'ui', 'assets', 'imud', 'fonts', 'Frank-Ruhl-Libre-Bold.ttf');
+    const bytes = fs2.readFileSync(FONT_PATH);
+    const doc = fs2.readFileSync(path2.join(__dirname, '..', 'fixtures', 'canonical_corpus.txt'), 'utf8');
+    // לפני S71.1: typeset רץ ב-impl B אך ההקרנה מדדה בטבלה ⇒ 168/546 שורות
+    // חרגו מגבולות הטור (מקס 32.5px) ו-97.8% מהמילים סטו מהתצוגה (ממוצע 111.8px).
+    const exp = exportPdf(doc, getDefaultSettings(), bytes, 'Frank Ruhl Libre');
+    assert(exp.ok, 'export ok: ' + exp.error);
+    let overflow = 0, lines = 0;
+    for (const pg of exp.projected.pages) {
+      for (const ln of pg.lines) {
+        if (!ln.words || !ln.words.length) continue;
+        lines++;
+        const wSum = ln.words.reduce((a, w) => a + w.w, 0);
+        if (wSum - ln.w > 1) overflow++;
+      }
+    }
+    assertEq(overflow, 0, `הקרנת הייצוא מודדת כמו המודל — שום שורה לא חורגת (${overflow}/${lines})`);
+    // דטרמיניזם ייצוא כפול נשמר גם אחרי התיקון
+    const again = exportPdf(doc, getDefaultSettings(), bytes, 'Frank Ruhl Libre');
+    assert(again.ok && Buffer.compare(exp.bytes, again.bytes) === 0, 'ייצוא כפול ⇒ בתים זהים');
+  });
+});
+
 report('s69-engine-residuals');
