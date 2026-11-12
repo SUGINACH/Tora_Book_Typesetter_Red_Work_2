@@ -66,7 +66,7 @@ describe('REQ-LB-02 Knuth-Plass optimal breaking', () => {
 
   it('greedy fallback also advances through the variable line-width profile', () => {
     const long = 'x'.repeat(20);
-    const tail = Array.from({ length: 8 }, (_, i) => 'a' + i);
+    const tail = Array.from({ length: 8 }, (_, i) => String.fromCharCode(97 + i));
     const words = [long, ...tail];
     const measure = (text) => text === ' ' ? 5 : String(text).length * 10;
     const lines = breakLines(words, (lineIndex) => lineIndex === 0 ? 88 : 132, measure, 20, { runts: 0 });
@@ -77,7 +77,13 @@ describe('REQ-LB-02 Knuth-Plass optimal breaking', () => {
   });
 
   it('invalid variable line widths fail explicitly instead of silently falling back', () => {
-    assert.throws(() => breakLines(['א', 'ב'], () => 0, W, 20, {}), /width for line 0/);
+    let thrown = false;
+    try {
+      breakLines(['א', 'ב'], () => 0, W, 20, {});
+    } catch (error) {
+      thrown = /width for line 0/.test(String(error && error.message));
+    }
+    assert(thrown, 'zero width is rejected with a clear error');
   });
 
   it('no hyphenation: word count conserved exactly', () => {
