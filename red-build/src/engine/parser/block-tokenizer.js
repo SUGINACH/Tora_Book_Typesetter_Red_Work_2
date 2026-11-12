@@ -4,7 +4,7 @@
 const crypto = require('crypto');
 const { HEADING_RE, ENDNOTE_CLASS_RE, DEFAULT_ENDNOTE_PREFIX, compileEndnotePrefix } = require('./dfa-lexer');
 const { scanBrackets } = require('./bracket-scanner');
-const { parseInlineRuns } = require('./inline-content');
+const { parseInlineRuns, parseInlineParagraph } = require('./inline-content');
 
 const ATOMIC_SPACE = '\uE000'; // V3/V4 breakthrough: רווח אטומי בתוך הערה — למדידה בלבד
 
@@ -104,33 +104,43 @@ function tokenize(bodyLines, opts = {}) {
     let cursor = 0;
     const parts = [];
     const notes = [];
+    const inlineNotes = [];
     // בנייה לפי pairs משמאל לימין (outermost first)
     const outer = segs.pairs.filter(p => p.depth === 1).sort((a, b) => a.open - b.open); // חיצוניים בלבד (depth 1)
     const openCh = fnEnabled ? fnOpen : '[';
     const closeCh = fnEnabled ? fnClose : ']';
     for (const p of outer) {
-      const before = line.slice(cursor, p.open).trim();
-      if (before) parts.push({ kind: 'text', value: before });
+      const beforeRaw = line.slice(cursor, p.open);
+      const before = beforeRaw.trim();
+      if (before) {
+        const leading = beforeRaw.length - beforeRaw.trimStart().length;
+        const trailingEnd = beforeRaw.trimEnd().length;
+        parts.push({ kind: 'text', value: before, sourceStart: cursor + leading, sourceEnd: cursor + trailingEnd });
+      }
       // **S4.6 (ביקורת 3):** חיתוך לפי תחילת הסוגר + אורכו בפועל (closeStart/closeLen
       // מהסורק) — נכון גם לתוחמים מרובי-תווים (']]'/END) ולצורה העברית ]ם. בעבר
       // נוסף אורך התוחם המוגדר למיקום התו האחרון — קיצוץ/דילוג תווים בתוחם ארוך.
       const cs = p.closeStart != null ? p.closeStart : p.close;
       const cl = p.closeLen != null ? p.closeLen : closeCh.length;
-      const noteText = line.slice(p.open + openCh.length, cs).trim().replace(/ +/g, ATOMIC_SPACE);
+      const noteRaw = line.slice(p.open + openCh.length, cs);
+      const noteText = noteRaw.trim().replace(/ +/g, ATOMIC_SPACE);
       notes.push(noteText);
+      const noteLeading = noteRaw.length - noteRaw.trimStart().length;
+      const noteTrailingEnd = noteRaw.trimEnd().length;
+      inlineNotes.push({ text: noteRaw.trim(), sourceStart: p.open + openCh.length + noteLeading, sourceEnd: p.open + openCh.length + noteTrailingEnd });
       parts.push({ kind: 'note-ref', noteIndex: notes.length - 1 });
       cursor = cs + cl;
     }
-    const tail = line.slice(cursor).trim();
-    if (tail) parts.push({ kind: 'text', value: tail });
+    const tailRaw = line.slice(cursor);
+    const tail = tailRaw.trim();
+    if (tail) {
+      const leading = tailRaw.length - tailRaw.trimStart().length;
+      const trailingEnd = tailRaw.trimEnd().length;
+      parts.push({ kind: 'text', value: tail, sourceStart: cursor + leading, sourceEnd: cursor + trailingEnd });
+    }
 
     const inlineOptions = opts.inlineOptions || opts;
-    const inlineContent = {
-      parts: parts.map((part) => part.kind === 'text'
-        ? { kind: 'text', runs: parseInlineRuns(part.value, { ...inlineOptions, allowImages: true }) }
-        : { kind: 'note-ref', noteIndex: part.noteIndex }),
-      notes: notes.map((note) => parseInlineRuns(note, { ...inlineOptions, allowImages: true }))
-    };
+    const inlineContent = parseInlineParagraph(parts, inlineNotes, inlineOptions);
     tokens.push(mkToken('paragraph', { parts, notes, unmatchedClosers: segs.unmatchedClosers, raw: line, inlineContent }));
   }
   return tokens;
