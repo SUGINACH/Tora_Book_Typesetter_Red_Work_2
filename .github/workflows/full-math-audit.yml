@@ -7,7 +7,7 @@
 #   1. local  — על ה-build שבענף (כל push ל-main): האפליקציה מוגשת בשרת
 #      מקומי ברגר, הקובץ הגדול מאוד מוזרם, האודיט המלא + דטרמיניזם.
 #   2. live   — על האתר החי של GitHub Pages (לילית + ידני + אחרי deploy):
-#      אותו אודיט מול https://suginach.github.io/Tora_Book_Typesetter_Red/
+#      אותו אודיט מול https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/
 #      עם הזרקת ה-fixture ב-base64 — מאמת גם את הפריסה בפועל, לא רק את
 #      הקוד.
 # יציאה 0 **רק** על 0 בעיות + כיסוי מלא + דטרמיניזם זהה — תוצאה מקובלת
@@ -84,7 +84,7 @@ jobs:
       - name: Full math audit — LIVE site (fixture injected via base64)
         run: |
           node tools/layout-audit/run-full-math.js --tag live \
-            --url https://suginach.github.io/Tora_Book_Typesetter_Red/ \
+            --url https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/ \
             --fixture audits/very_long_test_text.txt
       - name: Upload reports
         if: always()
