@@ -24,7 +24,7 @@ test('notes sharing a physical margin are packed without overlap and keep order'
   const [a, b] = result.notes;
   assert.equal(a.anchorY, 100);
   assert.ok(b.anchorY >= a.lines.at(-1).y + 9.6 + 1 - 1e-7);
-  assert.equal(b.anchorY, 120.2);
+  assert.ok(Math.abs(b.anchorY - 120.2) < 1e-7);
   assert.deepEqual(input[1].lines.map(x => x.y), [110], 'input remains immutable');
   assert.deepEqual(result.diagnostics, []);
 });
@@ -44,8 +44,8 @@ test('when the bottom edge is reached, the ordered group moves upward minimally'
     note('left', 145, [145], 'B')
   ], { top: 100, bottom: 150, pitch: 9.6, gap: 1 });
   const [a, b] = result.notes;
-  assert.equal(a.anchorY, 120.2);
-  assert.equal(b.anchorY, 140.4);
+  assert.ok(Math.abs(a.anchorY - 120.2) < 1e-7);
+  assert.ok(Math.abs(b.anchorY - 140.4) < 1e-7);
   assert.ok(a.anchorY >= 100);
   assert.ok(b.lines[0].y + 9.6 <= 150 + 1e-7);
   assert.deepEqual(result.diagnostics, []);
