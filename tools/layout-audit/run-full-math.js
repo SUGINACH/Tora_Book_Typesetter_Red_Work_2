@@ -24,7 +24,7 @@
  *        [--tag <name>] [--out <dir>] [--skip-determinism]
  * דוגמאות:
  *   node tools/layout-audit/run-full-math.js                      # מקומי + very_long
- *   node tools/layout-audit/run-full-math.js --url https://suginach.github.io/Tora_Book_Typesetter_Red/ --tag live
+ *   node tools/layout-audit/run-full-math.js --url https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/ --tag live
  */
 const { spawn } = require('child_process');
 const fs = require('fs');
