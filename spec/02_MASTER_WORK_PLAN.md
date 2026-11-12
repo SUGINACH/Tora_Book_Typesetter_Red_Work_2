@@ -400,6 +400,79 @@ archive/*← legacy lines (V20.x, old_ver, debug/) — read-only
 
 ---
 
+
+
+---
+
+## S14 — תוכן עשיר inline: תמונות וטווחי גופן (החלטת משתמש D-107)
+
+**מעמד:** שלב תכנון/מימוש חדש, לאחר קיבוע חוזה התוכן והבטחת מסלול עימוד יחיד. אין להתחיל בהוספת תמונות או גופנים כ-feature-specific patch לנתיב המורשת.
+
+### S14.0 תנאי סף ארכיטקטוני
+
+- [ ] לבחור ולנעול AST/מודל תוכן קנוני אחד לזרימת טקסט, הערות ואובייקטים inline.
+- [ ] לוודא שהמדידה, שבירת השורות ותכנון העמודים משתמשים במסלול מנוע יחיד. אם קיימים נתיבי legacy/DP פעילים במקביל, להשלים את איחודם לפני חיבור הפיצ'רים.
+- [ ] לקבע חוזה גאומטריה אחד שה-DOM וה-PDF מקרינים; אין CSS float, reflow בדפדפן או post-layout patch.
+- [ ] להוסיף contentHash/flowHash/geometryHash או מנגנון זהות מקביל שמבחין בין מקור, זרימה וגאומטריה.
+
+### S14.1 מודל משאבים לחבילת מסמך
+
+- [ ] ZIP עם קובץ טקסט ותיקיית images, וכן פתיחת תיקייה.
+- [ ] resolver לנתיבים יחסיים; הגנה מפני נתיבים מוחלטים ו-path traversal; ללא כתובות רשת.
+- [ ] PNG/JPEG; ממדים ויחס רוחב/גובה נקראים פעם אחת ונשמרים ברשומת נכס.
+- [ ] duplicate basename: סדר ZIP יציב; בסריקת תיקייה סדר נתיבים יחסי מנורמל; נתיב יחסי מדויק גובר על basename.
+- [ ] אזהרת בדיקה למשאב חסר/פגום; העימוד ממשיך ללא סמן הפניה גולמי וללא אובדן הטקסט הסובב.
+
+### S14.2 פענוח תמונות
+
+- [ ] tokenizer/parser מזהה `#path/name.ext#` ו-suffix סופי `.lNN/.cNN/.rNN`.
+- [ ] ברירת מחדל 50%/center; שני פקדים בלוח ההגדרות; suffix מקומי גובר עליהם.
+- [ ] תמונות מותרות בגוף רגיל וב-footnotes תחתונות בלבד; לא H0–H7, side-notes או endnotes.
+- [ ] ImageRun נושא resource id, מקור קובץ, ממדים מקוריים, ratio, widthPct, align ו-anchor/source offset.
+
+### S14.3 תכנון זרימת תמונה וטקסט
+
+- [ ] ה-planner מייצר bands גאומטריים בגובה התמונה; מיקום ימין/שמאל משאיר מסלול מילים בצד הנגדי.
+- [ ] מיקום מרכזי מאפשר שני מסלולים רק כששניהם מאפשרים שורה תקינה; אחרת הטקסט ממשיך מתחת לתמונה ברוחב מלא.
+- [ ] בתחתית התמונה חוזרים לרוחב הטור המלא. כל bands משתתפים בקיבולת ובאיזון לפני commit של העמוד.
+- [ ] תמונה אינה נחתכת/מתפצלת. היא עוברת למיקום הבא אם אינה נכנסת; תמונה גבוהה מכל אזור זרימה מוקטנת פרופורציונלית עד גובה האזור.
+- [ ] footnote image נכללת במדידת אותה הערה, שומרת anchor ו-note identity, והמשכה אינו מקבל סמן חדש.
+
+### S14.4 טווחי גופן
+
+- [ ] להרחיב את מנגנון inline marker הקיים (D-68) כך שהטווח נושא family, ולא רק factor של גודל.
+- [ ] זוג markers מוגדר מראש: open/close שונים או סימטריים; סגנונות family-only.
+- [ ] parser לתחביר הקצר `<Family>…</>`; אין תחביר ארוך.
+- [ ] מחסנית קינון; family פנימי גובר על family חיצוני וחזרה ל-family החיצוני בסגירה.
+- [ ] פענוח לפני מדידה; מדידת כל מילה/מקטע במשפחה בפועל, כולל מעבר שורה/עמוד.
+- [ ] טווחי גופן גם בטקסט מוסגר, footnotes ו-endnotes; לא בכותרות H0–H7, headers או תוכן TOC שנוצר.
+- [ ] טעינת קובץ גופן מקומי (TTF/OTF) ל-DOM ול-Worker; אותה משפחה/מטריקות ב-PDF, עם הטמעה/תת-קבוצה.
+- [ ] סמנים לא מזווגים מוסרים בלי להחיל סגנון; טקסט נשמר plain; אזהרה מפורטת בכרטיסיית הבדיקה.
+
+### S14.5 תצורת סגנונות
+
+- [ ] להגדיר מזהה סגנון, משפחת גופן וסמני פתיחה/סגירה בספריית סגנונות.
+- [ ] לייבא/לייצא את ההגדרות באופן דטרמיניסטי.
+- [ ] קדימות בעת מיזוג: מסמך > תבנית > ספריית סגנונות > ברירת מחדל.
+- [ ] זיהוי מזהים כפולים/מפרידים סותרים; אין דריסה שקטה.
+
+### S14.6 DOM/PDF ותצוגה
+
+- [ ] DOM ו-PDF מקרינים אותה גאומטריית ImageRun/TextRun; renderer אינו מבצע חישוב שבירת שורות עצמאי.
+- [ ] PDF מטמיע את התמונה המקומית ואת תתי-הגופנים שנצרכו; אין כתובות חיצוניות.
+- [ ] אותה התנהגות ב-live preview, HTML export ו-PDF; בדיקות cross-path על גאומטריה ותוכן.
+
+### S14.7 מטריצת בדיקות ושער
+
+- [ ] parser: הפניות תמונה, suffix, paths, markers סימטריים/נפרדים, קינון, סמנים פגומים.
+- [ ] layout: RTL left/right/center, שני מסלולי טקסט, חזרה לרוחב מלא, תמונה בתחתית טור, תמונה גבוהה, footnote split.
+- [ ] resources: ZIP/תיקייה שקולים, duplicate basename דטרמיניסטי, missing/corrupt asset ואזהרה.
+- [ ] font metrics: גופן מוטמע ומקומי, טווח חוצה שורות/עמודים, סוגריים, PDF subset.
+- [ ] HARD invariants: אין אובדן טקסט, אין חפיפה, אין גלישה, סדר קריאה נשמר, note anchor ו-marker identity נשמרים.
+- [ ] קנוני: `audits/very_long_test_text.txt`; בנוסף קורפוס הספר האמיתי `red-build/tests/fixtures/real/very_long_test_text.txt` וקורפוס Orange ההיסטורי. מסמכים סינתטיים תקינים מבניים הם משלימים בלבד.
+- [ ] אין בדיקות P6/P7 ואין שימוש בייחוס PDF כשער קבלה (D-100).
+- [ ] build + npm test + deterministic repeat + DOM/PDF cross-path + live browser audit; אין טענה על פריסה לפני אימות.
+
 ## נספח א — לוח זמנים יחסי (equal phases, dependencies)
 
 ```
@@ -428,13 +501,10 @@ parse → scope-map → style-prepass → fonts-ready → measure → line-plan(
 **אסור** לפוסט־פרוסס שמשנה גובה אחרי page-plan (Claude §6.4(4)).
 
 ## נספח ד — Open questions להכרעת משתמש (to present, not guess)
-1. Default for `hdr-h1-title-mode` (main vs full) — Orange chose 'main'; confirm.
-2. Rounding-tolerance exemplars (6–10 containment-rounding): accept as normal or tighten?
-3. Long footnote policy: split-with-continuation vs move-whole (default?).
-4. P2.5 extended balancing before H4/H6 — needed or obsolete?
-5. Sparse-page exclusion when chapter-end has notes — desired behavior?
-6. Widow/orphan strictness levels granularity (per Mapping C-6 proposal).
-7. Page-size catalog beyond A4 (which sizes ship in v1).
-8. Whether back-shaar 4 sections remain free-text or templated fields.
+
+רשימת השאלות המחייבת נמצאת ב-`OPEN_QUESTIONS.md`. עודכנה ב-12.11.2026 לפי D-107:
+- שאלות 1–8 הוכרעו, למעט שאלה חדשה 11 על סלוטים מיוחדים לעמודי פתיחה.
+- שאלות 9–10 נותרו פתוחות ללא שינוי.
+- אין לשחזר שאלות שהוכרעו ואין להניח אישור לשאלה שנותרה פתוחה.
 
 *סוף תכנית העבודה. ביצוע: שלב אחר שלב, שער אחר שער; אין לדלוג; אין "להתקין" טלאים — אם התגלה פגם ששייך לשלב קודם, פותחים Branch-back-fix מאותו שלב עם עדכון Registry + בדיקת רגרסיה, לא תיקון נקודתי בענף ראשי.*
