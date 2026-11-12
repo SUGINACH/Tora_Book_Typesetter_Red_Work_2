@@ -111,8 +111,15 @@ function composeLineFragments(items, options = {}) {
   const resolvedAlign = align === 'start' ? (direction === 'rtl' ? 'right' : 'left')
     : align === 'end' ? (direction === 'rtl' ? 'left' : 'right') : align;
   const spare = Math.max(0, widthPx - totalWidth);
-  const offset = resolvedAlign === 'right' ? spare : resolvedAlign === 'center' ? spare / 2 : 0;
-  let cursor = direction === 'rtl' ? x + widthPx - offset : x + offset;
+  let cursor;
+  if (direction === 'rtl') {
+    cursor = resolvedAlign === 'right' ? x + widthPx
+      : resolvedAlign === 'center' ? x + (widthPx + totalWidth) / 2
+        : x + totalWidth;
+  } else {
+    const offset = resolvedAlign === 'right' ? spare : resolvedAlign === 'center' ? spare / 2 : 0;
+    cursor = x + offset;
+  }
   const fragments = normalized.map(item => {
     if (direction === 'rtl') cursor -= item.widthPx;
     const fragment = {
