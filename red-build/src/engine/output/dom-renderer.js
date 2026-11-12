@@ -992,6 +992,7 @@ function renderLegacyPage(pg, settings, doc) {
       // הייצוא, כמו S4.23).
       {
         const markerSet = new Set(Array.isArray(ln.markerIdx) ? ln.markerIdx : []);
+        const markerKeyByIndex = new Map((Array.isArray(ln.markerIdx) ? ln.markerIdx : []).map((index, markerIndex) => [index, Array.isArray(ln.markerKeys) ? ln.markerKeys[markerIndex] : null]));
         const imudSet = (settings && settings._imudRaw) || {};
         const markerSz = Number(imudSet['note-marker-size']) || 8;
         const parenPx = pt2px(SZ.body + SZ.parenDelta);
@@ -1058,6 +1059,8 @@ function renderLegacyPage(pg, settings, doc) {
           if (wi >= 0 && markerSet.has(wi)) {
             const m = doc.createElement('span');
             m.className = 'w w--fnmarker';
+            const noteKey = markerKeyByIndex.get(wi);
+            if (noteKey != null) m.dataset.noteKey = String(noteKey);
             m.textContent = scrubPUAText(w);
             m.style.fontSize = `${pt2px(markerSz)}px`;
             m.style.verticalAlign = 'super';
@@ -1178,6 +1181,7 @@ function renderLegacyPage(pg, settings, doc) {
             const s = doc.createElement('span');
             if (t.mk) {
               s.className = 'w w--fnmarker';
+              if (t.noteKey != null) s.dataset.noteKey = String(t.noteKey);
               s.style.fontSize = `${pt2px(listingSz)}px`;
               if (fnMarkFont) s.style.fontFamily = fnMarkFont; // **S74 (בעיה 5):** הסמן ב-FRL
             }
@@ -1196,6 +1200,7 @@ function renderLegacyPage(pg, settings, doc) {
         if (fn.marker) {
           const m = doc.createElement('span');
           m.className = 'w w--fnmarker';
+          if (fn.noteKey != null) m.dataset.noteKey = String(fn.noteKey);
           m.style.fontSize = `${pt2px(listingSz)}px`;
           if (fnMarkFont) m.style.fontFamily = fnMarkFont; // **S74 (בעיה 5):** הסמן ב-FRL
           m.textContent = scrubPUAText(fn.marker);
