@@ -3116,6 +3116,7 @@ function legacyTypeset(rawText, settings, env) {
       col.push({
         words: ln.words.slice(),
         markerIdx: ln.markerIdx || [],
+        markerKeys: ln.markerKeys || [],
         parenFlags: ln.parenFlags || null,
         parenStarts: ln.parenStarts || null,
         parenEnds: ln.parenEnds || null,
