@@ -4,6 +4,7 @@
 const assert = require('node:assert/strict');
 const { parseInlineRuns } = require('../../src/engine/parser/inline-content');
 const { tokenize } = require('../../src/engine/parser/block-tokenizer');
+const { tokenizeDoc: tokenizeLegacyDoc } = require('../../src/engine/layout/legacy-imud-flow');
 
 let passed = 0;
 function test(name, fn) {
@@ -84,6 +85,46 @@ test('configured marker pairs and symmetric toggle markers produce the same Text
   });
   assert.equal(textOf(symmetric), 'א ב ג');
   assert.deepEqual(symmetric.runs.filter(run => run.fontFamily).map(run => run.text), ['ב']);
+});
+
+test('run source offsets remain absolute when an image follows a footnote', () => {
+  const source = 'לפני [הערה] ואחר כך #assets/after.jpg#';
+  const [paragraph] = tokenize([source]);
+  const image = paragraph.inlineContent.parts
+    .filter(part => part.kind === 'text')
+    .flatMap(part => part.runs)
+    .find(run => run.kind === 'image');
+  assert(image, 'ImageRun appears after the note reference');
+  assert.equal(image.sourceStart, source.indexOf('#assets/after.jpg#'));
+  assert.equal(image.sourceEnd, source.indexOf('#assets/after.jpg#') + '#assets/after.jpg#'.length);
+});
+
+test('crossing font ranges are rejected as a group rather than styling ambiguous content', () => {
+  const result = parseInlineRuns('א [[A]]ב [[B]]ג [[/A]]ד [[/B]] ה', {
+    availableFamilies: ['Family A', 'Family B'],
+    fontMarkers: [
+      { id: 'a', open: '[[A]]', close: '[[/A]]', family: 'Family A' },
+      { id: 'b', open: '[[B]]', close: '[[/B]]', family: 'Family B' }
+    ]
+  });
+  assert.equal(textOf(result), 'א ב ג ד ה');
+  assert.equal(result.runs.some(run => run.fontFamily), false);
+  assert(result.warnings.some(w => w.code === 'crossing-font-range'));
+});
+
+test('legacy parser emits the same inline paragraph contract including footnote images', () => {
+  const [paragraph] = tokenizeLegacyDoc(
+    'גוף <Guttman Rashi>מילה</> [הערה #notes/note.jpg#] סוף',
+    { fnOpen: '[', fnClose: ']', endPrefix: '' },
+    { availableFamilies: ['Guttman Rashi'] }
+  ).tokens.filter(token => token.type === 'p');
+  assert(paragraph.inlineContent);
+  assert(paragraph.inlineContent.parts.some(part =>
+    part.kind === 'text' && part.runs.some(run => run.fontFamily === 'Guttman Rashi')
+  ));
+  assert(paragraph.inlineContent.notes.some(note =>
+    note.runs.some(run => run.kind === 'image' && run.resourcePath === 'notes/note.jpg')
+  ));
 });
 
 test('malformed font markers are removed, preserve plain text, and report warnings', () => {
