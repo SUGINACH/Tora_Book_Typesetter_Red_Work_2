@@ -26,7 +26,12 @@
     audited.set(idx, rec);
   };
   let scroller = null;
-  for (const cand of [document.querySelector('.tab-panel[data-tab="preview"]'), canvas]) {
+  // Match full-math-audit's actual scroller in the split-pane UI.
+  // The tab panel is no longer the scroll owner; probing it first (or alone)
+  // leaves only the initially mounted 9 pages in the determinism sample.
+  const previewPane = document.querySelector('.preview-pane');
+  const tabPanel = document.querySelector('.tab-panel[data-tab="preview"]');
+  for (const cand of [previewPane, tabPanel, canvas]) {
     if (cand && cand.scrollHeight > cand.clientHeight + 10) { scroller = cand; break; }
   }
   if (!scroller) {
