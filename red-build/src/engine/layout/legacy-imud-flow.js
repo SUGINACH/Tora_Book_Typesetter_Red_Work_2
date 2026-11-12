@@ -3756,7 +3756,7 @@ function legacyLayoutHashDigest(pages) {
 
 module.exports = {
   GEO, SZ, HEADING_MODES, toGematria, stripEditorialNotes, parseMetadata,
-  tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset, parseInlineRuns,
+  tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset,
   FLOW_BOTTOM, SINGLE_W, wrapText, headingItemH, legacyLayoutHashDigest,
   parenCenterRaisePx
 };
