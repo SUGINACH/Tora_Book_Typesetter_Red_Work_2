@@ -51,4 +51,19 @@ test('non-rendered year and disabled back-matter metadata do not inflate source 
   assert.equal(countLegacySourceWords(extraMetadata, settings), base);
 });
 
-console.log('legacy-content-count: 2 tests passed');
+test('stable note-instance keys survive into the page model beside their visible markers', () => {
+  const result = legacyTypeset(VALID_DOC, settings, {});
+  const markerLines = result.pages.flatMap(page => page.columns || [])
+    .flat()
+    .filter(line => Array.isArray(line.markerIdx) && line.markerIdx.length > 0);
+  assert.ok(markerLines.length > 0, 'fixture must render at least one body footnote marker');
+  for (const line of markerLines) {
+    assert.equal(line.markerKeys.length, line.markerIdx.length,
+      'every visible body marker must carry exactly one stable source-note key');
+    for (const key of line.markerKeys) {
+      assert.match(key, /^.+#\\d+$/, 'note key must identify token and occurrence ordinal');
+    }
+  }
+});
+
+console.log('legacy-content-count: 3 tests passed');
