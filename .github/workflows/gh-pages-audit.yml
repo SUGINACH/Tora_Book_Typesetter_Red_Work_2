@@ -88,7 +88,7 @@ jobs:
       - name: Full math audit — LIVE site right after deploy (fixture injected via base64)
         run: |
           node tools/layout-audit/run-full-math.js --tag live \
-            --url https://suginach.github.io/Tora_Book_Typesetter_Red/ \
+            --url https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/ \
             --fixture audits/very_long_test_text.txt
 
       - name: Upload reports
