@@ -924,7 +924,13 @@ if (typeof document !== 'undefined') {
     i: p.i, t: p.t, pw: p.pw, ph: p.ph,
     h: p.header ? p.header.text : null, fo: p.folio ? p.folio.text : null,
     g: p.gates, colsN: p.cols.length, cols: p.cols.map((c) => ({ n: c.n, x: c.x, w: c.w, tops: c.tops, f: c.f, at: c.at, p: c.p })),
-    fn: p.fns.length, fnMk: p.fnMk || '', fnMkList: p.fnMkList || [], mk: p.mk || '', mkList: p.mkList || [], mkn: p.mkn || 0,
+    fn: p.fns.length, fnMk: p.fnMk || '', fnMkList: p.fnMkList || [],
+    // **S14 diagnostic:** retain per-page source instance IDs so a missing
+    // opening can be traced to its exact page and compared with the body.
+    bodyNoteKeys: (p.cols || []).flatMap(col => (col.lines || []).flatMap(line =>
+      (line.markers || []).map(marker => marker.key).filter(Boolean))),
+    footnoteNoteKeys: (p.fns || []).flatMap(fn => fn.noteKeys || []),
+    mk: p.mk || '', mkList: p.mkList || [], mkn: p.mkn || 0,
     colContent: p.colContent, lines: p.lines, words: p.words,
     tocRows: p.tocRows.length, fnAreaN: p.fnAreaN, fnRuleN: p.fnRuleN, gutter: p.gutter
   }));
