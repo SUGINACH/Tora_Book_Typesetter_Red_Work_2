@@ -471,7 +471,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-12-s75'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-12-s76'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -14647,7 +14647,15 @@ function legacyTypeset(rawText, settings, env) {
 
       // ---- הערות שוליים בתחתית (bottom-anchored) ----
       if (fnQueue.length) {
-        placeFootnoteArea(pg, fnQueue);
+        // **S76:** אפשרויות הקיבולת — (א) flexSpacer: עמוד פתיחת מקטע
+        // (h0/h2, בלי פטור-span) שבו ה-spacer של המקור מתכווץ ב-0.22×גובה
+        // אזור-ההערות — ההצבה נוטלת את החלל המתפנה (משוואת שיווי-המשקל
+        // ב-placeFootnoteArea); (ב) budgetLines: קווי-התקציב שהגוף כיבד
+        // (fnReserved כולל ה-clamp) — רצפת ההצבה.
+        placeFootnoteArea(pg, fnQueue, {
+          flexSpacer: fnBodyFirst && pageIsSectionOpen && (isH0 || isH2) && !pg._h2SpanExempt,
+          budgetLines: fnBodyFirst ? Math.round((fnReserved - 38.5) / GEO.FN_PITCH) : null
+        });
         // **S4.24 (דיאג):** RED_DEBUG_FN=1 מדפיס לכל עמוד עם הערות את התקציב
         // מול המוצב בפועל (אחרי הפריסה) — כלי אבחון לחפיפות גוף/הערות.
         // אינו משפיע על הפלט.
@@ -14664,9 +14672,12 @@ function legacyTypeset(rawText, settings, env) {
         // של h2/h0 (שם קיים spacer) ורק כשיש הערות בעמוד (ההוכחה: עמ' 11 —
         // 0.22×105.3=23.2px ≈ הפרש 22.98px שנמדד בין עמ' 11 לעמ' 24/38).
         if (pageIsSectionOpen && (isH0 || isH2) && !pg._h2SpanExempt) {
-          // **S75:** ב-body-first ההזזה לפי התקציב בפועל (fnReserved — כולל
-          // ה-clamp לחלל שמתחת לגוף), לא לפי הצורך הגולמי.
-          const shift = 0.22 * (fnBodyFirst ? fnReserved : fnReserveFor(fnQueue));
+          // **S75 + S76 (ליקוי 1):** ב-body-first ההזזה לפי גובה אזור-ההערות
+          // **בפועל** (ההצבה + המפריד) — ה-flex של המקור מגיב לשטח האמיתי,
+          // וההצבה (משוואת 0.78) כבר התחשבה בהזזה זו: אין חפיפה ואין מרווח
+          // עודף. ב-legacy — ללא שינוי (fnReserveFor הגולמי, התנהגות S74).
+          const fnPlacedH = (pg.footnotes || []).reduce((a, f) => a + (f.lines || []).length * GEO.FN_PITCH, 0);
+          const shift = 0.22 * (fnBodyFirst ? (fnPlacedH + 38.5) : fnReserveFor(fnQueue));
           if (shift > 0.01) {
             for (const b of pg.bands) b.y -= shift;
             for (const col of pg.columns) for (const ln of col) ln.y -= shift;
@@ -14688,7 +14699,7 @@ function legacyTypeset(rawText, settings, env) {
    * הראשון מונח, השאר עובר לראש התור של העמוד הבא עם cont=true (מוצג
    * '(המשך)'). בלי תקרה (continuous / policy אחרת) — התנהגות המקור: המרזב
    * גדל כרצונו. העיגון לתחתית נשמר (yy = FLOW_BOTTOM − גובה-מוצג). */
-  function placeFootnoteArea(pg, queue) {
+  function placeFootnoteArea(pg, queue, opts) {
     if (!queue.length) return;
     pg.fnSep = true;
     let maxLines = Math.max(1, Math.floor((fnSplitEnabled ? fnBarMax : FN_FULL_CAP_PX) / GEO.FN_PITCH));
@@ -14702,11 +14713,30 @@ function legacyTypeset(rawText, settings, env) {
     // מוקדם (סוף מקטע וכד') המרזב גדל לשטח הפנוי (עדיפות 1 של המשתמש:
     // הכלה מלאה). תקרה מפורשת של המשתמש (fn-bar-max-height-px>0) מגבילה
     // גם את ההצבה עצמה.
+    // **S76 (ליקוי 1+3 — 12.11, "הערות ממשיכות למרות שיש מקום / השורה
+    // האחרונה לא מלאה"):** שני תיקוני שורש בקיבולת ההצבה:
+    //   (א) **חלל ה-flex בעמוד פתיחת מקטע** — המקור (S4.19) מכווץ את
+    //       ה-spacer ב-0.22×גובה אזור-ההערות ומזיז את הגוף למעלה; ההצבה
+    //       נוטלת את החלל המתפנה: שיווי המשקל (bb−0.22H)+38.5 ≤ FLOW_BOTTOM−H
+    //       נותן H ≤ (FLOW_BOTTOM−bb)/0.78. בלי זה נמדר ב-very_long (ספר
+    //       המשתמש) עמ' 690: תור של 29 שורות, הוצבו 28 בלבד ומרווח גלוי
+    //       של 114.8px מתחת לגוף — "יש מספיק מקום להכלתם בשלימות".
+    //   (ב) **רצפת התקציב** — ה-fit מרשה לדיו-הגוף להסתיים עד colBottom+0.01
+    //       (ומודל הדיו חורג עוד כמה px); ה-floor על החלל שמתחת לדיו מאבד
+    //       שורת מרזב שלמה לפיקסלים בודדים — רצפת ההתחלות נפלה מהעמוד
+    //       (נמדר: עמ' 691 — הערה טרייה נפתחה בעמוד שאחרי הסמן שלה) ונותר
+    //       מרווח-זנב של שורה. ההצבה לא תרד מקווי-התקציב שהגוף כיבד
+    //       (fnReserved כולל ה-clamp — חסם חפיפה מוכח: ה-gutter-top
+    //       = colBottom+38.5 ≥ דיו-הגוף+38.5).
     if (fnBodyFirst) {
       let bb = 0;
       for (const col of pg.columns || []) for (const ln of col) bb = Math.max(bb, (ln.y || 0) + (ln.heightPx || 16));
       const capByFull = Math.floor(FN_FULL_CAP_PX / GEO.FN_PITCH);
-      let canLines = Math.min(capByFull, Math.floor((FLOW_BOTTOM - bb - 38.5) / GEO.FN_PITCH));
+      const flexSpacer = !!(opts && opts.flexSpacer);
+      const availPx = flexSpacer ? (FLOW_BOTTOM - bb) / 0.78 - 38.5 : (FLOW_BOTTOM - bb - 38.5);
+      let canLines = Math.min(capByFull, Math.floor(availPx / GEO.FN_PITCH));
+      const budgetLines = (opts && Number.isFinite(opts.budgetLines)) ? Math.max(0, Math.floor(opts.budgetLines)) : 0;
+      if (budgetLines > 0) canLines = Math.max(canLines, Math.min(budgetLines, capByFull));
       if (Number.isFinite(fnBarMaxRaw) && fnBarMaxRaw > 0) {
         canLines = Math.min(canLines, Math.floor(fnBarMax / GEO.FN_PITCH));
       }
@@ -14719,30 +14749,19 @@ function legacyTypeset(rawText, settings, env) {
     // מספרה הפרקי) בראש תור העמוד הבא.
     if (fnLayoutMode === 'continuous') {
       const built = fnFlowFor(queue);
-      // **S75 (בקשה 1 — אין "סמן בלבד"):** החיתוך לא נופל בין שורת הפתיחה
-      // (הסמן/תווית ההמשך) של הערה לשורת המילים הראשונה שלה — אם המילים לא
-      // נכנסו, גם הפתיחה נדחקת לעמוד הבא וההערה נפתחת שם שלמה (טרייה עם
-      // מספרה; נמדר ב-very_long עמ' 562 — סמן יא. נתקע לבד). מונע גם שורת
-      // '(המשך)' גולמית בתחתית המרזב.
-      let cut = Math.min(maxLines, built.flowLines.length);
-      if (fnBodyFirst && cut < built.flowLines.length) {
-        const firstTokenLine = new Map();
-        const firstWordLine = new Map();
-        for (let i = 0; i < built.flowLines.length; i++) {
-          for (const t of built.flowLines[i]) {
-            if (t.noteIdx == null || t.gap) continue;
-            if (!firstTokenLine.has(t.noteIdx)) firstTokenLine.set(t.noteIdx, i);
-            if (!t.mk && t.t !== '(המשך)' && !firstWordLine.has(t.noteIdx)) firstWordLine.set(t.noteIdx, i);
-          }
-        }
-        for (let guard = 0; guard < 60; guard++) {
-          let pulled = false;
-          for (const [idx, wl] of firstWordLine) {
-            const tl = firstTokenLine.get(idx);
-            if (tl < cut && wl >= cut) { cut = tl; pulled = true; break; }
-          }
-          if (!pulled) break;
-        }
+      // **S75 (בקשה 1) + **S76 (ליקוי 3):** החיתוך ממלא את הקיבולת עד תום
+      // — המרזב נחתך רק כשהעמוד מלא פיזית, והשורה האחרונה שהוצבה היא
+      // שורת ביניים מיושבת (מלאה). פילבק "סמן-בלבד" (S75) הוסר: בזרימה
+      // הרציפה הסמן אינו לבד בשורה ממילא (הוא בן-זוג לזנב ההערה הקודמת;
+      // סמן ברוחב שורה שלם אינו קיים), וההדחקה שלו הותירה שורות מרזב
+      // ריקות + שורה אחרונה קצרה — בדיוק הליקוי שדווח ("הערה ממשיכה בעוד
+      // השורה האחרונה לא מלאה"). הגנת "סמן-בלבד" ברמת התקציב נותרה
+      // (fnBodyFirstLines — "התחלה" = שורה עם מילה, לא סמן בלבד).
+      const cut = Math.min(maxLines, built.flowLines.length);
+      // **S76 (ניפוי):** RED_DEBUG_FN_CUT=1 — מדפיס את ניתוח החיתוך של כל
+      // עמוד עם הערות. אינו משפיע על הפלט.
+      if (typeof process !== 'undefined' && process.env && process.env.RED_DEBUG_FN_CUT) {
+        console.error(`[fncut] page=${pages.length - 1} type=${pg.type} maxLines=${maxLines} flow=${built.flowLines.length} cut=${cut} contRest=${cut < built.flowLines.length}`);
       }
       const placed = built.flowLines.slice(0, cut);
       const rest = built.flowLines.slice(cut);
@@ -15211,9 +15230,32 @@ function legacyTypeset(rawText, settings, env) {
   // לדווח אי-איזון בלתי-פתיר (column-imbalance) בזמן ההצבה עצמה.
   // בעבר נוצר בסוף (אחרי flowSection) — ולכן לא היה זמין לזרימה.
   const ledger = new Ledger();
-  for (const sec of sections) {
+
+  // **S76 (ליקוי 2 — 12.11, "הערות של פרק אחד לא יכולות להמשיך בפרק הבא!"):
+  // שטיפת המשכים לעמודים ייעודיים.** המשכי הערות שנותרו בסוף מקטע מוצבים
+  // בעמודי-המשך של הפרק **עצמו** — לפני פתיחת הפרק הבא (h0/h2) או שער-משנה
+  // (h1) — בדיוק כמו שטיפת-הסיום (S4.24) בסוף המסמך. הגוף אינו נדחק
+  // (החלטת S75 המפורשת של המשתמש); ההערות משלימות את עצמן בעמודים שלהן,
+  // והפרק הבא נפתח עם מרזב נקי — בלי '(המשך)' של הפרק הקודם בתחתית עמוד
+  // הפתיחה שלו (נמדר בספר המשתמש: עמ' 690/692/695/696 קיבלו המשכים מהפרק
+  // הקודם). עמודים אלה הם 'regular' עם הכותרת הרצה של הפרק הממשיך, מספרים
+  // וגיליון כרגיל, והמרזב בהם בקיבולת העמוד המלאה (capByFull) — ההערות
+  // משלימות במינימום עמודים. ב-legacy — ללא שינוי (התנהגות S74 הנעולה).
+  const flushPendingFootnotes = () => {
+    while (pendingFootnotes.length) {
+      const pg = newPage('regular');
+      setHeader(pg, currentH2);
+      placeFootnoteArea(pg, pendingFootnotes.splice(0), { flexSpacer: false, budgetLines: null });
+    }
+  };
+
+  for (let si = 0; si < sections.length; si++) {
+    const sec = sections[si];
     if (sec.subShaar) {
       const t = sec.subShaar;
+      // **S76 (ליקוי 2):** לפני שער-משנה — המשכי הפרק הקודם מסיימים אצלו,
+      // לא מדלגים מעל עמוד השער לפרק שאחריו.
+      if (fnBodyFirst) flushPendingFootnotes();
       if (cfg.resetSimanOnH1) simanCounter = 0;
       const pg = newPage('shaar-sub');
       pg._secStartLevel = 1; // **EXT-15:** שער-משנה נפתח כמקטע h1
@@ -15223,17 +15265,20 @@ function legacyTypeset(rawText, settings, env) {
       continue;
     }
     flowSection(sec);
+    // **S76 (ליקוי 2):** המקטע הבא פותח פרק חדש (h0/h2) — המשכי הפרק הנוכחי
+    // נשטפים לעמודים ייעודיים לפניו. מקטע inline (h3+) ממשיך את אותו פרק
+    // — שם ההמשכים זורמים במקביל למילוי הגוף (החלטת S75), ואין שטיפה.
+    const next = sections[si + 1];
+    if (fnBodyFirst && pendingFootnotes.length && next && (next.subShaar || next.newPage)) {
+      flushPendingFootnotes();
+    }
   }
 
   // **S4.24 (שימור תוכן — שטיפת המשכים אחרונים):** המשכי הערות שנקצצו בתקרת
   // המרזב ונותרו אחרי הטוקן האחרון מוצגים בעמודי המשך ייעודיים — לעולם לא
   // מאבדים שורת הערה. כל עמוד כזה מציג לפחות שורה אחת (usedLines=0 בפתיחה)
   // ולכן הלולאה מתכנסת תמיד.
-  while (pendingFootnotes.length) {
-    const pg = newPage('regular');
-    setHeader(pg, currentH2);
-    placeFootnoteArea(pg, pendingFootnotes.splice(0));
-  }
+  flushPendingFootnotes();
 
   // ---- תוכן-עניינים כפול + מספור סופי ----
   const genShow = Array.isArray(cfg.gtocShow) ? cfg.gtocShow : [1, 2, 3, 4, 5, 6];
