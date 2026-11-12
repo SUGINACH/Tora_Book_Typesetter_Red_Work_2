@@ -199,6 +199,7 @@ class MeasureAPI {
 
   /**
    * מיקום שורות אופטימלי (KP) → מערך שורות עם רוחבים.
+   * @param {number|((lineIndex:number)=>number)} maxWidthPx — רוחב קבוע או רוחב זמין לפי אינדקס שורה.
    * @param {Function} [measureOverride] - הזרקת פונקציית מדידה (למשל פרופיל רוחב־גופן מהpipeline) — L1: entry יחיד דרך ההזרקה.
    * @returns {Array<{words:string[], widthPx:number, badness:number}>}
    */
