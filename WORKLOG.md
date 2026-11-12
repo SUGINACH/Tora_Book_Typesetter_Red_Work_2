@@ -3519,6 +3519,7 @@ S65–S71); ‏OPERATIONS (הצלבה); תבניות התכנית (51 תיבות
 - תנאי הסף S14.0 בתכנית העבודה נשאר חוסם; לא מסמנים אותו כבוצע ולא מתחילים S14.1–S14.7 לפני שמנוע יחיד הוכח.
 
 **ממצאים מאומתים:**
+0. בדיקת ההסתייגויות שלך לגבי B5/B8 נשמרה: H0–H7 משתמשים במשפחות המקור השונות (AlphaBlack, Lia Sgula, Alpha, AlphaLight, Noto Serif Hebrew, Hadassah Friedlaender; וגוף H0 Frank Ruhl Libre), ולא בגופן David אחיד. תוכן כללי ומפורט פעילים; כללי מציג רמות 1–6, מפורט 2–6, רמה 7 מוסתרת; מספור שורות/עמודים פעיל ו-inline grouping כבוי. התיקון הובהר גם ב-`DECISIONS.md` וב-G13.
 1. `pipeline.typeset` בוחר runtime לפי `_layout-profile === 'imud' && _imudRaw`: `legacyTypeset` עם return מוקדם לעומת parser/MeasureAPI/KP/DP.
 2. legacy מחזיק parser, `LineBreaker`, planner, מודל הערות וגאומטריה נפרדים. DOM dispatch ל-`renderLegacyPage`; PDF dispatch ל-`legacy-projector`; הנתיב המודרני משתמש ב-`geometry-projector`. `pdf-writer` משותף רק אחרי ההקרנה.
 3. `applyLegacyDefaults` ממזג imported settings מעל registry; restore של ההפרש השמור קורה אחר כך. ערכי המקור 12pt/1.34, Drop 1.5em/2 שורות ו-AQ=true מתנגשים ב-D-107 (14pt/1.4, 2em/3 שורות, AQ=false). נדרש precedence: persisted user > D-107 defaults > legacy source. ערכת 40 ושלושת השערים נשארים auto-active.
