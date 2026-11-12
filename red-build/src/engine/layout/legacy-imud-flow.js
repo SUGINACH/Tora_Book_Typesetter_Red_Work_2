@@ -30,7 +30,7 @@ const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = r
 // **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
-const { parseInlineRuns } = require('../parser/inline-content');
+const { parseInlineRuns, parseInlineParagraph } = require('../parser/inline-content');
 
 // ---------- גיאומטריה (px @96dpi; PDF = px×0.75) — מכויל מהייחוס ----------
 const GEO = {
@@ -383,16 +383,41 @@ function tokenizeDoc(rawText, cfg, inlineOptions = {}) {
       syntheticTail: true
     });
   }
-  // S14 P0: both historical and RED parsing now expose the same first-class
-  // inline AST. This is a shared parse contract, not a second renderer or layout path.
+  // S14 P0: the legacy adapter emits the same TextRun/ImageRun paragraph shape
+  // as the canonical tokenizer. Footnote payloads remain separate note units.
   for (const token of tokens) {
     if (token.type !== 'p') continue; // H0–H7/side notes are intentionally excluded
-    token.inlineContent = {
-      body: parseInlineRuns(token.text, { ...inlineOptions, allowImages: true }),
-      endNote: token.endNote
-        ? parseInlineRuns(token.endNote, { ...inlineOptions, allowImages: false })
-        : null
-    };
+    const parts = [];
+    const notes = [];
+    let cursor = 0;
+    for (const note of findNotes(token.text, cfg.fnOpen, cfg.fnClose)) {
+      const beforeRaw = token.text.slice(cursor, note.start);
+      const before = beforeRaw.trim();
+      if (before) {
+        const leading = beforeRaw.length - beforeRaw.trimStart().length;
+        const trailingEnd = beforeRaw.trimEnd().length;
+        parts.push({ kind: 'text', value: before, sourceStart: cursor + leading, sourceEnd: cursor + trailingEnd });
+      }
+      const sourceStart = note.start + cfg.fnOpen.length;
+      const rawNote = note.text;
+      const noteText = rawNote.trim();
+      const leading = rawNote.length - rawNote.trimStart().length;
+      const trailingEnd = rawNote.trimEnd().length;
+      notes.push({ text: noteText, sourceStart: sourceStart + leading, sourceEnd: sourceStart + trailingEnd });
+      parts.push({ kind: 'note-ref', noteIndex: notes.length - 1 });
+      cursor = note.end;
+    }
+    const tailRaw = token.text.slice(cursor);
+    const tail = tailRaw.trim();
+    if (tail) {
+      const leading = tailRaw.length - tailRaw.trimStart().length;
+      const trailingEnd = tailRaw.trimEnd().length;
+      parts.push({ kind: 'text', value: tail, sourceStart: cursor + leading, sourceEnd: cursor + trailingEnd });
+    }
+    token.inlineContent = parseInlineParagraph(parts, notes, inlineOptions);
+    token.inlineContent.endNote = token.endNote
+      ? parseInlineRuns(token.endNote, { ...inlineOptions, allowImages: false })
+      : null;
   }
   return { meta, tokens };
 }
@@ -3731,7 +3756,7 @@ function legacyLayoutHashDigest(pages) {
 
 module.exports = {
   GEO, SZ, HEADING_MODES, toGematria, stripEditorialNotes, parseMetadata,
-  tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset,
+  tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset, parseInlineRuns,
   FLOW_BOTTOM, SINGLE_W, wrapText, headingItemH, legacyLayoutHashDigest,
   parenCenterRaisePx
 };
