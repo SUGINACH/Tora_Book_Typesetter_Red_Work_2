@@ -207,9 +207,9 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
   const colorOf = (hex) => (hex ? hexColorToRgb(hex) : null);
   const bodyColor = colorOf(settings['body-color']);
   const headingColorOf = (lvl) => colorOf(settings[`heading-${lvl}-color`]);
-  const hdrColorOf = (pos) => (pos === 'right' ? colorOf(settings['header-recto-right-color'])
-    : pos === 'center' ? colorOf(settings['header-recto-center-color'])
-      : colorOf(settings['header-recto-left-color']));
+  const hdrColorOfS77 = (pos, side) => (pos === 'right' ? colorOf(settings[`header-${side}-right-color`])
+    : pos === 'center' ? colorOf(settings[`header-${side}-center-color`])
+      : colorOf(settings[`header-${side}-left-color`])); // **S77:** לפי הצד הפיזי — כמו ה-DOM
   const folioColor = colorOf(settings['page-num-color']);
   const bandColorOf = (b) => {
     if (b.kind === 'endnote-title') return colorOf(settings['endnote-title-color']);
@@ -478,7 +478,11 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
         const sumW = ws.reduce((a, w) => a + w.w, 0);
         const gaps = Math.max(0, ws.length - 1);
         let gapW = spaceW;
-        if (!isLast && gaps > 0 && sumW + gaps * spaceW < usableW) {
+        // **S77 (בקשה 1):** שורת חיתוך תוך-הערה (cutLast) — שורת-ביניים לכל
+        // דבר: מיושבת לשני הצדדים (מלאה) כמו שאר שורות הביניים — כמו ה-DOM
+        // (textAlignLast:justify). עד כאן סוף-המרזב המרופט הותיר "שורה
+        // אחרונה לא מלאה" בהערה שממשיכה לעמוד הבא.
+        if ((!isLast || fn.cutLast) && gaps > 0 && sumW + gaps * spaceW < usableW) {
           gapW = (usableW - sumW) / gaps; // יישוב לשני הצדדים — כמו הגוף
         }
         let cursor = rightEdge;
@@ -502,6 +506,7 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
       if (words.length) {
         out.footnotes.push({
           centerLast: !!fn.centerLast, // **S74 (בעיה 7):** מרכוז השורה האחרונה (חריג: המשך לעמוד הבא)
+          cutLast: !!fn.cutLast, // **S77 (בקשה 1):** שורת חיתוך תוך-הערה — מיושבת לשני הצדדים
           y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: '',
           text: fn.lines.flatMap(l => (l.words || []).filter(t => !t.gap).map(t => t.t)).join(' '),
           words, baselineY: null, h: fn.lines.length * GEO.FN_PITCH,
@@ -545,7 +550,9 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
       const sumW = ws.reduce((a, w) => a + w.w, 0);
       const gaps = Math.max(0, ws.length - 1);
       let gapW = spaceW;
-      if (!isLast && gaps > 0 && sumW + gaps * spaceW < usableW) {
+      // **S77 (בקשה 1):** חיתוך תוך-הערה (cutLast) — שורת-ביניים מיושבת
+      // לשני הצדדים (כמו ה-DOM), לא מרופטת.
+      if ((!isLast || fn.cutLast) && gaps > 0 && sumW + gaps * spaceW < usableW) {
         gapW = (usableW - sumW) / gaps; // יישוב לשני הצדדים (כמו הייחוס)
       }
       let cursor = lineRight;
@@ -563,7 +570,7 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
       }
     });
     if (words.length) {
-      out.footnotes.push({ centerLast: !!fn.centerLast, y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: fn.marker, text: fn.lines.map(l => l.words.join(' ')).join(' '), words, baselineY: firstBase, h: fn.lines.length * GEO.FN_PITCH, ...(fnColor ? { color: fnColor } : {}) });
+      out.footnotes.push({ centerLast: !!fn.centerLast, cutLast: !!fn.cutLast, y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: fn.marker, text: fn.lines.map(l => l.words.join(' ')).join(' '), words, baselineY: firstBase, h: fn.lines.length * GEO.FN_PITCH, ...(fnColor ? { color: fnColor } : {}) });
     }
   }
 
@@ -636,22 +643,33 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
   // ⇒ תת-גופן ייעודי; בלתי-רשומה ⇒ DavidLibre-Bold — התנהגות קודמת).
   if (pg.headerSlots && (pg.headerSlots.right || pg.headerSlots.center || pg.headerSlots.left)) {
     const slots = [];
-    // **S73:** גופן/צבע הסלוט — מההגדרות (header-recto-{right,center,left}-* —
-    // אותם מפתחות שה-DOM של legacy מציג; verso משוקף ל-recto בזרימת המורשת).
-    const SLOT_FONT_KEY = { right: 'header-recto-right-font', center: 'header-recto-center-font', left: 'header-recto-left-font' };
+    // **S73 + S77 (בקשה 3):** גופן/צבע/גודל/יישור/רוחב הסלוט — מההגדרות
+    // לפי הצד הפיזי של העמוד (עד כאן: מפתחי recto קבועים לכל העמודים —
+    // אותם מפתחות שה-DOM של legacy מציג). ברירות המחדל (33% + right/center/
+    // left + הגדלים המכוילים) משחזרות את המיקומים הקודמים במדויק.
+    const hdrSide = (pg.index % 2 === 0) ? 'recto' : 'verso'; // עמוד 1 (אינדקס 0) = recto
     const mk = (pos, text, sizePt) => {
       if (!text) return;
       // **S73:** גופן הסלוט מההגדרות — כמו ה-DOM (fontWeight 700 שם;
       // Livorna הוא חד-משקלי — המשפחה עצמה). נפילה ל-hApi (DavidLibre-Bold)
       // כשהמשפחה אינה רשומה — התנהגות קודמת.
-      const fam = settings[SLOT_FONT_KEY[pos]] || 'DavidLibre-Bold';
+      const fam = settings[`header-${hdrSide}-${pos}-font`] || 'DavidLibre-Bold';
+      // **S77:** גודל הסלוט מההגדרה (ברירת המחדל המיובאת = הקבועים המכוילים)
+      const szKey = `header-${hdrSide}-${pos}-size-pt`;
+      const effSz = Number(settings[szKey]) > 0 ? Number(settings[szKey]) : sizePt;
       const sApi = apiFor(fam) || hApi;
-      const w = sApi.measureTextWidth(text, sizePt, 0);
-      let x;
-      if (pos === 'right') x = GEO.COL_R_X + GEO.COL_W - 33 - w;
-      else if (pos === 'left') x = GEO.COL_L_X + 33;
-      else x = (GEO.PAGE_W - w) / 2;
-      slots.push({ pos, text, x, w, sizePt, fam: apiFor(fam) ? fam : null, color: hdrColorOf(pos) });
+      const w = sApi.measureTextWidth(text, effSz, 0);
+      // **S77:** תיבת הסלוט — רוחב% מהפס; היישור בתוכה מההגדרה (כמו ה-DOM).
+      const bandL = GEO.COL_L_X + 33, bandR = GEO.COL_R_X + GEO.COL_W - 33;
+      const bandW = bandR - bandL;
+      const wPct = Number(settings[`header-${hdrSide}-${pos}-width-pct`]);
+      const boxW = Math.max(0, (Number.isFinite(wPct) && wPct > 0 && wPct <= 100 ? wPct : 33) / 100) * bandW;
+      const align = settings[`header-${hdrSide}-${pos}-align`] || pos;
+      let x, alignEff;
+      if (pos === 'right') { x = bandR - boxW; alignEff = align; }
+      else if (pos === 'left') { x = bandL; alignEff = align; }
+      else { x = bandL + (bandW - boxW) / 2; alignEff = align; }
+      slots.push({ pos, text, x, w, boxW, align: alignEff, sizePt: effSz, fam: apiFor(fam) ? fam : null, color: hdrColorOfS77(pos, hdrSide) });
     };
     mk('right', pg.headerSlots.right, SZ.hdrR);
     mk('center', pg.headerSlots.center, SZ.hdrC);
@@ -662,11 +680,13 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
         const baseY = GEO.HEADER_BASELINE;
         // **S5.1 (תיקון C1/L2):** רוחב התיבה = רוחב הטקסט עצמו (s.w) — לא
         // s.w+40. ה+40 הסיט כל סלוט 40px מהמקום שמכויל מהייחוס ב-mk() לעיל.
+        // **S77:** התיבה ברוחב הסלוט מההגדרה (boxW) והמילים מיושבות בה לפי
+        // היישור מההגדרה — כמו ה-DOM.
         const sFam = s.fam || 'DavidLibre-Bold';
         const sApi = apiFor(sFam) || hApi;
         const sKey = s.fam ? fontKeyOf(s.fam) : 'heading';
-        s.words = placeWords(s.text.split(' '), sApi, s.x, s.w, s.sizePt,
-          s.pos === 'center' ? 'center' : (s.pos === 'right' ? 'right' : 'left'), baseY);
+        const a = s.align === 'center' ? 'center' : (s.align === 'left' ? 'left' : (s.align === 'right' ? 'right' : (s.pos === 'center' ? 'center' : (s.pos === 'right' ? 'right' : 'left'))));
+        s.words = placeWords(s.text.split(' '), sApi, s.x, s.boxW || s.w, s.sizePt, a, baseY);
         s.color = s.color || pg.headerSlots.color || null;
         for (const w of s.words) { if (s.color) w.color = s.color; w.fontKey = sKey; }
       }

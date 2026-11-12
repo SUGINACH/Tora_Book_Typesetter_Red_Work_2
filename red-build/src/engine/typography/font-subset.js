@@ -8,6 +8,16 @@
  *
  * **בדיקת tofu (0 סימנים חסרים):** הפרנסר עצמו משמש בודק — קריאה חוזרת
  * של התת־גופן חייבת למפות כל תו מבוקש לגליף בעל קווי מתאר לא־ריקים.
+ *
+ * **S77 (דיווח משתמש: "בהערות השוליים במקום גרשיים מופיע רווח לבן ב-PDF"):**
+ * גליפים קומפוזיטיביים (למשל quotedbl = שני רכיבי quotesingle באסיסטנט
+ * קל-מאוד; גם נקודתיים/פסיק-נקודה באותו גופן) הועתקו כבתים גולמיים בלי
+ * שני תנאים חיוניים: (א) רכיביהם לא נכנסו לסט — הגליף הפנה ל-gid שאינו קיים
+ * בתת-הגופן (נמדד: quotedbl → gid 334 מתוך 36) וה-PDF צייר ריק ברוחב
+ * ההתקדמות = "רווח לבן"; (ב) האינדקסים לא מופו מחדש למספור הגליפים החדש.
+ * כעת: סגירה טרנזיטיבית — רכיבי כל גליף קומפוזיטיבי (ו רכיבי-רכיבים)
+ * נוספים לסט, והאינדקסים בגליף המועתק נכתבים מחדש ל-gid החדש. בדיקת
+ * ה-tofu העצמית מאמתת גם שכל רכיב ממופה בתת-הגופן שנוצר.
  */
 
 const fm = require('./font-metrics');
@@ -37,32 +47,98 @@ function buildSubset(font, chars) {
     const g = fm.glyphIdOf(font, ch);
     if (g !== 0) { gidSet.add(g); charsKept.push(ch); }
   }
-  const gids = [...gidSet].sort((a, c) => a - c);
-  const gidToNew = new Map(gids.map((g, i) => [g, i])); // ישן → חדש
 
   // 2) glyf/loca מקוריים — העתקת קווי מתאר כמו שהם
   const locFormat = font.indexToLocFormat;
   const locaOff = font.tables.loca ? font.tables.loca.offset : null;
   const glyfOff = font.tables.glyf ? font.tables.glyf.offset : null;
   if (locaOff == null || glyfOff == null) return { ok: false, error: 'no-glyf-loca' };
+  const glyphStart = (g) => locFormat === 0 ? rdU16(b, locaOff + g * 2) * 2 : rdU32(b, locaOff + g * 4);
   const glyphLen = (g) => {
-    const s = locFormat === 0 ? rdU16(b, locaOff + g * 2) * 2 : rdU32(b, locaOff + g * 4);
+    const s = glyphStart(g);
     const e = locFormat === 0 ? rdU16(b, locaOff + (g + 1) * 2) * 2 : rdU32(b, locaOff + (g + 1) * 4);
     return e - s;
   };
   const glyphBytes = (g) => {
-    const s = locFormat === 0 ? rdU16(b, locaOff + g * 2) * 2 : rdU32(b, locaOff + g * 4);
+    const s = glyphStart(g);
     return b.slice(glyfOff + s, glyfOff + s + glyphLen(g));
   };
 
+  // **S77 — גליפים קומפוזיטיביים:** פענוח רשומות הרכיבים של גליף (אם קומפוזיטיבי).
+  // מבנה glyf: numberOfContours(int16; -1=קומפוזיטיבי) + bbox(int16×4), ואז
+  // רשומות: flags(u16) glyphIndex(u16) args(2/4 בתים לפי 0x0001) ואולי מטריצת
+  // ציור (0x0008/0x0040/0x0080); המשך לפי 0x0020 (MORE_COMPONENTS).
+  const compRefsOf = (g) => {
+    const len = glyphLen(g);
+    if (len < 10) return [];
+    const s = glyfOff + glyphStart(g);
+    if (rdS16(b, s) >= 0) return []; // גליף פשוט
+    const refs = [];
+    let off = s + 10;
+    for (;;) {
+      const flags = rdU16(b, off);
+      refs.push(rdU16(b, off + 2));
+      off += 4 + ((flags & 0x0001) ? 4 : 2);
+      if (flags & 0x0008) off += 2;
+      else if (flags & 0x0040) off += 4;
+      else if (flags & 0x0080) off += 8;
+      if (!(flags & 0x0020)) break;
+    }
+    return refs;
+  };
+  // סגירה טרנזיטיבית: כל רכיב (ורכיבי-רכיב) חייב להיכנס לסט — בלי זה
+  // הגליף הקומפוזיטיבי בתת-הגופן מצביע ל-gid שאינו קיים (רווח לבן ב-PDF).
+  {
+    const queue = [...gidSet];
+    while (queue.length) {
+      const g = queue.pop();
+      if (g >= font.numGlyphs) continue; // הגנה — אינדקס חריג במקור
+      for (const c of compRefsOf(g)) {
+        if (c < font.numGlyphs && !gidSet.has(c)) { gidSet.add(c); queue.push(c); }
+      }
+    }
+  }
+  const gids = [...gidSet].sort((a, c) => a - c);
+  const gidToNew = new Map(gids.map((g, i) => [g, i])); // ישן → חדש
+
+  // העתקת גליף עם מיפוי-מחדש של אינדקסי רכיבים (קומפוזיטיבי בלבד; גליף
+  // פשוט מוחזר כמו שהוא). ההעתקה לזיכרון חדש — Buffer.slice הוא תצוגה
+  // וכתיבה אליו הייתה משנה את הגופן המקורי הרשום.
+  const remappedGlyph = (g) => {
+    const raw = glyphBytes(g);
+    if (raw.length < 10 || rdS16(raw, 0) >= 0) return raw;
+    const out = Buffer.from(raw); // העתקה — לא לגעת במקור
+    let off = 10;
+    for (;;) {
+      const flags = rdU16(out, off);
+      const compOld = rdU16(out, off + 2);
+      const compNew = gidToNew.get(compOld);
+      if (compNew == null) return null; // לא אמור לקרות לאחר הסגירה — כשל רועש
+      out[off + 2] = (compNew >> 8) & 0xFF;
+      out[off + 3] = compNew & 0xFF;
+      off += 4 + ((flags & 0x0001) ? 4 : 2);
+      if (flags & 0x0008) off += 2;
+      else if (flags & 0x0040) off += 4;
+      else if (flags & 0x0080) off += 8;
+      if (!(flags & 0x0020)) break;
+    }
+    return out;
+  };
+
   // תת־glyf: מרווחים לפי קווי מתאר; loca קצר (÷2) אם אפשר, אחרת ארוך
-  const newGlyphs = gids.map(g => glyphBytes(g));
+  const newGlyphs = gids.map(g => {
+    const r = remappedGlyph(g);
+    if (r === null) return { error: `component-unmapped:${g}` };
+    return { bytes: r };
+  });
+  const badGlyph = newGlyphs.find(x => x && x.error);
+  if (badGlyph) return { ok: false, error: badGlyph.error };
   const glyfParts = [];
   const newLoca = [0];
   let acc = 0;
   for (const g of newGlyphs) {
-    glyfParts.push(g);
-    acc += g.length;
+    glyfParts.push(g.bytes);
+    acc += g.bytes.length;
     if (acc & 3) { const pad = 4 - (acc & 3); glyfParts.push(Buffer.alloc(pad)); acc += pad; }
     newLoca.push(acc);
   }
@@ -176,6 +252,27 @@ function buildSubset(font, chars) {
     // גליף ריק חוקי עם advance חיובי (אין לו קווי מתאר מטבעו); לא tofu.
     const len = loca2(g + 1) - loca2(g);
     if (len <= 0 && advNew === 0) return { ok: false, error: `tofu-empty:${ch.codePointAt(0).toString(16)}` };
+    // **S77 — קומפוזיטיבי:** כל רכיב של הגליף חייב להתמפות בתת-הגופן
+    // (הסגירה הטרנזיטיבית מבטיחה זאת; בדיקת האמת כאן מוכיחה שהרימופ
+    // בפועל תקין — לפני S77 quotedbl הצביע ל-gid 334 מתוך 36 גליפים).
+    if (len >= 10) {
+      const gOff = back.font.tables.glyf.offset + loca2(g);
+      if (rdS16(bytes, gOff) < 0) {
+        let off = gOff + 10;
+        for (;;) {
+          const flags = rdU16(bytes, off);
+          const comp = rdU16(bytes, off + 2);
+          if (comp >= gids.length || loca2(comp + 1) - loca2(comp) < 0) {
+            return { ok: false, error: `component-lost:${ch.codePointAt(0).toString(16)}:${comp}` };
+          }
+          off += 4 + ((flags & 0x0001) ? 4 : 2);
+          if (flags & 0x0008) off += 2;
+          else if (flags & 0x0040) off += 4;
+          else if (flags & 0x0080) off += 8;
+          if (!(flags & 0x0020)) break;
+        }
+      }
+    }
     const advOld = fm.advanceUnitsOf(font, ch);
     if (advOld !== advNew) return { ok: false, error: `width-drift:${ch.codePointAt(0).toString(16)}:${advNew}!=${advOld}` };
   }

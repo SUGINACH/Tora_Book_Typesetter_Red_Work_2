@@ -765,20 +765,26 @@ function renderLegacyPage(pg, settings, doc) {
     position(hdr, GEO.COL_L_X + 33, 52, (GEO.COL_R_X + GEO.COL_W - 33) - (GEO.COL_L_X + 33), 22);
     const HDR_BASELINE_Y = 71.9;
     const DLB_BASELINE_FACTOR = 0.5 + (0.7461 - 0.2192) / 2; // DavidLibre-Bold, line-height:1
-    // **S73 (צבע כותרת עליונה מההגדרות):** header-recto-{right,center,left}-color —
+    // **S73 (צבע כותרת עליונה מההגדרות):** header-{recto,verso}-{right,center,left}-color —
     // ברירת מחדל שחורה (הכחול הקבוע #0F1749 של D-89 הוחלף בהגדרה — בקשת
     // משתמש מפורשת: ברירת המחדל של כל הגופנים ללא יוצא מן הכלל = שחור).
+    // **S77 (בקשה 3):** גופן/צבע/גודל/יישור/רוחב לפי הצד הפיזי של העמוד
+    // (עד כאן: מפתחי recto קבועים לכל העמודים); היישור והרוחב מההגדרות
+    // (ברירות המחדל right/center/left + 33% משחזרות את העיגון הקודם במדויק).
+    const hdrSide = (pg.index % 2 === 0) ? 'recto' : 'verso'; // עמוד 1 (אינדקס 0) = recto
     const slots = [
-      ['rh rh--r', hs.right, SZ.hdrR, 'header-recto-right-font', 'header-recto-right-color', 'right'],
-      ['rh rh--c', hs.center, SZ.hdrC, 'header-recto-center-font', 'header-recto-center-color', 'center'],
-      ['rh rh--l', hs.left, SZ.hdrL, 'header-recto-left-font', 'header-recto-left-color', 'left']
+      ['rh rh--r', hs.right, SZ.hdrR, `header-${hdrSide}-right-font`, `header-${hdrSide}-right-color`, `header-${hdrSide}-right-size-pt`, `header-${hdrSide}-right-align`, `header-${hdrSide}-right-width-pct`, 'right'],
+      ['rh rh--c', hs.center, SZ.hdrC, `header-${hdrSide}-center-font`, `header-${hdrSide}-center-color`, `header-${hdrSide}-center-size-pt`, `header-${hdrSide}-center-align`, `header-${hdrSide}-center-width-pct`, 'center'],
+      ['rh rh--l', hs.left, SZ.hdrL, `header-${hdrSide}-left-font`, `header-${hdrSide}-left-color`, `header-${hdrSide}-left-size-pt`, `header-${hdrSide}-left-align`, `header-${hdrSide}-left-width-pct`, 'left']
     ];
-    for (const [cls, txt, sz, fk, ck, posKind] of slots) {
+    for (const [cls, txt, sz, fk, ck, szk, ak, wk, posKind] of slots) {
       if (!txt) continue;
       const s = doc.createElement('span');
       s.className = cls;
       s.textContent = txt;
-      const szPx = pt2px(sz);
+      // **S77:** גודל הסלוט מההגדרה (ברירת המחדל המיובאת = הקבועים המכוילים)
+      const szPt = Number(settings[szk]) > 0 ? Number(settings[szk]) : sz;
+      const szPx = pt2px(szPt);
       s.style.fontSize = `${szPx}px`;
       const ff = fontOf(fk);
       if (ff) s.style.fontFamily = ff; // **S4.26:** גופן הסלוט מההגדרות (ברירת מחדל: David Libre)
@@ -788,9 +794,16 @@ function renderLegacyPage(pg, settings, doc) {
       s.style.position = 'absolute';
       s.style.lineHeight = '1';
       s.style.top = `${(HDR_BASELINE_Y - 52) - szPx * DLB_BASELINE_FACTOR}px`;
-      if (posKind === 'right') s.style.right = '0';
-      else if (posKind === 'left') s.style.left = '0';
-      else { s.style.left = '50%'; s.style.transform = 'translateX(-50%)'; }
+      // **S77:** תיבת הסלוט = רוחב% מהפס; היישור בתוכה מההגדרה. ברירות המחדל
+      // (33% + right/center/left) משחזרות את העיגון הקודם: ימין צמוד ימינה,
+      // מרכז במרכז, שמאל צמוד שמאלה.
+      const bandW = (GEO.COL_R_X + GEO.COL_W - 33) - (GEO.COL_L_X + 33);
+      const wPct = Number(settings[wk]);
+      const boxW = Math.max(0, (Number.isFinite(wPct) && wPct > 0 && wPct <= 100 ? wPct : 33) / 100) * bandW;
+      const align = settings[ak] || posKind;
+      if (posKind === 'right') { s.style.right = '0'; s.style.width = `${boxW}px`; s.style.textAlign = align; }
+      else if (posKind === 'left') { s.style.left = '0'; s.style.width = `${boxW}px`; s.style.textAlign = align; }
+      else { s.style.left = `${(bandW - boxW) / 2}px`; s.style.width = `${boxW}px`; s.style.textAlign = align; }
       hdr.appendChild(s);
     }
     root.appendChild(hdr);
@@ -1146,7 +1159,9 @@ function renderLegacyPage(pg, settings, doc) {
       // **S74 (בעיה 7 — בקשת משתמש 12.11):** השורה האחרונה של מרזב ההערות
       // (של כל ההערות בעמוד יחד — לא של כל הערה בנפרד) ממורכזת; חריג:
       // הערה שממשיכה לעמוד הבא (centerLast=false מהמנוע) — נשארת לימין.
-      el.style.textAlignLast = fn.centerLast ? 'center' : 'right';
+      // **S77 (בקשה 1):** חיתוך תוך-הערה (cutLast מהמנוע) — השורה האחרונה
+      // היא שורת-ביניים לכל דבר ומיושבת לשני הצדדים (מלאה), כמו ב-PDF.
+      el.style.textAlignLast = fn.centerLast ? 'center' : (fn.cutLast ? 'justify' : 'right');
       el.style.whiteSpace = 'normal';
       // **S74 (בעיה 5):** סמני הרישום — FRL (נמדד בייחוס עמ' 31/37: הסמן
       // FRL 8pt, גוף ההערה Assistant ExtraLight) — גופן משלהם בתוך הזרם.

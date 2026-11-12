@@ -59,6 +59,25 @@ const OPEN_MODE_MAP = {
   'sub_shaar': 'new-page' // שער-משנה מובנה: show-shaar-sub נלווה ב-merge
 };
 
+/** **S77 (בקשה 3):** סוגי סלוטי כותרת-עליונה של המקור ⇒ מקורות header-*.
+ * ערך לא מוכר (למשל 'spear' — עיטור חנית של v19) ⇒ undefined — אינו דורס
+ * את ברירת המחדל של RED (הייבוא מדלג עליו; הערך הגולמי נשמר ב-_imudRaw). */
+function hdrSlotTypeMap(v) {
+  const t = String(v == null ? '' : v).trim();
+  switch (t) {
+    case 'book_title_split_r': return 'book-name-first-half';
+    case 'book_title_split_l': return 'book-name-second-half';
+    case 'h2_without_siman': return 'h2';
+    case 'h2': return 'h2';
+    case 'h1': return 'h1';
+    case 'book_title': return 'book-name';
+    case 'custom': return 'custom';
+    case 'none':
+    case '': return 'none';
+    default: return undefined;
+  }
+}
+
 /** עמדות עיצוב-מפריד של המקור ⇒ סגנונות RED. */
 const DIVIDER_MAP = { 'none': 'none', 'thin': 'thin', 'dashed': 'dashed', 'double': 'double', 'spear': 'thin' };
 
@@ -162,6 +181,26 @@ const DISPOSITIONS = {
   's-hdr-verso-r': { kind: 'mapped', to: ['header-verso-right-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט ימין (verso)' },
   's-hdr-verso-c': { kind: 'mapped', to: ['header-verso-center-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט מרכז (verso)' },
   's-hdr-verso-l': { kind: 'mapped', to: ['header-verso-left-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט שמאל (verso)' },
+  // **S77 (בקשה 3 — חיבור הגדרות הכותרת העליונה לנתיב המורשת):** סוגי הסלוטים
+  // של המקור (hdr-{r,c,l,verso-*}-type) ממופים למקורות header-{side}-{pos}-source.
+  // book_title_split_r/l = החצאים הקבועים (לפי מילים, ללא תלות בצד — ההחלפה
+  // היא hdr-alternating נפרד) ⇒ ההתנהגות המכוילת של המנוע המורשת משוחזרת
+  // במדויק דרך ההגדרות החיות. ערך לא מוכר (למשל 'spear' של v19 — עיטור) אינו
+  // דורס את ברירת המחדל של RED (transform מחזיר undefined ⇒ דילוג).
+  'hdr-r-type': { kind: 'mapped', to: ['header-recto-right-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט ימין (recto) ⇒ מקור חי בנתיב המורשת' },
+  'hdr-l-type': { kind: 'mapped', to: ['header-recto-left-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט שמאל (recto) ⇒ מקור חי בנתיב המורשת' },
+  'hdr-c-type': { kind: 'mapped', to: ['header-recto-center-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט מרכז (recto) ⇒ מקור חי בנתיב המורשת' },
+  'hdr-verso-r-type': { kind: 'mapped', to: ['header-verso-right-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט ימין (verso) ⇒ מקור חי בנתיב המורשת' },
+  'hdr-verso-l-type': { kind: 'mapped', to: ['header-verso-left-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט שמאל (verso) ⇒ מקור חי בנתיב המורשת' },
+  // hdr-verso-c-type אינו ממופה בכוונה: הייחוס המכויל מציג את הפרק (h2) במרכז
+  // גם בעמודי verso (הערך 'h1' בקובץ המקור אינו משתקף בפלט המכויל); שליטה
+  // חיה דרך header-verso-center-source (ברירת המחדל שלו h2).
+  'hdr-r-custom': { kind: 'mapped', to: ['header-recto-right-custom-text'], reason: 'S77: טקסט מותאם סלוט ימין (recto)' },
+  'hdr-c-custom': { kind: 'mapped', to: ['header-recto-center-custom-text'], reason: 'S77: טקסט מותאם סלוט מרכז (recto)' },
+  'hdr-l-custom': { kind: 'mapped', to: ['header-recto-left-custom-text'], reason: 'S77: טקסט מותאם סלוט שמאל (recto)' },
+  'hdr-verso-r-custom': { kind: 'mapped', to: ['header-verso-right-custom-text'], reason: 'S77: טקסט מותאם סלוט ימין (verso)' },
+  'hdr-verso-c-custom': { kind: 'mapped', to: ['header-verso-center-custom-text'], reason: 'S77: טקסט מותאם סלוט מרכז (verso)' },
+  'hdr-verso-l-custom': { kind: 'mapped', to: ['header-verso-left-custom-text'], reason: 'S77: טקסט מותאם סלוט שמאל (verso)' },
   'inp-book-title': { kind: 'mapped', to: 'imud-book-title', reason: 'S4.6: כותרת הספר — נצרכת בשער הראשי (dom-renderer)' },
   'inp-book-subtitle': { kind: 'mapped', to: 'imud-book-subtitle', reason: 'S4.6: כותרת־משנה — נצרכת בשער הראשי' },
   // **03.11(ד) — דיווח משתמש 3 / בקשת על מה-01.11: "הטמע את כל ברירות המחדל
@@ -357,6 +396,15 @@ function importImudSettings(legacy, registryKeys, opts = {}) {
     if ((d.kind === 'mapped' || d.kind === 'merged') && d.to) {
       const targets = Array.isArray(d.to) ? d.to : [d.to];
       const transformed = d.transform ? d.transform(v, ctx) : v;
+      // **S77:** transform שמחזיר undefined מסמן "אין דריסה" (ערך מקור לא
+      // מוכר שאין לו מקביל RED — למשל hdr-c-type='spear'). בלי ההגנה הזו
+      // היעד היה נקבע ל-undefined ודורס את ברירת המחדל של הרישום. המפתח
+      // עדיין נספר בדוח (קיבל disposition מלא; הערך הגולמי נשמר ב-_imudRaw).
+      if (transformed === undefined) {
+        dispositions[k] = { ...d, note: 'ערך לא מוכר — ללא דריסה (S77)' };
+        report[d.kind]++;
+        return;
+      }
       let anyApplied = false;
       let anyBlocked = false;
       for (const t of targets) {
@@ -398,6 +446,19 @@ function importImudSettings(legacy, registryKeys, opts = {}) {
     && legacy['line-height-body'] !== undefined) {
     settings['_imudRaw'] = legacy;
     settings['_layout-profile'] = 'imud';
+    // **S77 (בקשה 3 — חיבור הגדרות תוכן-העניינים לנתיב המורשת):** דגלי
+    // toc-level-N-show נגזרים מרשימות המקור (gtoc-show/dtoc-show; ברירות
+    // המחדל [1..6]/[2..6]) — כך ברירת המחדל המיובאת משמרת את הפלט המכויל
+    // במדויק, והדגלים החיים שולטים מעתה (הסרה/הוספה של רמות בשני התכנים).
+    // inline נפתח כבוי בכל הרמות — ה-TOC של המורשת אינו ממזג שורות כברירת
+    // מחדל; הפעלה מפורשת ממזגת רשומות רצופות לשורת ההורה.
+    // הפרש המשתמש השמור מוחל אחרי הייבוא — דגל שהמשתמש שינה גובר על הנגזר.
+    const gtocList = Array.isArray(legacy['gtoc-show']) ? legacy['gtoc-show'] : [1, 2, 3, 4, 5, 6];
+    const dtocList = Array.isArray(legacy['dtoc-show']) ? legacy['dtoc-show'] : [2, 3, 4, 5, 6];
+    for (let n = 1; n <= 7; n++) {
+      settings[`toc-level-${n}-show`] = gtocList.includes(n) || dtocList.includes(n);
+      settings[`toc-level-${n}-inline`] = false;
+    }
   }
   return { settings, uiState, dispositions, unmapped, report };
 }

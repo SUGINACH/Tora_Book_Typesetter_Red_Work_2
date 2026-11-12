@@ -76,6 +76,14 @@ function resolveSlot(source, ctx, settings, slotKey) {
       const halves = splitBookTitleHalves(ctx.bookName || '');
       return ctx.side === 'verso' ? halves.second : halves.first;
     }
+    // **S77 (בקשה 3 — חיבור ההגדרות לנתיב המורשת):** החצאים הקבועים של המקור —
+    // book_title_split_r/l של IMUD הם חצאים לפי מילים בלי תלות בצד (ההחלפה
+    // בין העמודים היא hdr-alternating נפרד). כך משוחזרת ההתנהגות המדויקת
+    // של המנוע המורשת גם דרך ההגדרות החיות.
+    case 'book-name-first-half':
+      return splitBookTitleHalves(ctx.bookName || '').first;
+    case 'book-name-second-half':
+      return splitBookTitleHalves(ctx.bookName || '').second;
     case 'h1': return extractH1TitleMain(ctx.h1 || '', settings['hdr-h1-title-mode']);
     case 'h2': return ctx.h2 || '';
     case 'page-num': return ctx.pageNumber || '';

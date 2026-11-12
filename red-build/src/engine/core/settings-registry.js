@@ -29,7 +29,7 @@ const K = (id, type, dflt, panel, control, consumers, testId, extra = {}) =>
 // **S9 (D-61):** מקורות כותרת עליונה — כולל book-name-rest (החלק שאחרי המקף) ופורט
 // fillHeaderFirstLastWords המאוחד (first-last-words). משותף ל‑6 סלוטים + 3 סלוטי פתיחה.
 // **S65 (SRS §12.2):** book-name-split — חצי שם הספר לפי הצד הפיזי: ראשון ב‑Recto, שני ב‑Verso.
-const HDR_SOURCES = ['none', 'book-name', 'book-name-rest', 'book-name-split', 'h1', 'h2', 'page-num', 'first-word', 'last-word', 'first-last-words', 'custom'];
+const HDR_SOURCES = ['none', 'book-name', 'book-name-rest', 'book-name-split', 'book-name-first-half', 'book-name-second-half', 'h1', 'h2', 'page-num', 'first-word', 'last-word', 'first-last-words', 'custom'];
 
 const registry = [
   // ---- רשת העמוד ומספור (GRID) ----

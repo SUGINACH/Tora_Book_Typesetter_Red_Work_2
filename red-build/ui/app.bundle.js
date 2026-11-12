@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 60 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 61 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -346,6 +346,7 @@ var __paths = {
   "src/engine/layout/legacy-imud-flow.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/layout/legacy-imud-flow.js|../core/events": "src/engine/core/events.js",
   "src/engine/layout/legacy-imud-flow.js|../core/ledger": "src/engine/core/ledger.js",
+  "src/engine/layout/legacy-imud-flow.js|../decoration/headers-builder": "src/engine/decoration/headers-builder.js",
   "src/engine/layout/legacy-imud-flow.js|../output/line-font": "src/engine/output/line-font.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/legacy-ornaments": "src/engine/decoration/legacy-ornaments.js",
   "src/engine/typography/measure-api.js|./measure-table": "src/engine/typography/measure-table.js",
@@ -471,7 +472,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-12-s76'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-12-s77'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -1499,7 +1500,7 @@ const K = (id, type, dflt, panel, control, consumers, testId, extra = {}) =>
 // **S9 (D-61):** מקורות כותרת עליונה — כולל book-name-rest (החלק שאחרי המקף) ופורט
 // fillHeaderFirstLastWords המאוחד (first-last-words). משותף ל‑6 סלוטים + 3 סלוטי פתיחה.
 // **S65 (SRS §12.2):** book-name-split — חצי שם הספר לפי הצד הפיזי: ראשון ב‑Recto, שני ב‑Verso.
-const HDR_SOURCES = ['none', 'book-name', 'book-name-rest', 'book-name-split', 'h1', 'h2', 'page-num', 'first-word', 'last-word', 'first-last-words', 'custom'];
+const HDR_SOURCES = ['none', 'book-name', 'book-name-rest', 'book-name-split', 'book-name-first-half', 'book-name-second-half', 'h1', 'h2', 'page-num', 'first-word', 'last-word', 'first-last-words', 'custom'];
 
 const registry = [
   // ---- רשת העמוד ומספור (GRID) ----
@@ -4363,6 +4364,8 @@ const BINDINGS = [
       "book-name",
       "book-name-rest",
       "book-name-split",
+      "book-name-first-half",
+      "book-name-second-half",
       "h1",
       "h2",
       "page-num",
@@ -4389,6 +4392,8 @@ const BINDINGS = [
       "book-name",
       "book-name-rest",
       "book-name-split",
+      "book-name-first-half",
+      "book-name-second-half",
       "h1",
       "h2",
       "page-num",
@@ -4415,6 +4420,8 @@ const BINDINGS = [
       "book-name",
       "book-name-rest",
       "book-name-split",
+      "book-name-first-half",
+      "book-name-second-half",
       "h1",
       "h2",
       "page-num",
@@ -4441,6 +4448,8 @@ const BINDINGS = [
       "book-name",
       "book-name-rest",
       "book-name-split",
+      "book-name-first-half",
+      "book-name-second-half",
       "h1",
       "h2",
       "page-num",
@@ -4467,6 +4476,8 @@ const BINDINGS = [
       "book-name",
       "book-name-rest",
       "book-name-split",
+      "book-name-first-half",
+      "book-name-second-half",
       "h1",
       "h2",
       "page-num",
@@ -4493,6 +4504,8 @@ const BINDINGS = [
       "book-name",
       "book-name-rest",
       "book-name-split",
+      "book-name-first-half",
+      "book-name-second-half",
       "h1",
       "h2",
       "page-num",
@@ -4579,6 +4592,8 @@ const BINDINGS = [
       "book-name",
       "book-name-rest",
       "book-name-split",
+      "book-name-first-half",
+      "book-name-second-half",
       "h1",
       "h2",
       "page-num",
@@ -4605,6 +4620,8 @@ const BINDINGS = [
       "book-name",
       "book-name-rest",
       "book-name-split",
+      "book-name-first-half",
+      "book-name-second-half",
       "h1",
       "h2",
       "page-num",
@@ -4631,6 +4648,8 @@ const BINDINGS = [
       "book-name",
       "book-name-rest",
       "book-name-split",
+      "book-name-first-half",
+      "book-name-second-half",
       "h1",
       "h2",
       "page-num",
@@ -10009,20 +10028,26 @@ function renderLegacyPage(pg, settings, doc) {
     position(hdr, GEO.COL_L_X + 33, 52, (GEO.COL_R_X + GEO.COL_W - 33) - (GEO.COL_L_X + 33), 22);
     const HDR_BASELINE_Y = 71.9;
     const DLB_BASELINE_FACTOR = 0.5 + (0.7461 - 0.2192) / 2; // DavidLibre-Bold, line-height:1
-    // **S73 (צבע כותרת עליונה מההגדרות):** header-recto-{right,center,left}-color —
+    // **S73 (צבע כותרת עליונה מההגדרות):** header-{recto,verso}-{right,center,left}-color —
     // ברירת מחדל שחורה (הכחול הקבוע #0F1749 של D-89 הוחלף בהגדרה — בקשת
     // משתמש מפורשת: ברירת המחדל של כל הגופנים ללא יוצא מן הכלל = שחור).
+    // **S77 (בקשה 3):** גופן/צבע/גודל/יישור/רוחב לפי הצד הפיזי של העמוד
+    // (עד כאן: מפתחי recto קבועים לכל העמודים); היישור והרוחב מההגדרות
+    // (ברירות המחדל right/center/left + 33% משחזרות את העיגון הקודם במדויק).
+    const hdrSide = (pg.index % 2 === 0) ? 'recto' : 'verso'; // עמוד 1 (אינדקס 0) = recto
     const slots = [
-      ['rh rh--r', hs.right, SZ.hdrR, 'header-recto-right-font', 'header-recto-right-color', 'right'],
-      ['rh rh--c', hs.center, SZ.hdrC, 'header-recto-center-font', 'header-recto-center-color', 'center'],
-      ['rh rh--l', hs.left, SZ.hdrL, 'header-recto-left-font', 'header-recto-left-color', 'left']
+      ['rh rh--r', hs.right, SZ.hdrR, `header-${hdrSide}-right-font`, `header-${hdrSide}-right-color`, `header-${hdrSide}-right-size-pt`, `header-${hdrSide}-right-align`, `header-${hdrSide}-right-width-pct`, 'right'],
+      ['rh rh--c', hs.center, SZ.hdrC, `header-${hdrSide}-center-font`, `header-${hdrSide}-center-color`, `header-${hdrSide}-center-size-pt`, `header-${hdrSide}-center-align`, `header-${hdrSide}-center-width-pct`, 'center'],
+      ['rh rh--l', hs.left, SZ.hdrL, `header-${hdrSide}-left-font`, `header-${hdrSide}-left-color`, `header-${hdrSide}-left-size-pt`, `header-${hdrSide}-left-align`, `header-${hdrSide}-left-width-pct`, 'left']
     ];
-    for (const [cls, txt, sz, fk, ck, posKind] of slots) {
+    for (const [cls, txt, sz, fk, ck, szk, ak, wk, posKind] of slots) {
       if (!txt) continue;
       const s = doc.createElement('span');
       s.className = cls;
       s.textContent = txt;
-      const szPx = pt2px(sz);
+      // **S77:** גודל הסלוט מההגדרה (ברירת המחדל המיובאת = הקבועים המכוילים)
+      const szPt = Number(settings[szk]) > 0 ? Number(settings[szk]) : sz;
+      const szPx = pt2px(szPt);
       s.style.fontSize = `${szPx}px`;
       const ff = fontOf(fk);
       if (ff) s.style.fontFamily = ff; // **S4.26:** גופן הסלוט מההגדרות (ברירת מחדל: David Libre)
@@ -10032,9 +10057,16 @@ function renderLegacyPage(pg, settings, doc) {
       s.style.position = 'absolute';
       s.style.lineHeight = '1';
       s.style.top = `${(HDR_BASELINE_Y - 52) - szPx * DLB_BASELINE_FACTOR}px`;
-      if (posKind === 'right') s.style.right = '0';
-      else if (posKind === 'left') s.style.left = '0';
-      else { s.style.left = '50%'; s.style.transform = 'translateX(-50%)'; }
+      // **S77:** תיבת הסלוט = רוחב% מהפס; היישור בתוכה מההגדרה. ברירות המחדל
+      // (33% + right/center/left) משחזרות את העיגון הקודם: ימין צמוד ימינה,
+      // מרכז במרכז, שמאל צמוד שמאלה.
+      const bandW = (GEO.COL_R_X + GEO.COL_W - 33) - (GEO.COL_L_X + 33);
+      const wPct = Number(settings[wk]);
+      const boxW = Math.max(0, (Number.isFinite(wPct) && wPct > 0 && wPct <= 100 ? wPct : 33) / 100) * bandW;
+      const align = settings[ak] || posKind;
+      if (posKind === 'right') { s.style.right = '0'; s.style.width = `${boxW}px`; s.style.textAlign = align; }
+      else if (posKind === 'left') { s.style.left = '0'; s.style.width = `${boxW}px`; s.style.textAlign = align; }
+      else { s.style.left = `${(bandW - boxW) / 2}px`; s.style.width = `${boxW}px`; s.style.textAlign = align; }
       hdr.appendChild(s);
     }
     root.appendChild(hdr);
@@ -10390,7 +10422,9 @@ function renderLegacyPage(pg, settings, doc) {
       // **S74 (בעיה 7 — בקשת משתמש 12.11):** השורה האחרונה של מרזב ההערות
       // (של כל ההערות בעמוד יחד — לא של כל הערה בנפרד) ממורכזת; חריג:
       // הערה שממשיכה לעמוד הבא (centerLast=false מהמנוע) — נשארת לימין.
-      el.style.textAlignLast = fn.centerLast ? 'center' : 'right';
+      // **S77 (בקשה 1):** חיתוך תוך-הערה (cutLast מהמנוע) — השורה האחרונה
+      // היא שורת-ביניים לכל דבר ומיושבת לשני הצדדים (מלאה), כמו ב-PDF.
+      el.style.textAlignLast = fn.centerLast ? 'center' : (fn.cutLast ? 'justify' : 'right');
       el.style.whiteSpace = 'normal';
       // **S74 (בעיה 5):** סמני הרישום — FRL (נמדד בייחוס עמ' 31/37: הסמן
       // FRL 8pt, גוף ההערה Assistant ExtraLight) — גופן משלהם בתוך הזרם.
@@ -12313,6 +12347,10 @@ const crypto = require('crypto');
 const { MeasureAPI, registeredFonts: registeredMeasureFonts, registerFont: registerMeasureFont, resolveMeasureImpl } = require('../typography/measure-api');
 const { EventLog } = require('../core/events');
 const { Ledger } = require('../core/ledger');
+// **S77 (בקשה 3 — חיבור הגדרות הכותרת העליונה לנתיב המורשת):** resolveSlot
+// (מקור יחיד לפענוח מקורות הסלוטים) + חיצוץ החצאים — אותה נוסחה כמו hdrR/hdrL.
+// headers-builder אינו דורש כלום — אין תלות מעגלית.
+const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = require('../decoration/headers-builder');
 // **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
@@ -13315,6 +13353,30 @@ function legacyTypeset(rawText, settings, env) {
   const hdrR = tw.slice(0, mid).join(' ');
   const hdrL = tw.slice(mid).join(' ');
 
+  // **S77 (בקשה 3 — "הרבה הגדרות שלא מחוברות"): הגדרות הכותרת העליונה
+  // מחוברות לנתיב המורשת.** עד כאן המנוע הרכיב את הכותרת הרצה בקוד קשיח
+  // (חצאי שם הספר + הפרק הנוכחי) ו-45 הגדרות header-* לא עשו כלום בפרופיל
+  // המורשת (הנתיב החי). כעת: כשמסופקים מקורות סלוט (הייבוא של IMUD ממפה
+  // אותם אוטומטית — book_title_split_r/l ⇒ החצאים הקבועים) הסלוטים
+  // נפענחים מההגדרות לכל עמוד לפי צדו הפיזי; ברירת המחדל המיובאת משחזרת
+  // את ההתנהגות המכוילת **במדויק** (ימין=חצי ראשון, מרכז=פרק, שמאל=חצי
+  // שני; ללא החלפה — hdr-alternating כבוי במקור). בלי הגדרות — ההתנהגות
+  // הוותיקה כמו שהיא (קריאות גולמיות/בדיקות ישנות).
+  const HDR_SIDES_S77 = ['recto', 'verso', 'opening'];
+  const hdrSourcesS77 = {};
+  let hdrAnySourceS77 = false;
+  for (const side of HDR_SIDES_S77) {
+    hdrSourcesS77[side] = {};
+    for (const pos of ['right', 'center', 'left']) {
+      const k = `header-${side}-${pos}-source`;
+      const v = settings[k];
+      hdrSourcesS77[side][pos] = v != null ? String(v) : null;
+      if (v != null) hdrAnySourceS77 = true;
+    }
+  }
+  const hdrEnabledS77 = settings['header-enabled']; // ברירת מחדל true — מופעל
+  const hdrDedicatedS77 = settings['header-opening-dedicated'] === true;
+
   // ---- מקטעים (כמו המקור: h1→sub_shaar, h0/h2→new_page, השאר inline) ----
   const sections = [];
   let cur = { tokens: [] };
@@ -13370,7 +13432,13 @@ function legacyTypeset(rawText, settings, env) {
     pages.push(pg);
     return pg;
   }
-  const setHeader = (pg, center) => { pg.headerSlots = { right: hdrR, center: center || '', left: hdrL }; };
+  // **S77:** ההקשר נשמר לפענוח הסלוטים בסוף (כשהאינדקסים הסופיים ידועים):
+  // h1/h2 נוכחיים בזמן יצירת העמוד. לעמודי TOC/הערות — כותרת העמוד עצמו
+  // (כך מקור 'h2' משמר את המרכז הוותיק גם שם).
+  const setHeader = (pg, center) => {
+    pg.headerSlots = { right: hdrR, center: center || '', left: hdrL };
+    pg._hdrCtx = { h1: currentH1 || '', h2: center || '' };
+  };
 
   // ---------- עמודי שער ----------
   // **S4.9:** תוכן השערים מהמטא-דאטה של המסמך — במיקומים המכוינים מהייחוס
@@ -14765,15 +14833,35 @@ function legacyTypeset(rawText, settings, env) {
       }
       const placed = built.flowLines.slice(0, cut);
       const rest = built.flowLines.slice(cut);
+      // **S77 (בקשה 1 — "השורה האחרונה של הערה שממשיכה לעמוד הבא אינה
+      // מלאה / לא מיושבת לשני הצדדים"):** כשהחיתוך נופל **בתוך** הערה (השורה
+      // האחרונה שהוצבה אינה סוף הערה — היא ממשיכה בעמוד הבא), שורת החיתוך
+      // היא שורת-ביניים לכל דבר: היא חייבת להיות מיושבת לשני הצדדים (מלאה)
+      // — כמו שאר שורות הביניים. עד כאן היא סומנה isLast במקרנים ונשארה
+      // מרופטת. זיהוי: הטוקן האחרון שהוצב והראשון שנשאר שייכים לאותה הערה
+      // (אותו noteIdx). חיתוך בגבול הערה — השורה האחרונה היא סוף טבעי של
+      // ההערה הקודמת ⇒ cutLast=false (התנהגות קודמת נשמרת).
+      let midNoteCut = false;
+      if (placed.length && rest.length) {
+        const realOf = (arr) => (arr || []).filter(t => t && !t.gap);
+        const lp = realOf(placed[placed.length - 1]);
+        const fr = realOf(rest[0]);
+        const lastTok = lp.length ? lp[lp.length - 1] : null;
+        const firstTok = fr.length ? fr[0] : null;
+        midNoteCut = !!(lastTok && firstTok && lastTok.noteIdx != null && lastTok.noteIdx === firstTok.noteIdx);
+      }
       if (placed.length) {
         const lines = [];
         let yy = FLOW_BOTTOM - placed.length * GEO.FN_PITCH;
         for (const tl of placed) { lines.push({ words: tl, y: yy }); yy += GEO.FN_PITCH; }
         // **S74 (בעיה 7 — בקשת משתמש 12.11):** השורה האחרונה של מרזב ההערות
-        // (של כל ההערות יחד — לא של כל הערה בנפרד) ממורכזת. חריג מפורש:
+        // (של כל ההערות יחד) ממורכזת. חריג מפורש:
         // הערה שממשיכה לעמוד הבא (rest לא ריק ⇒ המרזב נחתך באמצע הערה) —
         // שורתה האחרונה בעמוד זה נשארת מיושבת לימין, כמו שאר שורות הביניים.
-        pg.footnotes.push({ continuous: true, lines, centerLast: rest.length === 0 });
+        // **S77:** cutLast=true בחיתוך תוך-הערה — השורה האחרונה מיושבת לשני
+        // הצדדים (מלאה) בתצוגה וב-PDF; centerLast נותר כלעצמו (סמנטיקה
+        // נעולה בבדיקות s75/s76 — false כל שיש המשך).
+        pg.footnotes.push({ continuous: true, lines, centerLast: rest.length === 0, cutLast: midNoteCut });
       }
       if (rest.length) {
         const started = new Set();
@@ -14832,7 +14920,9 @@ function legacyTypeset(rawText, settings, env) {
         // **S4.9:** השורה הראשונה של כל הערה קצרה ברוחב הסמן — אחרת המילים
         // גולשות מעבר לשפה השמאלית של הדף. הגלישה של ההמשך נעשית מחדש
         // בעמוד הבא (ברוחב הסמן שלו) — הטקסט הוא מה שנשמר, לא השורות.
-        placed.push({ note: it.note, marker: it.marker, lines: it.lines.slice(0, remainLines), cont: !!it.note.cont });
+        // **S77 (בקשה 1):** cut=true — שורת החיתוך היא שורת-ביניים (ההערה
+        // ממשיכה בעמוד הבא) ותיושב לשני הצדדים בתצוגה וב-PDF.
+        placed.push({ note: it.note, marker: it.marker, lines: it.lines.slice(0, remainLines), cont: !!it.note.cont, cut: true });
         const restText = it.lines.slice(remainLines).join(' ');
         pendingFootnotes.push({ text: restText, cont: true, srcText: it.note.srcText || it.note.text, key: it.note.key });
         usedLines = maxLines;
@@ -14847,6 +14937,7 @@ function legacyTypeset(rawText, settings, env) {
     let yy = FLOW_BOTTOM - totalH;
     for (const p of placed) {
       const it = { marker: p.marker, lines: [], cont: p.cont };
+      if (p.cut) it.cutLast = true; // **S77 (בקשה 1):** שורת החיתוך — מיושבת לשני הצדדים
       for (const l of p.lines) { it.lines.push({ words: String(l).split(' '), y: yy }); yy += GEO.FN_PITCH; }
       pg.footnotes.push(it);
     }
@@ -15281,11 +15372,23 @@ function legacyTypeset(rawText, settings, env) {
   flushPendingFootnotes();
 
   // ---- תוכן-עניינים כפול + מספור סופי ----
-  const genShow = Array.isArray(cfg.gtocShow) ? cfg.gtocShow : [1, 2, 3, 4, 5, 6];
-  const detShow = Array.isArray(cfg.dtocShow) ? cfg.dtocShow : [2, 3, 4, 5, 6];
-  const genEntries = tokens.filter(t => t.type[0] === 'h' && genShow.includes(t.level))
+  // **S77 (בקשה 3 — חיבור הגדרות תוכן-העניינים לנתיב המורשת):** עד כאן
+  // רשימות הרמות היו מה-raw בלבד (gtoc-show/dtoc-show) ו-14 ההגדרות
+  // toc-level-N-show/inline לא עשו דבר בפרופיל המורשת. כעת: show=false
+  // מסיר את הרמה משני התכנים (השליטה החיה); ברירת המחדל/true — רשימות
+  // המקור קובעות (לכל תוכן-עניינים הרשימה שלו: הכללי [1..6], המפורט [2..6]
+  // — הוספת רמה שאינה ברשימת המקור היא הגדרת נתיב-מודרני בלבד, מתועד).
+  // inline=true ממזג רשומות רצופות של אותה רמה לשורת ההורה (טקסט ' | ' —
+  // כמו buildTocModel של הנתיב המודרני; גודל/פוליו של ההורה). הייבוא של
+  // IMUD נותן ערכי פתיחה המשמרים את הפלט המכויל במדויק (רשימות המקור).
+  const tocLevelShowS77 = (n) => settings[`toc-level-${n}-show`] === false ? false : true;
+  const tocLevelInlineS77 = (n) => settings[`toc-level-${n}-inline`] === true;
+  const genShowRaw = Array.isArray(cfg.gtocShow) ? cfg.gtocShow : [1, 2, 3, 4, 5, 6];
+  const detShowRaw = Array.isArray(cfg.dtocShow) ? cfg.dtocShow : [2, 3, 4, 5, 6];
+  const lvlShown = (rawList, n) => tocLevelShowS77(n) && rawList.includes(n);
+  const genEntries = tokens.filter(t => t.type[0] === 'h' && lvlShown(genShowRaw, t.level))
     .map(t => ({ tokenId: t.id, level: t.level, text: t.text }));
-  const detEntries = tokens.filter(t => t.type[0] === 'h' && detShow.includes(t.level))
+  const detEntries = tokens.filter(t => t.type[0] === 'h' && lvlShown(detShowRaw, t.level))
     .map(t => ({ tokenId: t.id, level: t.level, text: t.text }));
 
   // **S6.3:** גדלים נפרדים לכל תוכן-עניינים — s-gtoc-* מול s-dtoc-*
@@ -15320,7 +15423,19 @@ function legacyTypeset(rawText, settings, env) {
       return out.length ? out : [''];
     };
     const sizes = tocSizesFor(kind);
-    const rows = entries.map(e => {
+    // **S77 (בקשה 3):** מיזוג inline — רשומות רצופות של רמה inline=true מתמזגות
+    // לשורת ההורה הקודמת (טקסט משורשר ' | '; גודל/פוליו/מספר של ההורה) —
+    // אותה סמנטיקה כמו buildTocModel של הנתיב המודרני.
+    const mergedEntries = [];
+    for (const e of entries) {
+      const prev = mergedEntries[mergedEntries.length - 1];
+      if (prev && tocLevelInlineS77(e.level)) {
+        prev.text = prev.text + ' | ' + e.text;
+        continue;
+      }
+      mergedEntries.push({ ...e });
+    }
+    const rows = mergedEntries.map(e => {
       const sizePt = sizes[e.level] || 10.5;
       const x1 = GEO.TOC_TITLE_X1 - (e.level - 1) * GEO.TOC_STAIR;
       const availW = Math.max(40, (x1 - GEO.TOC_NUM_X - 10) * 0.92);
@@ -15373,6 +15488,7 @@ function legacyTypeset(rawText, settings, env) {
     return pagesRows.map((pr, pi) => {
       const pg = blankPageObj(kind);
       pg.headerSlots = { right: hdrR, center: title, left: hdrL };
+      pg._hdrCtx = { h1: '', h2: title }; // **S77:** עמוד TOC — מרכזו הענייני = הכותרת
       const isLast = pi === pagesRows.length - 1;
       // **S4.14:** מיקומי ה-TOC אבסולוטיים ומכוילים בפני עצמם (עמודי ה-TOC של
       // הייחוס מתחילים ב-113.6px — שונה מזרימת הגוף!) ואינם זזים עם FLOW_TOP.
@@ -15538,7 +15654,59 @@ function legacyTypeset(rawText, settings, env) {
   // **EXT-19 (כותרות מתחלפות — hdr-alternating):** בעמודים זוגיים-פיזיים
   // (אינדקס אי-זוגי) חצאי שם הספר מתחלפים בין הצדדים — כמו buildHeaderGridHTML
   // של המקור (isEven ⇒ החלפה). ברירת המחדל כבויה — החצאים קבועים.
-  if (cfg.hdrAlternating) {
+  // **S77 (בקשה 3):** כשהגדרות הכותרת מסופקות (הייבוא ממפה אותן) — הסלוטים
+  // נפענחים מההגדרות לכל עמוד לפי צדו הפיזי הסופי; ההחלפה הוותיקה אינה
+  // רצה (המקורות הצדדיים — book-name-split — מבטאים אותה במפורש). בלי
+  // הגדרות — ההתנהגות הוותיקה כמו שהיא.
+  if (hdrAnySourceS77) {
+    // מילה ראשונה/אחרונה של העמוד (סדר קריאה: טור ימין ואז שמאל)
+    const pageFirstLastS77 = (p) => {
+      const cols = (p.columns || []).map(c => (c || []).filter(ln => ln && (ln.words || []).length));
+      const flat = [];
+      for (const c of cols) for (const ln of c) flat.push(ln);
+      let first = '', last = '';
+      if (flat.length) {
+        const wOf = (ln) => (ln.words || []).map(w => (typeof w === 'string' ? w : (w && w.t) || '')).filter(Boolean);
+        const firstLn = wOf(flat[0]);
+        const lastLn = wOf(flat[flat.length - 1]);
+        first = firstLn.length ? hdrTrimPunct(firstLn[0]) : '';
+        last = lastLn.length ? hdrTrimPunct(lastLn[lastLn.length - 1]) : '';
+      }
+      return { firstWord: first, lastWord: last };
+    };
+    for (const p of final) {
+      if (!p.headerSlots) continue;
+      if (hdrEnabledS77 === false) { p.headerSlots = null; continue; } // header-enabled=false — אין כותרת רצה
+      // צד פיזי לפי האינדקס הסופי: עמוד 1 (אינדקס 0) = recto
+      const side = p.index % 2 === 0 ? 'recto' : 'verso';
+      // פתיחת פרק (sign-open) עם מצב ייעודי — סלוטי opening (D-61: גופן/גודל/יישור תמיד מהצד הפיזי)
+      const dedicated = hdrDedicatedS77 && p.type === 'sign-open';
+      const sourceSide = dedicated ? 'opening' : side;
+      const fl = pageFirstLastS77(p);
+      const ctx = {
+        ...(p._hdrCtx || {}),
+        bookName: bookTitle,
+        side,
+        pageNumber: p.folioDisplay || '',
+        firstWord: fl.firstWord,
+        lastWord: fl.lastWord
+      };
+      const resolved = {};
+      for (const pos of ['right', 'center', 'left']) {
+        let src = hdrSourcesS77[sourceSide][pos];
+        if (src == null) src = hdrSourcesS77[side][pos]; // opening ללא מקור — ירושה מהצד הפיזי
+        // custom תמיד מהצד הפיזי (D-61)
+        resolved[pos] = resolveHdrSlotText(src || 'none', ctx, settings, `header-${side}-${pos}-custom-text`);
+      }
+      p.headerSlots = resolved;
+      // **EXT-19 (נשמר גם בנתיב ההגדרות):** hdr-alternating=true — בעמודי
+      // verso ערכי הסלוטים הימני והשמאלי מתחלפים (כמו buildHeaderGridHTML
+      // של המקור). ברירת המחדל כבויה — הסלוטים הצדדיים שולטים ישירות.
+      if (cfg.hdrAlternating && side === 'verso') {
+        p.headerSlots = { right: resolved.left, center: resolved.center, left: resolved.right };
+      }
+    }
+  } else if (cfg.hdrAlternating) {
     for (const p of final) {
       if (p.index % 2 === 1 && p.headerSlots) {
         const h = p.headerSlots;
@@ -16883,6 +17051,181 @@ class Ledger {
 }
 
 module.exports = { Ledger, LIFECYCLE_STATES };
+
+};
+__modules["src/engine/decoration/headers-builder.js"] = function (require, module, exports) {
+// src/engine/decoration/headers-builder.js — Running heads recto/verso 3×2 (REQ-HDR-01/02, S9)
+'use strict';
+
+/**
+ * **S9 (D-61) — עצמאות מלאה של כל סלוט:** לכל אחד מששת הסלוטים (recto/verso × ימין/מרכז/שמאל):
+ * מקור, יישור, גופן, גודל, רוחב% וטקסט־מותאם — כולל סלוט המרכז בו־ורסו
+ * (**תיקון IMUD bc7892f נעול לנצח:** בכל הגרסאות הקודמות הפקדים של סלוט‑המרכז‑בו־ורסו
+ * היו קיימים ב‑UI אך לא נקראו מעולם — גודל הגופן והטקסט המותאם הוזנקו).
+ *
+ * מקורות (REQ-HDR-02): none / book-name (חלק ראשי לפי פיצול במקף) / book-name-rest
+ * (החלק שאחרי המקף) / h1 (מצב main|full לפי hdr-h1-title-mode) / h2 / page-num /
+ * first-word / last-word / first-last-words (פורט IMUD fillHeaderFirstLastWords:
+ * "ראשונה – אחרונה") / custom (טקסט מותאם **לסלוט זה**).
+ */
+
+/** חלוקת שם במקף ראשון: main = לפני המקף, rest = אחריו (Orange extractH1TitleMain ✓). */
+function extractH1TitleMain(text, mode = 'main') {
+  if (mode === 'full') return text;
+  const parts = String(text).split(/\s+[-–—]\s+/);
+  return parts[0] || text;
+}
+function extractTitleRest(text) {
+  const parts = String(text).split(/\s+[-–—]\s+/);
+  return parts.length > 1 ? parts.slice(1).join(' – ') : '';
+}
+
+/** **S65 (SRS §12.2):** פיצול שם הספר לשני חצאים לפי אמצע מילים —
+ *  זהה לנוסחת המורשת (legacy-imud-flow: tw.slice(0, Math.ceil(len/2))):
+ *  first = החצי הראשון (Recto), second = השני (Verso).
+ *  שם ריק/מילה אחת ⇒ שני החצאים זהים לשם המקורי (השני ריק כשאין מה לפצל). */
+function splitBookTitleHalves(text) {
+  const t = String(text == null ? '' : text).trim();
+  const words = t ? t.split(/\s+/) : [];
+  if (words.length <= 1) return { first: t, second: '' };
+  const mid = Math.ceil(words.length / 2);
+  return { first: words.slice(0, mid).join(' '), second: words.slice(mid).join(' ') };
+}
+
+/** גידוע מעגליות same_as (Orange c49b79e): מפת ירושה חד‑כיוונית + seen-set.
+ *  ב‑Red הירושה היחידה היא verso→recto (header-verso-same-as-recto), כך שמבנית
+ *  אין מעגל — אך הגידוע מפורש ונבדק כך שהוספת ירושה עתידית לא תוכל ליצור לולאה. */
+function resolveSameAs(side, settings) {
+  const seen = new Set([side]);
+  let cur = side;
+  while (cur === 'verso' && settings['header-verso-same-as-recto']) {
+    cur = 'recto';
+    if (seen.has(cur)) return side; // מעגליות — נשברת: חזרה לצד המקורי
+    seen.add(cur);
+  }
+  return cur;
+}
+
+/** ניקוי פיסוק קצה (פורט TRIM מ־IMUD fillHeaderFirstLastWords):
+ *  מילת פתיחה/סיום של עמוד לא נפתחת או מסתיימת בסימני פיסוק/מרכאות/סוגריים. */
+const EDGE_PUNCT = /^[\s"'“”‘’(){}\[\]<>.,;:!?\-–—…]+|[\s"'“”‘’(){}\[\]<>.,;:!?\-–—…]+$/g;
+function trimEdgePunctuation(word) {
+  return String(word == null ? '' : word).replace(EDGE_PUNCT, '');
+}
+
+/** פורט fillHeaderFirstLastWords (IMUD, הועבר מ‑V20.4): "מילה ראשונה – מילה אחרונה".
+ *  עמוד ללא טקסט ⇒ ריק. מילה יחידה ⇒ היא בלבד. */
+function firstLastWordsText(firstWord, lastWord) {
+  const f = trimEdgePunctuation(firstWord);
+  const l = trimEdgePunctuation(lastWord);
+  if (f && l && f !== l) return `${f} \u2013 ${l}`;
+  return f || l;
+}
+
+function resolveSlot(source, ctx, settings, slotKey) {
+  switch (source) {
+    case 'none': return '';
+    case 'book-name': return extractH1TitleMain(ctx.bookName || '', 'main');
+    case 'book-name-rest': return extractTitleRest(ctx.bookName || '');
+    // **S65 (SRS §12.2):** חצי שם הספר לפי הצד הפיזי של העמוד — ראשון ב‑Recto, שני ב‑Verso.
+    case 'book-name-split': {
+      const halves = splitBookTitleHalves(ctx.bookName || '');
+      return ctx.side === 'verso' ? halves.second : halves.first;
+    }
+    // **S77 (בקשה 3 — חיבור ההגדרות לנתיב המורשת):** החצאים הקבועים של המקור —
+    // book_title_split_r/l של IMUD הם חצאים לפי מילים בלי תלות בצד (ההחלפה
+    // בין העמודים היא hdr-alternating נפרד). כך משוחזרת ההתנהגות המדויקת
+    // של המנוע המורשת גם דרך ההגדרות החיות.
+    case 'book-name-first-half':
+      return splitBookTitleHalves(ctx.bookName || '').first;
+    case 'book-name-second-half':
+      return splitBookTitleHalves(ctx.bookName || '').second;
+    case 'h1': return extractH1TitleMain(ctx.h1 || '', settings['hdr-h1-title-mode']);
+    case 'h2': return ctx.h2 || '';
+    case 'page-num': return ctx.pageNumber || '';
+    case 'first-word': return ctx.firstWord || '';
+    case 'last-word': return ctx.lastWord || '';
+    case 'first-last-words': return firstLastWordsText(ctx.firstWord, ctx.lastWord);
+    case 'custom': return slotKey ? String(settings[slotKey] || '') : (ctx.customText || '');
+    default: return '';
+  }
+}
+
+/** האם העמוד נפתח בכותרת H2/H3 (שורת התוכן הראשונה בסדר קריאה) — לכותרת הייעודית. */
+function pageOpensWithH2H3(page) {
+  const lv = page && page.opensWithHeadingLevel;
+  return lv === 2 || lv === 3;
+}
+
+/**
+ * בניית כותרת עליונה לעמוד.
+ * @param {object} page - {index,isRecto,type,firstWord,lastWord,h1,h2,pageNumberDisplay,
+ *                          opensWithHeadingLevel,template:{hasRunningHead}}
+ * @param {object} settings
+ * @param {object} ctx - {bookName}
+ * @returns {{side,slots:{right,center,left},separator}|null}
+ *          slot = {source,text,align,widthPct,font,sizePt,customText}
+ */
+function buildHeader(page, settings, ctx) {
+  if (!settings['header-enabled'] || !page.template.hasRunningHead) return null;
+  const physical = page.isRecto ? 'recto' : 'verso';
+  // REQ-HDR-02: עמוד הנפתח ב‑H2/H3 + header-opening-dedicated ⇒ סלוטי מקור ייעודיים
+  const dedicated = settings['header-opening-dedicated'] === true && pageOpensWithH2H3(page);
+  // **03.11(ד) — תיקון D-36 חלקי, נאמן למקור:** במקור (top-header-grid) הכותרת
+  // העליונה מוצגת בכל עמודי התוכן, כולל עמודי פתיחה של פרק/סימן. D-36 העלים
+  // אותה מכל עמודי הפתיחה — ובספרים עשירי כותרות (כל עמוד פתיחה) זה הסתיר
+  // את הכותרות לגמרי ("אין כותרות עליונות" — דיווח משתמש 3). עתה: כל עמוד
+  // תבניתו hasRunningHead מציג כותרת; שערים/תוכן־עניינים/הערות נשארים בלי
+  // (template.hasRunningHead=false שלהם). header-opening-dedicated נשמר כמצב
+  // סלוטים ייעודי לפותחות H2/H3.
+  const sourceSide = dedicated ? 'opening' : resolveSameAs(physical, settings);
+  // טקסט מותאם תמיד מהצד הפיזי של העמוד (סלוטי הפתיחה יורשים — D-61)
+  const customSide = dedicated ? physical : sourceSide;
+  // **S65 (SRS §12.2):** מתג פיצול שם הספר — כשפעיל, כל סלוט שמקורו שם־הספר
+  // (book-name / book-name-rest) מציג את החצי לפי הצד הפיזי בלבד, וזאת דורסת
+  // אפשרויות דינמיות סותרות: ירושת verso-same-as-recto אינה חלה על סלוטים אלה
+  // (החצי השני מופיע ב‑verso גם אם הצד יורש מקורות מה‑recto), ו‑book-name-rest
+  // אינו מפצל במקף אלא לפי החצי הפיזי. מקורות דינמיים אחרים (h2/מילים) אינם סותרים
+  // ואינם מוספים.
+  const splitTitle = settings['split-book-title'] === true;
+  const out = { side: physical, dedicated, splitTitle, slots: {} };
+  for (const pos of ['right', 'center', 'left']) {
+    // מקור: מהצד החל על העמוד (opening/recto/verso אחרי ירושה); גופן/גודל/יישור/רוחב — תמיד מהצד הפיזי (D-61)
+    let source = settings[`header-${sourceSide}-${pos}-source`];
+    if (splitTitle && (source === 'book-name' || source === 'book-name-rest')) {
+      source = 'book-name-split'; // דריסה לפי הצד הפיזי (להלן) — SRS §12.2 סעיף 2
+    }
+    const customText = settings[`header-${customSide}-${pos}-custom-text`];
+    out.slots[pos] = {
+      source,
+      // בפיצול: הצד לצורך resolveSlot הוא הפיזי תמיד (דריסת ירושה); אחרת — ללא תלות בצד למקורות אלה
+      text: resolveSlot(source, {
+        ...ctx,
+        side: physical,
+        pageNumber: page.pageNumberDisplay,
+        firstWord: page.firstWord,
+        lastWord: page.lastWord,
+        customText,
+      }, settings, `header-${customSide}-${pos}-custom-text`),
+      align: settings[`header-${physical}-${pos}-align`],
+      widthPct: settings[`header-${physical}-${pos}-width-pct`],
+      font: settings[`header-${physical}-${pos}-font`],
+      sizePt: settings[`header-${physical}-${pos}-size-pt`],
+      // **S73 (צבע פר-סלוט):** header-{recto,verso}-{right,center,left}-color —
+      // ברירת מחדל שחורה לכולם (בקשת משתמש). ה-DOM והמקרן קוראים את אותו שדה.
+      color: settings[`header-${physical}-${pos}-color`] || null,
+      customText,
+    };
+  }
+  out.separator = settings['header-separator-line'];
+  return out;
+}
+
+module.exports = {
+  buildHeader, extractH1TitleMain, extractTitleRest, resolveSlot,
+  resolveSameAs, firstLastWordsText, pageOpensWithH2H3, trimEdgePunctuation,
+  splitBookTitleHalves,
+};
 
 };
 __modules["src/engine/decoration/legacy-ornaments.js"] = function (require, module, exports) {
@@ -20720,9 +21063,9 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
   const colorOf = (hex) => (hex ? hexColorToRgb(hex) : null);
   const bodyColor = colorOf(settings['body-color']);
   const headingColorOf = (lvl) => colorOf(settings[`heading-${lvl}-color`]);
-  const hdrColorOf = (pos) => (pos === 'right' ? colorOf(settings['header-recto-right-color'])
-    : pos === 'center' ? colorOf(settings['header-recto-center-color'])
-      : colorOf(settings['header-recto-left-color']));
+  const hdrColorOfS77 = (pos, side) => (pos === 'right' ? colorOf(settings[`header-${side}-right-color`])
+    : pos === 'center' ? colorOf(settings[`header-${side}-center-color`])
+      : colorOf(settings[`header-${side}-left-color`])); // **S77:** לפי הצד הפיזי — כמו ה-DOM
   const folioColor = colorOf(settings['page-num-color']);
   const bandColorOf = (b) => {
     if (b.kind === 'endnote-title') return colorOf(settings['endnote-title-color']);
@@ -20991,7 +21334,11 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
         const sumW = ws.reduce((a, w) => a + w.w, 0);
         const gaps = Math.max(0, ws.length - 1);
         let gapW = spaceW;
-        if (!isLast && gaps > 0 && sumW + gaps * spaceW < usableW) {
+        // **S77 (בקשה 1):** שורת חיתוך תוך-הערה (cutLast) — שורת-ביניים לכל
+        // דבר: מיושבת לשני הצדדים (מלאה) כמו שאר שורות הביניים — כמו ה-DOM
+        // (textAlignLast:justify). עד כאן סוף-המרזב המרופט הותיר "שורה
+        // אחרונה לא מלאה" בהערה שממשיכה לעמוד הבא.
+        if ((!isLast || fn.cutLast) && gaps > 0 && sumW + gaps * spaceW < usableW) {
           gapW = (usableW - sumW) / gaps; // יישוב לשני הצדדים — כמו הגוף
         }
         let cursor = rightEdge;
@@ -21015,6 +21362,7 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
       if (words.length) {
         out.footnotes.push({
           centerLast: !!fn.centerLast, // **S74 (בעיה 7):** מרכוז השורה האחרונה (חריג: המשך לעמוד הבא)
+          cutLast: !!fn.cutLast, // **S77 (בקשה 1):** שורת חיתוך תוך-הערה — מיושבת לשני הצדדים
           y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: '',
           text: fn.lines.flatMap(l => (l.words || []).filter(t => !t.gap).map(t => t.t)).join(' '),
           words, baselineY: null, h: fn.lines.length * GEO.FN_PITCH,
@@ -21058,7 +21406,9 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
       const sumW = ws.reduce((a, w) => a + w.w, 0);
       const gaps = Math.max(0, ws.length - 1);
       let gapW = spaceW;
-      if (!isLast && gaps > 0 && sumW + gaps * spaceW < usableW) {
+      // **S77 (בקשה 1):** חיתוך תוך-הערה (cutLast) — שורת-ביניים מיושבת
+      // לשני הצדדים (כמו ה-DOM), לא מרופטת.
+      if ((!isLast || fn.cutLast) && gaps > 0 && sumW + gaps * spaceW < usableW) {
         gapW = (usableW - sumW) / gaps; // יישוב לשני הצדדים (כמו הייחוס)
       }
       let cursor = lineRight;
@@ -21076,7 +21426,7 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
       }
     });
     if (words.length) {
-      out.footnotes.push({ centerLast: !!fn.centerLast, y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: fn.marker, text: fn.lines.map(l => l.words.join(' ')).join(' '), words, baselineY: firstBase, h: fn.lines.length * GEO.FN_PITCH, ...(fnColor ? { color: fnColor } : {}) });
+      out.footnotes.push({ centerLast: !!fn.centerLast, cutLast: !!fn.cutLast, y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: fn.marker, text: fn.lines.map(l => l.words.join(' ')).join(' '), words, baselineY: firstBase, h: fn.lines.length * GEO.FN_PITCH, ...(fnColor ? { color: fnColor } : {}) });
     }
   }
 
@@ -21149,22 +21499,33 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
   // ⇒ תת-גופן ייעודי; בלתי-רשומה ⇒ DavidLibre-Bold — התנהגות קודמת).
   if (pg.headerSlots && (pg.headerSlots.right || pg.headerSlots.center || pg.headerSlots.left)) {
     const slots = [];
-    // **S73:** גופן/צבע הסלוט — מההגדרות (header-recto-{right,center,left}-* —
-    // אותם מפתחות שה-DOM של legacy מציג; verso משוקף ל-recto בזרימת המורשת).
-    const SLOT_FONT_KEY = { right: 'header-recto-right-font', center: 'header-recto-center-font', left: 'header-recto-left-font' };
+    // **S73 + S77 (בקשה 3):** גופן/צבע/גודל/יישור/רוחב הסלוט — מההגדרות
+    // לפי הצד הפיזי של העמוד (עד כאן: מפתחי recto קבועים לכל העמודים —
+    // אותם מפתחות שה-DOM של legacy מציג). ברירות המחדל (33% + right/center/
+    // left + הגדלים המכוילים) משחזרות את המיקומים הקודמים במדויק.
+    const hdrSide = (pg.index % 2 === 0) ? 'recto' : 'verso'; // עמוד 1 (אינדקס 0) = recto
     const mk = (pos, text, sizePt) => {
       if (!text) return;
       // **S73:** גופן הסלוט מההגדרות — כמו ה-DOM (fontWeight 700 שם;
       // Livorna הוא חד-משקלי — המשפחה עצמה). נפילה ל-hApi (DavidLibre-Bold)
       // כשהמשפחה אינה רשומה — התנהגות קודמת.
-      const fam = settings[SLOT_FONT_KEY[pos]] || 'DavidLibre-Bold';
+      const fam = settings[`header-${hdrSide}-${pos}-font`] || 'DavidLibre-Bold';
+      // **S77:** גודל הסלוט מההגדרה (ברירת המחדל המיובאת = הקבועים המכוילים)
+      const szKey = `header-${hdrSide}-${pos}-size-pt`;
+      const effSz = Number(settings[szKey]) > 0 ? Number(settings[szKey]) : sizePt;
       const sApi = apiFor(fam) || hApi;
-      const w = sApi.measureTextWidth(text, sizePt, 0);
-      let x;
-      if (pos === 'right') x = GEO.COL_R_X + GEO.COL_W - 33 - w;
-      else if (pos === 'left') x = GEO.COL_L_X + 33;
-      else x = (GEO.PAGE_W - w) / 2;
-      slots.push({ pos, text, x, w, sizePt, fam: apiFor(fam) ? fam : null, color: hdrColorOf(pos) });
+      const w = sApi.measureTextWidth(text, effSz, 0);
+      // **S77:** תיבת הסלוט — רוחב% מהפס; היישור בתוכה מההגדרה (כמו ה-DOM).
+      const bandL = GEO.COL_L_X + 33, bandR = GEO.COL_R_X + GEO.COL_W - 33;
+      const bandW = bandR - bandL;
+      const wPct = Number(settings[`header-${hdrSide}-${pos}-width-pct`]);
+      const boxW = Math.max(0, (Number.isFinite(wPct) && wPct > 0 && wPct <= 100 ? wPct : 33) / 100) * bandW;
+      const align = settings[`header-${hdrSide}-${pos}-align`] || pos;
+      let x, alignEff;
+      if (pos === 'right') { x = bandR - boxW; alignEff = align; }
+      else if (pos === 'left') { x = bandL; alignEff = align; }
+      else { x = bandL + (bandW - boxW) / 2; alignEff = align; }
+      slots.push({ pos, text, x, w, boxW, align: alignEff, sizePt: effSz, fam: apiFor(fam) ? fam : null, color: hdrColorOfS77(pos, hdrSide) });
     };
     mk('right', pg.headerSlots.right, SZ.hdrR);
     mk('center', pg.headerSlots.center, SZ.hdrC);
@@ -21175,11 +21536,13 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
         const baseY = GEO.HEADER_BASELINE;
         // **S5.1 (תיקון C1/L2):** רוחב התיבה = רוחב הטקסט עצמו (s.w) — לא
         // s.w+40. ה+40 הסיט כל סלוט 40px מהמקום שמכויל מהייחוס ב-mk() לעיל.
+        // **S77:** התיבה ברוחב הסלוט מההגדרה (boxW) והמילים מיושבות בה לפי
+        // היישור מההגדרה — כמו ה-DOM.
         const sFam = s.fam || 'DavidLibre-Bold';
         const sApi = apiFor(sFam) || hApi;
         const sKey = s.fam ? fontKeyOf(s.fam) : 'heading';
-        s.words = placeWords(s.text.split(' '), sApi, s.x, s.w, s.sizePt,
-          s.pos === 'center' ? 'center' : (s.pos === 'right' ? 'right' : 'left'), baseY);
+        const a = s.align === 'center' ? 'center' : (s.align === 'left' ? 'left' : (s.align === 'right' ? 'right' : (s.pos === 'center' ? 'center' : (s.pos === 'right' ? 'right' : 'left'))));
+        s.words = placeWords(s.text.split(' '), sApi, s.x, s.boxW || s.w, s.sizePt, a, baseY);
         s.color = s.color || pg.headerSlots.color || null;
         for (const w of s.words) { if (s.color) w.color = s.color; w.fontKey = sKey; }
       }
@@ -21338,6 +21701,25 @@ const OPEN_MODE_MAP = {
   'sub_shaar': 'new-page' // שער-משנה מובנה: show-shaar-sub נלווה ב-merge
 };
 
+/** **S77 (בקשה 3):** סוגי סלוטי כותרת-עליונה של המקור ⇒ מקורות header-*.
+ * ערך לא מוכר (למשל 'spear' — עיטור חנית של v19) ⇒ undefined — אינו דורס
+ * את ברירת המחדל של RED (הייבוא מדלג עליו; הערך הגולמי נשמר ב-_imudRaw). */
+function hdrSlotTypeMap(v) {
+  const t = String(v == null ? '' : v).trim();
+  switch (t) {
+    case 'book_title_split_r': return 'book-name-first-half';
+    case 'book_title_split_l': return 'book-name-second-half';
+    case 'h2_without_siman': return 'h2';
+    case 'h2': return 'h2';
+    case 'h1': return 'h1';
+    case 'book_title': return 'book-name';
+    case 'custom': return 'custom';
+    case 'none':
+    case '': return 'none';
+    default: return undefined;
+  }
+}
+
 /** עמדות עיצוב-מפריד של המקור ⇒ סגנונות RED. */
 const DIVIDER_MAP = { 'none': 'none', 'thin': 'thin', 'dashed': 'dashed', 'double': 'double', 'spear': 'thin' };
 
@@ -21441,6 +21823,26 @@ const DISPOSITIONS = {
   's-hdr-verso-r': { kind: 'mapped', to: ['header-verso-right-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט ימין (verso)' },
   's-hdr-verso-c': { kind: 'mapped', to: ['header-verso-center-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט מרכז (verso)' },
   's-hdr-verso-l': { kind: 'mapped', to: ['header-verso-left-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט שמאל (verso)' },
+  // **S77 (בקשה 3 — חיבור הגדרות הכותרת העליונה לנתיב המורשת):** סוגי הסלוטים
+  // של המקור (hdr-{r,c,l,verso-*}-type) ממופים למקורות header-{side}-{pos}-source.
+  // book_title_split_r/l = החצאים הקבועים (לפי מילים, ללא תלות בצד — ההחלפה
+  // היא hdr-alternating נפרד) ⇒ ההתנהגות המכוילת של המנוע המורשת משוחזרת
+  // במדויק דרך ההגדרות החיות. ערך לא מוכר (למשל 'spear' של v19 — עיטור) אינו
+  // דורס את ברירת המחדל של RED (transform מחזיר undefined ⇒ דילוג).
+  'hdr-r-type': { kind: 'mapped', to: ['header-recto-right-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט ימין (recto) ⇒ מקור חי בנתיב המורשת' },
+  'hdr-l-type': { kind: 'mapped', to: ['header-recto-left-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט שמאל (recto) ⇒ מקור חי בנתיב המורשת' },
+  'hdr-c-type': { kind: 'mapped', to: ['header-recto-center-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט מרכז (recto) ⇒ מקור חי בנתיב המורשת' },
+  'hdr-verso-r-type': { kind: 'mapped', to: ['header-verso-right-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט ימין (verso) ⇒ מקור חי בנתיב המורשת' },
+  'hdr-verso-l-type': { kind: 'mapped', to: ['header-verso-left-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט שמאל (verso) ⇒ מקור חי בנתיב המורשת' },
+  // hdr-verso-c-type אינו ממופה בכוונה: הייחוס המכויל מציג את הפרק (h2) במרכז
+  // גם בעמודי verso (הערך 'h1' בקובץ המקור אינו משתקף בפלט המכויל); שליטה
+  // חיה דרך header-verso-center-source (ברירת המחדל שלו h2).
+  'hdr-r-custom': { kind: 'mapped', to: ['header-recto-right-custom-text'], reason: 'S77: טקסט מותאם סלוט ימין (recto)' },
+  'hdr-c-custom': { kind: 'mapped', to: ['header-recto-center-custom-text'], reason: 'S77: טקסט מותאם סלוט מרכז (recto)' },
+  'hdr-l-custom': { kind: 'mapped', to: ['header-recto-left-custom-text'], reason: 'S77: טקסט מותאם סלוט שמאל (recto)' },
+  'hdr-verso-r-custom': { kind: 'mapped', to: ['header-verso-right-custom-text'], reason: 'S77: טקסט מותאם סלוט ימין (verso)' },
+  'hdr-verso-c-custom': { kind: 'mapped', to: ['header-verso-center-custom-text'], reason: 'S77: טקסט מותאם סלוט מרכז (verso)' },
+  'hdr-verso-l-custom': { kind: 'mapped', to: ['header-verso-left-custom-text'], reason: 'S77: טקסט מותאם סלוט שמאל (verso)' },
   'inp-book-title': { kind: 'mapped', to: 'imud-book-title', reason: 'S4.6: כותרת הספר — נצרכת בשער הראשי (dom-renderer)' },
   'inp-book-subtitle': { kind: 'mapped', to: 'imud-book-subtitle', reason: 'S4.6: כותרת־משנה — נצרכת בשער הראשי' },
   // **03.11(ד) — דיווח משתמש 3 / בקשת על מה-01.11: "הטמע את כל ברירות המחדל
@@ -21636,6 +22038,15 @@ function importImudSettings(legacy, registryKeys, opts = {}) {
     if ((d.kind === 'mapped' || d.kind === 'merged') && d.to) {
       const targets = Array.isArray(d.to) ? d.to : [d.to];
       const transformed = d.transform ? d.transform(v, ctx) : v;
+      // **S77:** transform שמחזיר undefined מסמן "אין דריסה" (ערך מקור לא
+      // מוכר שאין לו מקביל RED — למשל hdr-c-type='spear'). בלי ההגנה הזו
+      // היעד היה נקבע ל-undefined ודורס את ברירת המחדל של הרישום. המפתח
+      // עדיין נספר בדוח (קיבל disposition מלא; הערך הגולמי נשמר ב-_imudRaw).
+      if (transformed === undefined) {
+        dispositions[k] = { ...d, note: 'ערך לא מוכר — ללא דריסה (S77)' };
+        report[d.kind]++;
+        return;
+      }
       let anyApplied = false;
       let anyBlocked = false;
       for (const t of targets) {
@@ -21677,6 +22088,19 @@ function importImudSettings(legacy, registryKeys, opts = {}) {
     && legacy['line-height-body'] !== undefined) {
     settings['_imudRaw'] = legacy;
     settings['_layout-profile'] = 'imud';
+    // **S77 (בקשה 3 — חיבור הגדרות תוכן-העניינים לנתיב המורשת):** דגלי
+    // toc-level-N-show נגזרים מרשימות המקור (gtoc-show/dtoc-show; ברירות
+    // המחדל [1..6]/[2..6]) — כך ברירת המחדל המיובאת משמרת את הפלט המכויל
+    // במדויק, והדגלים החיים שולטים מעתה (הסרה/הוספה של רמות בשני התכנים).
+    // inline נפתח כבוי בכל הרמות — ה-TOC של המורשת אינו ממזג שורות כברירת
+    // מחדל; הפעלה מפורשת ממזגת רשומות רצופות לשורת ההורה.
+    // הפרש המשתמש השמור מוחל אחרי הייבוא — דגל שהמשתמש שינה גובר על הנגזר.
+    const gtocList = Array.isArray(legacy['gtoc-show']) ? legacy['gtoc-show'] : [1, 2, 3, 4, 5, 6];
+    const dtocList = Array.isArray(legacy['dtoc-show']) ? legacy['dtoc-show'] : [2, 3, 4, 5, 6];
+    for (let n = 1; n <= 7; n++) {
+      settings[`toc-level-${n}-show`] = gtocList.includes(n) || dtocList.includes(n);
+      settings[`toc-level-${n}-inline`] = false;
+    }
   }
   return { settings, uiState, dispositions, unmapped, report };
 }
