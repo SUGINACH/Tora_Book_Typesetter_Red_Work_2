@@ -99,7 +99,21 @@ it('D-89/2: לכל שורת הערה בסיס משלה; אין ערימת שור
       if (l1.length && l2.length) {
         const r1 = Math.max(...l1.map(w => w.x + w.w));
         const r2 = Math.max(...l2.map(w => w.x + w.w));
-        assert(r2 >= r1 - 0.5, 'שורה 2 נפתחת מהשפה הימנית המלאה (לא נגרעת מרוחב הסמן)');
+        // **S74 (בעיה 7 — בקשת משתמש 12.11):** השורה האחרונה של ההערה האחרונה
+        // בעמוד ממורכזת (חריג: הערה שממשיכה לעמוד הבא — centerLast=false — נשארת
+        // לימין כמו שאר שורות הביניים). במרכוז: פערי הדיו משני הצדדים שווים.
+        if (fn.centerLast) {
+          const rightEdge = 120.72 + 2 * 269.41 + 13.48; // GEO.COL_L_X + BAND_W
+          const leftEdge = 120.72; // GEO.COL_L_X
+          const xs = l2.map(w => w.x);
+          const xe = l2.map(w => w.x + w.w);
+          const rightGap = rightEdge - Math.max(...xe);
+          const leftGap = Math.min(...xs) - leftEdge;
+          assert(Math.abs(rightGap - leftGap) < 1.5,
+            `S74: השורה האחרונה ממורכזת — פער ימין ${rightGap.toFixed(1)}px מול שמאל ${leftGap.toFixed(1)}px`);
+        } else {
+          assert(r2 >= r1 - 0.5, 'שורה 2 נפתחת מהשפה הימנית המלאה (לא נגרעת מרוחב הסמן)');
+        }
       }
     }
   }

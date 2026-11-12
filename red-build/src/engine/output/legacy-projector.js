@@ -163,7 +163,7 @@ function fontKeyOf(fam) {
 }
 
 /** הקרנת עמוד legacy בודד. */
-function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi = null, mnApi = null) {
+function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi = null, mnApi = null, fnOpts = null) {
   // **S4.26:** headingApi — מדידת/ציור כותרות ב-DavidLibre-Bold (כמו הייחוס
   // וכמו ה-DOM); בלי גופן רשום — גופן הגוף (התנהגות קודמת).
   const hApi = headingApi || api;
@@ -437,6 +437,14 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
   // (אין גליפי כוכבים) — ההפרדה נשארת דרך ריווח התחתית בלבד.
 
   // ---- הערות שוליים (תחתית) ----
+  // **S74 (בעיה 5):** גוף ההערה נמדד ומסומן בגופן ההגדרה f-note-body-font
+  // (ברירת המחדל המתוקנת — Assistant ExtraLight, כפי שנמדד בייחוס עמ' 31/37)
+  // באמצעות תת-גופן ייעודי (מנגנון המשפחות של S73); סמני הרישום נשארים
+  // ב־/F5 (FRL) — כמו בייחוס. בסיס השורה לפי מטריקות גופן ההערה בפועל.
+  const fnBodyKey = (fnOpts && fnOpts.bodyKey) || 'fnbody';
+  const fnMarkApi = (fnOpts && fnOpts.markApi) || fnApi;
+  const fnAsc = fnApi ? fnApi.ascentEm() : ascent;
+  const fnDesc = fnApi ? fnApi.descentEm() : descent;
   // **D-89 (דיווח משתמש: "בהערות השוליים יש מילים אחת על השניה"):**
   // בעבר כל שורות ההערה שורטטו על בסיס אחד (baselineOf של השורה הראשונה)
   // וכל שורה התחילה מאותו x — הערה רבת-שורות נערמה כולה על עצמה.
@@ -456,15 +464,16 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
       const usableW = rightEdge - GEO.COL_L_X;
       const words = [];
       fn.lines.forEach((l, li) => {
-        const baseY = baselineOf(l.y, GEO.FN_PITCH, SZ.fnBody, ascent, descent);
+        const baseY = baselineOf(l.y, GEO.FN_PITCH, SZ.fnBody, fnAsc, fnDesc);
         const isLast = li === fn.lines.length - 1;
         const toks = (l.words || []).filter(t => !t.gap);
-        // **S5.1:** גוף ההערה ב-FRL (כמו המדידה במנוע/ה-DOM) — לא בגוף הטקסט;
-        // סמני הרישום בגודלם העצמאי, אטגדים fnbody לכותב ה-PDF (/F5).
+        // **S5.1 + S74:** גוף ההערה בגופן ההגדרה; סמני הרישום ב-FRL (כמו
+        // הייחוס עמ' 31/37) — המדידה והציור באותו גופן לכל אחד.
         const ws = toks.map(t => ({
           text: t.t,
           sizePt: t.mk ? projCfg.listingSize : SZ.fnBody,
-          w: fnApi.measureTextWidth(t.t, t.mk ? projCfg.listingSize : SZ.fnBody, 0)
+          w: (t.mk ? fnMarkApi : fnApi).measureTextWidth(t.t, t.mk ? projCfg.listingSize : SZ.fnBody, 0),
+          mk: !!t.mk
         }));
         const sumW = ws.reduce((a, w) => a + w.w, 0);
         const gaps = Math.max(0, ws.length - 1);
@@ -473,6 +482,12 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
           gapW = (usableW - sumW) / gaps; // יישוב לשני הצדדים — כמו הגוף
         }
         let cursor = rightEdge;
+        // **S74 (בעיה 7 — בקשת משתמש 12.11):** השורה האחרונה של מרזב ההערות
+        // (של כל ההערות יחד) ממורכזת; חריג: הערה שממשיכה לעמוד הבא
+        // (centerLast=false מהמנוע) — נשארת מיושבת לימין.
+        if (isLast && fn.centerLast) {
+          cursor = rightEdge - Math.max(0, (usableW - (sumW + gaps * spaceW)) / 2);
+        }
         // **S6.0 (R5-C1 — סדר מילים הפוך בהערות):** הלולאה רצה מהסוף להתחלה
         // והציבה את המילה ה**אחרונה** בלוגי בקצה הימני — כלומר ההערה נקראה
         // בסדר הפוך בייצוא ה-PDF (המודל וה-DOM מציגים את המילה הראשונה מימין,
@@ -480,12 +495,13 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
         // מיקומי הסלוטים/הרווחים/היישוב לא השתנו כלל (רק מיפוי מילה→סלוט).
         for (let i = 0; i < ws.length; i++) {
           cursor -= ws[i].w;
-          words.push({ text: ws[i].text, x: cursor, w: ws[i].w, sizePt: ws[i].sizePt, baselineY: baseY, fontKey: 'fnbody', ...(fnColor ? { color: fnColor } : {}) });
+          words.push({ text: ws[i].text, x: cursor, w: ws[i].w, sizePt: ws[i].sizePt, baselineY: baseY, fontKey: ws[i].mk ? 'fnbody' : fnBodyKey, ...(fnColor ? { color: fnColor } : {}) });
           cursor -= gapW;
         }
       });
       if (words.length) {
         out.footnotes.push({
+          centerLast: !!fn.centerLast, // **S74 (בעיה 7):** מרכוז השורה האחרונה (חריג: המשך לעמוד הבא)
           y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: '',
           text: fn.lines.flatMap(l => (l.words || []).filter(t => !t.gap).map(t => t.t)).join(' '),
           words, baselineY: null, h: fn.lines.length * GEO.FN_PITCH,
@@ -509,14 +525,15 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
     }
     if (fn.marker) {
       // **EXT-17:** סמן הרישום בגודל עצמאי (note-listing-num-size, ברירת מחדל 8).
+      // **S74 (בעיה 5):** הסמן נמדד ב-FRL (כמו הייחוס) — לא בגופן גוף ההערה.
       const msz = projCfg.listingSize;
-      const mw = fnApi.measureTextWidth(fn.marker, msz, 0);
+      const mw = fnMarkApi.measureTextWidth(fn.marker, msz, 0);
       firstRight -= mw;
       words.push({ text: fn.marker, x: firstRight, w: mw, sizePt: msz, baselineY: null, fontKey: 'fnbody', ...(fnColor ? { color: fnColor } : {}) });
       firstRight -= spaceW;
     }
     fn.lines.forEach((l, li) => {
-      const baseY = baselineOf(l.y, GEO.FN_PITCH, SZ.fnBody, ascent, descent);
+      const baseY = baselineOf(l.y, GEO.FN_PITCH, SZ.fnBody, fnAsc, fnDesc);
       if (firstBase === null) {
         firstBase = baseY;
         if (words.length) words[0].baselineY = firstBase; // הסמן על בסיס השורה הראשונה
@@ -532,16 +549,21 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
         gapW = (usableW - sumW) / gaps; // יישוב לשני הצדדים (כמו הייחוס)
       }
       let cursor = lineRight;
+      // **S74 (בעיה 7):** מרכוז השורה האחרונה של ההערה האחרונה בעמוד
+      // (centerLast מהמנוע; חריג: הערה שנחתכה לעמוד הבא).
+      if (isLast && fn.centerLast) {
+        cursor = lineRight - Math.max(0, (usableW - (sumW + gaps * spaceW)) / 2);
+      }
       // **S6.0 (R5-C1):** מעבר קדימה — המילה הראשונה בלוגי בקצה הימני (RTL);
       // בעבר האחרונה הוצבה מימין וההערה נקראה הפוך ב-PDF.
       for (let i = 0; i < ws.length; i++) {
         cursor -= ws[i].w;
-        words.push({ text: ws[i].text, x: cursor, w: ws[i].w, sizePt: SZ.fnBody, baselineY: baseY, fontKey: 'fnbody', ...(fnColor ? { color: fnColor } : {}) });
+        words.push({ text: ws[i].text, x: cursor, w: ws[i].w, sizePt: SZ.fnBody, baselineY: baseY, fontKey: fnBodyKey, ...(fnColor ? { color: fnColor } : {}) });
         cursor -= gapW;
       }
     });
     if (words.length) {
-      out.footnotes.push({ y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: fn.marker, text: fn.lines.map(l => l.words.join(' ')).join(' '), words, baselineY: firstBase, h: fn.lines.length * GEO.FN_PITCH, ...(fnColor ? { color: fnColor } : {}) });
+      out.footnotes.push({ centerLast: !!fn.centerLast, y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: fn.marker, text: fn.lines.map(l => l.words.join(' ')).join(' '), words, baselineY: firstBase, h: fn.lines.length * GEO.FN_PITCH, ...(fnColor ? { color: fnColor } : {}) });
     }
   }
 
@@ -717,14 +739,24 @@ function projectLegacyDocument(result, settings) {
   // Hadassah להערות-הצד — כמו המדידה במנוע (fnApi/marginApi ב-legacyTypeset)
   // וכמו ה-DOM. נפילה שקופה לגוף הטקסט כשהגופן אינו רשום.
   let fnApi = null;
-  if (impl === 'font-metrics' && registeredFonts.has('Frank Ruhl Libre')) {
+  let fnBodyKey = 'fnbody'; // **S74 (בעיה 5):** גוף ההערה — משפחה ייעודית (תת-גופן S73) או /F5
+  let fnMarkApi = null; // **S74:** סמני הרישום — FRL (כמו הייחוס עמ' 31/37)
+  const fnFam = settings['f-note-body-font'];
+  if (impl === 'font-metrics' && fnFam && fnFam !== 'Frank Ruhl Libre' && registeredFonts.has(fnFam)) {
+    fnApi = new MeasureAPI({ 'body-font': fnFam, 'body-font-size-pt': SZ.fnBody, 'body-line-height': 1.5 }, 'font-metrics');
+    fnBodyKey = fnFam;
+  } else if (impl === 'font-metrics' && registeredFonts.has('Frank Ruhl Libre')) {
     fnApi = new MeasureAPI({ 'body-font': 'Frank Ruhl Libre', 'body-font-size-pt': SZ.fnBody, 'body-line-height': 1.5 }, 'font-metrics');
+  }
+  if (impl === 'font-metrics' && registeredFonts.has('Frank Ruhl Libre')) {
+    fnMarkApi = new MeasureAPI({ 'body-font': 'Frank Ruhl Libre', 'body-font-size-pt': SZ.fnBody, 'body-line-height': 1.5 }, 'font-metrics');
   }
   let mnApi = null;
   if (impl === 'font-metrics' && registeredFonts.has('Hadassah Friedlaender')) {
     mnApi = new MeasureAPI({ 'body-font': 'Hadassah Friedlaender', 'body-font-size-pt': SZ.marginNote, 'body-line-height': 1.2 }, 'font-metrics');
   }
-  const pages = result.pages.map(p => projectLegacyPage(p, settings, api, winApi, headingApi, fnApi, mnApi));
+  const fnOpts = { bodyKey: fnBodyKey, markApi: fnMarkApi };
+  const pages = result.pages.map(p => projectLegacyPage(p, settings, api, winApi, headingApi, fnApi, mnApi, fnOpts));
   return { pages, inkBounds: pages.map(() => null), layoutHash: result.layoutHash };
 }
 

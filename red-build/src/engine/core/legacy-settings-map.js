@@ -141,7 +141,15 @@ const DISPOSITIONS = {
   's-h5': { kind: 'mapped', to: 'heading-5-size-pt', transform: parseFloat, reason: 'S4.6: גודל H5' },
   's-h6': { kind: 'mapped', to: 'heading-6-size-pt', transform: parseFloat, reason: 'S4.6: גודל H6' },
   's-h7': { kind: 'mapped', to: 'heading-7-size-pt', transform: parseFloat, reason: 'S4.6: גודל H7 (6 במקור; חריגת טווח מדווחת)' },
-  'f-note-body': { kind: 'mapped', to: 'f-note-body-font', transform: resolveStack, reason: 'S4.6: גופן גוף ההערה — קיים ברישום RED' },
+  'f-note-body': { kind: 'mapped', to: 'f-note-body-font', transform: (v, ctx) => {
+    // **S74 (בעיה 5 — בקשת משתמש 12.11):** ברירת המחדל של המקור בהגדרות
+    // ('Frank Ruhl Libre') לא חוברה לרינדור בפועל בגרסה הישנה — גוף ההערה
+    // רונדר ב-Assistant ExtraLight (נמדד בייחוס עמ' 31/37: כל שורות גוף
+    // ההערה Assistant-ExtraLight 8.5pt; הסמן בלבד FRL 8pt). הרינדור הוא
+    // המפרט: ערך ברירת המחדל מתורגם לגופן הרינדור האמיתי; ערך שהמשתמש
+    // בחר במפורש (כל ערך אחר) נשמר כמו שהוא דרך resolveStack.
+    return /Frank Ruhl Libre/i.test(String(v || '')) ? 'אסיסטנט קל מאוד' : resolveStack(v, ctx);
+  }, reason: 'S74: גוף ההערה — ברירת המחדל = הרינדור בפועל של המקור (Assistant ExtraLight, נמדד בייחוס)' },
   'f-hdr-r': { kind: 'mapped', to: ['header-recto-right-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט ימין בכותרת עליונה (recto)' },
   'f-hdr-c': { kind: 'mapped', to: ['header-recto-center-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט מרכז (recto)' },
   'f-hdr-l': { kind: 'mapped', to: ['header-recto-left-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט שמאל (recto)' },

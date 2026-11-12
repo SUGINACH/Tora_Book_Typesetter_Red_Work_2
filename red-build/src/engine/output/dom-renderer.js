@@ -1048,6 +1048,14 @@ function renderLegacyPage(pg, settings, doc) {
             m.textContent = scrubPUAText(w);
             m.style.fontSize = `${pt2px(markerSz)}px`;
             m.style.verticalAlign = 'super';
+            // **S74 (בעיה 2 — בקשת משתמש 12.11, תצוגה בלבד):** תיבת השורה
+            // נמדדת מהטקסט הרגיל בלבד — הסמן העילי "מפלח" את מרווח הבין-שורות
+            // ואינו מגדיל אותו. בלי line-height:0 תיבת הסמן (בגובה השורה
+            // המוריש) מוגבהת ע"י vertical-align ומנפחת את תיבת השורה — הבסיס
+            // יורד והמרווח לשורה הקודמת מתרחב (ב-PDF הבסיסים קבועים והבעיה
+            // אינה קיימת — דיווח המשתמש). אותו דפוס כמו .w--window (0.85)
+            // שכבר מוכיח שתיבת שורה לא מתנפחת מגוף מוקטן/מוגבה.
+            m.style.lineHeight = '0';
             el.appendChild(m);
           } else if (!isHeading && wi >= 0 && parenIdx && parenIdx.has(wi)) {
             const s = doc.createElement('span');
@@ -1094,7 +1102,10 @@ function renderLegacyPage(pg, settings, doc) {
     for (const mn of (pg.marginNotes || [])) {
       const x = mn.side === 'right' ? GEO.MARGIN_R_X : GEO.MARGIN_L_X;
       for (const l of (mn.lines || [])) {
-        const el = mkLine(l.text, SZ.marginNote, 'right', GEO.MN_PITCH);
+        // **S74 (בעיה 4 — בקשת משתמש 12.11):** כותרות-הצד ממורכזות כברירת
+        // מחדל — כמו במקרן ה-PDF (placeWords 'center' / align:'center') וכמו
+        // הייחוס. עד כאן התצוגה הצמידה אותן לימין — אי-התאמה בין הנתיבים.
+        const el = mkLine(l.text, SZ.marginNote, 'center', GEO.MN_PITCH);
         el.className += ' margin-note';
         if (mnFont) el.style.fontFamily = mnFont;
         if (mnCol) el.style.color = mnCol;
@@ -1132,8 +1143,14 @@ function renderLegacyPage(pg, settings, doc) {
       if (fnFont) el.style.fontFamily = fnFont;
       if (fnCol) el.style.color = fnCol; // **S73:** צבע גוף ההערה
       el.style.textAlign = 'justify';
-      el.style.textAlignLast = 'right';
+      // **S74 (בעיה 7 — בקשת משתמש 12.11):** השורה האחרונה של מרזב ההערות
+      // (של כל ההערות בעמוד יחד — לא של כל הערה בנפרד) ממורכזת; חריג:
+      // הערה שממשיכה לעמוד הבא (centerLast=false מהמנוע) — נשארת לימין.
+      el.style.textAlignLast = fn.centerLast ? 'center' : 'right';
       el.style.whiteSpace = 'normal';
+      // **S74 (בעיה 5):** סמני הרישום — FRL (נמדד בייחוס עמ' 31/37: הסמן
+      // FRL 8pt, גוף ההערה Assistant ExtraLight) — גופן משלהם בתוך הזרם.
+      const fnMarkFont = fontStack('Frank Ruhl Libre');
       if (fn.continuous) {
         // זרימה רציפה — הדפדפן שובר ומיישב (אותו רוחב/גופן כמו fnFlowFor);
         // סמנים בגודל הרישום; רווח-כפול בין הערות (nbsp — כמו הגאפ במודל).
@@ -1147,6 +1164,7 @@ function renderLegacyPage(pg, settings, doc) {
             if (t.mk) {
               s.className = 'w w--fnmarker';
               s.style.fontSize = `${pt2px(listingSz)}px`;
+              if (fnMarkFont) s.style.fontFamily = fnMarkFont; // **S74 (בעיה 5):** הסמן ב-FRL
             }
             s.textContent = scrubPUAText(t.t);
             el.appendChild(s);
@@ -1164,6 +1182,7 @@ function renderLegacyPage(pg, settings, doc) {
           const m = doc.createElement('span');
           m.className = 'w w--fnmarker';
           m.style.fontSize = `${pt2px(listingSz)}px`;
+          if (fnMarkFont) m.style.fontFamily = fnMarkFont; // **S74 (בעיה 5):** הסמן ב-FRL
           m.textContent = scrubPUAText(fn.marker);
           el.appendChild(m);
           el.appendChild(doc.createTextNode(' '));

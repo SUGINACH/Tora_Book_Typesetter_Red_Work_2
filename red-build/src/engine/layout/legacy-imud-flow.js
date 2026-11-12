@@ -672,6 +672,13 @@ const H0_AREA_H = 249.2;   // **S4.19:** זרימת ההקדמה מתחילה ב
 // ה-h0 יש spacer (הכותרת ב-309 = 107.2+201.3+0.5) + כותרת (27.2) + שוליים (20)
 // ⇒ 309+47.4 = 356.4. הערך הקודם 240.8 השאיר את שורות ההקדמה גבוהות בכ-10px.
 const SINGLE_W = 552.3;    // .single-wide-col = 2×269.41+13.48 (grid)
+// **S74 (בעיה 1 — בקשת משתמש 12.11):** כותרות 2 ו-3 החד-טוריות מוגבלות ל־60%
+// מרוחב הפס **הנוכחי** (לא מרוחב העמוד) — תיבה של 331.38px הממורכזת בפס.
+// כותרת ארוכה נעטפת לשורות במקום למלא את רוחב הפס. הרינדור (DOM ו-PDF)
+// ממרכז את הפסים ברוחב הפס המלא — תיבת ה־60% חולקת את אותו מרכז בדיוק,
+// ולכן אין כל שינוי ברינדור: רק רוחב העטיפה כאן מצטמצם.
+const TITLE_W_PCT = 0.6;
+const H23_TITLE_W = SINGLE_W * TITLE_W_PCT; // 331.38px
 // **S4.13:** פס שורת ההקדמה — אותו line-height של הגוף (1.34) על 11.5pt
 // ⇒ 15.41pt = 20.55px. מדידת הייחוס בעמוד ההקדמה: פסים 15.0–16.3pt (ממוצע 20.5px
 // לפני הצמדת ההדפסה). הערך הקודם (22.2 = ×1.45) היה קליברציה שגויה שדחפה
@@ -887,7 +894,8 @@ function legacyTypeset(rawText, settings, env) {
     registerMeasureFont('Frank Ruhl Libre', env.prefaceFontBytes);
   }
   let prefaceApi = null;
-  let fnApi = null; // **S4.15:** גוף ההערות — FRL 8.5pt; נפילה לגוף אם לא נרשם
+  let fnApi = null; // גוף ההערות — גופן ברירת המחדל של הרינדור בפועל (S74); נפילות מתועדות להלן
+  let fnMarkApi = null; // **S74 (בעיה 5):** סמני הרישום — FRL 8pt (נמדד בייחוס עמ' 31/37)
   if (impl === 'font-metrics' && registeredMeasureFonts.has('Frank Ruhl Libre')) {
     prefaceApi = new MeasureAPI(
       { 'body-font': 'Frank Ruhl Libre', 'body-font-size-pt': SZ.h0Body, 'body-line-height': 1.45 },
@@ -898,13 +906,33 @@ function legacyTypeset(rawText, settings, env) {
     // ('חלוקת המלאכות…') — הייחוס שובר את השורה לפני 'כלולה' ואנחנו אחרי
     // ('…בדבר' / 'כלולה ההוצאה…') — הפרשי רוחב FRL מול גוף. אותו גופן
     // כמו ההקדמה — אותו API עם גודל שונה.
+    fnMarkApi = new MeasureAPI(
+      { 'body-font': 'Frank Ruhl Libre', 'body-font-size-pt': cfg.fnListingNumSize, 'body-line-height': 1.5 },
+      'font-metrics'
+    );
+  }
+  // **S74 (בעיה 5 — בקשת משתמש 12.11, גופן גוף ההערה):** ברירת המחדל של
+  // **הרינדור בפועל** של הגרסה הישנה — Assistant ExtraLight 8.5pt — נמדדה
+  // ישירות מהייחוס (עמ' 31/37: כל שורות גוף ההערה Assistant-ExtraLight 8.5pt;
+  // הסמן בלבד ב-FRL 8pt). הגדרת f-note-body של המקור לא חוברה לרינדור
+  // בפועל בגרסה הישנה — הרינדור הוא המפרט. גוף ההערה נמדד לפי
+  // f-note-body-font (ברירת המחדל המתוקנת) כשהמשפחה רשומה; נפילה: FRL
+  // רשום ואז גוף המסמך (הנפילות ההיסטוריות המתועדות).
+  const fnBodyFamily = settings['f-note-body-font'];
+  if (impl === 'font-metrics' && fnBodyFamily && registeredMeasureFonts.has(fnBodyFamily)) {
+    fnApi = new MeasureAPI(
+      { 'body-font': fnBodyFamily, 'body-font-size-pt': SZ.fnBody, 'body-line-height': 1.5 },
+      'font-metrics'
+    );
+  } else if (impl === 'font-metrics' && registeredMeasureFonts.has('Frank Ruhl Libre')) {
     fnApi = new MeasureAPI(
       { 'body-font': 'Frank Ruhl Libre', 'body-font-size-pt': SZ.fnBody, 'body-line-height': 1.5 },
       'font-metrics'
     );
   }
   const api = new MeasureAPI(settings, impl);
-  if (!fnApi) fnApi = api; // בלי FRL רשום — הערות בגופן הגוף (התנהגות קודמת)
+  if (!fnApi) fnApi = api; // בלי גופן רשום — הערות בגופן הגוף (התנהגות קודמת)
+  if (!fnMarkApi) fnMarkApi = fnApi; // **S74:** בנפילה נמדד הסמן בגופן גוף ההערה
   let windowApi = null;
   const windowFontName = registeredMeasureFonts.has('FrankReal-Bold') ? 'FrankReal-Bold'
     : (registeredMeasureFonts.has('FrankReal') ? 'FrankReal' : null);
@@ -1111,24 +1139,32 @@ function legacyTypeset(rawText, settings, env) {
       // **S6.3 (חיבור הגדרות):** מקור הטקסט = שדות הפאנל של המקור
       // (inp-book-back-* מ-default_settings) במפורש; המטא-דאטה של
       // המסמך רק ממלאת את השדות (כמו במקור) — נפילה כשהשדה ריק.
+      // **S74 (בעיה 5 — גופן השער האחורי):** כל שורות השער האחורי בגופן
+      // ההגדרה shaar-back-text-font — ברירת המחדל שלו תוקנה לגופן ברירת
+      // המחדל האמיתי של הגרסה הישנה (Assistant ExtraLight — נמדד בייחוס
+      // עמ' 2: כל 5 השורות Assistant-ExtraLight בגדלים 13.5/10/11/10/9.5pt).
+      // עד כאן השורות לא נשאו גופן כלל — הן ירשו את גופן הגוף בניגוד למקור.
+      // העטיפה נמדדת באותו גופן (wrapGate) — המדידה = הרינדור.
+      const shBackFontApi = fontApiFor(settings['shaar-back-text-font']);
+      const backFont = settings['shaar-back-text-font'] || null;
       const backBoxW = GEO.PAGE_W - 110 * (96 / 25.4);
       const copyright = cfg.backCopyright || meta.copyright || '';
       const publisher = cfg.backPublishing || meta.publisher || '';
       const contact = cfg.backContact || meta.contact || '';
       const extra = cfg.backExtra || meta.extra || '';
       const out = [];
-      if (copyright) out.push({ text: 'כל הזכויות שמורות', sizePt: 13.5, y: pt(191.8), color: colOf(settings['shaar-back-text-color']) });
-      wrapGate(copyright, 10, backBoxW).forEach((l, i) => out.push({
-        text: l, sizePt: 10, y: pt(216.4) + i * 10 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color'])
+      if (copyright) out.push({ text: 'כל הזכויות שמורות', sizePt: 13.5, y: pt(191.8), color: colOf(settings['shaar-back-text-color']), font: backFont });
+      wrapGate(copyright, 10, backBoxW, shBackFontApi).forEach((l, i) => out.push({
+        text: l, sizePt: 10, y: pt(216.4) + i * 10 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color']), font: backFont
       }));
-      wrapGate(publisher, 11, backBoxW).forEach((l, i) => out.push({
-        text: l, sizePt: 11, y: pt(357.3) + i * 11 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color'])
+      wrapGate(publisher, 11, backBoxW, shBackFontApi).forEach((l, i) => out.push({
+        text: l, sizePt: 11, y: pt(357.3) + i * 11 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color']), font: backFont
       }));
-      wrapGate(contact, 10, backBoxW).forEach((l, i) => out.push({
-        text: l, sizePt: 10, y: pt(500.9) + i * 10 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color'])
+      wrapGate(contact, 10, backBoxW, shBackFontApi).forEach((l, i) => out.push({
+        text: l, sizePt: 10, y: pt(500.9) + i * 10 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color']), font: backFont
       }));
-      wrapGate(extra, 9.5, backBoxW).forEach((l, i) => out.push({
-        text: l, sizePt: 9.5, y: pt(644.3) + i * 9.5 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color'])
+      wrapGate(extra, 9.5, backBoxW, shBackFontApi).forEach((l, i) => out.push({
+        text: l, sizePt: 9.5, y: pt(644.3) + i * 9.5 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color']), font: backFont
       }));
       return out.filter(g => g.text);
     }
@@ -1136,6 +1172,7 @@ function legacyTypeset(rawText, settings, env) {
       const parts = h1Token.text.split(/[-–—]/).map(s => s.trim()).filter(Boolean);
       const first = parts[0] || h1Token.text;
       const rest = parts.slice(1).join(' - ');
+      const hasSub = !!String(rest || '').trim();
       // **D-89:** כותרת השער ב-#0F172A — נמדד בייחוס עמ' 7; המשנה שחורה
       // ונעטפת לרוחב תיבת השער (378px) כמו ה-div במקור.
       // **S6.3:** גודל הכותרת מההגדרות (s-h1; במקור 50pt) וגופן הרמה
@@ -1145,14 +1182,20 @@ function legacyTypeset(rawText, settings, env) {
       const h1LineH = cfg.h1Size * (96 / 72) * 1.3;
       // **S6.3 (בטיחות עטיפה):** כמו בשער הראשי — ההמשך לפחות 25px מתחת
       // לשורת הכותרת האחרונה.
+      // **S74 (בעיה 3 — חפיפת טקסט/עיטור בשערי המשנה):** כשיש כותרת-משנה
+      // מוצב גל-העיטור בין שני חלקי הכותרת, מעוגן לראש כותרת-המשנה
+      // (subTop−40.8 — היחס המכויל מהייחוס: 585.5 = 626.3−40.8). בעבר היה
+      // מיקום קבוע (585.5) — כותרת שנעטפה לשורות חדרה לתוכו. כעת מרווח
+      // הבטיחות מתחת לכותרת גדל להכיל את העיטור המעוגן (40.8px) — והעיטור
+      // עוקב אחרי הכותרת-משנה בפועל, גם כשהיא נדחפת מטה מעטיפת הכותרת.
       const h1Bottom = pt(345.7) + h1Lines.length * h1LineH;
-      const restY = Math.max(pt(469.7), h1Bottom + 25);
+      const restY = Math.max(pt(469.7), h1Bottom + (hasSub ? 40.8 : 25));
       const out = h1Lines.map((l, i) => ({
         text: l, sizePt: cfg.h1Size, y: pt(345.7) + i * h1LineH,
         color: colOf(settings['heading-1-color']), font: settings['heading-1-font'] || null
       }));
       wrapGate(rest, cfg.h1SubSize, subBoxW, h1SubFontApi).forEach((l, i) => out.push({
-        text: l, sizePt: cfg.h1SubSize, y: restY + i * cfg.h1SubSize * (96 / 72) * 1.3, color: colOf(settings['shaar-subtitle-color']), font: 'David Libre'
+        text: l, sizePt: cfg.h1SubSize, y: restY + i * cfg.h1SubSize * (96 / 72) * 1.3, color: colOf(settings['shaar-subtitle-color']), font: 'David Libre', sub: true
       }));
       return out.filter(g => g.text);
     }
@@ -1198,9 +1241,13 @@ function legacyTypeset(rawText, settings, env) {
         if (isH0) {
           // **S4.24 (כותרת-h0 ארוכה מהפס — עטיפה):** שורות נוספות בפסים של 30px
           // מתחת למיקום המכויל (309.0) — השורה הראשונה זהה לחלוטין לחד-שורתי.
+          // **S74 (בעיה 1 — שמירת הרווח התחתון בעטיפה):** כל שורה עטופה נוספת
+          // דוחפת את ראש הזרימה בפס השורה שלה (30px) — המרווח שמתחת לכותרת
+          // חד-שורתית נשמר גם כשהכותרת נעטפת. בעבר top נשאר קבוע והשורות
+          // העודפות חפפו את ראש הזרימה (בעיה 1: "רווח תחתון לא נשמר בשבירה").
           const h0Lines = wrapText(sec.newPage.text, { measureTextWidth: (t, sz) => brk.hw(t, sz, h0Font) }, SINGLE_W, SZ.h0Title);
           (h0Lines.length ? h0Lines : ['']).forEach((h0seg, li) => pg.bands.push({ kind: 'h0-title', text: h0seg, sizePt: SZ.h0Title, y: 309.0 + li * 30, h: 30, tokenId: li === 0 ? sec.newPage.id : null }));
-          top = GEO.FLOW_TOP + H0_AREA_H;
+          top = GEO.FLOW_TOP + H0_AREA_H + (h0Lines.length - 1) * 30;
           currentH2 = sec.newPage.text;
         } else if (isH2) {
           // **S4.19 (שני אזורי-h2 — מדידה מהייחוס):** עמוד h2 שהמקטע שלו נפתח
@@ -1220,13 +1267,17 @@ function legacyTypeset(rawText, settings, env) {
           // **S4.24 (כותרת-h2 ארוכה מהפס — עטיפה):** נמדד בחי — "בענין הזכרת
           // שבת ור"ח בברהמ"ז…" 555.4px > 552.3 — גלישה שקטה. שורות נוספות
           // בפסים של 30px מתחת למיקום המכויל; הראשונה זהה לחלוטין.
-          const h2Lines = wrapText(disp, { measureTextWidth: (t, sz) => brk.hw(t, sz, h2Font) }, SINGLE_W, SZ.h2);
+          // **S74 (בעיה 1):** רוחב העטיפה = 60% מרוחב הפס (H23_TITLE_W) —
+          // כותרת ארוכה נשברת לשורות ממורכזות במקום למלא את הפס; וכל שורה
+          // עטופה דוחפת את ראש הזרימה בפס שלה — הרווח התחתון המוגדר נשמר.
+          const h2Lines = wrapText(disp, { measureTextWidth: (t, sz) => brk.hw(t, sz, h2Font) }, H23_TITLE_W, SZ.h2);
           (h2Lines.length ? h2Lines : ['']).forEach((h2seg, li) => pg.bands.push({ kind: 'h2-title', text: h2seg, sizePt: SZ.h2, y: (spanExempt ? 321.1 : 344.05) + li * 30, h: 30, tokenId: li === 0 ? sec.newPage.id : null }));
           currentH2 = disp;
           // **S4.9 (תיקון קריטי):** הזרימה מתחילה מתחת לאזור ה-h2 (סימן+כותרת) —
           // בלי זה הבלוקים מוצבים מראש העמוד, מתנגשים בכותרות וגוררים
           // הסחת עימוד של ~29 שורות בכל עמוד פתיחת סימן.
-          top = GEO.FLOW_TOP + areaH;
+          // **S74 (בעיה 1):** +(שורות-1)×30 — שמירת הרווח התחתון בעטיפה.
+          top = GEO.FLOW_TOP + areaH + (h2Lines.length - 1) * 30;
           pg._h2SpanExempt = spanExempt; // **S4.19:** לביטול הזזת ה-fn בסוף העמוד
         }
       }
@@ -1852,7 +1903,10 @@ function legacyTypeset(rawText, settings, env) {
           // ממנו (נמדד בחי: "ו. אחידות מעשה השחיטה וספיקות הגמרא" גלשה
           // 96px, עמ' 571). המקור עוטף ברוחב הפס; כל שורה עטופה = פס נפרד
           // בגיאומטריה המכוילת (H3_SPAN_H) — שורה ראשונה זהה לחלוטין.
-          const spanLines = wrapText(tok.text, { measureTextWidth: (t, sz) => brk.hw(t, sz, h3Font) }, SINGLE_W, SZ.h3);
+          // **S74 (בעיה 1):** כותרת-הרוחב (3) נעטפת ברוחב 60% מרוחב הפס —
+          // כמו כותרת 2; שורות ממורכזות. פס ה-span עצמו (H3_SPAN_H לכל שורה)
+          // כבר שומר את הרווח שמתחתיו מעצם מבנהו — אין תיקון נוסף נדרש.
+          const spanLines = wrapText(tok.text, { measureTextWidth: (t, sz) => brk.hw(t, sz, h3Font) }, H23_TITLE_W, SZ.h3);
           // **S4.13:** סף 60px — כמו המקור (if (currentAvailH < 60) break
           // לפני הצבת כותרת רוחבית); היה H3_SPAN_H+6≈46. **S4.24:** כותרת
           // מרובת-שורות דורשת מקום לכל שורותיה.
@@ -1861,6 +1915,10 @@ function legacyTypeset(rawText, settings, env) {
           // עצמו נופל לעמוד הבא). finalizeBlock עם nextTok=tok (h3=span)
           // מאזן דרך מסלול nextIsSpan.
           if (colBottom() - curY < 60 + (spanLines.length - 1) * H3_SPAN_H) {
+            // **S74 (בעיה 6 — אלמנת כותרת בסוף טור):** כותרות inline שנצברו
+            // בסוף הטור חוזרות עם ה-span לעמוד הבא — אחרת הן נותרות אלמנות
+            // בתחתית הטור (המקור מגלגל כותרות-זנב בכל נקודת יציאה מהמילוי).
+            ti -= rollbackTrailingHeadings();
             finalizeBlock(block, tok, false);
             break fillPage;
           }
@@ -2004,6 +2062,12 @@ function legacyTypeset(rawText, settings, env) {
             // (סעיף 3 של המקור; בלי זה נוצרים טורים שמאליים ריקים — 33 עמודים
             // במסמך הבדיקה הקבוע לפני התיקון, מול 0 בייחוס המקור).
             if (placedB > prospectiveBottom + 1.5) {
+              // **S74 (בעיה 6 — אלמנת כותרת בסוף טור):** שער תקציב-ההערות סוגר
+              // את העמוד כשהפסקה (עם הערותיה) נופלת לעמוד הבא — אבל כותרות
+              // inline שכבר הוצבו בתחתית הטור נשארו שם לבד (נצפה בחי: עמ' עט,
+              // כותרת 4 "מלאכות יצירה" אלמנה בתחתית הטור השמאלי). הן חוזרות
+              // עם הפסקה — כמו שאר נקודות היציאה (fit0/heading-no-fit).
+              ti -= rollbackTrailingHeadings();
               finalizeBlock(block, tok, false, true, 'fn-budget-gate');
               break fillPage;
             }
@@ -2242,7 +2306,11 @@ function legacyTypeset(rawText, settings, env) {
         const lines = [];
         let yy = FLOW_BOTTOM - placed.length * GEO.FN_PITCH;
         for (const tl of placed) { lines.push({ words: tl, y: yy }); yy += GEO.FN_PITCH; }
-        pg.footnotes.push({ continuous: true, lines });
+        // **S74 (בעיה 7 — בקשת משתמש 12.11):** השורה האחרונה של מרזב ההערות
+        // (של כל ההערות יחד — לא של כל הערה בנפרד) ממורכזת. חריג מפורש:
+        // הערה שממשיכה לעמוד הבא (rest לא ריק ⇒ המרזב נחתך באמצע הערה) —
+        // שורתה האחרונה בעמוד זה נשארת מיושבת לימין, כמו שאר שורות הביניים.
+        pg.footnotes.push({ continuous: true, lines, centerLast: rest.length === 0 });
       }
       if (rest.length) {
         const started = new Set();
@@ -2277,11 +2345,13 @@ function legacyTypeset(rawText, settings, env) {
     const items = fnItemsFor(queue);
     const placed = []; // {note, marker, lines(strings), cont}
     let usedLines = 0;
+    let lastPlacedCut = false; // **S74 (בעיה 7):** האם ההערה האחרונה שהוצבה נחתכה (ממשיכה לעמוד הבא)
     for (const it of items) {
       const need = it.lines.length;
       if (usedLines + need <= maxLines) {
         placed.push({ note: it.note, marker: it.marker, lines: it.lines, cont: !!it.note.cont });
         usedLines += need;
+        lastPlacedCut = false;
         continue;
       }
       if (!fnSplitEnabled) {
@@ -2303,6 +2373,7 @@ function legacyTypeset(rawText, settings, env) {
         const restText = it.lines.slice(remainLines).join(' ');
         pendingFootnotes.push({ text: restText, cont: true, srcText: it.note.srcText || it.note.text, key: it.note.key });
         usedLines = maxLines;
+        lastPlacedCut = true; // **S74 (בעיה 7):** נחתכה — השורה האחרונה אינה סוף הערה
       } else {
         // אין עוד תקציב במרזב — ההערה כולה עוברת לעמוד הבא (מספרה הפרקי
         // נשמר — S4.26 — כדי שהסמן בגוף וברישום יישארו זהים)
@@ -2315,6 +2386,12 @@ function legacyTypeset(rawText, settings, env) {
       const it = { marker: p.marker, lines: [], cont: p.cont };
       for (const l of p.lines) { it.lines.push({ words: String(l).split(' '), y: yy }); yy += GEO.FN_PITCH; }
       pg.footnotes.push(it);
+    }
+    // **S74 (בעיה 7):** במצב block — רק ההערה האחרונה של העמוד מקבלת מרכוז
+    // שורה-אחרונה, ורק אם לא נחתכה (המשך בעמוד הבא ⇒ בלי מרכוז).
+    if (placed.length) {
+      const lastRec = pg.footnotes[pg.footnotes.length - 1];
+      if (lastRec) lastRec.centerLast = !lastPlacedCut;
     }
   }
 
@@ -2333,7 +2410,9 @@ function legacyTypeset(rawText, settings, env) {
       if (!n.cont) {
         const num = (n.num != null) ? n.num : ++pagePos;
         marker = LineBreaker.markerWord(num, cfg.fnNumSeparator);
-        mkW = fnApi.measureTextWidth(marker, cfg.fnListingNumSize, 0)
+        // **S74 (בעיה 5):** הסמן נמדד בגופן הרישום של המקור (FRL — נמדד
+        // בייחוס עמ' 31/37); גוף ההערה בגופן גוף ההערה (fnApi).
+        mkW = fnMarkApi.measureTextWidth(marker, cfg.fnListingNumSize, 0)
           + fnApi.measureTextWidth(' ', SZ.fnBody, 0);
       }
       const lines = wrapText(n.text, fnApi, SINGLE_W - mkW, SZ.fnBody);
@@ -2361,7 +2440,7 @@ function legacyTypeset(rawText, settings, env) {
         tokens.push({ t: p, w: fnApi.measureTextWidth(p, SZ.fnBody, 0), noteIdx: i });
       }
       if (it.marker) {
-        tokens.push({ t: it.marker, mk: true, sizePt: cfg.fnListingNumSize, w: fnApi.measureTextWidth(it.marker, cfg.fnListingNumSize, 0), noteIdx: i });
+        tokens.push({ t: it.marker, mk: true, sizePt: cfg.fnListingNumSize, w: fnMarkApi.measureTextWidth(it.marker, cfg.fnListingNumSize, 0), noteIdx: i });
       }
       for (const wd of String(it.note.text).split(/\s+/).filter(Boolean)) {
         tokens.push({ t: wd, w: fnApi.measureTextWidth(wd, SZ.fnBody, 0), noteIdx: i });
@@ -3115,12 +3194,17 @@ function legacyTypeset(rawText, settings, env) {
     for (const p of pages) {
       if (p.type === 'shaar-sub') {
         dec(p, { x: 0.55 * GEO.PAGE_W, y: 0, w: 0.45 * GEO.PAGE_W, h: GEO.PAGE_H, kind: 'shaar-panel', kindStyle: 'rect:#F4F4F4' });
-        if ((p.gateLines || []).length > 1) { // כותרת + כותרת-משנה ⇒ הגל ביניהן (כמו renderSubShaar)
+        // **S74 (בעיה 3):** הגל בין שני חלקי הכותרת — מעוגן לראש כותרת-המשנה
+        // בפועל (subTop−40.8 — היחס המכויל מהייחוס), לא למיקום קבוע. בעבר
+        // נקבע לפי מספר השורות (>1) — כותרת שנעטפה ללא כותרת-משנה קיבלה גל
+        // שרודף לה בחינם, וכותרת-משנה שנדחפה מטה השאירה את הגל בתוך הכותרת.
+        const subLines = (p.gateLines || []).filter(g => g.sub);
+        if (subLines.length) { // כותרת + כותרת-משנה ⇒ הגל ביניהן (כמו renderSubShaar)
           const style = cfg.shaarSubDivider && cfg.shaarSubDivider !== 'none'
             ? (cfg.shaarSubDivider.startsWith('ext_') || cfg.shaarSubDivider.endsWith('.svg')
               ? 'imud:divider:' + cfg.shaarSubDivider : cfg.shaarSubDivider)
             : 'shaar-wave';
-          dec(p, { x: 175.7, y: 585.5, w: 140, h: 25, kind: 'shaar-divider', kindStyle: style });
+          dec(p, { x: 175.7, y: subLines[0].y - 40.8, w: 140, h: 25, kind: 'shaar-divider', kindStyle: style });
         }
       } else if (p.type === 'shaar-back') {
         dec(p, { x: 0, y: 0, w: 0.45 * GEO.PAGE_W, h: GEO.PAGE_H, kind: 'shaar-panel', kindStyle: 'rect:#F4F4F4' });

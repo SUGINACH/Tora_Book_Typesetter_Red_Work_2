@@ -71,7 +71,13 @@ describe('S4.5-ד: מיפוי default_settings.json המקורי — 100% dispos
     assertEq(settings['heading-0-font'], 'AlphaBlack', 'f-h0 ⇒ heading-0-font (משפחה ראשונה)');
     assertEq(settings['heading-0-size-pt'], 26, 's-h0=26 ⇒ heading-0-size-pt');
     assertEq(settings['heading-2-size-pt'], 17, 's-h2=17 ⇒ heading-2-size-pt');
-    assertEq(settings['f-note-body-font'], 'Frank Ruhl Libre', 'f-note-body ⇒ f-note-body-font');
+    // **S74 (בעיה 5 — בקשת משתמש 12.11):** ברירת המחדל של המקור ('Frank Ruhl
+    // Libre') לא חוברה לרינדור בפועל בגרסה הישנה — גוף ההערה רונדר ב-
+    // Assistant ExtraLight (נמדד בייחוס עמ' 31/37). המיפוי מתרגם את ברירת
+    // המחדל לגופן הרינדור האמיתי; ערך אחר (בחירה מפורשת) עדיין עובר כמו שהוא
+    // (נבדק להלן).
+    assertEq(settings['f-note-body-font'], 'אסיסטנט קל מאוד', 'f-note-body ⇒ f-note-body-font (S74: ברירת המחדל = הרינדור בפועל של המקור)');
+    assertEq(importImudSettings({ 'f-note-body': "'David HB', serif" }, RED_KEYS).settings['f-note-body-font'], 'David HB', 'S74: ערך שאינו ברירת המחדל נשמר כמו שהוא');
     assertEq(settings['header-recto-right-font'], 'Livorna', 'f-hdr-r ⇒ header-recto-right-font');
     assertEq(settings['header-recto-right-size-pt'], 15, 's-hdr-r=15 ⇒ header-recto-right-size-pt');
     assertEq(settings['header-verso-right-font'], 'Livorna', 'f-hdr-verso-r ⇒ header-verso-right-font');

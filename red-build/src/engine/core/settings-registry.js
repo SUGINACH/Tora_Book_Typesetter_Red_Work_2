@@ -149,7 +149,7 @@ const registry = [
   K('endnotes-enabled', 'bool', false, P.NOTES, 'chk-endnotes', ['layout/endnote-pages'], 'fx:endnotes-on', { note: 'נגזר מ‑note-placement-mode=endnotes (D-39); קלט ישן true ממופה ל‑mode=endnotes בהגירה (project-io)' }),
   K('endnote-title-text', 'string', 'הערות', P.NOTES, 'inp-endnote-title', ['layout/endnote-pages'], 'fx:endnote-title'),
   K('endnote-columns', 'number', 1, P.NOTES, 'sel-en-cols', ['layout/endnote-pages'], 'fx:en-cols', { enum: [1, 2], note: 'S7.1.1: טור אחד או שניים בעמודי הערות' }),
-  K('f-note-body-font', 'font', 'Frank Ruhl Libre', P.NOTES, 'sel-fnote-body-font', ['layout/footnote-budget'], 'fx:fnote-body-font'),
+  K('f-note-body-font', 'font', 'אסיסטנט קל מאוד', P.NOTES, 'sel-fnote-body-font', ['layout/footnote-budget', 'layout/legacy-imud-flow'], 'fx:fnote-body-font', { note: 'S74 (בעיה 5): ברירת המחדל של הרינדור בפועל של הגרסה הישנה — Assistant ExtraLight 8.5pt (נמדד בייחוס עמ׳ 31/37: כל שורות גוף ההערה; הסמן בלבד FRL 8pt). הגדרת f-note-body הישנה (FRL) לא חוברה לרינדור בפועל במקור' }),
   K('s-note-body-font', 'font', 'Frank Ruhl Libre', P.NOTES, 'sel-snote-body-font', ['layout/side-notes'], 'fx:snote-body-font'),
   // **S73 (צבע פר-גופן — הערות):** ברירת מחדל שחורה (בקשת משתמש מפורשת:
   // "ברירת המחדל של כל הגופנים ללא יוצא מן הכלל = שחור"). האפור הקבוע
@@ -267,7 +267,7 @@ const registry = [
   K('shaar-year-font', 'font', 'David Libre', P.THEMES, 'sel-shaar-year-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-year-font', { note: "מקור: f-sh-year=\"'David Libre', serif\"" }),
   K('shaar-year-color', 'color', '#000000', P.THEMES, 'inp-shaar-year-color', ['layout/legacy-imud-flow', 'output/geometry-projector', 'output/dom-renderer'], 'fx:shaar-year-color', { note: 'S73: צבע בס״ד/מקום-ושנה בשער — שחור כברירת מחדל' }),
   K('shaar-year-size-pt', 'number', 12, P.THEMES, 'rng-shaar-year-size', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-year-size', { min: 8, max: 20, note: 'מקור: s-sh-year=12' }),
-  K('shaar-back-text-font', 'font', 'David Libre', P.THEMES, 'sel-shaar-back-text-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-back-text-font', { note: 'גוף טקסט השער האחורי (שורות שמירת־זכויות) — מקור: David Libre' }),
+  K('shaar-back-text-font', 'font', 'אסיסטנט קל מאוד', P.THEMES, 'sel-shaar-back-text-font', ['output/shaar-content', 'output/dom-renderer', 'layout/legacy-imud-flow'], 'fx:shaar-back-text-font', { note: 'S74 (בעיה 5): כל שורות השער האחורי ב-Assistant ExtraLight — ברירת המחדל של הגרסה הישנה בפועל (נמדד בייחוס עמ׳ 2: חמש השורות Assistant-ExtraLight 13.5/10/11/10/9.5pt). עד S74 ירשו את גוף המסמך' }),
   K('shaar-back-text-color', 'color', '#000000', P.THEMES, 'inp-shaar-back-text-color', ['layout/legacy-imud-flow', 'output/geometry-projector', 'output/dom-renderer'], 'fx:shaar-back-text-color', { note: 'S73: צבע טקסט השער האחורי — שחור כברירת מחדל' }),
   K('shaar-back-text-size-pt', 'number', 10.5, P.THEMES, 'rng-shaar-back-text-size', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-back-text-size', { min: 8, max: 16, note: 'מקור: שורות ההמשך 10.5pt (השורה הראשונה 13pt מודגשת)' }),
   // נתוני הספר לשערים — ממופים מ-inp-book-* של המקור; בלי ערך — נופלים למטא-נתוני המסמך
