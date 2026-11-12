@@ -6470,9 +6470,56 @@ function hasUnclosedNote(text, open, close) {
   return text.indexOf(close, s + open.length) === -1;
 }
 
-/** קריאת קונפיגורציה מה-JSON המקורי (עם ברירות המחדל ההיסטוריות). */
-function readConfig(imud) {
-  const g = (k, d) => (imud && imud[k] !== undefined && imud[k] !== '' ? imud[k] : d);
+/** קריאת קונפיגורציה מה-JSON המקורי (עם ברירות המחדל ההיסטוריות).
+ * **S77 (בקשה 3 — "הרבה הגדרות שלא מחוברות"): גשר חי מהרישום.** עד כאן
+ * המנוע קרא את הקונפיגורציה מה-raw בלבד (_imudRaw) — והגדרות הרישום
+ * שמקבילות לו (גדלים/מתגים/טקסטים) לא עשו דבר בפרופיל המורשת (הנתיב
+ * החי; נמדר באתר החי: body/shaar/heading sizes, מתגי שערים ותכנים —
+ * שינוי לא השפיע). כעת: לכל מפתח raw עם מפתח רישום מקביל — ההגדרה
+ * החיה גוברת. הייבוא של ברירות המחדל ממפה את אותם הערכים בדיוק,
+ * ולכן ברירת המחדל אינה משתנה (הוכחת digest); שינוי חי בפאנל משפיע
+ * מיד. מפתחות גיאומטריים (size-body/line-height-body/s-h2..s-h7)
+ * אינם בגשר — הם מצומדים לקבועים מכוילים (LINE_H/מפתחי פס/עיגון)
+ * ודורשים העברת כיול ייעודית (מתועד בקובץ המעבר). */
+const RED_SETTING_BRIDGE_S77 = {
+  's-h0': 'heading-0-size-pt',
+  's-h1': 'heading-1-size-pt',
+  's-sh-sub': 'shaar-subtitle-size-pt',
+  's-sh-title': 'shaar-title-size-pt',
+  's-sh-desc': 'shaar-desc-size-pt',
+  's-sh-sec': 'shaar-sections-size-pt',
+  's-sh-author': 'shaar-author-size-pt',
+  's-sh-year': 'shaar-year-size-pt',
+  'fn-delim-open': 'fn-delim-open',
+  'fn-delim-close': 'fn-delim-close',
+  'en-line-prefix': 'en-line-prefix',
+  'drop-word-mode': 'first-word-mode',
+  'drop-word-count': 'first-word-length',
+  'drop-word-min-lines': 'first-word-threshold-lines',
+  'show-main-shaar': 'shaar-main-enabled',
+  'show-back-shaar': 'shaar-back-enabled',
+  'show-sub-shaar': 'shaar-sub-enabled',
+  'fn-title-text': 'endnote-title-text',
+  'enable-general-toc': 'toc-general-enabled',
+  'enable-detailed-toc': 'toc-detail-enabled',
+  'general-toc-count-numbering': 'general-toc-count-numbering',
+  'detailed-toc-count-numbering': 'detailed-toc-count-numbering',
+  'imbalance-max-delta-px': 'imbalance-max-delta-px'
+};
+function readConfig(imud, settings) {
+  const g = (k, d) => {
+    // **S77:** הגדרה חיה של הרישום גוברת על ה-raw (הייבוא מסנכרן את ברירות
+    // המחדל — התנהגות ברירת המחדל נשמרת במדויק)
+    // **תרגום אוצר-מילים:** 'drop' של הרישום = 'window' של המקור (אותו
+    // מנגנון מילת-חלון — כך מיפוי הייבוא); המנוע המורשת בודק 'window'.
+    if (k === 'drop-word-mode' && settings) {
+      const fm = settings['first-word-mode'];
+      if (fm != null && fm !== '') return fm === 'drop' ? 'window' : String(fm);
+    }
+    const rk = settings ? RED_SETTING_BRIDGE_S77[k] : null;
+    if (rk && settings[rk] !== undefined && settings[rk] !== null && settings[rk] !== '') return settings[rk];
+    return (imud && imud[k] !== undefined && imud[k] !== '' ? imud[k] : d);
+  };
   const b = (k, d) => {
     const v = g(k, d);
     return v === true || v === 'true' || v === '1' || v === 1;
@@ -7126,7 +7173,11 @@ function parenCenterRaisePx(ascentEm, hostPt, parenPt) {
  * legacyTypeset — הנתיב החי לפרופיל IMUD (התנהגות המקור = המפרט).
  */
 function legacyTypeset(rawText, settings, env) {
-  const cfg = readConfig(settings._imudRaw || {});
+  const cfg = readConfig(settings._imudRaw || {}, settings);
+  // **S77 (בקשה 3):** footnotes-enabled=false — הפסקת חילוץ ההערות לחלוטין
+  // (עד כאן ההגדרה לא נקראה כלל בנתיב המורשת; המפרידים מתרוקנים — findNotes
+  // מחזיר רשימה ריקה, הסמנים אינם מוצבים בגוף ואין מרזב).
+  if (settings['footnotes-enabled'] === false) { cfg.fnOpen = ''; cfg.fnClose = ''; }
   // **S6.3 (חיבור הגדרות):** גדלים שהיו קשיחים ב-SZ נקראים מההגדרות.
   // המוטציה דטרמיניסטית — כל קריאה מציבה ערכים מוחלטים מ-cfg (ברירות
   // המחדל של readConfig = הערכים ההיסטוריים המכוילים; ערכי המקור גוברים).

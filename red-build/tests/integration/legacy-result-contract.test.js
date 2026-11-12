@@ -67,8 +67,11 @@ describe('U-5 — חוזה תוצאת נתיב המורשת: contentHashIn (ui-r
 
   it('אי-תלות בהגדרות: שינוי פריסה (בלי שער אחורי) אינו משנה את contentHashIn', () => {
     const defaults = legacyDefaults();
-    // show-back-shaar=false מסיר עמוד שער-אחורי — פריסה משתנה, קלט לא
-    const noBack = { ...defaults, _imudRaw: { ...(defaults._imudRaw || {}), 'show-back-shaar': false } };
+    // **S77 (הגשר החי):** הגדרת הרישום גוברת על ה-raw — השינוי נעשה במפתח
+    // החי (shaar-back-enabled) כמו בפאנל ההגדרות (ה-raw עודכן גם הוא לשמירת
+    // הקונסיסטנטיות של שני המקורות). show-back-shaar=false מסיר עמוד
+    // שער-אחורי — פריסה משתנה, קלט לא.
+    const noBack = { ...defaults, 'shaar-back-enabled': false, _imudRaw: { ...(defaults._imudRaw || {}), 'show-back-shaar': false } };
     const a = typeset(CORPUS, defaults, { noRecommendations: true });
     const b = typeset(CORPUS, noBack, { noRecommendations: true });
     assertEq(b.contentHashIn, a.contentHashIn, 'contentHashIn תלוי-קלט בלבד');

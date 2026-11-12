@@ -91,7 +91,7 @@ const CUT_DOC = [
 ].join('\n');
 
 const QUOTE_DOC = [
-  'ספר הבדיקה - גרשיים S77',
+  'שם הספר - גרשיים בהערות S77',
   'כותרת 2 מספר 1 - פרק ראשון',
   'פסקה עם הערה [וע"כ היה לחייב בשבת: דגדר מעשה איסור; ועוד ראיה] ועוד מילים בגוף.',
   'פסקה נוספת עם גרשיים בגוף עצמו וע"כ ונקודתיים: ופסיק.'
@@ -413,6 +413,81 @@ describe('S77 בקשה 3 — הגדרות רמות תוכן-העניינים מ�
     const merged = rowsInline.find(row => String(row.text).includes(' | '));
     assert(merged != null, 'נמצאה שורה ממוזגת (טקסט " | ")');
     assertEq(merged.level, 3, 'השורה הממוזגת שייכת להורה (רמה 3)');
+    clearRegisteredFonts();
+  });
+});
+
+// =====================================================================
+describe('S77 בקשה 3 — הגשר החי: הגדרות רישום מחוברות ל-readConfig של המורשת', () => {
+  it('ברירת המחדל המיובאת: הגשר אינו משנה אף שורה (digest עמודים+כותרות+TOC זהה לנתיב ללא גשר)', () => {
+    const s = imudSettings();
+    registerCoreFonts(s);
+    // הנתיב "בלי גשר": מפתחות הרישום המגושרים לא נמצאים כלל בהגדרות
+    const BRIDGED = ['heading-0-size-pt', 'heading-1-size-pt', 'shaar-title-size-pt', 'shaar-subtitle-size-pt',
+      'shaar-desc-size-pt', 'shaar-sections-size-pt', 'shaar-author-size-pt', 'shaar-year-size-pt',
+      'fn-delim-open', 'fn-delim-close', 'en-line-prefix', 'first-word-mode', 'first-word-length',
+      'first-word-threshold-lines', 'shaar-main-enabled', 'shaar-back-enabled', 'shaar-sub-enabled',
+      'endnote-title-text', 'toc-general-enabled', 'toc-detail-enabled', 'general-toc-count-numbering',
+      'detailed-toc-count-numbering', 'imbalance-max-delta-px'];
+    const sNoBridge = { ...s };
+    for (const k of BRIDGED) delete sNoBridge[k];
+    const r1 = legacyTypeset(CUT_DOC, s, {});
+    const r2 = legacyTypeset(CUT_DOC, sNoBridge, {});
+    assertEq(r1.pages.length, r2.pages.length, 'אותו מספר עמודים');
+    for (let i = 0; i < r1.pages.length; i++) {
+      const a = r1.pages[i], b = r2.pages[i];
+      assertEq(a.type, b.type, `עמוד ${i}: סוג`);
+      assertEq(a.folioDisplay, b.folioDisplay, `עמוד ${i}: גיליון`);
+      const wa = JSON.stringify(a.columns.map(c => c.map(l => (l.words || []).join(' '))));
+      const wb = JSON.stringify(b.columns.map(c => c.map(l => (l.words || []).join(' '))));
+      assertEq(wa, wb, `עמוד ${i}: שורות הגוף זהות`);
+    }
+    clearRegisteredFonts();
+  });
+
+  it('שינויים חיים דרך הגשר: גודל שער, קידומת הערות-סיום, מתגי תכנים, ו-footnotes-enabled', () => {
+    const s = imudSettings();
+    registerCoreFonts(s);
+    // גודל כותרת השער מההגדרה (s-sh-title)
+    const r1 = legacyTypeset(QUOTE_DOC, { ...s, 'shaar-title-size-pt': 30 }, {});
+    const gate1 = r1.pages[0].gateLines || [];
+    const titleLine = gate1.find(g => g.sizePt >= 20);
+    assert(titleLine && titleLine.sizePt === 30, 'shaar-title-size-pt=30 ⇒ כותרת השער ב-30pt');
+    // en-line-prefix — קידומת הערות הסיום (אין הערות סיום במסמך קטן — בדיקת הערך ב-cfg דרך התנהגות עקיפה: משאירים לבדיקת הייבוא)
+    // footnotes-enabled=false — אין הערות כלל
+    const r2 = legacyTypeset(QUOTE_DOC, { ...s, 'footnotes-enabled': false }, {});
+    const hasNotes = r2.pages.some(pg => (pg.footnotes || []).length > 0);
+    assert(!hasNotes, 'footnotes-enabled=false ⇒ אין מרזב הערות');
+    const r3 = legacyTypeset(QUOTE_DOC, s, {});
+    assert(r3.pages.some(pg => (pg.footnotes || []).length > 0), 'ברירת המחדל — ההערות קיימות');
+    // toc-detail-enabled=false — אין עמודי תוכן מפורט
+    const r4 = legacyTypeset(CUT_DOC, { ...s, 'toc-detail-enabled': false }, {});
+    assert(!r4.pages.some(p => p.type === 'toc-detailed'), 'toc-detail-enabled=false ⇒ אין תוכן מפורט');
+    const r5 = legacyTypeset(CUT_DOC, s, {});
+    assert(r5.pages.some(p => p.type === 'toc-detailed'), 'ברירת המחדל — תוכן מפורט קיים');
+    // shaar-back-enabled=false — אין שער אחורי
+    const r6 = legacyTypeset(QUOTE_DOC, { ...s, 'shaar-back-enabled': false }, {});
+    assert(!r6.pages.some(p => p.type === 'shaar-back'), 'shaar-back-enabled=false ⇒ אין שער אחורי');
+    clearRegisteredFonts();
+  });
+
+  it('התצוגה וה-PDF: גודל כותרת השער מההגדרה זורם לשני הנתיבים', () => {
+    const s = imudSettings();
+    registerCoreFonts(s);
+    const r = legacyTypeset(QUOTE_DOC, { ...s, 'shaar-title-size-pt': 30 }, {});
+    // המקרן: שורות השער נושאות את הגודל
+    const proj = projectLegacyDocument(r, { ...s, 'shaar-title-size-pt': 30 });
+    const gateLine = proj.pages[0].lines.find(l => l.kind === 'gate' && l.sizePt === 30);
+    assert(gateLine != null, 'המקרן: שורת השער ב-30pt');
+    // ה-DOM: שורת השער בגודל ההגדרה
+    const doc = makeDoc();
+    const root = renderPage(r.pages[0], { ...s, 'shaar-title-size-pt': 30 }, doc);
+    const find30 = (el) => {
+      if (el.style && el.style.fontSize === '40px') return true; // 30pt × 96/72 = 40px
+      for (const c of (el.children || [])) if (find30(c)) return true;
+      return false;
+    };
+    assert(find30(root), 'ה-DOM: שורת השער ב-40px (30pt)');
     clearRegisteredFonts();
   });
 });

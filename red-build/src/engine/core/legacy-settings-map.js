@@ -292,6 +292,11 @@ const DISPOSITIONS = {
   'general-toc-show-numbering': { kind: 'mapped', to: 'general-toc-show-numbering' },
   'detailed-toc-count-numbering': { kind: 'mapped', to: 'detailed-toc-count-numbering' },
   'detailed-toc-show-numbering': { kind: 'mapped', to: 'detailed-toc-show-numbering' },
+  // **S77 (בקשה 3 — הגשר החי):** מתגי הפעלת התכנים — עד כאן ui-state (לא
+  // הגיעו למנוע); כעת ממופים למפתחות הרישום שהגשר קורא (ברירת המחדל
+  // של המקור — שניהם true — משומרת; קובץ מקור עם כיבוי יכובד).
+  'enable-general-toc': { kind: 'mapped', to: 'toc-general-enabled', transform: (v) => v !== false && v !== 'false', reason: 'S77: מתג תוכן-עניינים כללי — חי בנתיב המורשת' },
+  'enable-detailed-toc': { kind: 'mapped', to: 'toc-detail-enabled', transform: (v) => v !== false && v !== 'false', reason: 'S77: מתג תוכן-עניינים מפורט — חי בנתיב המורשת' },
 
   // ============ שערים/ערכות נושא (בוררי האפליקציה הישנה) ============
   'style-set-select': { kind: 'ui-state', reason: 'בורר סגנון כללי בפאנל הישן; ב-RED: תבניות/ערכות נושא' },
