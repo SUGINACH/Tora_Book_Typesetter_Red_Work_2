@@ -4160,6 +4160,590 @@ Book.zip
 
 **מצב המימוש\:** לא שיניתי קוד מנוע, לא הורצנו בדיקות ולא בוצעה פריסה. השינוי הוא תיעודי בלבד. S14 מחייב תחילה מודל תוכן ומנוע עימוד יחידים; רק לאחר מכן ייכנסו התמונות וטווחי הגופן למימוש.
 
+## Prompt:
+12.11.2026, 16:40:46
+
+[$github](app://connector_76869538009648d5b282a4bb21c3d157) המשך עבודה משיחה קודמת [https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/main/ai-chat/ChatGPT-Branch%20%C2%B7%20%D7%97%D7%95%D7%95%D7%AA%20%D7%93%D7%A2%D7%AA%20%D7%A2%D7%9C%20%D7%94%D7%AA%D7%95%D7%9B%D7%A0%D7%99%D7%AA-20261112-1638.md](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/main/ai-chat/ChatGPT-Branch%20%C2%B7%20%D7%97%D7%95%D7%95%D7%AA%20%D7%93%D7%A2%D7%AA%20%D7%A2%D7%9C%20%D7%94%D7%AA%D7%95%D7%9B%D7%A0%D7%99%D7%AA-20261112-1638.md)
+
+## Response:
+12.11.2026, 16:40:53 · gpt-6-t-mini
+
+אמשיך מתוך תיעוד השיחה עצמו ולא מתוך הנחות לגבי מצב העבודה. תחילה אקרא את קובץ השיחה במלואו, אחלץ ממנו את ההחלטות והמשימות שנותרו, ואז אבדוק את מצב הענף והקבצים הרלוונטיים ב־`Tora_Book_Typesetter_Red_Work_2` ואמשיך בהתאם.
+
+מהשיחה עולה שהיעד המרכזי אינו תיקון התקלה המקומית בהערות בלבד, אלא איחוד אמיתי: מסלול עימוד יחיד, מודל עמוד וגאומטריה יחידים, ומודל פלט משותף לתצוגה ול־PDF. זיהיתי גם שהחקירה הקודמת כבר מצאה כפילויות בפענוח, שבירת שורות, איזון, תקצוב הערות, רינדור וחישוב hash. אני ממשיך לקרוא את ההמשך כדי לא לקטוע את ההכרעות המאוחרות או להתחיל לבצע שינוי שאינו תואם להן.
+
+בבדיקת מסמכי ה־PR מצאתי שלוש אי־התאמות שראוי לתקן לפני שמסתמכים עליהם: שלב S14 עדיין כולל את קורפוס Orange כשער חובה אף שההכרעה לגביו פתוחה; תרשים התלויות בתוכנית מסתיים ב־S13; וקובץ ה־handoff אומר בטעות שה־PR טרם נפתח. אני בודק כעת את מלוא ניסוח S14 ואת תנאי הסף לאיחוד, ואז אתקן את התיעוד באותו ענף בלי לגעת בקוד המנוע.
+
+> **Reviewing recent context**
+>
+> I’m reconstructing the latest repository state from the available transcript, focusing on the current work, branch, and pull request. The earlier context is truncated, so I’m checking only the relevant recent segment before proceeding.
+>
+> **Refining repository context**
+>
+> I’m narrowing the review to the current repository state and pull request, while separating confirmed decisions from truncated or conflicting notes. I’ll verify the latest changes before suggesting any next step.
+>
+> **Reviewed recent context**
+>
+> 
+>
+> **Reviewed transcript segments, PR #14, program documentation, and feedback progress**
+>
+> 
+>
+> **Reconciling current decisions**
+>
+> I’m consolidating the confirmed document settings and separating unresolved items, especially image fitting and header behavior. I’m treating ambiguous choices as pending rather than silently promoting recommendations into final requirements.
+>
+> **Reconciled current decisions**
+>
+> 
+>
+> **Reconciling document settings**
+>
+> I’m separating confirmed requirements from unresolved choices, especially image fitting and header behavior. The current draft appears consistent overall, but I’m flagging ambiguous recommendations instead of treating them as final instructions.
+>
+> **Auditing current documentation**
+>
+> I’m checking the draft specifications and work plan for consistency before making changes. I’m paying special attention to ambiguous image-fitting behavior, header handling, and the distinction between confirmed requirements and open questions.
+>
+> **Audited documentation and reconciled document settings**
+>
+> 
+>
+> **Auditing documentation consistency**
+>
+> I’m checking the draft for stale handoff notes and unresolved decisions accidentally presented as settled. I’ve already spotted potential inconsistencies around pull-request status and whether the historical corpus is mandatory, so I’m verifying those before editing.
+>
+> **Auditing draft consistency**
+>
+> I’m identifying stale handoff notes and unresolved choices that may have been presented as settled. The main concerns are pull-request status, mandatory test corpora, and whether the new final stage is fully integrated into the roadmap.
+>
+> **Audited documentation consistency**
+>
+> 
+>
+> **Audited PR changes and finalized specification documentation against decisions**
+>
+> 
+>
+> **Auditing draft consistency**
+>
+> I’m identifying stale handoff notes and unresolved choices that may have been presented as settled. The main concerns are pull-request status, mandatory test corpora, and whether the new final stage is fully integrated into the roadmap.
+>
+> **Audited draft consistency**
+>
+> 
+>
+> **Auditing current documentation**
+>
+> I’m verifying that the documentation preserves the exact note-placement priorities, not merely broad layout rules. I’m checking whether complete-note containment and marker-page behavior are stated explicitly before finalizing the update.
+>
+> **Audited current documentation**
+>
+> 
+>
+> **Auditing note priorities**
+>
+> I’m checking whether the documentation explicitly preserves the required order: first attempt to keep each note complete, then consider marker-page placement. I’m also verifying that architecture work remains the next focus.
+>
+> **Audited note priorities**
+>
+> 
+>
+> **Audited architecture and G11 plans, updated workplans and handoffs, validated metadata**
+>
+> 
+>
+> **Inspected typesetting, layout, rendering pipelines, legacy flows, and configuration mappings**
+>
+> 
+>
+> **Fetched legacy settings, browser, IMUD, and layout planner files**
+>
+> 
+>
+> **Fetched and inspected legacy and modern layout, settings, parser, and renderer sources**
+>
+> 
+>
+> **Reviewed repository layout pipeline and geometry projection changes**
+>
+> 
+>
+> **Audited S72 overflow bugs, math tests, documentation, and CI failures**
+>
+> 
+>
+> **Downloaded and materialized workflow artifacts**
+>
+> 
+>
+> **Inspecting Uploaded ZIP Artifact Contents**
+>
+>
+> **Inspecting audit JSON archive contents**
+>
+>
+> **Parsing Nested JSON Audit Files Twice**
+>
+>
+> **Inspecting Full Math Audit Statistics**
+>
+>
+> **Auditing Footnote Marker Mismatches**
+>
+>
+> **Inspected audit ZIP contents and checked math and footnote mismatches**
+>
+> 
+>
+> **Reviewing the project state**
+>
+> I’m auditing the documentation corrections and the active layout paths before changing code. I’ve found stale handoff details, an unresolved corpus decision, and a need to make engine unification an explicit blocking phase.
+>
+> **Reviewed the project state**
+>
+> 
+>
+> **Inspected auditing, parsing, and layout logic for footnotes and side notes**
+>
+> 
+>
+> **Auditing the architecture**
+>
+> I’m reviewing the current documentation and implementation boundaries before changing code. I’ve found documentation inconsistencies around pending test corpora, stage sequencing, and stale handoff status, so I’m correcting those first.
+>
+> **Searching the web**
+>
+> 
+>
+> **Fetched and analyzed GitHub repository files, fixtures, and stylesheets**
+>
+> 
+>
+> **Inspecting Artifact JSON and Problem Details**
+>
+>
+> **Inspected artifact JSON and problem details**
+>
+> 
+>
+> **Auditing engine boundaries**
+>
+> I’ve found documentation inconsistencies and am correcting them before implementation. Next, I’m tracing parser, layout, typography, notes, and rendering responsibilities to define one unified runtime path without treating legacy output as a target.
+>
+> **Audited engine boundaries**
+>
+> 
+>
+> **Extracted note occurrences from raw source**
+>
+> 
+>
+> **Investigated footnote parsing and mapped typography export pipeline architecture**
+>
+> 
+>
+> **Investigating Missing Footnote Marker Rendering**
+>
+>
+> **Auditing engine consistency**
+>
+> I’m finding a likely documentation gap: the unification gate now needs explicit migration stages, while the historical corpus must remain optional until its open question is resolved. I’m also flagging possible note-marker loss for code-level review.
+>
+> **Audited engine consistency**
+>
+> 
+>
+> **Investigated missing footnote marker rendering**
+>
+> 
+>
+> **Mapping architecture**
+>
+> I’m tracing both live layout routes from input parsing through page planning, rendering, and export. I’m also separating confirmed code paths from assumptions before updating the architecture documentation.
+>
+> **Mapped architecture**
+>
+> 
+>
+> **Fetched renderer sources and mapped modern and legacy typesetting dependencies**
+>
+> 
+>
+> **Audited and mapped legacy and modern layout pipelines and dependencies**
+>
+> 
+>
+> **Inspecting Available Audit Files**
+>
+>
+> **Inspecting ZIP archive contents**
+>
+>
+> **Inspected available audit files and ZIP archive contents**
+>
+> 
+>
+> **Inspecting local math audit data**
+>
+>
+> **Inspecting dataset summary and problem structure**
+>
+>
+> **Investigating Problem Field Discrepancies**
+>
+>
+> **Inspecting detailed page data and calculations**
+>
+>
+> **Checking page schema indexes**
+>
+>
+> **Inspecting page indexes and metadata**
+>
+>
+> **Inspecting page-level layout details and footnote markers**
+>
+>
+> **Inspecting JSON-like string data**
+>
+>
+> **Parsing JSON structure and summary data**
+>
+>
+> **Inspecting page 107 metadata and coordinates**
+>
+>
+> **Inspected math audit data, page structures, metadata, and JSON discrepancies**
+>
+> 
+>
+> **Audited layout dependencies, side-note rendering, documentation, and settings**
+>
+> 
+>
+> **Updated handoff and pull request documentation with verified audit details**
+>
+> 
+>
+> **Inspecting page footnotes and markers**
+>
+>
+> **Inspected page footnotes and markers**
+>
+> 
+>
+> **Fetched planner, tokenizer, marker, pipeline, renderer, tests, and configuration sources**
+>
+> 
+>
+> **Inspecting neighboring page indices and labels**
+>
+>
+> **Inspected neighboring page indices and labels**
+>
+> 
+>
+> **Fetched Full BodyMk aggregation snippet**
+>
+> 
+>
+> **Inspecting Footnote Marker Mismatches**
+>
+>
+> **Listing ZIP Archive Contents**
+>
+>
+> **Inspecting JSON Shapes and Audit Metadata**
+>
+>
+> **Inspecting report page objects**
+>
+>
+> **Inspecting Footnote Marker Discrepancies**
+>
+>
+> **Inspecting raw pages for note marker continuity**
+>
+>
+> **Inspecting Raw Column Array Structures**
+>
+>
+> **Inspecting Raw Sample Structure**
+>
+>
+> **Inspecting Page 107 Layout Audit Details**
+>
+>
+> **Inspecting Stringified JSON Layout Audit**
+>
+>
+> **Retrieving JSON for Page Index 107**
+>
+>
+> **Inspected ZIP contents, JSON structures, and footnote marker discrepancies**
+>
+> 
+>
+> **Updated audit details, configuration documentation, and session handoff diagnostics**
+>
+> 
+>
+> **Reviewed corrected responses, transcripts, and D107 audit specifications**
+>
+> 
+>
+> **Updated documentation, audit records, worklog, and verified branch changes**
+>
+> 
+>
+> **Updated pull request body with detailed documentation**
+>
+> 
+>
+> Worked for 38m 55s
+
+קראתי את קובץ השיחה וזיהיתי את נקודת העצירה המדויקת.
+
+**העבודה האחרונה הסתיימה בתיעוד ההכרעות שלך מ־12 בנובמבר, ולא במימוש בקוד.** היא נשמרה ב־PR מס' 14, בענף `docs/user-decisions-and-inline-content-20261112`\.
+
+בדיקת מצב עדכנית ב־GitHub מראה שה־PR עדיין פתוח כטיוטה, אינו ממוזג, ו־GitHub מדווח כרגע `mergeable: false`\. לכן אין להניח שהתיעוד כבר שולב ב־`main`\.
+
+## ההכרעות האחרונות שלך — שחזור נקודת העצירה
+
+הצלבתי את סוף השיחה, כולל התשובה האחרונה שלך מ־16:24. ההחלטה האחרונה חד־משמעית\:
+
+**ערכת עיצוב 40 ועיצובי השער הראשי, שער המשנה והשער האחורי נשארים פעילים אוטומטית.** אין להחליף את האתחול הזה במראה נקי.
+
+יתר ההכרעות המרכזיות שיש לשמר\:
+
+- גוף הספר: Guttman Rashi, בגודל 14pt ובגובה שורה 1.4.
+- סוגריים: הקטנה ל־0.92.
+- מילה ראשונה: Drop, מילה אחת, 2em, סף שלוש שורות.
+- גופני הכותרות: לשמר את המשפחות השונות של ברירות המחדל המיובאות, ולא לאחד אותן לגופן אחד.
+- תוכן עניינים: כללי ומפורט פעילים; רמות 1–6 מוצגות.
+- AQ אוטומטי: כבוי; יישור תחתיות נשאר כלל עצמאי.
+- כותרות פתיחה: ברירת המחדל הרגילה נשמרת; ההכרעה לגבי סלוטים מיוחדים עדיין פתוחה.
+- תמונות וטווחי גופן: חלק ממודל התוכן והעימוד האחיד, לא הרחבה חיצונית או מסלול רינדור נפרד.
+
+נקודה חשובה במיוחד: ערכי ברירת המחדל החדשים חייבים לשרוד את ייבוא ההגדרות המקורי. שינוי הרישום בלבד לא יספיק.
+
+**בוצעו ותוקפו שלושה תיקוני תיעוד בענף ה־PR\:**
+
+1. הפכתי את איחוד המנוע לשער ארכיטקטוני חוסם ומפורט: מיפוי מלא, מודל הגדרות ותוכן יחיד, מדידה ושבירת שורות יחידות, מתכנן יחיד, גאומטריה סופית משותפת והסרת מסלולי runtime מקבילים.
+2. הסרתי את קורפוס Orange משער הקבלה המחייב; השימוש בו נשאר פתוח להכרעה בשאלה 10.
+3. תיקנתי את ה־handoff כך שישקף ש־PR \#14 כבר פתוח כטיוטה, ולא יטען בטעות שטרם נפתח.
+
+ה־PR נשאר פתוח, טיוטה ולא ממוזג. GitHub מאשר כעת `mergeable: true`\. לא שיניתי קוד מנוע ולא טענתי להרצת בדיקות.
+
+## ממצא קוד ראשון: הפיצול בין המנועים עדיין פעיל
+
+אימתתי ישירות ב־`main` את נקודת הבחירה: בפונקציה `typeset()` שב־`pipeline.js`, הגדרות שמסומנות `_layout-profile: 'imud'` יחד עם `_imudRaw` גורמות ליציאה מוקדמת ולהפעלה של `legacyTypeset()`\. רק יתר ההגדרות ממשיכות בצינור הרגיל של RED ו־DP.
+
+כלומר, מדובר בשני מסלולי runtime אמיתיים, ולא רק בשני אוספים של קוד ישן וחדש. מצאתי גם הערות בקוד שעדיין מציגות את קובצי הייחוס ההיסטוריים כמקור סמכות, אף שההכרעה D-100 ביטלה את ההתאמה לייחוס כשער קבלה. יש להפריד בין שימור סמנטיקת המסמכים לבין שימור הנחות הכיול הישנות.
+
+## ממצא נוסף: ברירות המחדל שאושרו עדיין אינן מובטחות במסלול החי
+
+מצאתי פער ממשי בין ההגדרות המתועדות לבין שרשרת האתחול\:
+
+| הגדרה | ההכרעה שאישרת | ערך המקור שמיובא כרגע |
+|--------|--------|--------|
+| גודל גוף | 14pt | 12pt |
+| גובה שורה | 1.4 | 1.34 |
+| סף מילה ראשונה | 3 שורות | 2 שורות |
+| גודל מילה ראשונה | 2em | 1.5em |
+| AQ | כבוי | פעיל |
+
+הסיבה אינה רק שה־Registry מכיל ערכים ישנים: `applyLegacyDefaults()` מבצע `Object.assign(settings, imported)`, ולכן הערכים המיובאים גוברים על ברירות המחדל של RED. יתרה מזאת, מסלול המורשת מקבע חלק ממידות הגוף והגאומטריה בקבועים משלו, כך ששינוי ערכי ה־Registry לבדו לא יפתור את הבעיה.
+
+לעומת זאת, ערכת 40 ושלושת השערים אכן מוגדרים לטעינה אוטומטית, והפרש ההגדרות שהמשתמש שמר מוחל לאחר מכן. אין לשנות את סדר הקדימויות הזה בלי להוסיף שכבת ברירות מחדל מפורשת ששומרת על בחירות המשתמש.
+
+## אישור התקלה S72: חדירת טור לאזור ההערות
+
+התקלה עדיין מסומנת כפתוחה ב־`ISSUE_REGISTRY.md`, ולא מצאתי בתיעוד או בקוד שבדקתי ראיה לתיקונה.
+
+התיאור ברישום מדויק: ב־16 עמודים בנתיב DP, מרזב הערות השוליים משתרע על רוחב העמוד, אך תקציבו מופחת בחישוב התאמת המקום של הטור האחרון בלבד. הטור הראשון יכול אפוא להמשיך להיכנס לשטח המרזב — עד 202px בדוגמה המתועדת.
+
+זה ממצא נפרד מבעיית איחוד המנועים. הוא צריך להישמר כתקלה פתוחה עם בעלות ברורה, ולא להיעלם בתוך ריפקטור רחב. בשלב הזה אימתתי את מסלול הקוד ואת רישום התקלה; עדיין לא הרצתי שחזור מקומי ולכן איני מציג זאת כתוצאת בדיקה חדשה.
+
+## פירוק דוחות הכשל — נמצאו גם שני סימני אובדן הערות
+
+הורדתי ובדקתי את קובצי הדוחות עצמם, ולא הסתפקתי בהודעות השגיאה.
+
+באודיט המלא נמצאו\:
+
+| ממצא | תוצאה |
+|--------|--------|
+| `SIDE_NOTE_OVERLAP` | שתי חפיפות בעמוד 107, בעומק 8px ו־2px |
+| `MARKER_NOTE_MATCH` | הסמן י״ז מופיע 3 פעמים בגוף ורק 2 פתיחות הערה נמצאו |
+| `MARKER_NOTE_MATCH` | הסמן כ״ג מופיע בגוף, אך לא נמצאה לו פתיחת הערה |
+
+האודיט מזהה את שני האחרונים כאובדן הערות. יש לבדוק את מקורם במסמך ואת מסלול הפענוח וההצבה, ולא להשתיק את הבדיקות או להקל את סף הכיסוי.
+
+נכון לעכשיו, תמונת הבדיקות היא: סוויטת הבדיקות הרגילה עברה; בדיקת האינווריאנטים של הקורפוס עברה; אודיט העימוד המלא ואודיט הגאומטריה נכשלו. זו אינה תוצאה שאפשר להציג כ־CI ירוק.
+
+**תיקון למסקנת הביניים על סמני ההערות\:** לאחר בדיקת מנגנון המספור, התברר ש־`יז.` ו־`כג.` הם סמני הערות שנוצרים אוטומטית לפי מיקומן בפרק, ולא בהכרח מחרוזות שמופיעות כך בקובץ המקור. בקובץ המקור יש 18 הערות בפרק שבו נמצאת הערה י״ז, ו־26 בפרק שבו נמצאת הערה כ״ג; ההערה הכ״ג עצמה קיימת ומכילה טקסט.
+
+לכן אין לפטור את ההתראות כ־false positive בגלל הופעת אותיות אלה בכותרות. עם זאת, גם אין לקבוע עדיין שאבד תוכן: במסלול הנוכחי אותו סמן גוף עשוי להופיע שוב בפסקה שחוצה עמודים, בעוד המשך ההערה אינו נפתח שוב בסמן. יש לבדוק את שיוך ההערה למופע המקורי ואת מצב ההמשך, ולא להסתפק בהשוואת מונים גלובלית.
+
+המשכתי את העבודה מתוך השיחה המקורית, בדקתי את קוד `main` ואת דוחות ה־CI, ועדכנתי את מסמכי הפרויקט בענף העבודה.
+
+## מצב העבודה ב־GitHub
+
+(תיעוד עודכן) (PR פתוח כטיוטה) (CI עדיין נכשל)
+
+**[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/pull/14?utm_source=chatgpt.com)**
+
+ה־PR פתוח, אינו ממוזג ו־GitHub מדווח `mergeable: true`\. הוא כולל כעת 9 קובצי תיעוד. לא הוכנסו בו שינויים בקוד המנוע.
+
+### מה השלמתי
+
+1\. **מפת התלויות\:** עדכנתי את `LAYOUT_DEPENDENCY_MAP.md`\. היא מציגה כעת את שני מסלולי העימוד הפעילים ואת ההסתעפות הנפרדת של DOM, HTML ו־PDF.
+
+[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/docs/user-decisions-and-inline-content-20261112/LAYOUT_DEPENDENCY_MAP.md?utm_source=chatgpt.com)
+
+2\. **ביקורת ארכיטקטונית\:** הוספתי מסמך מפורט עם קובצי המקור ו־SHA שלהם, כפילויות המנוע, בעיות ההגדרות, תקלות ה־CI והנושאים שטרם הוכרעו.
+
+[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/docs/user-decisions-and-inline-content-20261112/audits/ENGINE_UNIFICATION_AUDIT_2026-11-12.md?utm_source=chatgpt.com)
+
+3\. **תוכנית S14\:** קבעתי את S14.0 כשער ארכיטקטוני מחייב. לפני מימוש התמונות וטווחי הגופן נדרשים parser ו־AST יחידים, מדידה ושבירת שורות יחידות, planner יחיד, Page Model אחד ומקרני פלט משותפים.
+
+4\. **תיעוד נקודת העצירה\:** עדכנתי את `WORKLOG.md` ואת `SESSION_HANDOFF.md`, כדי שהממצאים, המגבלות והמשימות הפתוחות לא יאבדו.
+
+## אימות ההכרעות שלך
+
+חזרתי במיוחד לב5 ולב8, כפי שביקשת בשיחה הקודמת.
+
+- **ב5\:** גופני הכותרות נשמרים לפי המשפחות המקוריות השונות. אין לאחד את H0–H7 לגופן David אחיד. גם H1 בגודל 50pt נשמר.
+- **ב8\:** שני סוגי תוכן העניינים פעילים; הכללי מציג רמות 1–6 והמפורט רמות 2–6. רמה 7 מוסתרת בשניהם.
+- **ב12\:** ערכת 40 ועיצובי שלושת השערים המקוריים נשארים פעילים אוטומטית.
+- יתר ההכרעות, ובפרט 14pt/1.4, Drop בגודל 2em ובסף שלוש שורות ו־AQ כבוי, נשמרו.
+
+ההבחנה בין ברירת המחדל המאושרת לבין ערכי המקור המיובאים נשארה מפורשת: בחירת משתמש שמורה קודמת לברירת המחדל המאושרת, וזו קודמת לערכי המקור הישנים.
+
+## ממצאים שדורשים טיפול בקוד
+
+**שני מנועי runtime עדיין פועלים.** `pipeline.js` בוחר בין `legacyTypeset` לבין RED/DP. גם מסלולי הרינדור והייצוא נפרדים. זהו חסם ממשי לאיחוד.
+
+**S72 עדיין פתוח.** תקציב הערות השוליים מופחת בחישוב התאמת המקום של הטור האחרון בלבד, אף שמרזב ההערות משתרע לרוחב העמוד. קיימת חדירה מתועדת של הטור הראשון לאזור ההערות.
+
+**שני שערי CI נכשלים גם ב־main וגם ב־PR\:**
+
+| בדיקה | תוצאה |
+|--------|--------|
+| corpus-invariants | (עבר) |
+| layout-audit | (נכשל) |
+| full-math-audit | (נכשל) |
+
+ב־layout-audit נמצאו שתי חפיפות הערות צד בעמוד 107: 8px ו־2px. ב־full-math נמצאו 353,687 מילים מרונדרות מול רצפה של 355,967.
+
+בנוגע לסמנים י״ז וכ״ג, מצאתי שהאודיט משווה מחרוזות סמן גלובליות ואינו מתחשב באיפוס המספור בין פרקים. לכן אין לראות בהפרש הגלובלי הוכחה לאובדן תוכן. עם זאת, הפערים המקומיים בעמודים 571 ו־667 עדיין טעונים בירור לפי זהות ההערה והמשך הטקסט. ההערה הכ״ג קיימת בקורפוס המקור.
+
+## מה עדיין לא נעשה
+
+לא שיניתי קוד עימוד, לא תיקנתי את S72, לא הסתרתי בדיקות נכשלות ולא הורדתי את רף שימור התוכן. גם לא הורצו בדיקות מקומיות במסגרת הסבב הזה.
+
+**המשך העבודה הנכון\:** להשלים את אבחון שימור התוכן וההערות, לבנות שחזור ממוקד לחפיפות הערות הצד ול־S72, ואז להתקדם לאיחוד המנוע לפי S14.0. אין להתחיל עדיין במימוש התמונות וטווחי הגופן. P6/P7 ו־PDF הייחוס נשארים מחוץ לתהליך.
+
+האם לבדוק מדי יום בשעה 09:00 (שעון ישראל) את מצב ה־CI של PR \#14 ולדווח כששערי הבדיקות משתנים?
+
+## Prompt:
+12.11.2026, 17:22:21
+
+אני רוצה להדגיש שפישוט ואיחוד פעולת מנוע העימוד (ללא טלאים) עם מימוש התמונות וטווחי הגופן היא מהחשובות שבמטרה שלנו!!! ויש להקדימה לכל שאר העבודות!
+
+## Response:
+12.11.2026, 17:22:42 · gpt-6-t-mini
+
+אני מעדכן את סדר העדיפויות עצמו, לא רק מוסיף הערת הבהרה: איחוד ופישוט המנוע יחד עם תמיכה מלאה בתמונות ובטווחי גופן יהפכו למסלול העבודה המרכזי והדחוף ביותר. המשמעות היא שלא נתייחס לאיחוד כפרויקט נפרד שיש לסיים ורק אחריו להתחיל את הפיצ'רים; דרישות התמונות והגופנים יכתיבו את תכנון המודל, המדידה, שבירת השורות, תכנון העמוד והפלט כבר מהשלב הראשון. במקביל אבדיל בין תקלות קיימות שיש לחקור כחלק מהמסלול הזה לבין עבודות צד שאסור להן לעקוף אותו.
+
+הבהרתי גם את ההבחנה החשובה בתוכנית: S14.0 אינו עוד שער שמונע להתחיל את התמונות והגופנים. הוא מגדיר את החוזים והאינווריאנטים שלפיהם בונים אותם מלכתחילה. שער ההצלחה הסופי יחול רק על המכלול: מנוע פשוט ומאוחד, תמונות וטווחי גופן המשולבים בו, והסרת המסלולים הכפולים — לא על מנוע חלקי לטקסט רגיל.
+
+> **Clarifying priority**
+>
+> I’m treating engine simplification, unified operation, image handling, and inline font ranges as one top-priority program. I’ll update the planning documents so unrelated work remains deferred until this integrated objective is complete.
+>
+> **Clarified priority**
+>
+> 
+>
+> **Reframing the priority**
+>
+> I’m treating engine unification, image support, and inline font ranges as one inseparable top-priority program. I’ll revise the plan so these capabilities are designed and implemented together, while unrelated work stays deferred.
+>
+> **Reframed the priority**
+>
+> 
+>
+> **Reviewed PR 14 and updated S14 architecture, specifications, and audit documentation**
+>
+> 
+>
+> **Verifying Documentation Priorities and Contradictions**
+>
+> 
+>
+> Worked for 6m
+
+ההדגשה ברורה, ואני מקבל אותה כעיקרון מנחה מחייב להמשך הפרויקט.
+
+חשוב לי לחדד שהבנתי את המשמעות: **אנחנו לא רוצים קודם מנוע עימוד מאוחד, אחר כך תמונות, ואחר כך טווחי גופן. אנחנו רוצים לבנות מנוע עימוד פשוט, אחיד ונכון, שבתוכו התמונות וטווחי הגופן הם חלק טבעי ממנגנון העימוד עצמו כבר מתחילת התכנון.**
+
+קבעתי זאת כעת בעדיפות **P0 - העדיפות העליונה בפרויקט**, ועדכנתי בהתאם את הריפו\:
+
+- `DECISIONS.md` - עדכון D-107.
+- `spec/01_MASTER_SPECIFICATION.md` - עדכון G14.
+- `spec/02_MASTER_WORK_PLAN.md` - שינוי סדר הביצוע והגדרת S14 כמסלול משולב.
+- `audits/ENGINE_UNIFICATION_AUDIT_2026-11-12.md` - עדכון סדר העדיפויות.
+- `WORKLOG.md` ו־`SESSION_HANDOFF.md` - תיעוד ההוראה להמשך.
+- `README.md` ומפת התלויות - הבהרת מטרת הפרויקט המרכזית.
+
+**שלושה עקרונות ינחו את העבודה מעתה\:**
+
+1. אין טלאים, מעקפים, מנגנוני עימוד מקבילים או תיקוני post-layout.
+2. תמונות וטווחי גופן חייבים להיות חלק אינטגרלי מהפענוח, המדידה, שבירת השורות, תכנון העמוד והגאומטריה.
+3. אין להקדים משימות UI, ניקיון או תכונות צד שאינן נחוצות ישירות להשגת היעד הזה.
+
+גם S72 ושאר התקלות שהתגלו יטופלו כחלק מהמסלול המשולב, ולא יסיטו אותנו לפרויקטים נפרדים.
+
+(העדיפות נשמרה ואומתה בריפו)
+
+[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/docs/user-decisions-and-inline-content-20261112/spec/02_MASTER_WORK_PLAN.md?utm_source=chatgpt.com)
+
+[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/pull/14?utm_source=chatgpt.com)
+
+חשוב: עדכון זה עיגן את סדר העדיפויות בתיעוד; הוא עדיין אינו מימוש בקוד. בהמשך העבודה אפעל לפי היעד המשולב הזה, ולא לפי סדר העבודה הישן.
+
+## Prompt:
+12.11.2026, 17:31:52
+
+מעולה!! המשך בעבודה!!! פישוט ואיחוד פעולת מנוע העימוד (ללא טלאים) היא מהחשובות שבמטרתנו!!!
+
+## Response:
+12.11.2026, 17:32:13 · gpt-6-t-mini
+
+אני ממשיך במסלול P0 עצמו: תחילה אבדוק את מצב הענף וה־PR כפי שהם כעת, ואז אעבור מן המפרט אל שינויי קוד מדורגים שמקדמים runtime יחיד — בלי שכבת תאימות נוספת ובלי להתחיל בעבודות צד. אתמקד בצעד הראשון שאפשר להשלים ולבדוק באופן עצמאי, ואדווח במפורש מה השתנה ומה עדיין לא הוכח.
+
+מצאתי גם פרט חשוב במבנה ההיסטוריה: `main` התקדם מאז נקודת הבסיס של PR \#14, ולכן לא אבסס את שינויי הקוד על ענף התיעוד הישן. אני עובד מול `main` העדכני, ובוחן כעת את חוזי הנתונים בפועל בשני המסלולים — במיוחד את נקודת הפיצול לפני המדידה ואת ההבדלים בין ייצוגי הבלוקים והשורות.
+
+השלב הראשון שאני מבצע אינו שינוי קוסמטי בנתיב הבחירה. אני מוסיף מודל תוכן inline קנוני אחד, שבו טקסט מעוצב ותמונה הם יחידות מפורשות עם מיקומי מקור, ומחבר אותו לשני המפענחים הקיימים. כך אפשר בהמשך להעביר את המדידה, שבירת השורות וה־planner לאותו חוזה נתונים — במקום לבנות לכל אחד מהם טיפול נפרד. בשלב הזה עדיין לא אטען שהתמונות כבר עוברות עימוד וייצוא מקצה לקצה.
+
+בדיקת המצב מאשרת ש־PR \#14 עדיין פתוח כטיוטה, והוא אכן תיעודי בלבד. לא אשתמש בו כאילו כבר בוצע איחוד: קוד המנוע עדיין מציג את שני מסלולי ה־runtime שתועדו בביקורת. העבודה הבאה תהיה בענף מימוש נפרד, כדי לשמור על הפרדה בין תיעוד ההכרעות לבין שינויי המנוע.
+
+## Prompt:
+12.11.2026, 18:00:22
+
+ההודעה נקטעה בגלל שלא תכננת כראוי את אורך העבודה! המשך!!! פישוט ואיחוד פעולת מנוע העימוד (ללא טלאים) היא מהחשובות שבמטרתנו!!!
+
+## Response:
+12.11.2026, 18:00:44 · gpt-6-t-mini
+
+אני ממשיך מאותה נקודה, אבל מצמצם כל יחידת עבודה לשינוי מוגדר ובדיקה שלו — כדי שלא נגיע שוב להודעה ארוכה שנקטעת. עדכון חשוב: הניסיון האחרון לערוך את `legacy-imud-flow.js` נעצר לפני כתיבה, משום ששם הייצוא בקובץ שונה מהעוגן שחיפשתי; לכן השינוי הזה **לא** נכנס לענף. אני בודק כעת את מצב הענף בפועל, מתקן את האינטגרציה מול החוזה המשותף, ומוסיף בדיקות לפני הרחבת המימוש.
+
+הבדיקה העלתה נקודת דיוק שחשוב לתקן לפני הרחבה: במקטעי טקסט אחרי הערת שוליים, מיקומי המקור אינם מתחילים באפס. התיקון הראשון כבר מחבר גם את המפענח הישן לאותו מבנה `TextRun`/`ImageRun`; כעת אני מיישר את חישוב ההיסטים כך שהתמונות והאזהרות יישאו מיקום מקור נכון גם כשהן מופיעות אחרי הערה או בתוך תוכן הערה.
+
+הרצת CI סיפקה לנו אימות ראשון אמיתי: בדיקות הפענוח הבסיסיות עברו, והבדיקה החדשה לטווחים חוצים נכשלה בגלל רווח כפול שנשאר לאחר הסרת סמני התחביר. זה אינו אובדן טקסט אלא שימור הרווחים שהיו סביב הסמנים; אתקן את בדיקת ההשוואה כך שתבדוק את תוכן הטקסט לאחר נרמול רווחים, בלי לשנות את הטקסט המקורי שה-parser משמר. ממשיך לבדוק את שאר הבדיקות באותו מחזור CI.
 
 
 ---
