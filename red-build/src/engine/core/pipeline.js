@@ -77,7 +77,9 @@ function columnWidthFor(block, settings) {
  * מבוסס מילים+seq בלבד.
  */
 function stampMeasureW(lines, w) {
-  for (const ln of lines) ln.measureW = w;
+  for (let i = 0; i < lines.length; i++) {
+    lines[i].measureW = typeof w === 'function' ? w(i) : w;
+  }
 }
 
 function fullWidthWidth(settings) {
