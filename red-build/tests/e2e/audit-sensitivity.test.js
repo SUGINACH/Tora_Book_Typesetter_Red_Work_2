@@ -251,6 +251,39 @@ describe('audit-sensitivity — הוכחת רגישות הגלאים (S5.2)', ()
     assertEq(codes.length, 1, 'בדיוק הבעיה הזו: ' + codes.join(','));
   });
 
+  it('(ח4) מזהה מופע יציב: סמני גוף חוזרים באותו פרק אינם דורשים פתיחת הערה חוזרת', () => {
+    const book = cleanBook();
+    const noteKey = 'token-17#16';
+    book[4].cols[0].lines[0].markers = [{ t: 'יז.', key: noteKey, fs: 10.7 }];
+    book[5].cols[0].lines[0].markers = [{ t: 'יז.', key: noteKey, fs: 10.7 }];
+    book[6].cols[0].lines[0].markers = [{ t: 'יז.', key: noteKey, fs: 10.7 }];
+    book[4].fns = [{ x: COL_L_X, y: 960, w: 552.3, h: 28, markers: ['יז.'], noteKeys: [noteKey], text: 'יז. הערה ארוכה', fs: 12 }];
+    const { summary, codes, report } = runBook(book);
+    assertEq(summary.problems, 0, 'מזהה הערה אחד עם שלוש הופעות גוף ופתיחה אחת — חוקי: ' + codes.join(','));
+    assertEq(report.S.markers.reDisplayed, 2, 'שתי הופעות הגוף הנוספות נספרות כחזרה חוקית');
+  });
+
+  it('(ח5) מזהה מופע יציב: הפניה שאין לה פתיחת הערה לפי אותו מזהה עדיין מדווחת', () => {
+    const book = cleanBook();
+    const missingKey = 'token-23#22';
+    book[4].cols[0].lines[0].markers = [{ t: 'כג.', key: missingKey, fs: 10.7 }];
+    const { problems, codes } = runBook(book);
+    assert(codes.includes('MARKER_NOTE_MATCH'), 'מופע חסר חייב להפעיל MARKER_NOTE_MATCH');
+    const bad = problems.filter(p => p.type === 'MARKER_NOTE_MATCH');
+    assert(bad.some(p => p.noteKey === missingKey && p.inBody === 1 && p.inNotes === 0),
+      'הדוח מצביע על מזהה המופע המדויק ולא על האותיות המודפסות בלבד');
+  });
+
+  it('(ח6) מזהה מופע יציב: פתיחת הערה יתומה מזוהה גם כשהסמן הגרפי אינו קיים', () => {
+    const book = cleanBook();
+    const orphanKey = 'token-orphan#0';
+    book[5].fns = [{ x: COL_L_X, y: 960, w: 552.3, h: 28, markers: ['כד.'], noteKeys: [orphanKey], text: 'כד. הערה יתומה', fs: 12 }];
+    const { problems, codes } = runBook(book);
+    assert(codes.includes('MARKER_NOTE_MATCH'), 'פתיחת הערה יתומה חייבת להיות מדווחת');
+    assert(problems.some(p => p.noteKey === orphanKey && p.inBody === 0 && p.inNotes === 1),
+      'מזהה הפתיחה היתומה נשמר באבחון');
+  });
+
   it('(ט) גיליון משוכפל ⇒ FOLIO_SEQUENCE יורה', () => {
     const book = cleanBook();
     book[5].folio.text = 'ב׳'; // כמו עמוד 4 — כפילות
