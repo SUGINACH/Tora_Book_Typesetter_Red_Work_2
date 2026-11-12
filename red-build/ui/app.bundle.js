@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 62 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 63 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -349,6 +349,7 @@ var __paths = {
   "src/engine/layout/legacy-imud-flow.js|../decoration/headers-builder": "src/engine/decoration/headers-builder.js",
   "src/engine/layout/legacy-imud-flow.js|../output/line-font": "src/engine/output/line-font.js",
   "src/engine/layout/legacy-imud-flow.js|../parser/inline-content": "src/engine/parser/inline-content.js",
+  "src/engine/layout/legacy-imud-flow.js|./margin-flow": "src/engine/layout/margin-flow.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/legacy-ornaments": "src/engine/decoration/legacy-ornaments.js",
   "src/engine/typography/measure-api.js|./measure-table": "src/engine/typography/measure-table.js",
   "src/engine/typography/measure-api.js|./font-metrics": "src/engine/typography/font-metrics.js",
@@ -12356,6 +12357,7 @@ const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = r
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
 const { parseInlineRuns, parseInlineParagraph } = require('../parser/inline-content');
+const { packMarginNotes } = require('./margin-flow');
 
 // ---------- גיאומטריה (px @96dpi; PDF = px×0.75) — מכויל מהייחוס ----------
 const GEO = {
@@ -12766,6 +12768,24 @@ function tokenizeDoc(rawText, cfg, inlineOptions = {}) {
  * (התוצאה תמיד ≤ רוחב הטור פחות אפסילון) מבטיחה שהדפדפן לעולם לא
  * יצטרך לשבור — התוכנית = הרינדור (עקרון התצוגה=הייצוא). */
 const FIT_EPS = 0.75; // px — מכסה צבירת תת-פיקסל של עד ~96 גליפים בשורה (96/128)
+/**
+ * A footnote is considered started only when at least one visible body word
+ * reached the placed area. Separator gaps and marker-only tokens do not start
+ * a note: a page break immediately after such a token must preserve the note's
+ * original marker on the next page.
+ */
+function collectStartedFootnoteIndices(lines) {
+  const started = new Set();
+  for (const line of lines || []) {
+    for (const token of line || []) {
+      if (!token || token.noteIdx == null || token.gap || token.mk
+        || token.t === '(המשך)' || typeof token.t !== 'string' || !token.t.trim()) continue;
+      started.add(token.noteIdx);
+    }
+  }
+  return started;
+}
+
 class LineBreaker {
   constructor(api, cfg, windowApi = null, headingApi = null) {
     this.api = api;
@@ -14807,6 +14827,19 @@ function legacyTypeset(rawText, settings, env) {
       // ---- פריסת המחסנית לעמוד: פסים + בלוקים → טורים עם y מפורש ----
       layoutStack(pg, stack, top);
 
+      // Page-level placement: both columns have now contributed their
+      // anchored notes, so each physical margin is packed as one lane.
+      const marginPlacement = packMarginNotes(pg.marginNotes, {
+        top: GEO.FLOW_TOP,
+        bottom: GEO.FLOW_TOP + GEO.FLOW_H,
+        pitch: GEO.MN_PITCH,
+        gap: 1
+      });
+      pg.marginNotes = marginPlacement.notes;
+      if (marginPlacement.diagnostics.length) {
+        pg.layoutDiagnostics = (pg.layoutDiagnostics || []).concat(marginPlacement.diagnostics);
+      }
+
       // ---- הערות שוליים בתחתית (bottom-anchored) ----
       if (fnQueue.length) {
         // **S76:** אפשרויות הקיבולת — (א) flexSpacer: עמוד פתיחת מקטע
@@ -14958,8 +14991,9 @@ function legacyTypeset(rawText, settings, env) {
         pg.footnotes.push({ continuous: true, lines, centerLast: rest.length === 0, cutLast: midNoteCut });
       }
       if (rest.length) {
-        const started = new Set();
-        for (const tl of placed) for (const t of tl) started.add(t.noteIdx);
+        // Only placed note text starts a note. A separator gap can be
+        // attached to the next note before its marker/words cross the page break.
+        const started = collectStartedFootnoteIndices(placed);
         let curIdx = null, curTxt = [];
         const flushRest = () => {
           if (curIdx == null || !curTxt.length) return;
@@ -16082,6 +16116,7 @@ function legacyLayoutHashDigest(pages) {
 module.exports = {
   GEO, SZ, HEADING_MODES, toGematria, stripEditorialNotes, parseMetadata,
   tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset,
+  collectStartedFootnoteIndices,
   FLOW_BOTTOM, SINGLE_W, wrapText, headingItemH, legacyLayoutHashDigest,
   parenCenterRaisePx
 };
@@ -16289,6 +16324,7 @@ class MeasureAPI {
 
   /**
    * מיקום שורות אופטימלי (KP) → מערך שורות עם רוחבים.
+   * @param {number|((lineIndex:number)=>number)} maxWidthPx — רוחב קבוע או רוחב זמין לפי אינדקס שורה.
    * @param {Function} [measureOverride] - הזרקת פונקציית מדידה (למשל פרופיל רוחב־גופן מהpipeline) — L1: entry יחיד דרך ההזרקה.
    * @returns {Array<{words:string[], widthPx:number, badness:number}>}
    */
@@ -16824,106 +16860,159 @@ function badness(ratio) {
 
 /**
  * @param {string[]} words - מילות הפסקה (NBSP כבר הוצמד ע"י protectors)
- * @param {number} maxWidthPx
+ * @param {number|((lineIndex:number)=>number)} maxWidthPx
  * @param {(t:string)=>number} measure
  * @param {number} lineHeightPx
- * @param {{runtMinPct?:number}} opts
+ * @param {{runtMinPct?:number,raggedEnd?:boolean}} opts
  * @returns {Array<{words:string[], widthPx:number, heightPx:number, isLast:boolean}>}
  */
 function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
+  if (typeof measure !== 'function') throw new TypeError('kp-linebreak: measure(text) is required');
+  const widthProvider = typeof maxWidthPx === 'function' ? maxWidthPx : () => maxWidthPx;
+  if (typeof maxWidthPx !== 'function' && (!Number.isFinite(maxWidthPx) || maxWidthPx <= 0)) {
+    throw new RangeError('kp-linebreak: maxWidthPx must be a positive finite number or a line-width function');
+  }
+
+  // Resolve each line width once. A provider must be pure for a given line index;
+  // this cache prevents repeated geometry work while exploring DP candidates.
+  const lineWidths = new Map();
+  const widthForLine = (lineIndex) => {
+    if (!Number.isInteger(lineIndex) || lineIndex < 0) {
+      throw new RangeError('kp-linebreak: line index must be a non-negative integer');
+    }
+    if (!lineWidths.has(lineIndex)) {
+      const width = widthProvider(lineIndex);
+      if (!Number.isFinite(width) || width <= 0) {
+        throw new RangeError('kp-linebreak: width for line ' + lineIndex + ' must be positive and finite');
+      }
+      lineWidths.set(lineIndex, width);
+    }
+    return lineWidths.get(lineIndex);
+  };
+
   // **03.11 (ביקורת):** חיבור ההגדרה — runt-min-width-pct מגיע כ-runts מה-pipeline
   // וכ-runtMinPct מקריאות ישירות; שניהם נקראים (בעבר רק runtMinPct נקרא וההגדרה לא השפיעה).
   const runts = opts.runtMinPct != null ? opts.runtMinPct : (opts.runts != null ? opts.runts : 50);
   const items = buildItems(words, measure);
   const n = items.length;
-  const cost = new Array(n + 1).fill(INF);
-  const parent = new Array(n + 1).fill(-1);
-  cost[0] = 0;
+
+  // The state includes both item position and the next line index.
+  // A single best-cost value per item position is insufficient when widths vary:
+  // paths at the same item may have different future geometry. This is still one
+  // Knuth–Plass solver, with a two-dimensional state.
+  const states = Array.from({ length: n + 1 }, () => new Map());
+  states[0].set(0, { cost: 0, action: 'origin' });
+  const constantWidth = typeof maxWidthPx !== 'function';
+  const updateState = (position, lineNo, candidate) => {
+    if (constantWidth) {
+      // With a scalar width, future geometry is independent of lineNo. The
+      // cheapest path therefore dominates every other path at this position,
+      // preserving the original O(n²) state-space behavior.
+      let best = null;
+      for (const state of states[position].values()) {
+        if (!best || state.cost < best.cost) best = state;
+      }
+      if (best && best.cost <= candidate.cost) return;
+      states[position].clear();
+    }
+    const prior = states[position].get(lineNo);
+    if (!prior || candidate.cost < prior.cost) states[position].set(lineNo, candidate);
+  };
 
   for (let i = 0; i < n; i++) {
-    if (cost[i] === INF) continue;
-    if (items[i].kind === 'glue' && !items[i].internal) { // דלג על glue רגיל בהתחלת שורה;
-      // glue פנימי (בתוך יחידת NBSP) אסור לדלג — הרוחב שלו חלק בלתי נפרד מהצמד.
-      if (cost[i + 1] > cost[i]) { cost[i + 1] = cost[i]; parent[i + 1] = i; }
-      continue;
-    }
-    let w = 0, stretch = 0, shrink = 0;
-    for (let j = i; j < n; j++) {
-      const it = items[j];
-      if (it.kind === 'box') w += it.width;
-      // **תיקון שורש (ביקורת 03.11): רוחב glue נכלל ברוחב הטבעי של השורה —
-      // כמו ב-TeX (Σ תיבות + Σ רווחים). בעבר נצברו רק stretch/shrink ⇒ ה־DP
-      // "חשב" ששורה נכנסת בעוד רוחבה הטבעי (כולל רווחים) חורג מהטור.
-      else if (it.kind === 'glue') { w += it.width; stretch += it.stretch; shrink += it.shrink; }
-      else if (it.kind === 'penalty') {
-        if (it.forbidden) continue; // תוך-יחידה: אין כאן מקום שבירה (legalCut כבר מבטל); ההצברה נמשכת
-        // סיום שורה (penalty סופי של הפסקה) — good break.
-        // **תיקון שורש (ביקורת 03.11): השבירה הסופית היא צומת סוף-הפסקה n —
-        // בעבר נכתבה ל-cost[j] (אינדקס הפריט עצמו, n−1) ⇒ cost[n] נותר INF לעולם
-        // ⇒ ה־DP מעולם לא סיפק פתרון וכל שבירות השורות במנוע מאז S1 יצאו מהגיבוי
-        // הגרידי (עם באג ה-NBSP). התיקון מחיה את Knuth-Plass בפועל.
-        const slack = maxWidthPx - w;
-        // raggedEnd: מתיחת סוף-שורה (D-79) — שורות ragged אינן נמדדות במתיחת
-        // בין-מילים אלא בכניסה טבעית; היתרה עד לקצה הטור "נבלעת" במתיחת הסוף.
-        const raggedEnd = opts.raggedEnd !== false;
-        const effStretch = stretch + (raggedEnd ? maxWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
-        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
-        let b = badness(ratio);
-        if (b < INF && w < maxWidthPx * (runts / 100)) b += 60; // עונש runt בשורת הסיום
-        if (b < INF) {
-          const cand = cost[i] + b + LINE_DEMERIT;
-          if (cand < cost[n]) { cost[n] = cand; parent[n] = i; }
-        }
-        break;
+    if (!states[i].size) continue;
+    for (const [lineNo, state] of states[i]) {
+      if (items[i].kind === 'glue' && !items[i].internal) {
+        // Skip regular glue at the beginning of a line; internal glue is atomic.
+        updateState(i + 1, lineNo, {
+          cost: state.cost,
+          action: 'skip',
+          prevIndex: i,
+          prevLineNo: lineNo
+        });
+        continue;
       }
-      // **S5.1 (D-92-DP):** הדפדפן מרנדר רוחב טבעי (white-space:normal) —
-      // שורה שרוחבה הטבעי חורג מהטור נעטפת בתצוגה (טקסט-על-טקסט) גם אם
-      // היישוב יכול לכווץ רווחים ב-PDF. לכן המבחן ברוחב הטבעי, בלי shrink.
-      // **S5.2 (תיקון 3 — המבחן היה מרחיב, לא שמרני):** בעבר `w > maxWidth+0.75`
-      // אִפשר קווים ברוחב טבעי עד maxWidth+0.75px (ובכך גם קבלת חיתוכים עם
-      // slack שלילי דרך כיווץ) — בזמן ש-FIT_EPS של המורשת שמרן (limit−eps).
-      // כעת החיתוך נעצר מוקדם: שורה שאינה נכנסת ב-maxWidth−0.75 אינה מוארכת
-      // עוד, וכל קו מקובל הוא ברוחב טבעי ≤ maxWidth−0.75 (גם בסוף פסקה —
-      // הפנלטי הסופי נמדר רק אחרי שכל הפריטים עברו את אותו מבחן). מילה רחבה
-      // מהטור עדיין יוצאת כשורה בפני עצמה דרך הגיבוי הגרידי (greedyFallback —
-      // התקדמות מובטחת, טוקן בודד אינו נחסם: pushTok עם toks ריק אינו מוסף).
-      if (w > maxWidthPx - 0.75) break; // חריגה שאינה ניתנת לתיקון — שמרני כמו FIT_EPS
 
-      if (it.kind === 'box') {
-        // מקומות שבירה חוקיים נקבעים **מבנית מראש** (static legal-cuts): cut בצומת c חוקי
-        // רק אם items[c-1] הוא glue לא־פנימי ו‑items[c] תיבה שפותחת יחידה חדשה.
-        // זה מבטל את באג V23: lock תלוי-נקודת-התחלה על צמתים משותפים ל‑DP.
-        // (תיקון S3: הבדיקה הייתה בתוך הלולאה עם אינדקס שגוי j+2 — כל השברים נחסמו.)
-        const cut = j + 1; // נקודת שבירה חוקית: אחרי תיבה, לפני ה‑glue העוקב
-        if (!(items[cut].kind === 'glue' && !items[cut].internal && items[cut + 1] && items[cut + 1].kind === 'box')) continue;
-        const slack = maxWidthPx - w;
-        // **S5.2 (תיקון 3 — שמרנות בקבלת חיתוך):** קו שאינו נכנס ברוחב הטבעי
-        // (slack < −FIT_EPS) הוא בלתי-אפשרי — badness INF, לא "כיווץ". המבחן
-        // השמרני למעלה אמור למנוע הגעה לכאן; השמירה הכפולה מתעדת את הכוונה.
-        if (slack < -0.75) continue;
-        const raggedEnd = opts.raggedEnd !== false;
-        const effStretch = stretch + (raggedEnd ? maxWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
-        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
-        const b = badness(ratio);
-        if (b >= INF) continue;
-        const cand = cost[i] + b + LINE_DEMERIT;
-        if (cand < cost[cut]) { cost[cut] = cand; parent[cut] = i; }
+      const lineWidthPx = widthForLine(lineNo);
+      let w = 0, stretch = 0, shrink = 0;
+      for (let j = i; j < n; j++) {
+        const it = items[j];
+        if (it.kind === 'box') w += it.width;
+        // Natural width includes boxes and glue; stretch/shrink are tracked separately.
+        else if (it.kind === 'glue') { w += it.width; stretch += it.stretch; shrink += it.shrink; }
+        else if (it.kind === 'penalty') {
+          if (it.forbidden) continue;
+          // Final paragraph break.
+          const slack = lineWidthPx - w;
+          const raggedEnd = opts.raggedEnd !== false;
+          const effStretch = stretch + (raggedEnd ? lineWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
+          const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
+          let b = badness(ratio);
+          if (b < INF && w < lineWidthPx * (runts / 100)) b += 60;
+          if (b < INF) {
+            updateState(n, lineNo + 1, {
+              cost: state.cost + b + LINE_DEMERIT,
+              action: 'line',
+              prevIndex: i,
+              prevLineNo: lineNo,
+              start: i,
+              end: n
+            });
+          }
+          break;
+        }
+
+        // Conservative natural-width fit check (same 0.75px safety margin).
+        if (w > lineWidthPx - 0.75) break;
+
+        if (it.kind === 'box') {
+          const cut = j + 1;
+          // Legal breaks are structural: before a new box and after non-internal glue.
+          if (!(items[cut].kind === 'glue' && !items[cut].internal && items[cut + 1] && items[cut + 1].kind === 'box')) continue;
+          const slack = lineWidthPx - w;
+          if (slack < -0.75) continue;
+          const raggedEnd = opts.raggedEnd !== false;
+          const effStretch = stretch + (raggedEnd ? lineWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
+          const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
+          const b = badness(ratio);
+          if (b >= INF) continue;
+          updateState(cut, lineNo + 1, {
+            cost: state.cost + b + LINE_DEMERIT,
+            action: 'line',
+            prevIndex: i,
+            prevLineNo: lineNo,
+            start: i,
+            end: cut
+          });
+        }
       }
     }
   }
 
-  if (cost[n] === INF) return greedyFallback(items, maxWidthPx, measure, lineHeightPx);
+  let best = null;
+  for (const [lineNo, state] of states[n]) {
+    if (!best || state.cost < best.state.cost) best = { lineNo, state };
+  }
+  if (!best) return greedyFallback(items, widthForLine, measure, lineHeightPx);
 
+  // Reconstruct the selected line intervals from the 2D predecessor map.
   const cuts = [];
-  let p = n;
-  while (p > 0 && parent[p] >= 0) { cuts.push([parent[p], p]); p = parent[p]; }
+  let position = n, lineNo = best.lineNo;
+  while (position > 0) {
+    const state = states[position].get(lineNo);
+    if (!state || state.action === 'origin') {
+      throw new Error('kp-linebreak: broken predecessor chain while reconstructing lines');
+    }
+    if (state.action === 'line') cuts.push([state.start, state.end]);
+    position = state.prevIndex;
+    lineNo = state.prevLineNo;
+  }
   cuts.reverse();
 
   const lines = [];
   for (let k = 0; k < cuts.length; k++) {
     const [a, b] = cuts[k];
-    // תת־קופסאות של אותה יחידת NBSP מאוחדות חזרה עם \u00A0 (הצמד שומר על זהותו)
-    const rawBoxes = items.slice(a, b).filter(x => x.kind === 'box');
+    // Recombine sub-boxes of one NBSP unit into one output token.
     const toks = [];
     let cur = null, prevPenaltyForbidden = false;
     for (let idx = a; idx < b; idx++) {
@@ -16934,20 +17023,17 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
       else { if (cur !== null) toks.push(cur); cur = it.text; prevPenaltyForbidden = false; }
     }
     if (cur !== null) toks.push(cur);
-    void rawBoxes;
     if (!toks.length) continue;
-    // רוחב אמיתי: סכום תת־הקופסאות + רווחי ה‑glue שביניהן (כולל internal)
+
     let widthPx = 0;
     for (let idx = a; idx < b; idx++) {
       const it = items[idx];
-      if (it.kind === 'box') widthPx += it.width;
-      else if (it.kind === 'glue') widthPx += it.width;
+      if (it.kind === 'box' || it.kind === 'glue') widthPx += it.width;
     }
     lines.push({ words: toks, widthPx, heightPx: lineHeightPx, isLast: k === cuts.length - 1 });
   }
   return lines;
 }
-
 /**
  * מסלול גיבוי (כשה־DP לא מצא פתרון אפשרי, למשל מילה רחבה מהעמודה — אין מקף).
  * תיקון שורש (ביקורת 03.11, S13): בגיבוי חלים **אותם איסורי שבירה** כמו במסלול
@@ -16961,7 +17047,7 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
  * 3. התקדמות מובטחת: טוקן שגולש פותח שורה חדשה; טוקן רחב מהעמודה נשאר לבד
  *    בשורה משלו — אין לולאה ואין דילוג תוכן. מעבר אחד על הפריטים.
  */
-function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
+function greedyFallback(items, widthForLine, measure, lineHeightPx) {
   const space = measure(' ');
   const lines = [];
   let toks = [];            // טוקנים של השורה הנוכחית
@@ -16979,7 +17065,7 @@ function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
     // **לפני** ה-flush ונוסף גם אחריו ⇒ כל שורה שנפתחה ב-flush נשאה רווח
     // אחד עודף ב-widthPx (מדידה שקרית לצרכי ריצת-שורה/איזון). תוקם:
     // הבדיקה וההוספה לפי המצב **אחרי** ההחלטה על flush.
-    if (toks.length && w + space + curW > maxWidthPx - 0.75) flush(); // הטוקן הבא ייפתח שורה חדשה
+    if (toks.length && w + space + curW > widthForLine(lines.length) - 0.75) flush(); // הטוקן הבא ייפתח שורה חדשה
     const sp = toks.length ? space : 0;
     toks.push(cur); w += sp + curW;
     cur = null; curW = 0; joinNext = false;
@@ -17673,6 +17759,120 @@ function parseInlineParagraph(parts = [], notes = [], options = {}) {
   return { version: 1, parts: parsedParts, notes: parsedNotes, warnings, hasImages, hasFontRanges };
 }
 module.exports = { parseInlineRuns, parseInlineParagraph, parseImagePayload };
+
+};
+__modules["src/engine/layout/margin-flow.js"] = function (require, module, exports) {
+'use strict';
+
+/**
+ * Page-level allocator for anchored margin items.
+ *
+ * Column layout determines each note's preferred anchor. This pass runs only
+ * after every column has been projected, so notes from both columns share one
+ * vertical lane per physical margin. It preserves note order and text lines;
+ * only the y coordinates may move to prevent collisions.
+ */
+function packMarginNotes(notes = [], options = {}) {
+  const top = Number.isFinite(options.top) ? options.top : 0;
+  const bottom = Number.isFinite(options.bottom) ? options.bottom : Infinity;
+  const pitch = Number.isFinite(options.pitch) && options.pitch > 0 ? options.pitch : 1;
+  const gap = Number.isFinite(options.gap) && options.gap >= 0 ? options.gap : 1;
+  if (bottom <= top) throw new RangeError('margin-flow: bottom must be greater than top');
+
+  const output = (Array.isArray(notes) ? notes : []).map((note, index) => ({
+    ...note,
+    lines: Array.isArray(note && note.lines) ? note.lines.map(line => ({ ...line })) : [],
+    _marginOrder: index
+  }));
+  const diagnostics = [];
+  const groups = new Map([['right', []], ['left', []]]);
+
+  for (const note of output) {
+    if (!note || !groups.has(note.side)) {
+      diagnostics.push({ code: 'MARGIN_NOTE_INVALID_SIDE', index: note?._marginOrder ?? -1 });
+      continue;
+    }
+    if (!note.lines.length) continue;
+    const desiredTop = Number.isFinite(note.anchorY)
+      ? note.anchorY
+      : (Number.isFinite(note.lines[0].y) ? note.lines[0].y : top);
+    const lineYs = note.lines.map(line => line.y).filter(Number.isFinite);
+    if (lineYs.length !== note.lines.length) {
+      diagnostics.push({ code: 'MARGIN_NOTE_INVALID_GEOMETRY', index: note._marginOrder });
+      continue;
+    }
+    const oldTop = Math.min(...lineYs);
+    const height = (Math.max(...lineYs) - oldTop) + pitch;
+    if (!(height > 0) || !Number.isFinite(height)) {
+      diagnostics.push({ code: 'MARGIN_NOTE_INVALID_GEOMETRY', index: note._marginOrder });
+      continue;
+    }
+    groups.get(note.side).push({ note, desiredTop, oldTop, height, y: desiredTop });
+  }
+
+  for (const [side, entries] of groups) {
+    entries.sort((a, b) => a.desiredTop - b.desiredTop || a.note._marginOrder - b.note._marginOrder);
+    // Forward pass: honor every preferred anchor unless it collides with the
+    // preceding item in this same physical margin.
+    for (let i = 0; i < entries.length; i++) {
+      const item = entries[i];
+      item.y = Math.max(top, item.desiredTop);
+      if (i > 0) {
+        const prev = entries[i - 1];
+        item.y = Math.max(item.y, prev.y + prev.height + gap);
+      }
+    }
+
+    // If the lane overflows below the page, compact the entire ordered run
+    // upward from the bottom. This moves notes only as far as necessary.
+    if (entries.length) {
+      const last = entries[entries.length - 1];
+      if (last.y + last.height > bottom) {
+        last.y = bottom - last.height;
+        for (let i = entries.length - 2; i >= 0; i--) {
+          const next = entries[i + 1];
+          entries[i].y = Math.min(entries[i].y, next.y - gap - entries[i].height);
+        }
+      }
+    }
+
+    const totalHeight = entries.reduce((sum, item) => sum + item.height, 0)
+      + Math.max(0, entries.length - 1) * gap;
+    const capacity = bottom - top;
+    const overflow = totalHeight > capacity + 1e-7 || (entries[0] && entries[0].y < top - 1e-7);
+
+    // If the notes cannot physically fit, keep every line in order and
+    // non-overlapping, and report the page overflow instead of clipping text.
+    if (overflow && entries.length) {
+      let y = top;
+      for (const item of entries) {
+        item.y = y;
+        y += item.height + gap;
+      }
+      diagnostics.push({
+        code: 'MARGIN_NOTES_EXCEED_LANE',
+        side,
+        requiredHeight: totalHeight,
+        availableHeight: capacity,
+        overflowPx: Math.max(0, totalHeight - capacity)
+      });
+    }
+
+    for (const item of entries) {
+      const delta = item.y - item.oldTop;
+      item.note.anchorY = item.y;
+      item.note.lines = item.note.lines.map(line => ({
+        ...line,
+        y: Number.isFinite(line.y) ? line.y + delta : line.y
+      }));
+    }
+  }
+
+  for (const note of output) delete note._marginOrder;
+  return { notes: output, diagnostics };
+}
+
+module.exports = { packMarginNotes };
 
 };
 __modules["src/engine/decoration/legacy-ornaments.js"] = function (require, module, exports) {
