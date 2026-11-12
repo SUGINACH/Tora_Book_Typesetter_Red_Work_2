@@ -69,7 +69,7 @@ red-build/src/ui/{app-shell,settings-panel,editor-tab,preview-tab,testing-tab,st
 red-build/ui/{index.html,styles.css,engine-worker.bundle.js,app.bundle.js}   # האפליקציה החיה
 red-build/tests/{unit,integration,layout,e2e,audit,negative-controls,fixtures,artifacts}
 tools/{gen-ui-bindings,build-worker-bundle,scan-control-triggers}.js
-spec/          — מפרט אם + תכנית עבודה (S0..S13)
+spec/          — מפרט אם + תכנית עבודה (S0..S14)
 audits/        — 01 ביקורת עצמאית, 02 דוח סגירת S7, 03 דוח סגירת S8, 04 דוח סגירת S9
 DECISIONS.md / WORKLOG.md / ISSUE_REGISTRY.md / OPEN_QUESTIONS.md / PROVENANCE.md / LAYOUT_DEPENDENCY_MAP.md
 archive/debug/ — קבצי דיבוג היסטוריים (read-only)
