@@ -360,6 +360,7 @@ var __paths = {
   "src/engine/layout/legacy-imud-flow.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/layout/legacy-imud-flow.js|../core/events": "src/engine/core/events.js",
   "src/engine/layout/legacy-imud-flow.js|../core/ledger": "src/engine/core/ledger.js",
+  "src/engine/layout/legacy-imud-flow.js|../decoration/headers-builder": "src/engine/decoration/headers-builder.js",
   "src/engine/layout/legacy-imud-flow.js|../output/line-font": "src/engine/output/line-font.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/legacy-ornaments": "src/engine/decoration/legacy-ornaments.js",
   "src/engine/decoration/legacy-ornaments.js|./ornament-fit": "src/engine/decoration/ornament-fit.js",
@@ -1816,7 +1817,7 @@ const K = (id, type, dflt, panel, control, consumers, testId, extra = {}) =>
 // **S9 (D-61):** מקורות כותרת עליונה — כולל book-name-rest (החלק שאחרי המקף) ופורט
 // fillHeaderFirstLastWords המאוחד (first-last-words). משותף ל‑6 סלוטים + 3 סלוטי פתיחה.
 // **S65 (SRS §12.2):** book-name-split — חצי שם הספר לפי הצד הפיזי: ראשון ב‑Recto, שני ב‑Verso.
-const HDR_SOURCES = ['none', 'book-name', 'book-name-rest', 'book-name-split', 'h1', 'h2', 'page-num', 'first-word', 'last-word', 'first-last-words', 'custom'];
+const HDR_SOURCES = ['none', 'book-name', 'book-name-rest', 'book-name-split', 'book-name-first-half', 'book-name-second-half', 'h1', 'h2', 'page-num', 'first-word', 'last-word', 'first-last-words', 'custom'];
 
 const registry = [
   // ---- רשת העמוד ומספור (GRID) ----
@@ -5844,6 +5845,14 @@ function resolveSlot(source, ctx, settings, slotKey) {
       const halves = splitBookTitleHalves(ctx.bookName || '');
       return ctx.side === 'verso' ? halves.second : halves.first;
     }
+    // **S77 (בקשה 3 — חיבור ההגדרות לנתיב המורשת):** החצאים הקבועים של המקור —
+    // book_title_split_r/l של IMUD הם חצאים לפי מילים בלי תלות בצד (ההחלפה
+    // בין העמודים היא hdr-alternating נפרד). כך משוחזרת ההתנהגות המדויקת
+    // של המנוע המורשת גם דרך ההגדרות החיות.
+    case 'book-name-first-half':
+      return splitBookTitleHalves(ctx.bookName || '').first;
+    case 'book-name-second-half':
+      return splitBookTitleHalves(ctx.bookName || '').second;
     case 'h1': return extractH1TitleMain(ctx.h1 || '', settings['hdr-h1-title-mode']);
     case 'h2': return ctx.h2 || '';
     case 'page-num': return ctx.pageNumber || '';
@@ -6318,6 +6327,10 @@ const crypto = require('crypto');
 const { MeasureAPI, registeredFonts: registeredMeasureFonts, registerFont: registerMeasureFont, resolveMeasureImpl } = require('../typography/measure-api');
 const { EventLog } = require('../core/events');
 const { Ledger } = require('../core/ledger');
+// **S77 (בקשה 3 — חיבור הגדרות הכותרת העליונה לנתיב המורשת):** resolveSlot
+// (מקור יחיד לפענוח מקורות הסלוטים) + חיצוץ החצאים — אותה נוסחה כמו hdrR/hdrL.
+// headers-builder אינו דורש כלום — אין תלות מעגלית.
+const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = require('../decoration/headers-builder');
 // **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
@@ -7320,6 +7333,30 @@ function legacyTypeset(rawText, settings, env) {
   const hdrR = tw.slice(0, mid).join(' ');
   const hdrL = tw.slice(mid).join(' ');
 
+  // **S77 (בקשה 3 — "הרבה הגדרות שלא מחוברות"): הגדרות הכותרת העליונה
+  // מחוברות לנתיב המורשת.** עד כאן המנוע הרכיב את הכותרת הרצה בקוד קשיח
+  // (חצאי שם הספר + הפרק הנוכחי) ו-45 הגדרות header-* לא עשו כלום בפרופיל
+  // המורשת (הנתיב החי). כעת: כשמסופקים מקורות סלוט (הייבוא של IMUD ממפה
+  // אותם אוטומטית — book_title_split_r/l ⇒ החצאים הקבועים) הסלוטים
+  // נפענחים מההגדרות לכל עמוד לפי צדו הפיזי; ברירת המחדל המיובאת משחזרת
+  // את ההתנהגות המכוילת **במדויק** (ימין=חצי ראשון, מרכז=פרק, שמאל=חצי
+  // שני; ללא החלפה — hdr-alternating כבוי במקור). בלי הגדרות — ההתנהגות
+  // הוותיקה כמו שהיא (קריאות גולמיות/בדיקות ישנות).
+  const HDR_SIDES_S77 = ['recto', 'verso', 'opening'];
+  const hdrSourcesS77 = {};
+  let hdrAnySourceS77 = false;
+  for (const side of HDR_SIDES_S77) {
+    hdrSourcesS77[side] = {};
+    for (const pos of ['right', 'center', 'left']) {
+      const k = `header-${side}-${pos}-source`;
+      const v = settings[k];
+      hdrSourcesS77[side][pos] = v != null ? String(v) : null;
+      if (v != null) hdrAnySourceS77 = true;
+    }
+  }
+  const hdrEnabledS77 = settings['header-enabled']; // ברירת מחדל true — מופעל
+  const hdrDedicatedS77 = settings['header-opening-dedicated'] === true;
+
   // ---- מקטעים (כמו המקור: h1→sub_shaar, h0/h2→new_page, השאר inline) ----
   const sections = [];
   let cur = { tokens: [] };
@@ -7375,7 +7412,13 @@ function legacyTypeset(rawText, settings, env) {
     pages.push(pg);
     return pg;
   }
-  const setHeader = (pg, center) => { pg.headerSlots = { right: hdrR, center: center || '', left: hdrL }; };
+  // **S77:** ההקשר נשמר לפענוח הסלוטים בסוף (כשהאינדקסים הסופיים ידועים):
+  // h1/h2 נוכחיים בזמן יצירת העמוד. לעמודי TOC/הערות — כותרת העמוד עצמו
+  // (כך מקור 'h2' משמר את המרכז הוותיק גם שם).
+  const setHeader = (pg, center) => {
+    pg.headerSlots = { right: hdrR, center: center || '', left: hdrL };
+    pg._hdrCtx = { h1: currentH1 || '', h2: center || '' };
+  };
 
   // ---------- עמודי שער ----------
   // **S4.9:** תוכן השערים מהמטא-דאטה של המסמך — במיקומים המכוינים מהייחוס
@@ -8770,15 +8813,35 @@ function legacyTypeset(rawText, settings, env) {
       }
       const placed = built.flowLines.slice(0, cut);
       const rest = built.flowLines.slice(cut);
+      // **S77 (בקשה 1 — "השורה האחרונה של הערה שממשיכה לעמוד הבא אינה
+      // מלאה / לא מיושבת לשני הצדדים"):** כשהחיתוך נופל **בתוך** הערה (השורה
+      // האחרונה שהוצבה אינה סוף הערה — היא ממשיכה בעמוד הבא), שורת החיתוך
+      // היא שורת-ביניים לכל דבר: היא חייבת להיות מיושבת לשני הצדדים (מלאה)
+      // — כמו שאר שורות הביניים. עד כאן היא סומנה isLast במקרנים ונשארה
+      // מרופטת. זיהוי: הטוקן האחרון שהוצב והראשון שנשאר שייכים לאותה הערה
+      // (אותו noteIdx). חיתוך בגבול הערה — השורה האחרונה היא סוף טבעי של
+      // ההערה הקודמת ⇒ cutLast=false (התנהגות קודמת נשמרת).
+      let midNoteCut = false;
+      if (placed.length && rest.length) {
+        const realOf = (arr) => (arr || []).filter(t => t && !t.gap);
+        const lp = realOf(placed[placed.length - 1]);
+        const fr = realOf(rest[0]);
+        const lastTok = lp.length ? lp[lp.length - 1] : null;
+        const firstTok = fr.length ? fr[0] : null;
+        midNoteCut = !!(lastTok && firstTok && lastTok.noteIdx != null && lastTok.noteIdx === firstTok.noteIdx);
+      }
       if (placed.length) {
         const lines = [];
         let yy = FLOW_BOTTOM - placed.length * GEO.FN_PITCH;
         for (const tl of placed) { lines.push({ words: tl, y: yy }); yy += GEO.FN_PITCH; }
         // **S74 (בעיה 7 — בקשת משתמש 12.11):** השורה האחרונה של מרזב ההערות
-        // (של כל ההערות יחד — לא של כל הערה בנפרד) ממורכזת. חריג מפורש:
+        // (של כל ההערות יחד) ממורכזת. חריג מפורש:
         // הערה שממשיכה לעמוד הבא (rest לא ריק ⇒ המרזב נחתך באמצע הערה) —
         // שורתה האחרונה בעמוד זה נשארת מיושבת לימין, כמו שאר שורות הביניים.
-        pg.footnotes.push({ continuous: true, lines, centerLast: rest.length === 0 });
+        // **S77:** cutLast=true בחיתוך תוך-הערה — השורה האחרונה מיושבת לשני
+        // הצדדים (מלאה) בתצוגה וב-PDF; centerLast נותר כלעצמו (סמנטיקה
+        // נעולה בבדיקות s75/s76 — false כל שיש המשך).
+        pg.footnotes.push({ continuous: true, lines, centerLast: rest.length === 0, cutLast: midNoteCut });
       }
       if (rest.length) {
         const started = new Set();
@@ -8837,7 +8900,9 @@ function legacyTypeset(rawText, settings, env) {
         // **S4.9:** השורה הראשונה של כל הערה קצרה ברוחב הסמן — אחרת המילים
         // גולשות מעבר לשפה השמאלית של הדף. הגלישה של ההמשך נעשית מחדש
         // בעמוד הבא (ברוחב הסמן שלו) — הטקסט הוא מה שנשמר, לא השורות.
-        placed.push({ note: it.note, marker: it.marker, lines: it.lines.slice(0, remainLines), cont: !!it.note.cont });
+        // **S77 (בקשה 1):** cut=true — שורת החיתוך היא שורת-ביניים (ההערה
+        // ממשיכה בעמוד הבא) ותיושב לשני הצדדים בתצוגה וב-PDF.
+        placed.push({ note: it.note, marker: it.marker, lines: it.lines.slice(0, remainLines), cont: !!it.note.cont, cut: true });
         const restText = it.lines.slice(remainLines).join(' ');
         pendingFootnotes.push({ text: restText, cont: true, srcText: it.note.srcText || it.note.text, key: it.note.key });
         usedLines = maxLines;
@@ -8852,6 +8917,7 @@ function legacyTypeset(rawText, settings, env) {
     let yy = FLOW_BOTTOM - totalH;
     for (const p of placed) {
       const it = { marker: p.marker, lines: [], cont: p.cont };
+      if (p.cut) it.cutLast = true; // **S77 (בקשה 1):** שורת החיתוך — מיושבת לשני הצדדים
       for (const l of p.lines) { it.lines.push({ words: String(l).split(' '), y: yy }); yy += GEO.FN_PITCH; }
       pg.footnotes.push(it);
     }
@@ -9286,11 +9352,23 @@ function legacyTypeset(rawText, settings, env) {
   flushPendingFootnotes();
 
   // ---- תוכן-עניינים כפול + מספור סופי ----
-  const genShow = Array.isArray(cfg.gtocShow) ? cfg.gtocShow : [1, 2, 3, 4, 5, 6];
-  const detShow = Array.isArray(cfg.dtocShow) ? cfg.dtocShow : [2, 3, 4, 5, 6];
-  const genEntries = tokens.filter(t => t.type[0] === 'h' && genShow.includes(t.level))
+  // **S77 (בקשה 3 — חיבור הגדרות תוכן-העניינים לנתיב המורשת):** עד כאן
+  // רשימות הרמות היו מה-raw בלבד (gtoc-show/dtoc-show) ו-14 ההגדרות
+  // toc-level-N-show/inline לא עשו דבר בפרופיל המורשת. כעת: show=false
+  // מסיר את הרמה משני התכנים (השליטה החיה); ברירת המחדל/true — רשימות
+  // המקור קובעות (לכל תוכן-עניינים הרשימה שלו: הכללי [1..6], המפורט [2..6]
+  // — הוספת רמה שאינה ברשימת המקור היא הגדרת נתיב-מודרני בלבד, מתועד).
+  // inline=true ממזג רשומות רצופות של אותה רמה לשורת ההורה (טקסט ' | ' —
+  // כמו buildTocModel של הנתיב המודרני; גודל/פוליו של ההורה). הייבוא של
+  // IMUD נותן ערכי פתיחה המשמרים את הפלט המכויל במדויק (רשימות המקור).
+  const tocLevelShowS77 = (n) => settings[`toc-level-${n}-show`] === false ? false : true;
+  const tocLevelInlineS77 = (n) => settings[`toc-level-${n}-inline`] === true;
+  const genShowRaw = Array.isArray(cfg.gtocShow) ? cfg.gtocShow : [1, 2, 3, 4, 5, 6];
+  const detShowRaw = Array.isArray(cfg.dtocShow) ? cfg.dtocShow : [2, 3, 4, 5, 6];
+  const lvlShown = (rawList, n) => tocLevelShowS77(n) && rawList.includes(n);
+  const genEntries = tokens.filter(t => t.type[0] === 'h' && lvlShown(genShowRaw, t.level))
     .map(t => ({ tokenId: t.id, level: t.level, text: t.text }));
-  const detEntries = tokens.filter(t => t.type[0] === 'h' && detShow.includes(t.level))
+  const detEntries = tokens.filter(t => t.type[0] === 'h' && lvlShown(detShowRaw, t.level))
     .map(t => ({ tokenId: t.id, level: t.level, text: t.text }));
 
   // **S6.3:** גדלים נפרדים לכל תוכן-עניינים — s-gtoc-* מול s-dtoc-*
@@ -9325,7 +9403,19 @@ function legacyTypeset(rawText, settings, env) {
       return out.length ? out : [''];
     };
     const sizes = tocSizesFor(kind);
-    const rows = entries.map(e => {
+    // **S77 (בקשה 3):** מיזוג inline — רשומות רצופות של רמה inline=true מתמזגות
+    // לשורת ההורה הקודמת (טקסט משורשר ' | '; גודל/פוליו/מספר של ההורה) —
+    // אותה סמנטיקה כמו buildTocModel של הנתיב המודרני.
+    const mergedEntries = [];
+    for (const e of entries) {
+      const prev = mergedEntries[mergedEntries.length - 1];
+      if (prev && tocLevelInlineS77(e.level)) {
+        prev.text = prev.text + ' | ' + e.text;
+        continue;
+      }
+      mergedEntries.push({ ...e });
+    }
+    const rows = mergedEntries.map(e => {
       const sizePt = sizes[e.level] || 10.5;
       const x1 = GEO.TOC_TITLE_X1 - (e.level - 1) * GEO.TOC_STAIR;
       const availW = Math.max(40, (x1 - GEO.TOC_NUM_X - 10) * 0.92);
@@ -9378,6 +9468,7 @@ function legacyTypeset(rawText, settings, env) {
     return pagesRows.map((pr, pi) => {
       const pg = blankPageObj(kind);
       pg.headerSlots = { right: hdrR, center: title, left: hdrL };
+      pg._hdrCtx = { h1: '', h2: title }; // **S77:** עמוד TOC — מרכזו הענייני = הכותרת
       const isLast = pi === pagesRows.length - 1;
       // **S4.14:** מיקומי ה-TOC אבסולוטיים ומכוילים בפני עצמם (עמודי ה-TOC של
       // הייחוס מתחילים ב-113.6px — שונה מזרימת הגוף!) ואינם זזים עם FLOW_TOP.
@@ -9543,7 +9634,59 @@ function legacyTypeset(rawText, settings, env) {
   // **EXT-19 (כותרות מתחלפות — hdr-alternating):** בעמודים זוגיים-פיזיים
   // (אינדקס אי-זוגי) חצאי שם הספר מתחלפים בין הצדדים — כמו buildHeaderGridHTML
   // של המקור (isEven ⇒ החלפה). ברירת המחדל כבויה — החצאים קבועים.
-  if (cfg.hdrAlternating) {
+  // **S77 (בקשה 3):** כשהגדרות הכותרת מסופקות (הייבוא ממפה אותן) — הסלוטים
+  // נפענחים מההגדרות לכל עמוד לפי צדו הפיזי הסופי; ההחלפה הוותיקה אינה
+  // רצה (המקורות הצדדיים — book-name-split — מבטאים אותה במפורש). בלי
+  // הגדרות — ההתנהגות הוותיקה כמו שהיא.
+  if (hdrAnySourceS77) {
+    // מילה ראשונה/אחרונה של העמוד (סדר קריאה: טור ימין ואז שמאל)
+    const pageFirstLastS77 = (p) => {
+      const cols = (p.columns || []).map(c => (c || []).filter(ln => ln && (ln.words || []).length));
+      const flat = [];
+      for (const c of cols) for (const ln of c) flat.push(ln);
+      let first = '', last = '';
+      if (flat.length) {
+        const wOf = (ln) => (ln.words || []).map(w => (typeof w === 'string' ? w : (w && w.t) || '')).filter(Boolean);
+        const firstLn = wOf(flat[0]);
+        const lastLn = wOf(flat[flat.length - 1]);
+        first = firstLn.length ? hdrTrimPunct(firstLn[0]) : '';
+        last = lastLn.length ? hdrTrimPunct(lastLn[lastLn.length - 1]) : '';
+      }
+      return { firstWord: first, lastWord: last };
+    };
+    for (const p of final) {
+      if (!p.headerSlots) continue;
+      if (hdrEnabledS77 === false) { p.headerSlots = null; continue; } // header-enabled=false — אין כותרת רצה
+      // צד פיזי לפי האינדקס הסופי: עמוד 1 (אינדקס 0) = recto
+      const side = p.index % 2 === 0 ? 'recto' : 'verso';
+      // פתיחת פרק (sign-open) עם מצב ייעודי — סלוטי opening (D-61: גופן/גודל/יישור תמיד מהצד הפיזי)
+      const dedicated = hdrDedicatedS77 && p.type === 'sign-open';
+      const sourceSide = dedicated ? 'opening' : side;
+      const fl = pageFirstLastS77(p);
+      const ctx = {
+        ...(p._hdrCtx || {}),
+        bookName: bookTitle,
+        side,
+        pageNumber: p.folioDisplay || '',
+        firstWord: fl.firstWord,
+        lastWord: fl.lastWord
+      };
+      const resolved = {};
+      for (const pos of ['right', 'center', 'left']) {
+        let src = hdrSourcesS77[sourceSide][pos];
+        if (src == null) src = hdrSourcesS77[side][pos]; // opening ללא מקור — ירושה מהצד הפיזי
+        // custom תמיד מהצד הפיזי (D-61)
+        resolved[pos] = resolveHdrSlotText(src || 'none', ctx, settings, `header-${side}-${pos}-custom-text`);
+      }
+      p.headerSlots = resolved;
+      // **EXT-19 (נשמר גם בנתיב ההגדרות):** hdr-alternating=true — בעמודי
+      // verso ערכי הסלוטים הימני והשמאלי מתחלפים (כמו buildHeaderGridHTML
+      // של המקור). ברירת המחדל כבויה — הסלוטים הצדדיים שולטים ישירות.
+      if (cfg.hdrAlternating && side === 'verso') {
+        p.headerSlots = { right: resolved.left, center: resolved.center, left: resolved.right };
+      }
+    }
+  } else if (cfg.hdrAlternating) {
     for (const p of final) {
       if (p.index % 2 === 1 && p.headerSlots) {
         const h = p.headerSlots;
@@ -14516,20 +14659,26 @@ function renderLegacyPage(pg, settings, doc) {
     position(hdr, GEO.COL_L_X + 33, 52, (GEO.COL_R_X + GEO.COL_W - 33) - (GEO.COL_L_X + 33), 22);
     const HDR_BASELINE_Y = 71.9;
     const DLB_BASELINE_FACTOR = 0.5 + (0.7461 - 0.2192) / 2; // DavidLibre-Bold, line-height:1
-    // **S73 (צבע כותרת עליונה מההגדרות):** header-recto-{right,center,left}-color —
+    // **S73 (צבע כותרת עליונה מההגדרות):** header-{recto,verso}-{right,center,left}-color —
     // ברירת מחדל שחורה (הכחול הקבוע #0F1749 של D-89 הוחלף בהגדרה — בקשת
     // משתמש מפורשת: ברירת המחדל של כל הגופנים ללא יוצא מן הכלל = שחור).
+    // **S77 (בקשה 3):** גופן/צבע/גודל/יישור/רוחב לפי הצד הפיזי של העמוד
+    // (עד כאן: מפתחי recto קבועים לכל העמודים); היישור והרוחב מההגדרות
+    // (ברירות המחדל right/center/left + 33% משחזרות את העיגון הקודם במדויק).
+    const hdrSide = (pg.index % 2 === 0) ? 'recto' : 'verso'; // עמוד 1 (אינדקס 0) = recto
     const slots = [
-      ['rh rh--r', hs.right, SZ.hdrR, 'header-recto-right-font', 'header-recto-right-color', 'right'],
-      ['rh rh--c', hs.center, SZ.hdrC, 'header-recto-center-font', 'header-recto-center-color', 'center'],
-      ['rh rh--l', hs.left, SZ.hdrL, 'header-recto-left-font', 'header-recto-left-color', 'left']
+      ['rh rh--r', hs.right, SZ.hdrR, `header-${hdrSide}-right-font`, `header-${hdrSide}-right-color`, `header-${hdrSide}-right-size-pt`, `header-${hdrSide}-right-align`, `header-${hdrSide}-right-width-pct`, 'right'],
+      ['rh rh--c', hs.center, SZ.hdrC, `header-${hdrSide}-center-font`, `header-${hdrSide}-center-color`, `header-${hdrSide}-center-size-pt`, `header-${hdrSide}-center-align`, `header-${hdrSide}-center-width-pct`, 'center'],
+      ['rh rh--l', hs.left, SZ.hdrL, `header-${hdrSide}-left-font`, `header-${hdrSide}-left-color`, `header-${hdrSide}-left-size-pt`, `header-${hdrSide}-left-align`, `header-${hdrSide}-left-width-pct`, 'left']
     ];
-    for (const [cls, txt, sz, fk, ck, posKind] of slots) {
+    for (const [cls, txt, sz, fk, ck, szk, ak, wk, posKind] of slots) {
       if (!txt) continue;
       const s = doc.createElement('span');
       s.className = cls;
       s.textContent = txt;
-      const szPx = pt2px(sz);
+      // **S77:** גודל הסלוט מההגדרה (ברירת המחדל המיובאת = הקבועים המכוילים)
+      const szPt = Number(settings[szk]) > 0 ? Number(settings[szk]) : sz;
+      const szPx = pt2px(szPt);
       s.style.fontSize = `${szPx}px`;
       const ff = fontOf(fk);
       if (ff) s.style.fontFamily = ff; // **S4.26:** גופן הסלוט מההגדרות (ברירת מחדל: David Libre)
@@ -14539,9 +14688,16 @@ function renderLegacyPage(pg, settings, doc) {
       s.style.position = 'absolute';
       s.style.lineHeight = '1';
       s.style.top = `${(HDR_BASELINE_Y - 52) - szPx * DLB_BASELINE_FACTOR}px`;
-      if (posKind === 'right') s.style.right = '0';
-      else if (posKind === 'left') s.style.left = '0';
-      else { s.style.left = '50%'; s.style.transform = 'translateX(-50%)'; }
+      // **S77:** תיבת הסלוט = רוחב% מהפס; היישור בתוכה מההגדרה. ברירות המחדל
+      // (33% + right/center/left) משחזרות את העיגון הקודם: ימין צמוד ימינה,
+      // מרכז במרכז, שמאל צמוד שמאלה.
+      const bandW = (GEO.COL_R_X + GEO.COL_W - 33) - (GEO.COL_L_X + 33);
+      const wPct = Number(settings[wk]);
+      const boxW = Math.max(0, (Number.isFinite(wPct) && wPct > 0 && wPct <= 100 ? wPct : 33) / 100) * bandW;
+      const align = settings[ak] || posKind;
+      if (posKind === 'right') { s.style.right = '0'; s.style.width = `${boxW}px`; s.style.textAlign = align; }
+      else if (posKind === 'left') { s.style.left = '0'; s.style.width = `${boxW}px`; s.style.textAlign = align; }
+      else { s.style.left = `${(bandW - boxW) / 2}px`; s.style.width = `${boxW}px`; s.style.textAlign = align; }
       hdr.appendChild(s);
     }
     root.appendChild(hdr);
@@ -14897,7 +15053,9 @@ function renderLegacyPage(pg, settings, doc) {
       // **S74 (בעיה 7 — בקשת משתמש 12.11):** השורה האחרונה של מרזב ההערות
       // (של כל ההערות בעמוד יחד — לא של כל הערה בנפרד) ממורכזת; חריג:
       // הערה שממשיכה לעמוד הבא (centerLast=false מהמנוע) — נשארת לימין.
-      el.style.textAlignLast = fn.centerLast ? 'center' : 'right';
+      // **S77 (בקשה 1):** חיתוך תוך-הערה (cutLast מהמנוע) — השורה האחרונה
+      // היא שורת-ביניים לכל דבר ומיושבת לשני הצדדים (מלאה), כמו ב-PDF.
+      el.style.textAlignLast = fn.centerLast ? 'center' : (fn.cutLast ? 'justify' : 'right');
       el.style.whiteSpace = 'normal';
       // **S74 (בעיה 5):** סמני הרישום — FRL (נמדד בייחוס עמ' 31/37: הסמן
       // FRL 8pt, גוף ההערה Assistant ExtraLight) — גופן משלהם בתוך הזרם.
@@ -16670,6 +16828,16 @@ __modules["src/engine/typography/font-subset.js"] = function (require, module, e
  *
  * **בדיקת tofu (0 סימנים חסרים):** הפרנסר עצמו משמש בודק — קריאה חוזרת
  * של התת־גופן חייבת למפות כל תו מבוקש לגליף בעל קווי מתאר לא־ריקים.
+ *
+ * **S77 (דיווח משתמש: "בהערות השוליים במקום גרשיים מופיע רווח לבן ב-PDF"):**
+ * גליפים קומפוזיטיביים (למשל quotedbl = שני רכיבי quotesingle באסיסטנט
+ * קל-מאוד; גם נקודתיים/פסיק-נקודה באותו גופן) הועתקו כבתים גולמיים בלי
+ * שני תנאים חיוניים: (א) רכיביהם לא נכנסו לסט — הגליף הפנה ל-gid שאינו קיים
+ * בתת-הגופן (נמדד: quotedbl → gid 334 מתוך 36) וה-PDF צייר ריק ברוחב
+ * ההתקדמות = "רווח לבן"; (ב) האינדקסים לא מופו מחדש למספור הגליפים החדש.
+ * כעת: סגירה טרנזיטיבית — רכיבי כל גליף קומפוזיטיבי (ו רכיבי-רכיבים)
+ * נוספים לסט, והאינדקסים בגליף המועתק נכתבים מחדש ל-gid החדש. בדיקת
+ * ה-tofu העצמית מאמתת גם שכל רכיב ממופה בתת-הגופן שנוצר.
  */
 
 const fm = require('./font-metrics');
@@ -16699,32 +16867,98 @@ function buildSubset(font, chars) {
     const g = fm.glyphIdOf(font, ch);
     if (g !== 0) { gidSet.add(g); charsKept.push(ch); }
   }
-  const gids = [...gidSet].sort((a, c) => a - c);
-  const gidToNew = new Map(gids.map((g, i) => [g, i])); // ישן → חדש
 
   // 2) glyf/loca מקוריים — העתקת קווי מתאר כמו שהם
   const locFormat = font.indexToLocFormat;
   const locaOff = font.tables.loca ? font.tables.loca.offset : null;
   const glyfOff = font.tables.glyf ? font.tables.glyf.offset : null;
   if (locaOff == null || glyfOff == null) return { ok: false, error: 'no-glyf-loca' };
+  const glyphStart = (g) => locFormat === 0 ? rdU16(b, locaOff + g * 2) * 2 : rdU32(b, locaOff + g * 4);
   const glyphLen = (g) => {
-    const s = locFormat === 0 ? rdU16(b, locaOff + g * 2) * 2 : rdU32(b, locaOff + g * 4);
+    const s = glyphStart(g);
     const e = locFormat === 0 ? rdU16(b, locaOff + (g + 1) * 2) * 2 : rdU32(b, locaOff + (g + 1) * 4);
     return e - s;
   };
   const glyphBytes = (g) => {
-    const s = locFormat === 0 ? rdU16(b, locaOff + g * 2) * 2 : rdU32(b, locaOff + g * 4);
+    const s = glyphStart(g);
     return b.slice(glyfOff + s, glyfOff + s + glyphLen(g));
   };
 
+  // **S77 — גליפים קומפוזיטיביים:** פענוח רשומות הרכיבים של גליף (אם קומפוזיטיבי).
+  // מבנה glyf: numberOfContours(int16; -1=קומפוזיטיבי) + bbox(int16×4), ואז
+  // רשומות: flags(u16) glyphIndex(u16) args(2/4 בתים לפי 0x0001) ואולי מטריצת
+  // ציור (0x0008/0x0040/0x0080); המשך לפי 0x0020 (MORE_COMPONENTS).
+  const compRefsOf = (g) => {
+    const len = glyphLen(g);
+    if (len < 10) return [];
+    const s = glyfOff + glyphStart(g);
+    if (rdS16(b, s) >= 0) return []; // גליף פשוט
+    const refs = [];
+    let off = s + 10;
+    for (;;) {
+      const flags = rdU16(b, off);
+      refs.push(rdU16(b, off + 2));
+      off += 4 + ((flags & 0x0001) ? 4 : 2);
+      if (flags & 0x0008) off += 2;
+      else if (flags & 0x0040) off += 4;
+      else if (flags & 0x0080) off += 8;
+      if (!(flags & 0x0020)) break;
+    }
+    return refs;
+  };
+  // סגירה טרנזיטיבית: כל רכיב (ורכיבי-רכיב) חייב להיכנס לסט — בלי זה
+  // הגליף הקומפוזיטיבי בתת-הגופן מצביע ל-gid שאינו קיים (רווח לבן ב-PDF).
+  {
+    const queue = [...gidSet];
+    while (queue.length) {
+      const g = queue.pop();
+      if (g >= font.numGlyphs) continue; // הגנה — אינדקס חריג במקור
+      for (const c of compRefsOf(g)) {
+        if (c < font.numGlyphs && !gidSet.has(c)) { gidSet.add(c); queue.push(c); }
+      }
+    }
+  }
+  const gids = [...gidSet].sort((a, c) => a - c);
+  const gidToNew = new Map(gids.map((g, i) => [g, i])); // ישן → חדש
+
+  // העתקת גליף עם מיפוי-מחדש של אינדקסי רכיבים (קומפוזיטיבי בלבד; גליף
+  // פשוט מוחזר כמו שהוא). ההעתקה לזיכרון חדש — Buffer.slice הוא תצוגה
+  // וכתיבה אליו הייתה משנה את הגופן המקורי הרשום.
+  const remappedGlyph = (g) => {
+    const raw = glyphBytes(g);
+    if (raw.length < 10 || rdS16(raw, 0) >= 0) return raw;
+    const out = Buffer.from(raw); // העתקה — לא לגעת במקור
+    let off = 10;
+    for (;;) {
+      const flags = rdU16(out, off);
+      const compOld = rdU16(out, off + 2);
+      const compNew = gidToNew.get(compOld);
+      if (compNew == null) return null; // לא אמור לקרות לאחר הסגירה — כשל רועש
+      out[off + 2] = (compNew >> 8) & 0xFF;
+      out[off + 3] = compNew & 0xFF;
+      off += 4 + ((flags & 0x0001) ? 4 : 2);
+      if (flags & 0x0008) off += 2;
+      else if (flags & 0x0040) off += 4;
+      else if (flags & 0x0080) off += 8;
+      if (!(flags & 0x0020)) break;
+    }
+    return out;
+  };
+
   // תת־glyf: מרווחים לפי קווי מתאר; loca קצר (÷2) אם אפשר, אחרת ארוך
-  const newGlyphs = gids.map(g => glyphBytes(g));
+  const newGlyphs = gids.map(g => {
+    const r = remappedGlyph(g);
+    if (r === null) return { error: `component-unmapped:${g}` };
+    return { bytes: r };
+  });
+  const badGlyph = newGlyphs.find(x => x && x.error);
+  if (badGlyph) return { ok: false, error: badGlyph.error };
   const glyfParts = [];
   const newLoca = [0];
   let acc = 0;
   for (const g of newGlyphs) {
-    glyfParts.push(g);
-    acc += g.length;
+    glyfParts.push(g.bytes);
+    acc += g.bytes.length;
     if (acc & 3) { const pad = 4 - (acc & 3); glyfParts.push(Buffer.alloc(pad)); acc += pad; }
     newLoca.push(acc);
   }
@@ -16838,6 +17072,27 @@ function buildSubset(font, chars) {
     // גליף ריק חוקי עם advance חיובי (אין לו קווי מתאר מטבעו); לא tofu.
     const len = loca2(g + 1) - loca2(g);
     if (len <= 0 && advNew === 0) return { ok: false, error: `tofu-empty:${ch.codePointAt(0).toString(16)}` };
+    // **S77 — קומפוזיטיבי:** כל רכיב של הגליף חייב להתמפות בתת-הגופן
+    // (הסגירה הטרנזיטיבית מבטיחה זאת; בדיקת האמת כאן מוכיחה שהרימופ
+    // בפועל תקין — לפני S77 quotedbl הצביע ל-gid 334 מתוך 36 גליפים).
+    if (len >= 10) {
+      const gOff = back.font.tables.glyf.offset + loca2(g);
+      if (rdS16(bytes, gOff) < 0) {
+        let off = gOff + 10;
+        for (;;) {
+          const flags = rdU16(bytes, off);
+          const comp = rdU16(bytes, off + 2);
+          if (comp >= gids.length || loca2(comp + 1) - loca2(comp) < 0) {
+            return { ok: false, error: `component-lost:${ch.codePointAt(0).toString(16)}:${comp}` };
+          }
+          off += 4 + ((flags & 0x0001) ? 4 : 2);
+          if (flags & 0x0008) off += 2;
+          else if (flags & 0x0040) off += 4;
+          else if (flags & 0x0080) off += 8;
+          if (!(flags & 0x0020)) break;
+        }
+      }
+    }
     const advOld = fm.advanceUnitsOf(font, ch);
     if (advOld !== advNew) return { ok: false, error: `width-drift:${ch.codePointAt(0).toString(16)}:${advNew}!=${advOld}` };
   }
@@ -18732,9 +18987,9 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
   const colorOf = (hex) => (hex ? hexColorToRgb(hex) : null);
   const bodyColor = colorOf(settings['body-color']);
   const headingColorOf = (lvl) => colorOf(settings[`heading-${lvl}-color`]);
-  const hdrColorOf = (pos) => (pos === 'right' ? colorOf(settings['header-recto-right-color'])
-    : pos === 'center' ? colorOf(settings['header-recto-center-color'])
-      : colorOf(settings['header-recto-left-color']));
+  const hdrColorOfS77 = (pos, side) => (pos === 'right' ? colorOf(settings[`header-${side}-right-color`])
+    : pos === 'center' ? colorOf(settings[`header-${side}-center-color`])
+      : colorOf(settings[`header-${side}-left-color`])); // **S77:** לפי הצד הפיזי — כמו ה-DOM
   const folioColor = colorOf(settings['page-num-color']);
   const bandColorOf = (b) => {
     if (b.kind === 'endnote-title') return colorOf(settings['endnote-title-color']);
@@ -19003,7 +19258,11 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
         const sumW = ws.reduce((a, w) => a + w.w, 0);
         const gaps = Math.max(0, ws.length - 1);
         let gapW = spaceW;
-        if (!isLast && gaps > 0 && sumW + gaps * spaceW < usableW) {
+        // **S77 (בקשה 1):** שורת חיתוך תוך-הערה (cutLast) — שורת-ביניים לכל
+        // דבר: מיושבת לשני הצדדים (מלאה) כמו שאר שורות הביניים — כמו ה-DOM
+        // (textAlignLast:justify). עד כאן סוף-המרזב המרופט הותיר "שורה
+        // אחרונה לא מלאה" בהערה שממשיכה לעמוד הבא.
+        if ((!isLast || fn.cutLast) && gaps > 0 && sumW + gaps * spaceW < usableW) {
           gapW = (usableW - sumW) / gaps; // יישוב לשני הצדדים — כמו הגוף
         }
         let cursor = rightEdge;
@@ -19027,6 +19286,7 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
       if (words.length) {
         out.footnotes.push({
           centerLast: !!fn.centerLast, // **S74 (בעיה 7):** מרכוז השורה האחרונה (חריג: המשך לעמוד הבא)
+          cutLast: !!fn.cutLast, // **S77 (בקשה 1):** שורת חיתוך תוך-הערה — מיושבת לשני הצדדים
           y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: '',
           text: fn.lines.flatMap(l => (l.words || []).filter(t => !t.gap).map(t => t.t)).join(' '),
           words, baselineY: null, h: fn.lines.length * GEO.FN_PITCH,
@@ -19070,7 +19330,9 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
       const sumW = ws.reduce((a, w) => a + w.w, 0);
       const gaps = Math.max(0, ws.length - 1);
       let gapW = spaceW;
-      if (!isLast && gaps > 0 && sumW + gaps * spaceW < usableW) {
+      // **S77 (בקשה 1):** חיתוך תוך-הערה (cutLast) — שורת-ביניים מיושבת
+      // לשני הצדדים (כמו ה-DOM), לא מרופטת.
+      if ((!isLast || fn.cutLast) && gaps > 0 && sumW + gaps * spaceW < usableW) {
         gapW = (usableW - sumW) / gaps; // יישוב לשני הצדדים (כמו הייחוס)
       }
       let cursor = lineRight;
@@ -19088,7 +19350,7 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
       }
     });
     if (words.length) {
-      out.footnotes.push({ centerLast: !!fn.centerLast, y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: fn.marker, text: fn.lines.map(l => l.words.join(' ')).join(' '), words, baselineY: firstBase, h: fn.lines.length * GEO.FN_PITCH, ...(fnColor ? { color: fnColor } : {}) });
+      out.footnotes.push({ centerLast: !!fn.centerLast, cutLast: !!fn.cutLast, y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: fn.marker, text: fn.lines.map(l => l.words.join(' ')).join(' '), words, baselineY: firstBase, h: fn.lines.length * GEO.FN_PITCH, ...(fnColor ? { color: fnColor } : {}) });
     }
   }
 
@@ -19161,22 +19423,33 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
   // ⇒ תת-גופן ייעודי; בלתי-רשומה ⇒ DavidLibre-Bold — התנהגות קודמת).
   if (pg.headerSlots && (pg.headerSlots.right || pg.headerSlots.center || pg.headerSlots.left)) {
     const slots = [];
-    // **S73:** גופן/צבע הסלוט — מההגדרות (header-recto-{right,center,left}-* —
-    // אותם מפתחות שה-DOM של legacy מציג; verso משוקף ל-recto בזרימת המורשת).
-    const SLOT_FONT_KEY = { right: 'header-recto-right-font', center: 'header-recto-center-font', left: 'header-recto-left-font' };
+    // **S73 + S77 (בקשה 3):** גופן/צבע/גודל/יישור/רוחב הסלוט — מההגדרות
+    // לפי הצד הפיזי של העמוד (עד כאן: מפתחי recto קבועים לכל העמודים —
+    // אותם מפתחות שה-DOM של legacy מציג). ברירות המחדל (33% + right/center/
+    // left + הגדלים המכוילים) משחזרות את המיקומים הקודמים במדויק.
+    const hdrSide = (pg.index % 2 === 0) ? 'recto' : 'verso'; // עמוד 1 (אינדקס 0) = recto
     const mk = (pos, text, sizePt) => {
       if (!text) return;
       // **S73:** גופן הסלוט מההגדרות — כמו ה-DOM (fontWeight 700 שם;
       // Livorna הוא חד-משקלי — המשפחה עצמה). נפילה ל-hApi (DavidLibre-Bold)
       // כשהמשפחה אינה רשומה — התנהגות קודמת.
-      const fam = settings[SLOT_FONT_KEY[pos]] || 'DavidLibre-Bold';
+      const fam = settings[`header-${hdrSide}-${pos}-font`] || 'DavidLibre-Bold';
+      // **S77:** גודל הסלוט מההגדרה (ברירת המחדל המיובאת = הקבועים המכוילים)
+      const szKey = `header-${hdrSide}-${pos}-size-pt`;
+      const effSz = Number(settings[szKey]) > 0 ? Number(settings[szKey]) : sizePt;
       const sApi = apiFor(fam) || hApi;
-      const w = sApi.measureTextWidth(text, sizePt, 0);
-      let x;
-      if (pos === 'right') x = GEO.COL_R_X + GEO.COL_W - 33 - w;
-      else if (pos === 'left') x = GEO.COL_L_X + 33;
-      else x = (GEO.PAGE_W - w) / 2;
-      slots.push({ pos, text, x, w, sizePt, fam: apiFor(fam) ? fam : null, color: hdrColorOf(pos) });
+      const w = sApi.measureTextWidth(text, effSz, 0);
+      // **S77:** תיבת הסלוט — רוחב% מהפס; היישור בתוכה מההגדרה (כמו ה-DOM).
+      const bandL = GEO.COL_L_X + 33, bandR = GEO.COL_R_X + GEO.COL_W - 33;
+      const bandW = bandR - bandL;
+      const wPct = Number(settings[`header-${hdrSide}-${pos}-width-pct`]);
+      const boxW = Math.max(0, (Number.isFinite(wPct) && wPct > 0 && wPct <= 100 ? wPct : 33) / 100) * bandW;
+      const align = settings[`header-${hdrSide}-${pos}-align`] || pos;
+      let x, alignEff;
+      if (pos === 'right') { x = bandR - boxW; alignEff = align; }
+      else if (pos === 'left') { x = bandL; alignEff = align; }
+      else { x = bandL + (bandW - boxW) / 2; alignEff = align; }
+      slots.push({ pos, text, x, w, boxW, align: alignEff, sizePt: effSz, fam: apiFor(fam) ? fam : null, color: hdrColorOfS77(pos, hdrSide) });
     };
     mk('right', pg.headerSlots.right, SZ.hdrR);
     mk('center', pg.headerSlots.center, SZ.hdrC);
@@ -19187,11 +19460,13 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
         const baseY = GEO.HEADER_BASELINE;
         // **S5.1 (תיקון C1/L2):** רוחב התיבה = רוחב הטקסט עצמו (s.w) — לא
         // s.w+40. ה+40 הסיט כל סלוט 40px מהמקום שמכויל מהייחוס ב-mk() לעיל.
+        // **S77:** התיבה ברוחב הסלוט מההגדרה (boxW) והמילים מיושבות בה לפי
+        // היישור מההגדרה — כמו ה-DOM.
         const sFam = s.fam || 'DavidLibre-Bold';
         const sApi = apiFor(sFam) || hApi;
         const sKey = s.fam ? fontKeyOf(s.fam) : 'heading';
-        s.words = placeWords(s.text.split(' '), sApi, s.x, s.w, s.sizePt,
-          s.pos === 'center' ? 'center' : (s.pos === 'right' ? 'right' : 'left'), baseY);
+        const a = s.align === 'center' ? 'center' : (s.align === 'left' ? 'left' : (s.align === 'right' ? 'right' : (s.pos === 'center' ? 'center' : (s.pos === 'right' ? 'right' : 'left'))));
+        s.words = placeWords(s.text.split(' '), sApi, s.x, s.boxW || s.w, s.sizePt, a, baseY);
         s.color = s.color || pg.headerSlots.color || null;
         for (const w of s.words) { if (s.color) w.color = s.color; w.fontKey = sKey; }
       }
