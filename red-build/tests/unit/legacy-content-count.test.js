@@ -15,7 +15,7 @@ const imported = importImudSettings(
   new Set(getSettingDefs().map(def => def.id))
 );
 const settings = Object.assign({}, getDefaultSettings(), imported.settings, {
-  'show-back-shaar': false
+  'shaar-back-enabled': false
 });
 
 const VALID_DOC = [
