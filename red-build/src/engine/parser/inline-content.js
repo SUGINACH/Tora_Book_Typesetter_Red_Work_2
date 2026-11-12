@@ -251,8 +251,10 @@ function parseInlineRuns(value, options = {}) {
     boundaries.add(marker.start); boundaries.add(marker.end);
   }
   for (const image of images) {
-    imageAt.set(image.sourceStart, image);
-    boundaries.add(image.sourceStart); boundaries.add(image.sourceEnd);
+    const localStart = image.sourceStart - sourceOffset;
+    const localEnd = image.sourceEnd - sourceOffset;
+    imageAt.set(localStart, image);
+    boundaries.add(localStart); boundaries.add(localEnd);
   }
 
   const points = Array.from(boundaries).sort((a, b) => a - b);
