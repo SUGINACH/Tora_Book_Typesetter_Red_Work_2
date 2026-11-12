@@ -101,7 +101,19 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
   // Knuth–Plass solver, with a two-dimensional state.
   const states = Array.from({ length: n + 1 }, () => new Map());
   states[0].set(0, { cost: 0, action: 'origin' });
+  const constantWidth = typeof maxWidthPx !== 'function';
   const updateState = (position, lineNo, candidate) => {
+    if (constantWidth) {
+      // With a scalar width, future geometry is independent of lineNo. The
+      // cheapest path therefore dominates every other path at this position,
+      // preserving the original O(n²) state-space behavior.
+      let best = null;
+      for (const state of states[position].values()) {
+        if (!best || state.cost < best.cost) best = state;
+      }
+      if (best && best.cost <= candidate.cost) return;
+      states[position].clear();
+    }
     const prior = states[position].get(lineNo);
     if (!prior || candidate.cost < prior.cost) states[position].set(lineNo, candidate);
   };
