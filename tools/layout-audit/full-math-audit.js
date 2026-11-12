@@ -462,29 +462,53 @@
       // לכל מפתח (חסר = איבוד; עודף = הצגה חוזרת — חוקי, נספר בסטטיסטיקה).
       {
         const bodyMk = {}, fnMk = {};
+        const bodyById = {}, fnById = {};
         let bodyN = 0, fnN = 0;
-        // **S5.2:** סמני גוף הם רשומות {t,fs}; סמני הערה — מחרוזות — נרמול למפתח אחיד
         const keyOf = (m) => (typeof m === 'string' ? m : (m && m.t));
+        const identityOf = (m) => (m && typeof m === 'object' && m.key != null ? String(m.key) : null);
         for (const p of seq) {
           for (const c of (p.cols || [])) for (const l of c.lines) {
-            for (const m of (l.markers || [])) { const k = keyOf(m); if (k == null) continue; bodyMk[k] = (bodyMk[k] || 0) + 1; bodyN++; }
+            for (const m of (l.markers || [])) {
+              const k = keyOf(m); if (k == null) continue;
+              bodyMk[k] = (bodyMk[k] || 0) + 1; bodyN++;
+              const id = identityOf(m); if (id != null) bodyById[id] = (bodyById[id] || 0) + 1;
+            }
           }
           for (const f of (p.fns || [])) {
-            for (const m of (f.markers || [])) { const k = keyOf(m); if (k == null) continue; fnMk[k] = (fnMk[k] || 0) + 1; fnN++; }
+            for (const m of (f.markers || [])) { const k = keyOf(m); if (k != null) { fnMk[k] = (fnMk[k] || 0) + 1; fnN++; } }
+            for (const id of (f.noteKeys || [])) fnById[String(id)] = (fnById[String(id)] || 0) + 1;
           }
         }
         let reDisplayed = 0;
-        for (const k of new Set([...Object.keys(bodyMk), ...Object.keys(fnMk)])) {
-          const b = bodyMk[k] || 0, f = fnMk[k] || 0;
-          if (b === 0 && f === 0) continue;
-          if (b > 0 && f === 0) {
-            cnt('MARKER_NOTE_MATCH', { type: 'MARKER_NOTE_MATCH', severity: 'high', marker: k, inBody: b, inNotes: 0, detail: 'סמן הערה בגוף שאין לו אף פתיחת-הערה — ההערה אבדה' });
-          } else if (f > 0 && b === 0) {
-            cnt('MARKER_NOTE_MATCH', { type: 'MARKER_NOTE_MATCH', severity: 'high', marker: k, inBody: 0, inNotes: f, detail: 'פתיחת-הערה שאין לה סמן בגוף — הערה יתומה' });
-          } else if (f < b) {
-            cnt('MARKER_NOTE_MATCH', { type: 'MARKER_NOTE_MATCH', severity: 'high', marker: k, inBody: b, inNotes: f, detail: 'פתיחות-הערה פחות מסמני הגוף (' + f + '<' + b + ') — הערה אבדה בדרך' });
-          } else if (f > b) {
-            reDisplayed += f - b; // הצגה חוזרת חוקית (פסקה חוצת-עמודים — כמקור)
+        const identityMode = Object.keys(bodyById).length > 0 || Object.keys(fnById).length > 0;
+        if (identityMode) {
+          // One stable key denotes one source note instance. Multiple body
+          // appearances are legal paragraph continuations; they do not require
+          // a new footnote opening on every page.
+          for (const id of new Set([...Object.keys(bodyById), ...Object.keys(fnById)])) {
+            const b = bodyById[id] || 0, f = fnById[id] || 0;
+            if (b > 0 && f === 0) {
+              cnt('MARKER_NOTE_MATCH', { type: 'MARKER_NOTE_MATCH', severity: 'high', marker: id, noteKey: id, inBody: b, inNotes: 0, detail: 'מופע הערה בגוף ללא פתיחת הערה תואמת לפי מזהה מופע יציב' });
+            } else if (f > 0 && b === 0) {
+              cnt('MARKER_NOTE_MATCH', { type: 'MARKER_NOTE_MATCH', severity: 'high', marker: id, noteKey: id, inBody: 0, inNotes: f, detail: 'פתיחת הערה ללא סמן גוף תואם לפי מזהה מופע יציב' });
+            } else {
+              reDisplayed += Math.max(0, b - 1) + Math.max(0, f - 1);
+            }
+          }
+        } else {
+          // Compatibility fallback for older renderers without source note IDs.
+          for (const k of new Set([...Object.keys(bodyMk), ...Object.keys(fnMk)])) {
+            const b = bodyMk[k] || 0, f = fnMk[k] || 0;
+            if (b === 0 && f === 0) continue;
+            if (b > 0 && f === 0) {
+              cnt('MARKER_NOTE_MATCH', { type: 'MARKER_NOTE_MATCH', severity: 'high', marker: k, inBody: b, inNotes: 0, detail: 'סמן הערה בגוף שאין לו אף פתיחת-הערה — ההערה אבדה' });
+            } else if (f > 0 && b === 0) {
+              cnt('MARKER_NOTE_MATCH', { type: 'MARKER_NOTE_MATCH', severity: 'high', marker: k, inBody: 0, inNotes: f, detail: 'פתיחת-הערה שאין לה סמן בגוף — הערה יתומה' });
+            } else if (f < b) {
+              cnt('MARKER_NOTE_MATCH', { type: 'MARKER_NOTE_MATCH', severity: 'high', marker: k, inBody: b, inNotes: f, detail: 'פתיחות-הערה פחות מסמני הגוף (' + f + '<' + b + ') — הערה אבדה בדרך' });
+            } else if (f > b) {
+              reDisplayed += f - b;
+            }
           }
         }
         S.markers.body = bodyN; S.markers.footnote = fnN; S.markers.reDisplayed = reDisplayed;
@@ -782,7 +806,7 @@ if (typeof document !== 'undefined') {
           const wr = rel(R(winEl), origin);
           rec.window = { x: wr.x, y: wr.y, w: wr.w, h: wr.h };
         }
-        for (const m of mkEls) rec.markers.push({ t: (m.textContent || '').trim(), fs: parseFloat(getComputedStyle(m).fontSize) || 0 });
+        for (const m of mkEls) rec.markers.push({ t: (m.textContent || '').trim(), key: m.getAttribute('data-note-key') || null, fs: parseFloat(getComputedStyle(m).fontSize) || 0 });
         info.words += wc(l.textContent);
 
         const base = rec.last ? 'l' : (rec.head ? 'h' : 'b');
@@ -814,7 +838,9 @@ if (typeof document !== 'undefined') {
     for (const f of fns) {
       const fr = rel(R(f), origin);
       const fcs = getComputedStyle(f);
-      const markers = [...f.querySelectorAll('.w--fnmarker')].map((m) => (m.textContent || '').trim()).filter(Boolean);
+      const markerElements = [...f.querySelectorAll('.w--fnmarker')];
+      const markers = markerElements.map((m) => (m.textContent || '').trim()).filter(Boolean);
+      const noteKeys = markerElements.map((m) => m.getAttribute('data-note-key')).filter(Boolean);
       // נפילה (נתיב מודרני בלי ספאנים): המילה הראשונה של הטקסט. **S5.2 (תיקון
       // המשכים):** אלמנט המשך (.fn--continuation — מורשת block ומודרני כאחד) אינו
       // פתיחת-הערה ואסור לו לתרום סמן למולטיסט: במודרני ההמשך מציג את הסמן
@@ -825,7 +851,7 @@ if (typeof document !== 'undefined') {
         const first = (f.textContent || '').trim().replace(/^\(המשך\)\s*/, '').split(/[\s\u200F]+/)[0] || '';
         if (first && !/^\(המשך\)$/.test(first)) markers.push(first);
       }
-      info.fns.push({ x: fr.x, y: fr.y, w: fr.w, h: fr.h, markers, text: (f.textContent || '').slice(0, 24), fs: parseFloat(fcs.fontSize) || 0 });
+      info.fns.push({ x: fr.x, y: fr.y, w: fr.w, h: fr.h, markers, noteKeys, text: (f.textContent || '').slice(0, 24), fs: parseFloat(fcs.fontSize) || 0 });
       info.fnMk += markers.join('');
       info.fnMkList.push(...markers);
       info.words += wc(f.textContent);
