@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 const { describe, it, assert, assertEq, report } = require('../harness');
 
-const { legacyTypeset, FLOW_BOTTOM, SINGLE_W } = require('../../src/engine/layout/legacy-imud-flow');
+const { legacyTypeset, FLOW_BOTTOM, SINGLE_W, collectStartedFootnoteIndices } = require('../../src/engine/layout/legacy-imud-flow');
 const { importImudSettings } = require('../../src/engine/core/legacy-settings-map');
 const { getDefaultSettings, getSettingDefs } = require('../../src/engine/core/settings-registry');
 const { registerFont, clearRegisteredFonts } = require('../../src/engine/typography/measure-api');
@@ -214,6 +214,36 @@ describe('S76 — נייטרליות legacy מלאה (התיקונים ב-body-f
     assert(r.layoutHash.startsWith('legacy-6a06e3108c8ec'),
       `body-first נעול על ההאש החדש — התקבל ${r.layoutHash.slice(0, 20)}`);
     assertEq(r.contentPreserved, true, 'שימור תוכן');
+  });
+});
+
+// =====================================================================
+describe('S76 regression — only actual note text starts a continuous footnote', () => {
+  it('a separator gap or marker-only token at a page boundary does not suppress the next-page marker', () => {
+    const afterGap = collectStartedFootnoteIndices([
+      [{ t: '', gap: true, noteIdx: 2, w: 0 }]
+    ]);
+    assertEq(afterGap.has(2), false,
+      'רווח המפריד שנפל בעמוד הקודם אינו מסמן את ההערה ככזו שהתחילה');
+
+    const afterMarker = collectStartedFootnoteIndices([
+      [{ t: 'יז.', mk: true, noteIdx: 2, w: 8 }]
+    ]);
+    assertEq(afterMarker.has(2), false,
+      'סמן לבדו אינו תחילת הערה — המילים והסמן צריכים לעבור יחד');
+  });
+
+  it('a placed text word marks its note as started, without affecting adjacent notes', () => {
+    const started = collectStartedFootnoteIndices([
+      [
+        { t: '', gap: true, noteIdx: 1, w: 0 },
+        { t: 'כג.', mk: true, noteIdx: 1, w: 8 },
+        { t: 'מילה', noteIdx: 1, w: 20 },
+        { t: '', gap: true, noteIdx: 2, w: 0 }
+      ]
+    ]);
+    assertEq(started.has(1), true, 'מילה שהונחה בפועל מסמנת את ההערה כהתחלה');
+    assertEq(started.has(2), false, 'הרווח של ההערה הבאה אינו מסמן אותה כהתחלה');
   });
 });
 
