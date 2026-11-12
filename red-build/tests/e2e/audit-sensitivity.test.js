@@ -253,6 +253,11 @@ describe('audit-sensitivity — הוכחת רגישות הגלאים (S5.2)', ()
 
   it('(ח4) מזהה מופע יציב: סמני גוף חוזרים באותו פרק אינם דורשים פתיחת הערה חוזרת', () => {
     const book = cleanBook();
+    // cleanBook contains six pages (indexes 0..5); add the explicit continuation
+    // page instead of indexing a nonexistent seventh page.
+    book.push(structuredClone(book[5]));
+    book[6].i = 6;
+    book[6].folio = { ...book[6].folio, text: 'ד׳' };
     const noteKey = 'token-17#16';
     book[4].cols[0].lines[0].markers = [{ t: 'יז.', key: noteKey, fs: 10.7 }];
     book[5].cols[0].lines[0].markers = [{ t: 'יז.', key: noteKey, fs: 10.7 }];
