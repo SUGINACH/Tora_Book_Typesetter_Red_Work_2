@@ -31,6 +31,7 @@ const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = r
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
 const { parseInlineRuns, parseInlineParagraph } = require('../parser/inline-content');
+const { packMarginNotes } = require('./margin-flow');
 
 // ---------- גיאומטריה (px @96dpi; PDF = px×0.75) — מכויל מהייחוס ----------
 const GEO = {
@@ -2499,6 +2500,19 @@ function legacyTypeset(rawText, settings, env) {
 
       // ---- פריסת המחסנית לעמוד: פסים + בלוקים → טורים עם y מפורש ----
       layoutStack(pg, stack, top);
+
+      // Page-level placement: both columns have now contributed their
+      // anchored notes, so each physical margin is packed as one lane.
+      const marginPlacement = packMarginNotes(pg.marginNotes, {
+        top: GEO.FLOW_TOP,
+        bottom: GEO.FLOW_TOP + GEO.FLOW_H,
+        pitch: GEO.MN_PITCH,
+        gap: 1
+      });
+      pg.marginNotes = marginPlacement.notes;
+      if (marginPlacement.diagnostics.length) {
+        pg.layoutDiagnostics = (pg.layoutDiagnostics || []).concat(marginPlacement.diagnostics);
+      }
 
       // ---- הערות שוליים בתחתית (bottom-anchored) ----
       if (fnQueue.length) {
