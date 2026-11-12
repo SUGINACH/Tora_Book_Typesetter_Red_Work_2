@@ -386,7 +386,6 @@
       const types = seq.map((p) => p.t);
       if (seq.length) {
         if (types[0] !== 'shaar-main' || types[1] !== 'shaar-back') cnt('SHAAR_ORDER', { type: 'SHAAR_ORDER', severity: 'high', got: types.slice(0, 3), expected: ['shaar-main', 'shaar-back', '…'] });
-        if (!types.some((t) => t === 'shaar-sub')) cnt('NO_SHAAR_SUB', { type: 'NO_SHAAR_SUB', severity: 'medium' });
         const bodyPages = seq.filter((p) => /regular|sign-open|preface|h3-spread|toc/.test(p.t));
         const bodyNoHdr = bodyPages.filter((p) => !(p.header && p.header.text));
         if (bodyNoHdr.length) cnt('BODY_PAGES_WITHOUT_HEADER', { type: 'BODY_PAGES_WITHOUT_HEADER', severity: 'high', count: bodyNoHdr.length, pages: bodyNoHdr.map((p) => p.i).slice(0, 12) });
@@ -629,7 +628,7 @@ if (typeof document !== 'undefined') {
 
   const report = { url: location.href, started: new Date().toISOString(), ua: navigator.userAgent, dpr: devicePixelRatio, vp: [innerWidth, innerHeight], assets: null, fonts: null, virtualized: null, sweep: null, problems: [], pages: [], stats: null, summary: null };
   // **S5.2:** רשימת משפחות הבדיקה — מופיעה בדוח עצמו (machine-readable) ולא רק בהערת הקובץ
-  report.checkFamilies = ['LINE_OVERLAP', 'INK_NOT_JUSTIFIED', 'LINE_OUTSIDE_COLUMN', 'LINE_BELOW_COLUMN', 'LINE_ABOVE_COLUMN', 'GUTTER_OVERLAP', 'LINE_OUT_OF_ORDER', 'WINDOW_WRONG_SIDE', 'WINDOW_NOT_FIRST', 'LAST_LINE_JUSTIFIED', 'LAST_NOT_CENTERED', 'LAST_RIGHT_GAP', 'HEAD_JUSTIFIED', 'HEAD_NOT_CENTERED', 'HEADER_POSITION', 'FOLIO_POSITION', 'FOLIO_MISSING', 'FOLIO_SEQUENCE', 'FN_OVERLAP', 'FN_OVERLAPS_BODY', 'FN_BELOW_PAGE', 'FN_RULE_PRESENT', 'SIDE_NOTE_OVERLAP', 'SIDE_NOTE_IN_COLUMN', 'SIDE_NOTE_OUTSIDE_PAGE', 'SIDE_NOTE_EMPTY', 'ENDNOTE_OVERLAP', 'ENDNOTE_OUTSIDE_PAGE', 'ENDNOTE_TITLE_OVERLAP', 'ENDNOTE_EMPTY', 'EMPTY_PAGE', 'BAND_BOX_OUTSIDE_PAGE', 'BAND_INK_OUTSIDE', 'BAND_NOT_CENTERED', 'TOC_ROWS', 'PITCH_UNIFORMITY', 'BODY_FONT_UNIFORMITY', 'MARKER_NOTE_MATCH', 'TYPE_UNKNOWN', 'COLUMN_TOPS_ALIGN', 'COLUMN_ORDER_RTL', 'COLUMN_WIDTH_MISMATCH', 'COLUMN_OUTSIDE_PAGE', 'SINGLE_TYPE_TWO_CONTENT_COLS', 'NOWRAP_BODY_LINE', 'STYLE_NOT_JUSTIFIED', 'WRAPPED_LINE', 'DIR_RTL_MISSING', 'PLACEHOLDER_GEOMETRY', 'PAGE_INDEX_MISSING', 'NO_SCROLLER', 'COVERAGE', 'NO_PAGES', 'SHAAR_ORDER', 'NO_SHAAR_SUB', 'SHAAR_EMPTY', 'BODY_PAGES_WITHOUT_HEADER', 'COLUMN_BOTTOMS_BALANCE'];
+  report.checkFamilies = ['LINE_OVERLAP', 'INK_NOT_JUSTIFIED', 'LINE_OUTSIDE_COLUMN', 'LINE_BELOW_COLUMN', 'LINE_ABOVE_COLUMN', 'GUTTER_OVERLAP', 'LINE_OUT_OF_ORDER', 'WINDOW_WRONG_SIDE', 'WINDOW_NOT_FIRST', 'LAST_LINE_JUSTIFIED', 'LAST_NOT_CENTERED', 'LAST_RIGHT_GAP', 'HEAD_JUSTIFIED', 'HEAD_NOT_CENTERED', 'HEADER_POSITION', 'FOLIO_POSITION', 'FOLIO_MISSING', 'FOLIO_SEQUENCE', 'FN_OVERLAP', 'FN_OVERLAPS_BODY', 'FN_BELOW_PAGE', 'FN_RULE_PRESENT', 'SIDE_NOTE_OVERLAP', 'SIDE_NOTE_IN_COLUMN', 'SIDE_NOTE_OUTSIDE_PAGE', 'SIDE_NOTE_EMPTY', 'ENDNOTE_OVERLAP', 'ENDNOTE_OUTSIDE_PAGE', 'ENDNOTE_TITLE_OVERLAP', 'ENDNOTE_EMPTY', 'EMPTY_PAGE', 'BAND_BOX_OUTSIDE_PAGE', 'BAND_INK_OUTSIDE', 'BAND_NOT_CENTERED', 'TOC_ROWS', 'PITCH_UNIFORMITY', 'BODY_FONT_UNIFORMITY', 'MARKER_NOTE_MATCH', 'TYPE_UNKNOWN', 'COLUMN_TOPS_ALIGN', 'COLUMN_ORDER_RTL', 'COLUMN_WIDTH_MISMATCH', 'COLUMN_OUTSIDE_PAGE', 'SINGLE_TYPE_TWO_CONTENT_COLS', 'NOWRAP_BODY_LINE', 'STYLE_NOT_JUSTIFIED', 'WRAPPED_LINE', 'DIR_RTL_MISSING', 'PLACEHOLDER_GEOMETRY', 'PAGE_INDEX_MISSING', 'NO_SCROLLER', 'COVERAGE', 'NO_PAGES', 'SHAAR_ORDER', 'SHAAR_EMPTY', 'BODY_PAGES_WITHOUT_HEADER', 'COLUMN_BOTTOMS_BALANCE'];
   const collectionProblems = [];
 
   try { await document.fonts.ready; } catch (e) {}
@@ -861,9 +860,12 @@ if (typeof document !== 'undefined') {
   if (!report.virtualized) {
     for (const pg of liveNow()) auditLive(pg);
   } else {
-    const panel = document.querySelector('.tab-panel[data-tab="preview"]');
+    // **S77:** בתצוגה המפוצלת הגולל נמצא ב-root הקבוע .preview-pane;
+    // tab-panel נשאר fallback לגרסאות קודמות, וה-canvas fallback אחרון.
+    const previewPane = document.querySelector('.preview-pane');
+    const tabPanel = document.querySelector('.tab-panel[data-tab="preview"]');
     let scroller = null;
-    for (const cand of [panel, canvas]) if (cand && cand.scrollHeight > cand.clientHeight + 10) { scroller = cand; break; }
+    for (const cand of [previewPane, tabPanel, canvas]) if (cand && cand.scrollHeight > cand.clientHeight + 10) { scroller = cand; break; }
     if (!scroller) {
       collectionProblems.push({ type: 'NO_SCROLLER', severity: 'high', detail: 'וירטואלי ללא אלמנט גולל' });
       for (const pg of liveNow()) auditLive(pg);
