@@ -30,6 +30,7 @@ const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = r
 // **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
+const { parseInlineRuns } = require('../parser/inline-content');
 
 // ---------- גיאומטריה (px @96dpi; PDF = px×0.75) — מכויל מהייחוס ----------
 const GEO = {
@@ -300,7 +301,7 @@ function readConfig(imud, settings) {
 }
 
 // ---------- טוקניזציה (כמו performTypeset של המקור) ----------
-function tokenizeDoc(rawText, cfg) {
+function tokenizeDoc(rawText, cfg, inlineOptions = {}) {
   let text = stripEditorialNotes(rawText);
   const { meta, text: noMeta } = parseMetadata(text);
   text = noMeta;
@@ -381,6 +382,17 @@ function tokenizeDoc(rawText, cfg) {
       sideNote: null, endNote: pendingEndNote,
       syntheticTail: true
     });
+  }
+  // S14 P0: both historical and RED parsing now expose the same first-class
+  // inline AST. This is a shared parse contract, not a second renderer or layout path.
+  for (const token of tokens) {
+    if (token.type !== 'p') continue; // H0–H7/side notes are intentionally excluded
+    token.inlineContent = {
+      body: parseInlineRuns(token.text, { ...inlineOptions, allowImages: true }),
+      endNote: token.endNote
+        ? parseInlineRuns(token.endNote, { ...inlineOptions, allowImages: false })
+        : null
+    };
   }
   return { meta, tokens };
 }
@@ -1072,7 +1084,12 @@ function legacyTypeset(rawText, settings, env) {
     );
   }
   const brk = new LineBreaker(api, cfg, windowApi, headingApi);
-  const { meta, tokens } = tokenizeDoc(rawText, cfg);
+  const inlineOptions = {
+    fontMarkers: settings._inlineFontStyles || settings._inlineFontMarkers || [],
+    knownFamilies: settings._inlineFontFamilies || [],
+    availableFamilies: Array.from(registeredMeasureFonts.keys())
+  };
+  const { meta, tokens } = tokenizeDoc(rawText, cfg, inlineOptions);
 
   const bookTitle = (meta.bookTitle || 'ספר').trim();
   const tw = bookTitle.split(/\s+/);
