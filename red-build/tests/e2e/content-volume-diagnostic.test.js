@@ -11,6 +11,7 @@ const {
   tokenizeDoc,
   findNotes
 } = require('../../src/engine/layout/legacy-imud-flow');
+const { registerFont, clearRegisteredFonts } = require('../../src/engine/typography/measure-api');
 const {
   getDefaultSettings,
   getSettingDefs
@@ -32,6 +33,32 @@ const imported = importImudSettings(
   { availableFonts: new Set(fonts.map(font => font.family)) }
 );
 const settings = Object.assign({}, getDefaultSettings(), imported.settings);
+
+// Match the application's font registration before typesetting.
+const FONT_SETTING_KEYS = [
+  'body-font', 'first-word-font', 'dh-font', 'f-note-body-font', 'page-num-font',
+  ...Array.from({ length: 8 }, (_, i) => `heading-${i}-font`),
+  'shaar-title-font', 'shaar-subtitle-font', 'shaar-desc-font', 'shaar-sections-font',
+  'shaar-author-font', 'shaar-year-font', 'shaar-back-text-font',
+  ...['recto', 'verso'].flatMap(side => ['right', 'center', 'left'].map(pos => `header-${side}-${pos}-font`))
+];
+const FONT_DIR = path.join(ROOT, 'red-build', 'ui', 'assets', 'imud', 'fonts');
+const fontFiles = new Map(fonts.map(font => [font.family, font.file]));
+clearRegisteredFonts();
+for (const family of new Set(FONT_SETTING_KEYS.map(key => settings[key]).filter(Boolean))) {
+  const file = fontFiles.get(String(family).trim());
+  if (file && /\\.ttf$/i.test(file)) {
+    const registered = registerFont(String(family).trim(), fs.readFileSync(path.join(FONT_DIR, file)));
+    assert.ok(registered.ok, `register UI font ${family}: ${registered.error || 'ok'}`);
+  }
+}
+for (const [family, file] of [
+  ['FrankReal', 'FrankReal-Bold.ttf'],
+  ['DavidLibre-Bold', 'DavidLibre-Bold.ttf']
+]) {
+  const registered = registerFont(family, fs.readFileSync(path.join(FONT_DIR, file)));
+  assert.ok(registered.ok, `register special UI font ${family}: ${registered.error || 'ok'}`);
+}
 const normalizedSourceWords = countLegacySourceWords(raw, settings);
 const cfg = readConfig(settings._imudRaw || {}, settings);
 const parsed = tokenizeDoc(raw, cfg);
@@ -99,6 +126,7 @@ const diagnostic = {
   fixture: path.relative(ROOT, FIXTURE),
   rawWords,
   normalizedSourceWords,
+  registeredFontFamilies: [...new Set(FONT_SETTING_KEYS.map(key => settings[key]).filter(Boolean))],
   engineContentStats: result.contentStats || null,
   contentPreserved: result.contentPreserved,
   pages: result.pages.length,
