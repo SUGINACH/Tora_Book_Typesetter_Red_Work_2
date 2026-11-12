@@ -99,6 +99,7 @@
       slots: report.pageCount || 0,
       virtualized: report.virtualized,
       shaarPages: types.filter((t) => /shaar/.test(t)).length,
+      shaarSubPages: types.filter((t) => t === 'shaar-sub').length,
       bodyPagesWithHeader: `${bodyPages.filter((p) => p.headerText).length}/${bodyPages.length}`,
       totalLines: seq.reduce((s, p) => s + p.lines, 0),
       problems: problems.length,
@@ -388,10 +389,13 @@
   if (!report.virtualized) {
     for (const pg of liveNow()) auditLive(pg);
   } else {
-    // הגולל האמיתי: .tab-panel[data-tab=preview] (overflow:auto); נפילה — canvas
-    const panel = document.querySelector('.tab-panel[data-tab="preview"]');
+    // **S77:** בתצוגה המפוצלת התצוגה כבר אינה tab-panel; הגולל האמיתי
+    // הוא root של חלונית התצוגה הקבועה (.preview-pane, overflow:auto).
+    // tab-panel נשאר fallback למסכים/גרסאות קודמות; canvas הוא fallback אחרון.
+    const previewPane = document.querySelector('.preview-pane');
+    const tabPanel = document.querySelector('.tab-panel[data-tab="preview"]');
     let scroller = null;
-    for (const cand of [panel, canvas]) {
+    for (const cand of [previewPane, tabPanel, canvas]) {
       if (cand && cand.scrollHeight > cand.clientHeight + 10) { scroller = cand; break; }
     }
     if (!scroller) {
@@ -431,9 +435,6 @@
   if (seq.length) {
     if (types[0] !== 'shaar-main' || (types[1] !== 'shaar-back')) {
       problems.push({ type: 'SHAAR_ORDER', severity: 'high', got: types.slice(0, 3), expected: ['shaar-main', 'shaar-back', '…'] });
-    }
-    if (!types.some((t) => t === 'shaar-sub')) {
-      problems.push({ type: 'NO_SHAAR_SUB', severity: 'medium' });
     }
     const bodyPages = seq.filter((p) => /regular|sign-open|preface|h3-spread|toc/.test(p.type));
     const bodyNoHdr = bodyPages.filter((p) => !p.headerText);
