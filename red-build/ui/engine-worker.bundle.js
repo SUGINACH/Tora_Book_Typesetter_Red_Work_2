@@ -7159,6 +7159,57 @@ function tokenizeDoc(rawText, cfg, inlineOptions = {}) {
   return { meta, tokens };
 }
 
+
+/**
+ * Canonical source-word multiset for the legacy IMUD profile.
+ * It mirrors the source side of contentPreserved accounting, excluding only
+ * metadata fields and syntactic prefixes that are intentionally not rendered.
+ */
+function legacySourceWordMultiset(meta, tokens, cfg) {
+  const norm = (s) => String(s == null ? '' : s).split(/[\s\u00A0]+/).filter(Boolean);
+  const bump = (m, words) => { for (const w of words) m.set(w, (m.get(w) || 0) + 1); };
+  const src = new Map();
+  const backOnlyFields = ['copyright', 'publisher', 'contact', 'extra'];
+  for (const [key, value] of Object.entries(meta || {})) {
+    if (key === 'year') continue;
+    if (!cfg.showBackShaar && backOnlyFields.includes(key)) continue;
+    bump(src, norm(value));
+  }
+  const sourceTextOf = (token) => {
+    let text = String(token && token.text != null ? token.text : '');
+    if (cfg.fnOpen) text = text.split(cfg.fnOpen).join(' ');
+    if (cfg.fnClose) text = text.split(cfg.fnClose).join(' ');
+    if (token && token.type === 'h1') {
+      const parts = text.split(/[-–—]/).map(part => part.trim()).filter(Boolean);
+      if (parts.length >= 2) text = parts[0] + ' ' + parts.slice(1).join(' - ');
+    }
+    if (token && token.type === 'h2') {
+      text = text.replace(/^סימן\s+[א-ת]+[:\-–—\s]*/i, '').trim();
+    }
+    return text;
+  };
+  for (const token of (tokens || [])) {
+    bump(src, norm(sourceTextOf(token)));
+    if (token && token.sideNote) bump(src, norm(token.sideNote));
+    if (token && token.endNote) bump(src, norm(token.endNote));
+  }
+  return src;
+}
+
+/** Count normalized source words without running layout or pagination. */
+function countLegacySourceWords(rawText, settings = {}) {
+  const cfg = readConfig(settings._imudRaw || {}, settings);
+  if (settings['footnotes-enabled'] === false) {
+    cfg.fnOpen = '';
+    cfg.fnClose = '';
+  }
+  const parsed = tokenizeDoc(rawText, cfg);
+  const counts = legacySourceWordMultiset(parsed.meta, parsed.tokens, cfg);
+  let total = 0;
+  for (const count of counts.values()) total += count;
+  return total;
+}
+
 // ---------- שבירת שורות: פורט של getLinesFromParagraph ----------
 /**
  * גרידה כמו הדפדפן במקור: מילים נמדדות בגופן הגוף; הערה [...] מוצגת במדידה
@@ -10295,44 +10346,7 @@ function legacyTypeset(rawText, settings, env) {
   const contentStats = (() => {
     const norm = (s) => String(s == null ? '' : s).split(/[\s\u00A0]+/).filter(Boolean);
     const bump = (m, words) => { for (const w of words) m.set(w, (m.get(w) || 0) + 1); };
-    const src = new Map();
-    // **S5.2:** שדה השנה/מקום (meta.year) אינו מוצג בשער המכויל-ייחוס — כמו
-    // בתוכנת המקור. לכן אינו נספר כחובת-תוכן.
-    // **S6.0 (F16):** שדות השער האחורי בלבד (copyright/publisher/contact/extra)
-    // נספרים כחובה רק כשהשער האחורי מוצג — בלי זה ביטול show-back-shaar
-    // גרם לדגל אובדן-תוכן שקרי (8 מילים חסרות בקורפוס ללא _imudRaw).
-    const backOnlyFields = ['copyright', 'publisher', 'contact', 'extra'];
-    for (const [mk, mv] of Object.entries(meta)) {
-      if (mk === 'year') continue;
-      if (!cfg.showBackShaar && backOnlyFields.includes(mk)) continue;
-      bump(src, norm(mv));
-    }
-    // **S5.2:** מסיר את תוחמי ההערה ([ ]) מצד המקור — המנוע מחלץ את גוף
-    // ההערה מבלי לכלול את התוחמים בפלט (הם תחביר, לא תוכן).
-    const srcTextOf = (t) => {
-      let s = String(t.text == null ? '' : t.text);
-      if (cfg.fnOpen) s = s.split(cfg.fnOpen).join(' ');
-      if (cfg.fnClose) s = s.split(cfg.fnClose).join(' ');
-      // **S5.2:** כותרת h1 מפוצלת בשער-המשנה לכותרת + משנה (split לפי
-      // המקף; join(' - ') לשאר) — מקף-ההפרדה הראשון הוא תחביר עימוד,
-      // כמו קידומת 'כותרת N -'. משקפים את אותה טרנספורמציה בצד המקור.
-      if (t.type === 'h1') {
-        const parts = s.split(/[-–—]/).map(x => x.trim()).filter(Boolean);
-        if (parts.length >= 2) s = parts[0] + ' ' + parts.slice(1).join(' - ');
-      }
-      // **S6.0 (F12):** כותרת h2 שמתחילה ב'סימן א - ' — המנוע מסיר את הקידומת
-      // ברינדור (:1017) אך צד המקור לא שיקף זאת ⇒ מילת המקף נספרה חסרה
-      // (דגל שקרי). עתה אותה טרנספורמציה בשני הצדדים.
-      if (t.type === 'h2') {
-        s = s.replace(/^סימן\s+[א-ת]+[:\-–—\s]*/i, '').trim();
-      }
-      return s;
-    };
-    for (const t of tokens) {
-      bump(src, norm(srcTextOf(t)));
-      if (t.sideNote) bump(src, norm(t.sideNote));
-      if (t.endNote) bump(src, norm(t.endNote));
-    }
+    const src = legacySourceWordMultiset(meta, tokens, cfg);
     const out = new Map();
     const addText = (s) => bump(out, norm(s));
     // **S6.0 (F10):** תוחמי הערה לא-מאוזנים ([ בלי ]) — הפלט מציג את המילה
@@ -10508,7 +10522,7 @@ module.exports = {
   GEO, SZ, HEADING_MODES, toGematria, stripEditorialNotes, parseMetadata,
   tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset,
   FLOW_BOTTOM, SINGLE_W, wrapText, headingItemH, legacyLayoutHashDigest,
-  parenCenterRaisePx
+  countLegacySourceWords, parenCenterRaisePx
 };
 
 };
