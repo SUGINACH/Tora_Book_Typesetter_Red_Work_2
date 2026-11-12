@@ -308,7 +308,9 @@ describe('S70 (R3-M2/M3) — כיול orphan/widow: רק הפרות אמיתיו
 
   it('ריגרסיה מספרתית: very_long — 0 דיווחי שווא חדשים, הפרות אמיתיות נשמרות, הפריסה זהה לנעילה', () => {
     const fs = require('fs');
-    const t = fs.readFileSync('/home/z/my-project/tora_work/audits/very_long_test_text.txt', 'utf8');
+    const path = require('path');
+    const fixturePath = path.resolve(__dirname, '../../../audits/very_long_test_text.txt');
+    const t = fs.readFileSync(fixturePath, 'utf8');
     const r = typeset(t, S);
     // **S72/D-106:** הנעילה עודכנה מ-531f2154 — מעבר יישור-התחתיות משנה את הגיאומטריה
     // ⇒ הערת-צד אחת ("שמירתו") הוסטה במפל בין עמ' 119←120 (תוכן נשמר, 2/1335 עמודים).
