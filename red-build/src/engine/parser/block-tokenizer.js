@@ -4,6 +4,7 @@
 const crypto = require('crypto');
 const { HEADING_RE, ENDNOTE_CLASS_RE, DEFAULT_ENDNOTE_PREFIX, compileEndnotePrefix } = require('./dfa-lexer');
 const { scanBrackets } = require('./bracket-scanner');
+const { parseInlineRuns } = require('./inline-content');
 
 const ATOMIC_SPACE = '\uE000'; // V3/V4 breakthrough: רווח אטומי בתוך הערה — למדידה בלבד
 
@@ -74,14 +75,14 @@ function tokenize(bodyLines, opts = {}) {
     if (endnoteNumRe) {
       const mNum = line.match(endnoteNumRe);
       if (mNum) {
-        tokens.push(mkToken('endnote', { num: Number(mNum[1]), text: mNum[2].trim(), raw: line }));
+        tokens.push(mkToken('endnote', { num: Number(mNum[1]), text: mNum[2].trim(), raw: line, inlineContent: parseInlineRuns(mNum[2].trim(), { ...(opts.inlineOptions || opts), allowImages: false }) }));
         continue;
       }
     }
     if (endnoteRe) {
       const mEnd = line.match(endnoteRe);
       if (mEnd && mEnd[1] && mEnd[1].trim()) {
-        tokens.push(mkToken('endnote', { text: mEnd[1].trim(), raw: line }));
+        tokens.push(mkToken('endnote', { text: mEnd[1].trim(), raw: line, inlineContent: parseInlineRuns(mEnd[1].trim(), { ...(opts.inlineOptions || opts), allowImages: false }) }));
         continue;
       }
     }
@@ -123,7 +124,14 @@ function tokenize(bodyLines, opts = {}) {
     const tail = line.slice(cursor).trim();
     if (tail) parts.push({ kind: 'text', value: tail });
 
-    tokens.push(mkToken('paragraph', { parts, notes, unmatchedClosers: segs.unmatchedClosers, raw: line }));
+    const inlineOptions = opts.inlineOptions || opts;
+    const inlineContent = {
+      parts: parts.map((part) => part.kind === 'text'
+        ? { kind: 'text', runs: parseInlineRuns(part.value, { ...inlineOptions, allowImages: true }) }
+        : { kind: 'note-ref', noteIndex: part.noteIndex }),
+      notes: notes.map((note) => parseInlineRuns(note, { ...inlineOptions, allowImages: true }))
+    };
+    tokens.push(mkToken('paragraph', { parts, notes, unmatchedClosers: segs.unmatchedClosers, raw: line, inlineContent }));
   }
   return tokens;
 }
