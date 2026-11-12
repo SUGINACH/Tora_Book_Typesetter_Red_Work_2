@@ -533,7 +533,7 @@ archive/*← legacy lines (V20.x, old_ver, debug/) — read-only
 S0 ─► S1 ─► S2 ─► S3 ─► S4 ─┬─► S5 ─► S6 ─► S7 ─┐
                              ├─► S8 ─► S9 ───────┼─► S10 ─► S11 ─► S12 ─► S13
                              └───────────────────┘
-S13 ─► S14.0 (איחוד מנוע — שער חוסם) ─► S14.1–S14.7 (תמונות וגופנים inline)
+S13 ─► S14 (מסלול P0 משולב: חוזי מנוע יחיד + TextRun/ImageRun + תמונות/גופנים inline + הסרת מסלולים כפולים)
 ```
 - S4 can partially overlap S3 tail (registry scaffolding), but S5 REQUIRES both.
 - S8/S9 depend on S4+S5 (geometry frozen inputs) — parallelizable tracks after S5.
