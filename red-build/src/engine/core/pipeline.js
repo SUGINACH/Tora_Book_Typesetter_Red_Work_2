@@ -27,7 +27,7 @@ const { getDefaultSettings, derivePlacementFlags } = require('./settings-registr
 const { lexDocument } = require('../parser/dfa-lexer');
 const { tokenize, contentHash, normalizeText } = require('../parser/block-tokenizer');
 const { scanBrackets } = require('../parser/bracket-scanner');
-const { MeasureAPI, resolveMeasureImpl } = require('../typography/measure-api');
+const { MeasureAPI, resolveMeasureImpl, registeredFonts } = require('../typography/measure-api');
 const { protectWords } = require('../typography/protectors');
 const { applyDropWord } = require('../typography/dropword');
 const { planPages, layoutHash, bodyGeometryHash } = require('../layout/dp-planner');
@@ -159,7 +159,12 @@ function typeset(rawText, settingsIn, env = {}) {
   const parseOpts = {
     endnotePrefix: settings['en-line-prefix'],
     fnOpen: settings['fn-delim-open'],
-    fnClose: settings['fn-delim-close']
+    fnClose: settings['fn-delim-close'],
+    inlineOptions: {
+      fontMarkers: settings._inlineFontStyles || settings._inlineFontMarkers || [],
+      knownFamilies: settings._inlineFontFamilies || [],
+      availableFamilies: Array.from(registeredFonts.keys())
+    }
   };
   const { metadata, bodyLines } = lexDocument(rawText, parseOpts);
   const tokens = tokenize(bodyLines, parseOpts);
