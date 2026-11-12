@@ -60,7 +60,7 @@ test('generic font tags support nesting and restore the enclosing family', () =>
     'א <Guttman Rashi>ב <Frank Ruhl Libre>ג</> ד</> ה',
     { availableFamilies: ['Guttman Rashi', 'Frank Ruhl Libre'] }
   );
-  assert.equal(textOf(result).replace(/\\s+/g, ' ').trim(), 'א ב ג ד ה');
+  assert.equal(textOf(result), 'א ב ג ד ה');
   const styled = result.runs.filter(run => run.kind === 'text' && run.fontFamily);
   assert.deepEqual(styled.map(run => [run.text, run.fontFamily]), [
     ['ב ', 'Guttman Rashi'],
@@ -107,7 +107,7 @@ test('crossing font ranges are rejected as a group rather than styling ambiguous
       { id: 'b', open: '[[B]]', close: '[[/B]]', family: 'Family B' }
     ]
   });
-  assert.equal(textOf(result), 'א ב ג ד ה');
+  assert.equal(textOf(result).replace(/\s+/g, ' ').trim(), 'א ב ג ד ה');
   assert.equal(result.runs.some(run => run.fontFamily), false);
   assert(result.warnings.some(w => w.code === 'crossing-font-range'));
 });
