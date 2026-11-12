@@ -159,8 +159,10 @@ describe('S69 (R4-M3) — עוגן הגיליון בהקרנה: מה-CSS החי 
       assert(f.baselineY < 1106, `baseline from CSS bottom:25px anchor, got ${f.baselineY}`);
       assert(f.baselineY > 1070, `baseline still in the folio band (audit ≥1022.2), got ${f.baselineY}`);
       // תיבת הגיליון: ראשה ב-pageH-25-lineH
-      const lineH = Math.round((10 * 96 / 72) * 1.2);
-      assert(Math.abs(f.y - (pl.height - 25 - lineH)) < 0.51, `box top anchored to CSS, got ${f.y}`);
+      // **S75 (בקשה 2):** גובה התיבה נגזר מהגודל בהגדרות (11pt בברירת המחדל
+      // החדשה — ליבורנה מודגש כמדידת הייחוס; עד S74 היה 10pt קבוע).
+      const folioLineH = Math.round((Number(s['page-num-size-pt']) * 96 / 72) * 1.2);
+      assert(Math.abs(f.y - (pl.height - 25 - folioLineH)) < 0.51, `box top anchored to CSS, got ${f.y}`);
     }
   });
 

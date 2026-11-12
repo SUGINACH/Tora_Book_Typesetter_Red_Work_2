@@ -678,20 +678,47 @@ describe('S10.2 שער 6 — שינוי קל ≤2s; כבד דורש ⚡; טבל�
 
 // =====================================================================
 describe('S10.2 שער 7 + REQ-UI-01 — לשוניות, נגישות, רגרסיה', () => {
-  it('4 לשוניות role=tab עם aria-selected; מעבר מחליף פאנלים', () => {
+  it('S75: 3 לשוניות role=tab (עורך/הגדרות/בדיקה); התצוגה חלונית קבועה תמיד-גלויה + מפריד', () => {
     const doc = makeDoc();
     const app = createApp(doc, { transport: inlineTransport.createInlineTransport() });
     const tabs = app.root.querySelectorAll('.tabbtn');
-    assertEq(tabs.length, 4, 'ארבע לשוניות: עורך/הגדרות/בדיקה/תצוגה');
-    assertEq(tabs.filter(t => t.getAttribute('role') === 'tab').length, 4, 'role=tab לכל לשונית');
+    assertEq(tabs.length, 3, 'שלוש לשוניות: עורך/הגדרות/בדיקה (התצוגה ירדה ממערכת הכרטיסיות — S75)');
+    assertEq(tabs.filter(t => t.getAttribute('role') === 'tab').length, 3, 'role=tab לכל לשונית');
     assert(tabs[0].getAttribute('aria-selected') === 'true', 'עורך נבחר כברירת מחדל');
-    fire(tabs[3], 'click');
-    assert(tabs[3].getAttribute('aria-selected') === 'true');
-    assert(tabs[0].getAttribute('aria-selected') === 'false');
+    fire(tabs[2], 'click');
+    assert(tabs[2].getAttribute('aria-selected') === 'true', 'בדיקה נבחרה');
+    assert(tabs[0].getAttribute('aria-selected') === 'false', 'עורך נבחר מבוטל');
     const panels = app.root.querySelectorAll('.tab-panel');
+    assertEq(panels.length, 3, 'שלושת פאנלי הלשוניות בפאנל העבודה');
     const active = panels.filter(p => p.classList.contains('active'));
     assertEq(active.length, 1, 'פאנל אחד פעיל');
-    assertEq(active[0].dataset.tab, 'preview');
+    assertEq(active[0].dataset.tab, 'testing', 'פאנל הבדיקה פעיל');
+    // **S75 (בקשה 3):** התצוגה — חלונית קבועה מחוץ למערכת הכרטיסיות, גלויה תמיד
+    const wrap = app.root.querySelectorAll('.preview-pane-wrap');
+    assertEq(wrap.length, 1, 'חלונית התצוגה קיימת');
+    const previewPane = app.root.querySelectorAll('.preview-pane');
+    assertEq(previewPane.length, 1, 'שורש התצוגה הוא .preview-pane (לא tab-panel)');
+    assertEq(app.root.querySelectorAll('.pane-resizer').length, 1, 'מפריד הגרירה קיים');
+    assertEq(app.root.querySelectorAll('.workspace .work-pane .tab-panel').length, 3, 'הכרטיסיות בתוך הפאנל הימני');
+    // מיתוג עמודים קיים בתצוגה גם ללא מעבר לשונית
+    assert(app.preview.root === previewPane[0], 'שורש התצוגה הוא החלונית הקבועה');
+    // switchTab('preview') הוא no-op מוגן (קריאות היסטוריות)
+    app.switchTab('preview');
+    assert(tabs[2].getAttribute('aria-selected') === 'true', 'switchTab(preview) אינו משנה לשונית');
+    // הבר העליון — שורה אחת: כותרת + פס מצב + עזרה
+    const header = app.root.querySelectorAll('.app-header');
+    assertEq(header.length, 1, 'הבר העליון קיים');
+    assert(app.root.querySelectorAll('.app-header .status-strip').length === 1, 'פס המצב בבר העליון');
+    assert(app.root.querySelectorAll('.app-header .policy-help').length === 1, 'העזרה בבר העליון');
+    assert(app.root.querySelectorAll('.app-header .policy-help__body').length === 1, 'גוף העזרה — תפריט צף');
+    // חלוקת סביבת העבודה: ברירת מחדל 40%, clamp תקין
+    assertEq(app.getSplitPct(), 40, 'ברירת המחדל — פאנל כרטיסיות 40%');
+    app.setSplitPct(95);
+    assertEq(app.getSplitPct(), 72, 'תקרת החלוקה 72%');
+    app.setSplitPct(1);
+    assertEq(app.getSplitPct(), 18, 'רצפת החלוקה 18%');
+    app.setSplitPct(40);
+    assertEq(app.getSplitPct(), 40, 'חזרה לברירת המחדל');
   });
 
   it('עורך: מונים, ⏎ לא מיוצאים (F-01), DOCX נעול (S11), ניקוי', async () => {

@@ -305,7 +305,10 @@ function main() {
         const byNote = new Map();
         for (const l of fn.lines) {
           for (const t of (l.words || [])) {
-            if (t.gap) continue;
+            // **S75 (בקשה 1):** תווית '(המשך)' היא סימון-רינדור בלבד (נוספת
+            // בזרימה כשהערה נחתכת בין עמודים) — טקסט המודל לאימות המתמטי
+            // נקי ממנה, כמו מהסמנים (אחרת C1 סופר אותה כמילת תוכן חוץ).
+            if (t.gap || t.t === '(המשך)') continue;
             if (!byNote.has(t.noteIdx)) byNote.set(t.noteIdx, { marker: '', words: [] });
             const rec = byNote.get(t.noteIdx);
             if (t.mk) rec.marker = rec.marker ? rec.marker + ' ' + t.t : t.t;

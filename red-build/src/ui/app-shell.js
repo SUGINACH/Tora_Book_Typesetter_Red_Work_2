@@ -30,9 +30,30 @@ const { buildCaretMap } = require('./caret-map');
 const TABS = [
   { id: 'editor', label: '✍️ עורך' },
   { id: 'settings', label: '⚙️ הגדרות' },
-  { id: 'testing', label: '🔍 בדיקה' },
-  { id: 'preview', label: '📖 תצוגה' }
+  { id: 'testing', label: '🔍 בדיקה' }
 ];
+
+// **S75 (בקשה 3 — 12.11, פיצול ה-UI 40/60 כמראה GREEN):** התצוגה ירדה ממערכת
+// הכרטיסיות והפכה לחלונית קבועה בצד שמאל (60% בברירת המחדל), גלויה תמיד;
+// הכרטיסיות עורך/הגדרות/בדיקה בפאנל הימני (40%). מפריד גרירה ביניהם (בחירת
+// המשתמש) מאפשר לשנות את החלוקה בעכבר — כמו #resizer של GREEN. מ-GREEN
+// נלקח המראה החיצוני בלבד (צבעים/חלוקה) — לא צורת עימוד ההערות וכו'.
+const SPLIT_KEY = 'tora-red-workspace-split';
+const SPLIT_DEFAULT_PCT = 40; // רוחב הפאנל הימני (הכרטיסיות) באחוזים
+const SPLIT_MIN_PCT = 18, SPLIT_MAX_PCT = 72;
+
+function clampSplitPct(v) {
+  if (!Number.isFinite(v)) return SPLIT_DEFAULT_PCT;
+  return Math.min(SPLIT_MAX_PCT, Math.max(SPLIT_MIN_PCT, v));
+}
+
+function readSavedSplitPct() {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return null;
+    const raw = window.localStorage.getItem(SPLIT_KEY);
+    return raw == null ? null : clampSplitPct(parseFloat(raw));
+  } catch (e) { return null; }
+}
 
 function createApp(doc, opts = {}) {
   const settings = getDefaultSettings();
@@ -150,6 +171,9 @@ function createApp(doc, opts = {}) {
    * השמורות (פער 2 — הגדרה ששוחזרה עשויה לדרוש גופן שטרם נטען). */
   const FONT_SETTING_KEYS = [
     'body-font', 'first-word-font', 'dh-font', 'f-note-body-font',
+    // **S75 (בקשה 2):** גופן הגיליון — ברירת המחדל החדשה 'ליבורנה מודגש' חייבת
+    // להיטען (FontFace לתצוגה + registerFont למדידה/ייצוא) כשאר גופני ההגדרות.
+    'page-num-font',
     ...Array.from({ length: 8 }, (_, i) => `heading-${i}-font`),
     'shaar-title-font', 'shaar-subtitle-font', 'shaar-desc-font', 'shaar-sections-font',
     'shaar-author-font', 'shaar-year-font', 'shaar-back-text-font'
@@ -238,6 +262,9 @@ function createApp(doc, opts = {}) {
 
   const header = doc.createElement('header');
   header.className = 'app-header';
+  // **S75 (בקשה 3):** הבר העליון מצטמצם לשורה אחת בלבד (app-title + פס המצב +
+  // policy-help) ברוחב כל הדף — מעל הכרטיסיות והתצוגה. תוכן העזרה נפתח
+  // כתפריט צף מתחת לשורה ואינו מרחיב אותה.
   const title = doc.createElement('h1');
   title.className = 'app-title';
   title.textContent = 'ספר תורה — מערך עימוד (Red)';
@@ -249,6 +276,8 @@ function createApp(doc, opts = {}) {
   const helpSum = doc.createElement('summary');
   helpSum.textContent = 'מדיניות עדכון (קל/כבד)';
   help.appendChild(helpSum);
+  const helpBody = doc.createElement('div');
+  helpBody.className = 'policy-help__body';
   for (const row of policyTable()) {
     const d = doc.createElement('div');
     d.className = `policy-row policy-row--${row.cls}`;
@@ -256,8 +285,9 @@ function createApp(doc, opts = {}) {
     const keys = doc.createElement('div'); keys.className = 'policy-keys'; keys.textContent = row.keys.join(' · ');
     const beh = doc.createElement('div'); beh.className = 'policy-beh'; beh.textContent = row.behaviorHe;
     d.appendChild(b); d.appendChild(keys); d.appendChild(beh);
-    help.appendChild(d);
+    helpBody.appendChild(d);
   }
+  help.appendChild(helpBody);
   header.appendChild(help);
   root.appendChild(header);
 
@@ -278,21 +308,97 @@ function createApp(doc, opts = {}) {
     tabbar.appendChild(b);
     tabBtns.set(t.id, b);
   }
-  root.appendChild(tabbar);
 
+  // **S75 (בקשה 3):** מבנה חדש — סביבת עבודה מפוצלת: ימין = מערכת הכרטיסיות
+  // (עורך/הגדרות/בדיקה, מתחלפות כרגיל); מפריד גרירה; שמאל = התצוגה, חלונית
+  // קבועה שגלויה כל הזמן (ירדה ממערכת הכרטיסיות). ברירת המחדל 40% ימין /
+  // 60% שמאל; הגרירה משנה את החלוקה (נשמרת ב-localStorage).
   const main = doc.createElement('main');
   main.className = 'app-main';
+  const workspace = doc.createElement('div');
+  workspace.className = 'workspace';
+  const workPane = doc.createElement('section');
+  workPane.className = 'work-pane';
+  workPane.setAttribute('aria-label', 'אזור העבודה — עורך, הגדרות ובדיקה');
+  workPane.appendChild(tabbar);
+  const workPanels = doc.createElement('div');
+  workPanels.className = 'work-panels';
   const panels = new Map([
     ['editor', editor.root], ['settings', settingsPanel.root],
-    ['testing', testing.root], ['preview', preview.root]
+    ['testing', testing.root]
   ]);
   for (const [id, el] of panels) {
     el.classList.add(id === 'editor' ? 'active' : 'inactive');
-    main.appendChild(el);
+    workPanels.appendChild(el);
   }
+  workPane.appendChild(workPanels);
+  const resizer = doc.createElement('div');
+  resizer.className = 'pane-resizer';
+  resizer.setAttribute('role', 'separator');
+  resizer.setAttribute('aria-orientation', 'vertical');
+  resizer.setAttribute('aria-label', 'שינוי חלוקת האזורים — גרירה או חצים');
+  resizer.tabIndex = 0;
+  resizer.title = 'גרירה משנה את החלוקה בין הכרטיסיות לתצוגה';
+  const previewPane = doc.createElement('section');
+  previewPane.className = 'preview-pane-wrap';
+  previewPane.setAttribute('aria-label', 'תצוגה');
+  preview.root.classList.remove('tab-panel');
+  preview.root.classList.add('preview-pane');
+  previewPane.appendChild(preview.root);
+  workspace.appendChild(workPane);
+  workspace.appendChild(resizer);
+  workspace.appendChild(previewPane);
+  main.appendChild(workspace);
   root.appendChild(main);
 
+  // ---- מפריד הגרירה (S75): עכבר + מקלדת, שמירה ב-localStorage ----
+  let splitPct = readSavedSplitPct() != null ? readSavedSplitPct() : SPLIT_DEFAULT_PCT;
+  function applySplit() {
+    workPane.style.flexBasis = `${splitPct}%`;
+  }
+  function setSplitPct(v) {
+    splitPct = clampSplitPct(v);
+    applySplit();
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) window.localStorage.setItem(SPLIT_KEY, String(splitPct));
+    } catch (e) { /* אחסון לא זמין — החלוקה נשארת לסשן זה */ }
+    return splitPct;
+  }
+  applySplit();
+  if (typeof doc !== 'undefined') {
+    resizer.addEventListener('mousedown', (ev) => {
+      if (ev.button !== 0) return;
+      ev.preventDefault();
+      resizer.classList.add('resizing');
+      const move = (e) => {
+        if (typeof workspace.getBoundingClientRect !== 'function') return;
+        const rect = workspace.getBoundingClientRect();
+        if (!rect || !rect.width) return;
+        // RTL: הפאנל הימני (הכרטיסיות) נמשך מ-x ועד קצה הסביבה הימני
+        const pct = ((rect.right - e.clientX) / rect.width) * 100;
+        setSplitPct(pct);
+      };
+      const up = () => {
+        resizer.classList.remove('resizing');
+        if (typeof doc.removeEventListener === 'function') {
+          doc.removeEventListener('mousemove', move);
+          doc.removeEventListener('mouseup', up);
+        }
+      };
+      if (typeof doc.addEventListener === 'function') {
+        doc.addEventListener('mousemove', move);
+        doc.addEventListener('mouseup', up);
+      }
+    });
+    resizer.addEventListener('keydown', (ev) => {
+      // RTL: חץ שמאלה מרחיב את הפאנל הימני, ימינה מצמצם
+      if (ev.key === 'ArrowLeft') { ev.preventDefault(); setSplitPct(splitPct + 2); }
+      else if (ev.key === 'ArrowRight') { ev.preventDefault(); setSplitPct(splitPct - 2); }
+    });
+  }
+
   function switchTab(id) {
+    if (id === 'preview') return; // **S75:** התצוגה תמיד גלויה — אין לשונית להחליף
     for (const [pid, el] of panels) el.classList.toggle('active', pid === id);
     for (const [bid, b] of tabBtns) b.setAttribute('aria-selected', bid === id ? 'true' : 'false');
   }
@@ -718,6 +824,9 @@ function createApp(doc, opts = {}) {
 
   return {
     root, switchTab, editor, settingsPanel, preview, testing, status, engine, extensions,
+    // **S75 (בקשה 3):** שליטה/בדיקה של חלוקת סביבת העבודה (המפריד)
+    getSplitPct: () => splitPct,
+    setSplitPct,
     onExplicitRetypeset, onDocumentAction, onSettingChanged, onResetField,
     onCancelTypeset, // **S1-ה/U-1:** נתיב ביטול מפורש (לבדיקות/אבחון)
     scheduleLightRefresh, activateFinding, saveTemplateJson, loadTemplateJson, buildDebugJson,

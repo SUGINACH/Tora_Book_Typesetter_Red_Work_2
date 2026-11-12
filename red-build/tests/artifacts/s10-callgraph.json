@@ -28,7 +28,7 @@
       "file": "app-shell.js",
       "fn": "onExplicitRetypeset",
       "callee": "requestTypeset",
-      "line": 286
+      "line": 392
     },
     {
       "file": "engine-worker-main.js",

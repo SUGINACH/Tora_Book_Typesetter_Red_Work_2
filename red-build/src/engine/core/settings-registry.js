@@ -52,8 +52,8 @@ const registry = [
   // **S73 (בקשת משתמש — "הוסף בחירת גופן וגודל למספר העמוד"):** גופן/גודל/צבע
   // לגיליון. ברירת המחדל משמרת את ההתנהגות הקודמת: גופן ריק = ירושת גוף
   // הטקסט, גודל 10pt, שחור. התצוגה (dom-renderer) והמקרנים קוראים אותם כאחד.
-  K('page-num-font', 'font', '', P.GRID, 'sel-page-num-font', ['output/legacy-projector', 'output/geometry-projector', 'output/dom-renderer'], 'fx:page-num-font', { note: "S73: גופן הגיליון (מספר העמוד); ריק = גוף הטקסט (התנהגות קודמת)" }),
-  K('page-num-size-pt', 'number', 10, P.GRID, 'rng-page-num-size', ['output/legacy-projector', 'output/geometry-projector', 'output/dom-renderer'], 'fx:page-num-size', { min: 6, max: 20, note: 'S73: גודל הגיליון בפט"; 10 = ההתנהגות הקודמת' }),
+  K('page-num-font', 'font', 'ליבורנה מודגש', P.GRID, 'sel-page-num-font', ['output/legacy-projector', 'output/geometry-projector', 'output/dom-renderer'], 'fx:page-num-font', { note: "S75 (בקשה 2, 12.11): ברירת המחדל גופן הייחוס — Livorna-Bold 11pt (נמדד בייחוס עמ' ט-יא: הגיליון ב'ליבורנה מודגש'); ריק = גוף הטקסט. עד S74 היתה ברירת המחדל ריקה (גוף הטקסט) 10pt" }),
+  K('page-num-size-pt', 'number', 11, P.GRID, 'rng-page-num-size', ['output/legacy-projector', 'output/geometry-projector', 'output/dom-renderer'], 'fx:page-num-size', { min: 6, max: 20, note: "S75 (בקשה 2, 12.11): 11pt כמדידת הייחוס (עמ' ט-יא); עד S74 היה 10" }),
   K('page-num-color', 'color', '#000000', P.GRID, 'inp-page-num-color', ['output/legacy-projector', 'output/geometry-projector', 'output/dom-renderer'], 'fx:page-num-color', { note: 'S73: צבע הגיליון — ברירת מחדל שחורה (כמו כל הגופנים)' }),
   // **S9 (D-61):** page-num-start-idx — שחזור V1 מלא (REQ-HDR-03): מספור מוצג רק מסוד ה‑counted
   // הזה ואילך; הערך האפקטיבי = סוד − start‑idx + initial‑value (נוסחת V1 formatPageNumberDisplay).
@@ -146,6 +146,12 @@ const registry = [
   K('footnote-columns', 'number', 1, P.NOTES, 'sel-fn-cols', ['layout/footnote-budget'], 'fx:fn-cols', { enum: [1, 2] }),
   K('footnote-separator-rule', 'enum', 'regular', P.NOTES, 'sel-fn-rule', ['output/dom-renderer'], 'fx:fn-rule', { enum: ['none', 'regular', 'circles', 'sparkle', 'star', 'diamond'] }),
   K('fn-layout-mode', 'enum', 'continuous', P.NOTES, 'sel-fn-layout', ['layout/dp-planner', 'output/dom-renderer'], 'fx:fn-layout', { enum: ['block', 'continuous'], note: 'S4.26 (דיווח משתמש 05.11): ברירת המחדל זרימה רציפה — הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה; block=כל הערה בלוק משלה' }),
+  // **S75 (בקשה 1 — 12.11, בחירת מנגנון הצבת ההערות):** ברירת המחדל = המנגנון
+  // החדש (body-first): הגוף ממלא את אזור הטקסט העיקרי תמיד; המרזב נכנס
+  // בחלל שמתחת לגוף עד תקרה יחסית (50% מגובה הזרימה בברירת המחדל); הערה
+  // שאינה נכנסת מוצבת חלקית כפי יכולת ההכלה והמשכה זורם לעמוד הבא;
+  // המשך אינו מקבל מספר. legacy = מנגנון S74 (שער תקציב + קיבולת מלאה).
+  K('fn-placement-mode', 'enum', 'body-first', P.NOTES, 'sel-fn-placement', ['layout/legacy-imud-flow'], 'fx:fn-placement', { enum: ['body-first', 'legacy'], note: 'S75 (בקשה 1): body-first (ברירת המחדל) — הגוף ממלא את העמוד; ההערות נכנסות בחלל שמתחת לגוף (תקרה 50% מגובה הזרימה); הערה שאינה נכנסת מוצבת חלקית והמשכה בעמוד הבא; legacy = מנגנון S74 הקודם (שער תקציב-ההערות + קיבולת עמוד מלאה)' }),
   K('endnotes-enabled', 'bool', false, P.NOTES, 'chk-endnotes', ['layout/endnote-pages'], 'fx:endnotes-on', { note: 'נגזר מ‑note-placement-mode=endnotes (D-39); קלט ישן true ממופה ל‑mode=endnotes בהגירה (project-io)' }),
   K('endnote-title-text', 'string', 'הערות', P.NOTES, 'inp-endnote-title', ['layout/endnote-pages'], 'fx:endnote-title'),
   K('endnote-columns', 'number', 1, P.NOTES, 'sel-en-cols', ['layout/endnote-pages'], 'fx:en-cols', { enum: [1, 2], note: 'S7.1.1: טור אחד או שניים בעמודי הערות' }),

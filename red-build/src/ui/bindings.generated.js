@@ -238,12 +238,12 @@ const BINDINGS = [
     "panelKey": "GRID",
     "labelHe": "גופן מספר העמוד (ריק = גוף)",
     "type": "font",
-    "def": "",
+    "def": "ליבורנה מודגש",
     "enum": null,
     "min": null,
     "max": null,
     "step": null,
-    "note": "S73: גופן הגיליון (מספר העמוד); ריק = גוף הטקסט (התנהגות קודמת)"
+    "note": "S75 (בקשה 2, 12.11): ברירת המחדל גופן הייחוס — Livorna-Bold 11pt (נמדד בייחוס עמ' ט-יא: הגיליון ב'ליבורנה מודגש'); ריק = גוף הטקסט. עד S74 היתה ברירת המחדל ריקה (גוף הטקסט) 10pt"
   },
   {
     "id": "page-num-size-pt",
@@ -252,12 +252,12 @@ const BINDINGS = [
     "panelKey": "GRID",
     "labelHe": "גודל מספר העמוד (pt)",
     "type": "number",
-    "def": 10,
+    "def": 11,
     "enum": null,
     "min": 6,
     "max": 20,
     "step": null,
-    "note": "S73: גודל הגיליון בפט\"; 10 = ההתנהגות הקודמת"
+    "note": "S75 (בקשה 2, 12.11): 11pt כמדידת הייחוס (עמ' ט-יא); עד S74 היה 10"
   },
   {
     "id": "page-num-color",
@@ -2060,6 +2060,23 @@ const BINDINGS = [
     "note": "S4.26 (דיווח משתמש 05.11): ברירת המחדל זרימה רציפה — הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה; block=כל הערה בלוק משלה"
   },
   {
+    "id": "fn-placement-mode",
+    "control": "sel-fn-placement",
+    "panel": "הערות שוליים וסיום",
+    "panelKey": "NOTES",
+    "labelHe": "מנגנון הצבת הערות (גוף תחילה / ישן)",
+    "type": "enum",
+    "def": "body-first",
+    "enum": [
+      "body-first",
+      "legacy"
+    ],
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "S75 (בקשה 1): body-first (ברירת המחדל) — הגוף ממלא את העמוד; ההערות נכנסות בחלל שמתחת לגוף (תקרה 50% מגובה הזרימה); הערה שאינה נכנסת מוצבת חלקית והמשכה בעמוד הבא; legacy = מנגנון S74 הקודם (שער תקציב-ההערות + קיבולת עמוד מלאה)"
+  },
+  {
     "id": "endnotes-enabled",
     "control": "chk-endnotes",
     "panel": "הערות שוליים וסיום",
@@ -2111,12 +2128,12 @@ const BINDINGS = [
     "panelKey": "NOTES",
     "labelHe": "גופן גוף הערת־שוליים",
     "type": "font",
-    "def": "Frank Ruhl Libre",
+    "def": "אסיסטנט קל מאוד",
     "enum": null,
     "min": null,
     "max": null,
     "step": null,
-    "note": null
+    "note": "S74 (בעיה 5): ברירת המחדל של הרינדור בפועל של הגרסה הישנה — Assistant ExtraLight 8.5pt (נמדד בייחוס עמ׳ 31/37: כל שורות גוף ההערה; הסמן בלבד FRL 8pt). הגדרת f-note-body הישנה (FRL) לא חוברה לרינדור בפועל במקור"
   },
   {
     "id": "s-note-body-font",
@@ -3576,12 +3593,12 @@ const BINDINGS = [
     "panelKey": "THEMES",
     "labelHe": "שער אחורי — גופן הטקסט",
     "type": "font",
-    "def": "David Libre",
+    "def": "אסיסטנט קל מאוד",
     "enum": null,
     "min": null,
     "max": null,
     "step": null,
-    "note": "גוף טקסט השער האחורי (שורות שמירת־זכויות) — מקור: David Libre"
+    "note": "S74 (בעיה 5): כל שורות השער האחורי ב-Assistant ExtraLight — ברירת המחדל של הגרסה הישנה בפועל (נמדד בייחוס עמ׳ 2: חמש השורות Assistant-ExtraLight 13.5/10/11/10/9.5pt). עד S74 ירשו את גוף המסמך"
   },
   {
     "id": "shaar-back-text-color",

@@ -55,6 +55,8 @@ const L = {
   'footnote-marker-style': 'סגנון סמן הערה', 'footnote-reset-policy': 'מדיניות איפוס מונה הערות',
   'footnote-columns': 'מספר טורי הערות שוליים', 'footnote-separator-rule': 'קו הפרדה של סרגל הערות',
   'fn-layout-mode': 'אופן פריסת הערות (בלוק/רציף)', 'endnotes-enabled': 'הערות סיום מופעלות',
+  // **S75 (בקשה 1):** בחירת מנגנון הצבת ההערות — body-first (ברירת המחדל) / legacy.
+  'fn-placement-mode': 'מנגנון הצבת הערות (גוף תחילה / ישן)',
   'endnote-title-text': 'כותרת עמודי הערות', 'endnote-columns': 'מספר טורי הערות־סיום',
   'f-note-body-font': 'גופן גוף הערת־שוליים', 's-note-body-font': 'גופן גוף הערת־צד',
   'fn-bar-max-height-px': 'תקרת גובה סרגל הערות (px)', 'long-footnote-policy': 'מדיניות הערה ארוכה',

@@ -307,13 +307,16 @@ def main():
     co = [i for i, t in enumerate(seq) if t == "chapter-open"]
     if len(co) != h0_count:
         problems.append(f"פתיחות-פרק {len(co)} ≠ כותרות h0 במקור {h0_count}")
-    # אחרי בלוק ה-toc-detailed: רק shaar-sub/chapter-open/body
+    # אחרי בלוק ה-toc-detailed: רק פתיחות מקטעים וגוף (sign-open = עמוד פתיחת
+    # פרק h2 בגוף — חוקי באזור הגוף; **S75:** מנגנון body-first משנה את מספר
+    # השורות בעמודי פתיחה (מרזב יחסי) ⇒ עמוד דל בשורות מסווג sign-open גם
+    # בהמשך הספר — לא כשל סדר).
     if td:
-        after = set(seq[td[-1] + 1:]) - {"shaar-sub", "chapter-open", "body", "blank"}
+        after = set(seq[td[-1] + 1:]) - {"shaar-sub", "chapter-open", "body", "blank", "sign-open"}
         if after:
             problems.append(f"סוגים זרים אחרי ה-TOC: {sorted(after)}")
     elif body_first is not None and tg:
-        after = set(seq[tg[-1] + 1:]) - {"shaar-sub", "chapter-open", "body", "blank"}
+        after = set(seq[tg[-1] + 1:]) - {"shaar-sub", "chapter-open", "body", "blank", "sign-open"}
         if after:
             problems.append(f"סוגים זרים אחרי ה-TOC: {sorted(after)}")
     C.add("C6", "מכונת מצבים — סדר סוגי עמודים חוקי ותואם למבנה המקור",
@@ -496,12 +499,24 @@ def main():
     #   (ג) אחרי השחזור — כל הערה משוחזרת חייבת להיות הערת [..] אמיתית
     #       מהמקור, וכל הערת מקור חייבת להופיע (שקילות דו-כיוונית);
     #   (ד) קטע חיתוך שלא הושלם עד סוף הספר = המשך אבוד — כשל אמיתי.
+    # **S75 (בקשה 1 — מנגנון body-first, 12.11): מודל השחזור הורחב לתור
+    # פתיחות (FIFO).** במנגנון החדש עמוד יכול להכיל יותר מהערה חתוכה
+    # אחת: כשרצפת ההתחלות דוחפת את תחילת ההערה הבאה מעבר לתקרת המרזב,
+    # ההערה הקודמת נחתכת באמצע הזרימה (לא בסוף העמוד) והבאה מתחילה
+    # אחריה — שתיהן חוקיות (עדיפות 2 של המשתמש: הבטחת תחילת-ההערה
+    # בעמוד הסמן). ההמשכים זורמים בסדר הפתיחה (pendingFootnotes שומר
+    # סדר) ולכן:
+    #   • פריט עם סמן שאינו הערת מקור שלמה = פתיחה חדשה (נדחף לסוף התור);
+    #   • פריט בלי סמן (המשך) מצטרף לפתיחה הקדומה ביותר; אם ההצטברות
+    #     המלאה היא הערת מקור — הפתיחה נסגרה והושלמה;
+    #   • בסוף הספר התור חייב להתרוקן (המשך אבוד = כשל אמיתי);
+    #   • שקילות דו-כיוונית מול הערות המקור נשמרת לאחר השחזור.
     reconstructed = []
-    carry = None
+    open_notes = []  # FIFO של טקסטים חלקיים בסדר הפתיחה
     split_cuts = 0
     for p in pages:
         fns = p.get("footnotes") or []
-        for fi, f in enumerate(fns):
+        for f in fns:
             t = norm(f.get("text") or "")
             mk = (f.get("marker") or "").strip()
             if not t:
@@ -509,40 +524,29 @@ def main():
                                "marker": f.get("marker")})
                 continue
             if mk == "":
-                # **S4.26: המשך — בלי אות סימון.** חייב להתחבר לנושא פתוח.
-                if carry is None:
+                # **S4.26: המשך — בלי אות סימון.** מצטרף לפתיחה הקדומה (FIFO).
+                if not open_notes:
                     fn_bad.append({"page": p["index"], "why": "המשך בלי נושא קודם",
                                    "sample": t[:40]})
                     reconstructed.append(t)
-                    carry = t
                 else:
-                    carry = norm(carry + " " + t)
+                    open_notes[0] = norm(open_notes[0] + " " + t)
+                    if open_notes[0] in src_note_set:
+                        reconstructed.append(open_notes.pop(0))
                 continue
-            # פריט עם סמן: סוגר נושא פתוח אם קיים
-            if carry is not None:
-                if carry in src_note_set:
-                    reconstructed.append(carry)
-                else:
-                    fn_bad.append({"page": p["index"], "why": "נושא שלא הושלם להערת מקור",
-                                   "sample": carry[:40]})
-                    reconstructed.append(carry)
-                carry = None
+            # פריט עם סמן: הערת מקור שלמה — או פתיחה חדשה שנחתכה (בסוף
+            # העמוד, או באמצע הזרימה מעל תחילתה של ההערה שאחריה — שניהם
+            # חוקיים ב-body-first; ההמשך יופיע חסר-סמן בעמוד הבא)
             if t in src_note_set:
                 reconstructed.append(t)
-            elif fi == len(fns) - 1:
-                # פריט טרי שנחתך בגבול העמוד — המשכו יופיע חסר-סמן בעמוד הבא
-                carry = t
-                split_cuts += 1
             else:
-                fn_bad.append({"page": p["index"],
-                               "why": "הערה לא-שלמה באמצע אזור-ההערות (פיצול חייב להיות בסוף העמוד בלבד)",
-                               "sample": t[:40]})
-                reconstructed.append(t)
-    if carry is not None:
-        if carry not in src_note_set:
+                open_notes.append(t)
+                split_cuts += 1
+    for leftover in open_notes:
+        if leftover not in src_note_set:
             fn_bad.append({"why": "המשך הערה אבוד — קטע חיתוך בסוף הספר שלא הושלם",
-                           "sample": carry[:40]})
-        reconstructed.append(carry)
+                           "sample": leftover[:40]})
+        reconstructed.append(leftover)
     seen_out_notes = set(reconstructed)
     invented = [t[:30] for t in sorted(seen_out_notes) if t not in src_note_set]
     if invented:
