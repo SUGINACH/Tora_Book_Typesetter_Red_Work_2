@@ -100,6 +100,7 @@ function parseInlineRuns(value, options = {}) {
   const spans = [];
   const images = [];
   const stack = [];
+  const invalidOpens = new Set();
   const configuredTokens = [];
   for (const pair of fontMarkers) {
     configuredTokens.push({ token: pair.open, pair, type: 'open' });
@@ -107,8 +108,9 @@ function parseInlineRuns(value, options = {}) {
   }
   configuredTokens.sort((a, b) => b.token.length - a.token.length);
 
+  const sourceOffset = Number.isFinite(options.sourceOffset) ? options.sourceOffset : 0;
   const addWarning = (code, start, end, message, extra = {}) => {
-    warnings.push({ code, start, end, message, ...extra });
+    warnings.push({ code, start: start + sourceOffset, end: end + sourceOffset, message, ...extra });
   };
 
   const markerAt = (index) => {
@@ -152,8 +154,8 @@ function parseInlineRuns(value, options = {}) {
             resourcePath: parsed.resourcePath,
             align: parsed.align,
             widthPct: parsed.widthPct,
-            sourceStart: index,
-            sourceEnd: close + 1
+            sourceStart: index + sourceOffset,
+            sourceEnd: close + 1 + sourceOffset
           });
           index = close + 1;
           continue;
@@ -186,7 +188,7 @@ function parseInlineRuns(value, options = {}) {
         : !!top && top.kind === 'configured' && top.id === marker.pair.id;
       if (matches) {
         stack.pop();
-        if (top.start < index) {
+        if (!invalidOpens.has(top) && top.start < index) {
           spans.push({
             start: top.start,
             end: index,
@@ -200,15 +202,24 @@ function parseInlineRuns(value, options = {}) {
           addWarning('font-family-unavailable', top.markerStart, end, 'משפחת הגופן של הטווח אינה טעונה; הטקסט נשמר בגופן הרגיל.', { family: top.family, markerId: top.id });
         }
       } else {
-        const buriedMatch = marker.type === 'generic-close'
-          ? stack.some(item => item.kind === 'generic')
-          : stack.some(item => item.kind === 'configured' && item.id === marker.pair.id);
-        addWarning(
-          buriedMatch ? 'crossing-font-range' : 'unmatched-font-close',
-          index,
-          end,
-          buriedMatch ? 'טווחי גופן חוצים זה את זה; הסמן הבעייתי הוסר והטקסט נשאר ללא שינוי.' : 'סמן סגירת גופן ללא פתיחה תואמת הוסר; הטקסט נשמר ללא שינוי.'
-        );
+        const matchesOpen = (item) => marker.type === 'generic-close'
+          ? item.kind === 'generic'
+          : item.kind === 'configured' && item.id === marker.pair.id;
+        let matchIndex = -1;
+        for (let si = stack.length - 1; si >= 0; si--) {
+          if (matchesOpen(stack[si])) { matchIndex = si; break; }
+        }
+        if (matchIndex >= 0) {
+          // A close marker that jumps over a nested open marker makes every
+          // intersecting range ambiguous. Invalidate the entire crossing group.
+          for (let si = matchIndex; si < stack.length; si++) invalidOpens.add(stack[si]);
+          stack.splice(matchIndex);
+          addWarning('crossing-font-range', index, end,
+            'טווחי גופן חוצים זה את זה; כל הטווחים המעורבים נשארים בטקסט רגיל.');
+        } else {
+          addWarning('unmatched-font-close', index, end,
+            'סמן סגירת גופן ללא פתיחה תואמת הוסר; הטקסט נשמר ללא שינוי.');
+        }
       }
     }
     index = end;
@@ -254,7 +265,7 @@ function parseInlineRuns(value, options = {}) {
       prev.text += text;
       prev.sourceEnd = end;
     } else {
-      runs.push({ kind: 'text', text, fontFamily: family || null, sourceStart: start, sourceEnd: end });
+      runs.push({ kind: 'text', text, fontFamily: family || null, sourceStart: start + sourceOffset, sourceEnd: end + sourceOffset });
     }
   };
 
@@ -297,4 +308,41 @@ function parseInlineRuns(value, options = {}) {
   };
 }
 
-module.exports = { parseInlineRuns, parseImagePayload };
+
+/** Parse paragraph text fragments and footnotes into one shared inline AST. */
+function parseInlineParagraph(parts = [], notes = [], options = {}) {
+  const parsedParts = [];
+  const parsedNotes = [];
+  const warnings = [];
+  let hasImages = false;
+  let hasFontRanges = false;
+
+  for (const part of parts) {
+    if (!part || part.kind !== 'text') {
+      if (part && part.kind === 'note-ref') parsedParts.push({ kind: 'note-ref', noteIndex: part.noteIndex });
+      continue;
+    }
+    const parsed = parseInlineRuns(part.value, {
+      ...options,
+      sourceOffset: Number.isFinite(part.sourceStart) ? part.sourceStart : 0,
+      allowImages: true
+    });
+    parsedParts.push({ kind: 'text', sourceStart: part.sourceStart, sourceEnd: part.sourceEnd, runs: parsed.runs });
+    warnings.push(...parsed.warnings);
+    hasImages = hasImages || parsed.hasImages;
+    hasFontRanges = hasFontRanges || parsed.hasFontRanges;
+  }
+
+  for (const note of notes) {
+    const payload = note && typeof note === 'object' ? note.text : note;
+    const sourceStart = note && typeof note === 'object' && Number.isFinite(note.sourceStart) ? note.sourceStart : 0;
+    const parsed = parseInlineRuns(payload, { ...options, sourceOffset: sourceStart, allowImages: true });
+    parsedNotes.push({ sourceStart, sourceEnd: note && typeof note === 'object' ? note.sourceEnd : undefined, runs: parsed.runs });
+    warnings.push(...parsed.warnings);
+    hasImages = hasImages || parsed.hasImages;
+    hasFontRanges = hasFontRanges || parsed.hasFontRanges;
+  }
+
+  return { version: 1, parts: parsedParts, notes: parsedNotes, warnings, hasImages, hasFontRanges };
+}
+module.exports = { parseInlineRuns, parseInlineParagraph, parseImagePayload };
