@@ -7178,24 +7178,6 @@ function tokenizeDoc(rawText, cfg, inlineOptions = {}) {
  * (התוצאה תמיד ≤ רוחב הטור פחות אפסילון) מבטיחה שהדפדפן לעולם לא
  * יצטרך לשבור — התוכנית = הרינדור (עקרון התצוגה=הייצוא). */
 const FIT_EPS = 0.75; // px — מכסה צבירת תת-פיקסל של עד ~96 גליפים בשורה (96/128)
-/**
- * A footnote is considered started only when at least one visible body word
- * reached the placed area. Separator gaps and marker-only tokens do not start
- * a note: a page break immediately after such a token must preserve the note's
- * original marker on the next page.
- */
-function collectStartedFootnoteIndices(lines) {
-  const started = new Set();
-  for (const line of lines || []) {
-    for (const token of line || []) {
-      if (!token || token.noteIdx == null || token.gap || token.mk
-        || token.t === '(המשך)' || typeof token.t !== 'string' || !token.t.trim()) continue;
-      started.add(token.noteIdx);
-    }
-  }
-  return started;
-}
-
 class LineBreaker {
   constructor(api, cfg, windowApi = null, headingApi = null) {
     this.api = api;
@@ -9401,9 +9383,8 @@ function legacyTypeset(rawText, settings, env) {
         pg.footnotes.push({ continuous: true, lines, centerLast: rest.length === 0, cutLast: midNoteCut });
       }
       if (rest.length) {
-        // Only placed note text starts a note. A separator gap can be
-        // attached to the next note before its marker/words cross the page break.
-        const started = collectStartedFootnoteIndices(placed);
+        const started = new Set();
+        for (const tl of placed) for (const t of tl) started.add(t.noteIdx);
         let curIdx = null, curTxt = [];
         const flushRest = () => {
           if (curIdx == null || !curTxt.length) return;
@@ -10526,7 +10507,6 @@ function legacyLayoutHashDigest(pages) {
 module.exports = {
   GEO, SZ, HEADING_MODES, toGematria, stripEditorialNotes, parseMetadata,
   tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset,
-  collectStartedFootnoteIndices,
   FLOW_BOTTOM, SINGLE_W, wrapText, headingItemH, legacyLayoutHashDigest,
   parenCenterRaisePx
 };
