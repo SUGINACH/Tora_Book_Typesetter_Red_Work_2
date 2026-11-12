@@ -8475,6 +8475,7 @@ function legacyTypeset(rawText, settings, env) {
           const starts = []; // **S4.24:** דגלי קצה-סוגריים — ממופים דרך פיצול הסמנים
           const ends = [];
           const markerIdx = []; // אינדקסים של סמני ההערות (להסרה מדויקת במודל)
+          const markerKeys = []; // מפתחות מופע יציבים — אינם תלויים בסמן הגימטרי המוצג
           for (let wi = 0; wi < ln.words.length; wi++) {
             const w = ln.words[wi];
             // **S4.19:** דגל הסוגריים של המילה המקורית — מועבר לכל חלקיה
@@ -8503,6 +8504,7 @@ function legacyTypeset(rawText, settings, env) {
                   }
                   applyFnReserve(); // **S75:** גם בפליטת סמן — תקציב דרך נקודה אחת (clamp ב-body-first)
                   markerIdx.push(words.length);
+                  markerKeys.push(noteKey);
                   words.push(marker);
                   flags.push(false);
                   starts.push(false); ends.push(false);
@@ -8522,7 +8524,7 @@ function legacyTypeset(rawText, settings, env) {
             starts[firstAt] = wS;
             ends[words.length - 1] = wE;
           }
-          emitted.push({ ...ln, words, markerIdx, parenFlags: flags, parenStarts: starts, parenEnds: ends });
+          emitted.push({ ...ln, words, markerIdx, markerKeys, parenFlags: flags, parenStarts: starts, parenEnds: ends });
         }
         return emitted;
       };
@@ -9506,7 +9508,7 @@ function legacyTypeset(rawText, settings, env) {
     const totalH = placed.reduce((a, p) => a + p.lines.length * GEO.FN_PITCH, 0);
     let yy = FLOW_BOTTOM - totalH;
     for (const p of placed) {
-      const it = { marker: p.marker, lines: [], cont: p.cont };
+      const it = { marker: p.marker, noteKey: p.note.key, lines: [], cont: p.cont };
       if (p.cut) it.cutLast = true; // **S77 (בקשה 1):** שורת החיתוך — מיושבת לשני הצדדים
       for (const l of p.lines) { it.lines.push({ words: String(l).split(' '), y: yy }); yy += GEO.FN_PITCH; }
       pg.footnotes.push(it);
@@ -9558,16 +9560,16 @@ function legacyTypeset(rawText, settings, env) {
     // = פעמיים רווח) — אותו דבר ב-DOM (nbsp) וב-PDF (שני גאפים).
     const tokens = [];
     items.forEach((it, i) => {
-      if (i > 0) tokens.push({ t: '', gap: true, noteIdx: i, w: 0 });
+      if (i > 0) tokens.push({ t: '', gap: true, noteIdx: i, noteKey: it.note.key, w: 0 });
       if (it.note.cont) {
         const p = '(המשך)';
-        tokens.push({ t: p, w: fnApi.measureTextWidth(p, SZ.fnBody, 0), noteIdx: i });
+        tokens.push({ t: p, noteKey: it.note.key, w: fnApi.measureTextWidth(p, SZ.fnBody, 0), noteIdx: i });
       }
       if (it.marker) {
-        tokens.push({ t: it.marker, mk: true, sizePt: cfg.fnListingNumSize, w: fnMarkApi.measureTextWidth(it.marker, cfg.fnListingNumSize, 0), noteIdx: i });
+        tokens.push({ t: it.marker, mk: true, noteKey: it.note.key, sizePt: cfg.fnListingNumSize, w: fnMarkApi.measureTextWidth(it.marker, cfg.fnListingNumSize, 0), noteIdx: i });
       }
       for (const wd of String(it.note.text).split(/\s+/).filter(Boolean)) {
-        tokens.push({ t: wd, w: fnApi.measureTextWidth(wd, SZ.fnBody, 0), noteIdx: i });
+        tokens.push({ t: wd, noteKey: it.note.key, w: fnApi.measureTextWidth(wd, SZ.fnBody, 0), noteIdx: i });
       }
     });
     const flowLines = [];
@@ -9850,6 +9852,7 @@ function legacyTypeset(rawText, settings, env) {
       col.push({
         words: ln.words.slice(),
         markerIdx: ln.markerIdx || [],
+        markerKeys: ln.markerKeys || [],
         parenFlags: ln.parenFlags || null,
         parenStarts: ln.parenStarts || null,
         parenEnds: ln.parenEnds || null,
@@ -15553,6 +15556,7 @@ function renderLegacyPage(pg, settings, doc) {
       // הייצוא, כמו S4.23).
       {
         const markerSet = new Set(Array.isArray(ln.markerIdx) ? ln.markerIdx : []);
+        const markerKeyByIndex = new Map((Array.isArray(ln.markerIdx) ? ln.markerIdx : []).map((index, markerIndex) => [index, Array.isArray(ln.markerKeys) ? ln.markerKeys[markerIndex] : null]));
         const imudSet = (settings && settings._imudRaw) || {};
         const markerSz = Number(imudSet['note-marker-size']) || 8;
         const parenPx = pt2px(SZ.body + SZ.parenDelta);
@@ -15619,6 +15623,8 @@ function renderLegacyPage(pg, settings, doc) {
           if (wi >= 0 && markerSet.has(wi)) {
             const m = doc.createElement('span');
             m.className = 'w w--fnmarker';
+            const noteKey = markerKeyByIndex.get(wi);
+            if (noteKey != null) m.dataset.noteKey = String(noteKey);
             m.textContent = scrubPUAText(w);
             m.style.fontSize = `${pt2px(markerSz)}px`;
             m.style.verticalAlign = 'super';
@@ -15739,6 +15745,7 @@ function renderLegacyPage(pg, settings, doc) {
             const s = doc.createElement('span');
             if (t.mk) {
               s.className = 'w w--fnmarker';
+              if (t.noteKey != null) s.dataset.noteKey = String(t.noteKey);
               s.style.fontSize = `${pt2px(listingSz)}px`;
               if (fnMarkFont) s.style.fontFamily = fnMarkFont; // **S74 (בעיה 5):** הסמן ב-FRL
             }
@@ -15757,6 +15764,7 @@ function renderLegacyPage(pg, settings, doc) {
         if (fn.marker) {
           const m = doc.createElement('span');
           m.className = 'w w--fnmarker';
+          if (fn.noteKey != null) m.dataset.noteKey = String(fn.noteKey);
           m.style.fontSize = `${pt2px(listingSz)}px`;
           if (fnMarkFont) m.style.fontFamily = fnMarkFont; // **S74 (בעיה 5):** הסמן ב-FRL
           m.textContent = scrubPUAText(fn.marker);
