@@ -61,7 +61,7 @@ test('stable note-instance keys survive into the page model beside their visible
     assert.equal(line.markerKeys.length, line.markerIdx.length,
       'every visible body marker must carry exactly one stable source-note key');
     for (const key of line.markerKeys) {
-      assert.match(key, /^.+#\\d+$/, 'note key must identify token and occurrence ordinal');
+      assert.match(key, /^.+#\d+$/, 'note key must identify token and occurrence ordinal');
     }
   }
 });
