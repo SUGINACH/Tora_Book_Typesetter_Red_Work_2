@@ -26,7 +26,8 @@ test('text runs become atomic words and one measured glue per whitespace run', (
   assert.equal(result.items[1].widthPx, 2);
   assert.equal(result.items[2].widthPx, 8);
   assert.deepEqual([result.items[0].sourceStart,result.items[0].sourceEnd],[10,14]);
-  assert.deepEqual([result.items[2].sourceStart,result.items[2].sourceEnd],[18,22]);
+  assert.deepEqual([result.items[1].sourceStart,result.items[1].sourceEnd],[14,17]);
+  assert.deepEqual([result.items[2].sourceStart,result.items[2].sourceEnd],[17,21]);
 });
 
 test('adjacent font runs inside one lexical word remain one atom with measured subsegments', () => {
