@@ -105,6 +105,44 @@ function fontStack(family) {
   return out.join(', ');
 }
 
+const inlineItemRenderers = new Map();
+
+function registerInlineItemRenderer(kind, renderer) {
+  if (typeof kind !== 'string' || !kind.trim()) {
+    throw new TypeError('dom-renderer: inline item kind must be a non-empty string');
+  }
+  if (typeof renderer !== 'function') {
+    throw new TypeError('dom-renderer: inline item renderer must be a function');
+  }
+  inlineItemRenderers.set(kind, renderer);
+  return () => {
+    if (inlineItemRenderers.get(kind) === renderer) inlineItemRenderers.delete(kind);
+  };
+}
+
+function bytesToBase64(input) {
+  const bytes = input instanceof Uint8Array
+    ? input
+    : (ArrayBuffer.isView(input)
+      ? new Uint8Array(input.buffer, input.byteOffset, input.byteLength)
+      : (input instanceof ArrayBuffer ? new Uint8Array(input) : null));
+  if (!bytes) throw new TypeError('dom-renderer: image bytes must be an ArrayBuffer or byte view');
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let output = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i];
+    const hasB = i + 1 < bytes.length;
+    const hasC = i + 2 < bytes.length;
+    const b = hasB ? bytes[i + 1] : 0;
+    const c = hasC ? bytes[i + 2] : 0;
+    output += alphabet[a >> 2];
+    output += alphabet[((a & 3) << 4) | (b >> 4)];
+    output += hasB ? alphabet[((b & 15) << 2) | (c >> 6)] : '=';
+    output += hasC ? alphabet[c & 63] : '=';
+  }
+  return output;
+}
+
 function renderLine(ln, doc, settings = {}) {
   const el = doc.createElement('div');
   el.className = 'line' + (ln.isLast ? ' line--last' + lastLineClass(ln, settings) : '');
@@ -155,6 +193,67 @@ function renderLine(ln, doc, settings = {}) {
       prependChild(el, cm);
     }
   }
+  if (Array.isArray(ln.fragments)) {
+    for (const fragment of ln.fragments) {
+      if (fragment.kind === 'text') {
+        const word = doc.createElement('span');
+        word.className = 'w';
+        if (fragment.id != null) word.dataset.inlineId = String(fragment.id);
+        if (Array.isArray(fragment.segments) && fragment.segments.length) {
+          for (const segment of fragment.segments) {
+            const child = doc.createElement('span');
+            child.className = 'w__segment';
+            if (segment.fontFamily) child.style.fontFamily = fontStack(segment.fontFamily);
+            if (Number.isFinite(segment.sizePt) && segment.sizePt > 0) child.style.fontSize = String(ptToPx(segment.sizePt)) + 'px';
+            child.textContent = scrubPUAText(segment.text || '');
+            word.appendChild(child);
+          }
+        } else {
+          word.textContent = scrubPUAText(fragment.text || '');
+        }
+        el.appendChild(word);
+        continue;
+      }
+
+      if (fragment.kind === 'image') {
+        const image = doc.createElement('img');
+        image.className = 'inline-image';
+        image.alt = fragment.alt || fragment.resourcePath || '';
+        image.draggable = false;
+        image.style.display = 'inline-block';
+        image.style.width = String(fragment.widthPx) + 'px';
+        image.style.height = String(fragment.heightPx) + 'px';
+        image.style.maxWidth = '100%';
+        image.style.objectFit = 'contain';
+        image.style.verticalAlign = 'middle';
+        const mimeType = fragment.mimeType || 'application/octet-stream';
+        if (fragment.bytes && fragment.bytes.length) {
+          image.src = 'data:' + mimeType + ';base64,' + bytesToBase64(fragment.bytes);
+        } else {
+          image.dataset.resourceMissing = 'true';
+        }
+        if (fragment.resourceId) image.dataset.resourceId = fragment.resourceId;
+        el.appendChild(image);
+        continue;
+      }
+
+      const customRenderer = inlineItemRenderers.get(fragment.kind);
+      const customNode = customRenderer ? customRenderer(fragment, doc, settings) : null;
+      if (customNode) {
+        el.appendChild(customNode);
+      } else {
+        const placeholder = doc.createElement('span');
+        placeholder.className = 'inline-item inline-item--custom';
+        placeholder.dataset.inlineKind = fragment.kind;
+        if (fragment.id != null) placeholder.dataset.inlineId = String(fragment.id);
+        placeholder.style.display = 'inline-block';
+        placeholder.style.width = String(fragment.widthPx) + 'px';
+        placeholder.style.height = String(fragment.heightPx) + 'px';
+        placeholder.style.verticalAlign = 'middle';
+        el.appendChild(placeholder);
+      }
+    }
+  } else {
   // **D-42:** מילים בתוך סוגריים — span.w--paren עם font-size בסקאלה (geometry-neutral).
   // מילים רגילות — span.w אחיד (מיצג גם ב‑DOM אמיתי וגם ב‑shim של הבדיקות).
   // **S11:** טווחי inline מסגנון מותאך — span.w--custom עם data-style (גודל מוחל כבר במדידה).
@@ -180,6 +279,7 @@ function renderLine(ln, doc, settings = {}) {
     }
   } else {
     el.textContent = words.join(' ');
+  }
   }
   const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
   if (tok) el.dataset.token = tok;
@@ -1509,4 +1609,4 @@ function renderPage(page, settings, doc, header) {
   return root;
 }
 
-module.exports = { renderPage, renderLine, scrubPUAText, bgRgba, PT_CLASS, renderSpanningBand, renderDecorations, renderPageBackgroundAndShaar, renderShaarContent, renderCustomPageContent, applyCustomStyleSpec, fontStack };
+module.exports = { renderPage, renderLine, scrubPUAText, bgRgba, PT_CLASS, renderSpanningBand, renderDecorations, renderPageBackgroundAndShaar, renderShaarContent, renderCustomPageContent, applyCustomStyleSpec, fontStack, registerInlineItemRenderer, bytesToBase64 };
