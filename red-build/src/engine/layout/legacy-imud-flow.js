@@ -429,6 +429,30 @@ function tokenizeDoc(rawText, cfg, inlineOptions = {}) {
  * It mirrors the source side of contentPreserved accounting, excluding only
  * metadata fields and syntactic prefixes that are intentionally not rendered.
  */
+/**
+ * Shared classification of a note-flow token. Only visible body text starts
+ * a note on a page; separator gaps, marker tokens and "(המשך)" do not.
+ */
+function isFootnoteBodyToken(token) {
+  return !!token
+    && Number.isInteger(token.noteIdx)
+    && !token.gap
+    && !token.mk
+    && token.t !== '(המשך)'
+    && typeof token.t === 'string'
+    && token.t.trim().length > 0;
+}
+
+function collectStartedFootnoteIndices(lines) {
+  const started = new Set();
+  for (const line of lines || []) {
+    for (const token of line || []) {
+      if (isFootnoteBodyToken(token)) started.add(token.noteIdx);
+    }
+  }
+  return started;
+}
+
 function legacySourceWordMultiset(meta, tokens, cfg) {
   const norm = (s) => String(s == null ? '' : s).split(/[\s\u00A0]+/).filter(Boolean);
   const bump = (m, words) => { for (const w of words) m.set(w, (m.get(w) || 0) + 1); };
@@ -2815,34 +2839,6 @@ function legacyTypeset(rawText, settings, env) {
    * מוצגים בגודל הרישום בתוך הזרם; המשך נפתח ב-'(המשך)' בלבד. מחזיר
    * שורות זרימה — כל שורה רשימת טוקנים {t, mk?, gap?, noteIdx} — מקור
    * יחיד לתקציב (fnReserveFor) ולפריסה (placeFootnoteArea). */
-  /**
-   * A note becomes "started on this page" only after visible note-body text
-   * has actually been placed. A separator gap, marker, or continuation label
-   * can fall at a page boundary before the note itself starts.
-   *
-   * The same predicate drives the body-first reservation floor and the
-   * continuous-flow carry decision, so those two decisions cannot disagree.
-   */
-  function isFootnoteBodyToken(token) {
-    return !!token
-      && Number.isInteger(token.noteIdx)
-      && !token.gap
-      && !token.mk
-      && token.t !== '(המשך)'
-      && typeof token.t === 'string'
-      && token.t.trim().length > 0;
-  }
-
-  function collectStartedFootnoteIndices(lines) {
-    const started = new Set();
-    for (const line of lines || []) {
-      for (const token of line || []) {
-        if (isFootnoteBodyToken(token)) started.add(token.noteIdx);
-      }
-    }
-    return started;
-  }
-
   function fnFlowFor(queue) {
     const items = fnItemsFor(queue);
     const spaceW = fnApi.measureTextWidth(' ', SZ.fnBody, 0);
