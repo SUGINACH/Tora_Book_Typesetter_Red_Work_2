@@ -51,7 +51,7 @@ function createMeasuredInlineItems(runs, options = {}) {
   }
 
   function measure(text, family, runSizePt) {
-    const clean = String(text).replace(/\u005cuE102/g, '');
+    const clean = String(text).split(String.fromCharCode(0xE102)).join('');
     const width = options.measureText(clean, family || null, runSizePt == null ? sizePt : runSizePt);
     return finiteNonNegative(width, 'measured text width');
   }
@@ -117,32 +117,56 @@ function createMeasuredInlineItems(runs, options = {}) {
       const runSizePt = effectiveSize(run);
       // Ordinary spaces create legal break glue. NBSP and the private atomic
       // note separator stay inside the same measured word box.
-      const matcher = /[\u005cu00A0\u005cuE000]+|[ \\t\\n\\r]+|\\S+/gu;
-      let match;
-      while ((match = matcher.exec(value))) {
-        const token = match[0];
-        const sourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart + match.index : undefined;
-        const sourceEnd = Number.isFinite(run.sourceStart) ? sourceStart + token.length : undefined;
-        if (/^[ \\t\\n\\r]+$/u.test(token)) {
-          appendGlue(run, sourceStart, sourceEnd);
-          continue;
+      // Ordinary spaces create break glue. NBSP and the private atomic
+      // note separator stay inside the current word and are normalized for drawing.
+      let cursor = 0;
+      while (cursor < value.length) {
+        const first = value[cursor];
+        const isAtomic = first === String.fromCharCode(0x00A0) || first === String.fromCharCode(0xE000);
+        const isBreak = first === ' ' || first === '\t' || first === '\n' || first === '\r';
+        let end = cursor + 1;
+        if (isAtomic || isBreak) {
+          while (end < value.length) {
+            const ch = value[end];
+            const same = isAtomic
+              ? ch === String.fromCharCode(0x00A0) || ch === String.fromCharCode(0xE000)
+              : ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r';
+            if (!same) break;
+            end++;
+          }
+        } else {
+          while (end < value.length) {
+            const ch = value[end];
+            if (ch === String.fromCharCode(0x00A0) || ch === String.fromCharCode(0xE000)
+              || ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') break;
+            end++;
+          }
         }
-        const atomicSpace = /^[\u005cu00A0\u005cuE000]+$/u.test(token);
-        const visibleToken = atomicSpace ? token.replace(/\u005cuE000/g, '\u005cu00A0') : token;
-        const measuredToken = atomicSpace ? ' '.repeat(visibleToken.length) : visibleToken;
-        const widthPx = measure(measuredToken, family, runSizePt);
-        const heightPx = finiteNonNegative(lineHeightForSize(runSizePt), 'line height for run');
-        // Adjacent parser runs can split one lexical word at removed font markers.
-        // Only ordinary visible whitespace or an atomic non-text run ends the current word.
-        wordSegments.push({
-          text: visibleToken,
-          fontFamily: family,
-          widthPx,
-          heightPx,
-          ...(runSizePt != null ? { sizePt: runSizePt } : {}),
-          ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
-          ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
-        });
+        const token = value.slice(cursor, end);
+        const sourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart + cursor : undefined;
+        const sourceEnd = Number.isFinite(run.sourceStart) ? sourceStart + token.length : undefined;
+        if (isBreak) {
+          appendGlue(run, sourceStart, sourceEnd);
+        } else {
+          const visibleToken = isAtomic
+            ? token.split(String.fromCharCode(0xE000)).join(String.fromCharCode(0x00A0))
+            : token;
+          const measuredToken = isAtomic ? ' '.repeat(visibleToken.length) : visibleToken;
+          const widthPx = measure(measuredToken, family, runSizePt);
+          const heightPx = finiteNonNegative(lineHeightForSize(runSizePt), 'line height for run');
+          // Adjacent parser runs can split one lexical word at removed font markers.
+          // Only ordinary visible whitespace or an atomic non-text run ends the current word.
+          wordSegments.push({
+            text: visibleToken,
+            fontFamily: family,
+            widthPx,
+            heightPx,
+            ...(runSizePt != null ? { sizePt: runSizePt } : {}),
+            ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+            ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+          });
+        }
+        cursor = end;
       }
       continue;
     }
