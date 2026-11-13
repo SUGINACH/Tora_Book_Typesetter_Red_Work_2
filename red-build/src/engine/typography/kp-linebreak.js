@@ -207,8 +207,7 @@ function solveBreaks(items, maxWidthPx, opts = {}) {
   }
   cuts.reverse();
   return { cuts, widthForLine };
-
-
+}
 
 function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
   if (!Array.isArray(words)) throw new TypeError('kp-linebreak: words must be an array');
