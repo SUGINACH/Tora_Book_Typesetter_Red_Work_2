@@ -1,4 +1,7 @@
 # Tora Book Typesetter — RED
+
+> **עדכון עדיפות 12.11.2026 — P0:** היעד המרכזי הבא הוא מסלול משולב אחד של פישוט ואיחוד מלא של מנוע העימוד, יחד עם מימוש תמונות inline וטווחי גופן inline. שלושת המרכיבים מתוכננים וממומשים יחד בתוך AST, מדידה, שבירת שורות, planner, Page Model ופלט יחידים; אין להשלים תחילה מנוע לטקסט רגיל ולדחות את התמונות/הגופנים, ואין לפתור זאת באמצעות טלאים, CSS float, מנוע שני או תיקוני post-layout. מסלול זה קודם לעבודות UI, ניקיון ותכונות צד שאינן חוסמות אותו. ראו G14 ו-S14.
+
 **מנוע עימוד תורני (RTL, עברית) — בנייה מאפס, אפס תלויות ריצה.**
 
 > מצב אמת, עדכני ל־11.11.2026 — **בדיקת ההתאמה לייחוס בוטלה כליל (D-100, הכרעת משתמש).** ההתאמה לייחוס הגרסה הישנה (layout-parity) נעשתה בתחילת הפרויקט כדי לתת למסמך את המראה הכללי הדרוש (יחסי גדלים, שערים, עימוד מזהים) — תפקיד שהושלם; אין עוד צורך בבדיקה ובהתאמה אלה. מצב סופי מתועד לפני הביטול (3d55cb4): ‏HARD ‏4/4 | ‏PARITY ‏12/14 | ‏88.9% — כל סטיות ‏P6/P7 ‏סווגו עד תום (D-99; דוח: ‏`audits/P6_P7_D97_CLASSIFICATION.md`) — אפס פגמים אמיתיים. הכלים והייחוס נשארים במאגר לפרובננס בלבד. **מקור הסמכות מעתה:** ‏אינווריאנטים מוחלטים ‏C1–C12 ‏(verify-corpus ‏על ‏very_long ‏— מסמך הבדיקה הראשי, ‏D-98) בכל ‏push ‏(workflow ‏corpus-invariants), ‏בדיקות המנוע ‏(npm test ‏— ‏672 בדידות ב־33 סוויטות), ‏דטרמיניזם, ‏full-math-audit, וקבלת משתמש. לצדו: אודיט גיאומטריה בדפדפן אמיתי (tools/layout-audit; very_long: ‏704/704 עמ', ‏0 בעיות). ברירות המחדל של המקור חיות מהעלייה (שערים בסדר המקור, כותרות עליונות, יישור justify, ארבעה גופני עיצוב מוטמעים — SIL OFL). דטרמיניזם נעול (‏ad1161a9; ‏קנוני ‏80f9ed6c). תג v25-unified-rc1 — קידום למהדורה באישור משתמש בלבד. מסמכי האם: `spec/01_MASTER_SPECIFICATION.md`, `spec/02_MASTER_WORK_PLAN.md`; תוכנית העבודה המחייבת כעת: `spec/תכנית לשיפור תוכנת עימוד Red.MD` + `spec/תוכנית הפעלה לחמשת הסוכנים.md`. ממצאים פתוחים: `ISSUE_REGISTRY.md` — מדור EXT; baseline ‏S0 ‏המלא: `audits/baseline_S0/`.
@@ -69,7 +72,7 @@ red-build/src/ui/{app-shell,settings-panel,editor-tab,preview-tab,testing-tab,st
 red-build/ui/{index.html,styles.css,engine-worker.bundle.js,app.bundle.js}   # האפליקציה החיה
 red-build/tests/{unit,integration,layout,e2e,audit,negative-controls,fixtures,artifacts}
 tools/{gen-ui-bindings,build-worker-bundle,scan-control-triggers}.js
-spec/          — מפרט אם + תכנית עבודה (S0..S13)
+spec/          — מפרט אם + תכנית עבודה (S0..S14)
 audits/        — 01 ביקורת עצמאית, 02 דוח סגירת S7, 03 דוח סגירת S8, 04 דוח סגירת S9
 DECISIONS.md / WORKLOG.md / ISSUE_REGISTRY.md / OPEN_QUESTIONS.md / PROVENANCE.md / LAYOUT_DEPENDENCY_MAP.md
 archive/debug/ — קבצי דיבוג היסטוריים (read-only)
