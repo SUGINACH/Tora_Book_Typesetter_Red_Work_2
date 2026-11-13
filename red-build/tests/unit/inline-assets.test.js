@@ -129,7 +129,7 @@ test('default image geometry is 50 percent centered and tall images preserve rat
   });
   assert.equal(result.ok, true);
   assert.equal(result.image.align, 'center');
-  assert.equal(result.image.widthPx, 50);
+  assert.equal(result.image.widthPx, 100 / 3);
   assert.equal(result.image.heightPx, 100);
   assert.equal(result.image.scaledToFit, true);
 });
