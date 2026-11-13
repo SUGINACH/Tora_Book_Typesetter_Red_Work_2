@@ -169,7 +169,9 @@ function createStyledInlineRuns(parts, options = {}) {
           );
           if (custom && Number.isFinite(custom.factor) && custom.factor > 0) {
             sizePt *= custom.factor;
-          } else if (parenSpans.length && offsetInSpans(tokenOffset, parenSpans)) {
+          } else if (parenSpans.some(span =>
+            tokenOffset < span.to && tokenOffset + token.length > span.from
+          )) {
             sizePt *= parenScale;
           }
         }
