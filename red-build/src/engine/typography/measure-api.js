@@ -209,6 +209,23 @@ class MeasureAPI {
     return knuth.breakLines(words, maxWidthPx, measure, this.lineHeightPx(sizePt), opts);
   }
 
+  /**
+   * Layout already-measured mixed inline atoms through the shared Knuth–Plass
+   * solver. Text dimensions must originate from this MeasureAPI instance;
+   * image dimensions must come from the asset metadata resolver; custom item
+   * kinds use the same {kind,id,widthPx,heightPx} box contract.
+   *
+   * This is deliberately a measured-input API: the solver never measures,
+   * guesses image ratios, or dispatches to a per-kind line breaker.
+   */
+  layoutMeasuredInlineItems(items, maxWidthPx, lineHeightPx, opts = {}) {
+    if (!Number.isFinite(lineHeightPx) || lineHeightPx < 0) {
+      throw new RangeError('MeasureAPI.layoutMeasuredInlineItems: lineHeightPx must be finite and non-negative');
+    }
+    const knuth = require('./kp-linebreak');
+    return knuth.breakInlineItems(items, maxWidthPx, lineHeightPx, opts);
+  }
+
   cacheStats() { return { ...this.stats, hitRate: this.stats.calls ? this.stats.hits / this.stats.calls : 0 }; }
 }
 
