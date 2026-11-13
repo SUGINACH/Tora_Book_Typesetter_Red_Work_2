@@ -434,6 +434,7 @@ var __paths = {
   "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/output/geometry-projector.js|../extensions/style-schema": "src/engine/extensions/style-schema.js",
   "src/engine/output/geometry-projector.js|../extensions/apply-styles": "src/engine/extensions/apply-styles.js",
+  "src/engine/output/pdf-writer.js|../import/zip-reader": "src/engine/import/zip-reader.js",
   "src/engine/output/legacy-projector.js|../layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
   "src/engine/output/legacy-projector.js|./line-font": "src/engine/output/line-font.js",
   "src/engine/output/legacy-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
@@ -19871,6 +19872,8 @@ __modules["src/engine/output/pdf-writer.js"] = function (require, module, export
 // src/engine/output/pdf-writer.js — Pure-JS PDF 1.4 writer (S12.1-3, REQ-EXP-03)
 'use strict';
 
+const { crc32, inflateRawPure } = require('../import/zip-reader');
+
 /**
  * כותב PDF מהקרנת הגיאומטריה (geometry-projector — מקור יחיד) + תת־גופן
  * TrueType מוטמע (CIDFontType2 + ToUnicode — טקסט אמיתי נבחר/מופק).
@@ -20057,6 +20060,264 @@ function buildToUnicode(font) {
   return lines.join('\n');
 }
 
+
+const pdfInlineItemRenderers = new Map();
+
+function registerPdfInlineItemRenderer(kind, renderer) {
+  if (typeof kind !== 'string' || !kind.trim()) {
+    throw new TypeError('pdf-writer: inline item kind must be a non-empty string');
+  }
+  if (typeof renderer !== 'function') {
+    throw new TypeError('pdf-writer: inline item renderer must be a function');
+  }
+  pdfInlineItemRenderers.set(kind, renderer);
+  return () => {
+    if (pdfInlineItemRenderers.get(kind) === renderer) pdfInlineItemRenderers.delete(kind);
+  };
+}
+
+function asByteView(input) {
+  if (input instanceof Uint8Array) return input;
+  if (ArrayBuffer.isView(input)) return new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
+  if (input instanceof ArrayBuffer) return new Uint8Array(input);
+  return null;
+}
+function readU32BE(bytes, offset) {
+  return ((bytes[offset] << 24) | (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3]) >>> 0;
+}
+function adler32(bytes) {
+  let a = 1, b = 0;
+  for (let i = 0; i < bytes.length; i++) {
+    a = (a + bytes[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+  return ((b << 16) | a) >>> 0;
+}
+function encodeZlibStored(bytesInput) {
+  const bytes = asByteView(bytesInput);
+  if (!bytes) throw new TypeError('pdf-writer: zlib input must be bytes');
+  const blockCount = Math.max(1, Math.ceil(bytes.length / 65535));
+  const out = new Uint8Array(2 + bytes.length + blockCount * 5 + 4);
+  let p = 0;
+  out[p++] = 0x78;
+  out[p++] = 0x01;
+  let offset = 0;
+  for (let block = 0; block < blockCount; block++) {
+    const length = Math.min(65535, bytes.length - offset);
+    out[p++] = block === blockCount - 1 ? 1 : 0; // BFINAL, BTYPE=00, aligned
+    out[p++] = length & 255;
+    out[p++] = (length >>> 8) & 255;
+    const inverse = (~length) & 0xffff;
+    out[p++] = inverse & 255;
+    out[p++] = (inverse >>> 8) & 255;
+    if (length) out.set(bytes.subarray(offset, offset + length), p);
+    p += length;
+    offset += length;
+  }
+  const checksum = adler32(bytes);
+  out[p++] = (checksum >>> 24) & 255;
+  out[p++] = (checksum >>> 16) & 255;
+  out[p++] = (checksum >>> 8) & 255;
+  out[p++] = checksum & 255;
+  return out;
+}
+
+/**
+ * Decode PNG pixels into DeviceRGB plus an optional 8-bit alpha plane.
+ * Supports color types 0/2/3/4/6, bit depths 1/2/4/8/16 and both standard
+ * and Adam7 interlaced images. PNG chunk CRCs and the zlib Adler checksum are
+ * validated before any PDF object is emitted.
+ */
+function decodePngForPdf(input) {
+  const bytes = asByteView(input);
+  const signature = [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a];
+  if (!bytes || bytes.length < 33 || !signature.every((v,i)=>bytes[i]===v)) {
+    throw new Error('pdf-writer: PNG signature or data is invalid');
+  }
+  let width=0,height=0,bitDepth=0,colorType=-1,interlace=0;
+  let palette=null, transparency=null, sawHeader=false, sawEnd=false;
+  const idat=[];
+  let idatLength=0;
+  for(let offset=8;offset<bytes.length;){
+    if(offset+12>bytes.length)throw new Error('pdf-writer: truncated PNG chunk');
+    const length=readU32BE(bytes,offset);
+    const typeStart=offset+4, dataStart=offset+8, dataEnd=dataStart+length, chunkEnd=dataEnd+4;
+    if(chunkEnd>bytes.length||dataEnd<dataStart)throw new Error('pdf-writer: PNG chunk exceeds input');
+    const type=String.fromCharCode(bytes[typeStart],bytes[typeStart+1],bytes[typeStart+2],bytes[typeStart+3]);
+    const crcExpected=readU32BE(bytes,dataEnd);
+    const crcActual=crc32(bytes.subarray(typeStart,dataEnd));
+    if(crcExpected!==crcActual)throw new Error('pdf-writer: PNG CRC mismatch in '+type);
+    if(!sawHeader){
+      if(type!=='IHDR'||length!==13)throw new Error('pdf-writer: PNG IHDR is missing or invalid');
+      width=readU32BE(bytes,dataStart);
+      height=readU32BE(bytes,dataStart+4);
+      bitDepth=bytes[dataStart+8];
+      colorType=bytes[dataStart+9];
+      if(bytes[dataStart+10]!==0||bytes[dataStart+11]!==0)throw new Error('pdf-writer: unsupported PNG compression or filter method');
+      interlace=bytes[dataStart+12];
+      sawHeader=true;
+    }else if(type==='IHDR'){
+      throw new Error('pdf-writer: duplicate PNG IHDR');
+    }
+    if(type==='PLTE')palette=bytes.slice(dataStart,dataEnd);
+    if(type==='tRNS')transparency=bytes.slice(dataStart,dataEnd);
+    if(type==='IDAT'){
+      idat.push(bytes.subarray(dataStart,dataEnd));
+      idatLength+=length;
+    }
+    if(type==='IEND'){
+      if(length!==0){throw new Error('pdf-writer: invalid PNG IEND');}
+      sawEnd=true;
+      if(chunkEnd!==bytes.length)throw new Error('pdf-writer: trailing data after PNG IEND');
+      break;
+    }
+    offset=chunkEnd;
+  }
+  const validDepths={0:[1,2,4,8,16],2:[8,16],3:[1,2,4,8],4:[8,16],6:[8,16]};
+  const channelsByType={0:1,2:3,3:1,4:2,6:4};
+  if(!sawHeader||!sawEnd||!idatLength)throw new Error('pdf-writer: incomplete PNG structure');
+  if(!validDepths[colorType]||!validDepths[colorType].includes(bitDepth))throw new Error('pdf-writer: unsupported PNG color type or bit depth');
+  if(interlace!==0&&interlace!==1)throw new Error('pdf-writer: unsupported PNG interlace mode');
+  if(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width*height>100000000) {
+    throw new Error('pdf-writer: PNG dimensions exceed safety limits');
+  }
+  if(colorType===3&&(!palette||palette.length%3!==0||palette.length>768))throw new Error('pdf-writer: indexed PNG palette is invalid');
+  if(colorType===3&&transparency&&transparency.length>palette.length/3)throw new Error('pdf-writer: indexed PNG transparency is invalid');
+
+  const zlibBytes=new Uint8Array(idatLength);
+  let zOffset=0;
+  for(const chunk of idat){zlibBytes.set(chunk,zOffset);zOffset+=chunk.length;}
+  if(zlibBytes.length<6||(zlibBytes[0]&15)!==8||(((zlibBytes[0]<<8)|zlibBytes[1])%31)!==0||(zlibBytes[1]&32)!==0) {
+    throw new Error('pdf-writer: invalid PNG zlib header');
+  }
+  const deflateBytes=zlibBytes.subarray(2,zlibBytes.length-4);
+  const inflated=inflateRawPure(deflateBytes,0,-1);
+  const adlerExpected=readU32BE(zlibBytes,zlibBytes.length-4);
+  if(adler32(inflated)!==adlerExpected)throw new Error('pdf-writer: PNG Adler checksum mismatch');
+
+  const passes=interlace===0
+    ? [[0,0,1,1]]
+    : [[0,0,8,8],[4,0,8,8],[0,4,4,8],[2,0,4,4],[0,2,2,4],[1,0,2,2],[0,1,1,2]];
+  const channels=channelsByType[colorType];
+  const sampleMax=bitDepth===16?65535:(1<<bitDepth)-1;
+  const rgb=new Uint8Array(width*height*3);
+  const alpha=new Uint8Array(width*height);
+  alpha.fill(255);
+  let hasAlpha=false, readOffset=0;
+
+  const scaleSample=value=>bitDepth===16?Math.round(value/257):(bitDepth===8?value:Math.round(value*255/sampleMax));
+  const sampleAt=(row,pixel,channel)=>{
+    const sampleIndex=pixel*channels+channel;
+    if(bitDepth===16)return (row[sampleIndex*2]<<8)|row[sampleIndex*2+1];
+    if(bitDepth===8)return row[sampleIndex];
+    const bitOffset=sampleIndex*bitDepth;
+    const shift=8-bitDepth-(bitOffset&7);
+    return (row[bitOffset>>3]>>shift)&sampleMax;
+  };
+  const paeth=(a,b,c)=>{
+    const p=a+b-c,pa=Math.abs(p-a),pb=Math.abs(p-b),pc=Math.abs(p-c);
+    return pa<=pb&&pa<=pc?a:(pb<=pc?b:c);
+  };
+
+  for(const pass of passes){
+    const [x0,y0,dx,dy]=pass;
+    const passWidth=width<=x0?0:Math.ceil((width-x0)/dx);
+    const passHeight=height<=y0?0:Math.ceil((height-y0)/dy);
+    if(!passWidth||!passHeight)continue;
+    const rowBytes=Math.ceil(passWidth*channels*bitDepth/8);
+    const bytesPerPixel=Math.max(1,Math.ceil(channels*bitDepth/8));
+    let previous=new Uint8Array(rowBytes);
+    for(let py=0;py<passHeight;py++){
+      if(readOffset+1+rowBytes>inflated.length)throw new Error('pdf-writer: truncated PNG scanline data');
+      const filter=inflated[readOffset++];
+      const raw=inflated.subarray(readOffset,readOffset+rowBytes);
+      readOffset+=rowBytes;
+      const row=new Uint8Array(rowBytes);
+      for(let i=0;i<rowBytes;i++){
+        const value=raw[i];
+        const left=i>=bytesPerPixel?row[i-bytesPerPixel]:0;
+        const up=previous[i]||0;
+        const upperLeft=i>=bytesPerPixel?previous[i-bytesPerPixel]||0:0;
+        if(filter===0)row[i]=value;
+        else if(filter===1)row[i]=(value+left)&255;
+        else if(filter===2)row[i]=(value+up)&255;
+        else if(filter===3)row[i]=(value+Math.floor((left+up)/2))&255;
+        else if(filter===4)row[i]=(value+paeth(left,up,upperLeft))&255;
+        else throw new Error('pdf-writer: unknown PNG scanline filter '+filter);
+      }
+      previous=row;
+      for(let px=0;px<passWidth;px++){
+        const x=x0+px*dx,y=y0+py*dy,pixel=y*width+x,out=pixel*3;
+        let r=0,g=0,b=0,a=255;
+        if(colorType===0){
+          const gray=sampleAt(row,px,0);
+          r=g=b=scaleSample(gray);
+          if(transparency&&transparency.length>=2&&gray===((transparency[0]<<8)|transparency[1]))a=0;
+        }else if(colorType===2){
+          const rr=sampleAt(row,px,0),gg=sampleAt(row,px,1),bb=sampleAt(row,px,2);
+          r=scaleSample(rr);g=scaleSample(gg);b=scaleSample(bb);
+          if(transparency&&transparency.length>=6&&rr===((transparency[0]<<8)|transparency[1])&&gg===((transparency[2]<<8)|transparency[3])&&bb===((transparency[4]<<8)|transparency[5]))a=0;
+        }else if(colorType===3){
+          const index=sampleAt(row,px,0),paletteAt=index*3;
+          if(!palette||paletteAt+2>=palette.length)throw new Error('pdf-writer: PNG palette index is out of range');
+          r=palette[paletteAt];g=palette[paletteAt+1];b=palette[paletteAt+2];
+          if(transparency&&index<transparency.length)a=transparency[index];
+        }else if(colorType===4){
+          const gray=sampleAt(row,px,0);
+          r=g=b=scaleSample(gray);
+          a=scaleSample(sampleAt(row,px,1));
+        }else{
+          r=scaleSample(sampleAt(row,px,0));
+          g=scaleSample(sampleAt(row,px,1));
+          b=scaleSample(sampleAt(row,px,2));
+          a=scaleSample(sampleAt(row,px,3));
+        }
+        rgb[out]=r;rgb[out+1]=g;rgb[out+2]=b;
+        alpha[pixel]=a;
+        if(a!==255)hasAlpha=true;
+      }
+    }
+  }
+  if(readOffset!==inflated.length)throw new Error('pdf-writer: unexpected trailing PNG scanline data');
+  return {width,height,rgbBytes:rgb,alphaBytes:hasAlpha?alpha:null};
+}
+
+function imageKey(fragment) {
+  const value=fragment.resourceId || fragment.id || fragment.resourcePath;
+  if(value==null||String(value).trim()==='')throw new Error('pdf-writer: image fragment requires stable resource identity');
+  return String(value);
+}
+function preparePdfImage(fragment) {
+  const bytes=asByteView(fragment.bytes);
+  if(!bytes||!bytes.length)throw new Error('pdf-writer: image '+imageKey(fragment)+' has no embedded bytes');
+  if(bytes.length>64*1024*1024)throw new Error('pdf-writer: image exceeds 64MB safety limit');
+  const mime=String(fragment.mimeType||'').toLowerCase();
+  if(mime==='image/jpeg'||mime==='image/jpg'){
+    if(bytes[0]!==0xff||bytes[1]!==0xd8||bytes[bytes.length-2]!==0xff||bytes[bytes.length-1]!==0xd9) {
+      throw new Error('pdf-writer: JPEG image '+imageKey(fragment)+' has invalid SOI/EOI markers');
+    }
+    const width=Number(fragment.intrinsicWidthPx||fragment.widthPx);
+    const height=Number(fragment.intrinsicHeightPx||fragment.heightPx);
+    if(!Number.isInteger(width)||!Number.isInteger(height)||width<=0||height<=0)throw new Error('pdf-writer: JPEG image has invalid intrinsic dimensions');
+    return {key:imageKey(fragment),name:null,width,height,filter:'DCTDecode',colorSpace:'DeviceRGB',bits:8,data:bytes,alphaBytes:null};
+  }
+  if(mime==='image/png'){
+    const decoded=decodePngForPdf(bytes);
+    if(fragment.intrinsicWidthPx!=null&&Number(fragment.intrinsicWidthPx)!==decoded.width)throw new Error('pdf-writer: PNG intrinsic width does not match metadata');
+    if(fragment.intrinsicHeightPx!=null&&Number(fragment.intrinsicHeightPx)!==decoded.height)throw new Error('pdf-writer: PNG intrinsic height does not match metadata');
+    return {key:imageKey(fragment),name:null,width:decoded.width,height:decoded.height,filter:'FlateDecode',colorSpace:'DeviceRGB',bits:8,data:encodeZlibStored(decoded.rgbBytes),alphaBytes:decoded.alphaBytes?encodeZlibStored(decoded.alphaBytes):null};
+  }
+  throw new Error('pdf-writer: unsupported raster image MIME type '+mime);
+}
+function streamBuffer(dictionary, bytes) {
+  const data=Buffer.from(bytes);
+  return Buffer.concat([
+    Buffer.from(dictionary.replace('__LENGTH__',String(data.length))+'\nstream\n','latin1'),
+    data,
+    Buffer.from('\nendstream','latin1')
+  ]);
+}
+
 /**
  * כתיבת מסמך PDF שלם.
  * @param {object} opts
@@ -20155,6 +20416,28 @@ function writePdf(opts) {
   }
   /** מפת key → {font, name} לציור מיידי ב-emitWord (נתיב יחיד). */
   const extraByKeys = new Map(extraFonts.map((ef, i) => [ef.key, { font: ef.font, name: `F${7 + i}` }]));
+  const inlineImages = [];
+  const inlineImageByKey = new Map();
+  for (const page of pages) {
+    const lines = [
+      ...(page.spanning && Array.isArray(page.spanning.lines) ? page.spanning.lines : []),
+      ...(Array.isArray(page.lines) ? page.lines : [])
+    ];
+    for (const line of lines) {
+      for (const fragment of (line.fragments || [])) {
+        if (!fragment || fragment.kind !== 'image') continue;
+        const key = imageKey(fragment);
+        if (inlineImageByKey.has(key)) continue;
+        const image = preparePdfImage(fragment);
+        image.name = 'Im' + String(inlineImages.length + 1);
+        image.objectId = pdf.reserve();
+        image.smaskId = image.alphaBytes ? pdf.reserve() : null;
+        inlineImages.push(image);
+        inlineImageByKey.set(key, image);
+      }
+    }
+  }
+
   const pageIds = pages.map(() => pdf.reserve());
   const contentIds = pages.map(() => pdf.reserve());
   const linkIds = new Map(); // pageIndex → [ids]
@@ -20271,12 +20554,51 @@ function writePdf(opts) {
       }
       ops.push('ET');
     };
+    const emitImage = (fragment) => {
+      const image = inlineImageByKey.get(imageKey(fragment));
+      if (!image) throw new Error('pdf-writer: image resource was not registered');
+      const x = round2(fragment.x * PX_TO_PT);
+      const y = round2(hPt - (fragment.y + fragment.heightPx) * PX_TO_PT);
+      const w = round2(fragment.widthPx * PX_TO_PT);
+      const h = round2(fragment.heightPx * PX_TO_PT);
+      ops.push('q ' + w + ' 0 0 ' + h + ' ' + x + ' ' + y + ' cm /' + image.name + ' Do Q');
+    };
     const emitLines = (lines) => {
       for (const ln of lines) {
         // **S12 (parity):** בסיס השורה מהמקרן (מודל תיבת שורה CSS — half-leading+ascent)
         const baselineY = ln.baselineY != null ? ln.baselineY : ln.y + ln.h - ln.sizePt * (96 / 72) * 0.78;
         // **S4.9 (legacy IMUD):** מילים עם גודל/בסיס משלהן (מילת-חלון 1.5×, סמני הערות)
-        for (const w of ln.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : baselineY, w.sizePt || ln.sizePt, w.fontKey, w.color);
+        if (Array.isArray(ln.fragments) && ln.fragments.length) {
+          for (const fragment of ln.fragments) {
+            if (fragment.kind === 'text') {
+              const segments = Array.isArray(fragment.segments) && fragment.segments.length
+                ? fragment.segments
+                : [{ text: fragment.text, x: fragment.x, sizePt: fragment.sizePt, fontKey: fragment.fontKey }];
+              for (const segment of segments) {
+                emitWord(
+                  segment.text,
+                  Number.isFinite(segment.x) ? segment.x : fragment.x,
+                  segment.baselineY != null ? segment.baselineY : baselineY,
+                  segment.sizePt || fragment.sizePt || ln.sizePt,
+                  segment.fontKey || fragment.fontKey,
+                  fragment.color
+                );
+              }
+            } else if (fragment.kind === 'image') {
+              emitImage(fragment);
+            } else {
+              const renderer = pdfInlineItemRenderers.get(fragment.kind);
+              if (!renderer) throw new Error('pdf-writer: no PDF renderer registered for inline item kind ' + fragment.kind);
+              const customOps = renderer(fragment, { pxToPt: PX_TO_PT, pageHeightPt: hPt, round2 });
+              if (!Array.isArray(customOps) || customOps.some(op => typeof op !== 'string')) {
+                throw new TypeError('pdf-writer: custom inline renderer must return an array of PDF operator strings');
+              }
+              ops.push(...customOps);
+            }
+          }
+        } else {
+          for (const w of (ln.words || [])) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : baselineY, w.sizePt || ln.sizePt, w.fontKey, w.color);
+        }
       }
     };
     if (pg.spanning) emitLines(pg.spanning.lines);
@@ -20551,6 +20873,23 @@ function writePdf(opts) {
     pdf.put(ef.ids.toUnicode, `<< /Length ${toUniE.length} >>\nstream\n${toUniE}\nendstream`);
   });
 
+  for (const image of inlineImages) {
+    const dictionary = image.filter === 'DCTDecode'
+      ? '<< /Type /XObject /Subtype /Image /Width ' + image.width + ' /Height ' + image.height +
+        ' /ColorSpace /' + image.colorSpace + ' /BitsPerComponent ' + image.bits +
+        ' /Filter /DCTDecode /Length __LENGTH__ >>'
+      : '<< /Type /XObject /Subtype /Image /Width ' + image.width + ' /Height ' + image.height +
+        ' /ColorSpace /' + image.colorSpace + ' /BitsPerComponent ' + image.bits +
+        ' /Filter /FlateDecode' + (image.smaskId ? ' /SMask ' + image.smaskId + ' 0 R' : '') +
+        ' /Length __LENGTH__ >>';
+    pdf.put(image.objectId, streamBuffer(dictionary, image.data));
+    if (image.smaskId) {
+      const smaskDictionary = '<< /Type /XObject /Subtype /Image /Width ' + image.width + ' /Height ' + image.height +
+        ' /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode /Length __LENGTH__ >>';
+      pdf.put(image.smaskId, streamBuffer(smaskDictionary, image.alphaBytes));
+    }
+  }
+
   // ---- עמודים ----
   // **S6.0 (R5-M6 — תיבות עמוד חוקיות):** TrimBox = גודל העמוד; BleedBox
   // בתוך ה-MediaBox (בעבר ה-BleedBox חרג **מחוץ** ל-MediaBox — הפרה של
@@ -20580,7 +20919,10 @@ function writePdf(opts) {
     // **S73:** הגופנים הדינמיים באותם משאבים לכל עמוד — סדר קבוע (דטרמיניזם)
     extraFonts.forEach((ef, i) => fontPairs.push([`/F${7 + i}`, ef.ids.type0]));
     const fontRes = `/Font << ${fontPairs.map(([n, id]) => `${n} ${id} 0 R`).join(' ')} >>`;
-    pdf.put(pageIds[i], `<< /Type /Page /Parent ${ID.pages} 0 R /MediaBox ${mediabox} /TrimBox ${trimbox} /BleedBox ${bleedbox} /Resources << ${fontRes} >> /Contents ${contentIds[i]} 0 R${annotsStr} >>`);
+    const xObjectRes = inlineImages.length
+      ? ' /XObject << ' + inlineImages.map(image => '/' + image.name + ' ' + image.objectId + ' 0 R').join(' ') + ' >>'
+      : '';
+    pdf.put(pageIds[i], `<< /Type /Page /Parent ${ID.pages} 0 R /MediaBox ${mediabox} /TrimBox ${trimbox} /BleedBox ${bleedbox} /Resources << ${fontRes}${xObjectRes} >> /Contents ${contentIds[i]} 0 R${annotsStr} >>`);
     pdf.put(contentIds[i], Buffer.concat([
       Buffer.from(`<< /Length ${contents[i].length} >>\nstream\n`, 'latin1'),
       contents[i],
@@ -20634,7 +20976,7 @@ function writePdf(opts) {
   return pdf.build();
 }
 
-module.exports = { writePdf, PdfBuilder, PX_TO_PT, MM_TO_PT, visualOrderRtl, BRACKET_MIRROR };
+module.exports = { writePdf, PdfBuilder, PX_TO_PT, MM_TO_PT, visualOrderRtl, BRACKET_MIRROR, decodePngForPdf, encodeZlibStored, registerPdfInlineItemRenderer };
 
 };
 __modules["src/engine/output/legacy-projector.js"] = function (require, module, exports) {
