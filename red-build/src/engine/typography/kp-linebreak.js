@@ -318,9 +318,23 @@ function breakInlineItems(inlineItems, maxWidthPx, lineHeightPx, opts = {}) {
   for (let lineIndex = 0; lineIndex < solution.cuts.length; lineIndex++) {
     const [start, end] = solution.cuts[lineIndex];
     const slice = measured.slice(start, end);
-    const fragments = slice
-      .filter(item => item.kind === 'box')
-      .map(item => ({ ...item.payload, widthPx: item.width, heightPx: item.height }));
+    const fragments = [];
+    let pendingGapPx = 0;
+    for (const item of slice) {
+      if (item.kind === 'glue') {
+        pendingGapPx += item.width;
+        continue;
+      }
+      if (item.kind !== 'box') continue;
+      if (fragments.length) fragments[fragments.length - 1].gapAfterPx += pendingGapPx;
+      fragments.push({
+        ...item.payload,
+        widthPx: item.width,
+        heightPx: item.height,
+        gapAfterPx: 0
+      });
+      pendingGapPx = 0;
+    }
     const widthPx = slice.reduce((sum, item) =>
       sum + (item.kind === 'box' || item.kind === 'glue' ? item.width : 0), 0);
     const heightPx = Math.max(lineHeightPx, ...fragments.map(item => item.heightPx || 0));
