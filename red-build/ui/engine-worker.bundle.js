@@ -300,6 +300,7 @@ var __paths = {
   "src/engine/core/pipeline.js|./settings-registry": "src/engine/core/settings-registry.js",
   "src/engine/core/pipeline.js|../parser/dfa-lexer": "src/engine/parser/dfa-lexer.js",
   "src/engine/core/pipeline.js|../parser/block-tokenizer": "src/engine/parser/block-tokenizer.js",
+  "src/engine/core/pipeline.js|../parser/inline-content": "src/engine/parser/inline-content.js",
   "src/engine/core/pipeline.js|../parser/bracket-scanner": "src/engine/parser/bracket-scanner.js",
   "src/engine/core/pipeline.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/core/pipeline.js|../typography/protectors": "src/engine/typography/protectors.js",
@@ -589,6 +590,7 @@ __modules["src/engine/core/pipeline.js"] = function (require, module, exports) {
 const { getDefaultSettings, derivePlacementFlags } = require('./settings-registry');
 const { lexDocument } = require('../parser/dfa-lexer');
 const { tokenize, contentHash, normalizeText } = require('../parser/block-tokenizer');
+const { inlineParagraphSourceText, inlineNoteSourceText, inlineRunsSourceText } = require('../parser/inline-content');
 const { scanBrackets } = require('../parser/bracket-scanner');
 const { MeasureAPI, resolveMeasureImpl, registeredFonts } = require('../typography/measure-api');
 const { protectWords } = require('../typography/protectors');
@@ -961,8 +963,15 @@ function typeset(rawText, settingsIn, env = {}) {
     // breaking the lines — the causal root of V23 (9 geometry changes from late application).
     // Word mapping: the words of the text parts (in order) correspond 1:1 to the words of the flattened
     // text from which flatBody was built — a shared running index (exact, no searches).
-    const textParts = t.parts.filter(p => p.kind === 'text');
-    const flatBody = textParts.map(p => p.value).join(' ');
+    // S14: inlineContent is the canonical source for paragraph text and note
+    // payloads. t.parts/t.notes remain on the token only as compatibility
+    // metadata for older consumers; measurement no longer rebuilds content
+    // from that parallel representation.
+    const inlineContent = t.inlineContent;
+    if (!inlineContent || !Array.isArray(inlineContent.parts) || !Array.isArray(inlineContent.notes)) {
+      throw new TypeError('pipeline: paragraph token is missing canonical inlineContent');
+    }
+    const flatBody = inlineParagraphSourceText(inlineContent);
     const parenSpans = parenScale !== 1 ? parenSpansOfFlat(flatBody) : [];
     const flatWordOffsets = [];
     {
@@ -1032,9 +1041,9 @@ function typeset(rawText, settingsIn, env = {}) {
     const customFactorById = new Map(csInlineSpans.map(s => [s.styleId, s.factor]));
     let csInfo = null; // **S11:** סגנון הבלוק שיוצמד לשורות ולבלוק (מדלג על ערכי איטרציות קודמות)
 
-    for (const p of t.parts) {
+    for (const p of inlineContent.parts) {
       if (p.kind === 'text') {
-        const src = normalizeText(p.value);
+        const src = normalizeText(inlineRunsSourceText(p.runs));
         for (const wordRaw of src.split(/\s+/).filter(Boolean)) {
           const info = flatWordOffsets[Math.min(flatWordIdx, flatWordOffsets.length - 1)];
           flatWordIdx++;
@@ -1051,7 +1060,7 @@ function typeset(rawText, settingsIn, env = {}) {
         }
       } else {
         // note-ref: uniform marker allocation (D-30/D-41) — policy numbering + style
-        const noteRaw = t.notes[p.noteIndex];
+        const noteRaw = inlineNoteSourceText(inlineContent, p.noteIndex, ATOMIC);
         const marker = markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
         assignedMarkers.add(marker);
         noteAssignments.push({ noteIndex: p.noteIndex, marker });
@@ -1136,12 +1145,32 @@ function typeset(rawText, settingsIn, env = {}) {
       // המונה מוצג בשורה הראשונה של הבלוק (הפס של full-width מטופל ברנדרר מהמידע על הפס)
       if (csInfo.counterMark && lines.length) lines[0].csCounterMark = csInfo.counterMark;
     }
+    const inlineImageFallbacks = inlineContent.parts.flatMap(part =>
+      part && part.kind === 'text'
+        ? (part.runs || []).filter(run => run.kind === 'image').map(run => ({
+          resourcePath: run.resourcePath,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd,
+          sourceText: run.sourceText || ''
+        }))
+        : []
+    );
     const blk = {
-      kind: 'paragraph', tokenId: t.id, parts: t.parts, notes, bodyMarkers, lines,
+      kind: 'paragraph', tokenId: t.id, parts: t.parts, inlineContent,
+      inlineImageFallbacks, notes, bodyMarkers, lines,
       unmatchedClosers: t.unmatchedClosers || [], part: currentPart, dh,
       noteAssignments, parenCharSpans: parenSpans, flatWordOffsets,
       customStyle: csInfo
     };
+    if (inlineImageFallbacks.length) {
+      // A dimensioned asset resolver and raster PDF embedding are not yet
+      // connected. Keep each original marker as visible text for now; never
+      // drop an ImageRun silently or invent its intrinsic dimensions.
+      eventLog.emit('parse', 'inline-image-preserved-pending-asset-resolution', {
+        tokenId: t.id,
+        images: inlineImageFallbacks.map(image => image.resourcePath)
+      }, null);
+    }
     if (blk.customStyle) {
       blk.fullWidth = blk.customStyle.layoutMode === 'full-width';
       blk.forcePageBreakBefore = blk.customStyle.layoutMode === 'new-location';
@@ -2731,6 +2760,7 @@ function parseInlineRuns(value, options = {}) {
             resourcePath: parsed.resourcePath,
             align: parsed.align,
             widthPct: parsed.widthPct,
+            sourceText: source.slice(index, close + 1),
             sourceStart: index + sourceOffset,
             sourceEnd: close + 1 + sourceOffset
           });
@@ -2888,6 +2918,39 @@ function parseInlineRuns(value, options = {}) {
 }
 
 
+/**
+ * Return the lossless source projection of canonical inline runs.
+ * Images are projected back to their original marker until a dimensioned
+ * resource resolver is supplied; this prevents silent content loss.
+ */
+function inlineRunsSourceText(runs = []) {
+  return (Array.isArray(runs) ? runs : []).map(run => {
+    if (!run) return '';
+    if (run.kind === 'text') return run.text || '';
+    if (run.kind === 'image') return run.sourceText || '';
+    return '';
+  }).join('');
+}
+
+/** Plain source text of a canonical paragraph, with note references omitted. */
+function inlineParagraphSourceText(inlineContent) {
+  if (!inlineContent || !Array.isArray(inlineContent.parts)) {
+    throw new TypeError('inline-content: canonical paragraph parts are required');
+  }
+  return inlineContent.parts
+    .filter(part => part && part.kind === 'text')
+    .map(part => inlineRunsSourceText(part.runs))
+    .join(' ');
+}
+
+/** Source text of a canonical note; optional atomic-space projection for layout. */
+function inlineNoteSourceText(inlineContent, noteIndex, atomicSpace = null) {
+  const note = inlineContent && Array.isArray(inlineContent.notes) ? inlineContent.notes[noteIndex] : null;
+  if (!note) throw new RangeError('inline-content: note index is out of range');
+  const source = inlineRunsSourceText(note.runs);
+  return atomicSpace == null ? source : source.replace(/ +/g, atomicSpace);
+}
+
 /** Parse paragraph text fragments and footnotes into one shared inline AST. */
 function parseInlineParagraph(parts = [], notes = [], options = {}) {
   const parsedParts = [];
@@ -2924,7 +2987,7 @@ function parseInlineParagraph(parts = [], notes = [], options = {}) {
 
   return { version: 1, parts: parsedParts, notes: parsedNotes, warnings, hasImages, hasFontRanges };
 }
-module.exports = { parseInlineRuns, parseInlineParagraph, parseImagePayload };
+module.exports = { parseInlineRuns, parseInlineParagraph, parseImagePayload, inlineRunsSourceText, inlineParagraphSourceText, inlineNoteSourceText };
 
 };
 __modules["src/engine/typography/measure-api.js"] = function (require, module, exports) {
