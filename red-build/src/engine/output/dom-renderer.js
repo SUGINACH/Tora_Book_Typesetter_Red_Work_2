@@ -274,12 +274,11 @@ function renderFootnoteArea(page, settings, doc) {
     && tpl && Array.isArray(tpl.columns) && tpl.columns.length >= 2
     && page.fnReservedHeightPx > 0;
   if (twoLanes) {
-    const order = page.footnotes.map((n, i) => ({ i, h: n.heightPx || 0 })).sort((a, b) => b.h - a.h || a.i - b.i);
-    const totals = [0, 0];
-    const laneOf = new Map();
-    for (const s of order) { const li = totals[0] <= totals[1] ? 0 : 1; totals[li] += s.h; laneOf.set(s.i, li); }
-    const lanes = [[], []];
-    page.footnotes.forEach((n, i) => lanes[laneOf.get(i)].push(n));
+    // **S78 (D-107):** חלוקת הנתיבים — מקור יחד (footnote-lanes.assignFootnoteLanes),
+    // כמו התקציב וההקרנה — תצוגה=ייצוא=תקציב מאותו חלוקה.
+    const { assignFootnoteLanes } = require('../layout/footnote-lanes');
+    const { lanes: laneIdx } = assignFootnoteLanes(page.footnotes);
+    const lanes = [laneIdx[0].map(i => page.footnotes[i]), laneIdx[1].map(i => page.footnotes[i])];
     const row = doc.createElement('div');
     row.style.display = 'flex';
     row.style.flexDirection = 'row-reverse'; // RTL — הנתיב הראשון מימין

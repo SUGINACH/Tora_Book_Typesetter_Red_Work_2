@@ -1,6 +1,8 @@
 // src/engine/layout/footnote-budget.js — Footnote reservation (REQ-FN-01/02/07)
 'use strict';
 
+const { assignFootnoteLanes } = require('./footnote-lanes'); // **S78 (D-107):** מקור-אמת יחיד לחלוקת נתיבי המרזב
+
 /**
  * **מקור־הסמכות היחיד לתקציב המרזב** (תיקון P1-1): הן probe הן reservation
  * עוברים כאן — getFootnotesReservedHeight — וה‑dp-planner קורא לזה בלבד
@@ -14,9 +16,19 @@
 /** פרופילי רוחב גופן לגוף ההערה (f-note-body-font). */
 const NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
 
+/** **S78 (D-107 — מדדי ההערה, מקור יחיד):** גודל גוף-ההערה (0.8× הגוף —
+ * כמו .footnotes{font-size:.8em} ב-DOM) ופיץ' השורה שלו (1.25 — כמו המרזב
+ * בשני הרנדרים). עד כאן הנוסחה שוכפלה בשלושה אתרים (כאן, פיצול
+ * ההערה-הארוכה ב-dp-planner, הקרנת המרזב ב-geometry-projector) — כל
+ * נגזרת שהתרחקה מחברותיה הזיזה את התקציב מול ההקרנה. */
+function noteMetrics(settings) {
+  const sizePt = settings['body-font-size-pt'] * 0.8;
+  const lineHeightPx = Math.round(sizePt * (96 / 72) * 1.25);
+  return { sizePt, lineHeightPx };
+}
+
 function noteHeight(note, settings, measure) {
-  const size = settings['body-font-size-pt'] * 0.8; // גופן הערה קטן
-  const lh = Math.round(size * (96 / 72) * 1.25);
+  const { sizePt, lineHeightPx: lh } = noteMetrics(settings); // **S78:** מקור יחיד לגודל/פיץ'
   const words = String(note.text).replace(/\uE000/g, ' ').split(/\s+/).filter(Boolean);
   const colW = laneWidth(settings);
   // **S70 (R7-M4):** הפקטור מתקן את טבלת impl A בלבד; ב-impl B
@@ -28,12 +40,12 @@ function noteHeight(note, settings, measure) {
   // ⇒ כל הערה הגובלת בשבירת-שורה נמדדה שורה אחת פחות (19–21px) וההערה
   // שאחריה חפפה אותה (32% מ-230 הערות בדגימה). נכללים גם הסמן ורווח
   // ההמשך בשורה הראשונה — כמו שמצויר בפועל.
-  const spaceW = measure(' ', size) * factor;
+  const spaceW = measure(' ', sizePt) * factor;
   const mkTxt = note && note.marker != null ? String(note.marker) : '';
-  const mkW = mkTxt ? measure(mkTxt, size) * factor + spaceW : 0;
+  const mkW = mkTxt ? measure(mkTxt, sizePt) * factor + spaceW : 0;
   let lines = 1, w = Math.min(mkW, colW);
   for (const word of words) {
-    const ww = measure(word, size) * factor;
+    const ww = measure(word, sizePt) * factor;
     const addW = (w > 0 ? spaceW : 0) + ww;
     if (w + addW > colW && w > 0) { lines++; w = ww; } else w += addW;
   }
@@ -64,9 +76,11 @@ function getFootnotesReservedHeight(pageNotes, settings, measure) {
   const heights = pageNotes.map(n => n.heightPx != null ? n.heightPx : noteHeight(n, settings, measure));
   if (cols === 1) return heights.reduce((a, b) => a + b, 0);
   // 2 טורים: חלוקה שווה־גובה (greedy LPT דטרמיניסטית)
-  const t = [0, 0];
-  for (const h of [...heights].sort((a, b) => b - a)) { const i = t[0] <= t[1] ? 0 : 1; t[i] += h; }
-  return Math.max(t[0], t[1]);
+  // **S78 (D-107):** חלוקת הנתיבים — מקור יחיד (footnote-lanes). שקול מתמטית למימוש
+  // הקודם (סדר גובה-יורד/אינדקס-עולה, חמדני לנמוך) — נעול בבדיקת שקילות; מעתה
+  // תקציב/הקרנה/תצוגה משתפים את אותה חלוקה ממקור אחד.
+  const { totals } = assignFootnoteLanes(pageNotes, (n, i) => heights[i]);
+  return Math.max(totals[0], totals[1]);
 }
 
-module.exports = { getFootnotesReservedHeight, noteHeight, laneWidth, NOTE_FONT_FACTORS };
+module.exports = { getFootnotesReservedHeight, noteHeight, noteMetrics, laneWidth, NOTE_FONT_FACTORS };

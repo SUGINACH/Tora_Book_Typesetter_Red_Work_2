@@ -17,6 +17,7 @@
 
 const { usedHeight, pageImbalance } = require('./balancing');
 const { colCapacityOf } = require('./column-flow'); // **S5.2 (P-2):** קיבולת טור — מקור יחיד
+const { widowOrphanPolicy } = require('./constraint-matrix'); // **S78 (D-107):** דגלי המדיניות — קריאה מרוכזת אחת
 const { MARK_TAG } = require('../notes/markers');
 
 /** עמודים מבניים שאינם זרימת-תוכן — כותרת בודדת בהם היא מכוונת-עיצוב,
@@ -52,6 +53,9 @@ function isNoteMarkerWord(w) {
 const CHECKS = {
   widowOrphan(page, settings, ledger) {
     const violations = [];
+    // **S78 (D-107):** דגלי המדיניות — constraint-matrix.widowOrphanPolicy (מקור יחיד;
+    // עד כאן גישות settings[...] מפוזרות בגוף הבדיקה).
+    const WO = widowOrphanPolicy(settings);
     for (let c = 0; c < page.columns.length; c++) {
       const col = page.columns[c];
       if (!col.length) continue;
@@ -66,9 +70,9 @@ const CHECKS = {
         let run = 0;
         for (const l of col) { if (l.meta && l.meta.tokenId === first.meta.tokenId) run++; else break; }
         if (run < 2) {
-          if (settings['prevent-widows-top'] && first.isLast) {
+          if (WO.preventWidowsTop && first.isLast) {
             violations.push({ kind: 'widow-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { run }, ledgerRef: ledger.create('widow-top', `p${page.index}c${c}`, page.index, { run }, 'protections').issue_id });
-          } else if (settings['prevent-orphans-top'] && settings['widow-strictness'] !== 'relaxed') {
+          } else if (WO.preventOrphansTop && WO.strictness !== 'relaxed') {
             violations.push({ kind: 'orphan-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { run }, ledgerRef: ledger.create('orphan-top', `p${page.index}c${c}`, page.index, { run }, 'protections').issue_id });
           }
         }
@@ -81,9 +85,9 @@ const CHECKS = {
       if (last.meta && last.meta.part === 'first') {
         const sameTokenInCol = col.filter(x => x.meta && x.meta.tokenId === last.meta.tokenId).length;
         if (sameTokenInCol === 1) {
-          if (settings['prevent-orphans-bottom']) {
+          if (WO.preventOrphansBottom) {
             violations.push({ kind: 'orphan-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { sameTokenInCol }, ledgerRef: ledger.create('orphan-bottom', `p${page.index}c${c}`, page.index, { sameTokenInCol }, 'protections').issue_id });
-          } else if (settings['prevent-widows-bottom']) {
+          } else if (WO.preventWidowsBottom) {
             violations.push({ kind: 'widow-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { sameTokenInCol }, ledgerRef: ledger.create('widow-bottom', `p${page.index}c${c}`, page.index, { sameTokenInCol }, 'protections').issue_id });
           }
         }

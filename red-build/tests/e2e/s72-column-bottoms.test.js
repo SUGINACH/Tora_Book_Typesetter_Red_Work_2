@@ -191,8 +191,13 @@ describe('S72.2 DP — יישור תחתיות ככלל עימוד (שיפורי
     assert(min >= 0.95 - 1e-9 && max <= 1.05 + 1e-9, `מקדם מחוץ לגבולות: [${min}, ${max}]`);
   });
 
-  it('נייטרליות: hash הקורפוס זהה לנעילה (010f9b35) — aqStretch אינו משנה תוכן', () => {
-    assert(result.layoutHash.startsWith('010f9b35'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
+  it('נייטרליות: hash הקורפוס זהה לנעילה (4b5c3408) — aqStretch אינו משנה תוכן', () => {
+    // **S78/D-107 (נעילה מחודשת — תיקון שורש מאושר):** מועמדי הפיצול מוגבלים כעת
+    // למקום הפנוי (maxFit היה מת ב-generateCandidates) + הערות עוקבות אחר עוגנן.
+    // על קורפוס זה: ‏1038→812 עמודים באותן 58,267 שורות ו-290,120 מילים **בדיוק**
+    // (חסרון 226 עמודי-בזבוז בלבד), underfill ‏263→16, כמעט-ריקים 177→1, איזון
+    // ‏452→312, הכלה ‏16→16. הקודם: 010f9b35 (S72/D-106).
+    assert(result.layoutHash.startsWith('4b5c3408'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
     const r2 = typeset(corpus, getDefaultSettings(), {});
     assertEq(result.layoutHash, r2.layoutHash, 'דטרמיניזם');
     // הקנוני — נעילת 80f9ed6c מ-S6.0 (מאומת ב-s13-acceptance)
