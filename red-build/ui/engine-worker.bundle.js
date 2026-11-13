@@ -1284,6 +1284,14 @@ function typeset(rawText, settingsIn, env = {}) {
           ln.tokenId = t.id;
           ln.part = currentPart;
           ln.sizePt = bodySizePt;
+          ln.richSignatureRequired = hasInlineImages || inlineContent.parts.some(part =>
+            part && part.kind === 'text' && (part.runs || []).some(run =>
+              run && run.kind === 'text' && (
+                (run.fontFamily && run.fontFamily !== settings['body-font']) ||
+                (run.sizePt != null && Number(run.sizePt) !== bodySizePt)
+              )
+            )
+          );
         }
         stampMeasureW(lines, colW);
         usedMeasuredInlineLayout = true;
@@ -5533,9 +5541,13 @@ function reAlignColumns(page) {
  * hash sensitive to image/font changes even when the visible word sequence
  * happens to remain unchanged.
  */
-function lineLayoutSignature(line) {
-  const words = (line.words || []).join('\u00A7');
+function lineLayoutSignature(line, includeGeometry = false) {
+  const words = (line.words || []).join('\\u00A7');
   if (!Array.isArray(line.fragments)) return words;
+  // Keep the historical content hash stable for ordinary text and note
+  // markers. Only truly new inline page-item/font features extend layoutHash.
+  // The geometry hash remains exhaustive for every measured fragment.
+  if (!includeGeometry && !line.richSignatureRequired) return words;
   const fragments = line.fragments.map(fragment => ({
     kind: fragment.kind,
     id: fragment.id == null ? null : fragment.id,
@@ -5556,7 +5568,7 @@ function lineLayoutSignature(line) {
       fontFamily: segment.fontFamily || null
     })) : null
   }));
-  return words + '\u00B6' + JSON.stringify({
+  return words + '\\u00B6' + JSON.stringify({
     heightPx: line.heightPx,
     aqStretch: line.aqStretch || 1,
     fragments
@@ -5582,7 +5594,7 @@ function bodyGeometryHash(pages) {
   const canon = pages.map(p => ({
     i: p.index, t: p.type,
     c: p.columns.map(col => col.map(ln =>
-      `${lineTokenId(ln)}:${lineLayoutSignature(ln)}:${ln.seq != null ? 's' + ln.seq : ''}`
+      `${lineTokenId(ln)}:${lineLayoutSignature(ln, true)}:${ln.seq != null ? 's' + ln.seq : ''}`
     ))
   }));
   return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
