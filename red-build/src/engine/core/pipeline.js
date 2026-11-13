@@ -602,24 +602,73 @@ function typeset(rawText, settingsIn, env = {}) {
     const hasInlineImages = inlineImageRuns.length > 0;
     const allInlineImagesResolved = !hasInlineImages
       || inlineImageRuns.every(run => resolvedInlineImageBoxes.has(run));
-    const richRunEligible = inlineContent.parts.length === 1
-      && inlineContent.parts[0].kind === 'text'
-      && !hasInlineNotes
+    const richNoteMode = notesMode !== 'inline'
+      && (settings['footnotes-enabled'] || notesMode === 'endnotes');
+    const richNotesEligible = !hasInlineNotes || richNoteMode;
+    const richRunEligible = inlineContent.parts.length > 0
+      && inlineContent.parts.every(part => part && (part.kind === 'text' || part.kind === 'note-ref'))
+      && richNotesEligible
       && allInlineImagesResolved
       && !dh
       && !csBlock
-      && csInlineSpans.length === 0
-      && parenSpans.length === 0;
+      && (!hasInlineNotes || (csInlineSpans.length === 0 && parenSpans.length === 0));
     let lines = null;
     let usedMeasuredInlineLayout = false;
+    const richNoteMarkers = new Map();
 
     if (richRunEligible) {
       const bodySizePt = Number(settings['body-font-size-pt']);
-      const measuredRuns = createStyledInlineRuns(inlineContent.parts, {
+      const richRuns = [];
+      let canAttachMarkerBackward = false;
+      let ordinaryGlueAfterMarker = false;
+
+      for (let partIndex = 0; partIndex < inlineContent.parts.length; partIndex++) {
+        const part = inlineContent.parts[partIndex];
+        if (part.kind === 'text') {
+          if (ordinaryGlueAfterMarker) {
+            richRuns.push({ kind: 'text', text: ' ' });
+            ordinaryGlueAfterMarker = false;
+          }
+          for (const run of (part.runs || [])) {
+            richRuns.push(run);
+            if (run.kind === 'text') {
+              const value = String(run.text || '');
+              if (value.length) {
+                const last = value[value.length - 1];
+                canAttachMarkerBackward = last !== ' ' && last !== '\\t' && last !== '\\n' && last !== '\\r';
+              }
+            } else {
+              canAttachMarkerBackward = false;
+            }
+          }
+          continue;
+        }
+
+        const noteIndex = part.noteIndex;
+        const noteRaw = inlineNoteSourceText(inlineContent, noteIndex, ATOMIC);
+        const marker = markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
+        richNoteMarkers.set(noteIndex, marker);
+        assignedMarkers.add(marker);
+        noteAssignments.push({ noteIndex, marker });
+        notes.push({ text: String(noteRaw).replace(/\\uE000/g, ' '), marker, tokenId: t.id, noteIndex, part: currentPart || 1 });
+        bodyMarkers.push(marker);
+
+        const nextPart = inlineContent.parts[partIndex + 1];
+        const hasNextText = !!(nextPart && nextPart.kind === 'text');
+        const hasNextNote = !!(nextPart && nextPart.kind === 'note-ref');
+        const markerText = canAttachMarkerBackward
+          ? '\\u00A0' + MARK_TAG + marker
+          : MARK_TAG + marker + (hasNextText ? '\\u00A0' : '');
+        richRuns.push({ kind: 'text', text: markerText });
+        ordinaryGlueAfterMarker = canAttachMarkerBackward ? (hasNextText || hasNextNote) : hasNextNote;
+        canAttachMarkerBackward = false;
+      }
+
+      const measuredRuns = createStyledInlineRuns([{ kind: 'text', runs: richRuns }], {
         baseSizePt: bodySizePt,
         parenScale,
-        parenSpans,
-        customSpans: csInlineSpans
+        parenSpans: hasInlineNotes ? [] : parenSpans,
+        customSpans: hasInlineNotes ? [] : csInlineSpans
       });
       const richLayout = api.layoutInlineRuns(measuredRuns, colW, {
         sizePt: bodySizePt,
@@ -675,9 +724,12 @@ function typeset(rawText, settingsIn, env = {}) {
         } else {
           // note-ref: uniform marker allocation (D-30/D-41) — policy numbering + style
           const noteRaw = inlineNoteSourceText(inlineContent, p.noteIndex, ATOMIC);
-          const marker = markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
-          assignedMarkers.add(marker);
-          noteAssignments.push({ noteIndex: p.noteIndex, marker });
+          let marker = richNoteMarkers.get(p.noteIndex);
+          if (!marker) {
+            marker = markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
+            assignedMarkers.add(marker);
+            noteAssignments.push({ noteIndex: p.noteIndex, marker });
+          }
           if (notesMode === 'inline' || (!settings['footnotes-enabled'] && notesMode !== 'endnotes')) {
             // (c) inline / fn-off: full placeholder in the body — `${marker}\uE000${text}`
             // (D-30: the separator is the first \uE000 — atomic in measurement, exact in extraction)
@@ -693,8 +745,10 @@ function typeset(rawText, settingsIn, env = {}) {
           }
           // footnotes / endnotes: only the marker is pushed in the body (counted once — at the anchor);
           // the text of the note flows to its display location (gutter / pages of notes — D-30).
-          notes.push({ text: String(noteRaw).replace(/\uE000/g, ' '), marker, tokenId: t.id, noteIndex: p.noteIndex, part: currentPart || 1 });
-          bodyMarkers.push(marker);
+          if (!richNoteMarkers.has(p.noteIndex)) {
+            notes.push({ text: String(noteRaw).replace(/\\uE000/g, ' '), marker, tokenId: t.id, noteIndex: p.noteIndex, part: currentPart || 1 });
+            bodyMarkers.push(marker);
+          }
           allWords.push(marker);
         }
       }
