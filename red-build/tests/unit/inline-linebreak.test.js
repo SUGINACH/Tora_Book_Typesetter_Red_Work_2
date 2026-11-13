@@ -3,6 +3,7 @@
 
 const assert = require('node:assert/strict');
 const { breakLines, breakInlineItems } = require('../../src/engine/typography/kp-linebreak');
+const { MeasureAPI } = require('../../src/engine/typography/measure-api');
 const { composeLineFragments } = require('../../src/engine/layout/line-fragments');
 
 let passed = 0;
@@ -26,6 +27,20 @@ test('the generic item adapter produces the same word breaks as the legacy adapt
   assert.equal(generic.ok, true);
   assert.deepEqual(generic.lines.map(line => line.words), legacy.map(line => line.words));
   assert.deepEqual(generic.lines.map(line => line.widthPx), legacy.map(line => line.widthPx));
+});
+
+test('MeasureAPI is the single entry point for already-measured mixed atoms', () => {
+  const api = new MeasureAPI({}, 'table');
+  const result = api.layoutMeasuredInlineItems([
+    { kind: 'text', text: 'פריט', widthPx: 30, heightPx: 18, sourceStart: 0, sourceEnd: 4 },
+    { kind: 'glue', widthPx: 5, stretchPx: 3, shrinkPx: 2 },
+    { kind: 'qr-code', id: 'qr:chapter-2', widthPx: 22, heightPx: 22 }
+  ], 80, 18);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.lines[0].fragments.map(item => item.kind), ['text', 'qr-code']);
+  assert.equal(result.lines[0].fragments[0].gapAfterPx, 5);
+  assert.equal(result.lines[0].heightPx, 22);
+  assert.throws(() => api.layoutMeasuredInlineItems([], 80, NaN), /lineHeightPx/);
 });
 
 test('mixed text and image atoms remain intact and determine the line height', () => {
