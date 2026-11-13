@@ -51,7 +51,7 @@ function createMeasuredInlineItems(runs, options = {}) {
   }
 
   function measure(text, family, runSizePt) {
-    const clean = String(text).replace(/\\uE102/g, '');
+    const clean = String(text).replace(/\u005cuE102/g, '');
     const width = options.measureText(clean, family || null, runSizePt == null ? sizePt : runSizePt);
     return finiteNonNegative(width, 'measured text width');
   }
@@ -117,7 +117,7 @@ function createMeasuredInlineItems(runs, options = {}) {
       const runSizePt = effectiveSize(run);
       // Ordinary spaces create legal break glue. NBSP and the private atomic
       // note separator stay inside the same measured word box.
-      const matcher = /[\\u00A0\\uE000]+|[ \\t\\n\\r]+|\\S+/gu;
+      const matcher = /[\u005cu00A0\u005cuE000]+|[ \\t\\n\\r]+|\\S+/gu;
       let match;
       while ((match = matcher.exec(value))) {
         const token = match[0];
@@ -127,8 +127,8 @@ function createMeasuredInlineItems(runs, options = {}) {
           appendGlue(run, sourceStart, sourceEnd);
           continue;
         }
-        const atomicSpace = /^[\\u00A0\\uE000]+$/u.test(token);
-        const visibleToken = atomicSpace ? token.replace(/\\uE000/g, '\\u00A0') : token;
+        const atomicSpace = /^[\u005cu00A0\u005cuE000]+$/u.test(token);
+        const visibleToken = atomicSpace ? token.replace(/\u005cuE000/g, '\u005cu00A0') : token;
         const measuredToken = atomicSpace ? ' '.repeat(visibleToken.length) : visibleToken;
         const widthPx = measure(measuredToken, family, runSizePt);
         const heightPx = finiteNonNegative(lineHeightForSize(runSizePt), 'line height for run');
