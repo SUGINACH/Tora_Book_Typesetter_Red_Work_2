@@ -42,10 +42,47 @@ function reAlignColumns(page) {
   return orphaned;
 }
 
+/**
+ * Stable signature for a planned line. Legacy word-only lines retain their
+ * historical signature; measured inline lines additionally include the
+ * actual atom geometry and per-segment font metrics. This makes the layout
+ * hash sensitive to image/font changes even when the visible word sequence
+ * happens to remain unchanged.
+ */
+function lineLayoutSignature(line) {
+  const words = (line.words || []).join('\\u00A7');
+  if (!Array.isArray(line.fragments)) return words;
+  const fragments = line.fragments.map(fragment => ({
+    kind: fragment.kind,
+    id: fragment.id == null ? null : fragment.id,
+    resourceId: fragment.resourceId == null ? null : fragment.resourceId,
+    text: fragment.kind === 'text' ? fragment.text : null,
+    widthPx: fragment.widthPx,
+    heightPx: fragment.heightPx,
+    gapAfterPx: fragment.gapAfterPx || 0,
+    sizePt: fragment.sizePt == null ? null : fragment.sizePt,
+    fontFamily: fragment.fontFamily || null,
+    sourceStart: fragment.sourceStart == null ? null : fragment.sourceStart,
+    sourceEnd: fragment.sourceEnd == null ? null : fragment.sourceEnd,
+    segments: Array.isArray(fragment.segments) ? fragment.segments.map(segment => ({
+      text: segment.text,
+      widthPx: segment.widthPx,
+      heightPx: segment.heightPx == null ? null : segment.heightPx,
+      sizePt: segment.sizePt == null ? null : segment.sizePt,
+      fontFamily: segment.fontFamily || null
+    })) : null
+  }));
+  return words + '\\u00B6' + JSON.stringify({
+    heightPx: line.heightPx,
+    aqStretch: line.aqStretch || 1,
+    fragments
+  });
+}
+
 function layoutHash(pages) {
   const canon = pages.map(p => ({
     i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}`)),
+    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${lineLayoutSignature(ln)}`)),
     // **S4.10:** דפנסיביות — עמודי מנוע המורשת אינם מחויבים לכל השדות
     // (לפני כן p.sideNotes.length קרס על undefined). לעמודי DP אין שינוי ערך.
     fn: (p.footnotes || []).length, sn: (p.sideNotes || []).length
@@ -54,16 +91,15 @@ function layoutHash(pages) {
 }
 
 /**
- * **D-47 (תיקון P0-6):** hash של **הגיאומטריה הנמדדת בלבד** (הטורים/השורות) —
- * זהו האינווריאנט T1: פאס העיטורים/ההערות אסור לו לשנות את הפריסה שנמדדה.
- * בעבר ההשוואה CP4==CP5 השוותה משתנה לעצמו — טאוטולוגיה שאינה יכולה להיכשל.
- * כאן: hash נפרד של הטורים בלבד (בלי מרזבים/הערות צד שמשתנים כחוק בשלב ההערות)
- * — נבדק לפני ואחרי פאס העיטורים בpipeline; שינוי אמיתי בשורות ⇒ הבדיקה נכשלת.
+ * **D-47 (תיקון P0-6):** hash של הגיאומטריה הנמדדת בלבד (הטורים/השורות).
+ * עבור שורות rich הוא כולל גם ממדי atoms ופרטי מקטעי הגופן, ולא רק מילים.
  */
 function bodyGeometryHash(pages) {
   const canon = pages.map(p => ({
     i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}:${ln.seq != null ? 's' + ln.seq : ''}`))
+    c: p.columns.map(col => col.map(ln =>
+      `${lineTokenId(ln)}:${lineLayoutSignature(ln)}:${ln.seq != null ? 's' + ln.seq : ''}`
+    ))
   }));
   return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
 }
