@@ -15,12 +15,13 @@
     const idx = Number(pg.getAttribute('data-page-index'));
     if (!Number.isFinite(idx) || audited.has(idx)) return;
     const rec = { i: idx, t: typeOf(pg), cols: [] };
+    const pageRect = pg.getBoundingClientRect();
     for (const c of pg.querySelectorAll('.column')) {
       // **S70 (R9):** טביעה דו-צירית (x+y) — בעבר y-בלבד הייתה החלקה
       // אופקית של שורה בלתי-נראית לגליאה.
       rec.cols.push([...c.children].map((l) => {
         const r2 = l.getBoundingClientRect();
-        return [Math.round(r2.left * 10), Math.round(r2.top * 10)];
+        return [Math.round((r2.left - pageRect.left) * 10), Math.round((r2.top - pageRect.top) * 10)];
       }));
     }
     audited.set(idx, rec);
