@@ -110,7 +110,12 @@ test('generic item validation rejects implicit whitespace and malformed atoms', 
   assert.throws(() => breakInlineItems([{ kind: 'text', text: 'שלום עולם', widthPx: 40 }], 80, 18), /single break units/);
   assert.throws(() => breakInlineItems([{ kind: 'image', widthPx: 20, heightPx: 10 }], 80, 18), /resourcePath/);
   assert.throws(() => breakInlineItems([{ kind: 'anchor', widthPx: 0 }], 80, 18), /stable id/);
-  assert.throws(() => breakInlineItems([{ kind: 'widget', widthPx: 10 }], 80, 18), /unsupported inline item kind/);
+  assert.throws(() => breakInlineItems([{ widthPx: 10 }], 80, 18), /non-empty kind/);
+  assert.throws(() => breakInlineItems([{ kind: 'widget', widthPx: 10 }], 80, 18), /custom atoms require a stable id/);
+  const custom = breakInlineItems([{ kind: 'qr-code', id: 'qr:4', widthPx: 10, heightPx: 10 }], 80, 18);
+  assert.equal(custom.ok, true);
+  assert.equal(custom.lines[0].fragments[0].kind, 'qr-code');
+  assert.equal(custom.lines[0].fragments[0].id, 'qr:4');
 });
 
 console.log('inline-linebreak: ' + passed + ' tests passed');
