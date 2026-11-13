@@ -20,7 +20,8 @@ const { MeasureAPI } = require('../typography/measure-api');
 const { NOTE_FONT_FACTORS } = require('../layout/footnote-budget');
 const { markerFor } = require('../notes/markers');
 const { SIDE_NOTE_FONT_FACTORS } = require('../layout/side-notes');
-const { lineFontSizePt, hexColorToRgb } = require('./line-font'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
+const { lineFontSizePt, hexColorToRgb } = require('./line-font');
+const { composeLineFragments } = require('../layout/line-fragments'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
 // **S73:** גופן השערים לפי מחלקת בלוק — מקור יחיד לשני הנתיבים (DOM+PDF)
 const { buildShaarBlocks, shaarFontOf } = require('./shaar-content');
 const { ornamentInk, parseSvgPaint, svgToPdfOps, svgInkBBox } = require('../decoration/ornament-ink'); // **EXT-4:** הדיו — מקור יחיד לכל הנתיבים // **03.11(ד):** תוכן השערים — אותו מודל כמו ה-DOM
@@ -672,7 +673,82 @@ function customFactorMapOf(settings) {
   return m;
 }
 
+function projectMeasuredLine(ln, colX, y, colW, settings, align, sizePt) {
+  const items = ln.fragments.map(fragment => ({ ...fragment }));
+  if (!items.length) return null;
+
+  if (align === 'justify' && !ln.isLast) {
+    const naturalWidth = items.reduce((sum, item) =>
+      sum + item.widthPx + (item.gapAfterPx || 0), 0);
+    const gapIndexes = [];
+    for (let i = 0; i < items.length - 1; i++) {
+      if ((items[i].gapAfterPx || 0) > 0) gapIndexes.push(i);
+    }
+    const extra = colW - naturalWidth;
+    if (extra > 0 && gapIndexes.length) {
+      const add = extra / gapIndexes.length;
+      for (const index of gapIndexes) items[index].gapAfterPx += add;
+    }
+  }
+
+  const placement = composeLineFragments(items, {
+    x: colX, y, widthPx: colW,
+    heightPx: ln.heightPx || 0,
+    direction: 'rtl',
+    align: align === 'justify' ? 'right' : align
+  });
+  if (!placement.ok) {
+    throw new Error('geometry-projector: measured inline fragments overflow line by ' +
+      roundTo3(placement.requiredWidthPx - placement.availableWidthPx) + 'px');
+  }
+
+  const bodyColor = colorOfSetting(settings['body-color']);
+  const fragments = placement.fragments.map(fragment => {
+    if (fragment.kind !== 'text') return fragment;
+    let segmentRight = fragment.x + fragment.widthPx;
+    const sourceSegments = Array.isArray(fragment.segments) && fragment.segments.length
+      ? fragment.segments
+      : [{ text: fragment.text, widthPx: fragment.widthPx, fontFamily: fragment.fontFamily || null }];
+    const segments = sourceSegments.map(segment => {
+      const widthPx = Number(segment.widthPx);
+      segmentRight -= widthPx;
+      const fontKey = familyFontKeyOf(segment.fontFamily, settings);
+      return {
+        ...segment, x: segmentRight, y, widthPx,
+        sizePt: segment.sizePt || fragment.sizePt || sizePt,
+        ...(fontKey ? { fontKey } : {})
+      };
+    });
+    return {
+      ...fragment,
+      segments,
+      sizePt: fragment.sizePt || sizePt,
+      ...(segments.length === 1 && segments[0].fontKey ? { fontKey: segments[0].fontKey } : {}),
+      ...(fragment.color ? {} : (bodyColor ? { color: bodyColor } : {}))
+    };
+  });
+
+  const words = fragments.filter(fragment => fragment.kind === 'text').map(fragment => ({
+    text: fragment.text, x: fragment.x, w: fragment.widthPx,
+    sizePt: fragment.sizePt || sizePt,
+    ...(fragment.fontKey ? { fontKey: fragment.fontKey } : {}),
+    ...(fragment.color ? { color: fragment.color } : {}),
+    segments: fragment.segments
+  }));
+  const heightPx = Math.max(ln.heightPx || 0, ...fragments.map(fragment => fragment.heightPx || 0));
+  return {
+    x: colX, y, w: colW, h: heightPx * (ln.aqStretch || 1),
+    words, fragments, align,
+    kind: ln.kind || 'paragraph', level: ln.level, isLast: !!ln.isLast,
+    sizePt,
+    tokenId: ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId),
+    baselineY: null
+  };
+}
+function roundTo3(value) { return Math.round(value * 1000) / 1000; }
+
 function projectLine(ln, colX, y, colW, settings, measure, align) {
+  if (Array.isArray(ln.fragments)) return projectMeasuredLine(ln, colX, y, colW, settings, align, lineFontSizePt(ln, settings));
   const sizePt = lineFontSizePt(ln, settings);
   // **S73 (תצוגה=ייצוא בגופני כותרות — נתיב DP):** ה-DOM מציג כותרות inline
   // בגופן הרמה מההגדרות (heading-N-font) ובצבען (heading-N-color); עד כאן
@@ -875,4 +951,4 @@ function projectDocument(result, settings, api) {
   return { pages, inkBounds, layoutHash: result.layoutHash };
 }
 
-module.exports = { projectPage, projectLine, projectDocument, lineFontSizePt, attachBaselines };
+module.exports = { projectPage, projectLine, projectDocument, projectMeasuredLine, lineFontSizePt, attachBaselines };

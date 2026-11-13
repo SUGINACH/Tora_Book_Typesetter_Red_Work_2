@@ -7,6 +7,8 @@ const path = require('path');
 const { describe, it, assert, assertEq, report } = require('../harness');
 
 const { typeset } = require('../../src/engine/core/pipeline');
+const { registerFont, clearRegisteredFonts } = require('../../src/engine/typography/measure-api');
+const { buildTtfFixture } = require('../fixtures/gen_ttf_fixture');
 const { getDefaultSettings } = require('../../src/engine/core/settings-registry');
 const { renderPage } = require('../../src/engine/output/dom-renderer');
 const { buildStandaloneHtml, assertOfflineSafe } = require('../../src/engine/output/html-export');
@@ -60,6 +62,57 @@ describe('e2e-pipeline', () => {
     assert(result.pages.length > 0, 'must produce pages');
     assert(result.contentPreserved === true, 'word multiset must be preserved');
     assert(typeof result.layoutHash === 'string' && result.layoutHash.length >= 16, 'layout hash present');
+  });
+
+  it('canonical inline font runs reach the shared measured solver and survive pagination', () => {
+    clearRegisteredFonts();
+    const fontBytes = buildTtfFixture({ kern:false }).bytes;
+    assert(registerFont('Inline Alpha', fontBytes).ok, 'inline font fixture must register');
+    try {
+      const settings = { ...getDefaultSettings(), _inlineFontFamilies:['Inline Alpha'] };
+      const source = 'טקסט רגיל <Inline Alpha>מילה מעוצבת</> המשך הפסקה';
+      const result = typeset(source, settings);
+      assert(result.contentPreserved === true, 'inline delimiters are markup, not printable content');
+      const lines = result.pages.flatMap(page => page.columns.flat());
+      const styled = lines.flatMap(line => line.fragments || [])
+        .find(fragment => fragment.kind === 'text'
+          && (fragment.segments || []).some(segment => segment.fontFamily === 'Inline Alpha'));
+      assert(styled, 'the page model must retain measured rich fragments');
+      assertEq(styled.text, 'מילה', 'styled word fragment is retained as one atom');
+      assert(styled.segments.some(segment => segment.fontFamily === 'Inline Alpha'));
+      assert(lines.some(line => line.words.includes('מעוצבת')), 'all styled words remain in the line stream');
+    } finally {
+      clearRegisteredFonts();
+    }
+  });
+
+  it('external footnote anchors share the measured stream when combined with a styled inline run', () => {
+    clearRegisteredFonts();
+    const fontBytes = buildTtfFixture({ kern:false }).bytes;
+    assert(registerFont('Inline Alpha', fontBytes).ok, 'inline font fixture must register');
+    try {
+      const settings = {
+        ...getDefaultSettings(),
+        'footnotes-enabled': true,
+        'notes-mode':'footnotes',
+        _inlineFontFamilies:['Inline Alpha']
+      };
+      const source = 'מילת <Inline Alpha>עוגן</> [הערת שוליים קצרה] המשך הפסקה עם תוכן';
+      const result = typeset(source, settings);
+      assert(result.contentPreserved === true, 'body marker and footnote text are both accounted for');
+      const pageLines = result.pages.flatMap(page => page.columns.flat());
+      const footnote = result.pages.flatMap(page => page.footnotes || [])
+        .find(note => note && note.marker);
+      assert(footnote, 'external note is placed in the footnote model');
+      const anchor = pageLines.flatMap(line => line.fragments || [])
+        .find(fragment => fragment.kind === 'text' && fragment.text.includes(footnote.marker));
+      assert(anchor, 'the body marker survives as a measured text fragment');
+      assert(anchor.text.includes(String.fromCharCode(0x00A0)), 'the marker is nonbreakingly attached to its anchor word');
+      assert(anchor.text.includes(String.fromCharCode(0xE102)), 'the internal marker tag survives until renderer scrubbing');
+      assert(anchor.segments.some(segment => segment.fontFamily === 'Inline Alpha'), 'styled anchor remains segmented');
+    } finally {
+      clearRegisteredFonts();
+    }
   });
 
   it('determinism: two runs yield identical layoutHash', () => {

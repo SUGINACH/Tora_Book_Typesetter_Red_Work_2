@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 const { describe, it, assert, assertEq, report } = require('../harness');
 
-const { legacyTypeset, FLOW_BOTTOM, SINGLE_W } = require('../../src/engine/layout/legacy-imud-flow');
+const { legacyTypeset, FLOW_BOTTOM, SINGLE_W, collectStartedFootnoteIndices } = require('../../src/engine/layout/legacy-imud-flow');
 const { importImudSettings } = require('../../src/engine/core/legacy-settings-map');
 const { getDefaultSettings, getSettingDefs } = require('../../src/engine/core/settings-registry');
 const { registerFont, clearRegisteredFonts } = require('../../src/engine/typography/measure-api');
@@ -207,13 +207,44 @@ describe('S76 — נייטרליות legacy מלאה (התיקונים ב-body-f
       `legacy אינו נייטרלי — התקבל ${r.layoutHash.slice(0, 20)} (צפוי נעילת S74)`);
   });
 
-  it('body-first במסמך הבדיקה הקבוע: ההאש החדש של S76 (שינוי מכוון, מתועד ב-s72)', () => {
+  it('body-first במסמך הבדיקה הקבוע: ההאש לאחר תיקון גבול הערות S77 (מתועד ב-s72)', () => {
     const { generateTestDocument } = require('../../src/ui/test-doc-generator');
     const text = generateTestDocument({ mode: 'fixed' });
     const r = legacyTypeset(text, imudSettings(), {});
-    assert(r.layoutHash.startsWith('legacy-6a06e3108c8ec'),
+    assert(r.layoutHash.startsWith('legacy-92cb248d0f8db2e0'),
       `body-first נעול על ההאש החדש — התקבל ${r.layoutHash.slice(0, 20)}`);
     assertEq(r.contentPreserved, true, 'שימור תוכן');
+  });
+});
+
+// =====================================================================
+describe('S77 — גבול שורה אינו מסמן הערה ככזו שהתחילה', () => {
+  it('gap, marker ו-(המשך) לבדם אינם תחילת הערה', () => {
+    const started = collectStartedFootnoteIndices([
+      [
+        { t: 'טקסט הערה קודמת', noteIdx: 0 },
+        { t: '', gap: true, noteIdx: 1 },
+        { t: 'יז.', mk: true, noteIdx: 1 },
+        { t: '(המשך)', noteIdx: 2 }
+      ]
+    ]);
+    assertEq([...started], [0],
+      'רק תוכן ממשי של הערה שהונח מסמן אותה כמתחילה בעמוד');
+  });
+
+  it('הערה שמתחילה אחרי gap בעמוד הבא נשארת טרייה ומקבלת את הסמן שלה', () => {
+    const previousPage = collectStartedFootnoteIndices([
+      [{ t: 'מילה אחרונה של הערה א', noteIdx: 0 }, { t: '', gap: true, noteIdx: 1 }]
+    ]);
+    assertEq(previousPage.has(0), true);
+    assertEq(previousPage.has(1), false,
+      'רווח ההפרדה של הערה ב אינו הופך אותה להמשך');
+
+    const nextPage = collectStartedFootnoteIndices([
+      [{ t: 'מילה ראשונה של הערה ב', noteIdx: 1 }]
+    ]);
+    assertEq(nextPage.has(1), true,
+      'מילה ראשונה שמונחת בפועל היא תחילת ההערה');
   });
 });
 

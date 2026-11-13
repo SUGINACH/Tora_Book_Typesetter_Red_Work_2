@@ -195,8 +195,30 @@ const gotoView = async () => {
 (async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   if (!fs.existsSync(FIXTURE)) throw new Error(`חסר fixture: ${FIXTURE}`);
-  // **S5.2 (רצפת נפח):** ספירת מילות ה-fixture — בסיס ליחס המילים המרונדרות
-  const fixtureWords = fs.readFileSync(FIXTURE, 'utf8').split(/\s+/).filter(Boolean).length;
+  // The volume audit compares like with like: source words after the same
+  // parser normalization used by legacy content-preservation accounting.
+  // Raw whitespace tokens include metadata syntax and other non-content text,
+  // while rendered bodyWords deliberately excludes duplicated TOC rows.
+  const sourceText = fs.readFileSync(FIXTURE, 'utf8');
+  const rawFixtureWords = sourceText.split(/\s+/).filter(Boolean).length;
+  const { getDefaultSettings, getSettingDefs } = require(path.join(ROOT, 'red-build', 'src', 'engine', 'core', 'settings-registry'));
+  const { importImudSettings } = require(path.join(ROOT, 'red-build', 'src', 'engine', 'core', 'legacy-settings-map'));
+  const { countLegacySourceWords } = require(path.join(ROOT, 'red-build', 'src', 'engine', 'layout', 'legacy-imud-flow'));
+  const imudAssets = path.join(ROOT, 'red-build', 'ui', 'assets', 'imud');
+  const legacyDefaults = JSON.parse(fs.readFileSync(path.join(imudAssets, 'default_settings.json'), 'utf8'));
+  const fontCatalog = JSON.parse(fs.readFileSync(path.join(imudAssets, 'imud-fonts.json'), 'utf8'));
+  const availableFonts = new Set(fontCatalog.map(entry => entry.family));
+  const imported = importImudSettings(
+    legacyDefaults,
+    new Set(getSettingDefs().map(def => def.id)),
+    { availableFonts }
+  );
+  const auditSettings = Object.assign({}, getDefaultSettings(), imported.settings);
+  const fixtureWords = countLegacySourceWords(sourceText, auditSettings);
+  if (!Number.isSafeInteger(fixtureWords) || fixtureWords <= 0) {
+    throw new Error('הספירה המנורמלת של תוכן המקור אינה תקינה');
+  }
+  log('ספירת מקור: ' + fixtureWords.toLocaleString() + ' מילים לאחר נרמול (raw: ' + rawFixtureWords.toLocaleString() + ')');
   // **S5.2 (פריסה מיושנת — cache-bust):** פתיחת ה-HTML עם query ייחודי — אחרת
   // ה-CDN של Pages עשוי להגיש HTML מיושן מהמטמון והבדיקה תרוץ נגד עבר.
   const runId = Date.now();
@@ -306,10 +328,9 @@ const gotoView = async () => {
   const s = report.summary || {};
   const st = report.stats || {};
 
-  // **S5.2 (רצפת נפח):** כיסוי מלא של הספר כולו — לא רק "0 בעיות במה שכן רונדר".
-  // עמודים: הקורפוס הקנוני 704 (רצפה 690 — נדיבה בכוונה לשינויי TOC/הערות-סיום
-  // של המנוע). מילים: ספירת הדוח (שורות+הערות+פסים+TOC) מול ה-fixture ביחס
-  // ≥0.98 — תופס מנוע שמדלג תוכן שלם בשקט.
+  // Volume coverage: browser-rendered body words (TOC duplicates excluded) are
+  // compared with parser-normalized source content using the same legacy rules.
+  // Keep the 0.98 safety floor; only the denominator's semantics are corrected.
   const floorFail = [];
   if (!(pages1 >= EXPECTED_PAGES_MIN)) floorFail.push(`עמודים ${pages1} < רצפת המינימום ${EXPECTED_PAGES_MIN}`);
   // **S70 (R9):** הרצפה מודדת על מילות הגוף בלבד (bodyWords) — בעבר נכללו שורות ה-TOC
@@ -325,7 +346,7 @@ const gotoView = async () => {
     if (server) server.close();
     process.exit(1);
   }
-  log(`רצפת נפח ✓: ${pages1} עמודים (≥${EXPECTED_PAGES_MIN}) | ${totalWords.toLocaleString()} מילים (≥${Math.round(EXPECTED_WORDS_MIN_RATIO * fixtureWords).toLocaleString()})`);
+  log(`רצפת נפח ✓: ${pages1} עמודים (≥${EXPECTED_PAGES_MIN}) | ${bodyWords.toLocaleString()} מילות גוף (≥${Math.round(EXPECTED_WORDS_MIN_RATIO * fixtureWords).toLocaleString()} מנורמלות)`);
   log('─'.repeat(62));
   log(`עמודים: ${s.pages}/${s.slots} | שורות: ${(s.totalLines || 0).toLocaleString()} | וירטואלי: ${s.virtualized} | סריקה: ${s.sweep && s.sweep.ms}ms`);
   log(`בעיות (סה"כ): ${s.problems} | לפי סוג: ${JSON.stringify(st.counts || {})}`);
@@ -349,8 +370,17 @@ const gotoView = async () => {
     fs.writeFileSync(path.join(OUT, `${TAG}-determinism-raw.json`), detRaw, 'utf8');
     const det = JSON.parse(detRaw);
     const canonMain = {}, canonDet = {};
-    for (const p of (report.pages || [])) canonMain[p.i] = [p.t, (p.cols || []).map((c) => c.tops)];
-    for (const p of (det.pages || [])) canonDet[p.i] = [p.t, p.cols];
+    // Both collectors use page-relative tenths of a CSS pixel. The audit's
+    // compact columns store x once + y per line; the sweep stores [x,y] per
+    // line. Normalize to the same two-axis signature before comparing.
+    for (const p of (report.pages || [])) {
+      canonMain[p.i] = [p.t, (p.cols || []).map((c) =>
+        (c.tops || []).map((y) => [Math.round(c.x * 10), y]))];
+    }
+    for (const p of (det.pages || [])) {
+      canonDet[p.i] = [p.t, (p.cols || []).map((col) =>
+        (col || []).map((point) => [point[0], point[1]]))];
+    }
     const keys1 = Object.keys(canonMain).sort((a, b) => a - b);
     const keys2 = Object.keys(canonDet).sort((a, b) => a - b);
     const diffs = [];

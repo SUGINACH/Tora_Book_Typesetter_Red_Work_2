@@ -12,6 +12,7 @@
 
 const { typeset } = require('../engine/core/pipeline');
 const { serializeTypesetResult, validateRequest, progressMessage } = require('./worker-protocol');
+const { createInlineAssetResolver } = require('../engine/import/document-assets');
 
 let cancelledJobs = new Set();
 
@@ -73,6 +74,7 @@ function handleExportRequest(msg, post) {
 /** מטפל הודעות — pure, מקבל post חיצוני (מבודד לבדיקות). */
 function createEngineWorkerMain(post) {
   if (typeof post !== 'function') throw new Error('engine-worker-main: post(message) required');
+  const inlineAssetResolvers = new Map();
   return function onMessage(msg) {
     try {
       validateRequest(msg);
@@ -86,10 +88,34 @@ function createEngineWorkerMain(post) {
     }
     if (msg.type === 'register-font') { handleRegisterFont(msg, post); return; }
     if (msg.type === 'register-assets') { handleRegisterAssets(msg, post); return; }
+    if (msg.type === 'register-inline-assets') {
+      try {
+        const resolver = createInlineAssetResolver(msg.items);
+        inlineAssetResolvers.set(msg.collection, resolver);
+        post({
+          type: 'register-inline-assets-result', jobId: msg.jobId, collection: msg.collection,
+          ok: true, registered: resolver.count, diagnostics: resolver.diagnostics
+        });
+      } catch (e) {
+        post({
+          type: 'register-inline-assets-result', jobId: msg.jobId, collection: msg.collection,
+          ok: false, error: e && e.message ? e.message : String(e)
+        });
+      }
+      return;
+    }
     if (msg.type === 'export-request') { handleExportRequest(msg, post); return; }
     const jobId = msg.jobId;
     try {
+      const inlineAssetResolver = msg.assetCollection
+        ? inlineAssetResolvers.get(msg.assetCollection)
+        : null;
+      if (msg.assetCollection && !inlineAssetResolver) {
+        post({ type: 'typeset-error', jobId, message: `inline asset collection not registered: ${msg.assetCollection}` });
+        return;
+      }
       const result = typeset(msg.text, msg.settings, {
+        inlineAssetResolver,
         onProgress: (info) => {
           if (!cancelledJobs.has(jobId)) post(progressMessage(jobId, info));
         }

@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 61 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 64 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -348,9 +348,13 @@ var __paths = {
   "src/engine/layout/legacy-imud-flow.js|../core/ledger": "src/engine/core/ledger.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/headers-builder": "src/engine/decoration/headers-builder.js",
   "src/engine/layout/legacy-imud-flow.js|../output/line-font": "src/engine/output/line-font.js",
+  "src/engine/layout/legacy-imud-flow.js|../parser/inline-content": "src/engine/parser/inline-content.js",
+  "src/engine/layout/legacy-imud-flow.js|./margin-flow": "src/engine/layout/margin-flow.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/legacy-ornaments": "src/engine/decoration/legacy-ornaments.js",
   "src/engine/typography/measure-api.js|./measure-table": "src/engine/typography/measure-table.js",
   "src/engine/typography/measure-api.js|./font-metrics": "src/engine/typography/font-metrics.js",
+  "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
+  "src/engine/typography/measure-api.js|../layout/inline-item-factory": "src/engine/layout/inline-item-factory.js",
   "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
   "src/engine/decoration/legacy-ornaments.js|./ornament-fit": "src/engine/decoration/ornament-fit.js",
   "src/ui/testing-tab.js|../audit/report-schema": "src/audit/report-schema.js",
@@ -9368,6 +9372,44 @@ function fontStack(family) {
   return out.join(', ');
 }
 
+const inlineItemRenderers = new Map();
+
+function registerInlineItemRenderer(kind, renderer) {
+  if (typeof kind !== 'string' || !kind.trim()) {
+    throw new TypeError('dom-renderer: inline item kind must be a non-empty string');
+  }
+  if (typeof renderer !== 'function') {
+    throw new TypeError('dom-renderer: inline item renderer must be a function');
+  }
+  inlineItemRenderers.set(kind, renderer);
+  return () => {
+    if (inlineItemRenderers.get(kind) === renderer) inlineItemRenderers.delete(kind);
+  };
+}
+
+function bytesToBase64(input) {
+  const bytes = input instanceof Uint8Array
+    ? input
+    : (ArrayBuffer.isView(input)
+      ? new Uint8Array(input.buffer, input.byteOffset, input.byteLength)
+      : (input instanceof ArrayBuffer ? new Uint8Array(input) : null));
+  if (!bytes) throw new TypeError('dom-renderer: image bytes must be an ArrayBuffer or byte view');
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let output = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i];
+    const hasB = i + 1 < bytes.length;
+    const hasC = i + 2 < bytes.length;
+    const b = hasB ? bytes[i + 1] : 0;
+    const c = hasC ? bytes[i + 2] : 0;
+    output += alphabet[a >> 2];
+    output += alphabet[((a & 3) << 4) | (b >> 4)];
+    output += hasB ? alphabet[((b & 15) << 2) | (c >> 6)] : '=';
+    output += hasC ? alphabet[c & 63] : '=';
+  }
+  return output;
+}
+
 function renderLine(ln, doc, settings = {}) {
   const el = doc.createElement('div');
   el.className = 'line' + (ln.isLast ? ' line--last' + lastLineClass(ln, settings) : '');
@@ -9418,6 +9460,67 @@ function renderLine(ln, doc, settings = {}) {
       prependChild(el, cm);
     }
   }
+  if (Array.isArray(ln.fragments)) {
+    for (const fragment of ln.fragments) {
+      if (fragment.kind === 'text') {
+        const word = doc.createElement('span');
+        word.className = 'w';
+        if (fragment.id != null) word.dataset.inlineId = String(fragment.id);
+        if (Array.isArray(fragment.segments) && fragment.segments.length) {
+          for (const segment of fragment.segments) {
+            const child = doc.createElement('span');
+            child.className = 'w__segment';
+            if (segment.fontFamily) child.style.fontFamily = fontStack(segment.fontFamily);
+            if (Number.isFinite(segment.sizePt) && segment.sizePt > 0) child.style.fontSize = String(ptToPx(segment.sizePt)) + 'px';
+            child.textContent = scrubPUAText(segment.text || '');
+            word.appendChild(child);
+          }
+        } else {
+          word.textContent = scrubPUAText(fragment.text || '');
+        }
+        el.appendChild(word);
+        continue;
+      }
+
+      if (fragment.kind === 'image') {
+        const image = doc.createElement('img');
+        image.className = 'inline-image';
+        image.alt = fragment.alt || fragment.resourcePath || '';
+        image.draggable = false;
+        image.style.display = 'inline-block';
+        image.style.width = String(fragment.widthPx) + 'px';
+        image.style.height = String(fragment.heightPx) + 'px';
+        image.style.maxWidth = '100%';
+        image.style.objectFit = 'contain';
+        image.style.verticalAlign = 'middle';
+        const mimeType = fragment.mimeType || 'application/octet-stream';
+        if (fragment.bytes && fragment.bytes.length) {
+          image.src = 'data:' + mimeType + ';base64,' + bytesToBase64(fragment.bytes);
+        } else {
+          image.dataset.resourceMissing = 'true';
+        }
+        if (fragment.resourceId) image.dataset.resourceId = fragment.resourceId;
+        el.appendChild(image);
+        continue;
+      }
+
+      const customRenderer = inlineItemRenderers.get(fragment.kind);
+      const customNode = customRenderer ? customRenderer(fragment, doc, settings) : null;
+      if (customNode) {
+        el.appendChild(customNode);
+      } else {
+        const placeholder = doc.createElement('span');
+        placeholder.className = 'inline-item inline-item--custom';
+        placeholder.dataset.inlineKind = fragment.kind;
+        if (fragment.id != null) placeholder.dataset.inlineId = String(fragment.id);
+        placeholder.style.display = 'inline-block';
+        placeholder.style.width = String(fragment.widthPx) + 'px';
+        placeholder.style.height = String(fragment.heightPx) + 'px';
+        placeholder.style.verticalAlign = 'middle';
+        el.appendChild(placeholder);
+      }
+    }
+  } else {
   // **D-42:** מילים בתוך סוגריים — span.w--paren עם font-size בסקאלה (geometry-neutral).
   // מילים רגילות — span.w אחיד (מיצג גם ב‑DOM אמיתי וגם ב‑shim של הבדיקות).
   // **S11:** טווחי inline מסגנון מותאך — span.w--custom עם data-style (גודל מוחל כבר במדידה).
@@ -9443,6 +9546,7 @@ function renderLine(ln, doc, settings = {}) {
     }
   } else {
     el.textContent = words.join(' ');
+  }
   }
   const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
   if (tok) el.dataset.token = tok;
@@ -10255,6 +10359,7 @@ function renderLegacyPage(pg, settings, doc) {
       // הייצוא, כמו S4.23).
       {
         const markerSet = new Set(Array.isArray(ln.markerIdx) ? ln.markerIdx : []);
+        const markerKeyByIndex = new Map((Array.isArray(ln.markerIdx) ? ln.markerIdx : []).map((index, markerIndex) => [index, Array.isArray(ln.markerKeys) ? ln.markerKeys[markerIndex] : null]));
         const imudSet = (settings && settings._imudRaw) || {};
         const markerSz = Number(imudSet['note-marker-size']) || 8;
         const parenPx = pt2px(SZ.body + SZ.parenDelta);
@@ -10321,6 +10426,8 @@ function renderLegacyPage(pg, settings, doc) {
           if (wi >= 0 && markerSet.has(wi)) {
             const m = doc.createElement('span');
             m.className = 'w w--fnmarker';
+            const noteKey = markerKeyByIndex.get(wi);
+            if (noteKey != null) m.dataset.noteKey = String(noteKey);
             m.textContent = scrubPUAText(w);
             m.style.fontSize = `${pt2px(markerSz)}px`;
             m.style.verticalAlign = 'super';
@@ -10441,6 +10548,7 @@ function renderLegacyPage(pg, settings, doc) {
             const s = doc.createElement('span');
             if (t.mk) {
               s.className = 'w w--fnmarker';
+              if (t.noteKey != null) s.dataset.noteKey = String(t.noteKey);
               s.style.fontSize = `${pt2px(listingSz)}px`;
               if (fnMarkFont) s.style.fontFamily = fnMarkFont; // **S74 (בעיה 5):** הסמן ב-FRL
             }
@@ -10459,6 +10567,7 @@ function renderLegacyPage(pg, settings, doc) {
         if (fn.marker) {
           const m = doc.createElement('span');
           m.className = 'w w--fnmarker';
+          if (fn.noteKey != null) m.dataset.noteKey = String(fn.noteKey);
           m.style.fontSize = `${pt2px(listingSz)}px`;
           if (fnMarkFont) m.style.fontFamily = fnMarkFont; // **S74 (בעיה 5):** הסמן ב-FRL
           m.textContent = scrubPUAText(fn.marker);
@@ -10767,7 +10876,7 @@ function renderPage(page, settings, doc, header) {
   return root;
 }
 
-module.exports = { renderPage, renderLine, scrubPUAText, bgRgba, PT_CLASS, renderSpanningBand, renderDecorations, renderPageBackgroundAndShaar, renderShaarContent, renderCustomPageContent, applyCustomStyleSpec, fontStack };
+module.exports = { renderPage, renderLine, scrubPUAText, bgRgba, PT_CLASS, renderSpanningBand, renderDecorations, renderPageBackgroundAndShaar, renderShaarContent, renderCustomPageContent, applyCustomStyleSpec, fontStack, registerInlineItemRenderer, bytesToBase64 };
 
 };
 __modules["src/engine/notes/markers.js"] = function (require, module, exports) {
@@ -12354,6 +12463,8 @@ const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = r
 // **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
+const { parseInlineRuns, parseInlineParagraph } = require('../parser/inline-content');
+const { packMarginNotes } = require('./margin-flow');
 
 // ---------- גיאומטריה (px @96dpi; PDF = px×0.75) — מכויל מהייחוס ----------
 const GEO = {
@@ -12624,7 +12735,7 @@ function readConfig(imud, settings) {
 }
 
 // ---------- טוקניזציה (כמו performTypeset של המקור) ----------
-function tokenizeDoc(rawText, cfg) {
+function tokenizeDoc(rawText, cfg, inlineOptions = {}) {
   let text = stripEditorialNotes(rawText);
   const { meta, text: noMeta } = parseMetadata(text);
   text = noMeta;
@@ -12706,7 +12817,118 @@ function tokenizeDoc(rawText, cfg) {
       syntheticTail: true
     });
   }
+  // S14 P0: the legacy adapter emits the same TextRun/ImageRun paragraph shape
+  // as the canonical tokenizer. Footnote payloads remain separate note units.
+  for (const token of tokens) {
+    if (token.type !== 'p') continue; // H0–H7/side notes are intentionally excluded
+    const parts = [];
+    const notes = [];
+    let cursor = 0;
+    for (const note of findNotes(token.text, cfg.fnOpen, cfg.fnClose)) {
+      const beforeRaw = token.text.slice(cursor, note.start);
+      const before = beforeRaw.trim();
+      if (before) {
+        const leading = beforeRaw.length - beforeRaw.trimStart().length;
+        const trailingEnd = beforeRaw.trimEnd().length;
+        parts.push({ kind: 'text', value: before, sourceStart: cursor + leading, sourceEnd: cursor + trailingEnd });
+      }
+      const sourceStart = note.start + cfg.fnOpen.length;
+      const rawNote = note.text;
+      const noteText = rawNote.trim();
+      const leading = rawNote.length - rawNote.trimStart().length;
+      const trailingEnd = rawNote.trimEnd().length;
+      notes.push({ text: noteText, sourceStart: sourceStart + leading, sourceEnd: sourceStart + trailingEnd });
+      parts.push({ kind: 'note-ref', noteIndex: notes.length - 1 });
+      cursor = note.end;
+    }
+    const tailRaw = token.text.slice(cursor);
+    const tail = tailRaw.trim();
+    if (tail) {
+      const leading = tailRaw.length - tailRaw.trimStart().length;
+      const trailingEnd = tailRaw.trimEnd().length;
+      parts.push({ kind: 'text', value: tail, sourceStart: cursor + leading, sourceEnd: cursor + trailingEnd });
+    }
+    token.inlineContent = parseInlineParagraph(parts, notes, inlineOptions);
+    token.inlineContent.endNote = token.endNote
+      ? parseInlineRuns(token.endNote, { ...inlineOptions, allowImages: false })
+      : null;
+  }
   return { meta, tokens };
+}
+
+
+/**
+ * Canonical source-word multiset for the legacy IMUD profile.
+ * It mirrors the source side of contentPreserved accounting, excluding only
+ * metadata fields and syntactic prefixes that are intentionally not rendered.
+ */
+/**
+ * Shared classification of a note-flow token. Only visible body text starts
+ * a note on a page; separator gaps, marker tokens and "(המשך)" do not.
+ */
+function isFootnoteBodyToken(token) {
+  return !!token
+    && Number.isInteger(token.noteIdx)
+    && !token.gap
+    && !token.mk
+    && token.t !== '(המשך)'
+    && typeof token.t === 'string'
+    && token.t.trim().length > 0;
+}
+
+function collectStartedFootnoteIndices(lines) {
+  const started = new Set();
+  for (const line of lines || []) {
+    for (const token of line || []) {
+      if (isFootnoteBodyToken(token)) started.add(token.noteIdx);
+    }
+  }
+  return started;
+}
+
+function legacySourceWordMultiset(meta, tokens, cfg) {
+  const norm = (s) => String(s == null ? '' : s).split(/[\s\u00A0]+/).filter(Boolean);
+  const bump = (m, words) => { for (const w of words) m.set(w, (m.get(w) || 0) + 1); };
+  const src = new Map();
+  const backOnlyFields = ['copyright', 'publisher', 'contact', 'extra'];
+  for (const [key, value] of Object.entries(meta || {})) {
+    if (key === 'year') continue;
+    if (!cfg.showBackShaar && backOnlyFields.includes(key)) continue;
+    bump(src, norm(value));
+  }
+  const sourceTextOf = (token) => {
+    let text = String(token && token.text != null ? token.text : '');
+    if (cfg.fnOpen) text = text.split(cfg.fnOpen).join(' ');
+    if (cfg.fnClose) text = text.split(cfg.fnClose).join(' ');
+    if (token && token.type === 'h1') {
+      const parts = text.split(/[-–—]/).map(part => part.trim()).filter(Boolean);
+      if (parts.length >= 2) text = parts[0] + ' ' + parts.slice(1).join(' - ');
+    }
+    if (token && token.type === 'h2') {
+      text = text.replace(/^סימן\s+[א-ת]+[:\-–—\s]*/i, '').trim();
+    }
+    return text;
+  };
+  for (const token of (tokens || [])) {
+    bump(src, norm(sourceTextOf(token)));
+    if (token && token.sideNote) bump(src, norm(token.sideNote));
+    if (token && token.endNote) bump(src, norm(token.endNote));
+  }
+  return src;
+}
+
+/** Count normalized source words without running layout or pagination. */
+function countLegacySourceWords(rawText, settings = {}) {
+  const cfg = readConfig(settings._imudRaw || {}, settings);
+  if (settings['footnotes-enabled'] === false) {
+    cfg.fnOpen = '';
+    cfg.fnClose = '';
+  }
+  const parsed = tokenizeDoc(rawText, cfg);
+  const counts = legacySourceWordMultiset(parsed.meta, parsed.tokens, cfg);
+  let total = 0;
+  for (const count of counts.values()) total += count;
+  return total;
 }
 
 // ---------- שבירת שורות: פורט של getLinesFromParagraph ----------
@@ -13396,7 +13618,12 @@ function legacyTypeset(rawText, settings, env) {
     );
   }
   const brk = new LineBreaker(api, cfg, windowApi, headingApi);
-  const { meta, tokens } = tokenizeDoc(rawText, cfg);
+  const inlineOptions = {
+    fontMarkers: settings._inlineFontStyles || settings._inlineFontMarkers || [],
+    knownFamilies: settings._inlineFontFamilies || [],
+    availableFamilies: Array.from(registeredMeasureFonts.keys())
+  };
+  const { meta, tokens } = tokenizeDoc(rawText, cfg, inlineOptions);
 
   const bookTitle = (meta.bookTitle || 'ספר').trim();
   const tw = bookTitle.split(/\s+/);
@@ -13969,6 +14196,7 @@ function legacyTypeset(rawText, settings, env) {
           const starts = []; // **S4.24:** דגלי קצה-סוגריים — ממופים דרך פיצול הסמנים
           const ends = [];
           const markerIdx = []; // אינדקסים של סמני ההערות (להסרה מדויקת במודל)
+          const markerKeys = []; // מפתחות מופע יציבים — אינם תלויים בסמן הגימטרי המוצג
           for (let wi = 0; wi < ln.words.length; wi++) {
             const w = ln.words[wi];
             // **S4.19:** דגל הסוגריים של המילה המקורית — מועבר לכל חלקיה
@@ -13997,6 +14225,7 @@ function legacyTypeset(rawText, settings, env) {
                   }
                   applyFnReserve(); // **S75:** גם בפליטת סמן — תקציב דרך נקודה אחת (clamp ב-body-first)
                   markerIdx.push(words.length);
+                  markerKeys.push(noteKey);
                   words.push(marker);
                   flags.push(false);
                   starts.push(false); ends.push(false);
@@ -14016,7 +14245,7 @@ function legacyTypeset(rawText, settings, env) {
             starts[firstAt] = wS;
             ends[words.length - 1] = wE;
           }
-          emitted.push({ ...ln, words, markerIdx, parenFlags: flags, parenStarts: starts, parenEnds: ends });
+          emitted.push({ ...ln, words, markerIdx, markerKeys, parenFlags: flags, parenStarts: starts, parenEnds: ends });
         }
         return emitted;
       };
@@ -14764,6 +14993,19 @@ function legacyTypeset(rawText, settings, env) {
       // ---- פריסת המחסנית לעמוד: פסים + בלוקים → טורים עם y מפורש ----
       layoutStack(pg, stack, top);
 
+      // Page-level placement: both columns have now contributed their
+      // anchored notes, so each physical margin is packed as one lane.
+      const marginPlacement = packMarginNotes(pg.marginNotes, {
+        top: GEO.FLOW_TOP,
+        bottom: GEO.FLOW_TOP + GEO.FLOW_H,
+        pitch: GEO.MN_PITCH,
+        gap: 1
+      });
+      pg.marginNotes = marginPlacement.notes;
+      if (marginPlacement.diagnostics.length) {
+        pg.layoutDiagnostics = (pg.layoutDiagnostics || []).concat(marginPlacement.diagnostics);
+      }
+
       // ---- הערות שוליים בתחתית (bottom-anchored) ----
       if (fnQueue.length) {
         // **S76:** אפשרויות הקיבולת — (א) flexSpacer: עמוד פתיחת מקטע
@@ -14915,8 +15157,7 @@ function legacyTypeset(rawText, settings, env) {
         pg.footnotes.push({ continuous: true, lines, centerLast: rest.length === 0, cutLast: midNoteCut });
       }
       if (rest.length) {
-        const started = new Set();
-        for (const tl of placed) for (const t of tl) started.add(t.noteIdx);
+        const started = collectStartedFootnoteIndices(placed);
         let curIdx = null, curTxt = [];
         const flushRest = () => {
           if (curIdx == null || !curTxt.length) return;
@@ -14935,7 +15176,7 @@ function legacyTypeset(rawText, settings, env) {
             // **S4.26:** סמנים ו-(המשך) אינם טקסט — המספר נשמר ב-num (והסמן
             // נוסף מחדש בעמוד הבא רק להערה שלא החלה); ההמשך מקבל '(המשך)'
             // מ-fnFlowFor בעמוד הבא לפי cont=true.
-            if (t.gap || t.mk || t.t === '(המשך)') continue;
+            if (!isFootnoteBodyToken(t)) continue;
             if (t.noteIdx !== curIdx) { flushRest(); curIdx = t.noteIdx; curTxt = []; }
             curTxt.push(t.t);
           }
@@ -14987,7 +15228,7 @@ function legacyTypeset(rawText, settings, env) {
     const totalH = placed.reduce((a, p) => a + p.lines.length * GEO.FN_PITCH, 0);
     let yy = FLOW_BOTTOM - totalH;
     for (const p of placed) {
-      const it = { marker: p.marker, lines: [], cont: p.cont };
+      const it = { marker: p.marker, noteKey: p.note.key, lines: [], cont: p.cont };
       if (p.cut) it.cutLast = true; // **S77 (בקשה 1):** שורת החיתוך — מיושבת לשני הצדדים
       for (const l of p.lines) { it.lines.push({ words: String(l).split(' '), y: yy }); yy += GEO.FN_PITCH; }
       pg.footnotes.push(it);
@@ -15039,16 +15280,16 @@ function legacyTypeset(rawText, settings, env) {
     // = פעמיים רווח) — אותו דבר ב-DOM (nbsp) וב-PDF (שני גאפים).
     const tokens = [];
     items.forEach((it, i) => {
-      if (i > 0) tokens.push({ t: '', gap: true, noteIdx: i, w: 0 });
+      if (i > 0) tokens.push({ t: '', gap: true, noteIdx: i, noteKey: it.note.key, w: 0 });
       if (it.note.cont) {
         const p = '(המשך)';
-        tokens.push({ t: p, w: fnApi.measureTextWidth(p, SZ.fnBody, 0), noteIdx: i });
+        tokens.push({ t: p, noteKey: it.note.key, w: fnApi.measureTextWidth(p, SZ.fnBody, 0), noteIdx: i });
       }
       if (it.marker) {
-        tokens.push({ t: it.marker, mk: true, sizePt: cfg.fnListingNumSize, w: fnMarkApi.measureTextWidth(it.marker, cfg.fnListingNumSize, 0), noteIdx: i });
+        tokens.push({ t: it.marker, mk: true, noteKey: it.note.key, sizePt: cfg.fnListingNumSize, w: fnMarkApi.measureTextWidth(it.marker, cfg.fnListingNumSize, 0), noteIdx: i });
       }
       for (const wd of String(it.note.text).split(/\s+/).filter(Boolean)) {
-        tokens.push({ t: wd, w: fnApi.measureTextWidth(wd, SZ.fnBody, 0), noteIdx: i });
+        tokens.push({ t: wd, noteKey: it.note.key, w: fnApi.measureTextWidth(wd, SZ.fnBody, 0), noteIdx: i });
       }
     });
     const flowLines = [];
@@ -15080,10 +15321,8 @@ function legacyTypeset(rawText, settings, env) {
       for (let i = 0; i < built.flowLines.length; i++) {
         for (const t of built.flowLines[i]) {
           if (t.noteIdx == null || seen.has(t.noteIdx)) continue;
-          // **S75:** "התחלה" = שורה עם מילה מגוף ההערה — לא שורת סמן בלבד
-          // (סמן ללא מילים הותיר "הערה ריקה" בעמוד הסמן; נמדר ב-very_long
-          // עמ' 562 — סמן יא. בלבד). סמן, רווח-כפול ותווית (המשך) אינם תוכן.
-          if (t.gap || t.mk || t.t === '(המשך)') continue;
+          // Same body-token rule as the page-break carry decision below.
+          if (!isFootnoteBodyToken(t)) continue;
           seen.add(t.noteIdx);
           const it = built.items[t.noteIdx];
           if (it && it.note && !it.note.cont) starts = i + 1;
@@ -15331,6 +15570,7 @@ function legacyTypeset(rawText, settings, env) {
       col.push({
         words: ln.words.slice(),
         markerIdx: ln.markerIdx || [],
+        markerKeys: ln.markerKeys || [],
         parenFlags: ln.parenFlags || null,
         parenStarts: ln.parenStarts || null,
         parenEnds: ln.parenEnds || null,
@@ -15827,44 +16067,7 @@ function legacyTypeset(rawText, settings, env) {
   const contentStats = (() => {
     const norm = (s) => String(s == null ? '' : s).split(/[\s\u00A0]+/).filter(Boolean);
     const bump = (m, words) => { for (const w of words) m.set(w, (m.get(w) || 0) + 1); };
-    const src = new Map();
-    // **S5.2:** שדה השנה/מקום (meta.year) אינו מוצג בשער המכויל-ייחוס — כמו
-    // בתוכנת המקור. לכן אינו נספר כחובת-תוכן.
-    // **S6.0 (F16):** שדות השער האחורי בלבד (copyright/publisher/contact/extra)
-    // נספרים כחובה רק כשהשער האחורי מוצג — בלי זה ביטול show-back-shaar
-    // גרם לדגל אובדן-תוכן שקרי (8 מילים חסרות בקורפוס ללא _imudRaw).
-    const backOnlyFields = ['copyright', 'publisher', 'contact', 'extra'];
-    for (const [mk, mv] of Object.entries(meta)) {
-      if (mk === 'year') continue;
-      if (!cfg.showBackShaar && backOnlyFields.includes(mk)) continue;
-      bump(src, norm(mv));
-    }
-    // **S5.2:** מסיר את תוחמי ההערה ([ ]) מצד המקור — המנוע מחלץ את גוף
-    // ההערה מבלי לכלול את התוחמים בפלט (הם תחביר, לא תוכן).
-    const srcTextOf = (t) => {
-      let s = String(t.text == null ? '' : t.text);
-      if (cfg.fnOpen) s = s.split(cfg.fnOpen).join(' ');
-      if (cfg.fnClose) s = s.split(cfg.fnClose).join(' ');
-      // **S5.2:** כותרת h1 מפוצלת בשער-המשנה לכותרת + משנה (split לפי
-      // המקף; join(' - ') לשאר) — מקף-ההפרדה הראשון הוא תחביר עימוד,
-      // כמו קידומת 'כותרת N -'. משקפים את אותה טרנספורמציה בצד המקור.
-      if (t.type === 'h1') {
-        const parts = s.split(/[-–—]/).map(x => x.trim()).filter(Boolean);
-        if (parts.length >= 2) s = parts[0] + ' ' + parts.slice(1).join(' - ');
-      }
-      // **S6.0 (F12):** כותרת h2 שמתחילה ב'סימן א - ' — המנוע מסיר את הקידומת
-      // ברינדור (:1017) אך צד המקור לא שיקף זאת ⇒ מילת המקף נספרה חסרה
-      // (דגל שקרי). עתה אותה טרנספורמציה בשני הצדדים.
-      if (t.type === 'h2') {
-        s = s.replace(/^סימן\s+[א-ת]+[:\-–—\s]*/i, '').trim();
-      }
-      return s;
-    };
-    for (const t of tokens) {
-      bump(src, norm(srcTextOf(t)));
-      if (t.sideNote) bump(src, norm(t.sideNote));
-      if (t.endNote) bump(src, norm(t.endNote));
-    }
+    const src = legacySourceWordMultiset(meta, tokens, cfg);
     const out = new Map();
     const addText = (s) => bump(out, norm(s));
     // **S6.0 (F10):** תוחמי הערה לא-מאוזנים ([ בלי ]) — הפלט מציג את המילה
@@ -16039,8 +16242,9 @@ function legacyLayoutHashDigest(pages) {
 module.exports = {
   GEO, SZ, HEADING_MODES, toGematria, stripEditorialNotes, parseMetadata,
   tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset,
+  collectStartedFootnoteIndices,
   FLOW_BOTTOM, SINGLE_W, wrapText, headingItemH, legacyLayoutHashDigest,
-  parenCenterRaisePx
+  countLegacySourceWords, parenCenterRaisePx
 };
 
 };
@@ -16246,6 +16450,7 @@ class MeasureAPI {
 
   /**
    * מיקום שורות אופטימלי (KP) → מערך שורות עם רוחבים.
+   * @param {number|((lineIndex:number)=>number)} maxWidthPx — רוחב קבוע או רוחב זמין לפי אינדקס שורה.
    * @param {Function} [measureOverride] - הזרקת פונקציית מדידה (למשל פרופיל רוחב־גופן מהpipeline) — L1: entry יחיד דרך ההזרקה.
    * @returns {Array<{words:string[], widthPx:number, badness:number}>}
    */
@@ -16253,6 +16458,51 @@ class MeasureAPI {
     const knuth = require('./kp-linebreak');
     const measure = measureOverride || ((t) => this.measureTextWidth(t, sizePt));
     return knuth.breakLines(words, maxWidthPx, measure, this.lineHeightPx(sizePt), opts);
+  }
+
+  /**
+   * Parse canonical inline runs, measure every text segment in its effective
+   * registered family, resolve image boxes, then feed the shared atom solver.
+   * The returned fragments preserve sub-word font boundaries.
+   */
+  layoutInlineRuns(runs, maxWidthPx, opts = {}) {
+    const { createMeasuredInlineItems } = require('../layout/inline-item-factory');
+    const sizePt = opts.sizePt == null ? null : opts.sizePt;
+    const lineHeightPx = opts.lineHeightPx == null ? this.lineHeightPx(sizePt) : opts.lineHeightPx;
+    const measured = createMeasuredInlineItems(runs, {
+      ...opts,
+      sizePt,
+      lineHeightPx,
+      lineHeightForSize: size => size == null ? lineHeightPx : this.lineHeightPx(size),
+      defaultFontFamily: opts.defaultFontFamily || this.settings['body-font'],
+      measureText: (text, family, size) => {
+        const familyApi = family ? MeasureAPI.forFamily(family, this.settings) : null;
+        const defaultFamily = opts.defaultFontFamily || this.settings['body-font'];
+        if (family && family !== defaultFamily && !familyApi) {
+          throw new Error('MeasureAPI.layoutInlineRuns: font family is not registered: ' + family);
+        }
+        return (familyApi || this).measureTextWidth(text, size);
+      }
+    });
+    const layout = this.layoutMeasuredInlineItems(measured.items, maxWidthPx, lineHeightPx, opts);
+    return { ...layout, diagnostics: measured.diagnostics };
+  }
+
+  /**
+   * Layout already-measured mixed inline atoms through the shared Knuth–Plass
+   * solver. Text dimensions must originate from this MeasureAPI instance;
+   * image dimensions must come from the asset metadata resolver; custom item
+   * kinds use the same {kind,id,widthPx,heightPx} box contract.
+   *
+   * This is deliberately a measured-input API: the solver never measures,
+   * guesses image ratios, or dispatches to a per-kind line breaker.
+   */
+  layoutMeasuredInlineItems(items, maxWidthPx, lineHeightPx, opts = {}) {
+    if (!Number.isFinite(lineHeightPx) || lineHeightPx < 0) {
+      throw new RangeError('MeasureAPI.layoutMeasuredInlineItems: lineHeightPx must be finite and non-negative');
+    }
+    const knuth = require('./kp-linebreak');
+    return knuth.breakInlineItems(items, maxWidthPx, lineHeightPx, opts);
   }
 
   cacheStats() { return { ...this.stats, hitRate: this.stats.calls ? this.stats.hits / this.stats.calls : 0 }; }
@@ -16781,106 +17031,167 @@ function badness(ratio) {
 
 /**
  * @param {string[]} words - מילות הפסקה (NBSP כבר הוצמד ע"י protectors)
- * @param {number} maxWidthPx
+ * @param {number|((lineIndex:number)=>number)} maxWidthPx
  * @param {(t:string)=>number} measure
  * @param {number} lineHeightPx
- * @param {{runtMinPct?:number}} opts
+ * @param {{runtMinPct?:number,raggedEnd?:boolean}} opts
  * @returns {Array<{words:string[], widthPx:number, heightPx:number, isLast:boolean}>}
  */
-function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
+function solveBreaks(items, maxWidthPx, opts = {}) {
+  if (!Array.isArray(items)) throw new TypeError('kp-linebreak: measured items must be an array');
+  const widthProvider = typeof maxWidthPx === 'function' ? maxWidthPx : () => maxWidthPx;
+  if (typeof maxWidthPx !== 'function' && (!Number.isFinite(maxWidthPx) || maxWidthPx <= 0)) {
+    throw new RangeError('kp-linebreak: maxWidthPx must be a positive finite number or a line-width function');
+  }
+
+  // Resolve each line width once. A provider must be pure for a given line index;
+  // this cache prevents repeated geometry work while exploring DP candidates.
+  const lineWidths = new Map();
+  const widthForLine = (lineIndex) => {
+    if (!Number.isInteger(lineIndex) || lineIndex < 0) {
+      throw new RangeError('kp-linebreak: line index must be a non-negative integer');
+    }
+    if (!lineWidths.has(lineIndex)) {
+      const width = widthProvider(lineIndex);
+      if (!Number.isFinite(width) || width <= 0) {
+        throw new RangeError('kp-linebreak: width for line ' + lineIndex + ' must be positive and finite');
+      }
+      lineWidths.set(lineIndex, width);
+    }
+    return lineWidths.get(lineIndex);
+  };
+
   // **03.11 (ביקורת):** חיבור ההגדרה — runt-min-width-pct מגיע כ-runts מה-pipeline
   // וכ-runtMinPct מקריאות ישירות; שניהם נקראים (בעבר רק runtMinPct נקרא וההגדרה לא השפיעה).
   const runts = opts.runtMinPct != null ? opts.runtMinPct : (opts.runts != null ? opts.runts : 50);
-  const items = buildItems(words, measure);
   const n = items.length;
-  const cost = new Array(n + 1).fill(INF);
-  const parent = new Array(n + 1).fill(-1);
-  cost[0] = 0;
+
+  // The state includes both item position and the next line index.
+  // A single best-cost value per item position is insufficient when widths vary:
+  // paths at the same item may have different future geometry. This is still one
+  // Knuth–Plass solver, with a two-dimensional state.
+  const states = Array.from({ length: n + 1 }, () => new Map());
+  states[0].set(0, { cost: 0, action: 'origin' });
+  const constantWidth = typeof maxWidthPx !== 'function';
+  const updateState = (position, lineNo, candidate) => {
+    if (constantWidth) {
+      // With a scalar width, future geometry is independent of lineNo. The
+      // cheapest path therefore dominates every other path at this position,
+      // preserving the original O(n²) state-space behavior.
+      let best = null;
+      for (const state of states[position].values()) {
+        if (!best || state.cost < best.cost) best = state;
+      }
+      if (best && best.cost <= candidate.cost) return;
+      states[position].clear();
+    }
+    const prior = states[position].get(lineNo);
+    if (!prior || candidate.cost < prior.cost) states[position].set(lineNo, candidate);
+  };
 
   for (let i = 0; i < n; i++) {
-    if (cost[i] === INF) continue;
-    if (items[i].kind === 'glue' && !items[i].internal) { // דלג על glue רגיל בהתחלת שורה;
-      // glue פנימי (בתוך יחידת NBSP) אסור לדלג — הרוחב שלו חלק בלתי נפרד מהצמד.
-      if (cost[i + 1] > cost[i]) { cost[i + 1] = cost[i]; parent[i + 1] = i; }
-      continue;
-    }
-    let w = 0, stretch = 0, shrink = 0;
-    for (let j = i; j < n; j++) {
-      const it = items[j];
-      if (it.kind === 'box') w += it.width;
-      // **תיקון שורש (ביקורת 03.11): רוחב glue נכלל ברוחב הטבעי של השורה —
-      // כמו ב-TeX (Σ תיבות + Σ רווחים). בעבר נצברו רק stretch/shrink ⇒ ה־DP
-      // "חשב" ששורה נכנסת בעוד רוחבה הטבעי (כולל רווחים) חורג מהטור.
-      else if (it.kind === 'glue') { w += it.width; stretch += it.stretch; shrink += it.shrink; }
-      else if (it.kind === 'penalty') {
-        if (it.forbidden) continue; // תוך-יחידה: אין כאן מקום שבירה (legalCut כבר מבטל); ההצברה נמשכת
-        // סיום שורה (penalty סופי של הפסקה) — good break.
-        // **תיקון שורש (ביקורת 03.11): השבירה הסופית היא צומת סוף-הפסקה n —
-        // בעבר נכתבה ל-cost[j] (אינדקס הפריט עצמו, n−1) ⇒ cost[n] נותר INF לעולם
-        // ⇒ ה־DP מעולם לא סיפק פתרון וכל שבירות השורות במנוע מאז S1 יצאו מהגיבוי
-        // הגרידי (עם באג ה-NBSP). התיקון מחיה את Knuth-Plass בפועל.
-        const slack = maxWidthPx - w;
-        // raggedEnd: מתיחת סוף-שורה (D-79) — שורות ragged אינן נמדדות במתיחת
-        // בין-מילים אלא בכניסה טבעית; היתרה עד לקצה הטור "נבלעת" במתיחת הסוף.
-        const raggedEnd = opts.raggedEnd !== false;
-        const effStretch = stretch + (raggedEnd ? maxWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
-        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
-        let b = badness(ratio);
-        if (b < INF && w < maxWidthPx * (runts / 100)) b += 60; // עונש runt בשורת הסיום
-        if (b < INF) {
-          const cand = cost[i] + b + LINE_DEMERIT;
-          if (cand < cost[n]) { cost[n] = cand; parent[n] = i; }
-        }
-        break;
+    if (!states[i].size) continue;
+    for (const [lineNo, state] of states[i]) {
+      if (items[i].kind === 'glue' && !items[i].internal) {
+        // Skip regular glue at the beginning of a line; internal glue is atomic.
+        updateState(i + 1, lineNo, {
+          cost: state.cost,
+          action: 'skip',
+          prevIndex: i,
+          prevLineNo: lineNo
+        });
+        continue;
       }
-      // **S5.1 (D-92-DP):** הדפדפן מרנדר רוחב טבעי (white-space:normal) —
-      // שורה שרוחבה הטבעי חורג מהטור נעטפת בתצוגה (טקסט-על-טקסט) גם אם
-      // היישוב יכול לכווץ רווחים ב-PDF. לכן המבחן ברוחב הטבעי, בלי shrink.
-      // **S5.2 (תיקון 3 — המבחן היה מרחיב, לא שמרני):** בעבר `w > maxWidth+0.75`
-      // אִפשר קווים ברוחב טבעי עד maxWidth+0.75px (ובכך גם קבלת חיתוכים עם
-      // slack שלילי דרך כיווץ) — בזמן ש-FIT_EPS של המורשת שמרן (limit−eps).
-      // כעת החיתוך נעצר מוקדם: שורה שאינה נכנסת ב-maxWidth−0.75 אינה מוארכת
-      // עוד, וכל קו מקובל הוא ברוחב טבעי ≤ maxWidth−0.75 (גם בסוף פסקה —
-      // הפנלטי הסופי נמדר רק אחרי שכל הפריטים עברו את אותו מבחן). מילה רחבה
-      // מהטור עדיין יוצאת כשורה בפני עצמה דרך הגיבוי הגרידי (greedyFallback —
-      // התקדמות מובטחת, טוקן בודד אינו נחסם: pushTok עם toks ריק אינו מוסף).
-      if (w > maxWidthPx - 0.75) break; // חריגה שאינה ניתנת לתיקון — שמרני כמו FIT_EPS
 
-      if (it.kind === 'box') {
-        // מקומות שבירה חוקיים נקבעים **מבנית מראש** (static legal-cuts): cut בצומת c חוקי
-        // רק אם items[c-1] הוא glue לא־פנימי ו‑items[c] תיבה שפותחת יחידה חדשה.
-        // זה מבטל את באג V23: lock תלוי-נקודת-התחלה על צמתים משותפים ל‑DP.
-        // (תיקון S3: הבדיקה הייתה בתוך הלולאה עם אינדקס שגוי j+2 — כל השברים נחסמו.)
-        const cut = j + 1; // נקודת שבירה חוקית: אחרי תיבה, לפני ה‑glue העוקב
-        if (!(items[cut].kind === 'glue' && !items[cut].internal && items[cut + 1] && items[cut + 1].kind === 'box')) continue;
-        const slack = maxWidthPx - w;
-        // **S5.2 (תיקון 3 — שמרנות בקבלת חיתוך):** קו שאינו נכנס ברוחב הטבעי
-        // (slack < −FIT_EPS) הוא בלתי-אפשרי — badness INF, לא "כיווץ". המבחן
-        // השמרני למעלה אמור למנוע הגעה לכאן; השמירה הכפולה מתעדת את הכוונה.
-        if (slack < -0.75) continue;
-        const raggedEnd = opts.raggedEnd !== false;
-        const effStretch = stretch + (raggedEnd ? maxWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
-        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
-        const b = badness(ratio);
-        if (b >= INF) continue;
-        const cand = cost[i] + b + LINE_DEMERIT;
-        if (cand < cost[cut]) { cost[cut] = cand; parent[cut] = i; }
+      const lineWidthPx = widthForLine(lineNo);
+      let w = 0, stretch = 0, shrink = 0;
+      for (let j = i; j < n; j++) {
+        const it = items[j];
+        if (it.kind === 'box') w += it.width;
+        // Natural width includes boxes and glue; stretch/shrink are tracked separately.
+        else if (it.kind === 'glue') { w += it.width; stretch += it.stretch; shrink += it.shrink; }
+        else if (it.kind === 'penalty') {
+          if (it.forbidden) continue;
+          // Final paragraph break.
+          const slack = lineWidthPx - w;
+          const raggedEnd = opts.raggedEnd !== false;
+          const effStretch = stretch + (raggedEnd ? lineWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
+          const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
+          let b = badness(ratio);
+          if (b < INF && w < lineWidthPx * (runts / 100)) b += 60;
+          if (b < INF) {
+            updateState(n, lineNo + 1, {
+              cost: state.cost + b + LINE_DEMERIT,
+              action: 'line',
+              prevIndex: i,
+              prevLineNo: lineNo,
+              start: i,
+              end: n
+            });
+          }
+          break;
+        }
+
+        // Conservative natural-width fit check (same 0.75px safety margin).
+        if (w > lineWidthPx - 0.75) break;
+
+        if (it.kind === 'box') {
+          const cut = j + 1;
+          // Legal breaks are structural: before a new box and after non-internal glue.
+          if (!(items[cut].kind === 'glue' && !items[cut].internal && items[cut + 1] && items[cut + 1].kind === 'box')) continue;
+          const slack = lineWidthPx - w;
+          if (slack < -0.75) continue;
+          const raggedEnd = opts.raggedEnd !== false;
+          const effStretch = stretch + (raggedEnd ? lineWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
+          const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
+          const b = badness(ratio);
+          if (b >= INF) continue;
+          updateState(cut, lineNo + 1, {
+            cost: state.cost + b + LINE_DEMERIT,
+            action: 'line',
+            prevIndex: i,
+            prevLineNo: lineNo,
+            start: i,
+            end: cut
+          });
+        }
       }
     }
   }
 
-  if (cost[n] === INF) return greedyFallback(items, maxWidthPx, measure, lineHeightPx);
+  let best = null;
+  for (const [lineNo, state] of states[n]) {
+    if (!best || state.cost < best.state.cost) best = { lineNo, state };
+  }
+  if (!best) return { cuts: null, widthForLine };
 
+  // Reconstruct the selected line intervals from the 2D predecessor map.
   const cuts = [];
-  let p = n;
-  while (p > 0 && parent[p] >= 0) { cuts.push([parent[p], p]); p = parent[p]; }
+  let position = n, lineNo = best.lineNo;
+  while (position > 0) {
+    const state = states[position].get(lineNo);
+    if (!state || state.action === 'origin') {
+      throw new Error('kp-linebreak: broken predecessor chain while reconstructing lines');
+    }
+    if (state.action === 'line') cuts.push([state.start, state.end]);
+    position = state.prevIndex;
+    lineNo = state.prevLineNo;
+  }
   cuts.reverse();
+  return { cuts, widthForLine };
+}
 
+function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
+  if (!Array.isArray(words)) throw new TypeError('kp-linebreak: words must be an array');
+  if (typeof measure !== 'function') throw new TypeError('kp-linebreak: measure(text) is required');
+  const items = buildItems(words, measure);
+  const solution = solveBreaks(items, maxWidthPx, opts);
+  if (!solution.cuts) return greedyFallback(items, solution.widthForLine, measure, lineHeightPx);
+  const cuts = solution.cuts;
   const lines = [];
   for (let k = 0; k < cuts.length; k++) {
     const [a, b] = cuts[k];
-    // תת־קופסאות של אותה יחידת NBSP מאוחדות חזרה עם \u00A0 (הצמד שומר על זהותו)
-    const rawBoxes = items.slice(a, b).filter(x => x.kind === 'box');
+    // Recombine sub-boxes of one NBSP unit into one output token.
     const toks = [];
     let cur = null, prevPenaltyForbidden = false;
     for (let idx = a; idx < b; idx++) {
@@ -16891,18 +17202,125 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
       else { if (cur !== null) toks.push(cur); cur = it.text; prevPenaltyForbidden = false; }
     }
     if (cur !== null) toks.push(cur);
-    void rawBoxes;
     if (!toks.length) continue;
-    // רוחב אמיתי: סכום תת־הקופסאות + רווחי ה‑glue שביניהן (כולל internal)
+
     let widthPx = 0;
     for (let idx = a; idx < b; idx++) {
       const it = items[idx];
-      if (it.kind === 'box') widthPx += it.width;
-      else if (it.kind === 'glue') widthPx += it.width;
+      if (it.kind === 'box' || it.kind === 'glue') widthPx += it.width;
     }
     lines.push({ words: toks, widthPx, heightPx: lineHeightPx, isLast: k === cuts.length - 1 });
   }
   return lines;
+}
+/**
+ * Break an ordered sequence of already-measured atomic inline items with the
+ * same Knuth–Plass solver used by breakLines().
+ *
+ * Input is a stream of {kind:'text'|'image'|'anchor', widthPx, heightPx}
+ * atoms interleaved with explicit {kind:'glue', widthPx, stretchPx, shrinkPx}
+ * opportunities and optional {kind:'penalty', forbidden:true} constraints.
+ * Text atoms are indivisible words; whitespace is represented by glue. Any
+ * future item type can use the same measured-box contract without changing
+ * the optimizer.
+ *
+ * A layout that cannot fit an unbreakable item returns ok:false. Unlike the
+ * legacy word wrapper, this API never silently falls back to a second breaker.
+ */
+function breakInlineItems(inlineItems, maxWidthPx, lineHeightPx, opts = {}) {
+  if (!Array.isArray(inlineItems)) throw new TypeError('kp-linebreak: inlineItems must be an array');
+  if (!Number.isFinite(lineHeightPx) || lineHeightPx < 0) {
+    throw new RangeError('kp-linebreak: lineHeightPx must be finite and non-negative');
+  }
+  const measured = [];
+  let hasFinal = false;
+  for (let index = 0; index < inlineItems.length; index++) {
+    const item = inlineItems[index];
+    if (!item || typeof item !== 'object') {
+      throw new TypeError('kp-linebreak: invalid inline item at index ' + index);
+    }
+    if (item.kind === 'glue') {
+      const width = item.widthPx;
+      const stretch = item.stretchPx == null ? 0 : item.stretchPx;
+      const shrink = item.shrinkPx == null ? 0 : item.shrinkPx;
+      if (![width, stretch, shrink].every(Number.isFinite) || width < 0 || stretch < 0 || shrink < 0) {
+        throw new TypeError('kp-linebreak: glue geometry must be finite and non-negative');
+      }
+      measured.push({ kind: 'glue', width, stretch, shrink, internal: !!item.internal });
+      continue;
+    }
+    if (item.kind === 'penalty') {
+      const penalty = { kind: 'penalty', forbidden: !!item.forbidden, final: !!item.final };
+      measured.push(penalty);
+      hasFinal = hasFinal || penalty.final;
+      continue;
+    }
+    if (typeof item.kind !== 'string' || !item.kind.trim()) {
+      throw new TypeError('kp-linebreak: every atom requires a non-empty kind');
+    }
+    const width = item.widthPx, height = item.heightPx == null ? 0 : item.heightPx;
+    if (!Number.isFinite(width) || width < 0 || !Number.isFinite(height) || height < 0) {
+      throw new TypeError('kp-linebreak: atom geometry must be finite and non-negative');
+    }
+    if (item.kind === 'text') {
+      if (typeof item.text !== 'string' || !item.text || /[ \t\n\r]/.test(item.text)) {
+        throw new TypeError('kp-linebreak: text atoms must be non-empty single break units; represent spaces as glue');
+      }
+    } else if (item.kind === 'image' && (typeof item.resourcePath !== 'string' || !item.resourcePath.trim())) {
+      throw new TypeError('kp-linebreak: image atoms require resourcePath');
+    } else if (item.kind === 'anchor' && item.id == null) {
+      throw new TypeError('kp-linebreak: anchor atoms require a stable id');
+    } else if (!['text', 'image', 'anchor'].includes(item.kind) && item.id == null) {
+      throw new TypeError('kp-linebreak: custom atoms require a stable id');
+    }
+    measured.push({
+      kind: 'box',
+      text: item.kind === 'text' ? item.text : undefined,
+      width,
+      height,
+      payload: { ...item, widthPx: width, heightPx: height }
+    });
+  }
+  if (!hasFinal) measured.push({ kind: 'penalty', final: true });
+  const solution = solveBreaks(measured, maxWidthPx, opts);
+  if (!solution.cuts) {
+    const maxAtomWidthPx = measured.reduce((max, item) => item.kind === 'box' ? Math.max(max, item.width) : max, 0);
+    return { ok: false, reason: 'no-valid-line-break', maxAtomWidthPx, lines: [] };
+  }
+
+  const lines = [];
+  for (let lineIndex = 0; lineIndex < solution.cuts.length; lineIndex++) {
+    const [start, end] = solution.cuts[lineIndex];
+    const slice = measured.slice(start, end);
+    const fragments = [];
+    let pendingGapPx = 0;
+    for (const item of slice) {
+      if (item.kind === 'glue') {
+        pendingGapPx += item.width;
+        continue;
+      }
+      if (item.kind !== 'box') continue;
+      if (fragments.length) fragments[fragments.length - 1].gapAfterPx += pendingGapPx;
+      fragments.push({
+        ...item.payload,
+        widthPx: item.width,
+        heightPx: item.height,
+        gapAfterPx: 0
+      });
+      pendingGapPx = 0;
+    }
+    const widthPx = slice.reduce((sum, item) =>
+      sum + (item.kind === 'box' || item.kind === 'glue' ? item.width : 0), 0);
+    const heightPx = Math.max(lineHeightPx, ...fragments.map(item => item.heightPx || 0));
+    lines.push({
+      fragments,
+      words: fragments.filter(item => item.kind === 'text').map(item => item.text),
+      widthPx,
+      heightPx,
+      isLast: lineIndex === solution.cuts.length - 1
+    });
+  }
+  return { ok: true, lines };
 }
 
 /**
@@ -16918,7 +17336,7 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
  * 3. התקדמות מובטחת: טוקן שגולש פותח שורה חדשה; טוקן רחב מהעמודה נשאר לבד
  *    בשורה משלו — אין לולאה ואין דילוג תוכן. מעבר אחד על הפריטים.
  */
-function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
+function greedyFallback(items, widthForLine, measure, lineHeightPx) {
   const space = measure(' ');
   const lines = [];
   let toks = [];            // טוקנים של השורה הנוכחית
@@ -16936,7 +17354,7 @@ function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
     // **לפני** ה-flush ונוסף גם אחריו ⇒ כל שורה שנפתחה ב-flush נשאה רווח
     // אחד עודף ב-widthPx (מדידה שקרית לצרכי ריצת-שורה/איזון). תוקם:
     // הבדיקה וההוספה לפי המצב **אחרי** ההחלטה על flush.
-    if (toks.length && w + space + curW > maxWidthPx - 0.75) flush(); // הטוקן הבא ייפתח שורה חדשה
+    if (toks.length && w + space + curW > widthForLine(lines.length) - 0.75) flush(); // הטוקן הבא ייפתח שורה חדשה
     const sp = toks.length ? space : 0;
     toks.push(cur); w += sp + curW;
     cur = null; curW = 0; joinNext = false;
@@ -16961,7 +17379,257 @@ function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
   return lines;
 }
 
-module.exports = { breakLines, badness, STRETCH_RATIO, SHRINK_RATIO };
+module.exports = { breakLines, breakInlineItems, badness, STRETCH_RATIO, SHRINK_RATIO };
+
+};
+__modules["src/engine/layout/inline-item-factory.js"] = function (require, module, exports) {
+// src/engine/layout/inline-item-factory.js — canonical AST → measured inline atoms (S14 P0)
+'use strict';
+
+const DEFAULT_GLUE_STRETCH = 0.6;
+const DEFAULT_GLUE_SHRINK = 0.5;
+
+function finiteNonNegative(value, label) {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new RangeError('inline-item-factory: ' + label + ' must be finite and non-negative');
+  }
+  return value;
+}
+
+/**
+ * Convert canonical parser runs to the measured item contract used by the
+ * shared line solver. A word may contain multiple font-family segments; it
+ * remains one unbreakable text atom while its segments retain independent
+ * measurement and rendering metadata.
+ *
+ * options:
+ *   measureText(text, fontFamily, sizePt) -> widthPx
+ *   resolveImage(ImageRun, options) -> {ok:true,image} | {ok:false,code}
+ *   defaultFontFamily, sizePt, lineHeightPx, glueStretchRatio, glueShrinkRatio
+ */
+function createMeasuredInlineItems(runs, options = {}) {
+  if (!Array.isArray(runs)) throw new TypeError('inline-item-factory: runs must be an array');
+  if (typeof options.measureText !== 'function') {
+    throw new TypeError('inline-item-factory: measureText(text, fontFamily, sizePt) is required');
+  }
+
+  const sizePt = options.sizePt == null ? null : finiteNonNegative(options.sizePt, 'sizePt');
+  const lineHeightPx = options.lineHeightPx == null ? 0 : finiteNonNegative(options.lineHeightPx, 'lineHeightPx');
+  const stretchRatio = options.glueStretchRatio == null ? DEFAULT_GLUE_STRETCH : finiteNonNegative(options.glueStretchRatio, 'glueStretchRatio');
+  const shrinkRatio = options.glueShrinkRatio == null ? DEFAULT_GLUE_SHRINK : finiteNonNegative(options.glueShrinkRatio, 'glueShrinkRatio');
+  const defaultFontFamily = options.defaultFontFamily || null;
+  const lineHeightForSize = typeof options.lineHeightForSize === 'function'
+    ? options.lineHeightForSize
+    : () => lineHeightPx;
+  const items = [];
+  const diagnostics = [];
+  let wordSegments = [];
+
+  function effectiveFamily(run) {
+    return run && run.fontFamily ? String(run.fontFamily) : defaultFontFamily;
+  }
+
+  function effectiveSize(run) {
+    return run && run.sizePt != null
+      ? finiteNonNegative(run.sizePt, 'run sizePt')
+      : sizePt;
+  }
+
+  function measure(text, family, runSizePt) {
+    const clean = String(text).split(String.fromCharCode(0xE102)).join('');
+    const width = options.measureText(clean, family || null, runSizePt == null ? sizePt : runSizePt);
+    return finiteNonNegative(width, 'measured text width');
+  }
+
+  function flushWord() {
+    if (!wordSegments.length) return;
+    const text = wordSegments.map(segment => segment.text).join('');
+    const widthPx = wordSegments.reduce((sum, segment) => sum + segment.widthPx, 0);
+    const segments = wordSegments.map(segment => ({ ...segment }));
+    const sourceStarts = segments.map(segment => segment.sourceStart).filter(Number.isFinite);
+    const sourceEnds = segments.map(segment => segment.sourceEnd).filter(Number.isFinite);
+    const heightPx = Math.max(lineHeightPx, ...segments.map(segment => segment.heightPx || 0));
+    const sizeValues = [...new Set(segments.map(segment => segment.sizePt).filter(value => value != null))];
+    const item = {
+      kind: 'text',
+      text,
+      widthPx,
+      heightPx,
+      segments,
+      ...(sizeValues.length === 1 ? { sizePt: sizeValues[0] } : {}),
+      ...(segments.length === 1 ? { fontFamily: segments[0].fontFamily || null } : {}),
+      ...(sourceStarts.length ? { sourceStart: Math.min(...sourceStarts) } : {}),
+      ...(sourceEnds.length ? { sourceEnd: Math.max(...sourceEnds) } : {})
+    };
+    items.push(item);
+    wordSegments = [];
+  }
+
+  function appendGlue(run, sourceStart, sourceEnd) {
+    flushWord();
+    // Normalize a whitespace run to one break-space, matching the paragraph
+    // tokenizer/line-breaker contract. Never leave leading or duplicate glue.
+    const prior = items[items.length - 1];
+    if (!prior || prior.kind === 'glue') {
+      if (prior && prior.kind === 'glue') {
+        prior.sourceEnd = Number.isFinite(sourceEnd) ? sourceEnd : prior.sourceEnd;
+      }
+      return;
+    }
+    const family = effectiveFamily(run);
+    const runSizePt = effectiveSize(run);
+    const widthPx = measure(' ', family, runSizePt);
+    items.push({
+      kind: 'glue',
+      widthPx,
+      stretchPx: widthPx * stretchRatio,
+      shrinkPx: widthPx * shrinkRatio,
+      fontFamily: family,
+      ...(runSizePt != null ? { sizePt: runSizePt } : {}),
+      ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+      ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+    });
+  }
+
+  for (const run of runs) {
+    if (!run || typeof run !== 'object') {
+      throw new TypeError('inline-item-factory: every run must be an object');
+    }
+
+    if (run.kind === 'text') {
+      const value = String(run.text == null ? '' : run.text);
+      const family = effectiveFamily(run);
+      const runSizePt = effectiveSize(run);
+      // Ordinary spaces create legal break glue. NBSP and the private atomic
+      // note separator stay inside the same measured word box and are normalized
+      // to visible NBSP in the renderer.
+      let cursor = 0;
+      while (cursor < value.length) {
+        const first = value[cursor];
+        const isAtomic = first === String.fromCharCode(0x00A0) || first === String.fromCharCode(0xE000);
+        const isBreak = first === ' ' || first === '\t' || first === '\n' || first === '\r';
+        let end = cursor + 1;
+        if (isAtomic || isBreak) {
+          while (end < value.length) {
+            const ch = value[end];
+            const same = isAtomic
+              ? ch === String.fromCharCode(0x00A0) || ch === String.fromCharCode(0xE000)
+              : ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r';
+            if (!same) break;
+            end++;
+          }
+        } else {
+          while (end < value.length) {
+            const ch = value[end];
+            if (ch === String.fromCharCode(0x00A0) || ch === String.fromCharCode(0xE000)
+              || ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') break;
+            end++;
+          }
+        }
+        const token = value.slice(cursor, end);
+        const sourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart + cursor : undefined;
+        const sourceEnd = Number.isFinite(run.sourceStart) ? sourceStart + token.length : undefined;
+        if (isBreak) {
+          appendGlue(run, sourceStart, sourceEnd);
+        } else {
+          const visibleToken = isAtomic
+            ? token.split(String.fromCharCode(0xE000)).join(String.fromCharCode(0x00A0))
+            : token;
+          const measuredToken = isAtomic ? ' '.repeat(visibleToken.length) : visibleToken;
+          const widthPx = measure(measuredToken, family, runSizePt);
+          const heightPx = finiteNonNegative(lineHeightForSize(runSizePt), 'line height for run');
+          // Adjacent parser runs can split one lexical word at removed font markers.
+          // Only ordinary visible whitespace or an atomic non-text run ends the current word.
+          wordSegments.push({
+            text: visibleToken,
+            fontFamily: family,
+            widthPx,
+            heightPx,
+            ...(runSizePt != null ? { sizePt: runSizePt } : {}),
+            ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+            ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+          });
+        }
+        cursor = end;
+      }
+      continue;
+    }
+
+    if (run.kind === 'image') {
+      flushWord();
+      if (typeof options.resolveImage !== 'function') {
+        diagnostics.push({
+          code: 'INLINE_IMAGE_RESOLVER_MISSING',
+          resourcePath: run.resourcePath || null,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd
+        });
+        continue;
+      }
+      const resolved = options.resolveImage(run, options);
+      if (!resolved || resolved.ok !== true || !resolved.image) {
+        diagnostics.push({
+          code: (resolved && resolved.code) || 'INLINE_IMAGE_RESOURCE_MISSING',
+          resourcePath: run.resourcePath || null,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd
+        });
+        continue;
+      }
+      const image = resolved.image;
+      const widthPx = finiteNonNegative(image.widthPx, 'image width');
+      const heightPx = finiteNonNegative(image.heightPx, 'image height');
+      if (widthPx <= 0 || heightPx <= 0) {
+        diagnostics.push({
+          code: 'INLINE_IMAGE_DIMENSIONS_INVALID',
+          resourcePath: run.resourcePath || image.resourcePath || null,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd
+        });
+        continue;
+      }
+      items.push({
+        ...image,
+        kind: 'image',
+        widthPx,
+        heightPx,
+        sourceStart: Number.isFinite(run.sourceStart) ? run.sourceStart : image.sourceStart,
+        sourceEnd: Number.isFinite(run.sourceEnd) ? run.sourceEnd : image.sourceEnd
+      });
+      continue;
+    }
+
+    if (run.kind === 'anchor') {
+      flushWord();
+      items.push({
+        ...run,
+        kind: 'anchor',
+        widthPx: run.widthPx == null ? 0 : finiteNonNegative(run.widthPx, 'anchor width'),
+        heightPx: run.heightPx == null ? 0 : finiteNonNegative(run.heightPx, 'anchor height')
+      });
+      continue;
+    }
+
+    // Future page-item kinds use the same measured box contract. The solver
+    // and projector do not need a new branch for each new item type.
+    flushWord();
+    if (typeof run.kind !== 'string' || !run.kind.trim() || run.id == null) {
+      throw new TypeError('inline-item-factory: custom item kinds require kind and stable id');
+    }
+    items.push({
+      ...run,
+      widthPx: finiteNonNegative(run.widthPx, 'custom item width'),
+      heightPx: finiteNonNegative(run.heightPx, 'custom item height')
+    });
+  }
+
+  flushWord();
+  while (items.length && items[items.length - 1].kind === 'glue') items.pop();
+
+  return { items, diagnostics };
+}
+
+module.exports = { createMeasuredInlineItems };
 
 };
 __modules["src/engine/core/events.js"] = function (require, module, exports) {
@@ -17277,6 +17945,507 @@ module.exports = {
   resolveSameAs, firstLastWordsText, pageOpensWithH2H3, trimEdgePunctuation,
   splitBookTitleHalves,
 };
+
+};
+__modules["src/engine/parser/inline-content.js"] = function (require, module, exports) {
+// src/engine/parser/inline-content.js — canonical inline AST (TextRun / ImageRun), S14 P0
+'use strict';
+
+const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg']);
+const IMAGE_LIKE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'tif', 'tiff']);
+
+function asSet(value) {
+  if (value instanceof Set) return new Set(Array.from(value, x => String(x)));
+  if (Array.isArray(value)) return new Set(value.map(x => String(x)));
+  return new Set();
+}
+
+function normalizeFontMarkers(input, warnings) {
+  let entries = [];
+  if (Array.isArray(input)) entries = input.map((value, index) => [String(value && (value.id || index)), value]);
+  else if (input && typeof input === 'object') entries = Object.entries(input);
+
+  const provisional = [];
+  for (const [id, value] of entries) {
+    if (!value || typeof value !== 'object') {
+      warnings.push({ code: 'invalid-font-marker-definition', markerId: id, message: 'הגדרת סגנון גופן inline אינה אובייקט תקין.' });
+      continue;
+    }
+    const open = String(value.open != null ? value.open : (value.openMarker != null ? value.openMarker : ''));
+    const close = String(value.close != null ? value.close : (value.closeMarker != null ? value.closeMarker : ''));
+    const family = String(value.family != null ? value.family : (value.fontFamily != null ? value.fontFamily : '')).trim();
+    if (!open || !close || !family || open === close && !open.trim()) {
+      warnings.push({ code: 'invalid-font-marker-definition', markerId: id, message: 'סמני הפתיחה/סגירה ומשפחת הגופן חייבים להיות מוגדרים.' });
+      continue;
+    }
+    provisional.push({ id: String(id), open, close, family });
+  }
+
+  // A marker token may belong to only one configured style. Ambiguous definitions
+  // are rejected as a unit; guessing would make the parser dependent on ordering.
+  const owners = new Map();
+  const conflicts = new Set();
+  for (const pair of provisional) {
+    for (const token of new Set([pair.open, pair.close])) {
+      const prior = owners.get(token);
+      if (prior && prior !== pair.id) {
+        conflicts.add(prior);
+        conflicts.add(pair.id);
+      } else owners.set(token, pair.id);
+    }
+  }
+  for (const id of conflicts) {
+    warnings.push({ code: 'ambiguous-font-marker-definition', markerId: id, message: 'הגדרת הסגנון נדחתה: אותו סמן משויך ליותר מסגנון אחד.' });
+  }
+  return provisional.filter(pair => !conflicts.has(pair.id));
+}
+
+function parseImagePayload(raw) {
+  const payload = String(raw || '').trim();
+  if (!payload) return null;
+
+  let resourcePath = payload;
+  let align = null;
+  let widthPct = null;
+  const suffix = resourcePath.match(/\.([lcr])(\d{1,3})$/i);
+  if (suffix) {
+    align = ({ l: 'left', c: 'center', r: 'right' })[suffix[1].toLowerCase()];
+    widthPct = Number(suffix[2]);
+    resourcePath = resourcePath.slice(0, suffix.index);
+  }
+
+  const extMatch = resourcePath.match(/\.([a-z0-9]+)$/i);
+  const ext = extMatch ? extMatch[1].toLowerCase() : '';
+  if (!IMAGE_LIKE_EXTENSIONS.has(ext)) return null;
+  if (!IMAGE_EXTENSIONS.has(ext)) {
+    return { ok: false, code: 'unsupported-image-format', message: 'פורמט תמונה לא נתמך; מותר PNG, JPG או JPEG בלבד.' };
+  }
+  const segments = resourcePath.split('/');
+  const invalidPath =
+    !resourcePath ||
+    resourcePath.startsWith('/') ||
+    resourcePath.startsWith('//') ||
+    /^[a-z][a-z0-9+.-]*:/i.test(resourcePath) ||
+    resourcePath.includes('\\') ||
+    resourcePath.includes('?') ||
+    resourcePath.includes('#') ||
+    segments.some(part => !part || part === '.' || part === '..') ||
+    (widthPct != null && (!Number.isInteger(widthPct) || widthPct < 1 || widthPct > 100));
+  if (invalidPath) {
+    return { ok: false, code: 'invalid-image-path-or-size', message: 'נתיב התמונה או אחוז הרוחב אינם תקינים; נדרש נתיב יחסי ורוחב 1–100%.' };
+  }
+  return { ok: true, resourcePath, align, widthPct };
+}
+
+function parseInlineRuns(value, options = {}) {
+  const source = String(value == null ? '' : value);
+  const warnings = [];
+  const availableFamilies = asSet(options.availableFamilies);
+  const knownFamilies = asSet(options.knownFamilies);
+  for (const family of availableFamilies) knownFamilies.add(family);
+  const fontMarkers = normalizeFontMarkers(options.fontMarkers, warnings);
+  const hasAvailabilityContract = options.availableFamilies != null;
+
+  const markerRemovals = [];
+  const spans = [];
+  const images = [];
+  const stack = [];
+  const invalidOpens = new Set();
+  const configuredTokens = [];
+  for (const pair of fontMarkers) {
+    configuredTokens.push({ token: pair.open, pair, type: 'open' });
+    if (pair.close !== pair.open) configuredTokens.push({ token: pair.close, pair, type: 'close' });
+  }
+  configuredTokens.sort((a, b) => b.token.length - a.token.length);
+
+  const sourceOffset = Number.isFinite(options.sourceOffset) ? options.sourceOffset : 0;
+  const addWarning = (code, start, end, message, extra = {}) => {
+    warnings.push({ code, start: start + sourceOffset, end: end + sourceOffset, message, ...extra });
+  };
+
+  const markerAt = (index) => {
+    const candidates = [];
+    for (const entry of configuredTokens) {
+      if (!source.startsWith(entry.token, index)) continue;
+      let type = entry.type;
+      if (entry.pair.open === entry.pair.close) {
+        type = stack.length && stack[stack.length - 1].id === entry.pair.id ? 'close' : 'open';
+      }
+      candidates.push({ ...entry, type });
+    }
+    if (source.startsWith('</>', index)) {
+      candidates.push({ token: '</>', type: 'generic-close', tokenLength: 3 });
+    }
+    if (source[index] === '<' && source[index + 1] !== '/') {
+      const match = source.slice(index).match(/^<([^<>]{1,96})>/);
+      if (match) {
+        const family = match[1].trim();
+        const validName = !!family && !/[{};]/.test(family);
+        const closesLater = source.indexOf('</>', index + match[0].length) >= 0;
+        if (validName && (knownFamilies.has(family) || closesLater)) {
+          candidates.push({ token: match[0], type: 'generic-open', family });
+        }
+      }
+    }
+    if (!candidates.length) return null;
+    candidates.sort((a, b) => b.token.length - a.token.length);
+    return candidates[0];
+  };
+
+  let index = 0;
+  while (index < source.length) {
+    if (options.allowImages !== false && source[index] === '#') {
+      const close = source.indexOf('#', index + 1);
+      if (close > index + 1) {
+        const parsed = parseImagePayload(source.slice(index + 1, close));
+        if (parsed && parsed.ok) {
+          images.push({
+            kind: 'image',
+            resourcePath: parsed.resourcePath,
+            align: parsed.align,
+            widthPct: parsed.widthPct,
+            sourceText: source.slice(index, close + 1),
+            sourceStart: index + sourceOffset,
+            sourceEnd: close + 1 + sourceOffset
+          });
+          index = close + 1;
+          continue;
+        }
+        if (parsed && !parsed.ok) {
+          addWarning(parsed.code, index, close + 1, parsed.message, { source: source.slice(index, close + 1) });
+        }
+      }
+    }
+
+    const marker = markerAt(index);
+    if (!marker) { index++; continue; }
+
+    const end = index + marker.token.length;
+    markerRemovals.push({ start: index, end });
+    if (marker.type === 'open' || marker.type === 'generic-open') {
+      stack.push({
+        id: marker.type === 'generic-open' ? 'generic' : marker.pair.id,
+        kind: marker.type === 'generic-open' ? 'generic' : 'configured',
+        family: marker.type === 'generic-open' ? marker.family : marker.pair.family,
+        start: end,
+        markerStart: index,
+        markerEnd: end,
+        depth: stack.length
+      });
+    } else {
+      const top = stack[stack.length - 1];
+      const matches = marker.type === 'generic-close'
+        ? !!top && top.kind === 'generic'
+        : !!top && top.kind === 'configured' && top.id === marker.pair.id;
+      if (matches) {
+        stack.pop();
+        if (!invalidOpens.has(top) && top.start < index) {
+          spans.push({
+            start: top.start,
+            end: index,
+            family: top.family,
+            depth: top.depth,
+            available: !hasAvailabilityContract || availableFamilies.has(top.family),
+            markerId: top.id
+          });
+        }
+        if (hasAvailabilityContract && !availableFamilies.has(top.family)) {
+          addWarning('font-family-unavailable', top.markerStart, end, 'משפחת הגופן של הטווח אינה טעונה; הטקסט נשמר בגופן הרגיל.', { family: top.family, markerId: top.id });
+        }
+      } else {
+        const matchesOpen = (item) => marker.type === 'generic-close'
+          ? item.kind === 'generic'
+          : item.kind === 'configured' && item.id === marker.pair.id;
+        let matchIndex = -1;
+        for (let si = stack.length - 1; si >= 0; si--) {
+          if (matchesOpen(stack[si])) { matchIndex = si; break; }
+        }
+        if (matchIndex >= 0) {
+          // A close marker that jumps over a nested open marker makes every
+          // intersecting range ambiguous. Invalidate the entire crossing group.
+          for (let si = matchIndex; si < stack.length; si++) invalidOpens.add(stack[si]);
+          stack.splice(matchIndex);
+          addWarning('crossing-font-range', index, end,
+            'טווחי גופן חוצים זה את זה; כל הטווחים המעורבים נשארים בטקסט רגיל.');
+        } else {
+          addWarning('unmatched-font-close', index, end,
+            'סמן סגירת גופן ללא פתיחה תואמת הוסר; הטקסט נשמר ללא שינוי.');
+        }
+      }
+    }
+    index = end;
+  }
+
+  for (const open of stack) {
+    addWarning('unclosed-font-range', open.markerStart, open.markerEnd, 'סמן פתיחת גופן ללא סגירה תואמת הוסר; הטקסט נשמר בגופן הרגיל.', { family: open.family, markerId: open.id });
+  }
+
+  // Build interval events so font lookup is linear in the number of runs, not
+  // quadratic in the number of characters × nested ranges.
+  const starts = new Map();
+  const ends = new Map();
+  const removals = new Map();
+  const imageAt = new Map();
+  const boundaries = new Set([0, source.length]);
+  const addTo = (map, at, item) => {
+    if (!map.has(at)) map.set(at, []);
+    map.get(at).push(item);
+  };
+  for (const span of spans) {
+    if (!span.available || span.end <= span.start) continue;
+    addTo(starts, span.start, span);
+    addTo(ends, span.end, span);
+    boundaries.add(span.start); boundaries.add(span.end);
+  }
+  for (const marker of markerRemovals) {
+    addTo(removals, marker.start, marker);
+    boundaries.add(marker.start); boundaries.add(marker.end);
+  }
+  for (const image of images) {
+    const localStart = image.sourceStart - sourceOffset;
+    const localEnd = image.sourceEnd - sourceOffset;
+    imageAt.set(localStart, image);
+    boundaries.add(localStart); boundaries.add(localEnd);
+  }
+
+  const points = Array.from(boundaries).sort((a, b) => a - b);
+  const active = [];
+  const runs = [];
+  const appendText = (text, family, start, end) => {
+    if (!text) return;
+    const prev = runs[runs.length - 1];
+    if (prev && prev.kind === 'text' && prev.fontFamily === (family || null) && prev.sourceEnd <= start) {
+      prev.text += text;
+      prev.sourceEnd = end;
+    } else {
+      runs.push({ kind: 'text', text, fontFamily: family || null, sourceStart: start + sourceOffset, sourceEnd: end + sourceOffset });
+    }
+  };
+
+  let p = 0;
+  while (p < points.length - 1) {
+    const at = points[p];
+    const ending = (ends.get(at) || []).slice().sort((a, b) => b.depth - a.depth);
+    for (const span of ending) {
+      const pos = active.lastIndexOf(span);
+      if (pos >= 0) active.splice(pos, 1);
+    }
+    const beginning = (starts.get(at) || []).slice().sort((a, b) => a.depth - b.depth);
+    for (const span of beginning) active.push(span);
+
+    const image = imageAt.get(at);
+    if (image) {
+      runs.push({ ...image });
+    } else {
+      const marker = removals.get(at);
+      if (!marker) {
+        let family = null;
+        for (let k = active.length - 1; k >= 0; k--) {
+          if (active[k].available) { family = active[k].family; break; }
+        }
+        const next = points[p + 1];
+        appendText(source.slice(at, next), family, at, next);
+      }
+    }
+    p++;
+  }
+
+  const text = runs.filter(run => run.kind === 'text').map(run => run.text).join('');
+  return {
+    version: 1,
+    runs,
+    text,
+    warnings,
+    hasImages: images.length > 0,
+    hasFontRanges: spans.some(span => span.available)
+  };
+}
+
+
+/**
+ * Return the lossless source projection of canonical inline runs.
+ * Images are projected back to their original marker until a dimensioned
+ * resource resolver is supplied; this prevents silent content loss.
+ */
+function inlineRunsSourceText(runs = []) {
+  return (Array.isArray(runs) ? runs : []).map(run => {
+    if (!run) return '';
+    if (run.kind === 'text') return run.text || '';
+    if (run.kind === 'image') return run.sourceText || '';
+    return '';
+  }).join('');
+}
+
+/** Plain source text of a canonical paragraph, with note references omitted. */
+function inlineParagraphSourceText(inlineContent) {
+  if (!inlineContent || !Array.isArray(inlineContent.parts)) {
+    throw new TypeError('inline-content: canonical paragraph parts are required');
+  }
+  return inlineContent.parts
+    .filter(part => part && part.kind === 'text')
+    .map(part => inlineRunsSourceText(part.runs))
+    .join(' ');
+}
+
+/** Source text of a canonical note; optional atomic-space projection for layout. */
+function inlineNoteSourceText(inlineContent, noteIndex, atomicSpace = null) {
+  const note = inlineContent && Array.isArray(inlineContent.notes) ? inlineContent.notes[noteIndex] : null;
+  if (!note) throw new RangeError('inline-content: note index is out of range');
+  const source = inlineRunsSourceText(note.runs);
+  return atomicSpace == null ? source : source.replace(/ +/g, atomicSpace);
+}
+
+/** Parse paragraph text fragments and footnotes into one shared inline AST. */
+function parseInlineParagraph(parts = [], notes = [], options = {}) {
+  const parsedParts = [];
+  const parsedNotes = [];
+  const warnings = [];
+  let hasImages = false;
+  let hasFontRanges = false;
+
+  for (const part of parts) {
+    if (!part || part.kind !== 'text') {
+      if (part && part.kind === 'note-ref') parsedParts.push({ kind: 'note-ref', noteIndex: part.noteIndex });
+      continue;
+    }
+    const parsed = parseInlineRuns(part.value, {
+      ...options,
+      sourceOffset: Number.isFinite(part.sourceStart) ? part.sourceStart : 0,
+      allowImages: true
+    });
+    parsedParts.push({ kind: 'text', sourceStart: part.sourceStart, sourceEnd: part.sourceEnd, runs: parsed.runs });
+    warnings.push(...parsed.warnings);
+    hasImages = hasImages || parsed.hasImages;
+    hasFontRanges = hasFontRanges || parsed.hasFontRanges;
+  }
+
+  for (const note of notes) {
+    const payload = note && typeof note === 'object' ? note.text : note;
+    const sourceStart = note && typeof note === 'object' && Number.isFinite(note.sourceStart) ? note.sourceStart : 0;
+    const parsed = parseInlineRuns(payload, { ...options, sourceOffset: sourceStart, allowImages: true });
+    parsedNotes.push({ sourceStart, sourceEnd: note && typeof note === 'object' ? note.sourceEnd : undefined, runs: parsed.runs });
+    warnings.push(...parsed.warnings);
+    hasImages = hasImages || parsed.hasImages;
+    hasFontRanges = hasFontRanges || parsed.hasFontRanges;
+  }
+
+  return { version: 1, parts: parsedParts, notes: parsedNotes, warnings, hasImages, hasFontRanges };
+}
+module.exports = { parseInlineRuns, parseInlineParagraph, parseImagePayload, inlineRunsSourceText, inlineParagraphSourceText, inlineNoteSourceText };
+
+};
+__modules["src/engine/layout/margin-flow.js"] = function (require, module, exports) {
+'use strict';
+
+/**
+ * Page-level allocator for anchored margin items.
+ *
+ * Column layout determines each note's preferred anchor. This pass runs only
+ * after every column has been projected, so notes from both columns share one
+ * vertical lane per physical margin. It preserves note order and text lines;
+ * only the y coordinates may move to prevent collisions.
+ */
+function packMarginNotes(notes = [], options = {}) {
+  const top = Number.isFinite(options.top) ? options.top : 0;
+  const bottom = Number.isFinite(options.bottom) ? options.bottom : Infinity;
+  const pitch = Number.isFinite(options.pitch) && options.pitch > 0 ? options.pitch : 1;
+  const gap = Number.isFinite(options.gap) && options.gap >= 0 ? options.gap : 1;
+  if (bottom <= top) throw new RangeError('margin-flow: bottom must be greater than top');
+
+  const output = (Array.isArray(notes) ? notes : []).map((note, index) => ({
+    ...note,
+    lines: Array.isArray(note && note.lines) ? note.lines.map(line => ({ ...line })) : [],
+    _marginOrder: index
+  }));
+  const diagnostics = [];
+  const groups = new Map([['right', []], ['left', []]]);
+
+  for (const note of output) {
+    if (!note || !groups.has(note.side)) {
+      diagnostics.push({ code: 'MARGIN_NOTE_INVALID_SIDE', index: note?._marginOrder ?? -1 });
+      continue;
+    }
+    if (!note.lines.length) continue;
+    const desiredTop = Number.isFinite(note.anchorY)
+      ? note.anchorY
+      : (Number.isFinite(note.lines[0].y) ? note.lines[0].y : top);
+    const lineYs = note.lines.map(line => line.y).filter(Number.isFinite);
+    if (lineYs.length !== note.lines.length) {
+      diagnostics.push({ code: 'MARGIN_NOTE_INVALID_GEOMETRY', index: note._marginOrder });
+      continue;
+    }
+    const oldTop = Math.min(...lineYs);
+    const height = (Math.max(...lineYs) - oldTop) + pitch;
+    if (!(height > 0) || !Number.isFinite(height)) {
+      diagnostics.push({ code: 'MARGIN_NOTE_INVALID_GEOMETRY', index: note._marginOrder });
+      continue;
+    }
+    groups.get(note.side).push({ note, desiredTop, oldTop, height, y: desiredTop });
+  }
+
+  for (const [side, entries] of groups) {
+    entries.sort((a, b) => a.desiredTop - b.desiredTop || a.note._marginOrder - b.note._marginOrder);
+    // Forward pass: honor every preferred anchor unless it collides with the
+    // preceding item in this same physical margin.
+    for (let i = 0; i < entries.length; i++) {
+      const item = entries[i];
+      item.y = Math.max(top, item.desiredTop);
+      if (i > 0) {
+        const prev = entries[i - 1];
+        item.y = Math.max(item.y, prev.y + prev.height + gap);
+      }
+    }
+
+    // If the lane overflows below the page, compact the entire ordered run
+    // upward from the bottom. This moves notes only as far as necessary.
+    if (entries.length) {
+      const last = entries[entries.length - 1];
+      if (last.y + last.height > bottom) {
+        last.y = bottom - last.height;
+        for (let i = entries.length - 2; i >= 0; i--) {
+          const next = entries[i + 1];
+          entries[i].y = Math.min(entries[i].y, next.y - gap - entries[i].height);
+        }
+      }
+    }
+
+    const totalHeight = entries.reduce((sum, item) => sum + item.height, 0)
+      + Math.max(0, entries.length - 1) * gap;
+    const capacity = bottom - top;
+    const overflow = totalHeight > capacity + 1e-7 || (entries[0] && entries[0].y < top - 1e-7);
+
+    // If the notes cannot physically fit, keep every line in order and
+    // non-overlapping, and report the page overflow instead of clipping text.
+    if (overflow && entries.length) {
+      let y = top;
+      for (const item of entries) {
+        item.y = y;
+        y += item.height + gap;
+      }
+      diagnostics.push({
+        code: 'MARGIN_NOTES_EXCEED_LANE',
+        side,
+        requiredHeight: totalHeight,
+        availableHeight: capacity,
+        overflowPx: Math.max(0, totalHeight - capacity)
+      });
+    }
+
+    for (const item of entries) {
+      const delta = item.y - item.oldTop;
+      item.note.anchorY = item.y;
+      item.note.lines = item.note.lines.map(line => ({
+        ...line,
+        y: Number.isFinite(line.y) ? line.y + delta : line.y
+      }));
+    }
+  }
+
+  for (const note of output) delete note._marginOrder;
+  return { notes: output, diagnostics };
+}
+
+module.exports = { packMarginNotes };
 
 };
 __modules["src/engine/decoration/legacy-ornaments.js"] = function (require, module, exports) {
@@ -17923,10 +19092,51 @@ function reAlignColumns(page) {
   return orphaned;
 }
 
+/**
+ * Stable signature for a planned line. Legacy word-only lines retain their
+ * historical signature; measured inline lines additionally include the
+ * actual atom geometry and per-segment font metrics. This makes the layout
+ * hash sensitive to image/font changes even when the visible word sequence
+ * happens to remain unchanged.
+ */
+function lineLayoutSignature(line, includeGeometry = false) {
+  const words = (line.words || []).join('\\u00A7');
+  if (!Array.isArray(line.fragments)) return words;
+  // Keep the historical content hash stable for ordinary text and note
+  // markers. Only truly new inline page-item/font features extend layoutHash.
+  // The geometry hash remains exhaustive for every measured fragment.
+  if (!includeGeometry && !line.richSignatureRequired) return words;
+  const fragments = line.fragments.map(fragment => ({
+    kind: fragment.kind,
+    id: fragment.id == null ? null : fragment.id,
+    resourceId: fragment.resourceId == null ? null : fragment.resourceId,
+    text: fragment.kind === 'text' ? fragment.text : null,
+    widthPx: fragment.widthPx,
+    heightPx: fragment.heightPx,
+    gapAfterPx: fragment.gapAfterPx || 0,
+    sizePt: fragment.sizePt == null ? null : fragment.sizePt,
+    fontFamily: fragment.fontFamily || null,
+    sourceStart: fragment.sourceStart == null ? null : fragment.sourceStart,
+    sourceEnd: fragment.sourceEnd == null ? null : fragment.sourceEnd,
+    segments: Array.isArray(fragment.segments) ? fragment.segments.map(segment => ({
+      text: segment.text,
+      widthPx: segment.widthPx,
+      heightPx: segment.heightPx == null ? null : segment.heightPx,
+      sizePt: segment.sizePt == null ? null : segment.sizePt,
+      fontFamily: segment.fontFamily || null
+    })) : null
+  }));
+  return words + '\\u00B6' + JSON.stringify({
+    heightPx: line.heightPx,
+    aqStretch: line.aqStretch || 1,
+    fragments
+  });
+}
+
 function layoutHash(pages) {
   const canon = pages.map(p => ({
     i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}`)),
+    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${lineLayoutSignature(ln)}`)),
     // **S4.10:** דפנסיביות — עמודי מנוע המורשת אינם מחויבים לכל השדות
     // (לפני כן p.sideNotes.length קרס על undefined). לעמודי DP אין שינוי ערך.
     fn: (p.footnotes || []).length, sn: (p.sideNotes || []).length
@@ -17935,16 +19145,15 @@ function layoutHash(pages) {
 }
 
 /**
- * **D-47 (תיקון P0-6):** hash של **הגיאומטריה הנמדדת בלבד** (הטורים/השורות) —
- * זהו האינווריאנט T1: פאס העיטורים/ההערות אסור לו לשנות את הפריסה שנמדדה.
- * בעבר ההשוואה CP4==CP5 השוותה משתנה לעצמו — טאוטולוגיה שאינה יכולה להיכשל.
- * כאן: hash נפרד של הטורים בלבד (בלי מרזבים/הערות צד שמשתנים כחוק בשלב ההערות)
- * — נבדק לפני ואחרי פאס העיטורים בpipeline; שינוי אמיתי בשורות ⇒ הבדיקה נכשלת.
+ * **D-47 (תיקון P0-6):** hash של הגיאומטריה הנמדדת בלבד (הטורים/השורות).
+ * עבור שורות rich הוא כולל גם ממדי atoms ופרטי מקטעי הגופן, ולא רק מילים.
  */
 function bodyGeometryHash(pages) {
   const canon = pages.map(p => ({
     i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}:${ln.seq != null ? 's' + ln.seq : ''}`))
+    c: p.columns.map(col => col.map(ln =>
+      `${lineTokenId(ln)}:${lineLayoutSignature(ln, true)}:${ln.seq != null ? 's' + ln.seq : ''}`
+    ))
   }));
   return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
 }
@@ -19619,7 +20828,8 @@ class WorkerEngineClient {
     // respawn (terminate/קריסה): המופע החדש מתחיל עם זיכרון ריק, ובלי רישום
     // מחדש המדידה היתה נופלת בשקט לגופני fallback (סחף מדידה שקט).
     this._registeredFonts = new Map();   // name → bytes
-    this._registeredAssets = new Map(); // collection → items
+    this._registeredAssets = new Map(); // collection → decoration items
+    this._registeredInlineAssets = new Map(); // collection → document image items
     this._workerGeneration = typeof transport.getGeneration === 'function' ? transport.getGeneration() : null;
     transport.setHandler((m) => this._onMessage(m));
     if (typeof transport.setOnError === 'function') transport.setOnError((e) => this._onTransportError(e));
@@ -19643,6 +20853,11 @@ class WorkerEngineClient {
     for (const [collection, items] of this._registeredAssets) {
       const { jobId, promise } = this._newPendingJob('assets-replay');
       this.transport.post({ type: 'register-assets', jobId, collection, items });
+      promise.catch(() => {});
+    }
+    for (const [collection, items] of this._registeredInlineAssets) {
+      const { jobId, promise } = this._newPendingJob('inline-assets-replay');
+      this.transport.post({ type: 'register-inline-assets', jobId, collection, items });
       promise.catch(() => {});
     }
   }
@@ -19751,6 +20966,16 @@ class WorkerEngineClient {
     });
   }
 
+  /** רישום משאבי תמונה של מסמך. נפרד מרישום SVG של עיטורים. */
+  registerInlineAssets({ collection, items }) {
+    const { jobId, promise } = this._newPendingJob('inline-assets');
+    this.transport.post({ type: 'register-inline-assets', jobId, collection, items });
+    return promise.then((res) => {
+      this._registeredInlineAssets.set(collection, items);
+      return res;
+    });
+  }
+
   /** **03.11:** בקשת ייצוא PDF/ZIP במנוע המלא שב־Worker. bytes חוזר כ-Uint8Array. */
   requestExport({ kind, text, settings, fontBytes, fontName, extensions }) {
     this._maybeReplayRegistrations(); // **S70 (R8-M2):** הייצוא מודד כמו העימוד — גופנים חייבים להיות רשומים
@@ -19763,7 +20988,7 @@ class WorkerEngineClient {
    * בקשת עימוד. בקשה חדשה בזמן עבודה פעילה מבטלת את הקודמת (single-flight).
    * @returns {{promise:Promise<object>, jobId:string, cancel:()=>void}}
    */
-  requestTypeset({ text, settings, onProgress }) {
+  requestTypeset({ text, settings, onProgress, assetCollection }) {
     if (this.activeJob) this.cancel();
     this._maybeReplayRegistrations(); // **S70 (R8-M2):** רישום חוזר לפני העימוד אחרי respawn
     const jobId = `job-${Date.now().toString(36)}-${++jobSeq}`;
@@ -19771,7 +20996,9 @@ class WorkerEngineClient {
     const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
     const job = { jobId, resolve, reject, onProgress: onProgress || null, cancelled: false };
     this.activeJob = job;
-    this.transport.post({ type: 'typeset-request', jobId, text, settings });
+    const message = { type: 'typeset-request', jobId, text, settings };
+    if (assetCollection != null) message.assetCollection = assetCollection;
+    this.transport.post(message);
     return { promise, jobId, cancel: () => this.cancel() };
   }
 
@@ -20165,6 +21392,24 @@ function nodeOnly(loader) {
   return loader();
 }
 
+/** Iterate actual drawable text segments. Mixed-font measured atoms store
+ * their per-family metadata on segments rather than on the flattened word. */
+function forEachLineTextSegment(line, callback) {
+  for (const word of (line && line.words) || []) {
+    const segments = Array.isArray(word.segments) && word.segments.length
+      ? word.segments
+      : [word];
+    for (const segment of segments) {
+      callback(
+        String(segment.text == null ? word.text || '' : segment.text),
+        segment.fontKey || word.fontKey || null,
+        word,
+        segment
+      );
+    }
+  }
+}
+
 /** **03.11(ג) תיקון קריסת ייצוא HTML בדפדפן:** ב-DOM האמיתי outerHTML מאפיין
  * (מחרוזת), ב-shim הבדיקות — פונקציה. הפונקציה הזו מטפלת בשניהם + נפילה
  * לסריאליזציה ידנית בסיסית (אף סביבה לא נותרת בלי פלט). */
@@ -20346,7 +21591,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const winParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'window') winParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'window') winParts.push(text);
+            });
           }
         }
         if (winParts.length) {
@@ -20377,7 +21624,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const headParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'heading') headParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'heading') headParts.push(text);
+            });
           }
         }
         if (headParts.length) {
@@ -20411,11 +21660,11 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         for (const pg of projected.pages) {
           const scan = (lines) => {
             for (const ln of lines) {
-              for (const w of (ln.words || [])) {
-                for (const ch of String(w.text || '')) {
+              forEachLineTextSegment(ln, text => {
+                for (const ch of text) {
                   if (fontForWriter.cidOf(ch) === 0 && glyphIdOf(frlProfile, ch) !== 0) missingChars.add(ch);
                 }
-              }
+              });
             }
           };
           scan(pg.spanning ? pg.spanning.lines : []);
@@ -20456,7 +21705,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const fnParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'fnbody') fnParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'fnbody') fnParts.push(text);
+            });
           }
           for (const fn of (pg.footnotes || [])) for (const w of (fn.words || [])) if (w.fontKey === 'fnbody') fnParts.push(w.text);
         }
@@ -20485,7 +21736,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const mnParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'margin') mnParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'margin') mnParts.push(text);
+            });
           }
         }
         if (mnParts.length) {
@@ -20522,7 +21775,7 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
     };
     for (const pg of projected.pages) {
       for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-        for (const w of ln.words) collectFam(w.text, w.fontKey);
+        forEachLineTextSegment(ln, (text, fontKey) => collectFam(text, fontKey));
       }
       for (const fn of (pg.footnotes || [])) {
         for (const w of (fn.words || [])) collectFam(w.text, w.fontKey);

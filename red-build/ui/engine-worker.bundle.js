@@ -1,6 +1,6 @@
 // ui/engine-worker.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת ה־Worker (המנוע המלא — אין לטעון בחוט ה־UI)
-// מודולים: 64 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 69 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -294,12 +294,15 @@ function __resolve(from, name) {
 var __paths = {
   "src/ui/engine-worker-main.js|../engine/core/pipeline": "src/engine/core/pipeline.js",
   "src/ui/engine-worker-main.js|./worker-protocol": "src/ui/worker-protocol.js",
+  "src/ui/engine-worker-main.js|../engine/import/document-assets": "src/engine/import/document-assets.js",
   "src/ui/engine-worker-main.js|../engine/typography/measure-api": "src/engine/typography/measure-api.js",
   "src/ui/engine-worker-main.js|../engine/decoration/asset-registry": "src/engine/decoration/asset-registry.js",
   "src/ui/engine-worker-main.js|../engine/output/export-api": "src/engine/output/export-api.js",
   "src/engine/core/pipeline.js|./settings-registry": "src/engine/core/settings-registry.js",
   "src/engine/core/pipeline.js|../parser/dfa-lexer": "src/engine/parser/dfa-lexer.js",
   "src/engine/core/pipeline.js|../parser/block-tokenizer": "src/engine/parser/block-tokenizer.js",
+  "src/engine/core/pipeline.js|../parser/inline-content": "src/engine/parser/inline-content.js",
+  "src/engine/core/pipeline.js|../import/document-assets": "src/engine/import/document-assets.js",
   "src/engine/core/pipeline.js|../parser/bracket-scanner": "src/engine/parser/bracket-scanner.js",
   "src/engine/core/pipeline.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/core/pipeline.js|../typography/protectors": "src/engine/typography/protectors.js",
@@ -333,8 +336,12 @@ var __paths = {
   "src/engine/core/pipeline.js|../decoration/toc-builder": "src/engine/decoration/toc-builder.js",
   "src/engine/parser/block-tokenizer.js|./dfa-lexer": "src/engine/parser/dfa-lexer.js",
   "src/engine/parser/block-tokenizer.js|./bracket-scanner": "src/engine/parser/bracket-scanner.js",
+  "src/engine/parser/block-tokenizer.js|./inline-content": "src/engine/parser/inline-content.js",
+  "src/engine/import/document-assets.js|./zip-reader": "src/engine/import/zip-reader.js",
   "src/engine/typography/measure-api.js|./measure-table": "src/engine/typography/measure-table.js",
   "src/engine/typography/measure-api.js|./font-metrics": "src/engine/typography/font-metrics.js",
+  "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
+  "src/engine/typography/measure-api.js|../layout/inline-item-factory": "src/engine/layout/inline-item-factory.js",
   "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
   "src/engine/layout/dp-planner.js|./page-templates": "src/engine/layout/page-templates.js",
   "src/engine/layout/dp-planner.js|../core/ledger": "src/engine/core/ledger.js",
@@ -362,6 +369,8 @@ var __paths = {
   "src/engine/layout/legacy-imud-flow.js|../core/ledger": "src/engine/core/ledger.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/headers-builder": "src/engine/decoration/headers-builder.js",
   "src/engine/layout/legacy-imud-flow.js|../output/line-font": "src/engine/output/line-font.js",
+  "src/engine/layout/legacy-imud-flow.js|../parser/inline-content": "src/engine/parser/inline-content.js",
+  "src/engine/layout/legacy-imud-flow.js|./margin-flow": "src/engine/layout/margin-flow.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/legacy-ornaments": "src/engine/decoration/legacy-ornaments.js",
   "src/engine/decoration/legacy-ornaments.js|./ornament-fit": "src/engine/decoration/ornament-fit.js",
   "src/engine/extensions/apply-styles.js|../notes/markers": "src/engine/notes/markers.js",
@@ -418,12 +427,14 @@ var __paths = {
   "src/engine/output/geometry-projector.js|../notes/markers": "src/engine/notes/markers.js",
   "src/engine/output/geometry-projector.js|../layout/side-notes": "src/engine/layout/side-notes.js",
   "src/engine/output/geometry-projector.js|./line-font": "src/engine/output/line-font.js",
+  "src/engine/output/geometry-projector.js|../layout/line-fragments": "src/engine/layout/line-fragments.js",
   "src/engine/output/geometry-projector.js|./shaar-content": "src/engine/output/shaar-content.js",
   "src/engine/output/geometry-projector.js|../decoration/ornament-ink": "src/engine/decoration/ornament-ink.js",
   "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/output/geometry-projector.js|../extensions/style-schema": "src/engine/extensions/style-schema.js",
   "src/engine/output/geometry-projector.js|../extensions/apply-styles": "src/engine/extensions/apply-styles.js",
+  "src/engine/output/pdf-writer.js|../import/zip-reader": "src/engine/import/zip-reader.js",
   "src/engine/output/legacy-projector.js|../layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
   "src/engine/output/legacy-projector.js|./line-font": "src/engine/output/line-font.js",
   "src/engine/output/legacy-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
@@ -448,6 +459,7 @@ __modules["src/ui/engine-worker-main.js"] = function (require, module, exports) 
 
 const { typeset } = require('../engine/core/pipeline');
 const { serializeTypesetResult, validateRequest, progressMessage } = require('./worker-protocol');
+const { createInlineAssetResolver } = require('../engine/import/document-assets');
 
 let cancelledJobs = new Set();
 
@@ -509,6 +521,7 @@ function handleExportRequest(msg, post) {
 /** מטפל הודעות — pure, מקבל post חיצוני (מבודד לבדיקות). */
 function createEngineWorkerMain(post) {
   if (typeof post !== 'function') throw new Error('engine-worker-main: post(message) required');
+  const inlineAssetResolvers = new Map();
   return function onMessage(msg) {
     try {
       validateRequest(msg);
@@ -522,10 +535,34 @@ function createEngineWorkerMain(post) {
     }
     if (msg.type === 'register-font') { handleRegisterFont(msg, post); return; }
     if (msg.type === 'register-assets') { handleRegisterAssets(msg, post); return; }
+    if (msg.type === 'register-inline-assets') {
+      try {
+        const resolver = createInlineAssetResolver(msg.items);
+        inlineAssetResolvers.set(msg.collection, resolver);
+        post({
+          type: 'register-inline-assets-result', jobId: msg.jobId, collection: msg.collection,
+          ok: true, registered: resolver.count, diagnostics: resolver.diagnostics
+        });
+      } catch (e) {
+        post({
+          type: 'register-inline-assets-result', jobId: msg.jobId, collection: msg.collection,
+          ok: false, error: e && e.message ? e.message : String(e)
+        });
+      }
+      return;
+    }
     if (msg.type === 'export-request') { handleExportRequest(msg, post); return; }
     const jobId = msg.jobId;
     try {
+      const inlineAssetResolver = msg.assetCollection
+        ? inlineAssetResolvers.get(msg.assetCollection)
+        : null;
+      if (msg.assetCollection && !inlineAssetResolver) {
+        post({ type: 'typeset-error', jobId, message: `inline asset collection not registered: ${msg.assetCollection}` });
+        return;
+      }
       const result = typeset(msg.text, msg.settings, {
+        inlineAssetResolver,
         onProgress: (info) => {
           if (!cancelledJobs.has(jobId)) post(progressMessage(jobId, info));
         }
@@ -585,8 +622,10 @@ __modules["src/engine/core/pipeline.js"] = function (require, module, exports) {
 const { getDefaultSettings, derivePlacementFlags } = require('./settings-registry');
 const { lexDocument } = require('../parser/dfa-lexer');
 const { tokenize, contentHash, normalizeText } = require('../parser/block-tokenizer');
+const { inlineParagraphSourceText, inlineNoteSourceText, inlineRunsSourceText } = require('../parser/inline-content');
+const { resolveInlineImageRun } = require('../import/document-assets');
 const { scanBrackets } = require('../parser/bracket-scanner');
-const { MeasureAPI, resolveMeasureImpl } = require('../typography/measure-api');
+const { MeasureAPI, resolveMeasureImpl, registeredFonts } = require('../typography/measure-api');
 const { protectWords } = require('../typography/protectors');
 const { applyDropWord } = require('../typography/dropword');
 const { planPages, layoutHash, bodyGeometryHash } = require('../layout/dp-planner');
@@ -636,7 +675,9 @@ function columnWidthFor(block, settings) {
  * מבוסס מילים+seq בלבד.
  */
 function stampMeasureW(lines, w) {
-  for (const ln of lines) ln.measureW = w;
+  for (let i = 0; i < lines.length; i++) {
+    lines[i].measureW = typeof w === 'function' ? w(i) : w;
+  }
 }
 
 function fullWidthWidth(settings) {
@@ -664,6 +705,89 @@ function parenSpansOfFlat(flat) {
 function offsetInSpans(at, spans) {
   for (const s of spans) if (at > s.from && at < s.to) return true;
   return false;
+}
+
+/**
+ * Turn a note-free canonical paragraph AST into the measured-run input stream.
+ * The same flat offsets used by the legacy prepasses are used to assign
+ * pre-measurement size changes; font-family boundaries remain explicit runs.
+ */
+function createStyledInlineRuns(parts, options = {}) {
+  if (!Array.isArray(parts)) throw new TypeError('pipeline: inline paragraph parts must be an array');
+  const baseSizePt = Number(options.baseSizePt);
+  if (!Number.isFinite(baseSizePt) || baseSizePt <= 0) {
+    throw new RangeError('pipeline: body font size must be positive and finite');
+  }
+  const parenScale = Number(options.parenScale) || 1;
+  const parenSpans = Array.isArray(options.parenSpans) ? options.parenSpans : [];
+  const customSpans = Array.isArray(options.customSpans) ? options.customSpans : [];
+  const result = [];
+  let flatOffset = 0;
+  let textPartCount = 0;
+
+  for (const part of parts) {
+    if (!part || part.kind !== 'text') {
+      throw new TypeError('pipeline: rich body layout only accepts note-free text parts');
+    }
+    if (textPartCount > 0) {
+      result.push({ kind: 'text', text: ' ', sizePt: baseSizePt });
+      flatOffset++;
+    }
+    for (const run of (part.runs || [])) {
+      if (!run || typeof run !== 'object') continue;
+      if (run.kind === 'image') {
+        result.push(run);
+        flatOffset += String(run.sourceText || '').length;
+        continue;
+      }
+      if (run.kind !== 'text') {
+        throw new TypeError('pipeline: unsupported canonical inline run kind: ' + String(run.kind));
+      }
+
+      const value = String(run.text || '');
+      let cursor = 0;
+      while (cursor < value.length) {
+        const first = value[cursor];
+        const isBreak = first === ' ' || first.charCodeAt(0) === 9 || first.charCodeAt(0) === 10 || first.charCodeAt(0) === 13;
+        let end = cursor + 1;
+        while (end < value.length) {
+          const ch = value[end];
+          const nextIsBreak = ch === ' ' || ch.charCodeAt(0) === 9 || ch.charCodeAt(0) === 10 || ch.charCodeAt(0) === 13;
+          if (nextIsBreak !== isBreak) break;
+          end++;
+        }
+        const token = value.slice(cursor, end);
+        const tokenOffset = flatOffset + cursor;
+        let sizePt = baseSizePt;
+        if (!isBreak) {
+          const custom = customSpans.find(span =>
+            tokenOffset < span.to && tokenOffset + token.length > span.from
+          );
+          if (custom && Number.isFinite(custom.factor) && custom.factor > 0) {
+            sizePt *= custom.factor;
+          } else if (parenSpans.some(span =>
+            tokenOffset < span.to && tokenOffset + token.length > span.from
+          )) {
+            sizePt *= parenScale;
+          }
+        }
+        const sourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart + cursor : undefined;
+        const sourceEnd = Number.isFinite(sourceStart) ? sourceStart + token.length : undefined;
+        result.push({
+          kind: 'text',
+          text: token,
+          fontFamily: run.fontFamily || null,
+          sizePt,
+          ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+          ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+        });
+        cursor = end;
+      }
+      flatOffset += value.length;
+    }
+    textPartCount++;
+  }
+  return result;
 }
 
 /**
@@ -718,7 +842,12 @@ function typeset(rawText, settingsIn, env = {}) {
   const parseOpts = {
     endnotePrefix: settings['en-line-prefix'],
     fnOpen: settings['fn-delim-open'],
-    fnClose: settings['fn-delim-close']
+    fnClose: settings['fn-delim-close'],
+    inlineOptions: {
+      fontMarkers: settings._inlineFontStyles || settings._inlineFontMarkers || [],
+      knownFamilies: settings._inlineFontFamilies || [],
+      availableFamilies: Array.from(registeredFonts.keys())
+    }
   };
   const { metadata, bodyLines } = lexDocument(rawText, parseOpts);
   const tokens = tokenize(bodyLines, parseOpts);
@@ -750,7 +879,9 @@ function typeset(rawText, settingsIn, env = {}) {
   // בודקים את measure.impl ומדלגים על הפקטור ב-impl B.
   const measureWithImpl = (t, s) => api.measureTextWidth(t, s);
   measureWithImpl.impl = api.impl;
-  void env;
+  const inlineAssetResolver = env && env.inlineAssetResolver && typeof env.inlineAssetResolver.resolve === 'function'
+    ? env.inlineAssetResolver
+    : null;
 
   const FONT_WIDTH_PROFILES = {
     'Frank Ruhl Libre': null,
@@ -845,9 +976,11 @@ function typeset(rawText, settingsIn, env = {}) {
   const endnoteTokens = [];        // טוקני הערת־סיום גלויים (endnotes mode)
   const endnoteTitleByPart = new Map(); // D-40: הוראות כותרת־מחלקה per-part
   const markersByToken = new Map(); // tokenId → [{noteIndex, marker}] (סמן אחיד — D-30)
+  const omittedInlineImagesByToken = new Map(); // intentional omission + warning when the referenced asset cannot be resolved
   // **S11:** חשבונאות שימור תוכן לסגנונות שמסיטים פסקה שלמה מהגוף —
   // הסמן נספר במקור פעם אחת, בדיוק כמו note-ref רגיל (D-30).
   const customFootnoteMarkers = new Map(); // tokenId → סמן (מוצג בגוף, הטקסט במרזב)
+  const resolvedInlineImageRunsByToken = new Map(); // successful image atoms replace source command markers in content accounting
   const customEndnoteTokens = new Set();   // tokenIds שזרמו לעמודי ההערות (הסמן מודפס שם)
   let currentPart = 0;
   let fwCount = 0;
@@ -950,8 +1083,15 @@ function typeset(rawText, settingsIn, env = {}) {
     // breaking the lines — the causal root of V23 (9 geometry changes from late application).
     // Word mapping: the words of the text parts (in order) correspond 1:1 to the words of the flattened
     // text from which flatBody was built — a shared running index (exact, no searches).
-    const textParts = t.parts.filter(p => p.kind === 'text');
-    const flatBody = textParts.map(p => p.value).join(' ');
+    // S14: inlineContent is the canonical source for paragraph text and note
+    // payloads. t.parts/t.notes remain on the token only as compatibility
+    // metadata for older consumers; measurement no longer rebuilds content
+    // from that parallel representation.
+    const inlineContent = t.inlineContent;
+    if (!inlineContent || !Array.isArray(inlineContent.parts) || !Array.isArray(inlineContent.notes)) {
+      throw new TypeError('pipeline: paragraph token is missing canonical inlineContent');
+    }
+    const flatBody = inlineParagraphSourceText(inlineContent);
     const parenSpans = parenScale !== 1 ? parenSpansOfFlat(flatBody) : [];
     const flatWordOffsets = [];
     {
@@ -1018,91 +1158,247 @@ function typeset(rawText, settingsIn, env = {}) {
     const colW = (csBlock && csBlock.style.layoutMode === 'full-width')
       ? fullWidthWidth(settings)
       : columnWidthFor({ kind: 'paragraph' }, settings);
+    // Resolve image resources against this paragraph's actual flow-lane width.
+    // Geometry is recorded now; placement remains pending until inline fragments
+    // are carried through the DP planner and the shared Page Model.
+    const inlineImageRuns = inlineContent.parts.flatMap(part =>
+      part && part.kind === 'text' ? (part.runs || []).filter(run => run.kind === 'image') : []
+    );
+    const resolvedInlineImageBoxes = new Map();
+    const inlineImageMeasurements = inlineImageRuns.map(run => {
+      const base = {
+        resourcePath: run.resourcePath,
+        sourceStart: run.sourceStart,
+        sourceEnd: run.sourceEnd,
+        layoutPending: true
+      };
+      if (!inlineAssetResolver) return { ...base, resolved: false, code: 'INLINE_IMAGE_RESOLVER_MISSING' };
+      try {
+        const measured = resolveInlineImageRun(run, inlineAssetResolver, { localWidthPx: colW });
+        if (!measured.ok) return { ...base, resolved: false, code: measured.code };
+        const image = measured.image;
+        resolvedInlineImageBoxes.set(run, image);
+        return {
+          ...base, resolved: true,
+          resourceId: image.resourceId, mimeType: image.mimeType,
+          intrinsicWidthPx: image.intrinsicWidthPx, intrinsicHeightPx: image.intrinsicHeightPx,
+          aspectRatio: image.aspectRatio, widthPx: image.widthPx, heightPx: image.heightPx,
+          align: image.align, widthPct: image.widthPct, scaledToFit: image.scaledToFit
+        };
+      } catch (error) {
+        return { ...base, resolved: false, code: 'INLINE_IMAGE_MEASUREMENT_INVALID', message: String(error && error.message || error) };
+      }
+    });
     const customFactorById = new Map(csInlineSpans.map(s => [s.styleId, s.factor]));
     let csInfo = null; // **S11:** סגנון הבלוק שיוצמד לשורות ולבלוק (מדלג על ערכי איטרציות קודמות)
 
-    for (const p of t.parts) {
-      if (p.kind === 'text') {
-        const src = normalizeText(p.value);
-        for (const wordRaw of src.split(/\s+/).filter(Boolean)) {
-          const info = flatWordOffsets[Math.min(flatWordIdx, flatWordOffsets.length - 1)];
-          flatWordIdx++;
-          const inParen = parenSpans.length > 0 && info && offsetInSpans(info.at, parenSpans);
-          // **S11:** חברות בטווח inline = **חפיפה** (לא הכלה): מילה הפותחת במפריד «
-          // («וזה) חופפת את טווח התוכן שאחריו; מילה שלפני הפתיחה לא. וכך גם בסגירה.
-          const wLen = info ? String(info.word || wordRaw).length : String(wordRaw).length;
-          const inCustom = csInlineSpans.length > 0 && info
-            ? csInlineSpans.find(s => info.at < s.to && (info.at + wLen) > s.from) : null;
-          // עדיפות: טווח inline מותאם על פני סוגריים (שניהם לא יכולים לחפור בפועל — הסגנון תופס ראשון)
-          if (inCustom) allWords.push(CUSTOM_SENTINEL + inCustom.styleId + CUSTOM_SEP + wordRaw);
-          else if (inParen && parenScale !== 1) allWords.push(PAREN_SENTINEL + wordRaw);
-          else allWords.push(wordRaw);
-        }
-      } else {
-        // note-ref: uniform marker allocation (D-30/D-41) — policy numbering + style
-        const noteRaw = t.notes[p.noteIndex];
-        const marker = markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
-        assignedMarkers.add(marker);
-        noteAssignments.push({ noteIndex: p.noteIndex, marker });
-        if (notesMode === 'inline' || (!settings['footnotes-enabled'] && notesMode !== 'endnotes')) {
-          // (c) inline / fn-off: full placeholder in the body — `${marker}\uE000${text}`
-          // (D-30: the separator is the first \uE000 — atomic in measurement, exact in extraction)
-          const noteFlat = String(noteRaw).replace(/\uE000/g, ' ');
-          const placeholder = `${MARK_TAG}${marker}${ATOMIC}${noteFlat.replace(/ /g, ATOMIC)}`; // תג (D-53): אחרי kp ה‑E000 נהיה NBSP — התג מזהה את הסמן
-          const prev = allWords.length ? allWords[allWords.length - 1] : null;
-          if (prev && !prev.includes('\u00A0') && !prev.includes(ATOMIC)) {
-            allWords[allWords.length - 1] = `${prev}\u00A0${placeholder}`; // the marker sticks to its anchor (BRZ-11)
-          } else {
-            allWords.push(placeholder);
+    // S14: one measured-item stream is now the primary path for ordinary
+    // note-free, image-free body paragraphs. Exceptional note/style modes are
+    // intentionally held on the established path until their semantic atoms
+    // are migrated, rather than approximated or silently discarded.
+    const hasInlineNotes = inlineContent.parts.some(part => part && part.kind === 'note-ref');
+    const hasInlineImages = inlineImageRuns.length > 0;
+    const allInlineImagesResolved = !hasInlineImages
+      || inlineImageRuns.every(run => resolvedInlineImageBoxes.has(run));
+    const richNoteMode = notesMode !== 'inline'
+      && (settings['footnotes-enabled'] || notesMode === 'endnotes');
+    const richNotesEligible = !hasInlineNotes || richNoteMode;
+    const richRunEligible = inlineContent.parts.length > 0
+      && inlineContent.parts.every(part => part && (part.kind === 'text' || part.kind === 'note-ref'))
+      && richNotesEligible
+      && allInlineImagesResolved
+      && !dh
+      && !csBlock
+      && (!hasInlineNotes || (csInlineSpans.length === 0 && parenSpans.length === 0));
+    let lines = null;
+    let usedMeasuredInlineLayout = false;
+    const richNoteMarkers = new Map();
+
+    if (richRunEligible) {
+      const bodySizePt = Number(settings['body-font-size-pt']);
+      const richRuns = [];
+      let canAttachMarkerBackward = false;
+      let ordinaryGlueAfterMarker = false;
+
+      for (let partIndex = 0; partIndex < inlineContent.parts.length; partIndex++) {
+        const part = inlineContent.parts[partIndex];
+        if (part.kind === 'text') {
+          if (ordinaryGlueAfterMarker) {
+            richRuns.push({ kind: 'text', text: ' ' });
+            ordinaryGlueAfterMarker = false;
+          }
+          for (const run of (part.runs || [])) {
+            richRuns.push(run);
+            if (run.kind === 'text') {
+              const value = String(run.text || '');
+              if (value.length) {
+                const last = value[value.length - 1];
+                canAttachMarkerBackward = last !== ' ' && last.charCodeAt(0) !== 9 && last.charCodeAt(0) !== 10 && last.charCodeAt(0) !== 13;
+              }
+            } else {
+              canAttachMarkerBackward = false;
+            }
           }
           continue;
         }
-        // footnotes / endnotes: only the marker is pushed in the body (counted once — at the anchor);
-        // the text of the note flows to its display location (gutter / pages of notes — D-30).
-        notes.push({ text: String(noteRaw).replace(/\uE000/g, ' '), marker, tokenId: t.id, noteIndex: p.noteIndex, part: currentPart || 1 });
+
+        const noteIndex = part.noteIndex;
+        const noteRaw = inlineNoteSourceText(inlineContent, noteIndex, ATOMIC);
+        const marker = markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
+        richNoteMarkers.set(noteIndex, marker);
+        assignedMarkers.add(marker);
+        noteAssignments.push({ noteIndex, marker });
+        notes.push({ text: String(noteRaw).split(String.fromCharCode(0xE000)).join(' '), marker, tokenId: t.id, noteIndex, part: currentPart || 1 });
         bodyMarkers.push(marker);
-        allWords.push(marker);
+
+        const nextPart = inlineContent.parts[partIndex + 1];
+        const hasNextText = !!(nextPart && nextPart.kind === 'text');
+        const hasNextNote = !!(nextPart && nextPart.kind === 'note-ref');
+        const markerText = canAttachMarkerBackward
+          ? String.fromCharCode(0x00A0) + MARK_TAG + marker
+          : MARK_TAG + marker + (hasNextText ? String.fromCharCode(0x00A0) : '');
+        richRuns.push({ kind: 'text', text: markerText });
+        ordinaryGlueAfterMarker = canAttachMarkerBackward ? (hasNextText || hasNextNote) : hasNextNote;
+        canAttachMarkerBackward = false;
+      }
+
+      const measuredRuns = createStyledInlineRuns([{ kind: 'text', runs: richRuns }], {
+        baseSizePt: bodySizePt,
+        parenScale,
+        parenSpans: hasInlineNotes ? [] : parenSpans,
+        customSpans: hasInlineNotes ? [] : csInlineSpans
+      });
+      const richLayout = api.layoutInlineRuns(measuredRuns, colW, {
+        sizePt: bodySizePt,
+        lineHeightPx: api.lineHeightPx(bodySizePt),
+        runts: settings['runt-min-width-pct'],
+        resolveImage: run => {
+          const image = resolvedInlineImageBoxes.get(run);
+          return image ? { ok: true, image } : { ok: false, code: 'INLINE_IMAGE_RESOURCE_MISSING' };
+        }
+      });
+      if (richLayout.ok) {
+        lines = richLayout.lines;
+        for (const ln of lines) {
+          ln.kind = 'paragraph';
+          ln.tokenId = t.id;
+          ln.part = currentPart;
+          ln.sizePt = bodySizePt;
+          ln.richSignatureRequired = hasInlineImages || inlineContent.parts.some(part =>
+            part && part.kind === 'text' && (part.runs || []).some(run =>
+              run && run.kind === 'text' && (
+                (run.fontFamily && run.fontFamily !== settings['body-font']) ||
+                (run.sizePt != null && Number(run.sizePt) !== bodySizePt)
+              )
+            )
+          );
+        }
+        stampMeasureW(lines, colW);
+        usedMeasuredInlineLayout = true;
+        if (hasInlineImages) resolvedInlineImageRunsByToken.set(t.id, new Set(inlineImageRuns));
+        markersByToken.set(t.id, noteAssignments);
+        if (richLayout.diagnostics.length) {
+          eventLog.emit('measure', 'inline-item-diagnostics', {
+            tokenId: t.id, diagnostics: richLayout.diagnostics
+          }, null);
+        }
+      } else {
+        eventLog.emit('measure', 'inline-item-layout-infeasible', {
+          tokenId: t.id, reason: richLayout.reason, maxAtomWidthPx: richLayout.maxAtomWidthPx
+        }, null);
       }
     }
-    markersByToken.set(t.id, noteAssignments);
 
-    // Pasting lone markers to their neighbors (BRZ-11) — before measurement
-    const boundWords = bindMarkersToNeighbors(allWords, assignedMarkers);
-
-    // Measurement with a pre-pass of parentheses (D-42) + custom inline styles (S11):
-    // PAREN_SENTINEL → parenScale; CUSTOM_SENTINEL<id> → size factor of the style.
-    const measureWithParen = (x) => {
-      const clean0 = String(x).replace(/\uE102/g, ''); // תג סמן — מוסר ממדידה (D-53)
-      const csM = CUSTOM_RE.exec(clean0);
-      if (csM) {
-        const f = customFactorById.get(csM[1]);
-        const base = api.measureTextWidth(clean0.slice(csM[0].length));
-        return f != null ? base * f : base;
-      }
-      const isParen = clean0.startsWith(PAREN_SENTINEL);
-      const clean = isParen ? clean0.slice(PAREN_SENTINEL.length) : clean0;
-      const base = api.measureTextWidth(clean);
-      return isParen ? base * parenScale : base;
-    };
-    const protectedWords = protectWords(boundWords, measureWithParen, colW);
-    const lines = api.layoutLines(protectedWords, colW, null, { runts: settings['runt-min-width-pct'] }, measureWithParen);
-    stampMeasureW(lines, colW); // **S4.21:** המידה שבה השורה נשברה בפועל (runt-check אמת) — פסקת ההקדמה נמדדת במידת טור הגוף, לא ברוחב העמוד החד-טורי
-
-    // Cleaning the sentinels from the lines + tagging parenSpans/customSpans for rendering
-    for (const ln of lines) {
-      const spans = [];
-      const customSpans = [];
-      ln.words = (ln.words || []).map((w, wi) => {
-        if (CUSTOM_RE.test(w)) {
-          const m = CUSTOM_RE.exec(w);
-          customSpans.push({ wi, styleId: m[1] });
-          return w.slice(m[0].length);
+    if (!usedMeasuredInlineLayout) {
+      for (const p of inlineContent.parts) {
+        if (p.kind === 'text') {
+          const src = normalizeText(inlineRunsSourceText(p.runs));
+          for (const wordRaw of src.split(/\s+/).filter(Boolean)) {
+            const info = flatWordOffsets[Math.min(flatWordIdx, flatWordOffsets.length - 1)];
+            flatWordIdx++;
+            const inParen = parenSpans.length > 0 && info && offsetInSpans(info.at, parenSpans);
+            // **S11:** חברות בטווח inline = **חפיפה** (לא הכלה): מילה הפותחת במפריד «
+            // («וזה) חופפת את טווח התוכן שאחריו; מילה שלפני הפתיחה לא. וכך גם בסגירה.
+            const wLen = info ? String(info.word || wordRaw).length : String(wordRaw).length;
+            const inCustom = csInlineSpans.length > 0 && info
+              ? csInlineSpans.find(s => info.at < s.to && (info.at + wLen) > s.from) : null;
+            // עדיפות: טווח inline מותאם על פני סוגריים (שניהם לא יכולים לחפור בפועל — הסגנון תופס ראשון)
+            if (inCustom) allWords.push(CUSTOM_SENTINEL + inCustom.styleId + CUSTOM_SEP + wordRaw);
+            else if (inParen && parenScale !== 1) allWords.push(PAREN_SENTINEL + wordRaw);
+            else allWords.push(wordRaw);
+          }
+        } else {
+          // note-ref: uniform marker allocation (D-30/D-41) — policy numbering + style
+          const noteRaw = inlineNoteSourceText(inlineContent, p.noteIndex, ATOMIC);
+          let marker = richNoteMarkers.get(p.noteIndex);
+          if (!marker) {
+            marker = markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
+            assignedMarkers.add(marker);
+            noteAssignments.push({ noteIndex: p.noteIndex, marker });
+          }
+          if (notesMode === 'inline' || (!settings['footnotes-enabled'] && notesMode !== 'endnotes')) {
+            // (c) inline / fn-off: full placeholder in the body — `${marker}\uE000${text}`
+            // (D-30: the separator is the first \uE000 — atomic in measurement, exact in extraction)
+            const noteFlat = String(noteRaw).replace(/\uE000/g, ' ');
+            const placeholder = `${MARK_TAG}${marker}${ATOMIC}${noteFlat.replace(/ /g, ATOMIC)}`; // תג (D-53): אחרי kp ה‑E000 נהיה NBSP — התג מזהה את הסמן
+            const prev = allWords.length ? allWords[allWords.length - 1] : null;
+            if (prev && !prev.includes('\u00A0') && !prev.includes(ATOMIC)) {
+              allWords[allWords.length - 1] = `${prev}\u00A0${placeholder}`; // the marker sticks to its anchor (BRZ-11)
+            } else {
+              allWords.push(placeholder);
+            }
+            continue;
+          }
+          // footnotes / endnotes: only the marker is pushed in the body (counted once — at the anchor);
+          // the text of the note flows to its display location (gutter / pages of notes — D-30).
+          if (!richNoteMarkers.has(p.noteIndex)) {
+            notes.push({ text: String(noteRaw).replace(/\\uE000/g, ' '), marker, tokenId: t.id, noteIndex: p.noteIndex, part: currentPart || 1 });
+            bodyMarkers.push(marker);
+          }
+          allWords.push(marker);
         }
-        if (w.startsWith(PAREN_SENTINEL)) { spans.push(wi); return w.slice(PAREN_SENTINEL.length); }
-        return w;
-      });
-      if (spans.length && parenScale !== 1) ln.parenSpans = spans;
-      if (customSpans.length) ln.customSpans = customSpans;
+      }
+      markersByToken.set(t.id, noteAssignments);
+  
+      // Pasting lone markers to their neighbors (BRZ-11) — before measurement
+      const boundWords = bindMarkersToNeighbors(allWords, assignedMarkers);
+  
+      // Measurement with a pre-pass of parentheses (D-42) + custom inline styles (S11):
+      // PAREN_SENTINEL → parenScale; CUSTOM_SENTINEL<id> → size factor of the style.
+      const measureWithParen = (x) => {
+        const clean0 = String(x).replace(/\uE102/g, ''); // תג סמן — מוסר ממדידה (D-53)
+        const csM = CUSTOM_RE.exec(clean0);
+        if (csM) {
+          const f = customFactorById.get(csM[1]);
+          const base = api.measureTextWidth(clean0.slice(csM[0].length));
+          return f != null ? base * f : base;
+        }
+        const isParen = clean0.startsWith(PAREN_SENTINEL);
+        const clean = isParen ? clean0.slice(PAREN_SENTINEL.length) : clean0;
+        const base = api.measureTextWidth(clean);
+        return isParen ? base * parenScale : base;
+      };
+      const protectedWords = protectWords(boundWords, measureWithParen, colW);
+      lines = api.layoutLines(protectedWords, colW, null, { runts: settings['runt-min-width-pct'] }, measureWithParen);
+      stampMeasureW(lines, colW); // **S4.21:** המידה שבה השורה נשברה בפועל (runt-check אמת) — פסקת ההקדמה נמדדת במידת טור הגוף, לא ברוחב העמוד החד-טורי
+  
+      // Cleaning the sentinels from the lines + tagging parenSpans/customSpans for rendering
+      for (const ln of lines) {
+        const spans = [];
+        const customSpans = [];
+        ln.words = (ln.words || []).map((w, wi) => {
+          if (CUSTOM_RE.test(w)) {
+            const m = CUSTOM_RE.exec(w);
+            customSpans.push({ wi, styleId: m[1] });
+            return w.slice(m[0].length);
+          }
+          if (w.startsWith(PAREN_SENTINEL)) { spans.push(wi); return w.slice(PAREN_SENTINEL.length); }
+          return w;
+        });
+        if (spans.length && parenScale !== 1) ln.parenSpans = spans;
+        if (customSpans.length) ln.customSpans = customSpans;
+      }
+  
     }
     // **S11:** הסגנון ברמת הבלוק על הפסקה (לא-footnote): דגלי פריסה + מונה + עיטורים מקושרים
     if (csBlock && csBlock.style.layoutMode !== 'footnote' && csBlock.style.layoutMode !== 'endnote') {
@@ -1125,12 +1421,44 @@ function typeset(rawText, settingsIn, env = {}) {
       // המונה מוצג בשורה הראשונה של הבלוק (הפס של full-width מטופל ברנדרר מהמידע על הפס)
       if (csInfo.counterMark && lines.length) lines[0].csCounterMark = csInfo.counterMark;
     }
+    const inlineImageFallbacks = inlineImageRuns
+      .filter(run => !resolvedInlineImageRunsByToken.has(t.id) || !resolvedInlineImageRunsByToken.get(t.id).has(run))
+      .map(run => ({
+        resourcePath: run.resourcePath,
+        sourceStart: run.sourceStart,
+        sourceEnd: run.sourceEnd,
+        sourceText: run.sourceText || ''
+      }));
     const blk = {
-      kind: 'paragraph', tokenId: t.id, parts: t.parts, notes, bodyMarkers, lines,
+      kind: 'paragraph', tokenId: t.id, parts: t.parts, inlineContent,
+      inlineImageFallbacks, inlineImageMeasurements, notes, bodyMarkers, lines,
       unmatchedClosers: t.unmatchedClosers || [], part: currentPart, dh,
       noteAssignments, parenCharSpans: parenSpans, flatWordOffsets,
       customStyle: csInfo
     };
+    if (inlineImageMeasurements.length) {
+      const resolvedImages = inlineImageMeasurements.filter(image => image.resolved);
+      const unresolvedImages = inlineImageMeasurements.filter(image => !image.resolved);
+      if (resolvedImages.length) {
+        eventLog.emit('measure', 'inline-image-resources-measured-awaiting-placement', {
+          tokenId: t.id, images: resolvedImages
+        }, null);
+      }
+      if (unresolvedImages.length) {
+        // Missing resources remain visible as source text; no dimensions are guessed.
+        eventLog.emit('parse', 'inline-image-markers-retained-unresolved', {
+          tokenId: t.id, images: unresolvedImages
+        }, null);
+      } else if (usedMeasuredInlineLayout) {
+        eventLog.emit('parse', 'inline-image-markers-consumed-by-inline-items', {
+          tokenId: t.id, images: resolvedImages.map(image => image.resourcePath)
+        }, null);
+      } else {
+        eventLog.emit('parse', 'inline-image-markers-retained-pending-placement', {
+          tokenId: t.id, images: resolvedImages.map(image => image.resourcePath)
+        }, null);
+      }
+    }
     if (blk.customStyle) {
       blk.fullWidth = blk.customStyle.layoutMode === 'full-width';
       blk.forcePageBreakBefore = blk.customStyle.layoutMode === 'new-location';
@@ -1498,7 +1826,12 @@ function typeset(rawText, settingsIn, env = {}) {
     // paragraph: גוף + לכל note-ref: סמן (בעוגן שבגוף) + טקסט ההערה
     // (ממקום הצגתו). הסמן אחד לכל המצטרים — הוקצה אחדת
     // בשלב הבלוק (מדיניות + סגנון) — identity-by-construction (D-30).
-    const body = t.parts.filter(p => p.kind === 'text').map(p => p.value).join(' ');
+    const resolvedImages = resolvedInlineImageRunsByToken.get(t.id) || null;
+    const body = t.inlineContent && Array.isArray(t.inlineContent.parts)
+      ? t.inlineContent.parts.filter(p => p.kind === 'text').map(p => inlineRunsSourceText(
+        resolvedImages ? p.runs.filter(run => !resolvedImages.has(run)) : p.runs
+      )).join(' ')
+      : t.parts.filter(p => p.kind === 'text').map(p => p.value).join(' ');
     const refs = t.parts.filter(p => p.kind === 'note-ref');
     const assigns = markersByToken.get(t.id) || [];
     const out = [...wordSeq(body)];
@@ -2244,6 +2577,7 @@ __modules["src/engine/parser/block-tokenizer.js"] = function (require, module, e
 const crypto = require('crypto');
 const { HEADING_RE, ENDNOTE_CLASS_RE, DEFAULT_ENDNOTE_PREFIX, compileEndnotePrefix } = require('./dfa-lexer');
 const { scanBrackets } = require('./bracket-scanner');
+const { parseInlineRuns, parseInlineParagraph } = require('./inline-content');
 
 const ATOMIC_SPACE = '\uE000'; // V3/V4 breakthrough: רווח אטומי בתוך הערה — למדידה בלבד
 
@@ -2314,14 +2648,14 @@ function tokenize(bodyLines, opts = {}) {
     if (endnoteNumRe) {
       const mNum = line.match(endnoteNumRe);
       if (mNum) {
-        tokens.push(mkToken('endnote', { num: Number(mNum[1]), text: mNum[2].trim(), raw: line }));
+        tokens.push(mkToken('endnote', { num: Number(mNum[1]), text: mNum[2].trim(), raw: line, inlineContent: parseInlineRuns(mNum[2].trim(), { ...(opts.inlineOptions || opts), allowImages: false }) }));
         continue;
       }
     }
     if (endnoteRe) {
       const mEnd = line.match(endnoteRe);
       if (mEnd && mEnd[1] && mEnd[1].trim()) {
-        tokens.push(mkToken('endnote', { text: mEnd[1].trim(), raw: line }));
+        tokens.push(mkToken('endnote', { text: mEnd[1].trim(), raw: line, inlineContent: parseInlineRuns(mEnd[1].trim(), { ...(opts.inlineOptions || opts), allowImages: false }) }));
         continue;
       }
     }
@@ -2343,27 +2677,44 @@ function tokenize(bodyLines, opts = {}) {
     let cursor = 0;
     const parts = [];
     const notes = [];
+    const inlineNotes = [];
     // בנייה לפי pairs משמאל לימין (outermost first)
     const outer = segs.pairs.filter(p => p.depth === 1).sort((a, b) => a.open - b.open); // חיצוניים בלבד (depth 1)
     const openCh = fnEnabled ? fnOpen : '[';
     const closeCh = fnEnabled ? fnClose : ']';
     for (const p of outer) {
-      const before = line.slice(cursor, p.open).trim();
-      if (before) parts.push({ kind: 'text', value: before });
+      const beforeRaw = line.slice(cursor, p.open);
+      const before = beforeRaw.trim();
+      if (before) {
+        const leading = beforeRaw.length - beforeRaw.trimStart().length;
+        const trailingEnd = beforeRaw.trimEnd().length;
+        parts.push({ kind: 'text', value: before, sourceStart: cursor + leading, sourceEnd: cursor + trailingEnd });
+      }
       // **S4.6 (ביקורת 3):** חיתוך לפי תחילת הסוגר + אורכו בפועל (closeStart/closeLen
       // מהסורק) — נכון גם לתוחמים מרובי-תווים (']]'/END) ולצורה העברית ]ם. בעבר
       // נוסף אורך התוחם המוגדר למיקום התו האחרון — קיצוץ/דילוג תווים בתוחם ארוך.
       const cs = p.closeStart != null ? p.closeStart : p.close;
       const cl = p.closeLen != null ? p.closeLen : closeCh.length;
-      const noteText = line.slice(p.open + openCh.length, cs).trim().replace(/ +/g, ATOMIC_SPACE);
+      const noteRaw = line.slice(p.open + openCh.length, cs);
+      const noteText = noteRaw.trim().replace(/ +/g, ATOMIC_SPACE);
       notes.push(noteText);
+      const noteLeading = noteRaw.length - noteRaw.trimStart().length;
+      const noteTrailingEnd = noteRaw.trimEnd().length;
+      inlineNotes.push({ text: noteRaw.trim(), sourceStart: p.open + openCh.length + noteLeading, sourceEnd: p.open + openCh.length + noteTrailingEnd });
       parts.push({ kind: 'note-ref', noteIndex: notes.length - 1 });
       cursor = cs + cl;
     }
-    const tail = line.slice(cursor).trim();
-    if (tail) parts.push({ kind: 'text', value: tail });
+    const tailRaw = line.slice(cursor);
+    const tail = tailRaw.trim();
+    if (tail) {
+      const leading = tailRaw.length - tailRaw.trimStart().length;
+      const trailingEnd = tailRaw.trimEnd().length;
+      parts.push({ kind: 'text', value: tail, sourceStart: cursor + leading, sourceEnd: cursor + trailingEnd });
+    }
 
-    tokens.push(mkToken('paragraph', { parts, notes, unmatchedClosers: segs.unmatchedClosers, raw: line }));
+    const inlineOptions = opts.inlineOptions || opts;
+    const inlineContent = parseInlineParagraph(parts, inlineNotes, inlineOptions);
+    tokens.push(mkToken('paragraph', { parts, notes, unmatchedClosers: segs.unmatchedClosers, raw: line, inlineContent }));
   }
   return tokens;
 }
@@ -2543,6 +2894,1009 @@ function scanBrackets(segments, opts = {}) {
 }
 
 module.exports = { scanBrackets, matchCloser, CLOSER_FORMS };
+
+};
+__modules["src/engine/parser/inline-content.js"] = function (require, module, exports) {
+// src/engine/parser/inline-content.js — canonical inline AST (TextRun / ImageRun), S14 P0
+'use strict';
+
+const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg']);
+const IMAGE_LIKE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'tif', 'tiff']);
+
+function asSet(value) {
+  if (value instanceof Set) return new Set(Array.from(value, x => String(x)));
+  if (Array.isArray(value)) return new Set(value.map(x => String(x)));
+  return new Set();
+}
+
+function normalizeFontMarkers(input, warnings) {
+  let entries = [];
+  if (Array.isArray(input)) entries = input.map((value, index) => [String(value && (value.id || index)), value]);
+  else if (input && typeof input === 'object') entries = Object.entries(input);
+
+  const provisional = [];
+  for (const [id, value] of entries) {
+    if (!value || typeof value !== 'object') {
+      warnings.push({ code: 'invalid-font-marker-definition', markerId: id, message: 'הגדרת סגנון גופן inline אינה אובייקט תקין.' });
+      continue;
+    }
+    const open = String(value.open != null ? value.open : (value.openMarker != null ? value.openMarker : ''));
+    const close = String(value.close != null ? value.close : (value.closeMarker != null ? value.closeMarker : ''));
+    const family = String(value.family != null ? value.family : (value.fontFamily != null ? value.fontFamily : '')).trim();
+    if (!open || !close || !family || open === close && !open.trim()) {
+      warnings.push({ code: 'invalid-font-marker-definition', markerId: id, message: 'סמני הפתיחה/סגירה ומשפחת הגופן חייבים להיות מוגדרים.' });
+      continue;
+    }
+    provisional.push({ id: String(id), open, close, family });
+  }
+
+  // A marker token may belong to only one configured style. Ambiguous definitions
+  // are rejected as a unit; guessing would make the parser dependent on ordering.
+  const owners = new Map();
+  const conflicts = new Set();
+  for (const pair of provisional) {
+    for (const token of new Set([pair.open, pair.close])) {
+      const prior = owners.get(token);
+      if (prior && prior !== pair.id) {
+        conflicts.add(prior);
+        conflicts.add(pair.id);
+      } else owners.set(token, pair.id);
+    }
+  }
+  for (const id of conflicts) {
+    warnings.push({ code: 'ambiguous-font-marker-definition', markerId: id, message: 'הגדרת הסגנון נדחתה: אותו סמן משויך ליותר מסגנון אחד.' });
+  }
+  return provisional.filter(pair => !conflicts.has(pair.id));
+}
+
+function parseImagePayload(raw) {
+  const payload = String(raw || '').trim();
+  if (!payload) return null;
+
+  let resourcePath = payload;
+  let align = null;
+  let widthPct = null;
+  const suffix = resourcePath.match(/\.([lcr])(\d{1,3})$/i);
+  if (suffix) {
+    align = ({ l: 'left', c: 'center', r: 'right' })[suffix[1].toLowerCase()];
+    widthPct = Number(suffix[2]);
+    resourcePath = resourcePath.slice(0, suffix.index);
+  }
+
+  const extMatch = resourcePath.match(/\.([a-z0-9]+)$/i);
+  const ext = extMatch ? extMatch[1].toLowerCase() : '';
+  if (!IMAGE_LIKE_EXTENSIONS.has(ext)) return null;
+  if (!IMAGE_EXTENSIONS.has(ext)) {
+    return { ok: false, code: 'unsupported-image-format', message: 'פורמט תמונה לא נתמך; מותר PNG, JPG או JPEG בלבד.' };
+  }
+  const segments = resourcePath.split('/');
+  const invalidPath =
+    !resourcePath ||
+    resourcePath.startsWith('/') ||
+    resourcePath.startsWith('//') ||
+    /^[a-z][a-z0-9+.-]*:/i.test(resourcePath) ||
+    resourcePath.includes('\\') ||
+    resourcePath.includes('?') ||
+    resourcePath.includes('#') ||
+    segments.some(part => !part || part === '.' || part === '..') ||
+    (widthPct != null && (!Number.isInteger(widthPct) || widthPct < 1 || widthPct > 100));
+  if (invalidPath) {
+    return { ok: false, code: 'invalid-image-path-or-size', message: 'נתיב התמונה או אחוז הרוחב אינם תקינים; נדרש נתיב יחסי ורוחב 1–100%.' };
+  }
+  return { ok: true, resourcePath, align, widthPct };
+}
+
+function parseInlineRuns(value, options = {}) {
+  const source = String(value == null ? '' : value);
+  const warnings = [];
+  const availableFamilies = asSet(options.availableFamilies);
+  const knownFamilies = asSet(options.knownFamilies);
+  for (const family of availableFamilies) knownFamilies.add(family);
+  const fontMarkers = normalizeFontMarkers(options.fontMarkers, warnings);
+  const hasAvailabilityContract = options.availableFamilies != null;
+
+  const markerRemovals = [];
+  const spans = [];
+  const images = [];
+  const stack = [];
+  const invalidOpens = new Set();
+  const configuredTokens = [];
+  for (const pair of fontMarkers) {
+    configuredTokens.push({ token: pair.open, pair, type: 'open' });
+    if (pair.close !== pair.open) configuredTokens.push({ token: pair.close, pair, type: 'close' });
+  }
+  configuredTokens.sort((a, b) => b.token.length - a.token.length);
+
+  const sourceOffset = Number.isFinite(options.sourceOffset) ? options.sourceOffset : 0;
+  const addWarning = (code, start, end, message, extra = {}) => {
+    warnings.push({ code, start: start + sourceOffset, end: end + sourceOffset, message, ...extra });
+  };
+
+  const markerAt = (index) => {
+    const candidates = [];
+    for (const entry of configuredTokens) {
+      if (!source.startsWith(entry.token, index)) continue;
+      let type = entry.type;
+      if (entry.pair.open === entry.pair.close) {
+        type = stack.length && stack[stack.length - 1].id === entry.pair.id ? 'close' : 'open';
+      }
+      candidates.push({ ...entry, type });
+    }
+    if (source.startsWith('</>', index)) {
+      candidates.push({ token: '</>', type: 'generic-close', tokenLength: 3 });
+    }
+    if (source[index] === '<' && source[index + 1] !== '/') {
+      const match = source.slice(index).match(/^<([^<>]{1,96})>/);
+      if (match) {
+        const family = match[1].trim();
+        const validName = !!family && !/[{};]/.test(family);
+        const closesLater = source.indexOf('</>', index + match[0].length) >= 0;
+        if (validName && (knownFamilies.has(family) || closesLater)) {
+          candidates.push({ token: match[0], type: 'generic-open', family });
+        }
+      }
+    }
+    if (!candidates.length) return null;
+    candidates.sort((a, b) => b.token.length - a.token.length);
+    return candidates[0];
+  };
+
+  let index = 0;
+  while (index < source.length) {
+    if (options.allowImages !== false && source[index] === '#') {
+      const close = source.indexOf('#', index + 1);
+      if (close > index + 1) {
+        const parsed = parseImagePayload(source.slice(index + 1, close));
+        if (parsed && parsed.ok) {
+          images.push({
+            kind: 'image',
+            resourcePath: parsed.resourcePath,
+            align: parsed.align,
+            widthPct: parsed.widthPct,
+            sourceText: source.slice(index, close + 1),
+            sourceStart: index + sourceOffset,
+            sourceEnd: close + 1 + sourceOffset
+          });
+          index = close + 1;
+          continue;
+        }
+        if (parsed && !parsed.ok) {
+          addWarning(parsed.code, index, close + 1, parsed.message, { source: source.slice(index, close + 1) });
+        }
+      }
+    }
+
+    const marker = markerAt(index);
+    if (!marker) { index++; continue; }
+
+    const end = index + marker.token.length;
+    markerRemovals.push({ start: index, end });
+    if (marker.type === 'open' || marker.type === 'generic-open') {
+      stack.push({
+        id: marker.type === 'generic-open' ? 'generic' : marker.pair.id,
+        kind: marker.type === 'generic-open' ? 'generic' : 'configured',
+        family: marker.type === 'generic-open' ? marker.family : marker.pair.family,
+        start: end,
+        markerStart: index,
+        markerEnd: end,
+        depth: stack.length
+      });
+    } else {
+      const top = stack[stack.length - 1];
+      const matches = marker.type === 'generic-close'
+        ? !!top && top.kind === 'generic'
+        : !!top && top.kind === 'configured' && top.id === marker.pair.id;
+      if (matches) {
+        stack.pop();
+        if (!invalidOpens.has(top) && top.start < index) {
+          spans.push({
+            start: top.start,
+            end: index,
+            family: top.family,
+            depth: top.depth,
+            available: !hasAvailabilityContract || availableFamilies.has(top.family),
+            markerId: top.id
+          });
+        }
+        if (hasAvailabilityContract && !availableFamilies.has(top.family)) {
+          addWarning('font-family-unavailable', top.markerStart, end, 'משפחת הגופן של הטווח אינה טעונה; הטקסט נשמר בגופן הרגיל.', { family: top.family, markerId: top.id });
+        }
+      } else {
+        const matchesOpen = (item) => marker.type === 'generic-close'
+          ? item.kind === 'generic'
+          : item.kind === 'configured' && item.id === marker.pair.id;
+        let matchIndex = -1;
+        for (let si = stack.length - 1; si >= 0; si--) {
+          if (matchesOpen(stack[si])) { matchIndex = si; break; }
+        }
+        if (matchIndex >= 0) {
+          // A close marker that jumps over a nested open marker makes every
+          // intersecting range ambiguous. Invalidate the entire crossing group.
+          for (let si = matchIndex; si < stack.length; si++) invalidOpens.add(stack[si]);
+          stack.splice(matchIndex);
+          addWarning('crossing-font-range', index, end,
+            'טווחי גופן חוצים זה את זה; כל הטווחים המעורבים נשארים בטקסט רגיל.');
+        } else {
+          addWarning('unmatched-font-close', index, end,
+            'סמן סגירת גופן ללא פתיחה תואמת הוסר; הטקסט נשמר ללא שינוי.');
+        }
+      }
+    }
+    index = end;
+  }
+
+  for (const open of stack) {
+    addWarning('unclosed-font-range', open.markerStart, open.markerEnd, 'סמן פתיחת גופן ללא סגירה תואמת הוסר; הטקסט נשמר בגופן הרגיל.', { family: open.family, markerId: open.id });
+  }
+
+  // Build interval events so font lookup is linear in the number of runs, not
+  // quadratic in the number of characters × nested ranges.
+  const starts = new Map();
+  const ends = new Map();
+  const removals = new Map();
+  const imageAt = new Map();
+  const boundaries = new Set([0, source.length]);
+  const addTo = (map, at, item) => {
+    if (!map.has(at)) map.set(at, []);
+    map.get(at).push(item);
+  };
+  for (const span of spans) {
+    if (!span.available || span.end <= span.start) continue;
+    addTo(starts, span.start, span);
+    addTo(ends, span.end, span);
+    boundaries.add(span.start); boundaries.add(span.end);
+  }
+  for (const marker of markerRemovals) {
+    addTo(removals, marker.start, marker);
+    boundaries.add(marker.start); boundaries.add(marker.end);
+  }
+  for (const image of images) {
+    const localStart = image.sourceStart - sourceOffset;
+    const localEnd = image.sourceEnd - sourceOffset;
+    imageAt.set(localStart, image);
+    boundaries.add(localStart); boundaries.add(localEnd);
+  }
+
+  const points = Array.from(boundaries).sort((a, b) => a - b);
+  const active = [];
+  const runs = [];
+  const appendText = (text, family, start, end) => {
+    if (!text) return;
+    const prev = runs[runs.length - 1];
+    if (prev && prev.kind === 'text' && prev.fontFamily === (family || null) && prev.sourceEnd <= start) {
+      prev.text += text;
+      prev.sourceEnd = end;
+    } else {
+      runs.push({ kind: 'text', text, fontFamily: family || null, sourceStart: start + sourceOffset, sourceEnd: end + sourceOffset });
+    }
+  };
+
+  let p = 0;
+  while (p < points.length - 1) {
+    const at = points[p];
+    const ending = (ends.get(at) || []).slice().sort((a, b) => b.depth - a.depth);
+    for (const span of ending) {
+      const pos = active.lastIndexOf(span);
+      if (pos >= 0) active.splice(pos, 1);
+    }
+    const beginning = (starts.get(at) || []).slice().sort((a, b) => a.depth - b.depth);
+    for (const span of beginning) active.push(span);
+
+    const image = imageAt.get(at);
+    if (image) {
+      runs.push({ ...image });
+    } else {
+      const marker = removals.get(at);
+      if (!marker) {
+        let family = null;
+        for (let k = active.length - 1; k >= 0; k--) {
+          if (active[k].available) { family = active[k].family; break; }
+        }
+        const next = points[p + 1];
+        appendText(source.slice(at, next), family, at, next);
+      }
+    }
+    p++;
+  }
+
+  const text = runs.filter(run => run.kind === 'text').map(run => run.text).join('');
+  return {
+    version: 1,
+    runs,
+    text,
+    warnings,
+    hasImages: images.length > 0,
+    hasFontRanges: spans.some(span => span.available)
+  };
+}
+
+
+/**
+ * Return the lossless source projection of canonical inline runs.
+ * Images are projected back to their original marker until a dimensioned
+ * resource resolver is supplied; this prevents silent content loss.
+ */
+function inlineRunsSourceText(runs = []) {
+  return (Array.isArray(runs) ? runs : []).map(run => {
+    if (!run) return '';
+    if (run.kind === 'text') return run.text || '';
+    if (run.kind === 'image') return run.sourceText || '';
+    return '';
+  }).join('');
+}
+
+/** Plain source text of a canonical paragraph, with note references omitted. */
+function inlineParagraphSourceText(inlineContent) {
+  if (!inlineContent || !Array.isArray(inlineContent.parts)) {
+    throw new TypeError('inline-content: canonical paragraph parts are required');
+  }
+  return inlineContent.parts
+    .filter(part => part && part.kind === 'text')
+    .map(part => inlineRunsSourceText(part.runs))
+    .join(' ');
+}
+
+/** Source text of a canonical note; optional atomic-space projection for layout. */
+function inlineNoteSourceText(inlineContent, noteIndex, atomicSpace = null) {
+  const note = inlineContent && Array.isArray(inlineContent.notes) ? inlineContent.notes[noteIndex] : null;
+  if (!note) throw new RangeError('inline-content: note index is out of range');
+  const source = inlineRunsSourceText(note.runs);
+  return atomicSpace == null ? source : source.replace(/ +/g, atomicSpace);
+}
+
+/** Parse paragraph text fragments and footnotes into one shared inline AST. */
+function parseInlineParagraph(parts = [], notes = [], options = {}) {
+  const parsedParts = [];
+  const parsedNotes = [];
+  const warnings = [];
+  let hasImages = false;
+  let hasFontRanges = false;
+
+  for (const part of parts) {
+    if (!part || part.kind !== 'text') {
+      if (part && part.kind === 'note-ref') parsedParts.push({ kind: 'note-ref', noteIndex: part.noteIndex });
+      continue;
+    }
+    const parsed = parseInlineRuns(part.value, {
+      ...options,
+      sourceOffset: Number.isFinite(part.sourceStart) ? part.sourceStart : 0,
+      allowImages: true
+    });
+    parsedParts.push({ kind: 'text', sourceStart: part.sourceStart, sourceEnd: part.sourceEnd, runs: parsed.runs });
+    warnings.push(...parsed.warnings);
+    hasImages = hasImages || parsed.hasImages;
+    hasFontRanges = hasFontRanges || parsed.hasFontRanges;
+  }
+
+  for (const note of notes) {
+    const payload = note && typeof note === 'object' ? note.text : note;
+    const sourceStart = note && typeof note === 'object' && Number.isFinite(note.sourceStart) ? note.sourceStart : 0;
+    const parsed = parseInlineRuns(payload, { ...options, sourceOffset: sourceStart, allowImages: true });
+    parsedNotes.push({ sourceStart, sourceEnd: note && typeof note === 'object' ? note.sourceEnd : undefined, runs: parsed.runs });
+    warnings.push(...parsed.warnings);
+    hasImages = hasImages || parsed.hasImages;
+    hasFontRanges = hasFontRanges || parsed.hasFontRanges;
+  }
+
+  return { version: 1, parts: parsedParts, notes: parsedNotes, warnings, hasImages, hasFontRanges };
+}
+module.exports = { parseInlineRuns, parseInlineParagraph, parseImagePayload, inlineRunsSourceText, inlineParagraphSourceText, inlineNoteSourceText };
+
+};
+__modules["src/engine/import/document-assets.js"] = function (require, module, exports) {
+// src/engine/import/document-assets.js — deterministic local document assets (S14.1)
+'use strict';
+
+const { readZip, utf8Decode, crc32 } = require('./zip-reader');
+
+const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+const JPEG_SOF = new Set([
+  0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7,
+  0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf
+]);
+
+function asBytes(value) {
+  if (value instanceof Uint8Array) return value;
+  if (value instanceof ArrayBuffer) return new Uint8Array(value);
+  if (ArrayBuffer.isView(value)) return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  return null;
+}
+
+/** Normalize a document-relative path without resolving it against the host filesystem. */
+function normalizeDocumentPath(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const raw = value.normalize('NFC').replace(/\\/g, '/');
+  if (
+    raw.startsWith('/') ||
+    raw.startsWith('//') ||
+    /^[a-z][a-z0-9+.-]*:/i.test(raw) ||
+    raw.includes('?') ||
+    raw.includes('#') ||
+    raw.includes('\0')
+  ) return null;
+  const segments = raw.split('/');
+  if (segments.some(part => !part || part === '.' || part === '..')) return null;
+  return segments.join('/');
+}
+
+function imageExtension(path) {
+  const match = String(path).match(/\.([^.\/]+)$/);
+  return match ? match[1].toLowerCase() : '';
+}
+
+function positiveDimensions(width, height) {
+  return Number.isInteger(width) && width > 0
+    && Number.isInteger(height) && height > 0
+    && width <= 100000 && height <= 100000;
+}
+
+/** Read intrinsic dimensions from PNG IHDR or a JPEG SOF marker. */
+function readImageDimensions(input, expectedFormat = null) {
+  const bytes = asBytes(input);
+  if (!bytes || bytes.length < 10) return { ok: false, code: 'image-data-invalid' };
+
+  if (bytes.length >= 8 && PNG_SIGNATURE.every((byte,index)=>bytes[index]===byte)) {
+    let offset=8, width=0, height=0, bitDepth=0, colorType=-1;
+    let sawHeader=false, sawData=false, sawEnd=false;
+    const allowedDepths = {
+      0:[1,2,4,8,16], 2:[8,16], 3:[1,2,4,8], 4:[8,16], 6:[8,16]
+    };
+    while (offset < bytes.length) {
+      if (offset + 12 > bytes.length) return { ok:false, code:'image-png-chunk-truncated' };
+      const length = ((bytes[offset]<<24)|(bytes[offset+1]<<16)|(bytes[offset+2]<<8)|bytes[offset+3])>>>0;
+      const typeStart=offset+4, dataStart=offset+8, dataEnd=dataStart+length, chunkEnd=dataEnd+4;
+      if (chunkEnd > bytes.length || dataEnd < dataStart) return { ok:false, code:'image-png-chunk-truncated' };
+      const type=String.fromCharCode(bytes[typeStart],bytes[typeStart+1],bytes[typeStart+2],bytes[typeStart+3]);
+      const expectedCrc=((bytes[dataEnd]<<24)|(bytes[dataEnd+1]<<16)|(bytes[dataEnd+2]<<8)|bytes[dataEnd+3])>>>0;
+      const actualCrc=crc32(bytes.subarray(typeStart,dataEnd));
+      if (actualCrc !== expectedCrc) return { ok:false, code:'image-png-crc-mismatch', chunk:type };
+
+      if (!sawHeader) {
+        if (type !== 'IHDR' || length !== 13) return { ok:false, code:'image-png-header-invalid' };
+        width=((bytes[dataStart]<<24)|(bytes[dataStart+1]<<16)|(bytes[dataStart+2]<<8)|bytes[dataStart+3])>>>0;
+        height=((bytes[dataStart+4]<<24)|(bytes[dataStart+5]<<16)|(bytes[dataStart+6]<<8)|bytes[dataStart+7])>>>0;
+        bitDepth=bytes[dataStart+8];
+        colorType=bytes[dataStart+9];
+        const compression=bytes[dataStart+10], filter=bytes[dataStart+11], interlace=bytes[dataStart+12];
+        if (!positiveDimensions(width,height) || width*height > 200000000) {
+          return { ok:false, code:'image-dimensions-invalid' };
+        }
+        if (!allowedDepths[colorType] || !allowedDepths[colorType].includes(bitDepth)
+          || compression!==0 || filter!==0 || (interlace!==0 && interlace!==1)) {
+          return { ok:false, code:'image-png-header-invalid' };
+        }
+        sawHeader=true;
+      } else if (type === 'IHDR') {
+        return { ok:false, code:'image-png-duplicate-header' };
+      }
+      if (type === 'IDAT') sawData=true;
+      if (type === 'IEND') {
+        if (length!==0 || !sawData) return { ok:false, code:'image-png-end-invalid' };
+        sawEnd=true;
+        offset=chunkEnd;
+        break;
+      }
+      offset=chunkEnd;
+    }
+    if (!sawHeader || !sawData || !sawEnd || offset!==bytes.length) {
+      return { ok:false, code:'image-png-structure-incomplete' };
+    }
+    if (expectedFormat && expectedFormat!=='png') return { ok:false, code:'image-format-mismatch' };
+    return { ok:true, format:'png', mimeType:'image/png', width, height, aspectRatio:width/height };
+  }
+
+  if (bytes[0]!==0xff || bytes[1]!==0xd8) return { ok:false, code:'image-format-unsupported' };
+  if (expectedFormat && expectedFormat!=='jpg' && expectedFormat!=='jpeg') {
+    return { ok:false, code:'image-format-mismatch' };
+  }
+  let offset=2, width=0, height=0, sawSof=false, sawScan=false, sawEoi=false;
+  while (offset < bytes.length) {
+    if (bytes[offset]!==0xff) {
+      if (!sawScan) return { ok:false, code:'image-jpeg-marker-invalid' };
+      offset++;
+      continue;
+    }
+    while (offset<bytes.length && bytes[offset]===0xff) offset++;
+    if (offset>=bytes.length) break;
+    const marker=bytes[offset++];
+    if (marker===0x00) {
+      if (!sawScan) return { ok:false, code:'image-jpeg-marker-invalid' };
+      continue;
+    }
+    if (marker===0xd9) { sawEoi=true; break; }
+    if (marker===0xd8 || marker===0x01 || (marker>=0xd0 && marker<=0xd7)) continue;
+    if (offset+2>bytes.length) return { ok:false, code:'image-jpeg-segment-truncated' };
+    const length=(bytes[offset]<<8)|bytes[offset+1];
+    if (length<2 || offset+length>bytes.length) return { ok:false, code:'image-jpeg-segment-invalid' };
+    if (JPEG_SOF.has(marker)) {
+      if (length<8) return { ok:false, code:'image-jpeg-sof-invalid' };
+      height=(bytes[offset+3]<<8)|bytes[offset+4];
+      width=(bytes[offset+5]<<8)|bytes[offset+6];
+      if (!positiveDimensions(width,height) || width*height>200000000) {
+        return { ok:false, code:'image-dimensions-invalid' };
+      }
+      sawSof=true;
+    }
+    if (marker===0xda) {
+      if (!sawSof) return { ok:false, code:'image-jpeg-sof-missing' };
+      sawScan=true;
+      // Entropy-coded scan: skip stuffed FF00 and restart markers; other markers
+      // terminate the scan and are parsed by the outer loop (including EOI).
+      offset += length;
+      continue;
+    }
+    offset += length;
+  }
+  if (!sawSof) return { ok:false, code:'image-jpeg-dimensions-not-found' };
+  if (!sawScan || !sawEoi) return { ok:false, code:'image-jpeg-structure-incomplete' };
+  if (expectedFormat && expectedFormat!=='jpg' && expectedFormat!=='jpeg') {
+    return { ok:false, code:'image-format-mismatch' };
+  }
+  return { ok:true, format:'jpeg', mimeType:'image/jpeg', width, height, aspectRatio:width/height };
+}
+
+/**
+ * Build a resolver from a ZIP entry sequence or a deterministic folder scan.
+ * Exact paths win; basename lookup uses first-seen order.
+ */
+function createInlineAssetResolver(entries = []) {
+  if (!Array.isArray(entries)) throw new TypeError('document-assets: entries must be an array');
+  const byPath = new Map();
+  const byBasename = new Map();
+  const assets = [];
+  const diagnostics = [];
+
+  for (let index = 0; index < entries.length; index++) {
+    const entry = entries[index] || {};
+    const path = normalizeDocumentPath(entry.path || entry.name || '');
+    if (!path) {
+      diagnostics.push({ code: 'INLINE_ASSET_PATH_INVALID', index, path: entry.path || entry.name || null });
+      continue;
+    }
+    const extension = imageExtension(path);
+    if (!['png', 'jpg', 'jpeg'].includes(extension)) {
+      diagnostics.push({ code: 'INLINE_ASSET_FORMAT_UNSUPPORTED', index, path });
+      continue;
+    }
+    const bytes = asBytes(entry.data != null ? entry.data : entry.bytes);
+    if (!bytes || !bytes.length) {
+      diagnostics.push({ code: 'INLINE_ASSET_DATA_MISSING', index, path });
+      continue;
+    }
+    const dimensions = readImageDimensions(bytes, extension);
+    if (!dimensions.ok) {
+      diagnostics.push({ code: 'INLINE_ASSET_INVALID', index, path, reason: dimensions.code });
+      continue;
+    }
+    const asset = {
+      id: 'inline-asset:' + index + ':' + path,
+      path,
+      basename: path.slice(path.lastIndexOf('/') + 1),
+      order: index,
+      bytes,
+      ...dimensions
+    };
+    if (!byPath.has(path)) byPath.set(path, asset);
+    else diagnostics.push({ code: 'INLINE_ASSET_DUPLICATE_PATH', index, path, keptOrder: byPath.get(path).order });
+    if (!byBasename.has(asset.basename)) byBasename.set(asset.basename, asset);
+    assets.push(asset);
+  }
+
+  function resolve(resourcePath) {
+    const normalized = normalizeDocumentPath(resourcePath);
+    if (!normalized) return { ok: false, code: 'INLINE_IMAGE_PATH_INVALID', resourcePath };
+    const asset = normalized.includes('/')
+      ? byPath.get(normalized)
+      : (byPath.get(normalized) || byBasename.get(normalized));
+    if (!asset) return { ok: false, code: 'INLINE_IMAGE_RESOURCE_MISSING', resourcePath: normalized };
+    return { ok: true, asset };
+  }
+
+  return { resolve, assets: assets.slice(), diagnostics: diagnostics.slice(), count: assets.length };
+}
+
+/** Resolve one ImageRun and calculate its box from the local flow-lane width. */
+function resolveInlineImageRun(run, resolver, options = {}) {
+  if (!run || run.kind !== 'image') throw new TypeError('document-assets: ImageRun required');
+  if (!resolver || typeof resolver.resolve !== 'function') {
+    return { ok: false, code: 'INLINE_IMAGE_RESOLVER_MISSING', resourcePath: run.resourcePath };
+  }
+  const result = resolver.resolve(run.resourcePath);
+  if (!result.ok) return result;
+
+  const widthPct = run.widthPct == null ? (options.defaultWidthPct == null ? 50 : options.defaultWidthPct) : run.widthPct;
+  const align = run.align || options.defaultAlign || 'center';
+  const localWidthPx = options.localWidthPx;
+  if (!Number.isFinite(localWidthPx) || localWidthPx <= 0) {
+    throw new RangeError('document-assets: localWidthPx must be positive and finite');
+  }
+  if (!Number.isInteger(widthPct) || widthPct < 1 || widthPct > 100) {
+    throw new RangeError('document-assets: widthPct must be an integer from 1 to 100');
+  }
+  if (!['left', 'center', 'right'].includes(align)) {
+    throw new RangeError('document-assets: align must be left, center or right');
+  }
+
+  const asset = result.asset;
+  let widthPx = localWidthPx * widthPct / 100;
+  let heightPx = widthPx / asset.aspectRatio;
+  let scaledToFit = false;
+  const maxHeightPx = options.maxHeightPx;
+  if (Number.isFinite(maxHeightPx) && maxHeightPx > 0 && heightPx > maxHeightPx) {
+    const scale = maxHeightPx / heightPx;
+    widthPx *= scale;
+    heightPx *= scale;
+    scaledToFit = true;
+  }
+  return {
+    ok: true,
+    image: {
+      kind: 'image',
+      id: asset.id,
+      resourceId: asset.id,
+      resourcePath: asset.path,
+      bytes: asset.bytes,
+      mimeType: asset.mimeType,
+      intrinsicWidthPx: asset.width,
+      intrinsicHeightPx: asset.height,
+      aspectRatio: asset.aspectRatio,
+      widthPct,
+      align,
+      widthPx,
+      heightPx,
+      scaledToFit,
+      sourceStart: run.sourceStart,
+      sourceEnd: run.sourceEnd,
+      sourceText: run.sourceText || ''
+    }
+  };
+}
+
+/** Read a ZIP document package: exactly one root-level TXT plus supported images. */
+function readDocumentZip(input) {
+  const bytes = asBytes(input);
+  if (!bytes) return { ok: false, error: 'zip-data-invalid', text: null, textPath: null, assets: [], denied: [] };
+  const archive = readZip(bytes);
+  if (!archive.ok) {
+    return { ok: false, error: archive.error, text: null, textPath: null, assets: [], denied: archive.denied || [] };
+  }
+  const rootTexts = archive.entries.filter(entry =>
+    !entry.name.includes('/') && /\.txt$/i.test(entry.name)
+  );
+  if (rootTexts.length !== 1) {
+    return {
+      ok: false,
+      error: rootTexts.length ? 'zip-ambiguous-root-text' : 'zip-root-text-missing',
+      text: null,
+      textPath: null,
+      assets: [],
+      denied: archive.denied
+    };
+  }
+  const textEntry = rootTexts[0];
+  const assetEntries = archive.entries
+    .filter(entry => entry !== textEntry && ['png', 'jpg', 'jpeg'].includes(imageExtension(entry.name)))
+    .map(entry => ({ path: entry.name, data: entry.data }));
+  const resolver = createInlineAssetResolver(assetEntries);
+  return {
+    ok: true,
+    text: utf8Decode(textEntry.data),
+    textPath: textEntry.name,
+    assets: assetEntries,
+    assetDiagnostics: resolver.diagnostics,
+    denied: archive.denied
+  };
+}
+
+module.exports = {
+  normalizeDocumentPath,
+  readImageDimensions,
+  createInlineAssetResolver,
+  resolveInlineImageRun,
+  readDocumentZip
+};
+
+};
+__modules["src/engine/import/zip-reader.js"] = function (require, module, exports) {
+// src/engine/import/zip-reader.js — קורא ZIP ללא תלות חיצונית (S11.1-3, DOCX import)
+'use strict';
+
+/**
+ * קורא ZIP מינימלי לייבוא DOCX: פורמט STORE(0) + DEFLATE(8).
+ * **סביבת-אגנוסטית (תיקון 03.11 — "Buffer is not defined" בדפדפן):** אין כל
+ * שימוש ב-Buffer/שיטותיו — Uint8Array טהור + פונקציות עזר פרטיות (u16le/u32le/
+ * utf8Decode). עובד זהה ב-Node (Buffer הוא sub-class של Uint8Array) ובדפדפן.
+ * node:zlib (מובנה, לא תלות חיצונית) משמש כשקיים; אחרת המנפח הטהור להלן.
+ * **אבטחה (S13 pass):**
+ *  - path traversal: שמות רשומות עם ../ או / אבסולוטי או בריחת תחילית — נדחים
+ *    ברשימה (denied) ולא נפתחים לעולם;
+ *  - החזרת רשומות מנורמלות בלבד (שמות יחסיים נקיים);
+ *  - אין eval; אין כתיבה לדיסק — הכל בזיכרון.
+ */
+
+// ---------- עזרי בתים ללא Buffer (זהה לפלט readUInt16LE/readUInt32LE) ----------
+function u16le(b, o) { return b[o] | (b[o + 1] << 8); }
+function u32le(b, o) { return (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0; }
+function u8sub(b, s, e) { return b.subarray ? b.subarray(s, e) : b.slice(s, e); }
+
+/** פענוח UTF-8 טהור (TextDecoder כשקיים — אחרת מימוש ידני; תואם Buffer.toString('utf8')). */
+function utf8Decode(bytes) {
+  if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf-8').decode(bytes);
+  let s = '';
+  for (let i = 0; i < bytes.length;) {
+    const c = bytes[i];
+    if (c < 0x80) { s += String.fromCharCode(c); i++; }
+    else if (c < 0xe0) { s += String.fromCharCode(((c & 0x1f) << 6) | (bytes[i + 1] & 0x3f)); i += 2; }
+    else if (c < 0xf0) { s += String.fromCharCode(((c & 0x0f) << 12) | ((bytes[i + 1] & 0x3f) << 6) | (bytes[i + 2] & 0x3f)); i += 3; }
+    else {
+      const cp = ((c & 0x07) << 18) | ((bytes[i + 1] & 0x3f) << 12) | ((bytes[i + 2] & 0x3f) << 6) | (bytes[i + 3] & 0x3f);
+      const off = cp - 0x10000;
+      s += String.fromCharCode(0xd800 + (off >> 10), 0xdc00 + (off & 0x3ff));
+      i += 4;
+    }
+  }
+  return s;
+}
+
+const zlib = (() => {
+  try { return require('zlib'); } catch (e) { return null; } // בדפדפן אין zlib — מנפח טהור
+})();
+
+// =====================================================================
+// מנפח raw-DEFLATE טהור (BTYPE 00/01/10) — גיבוי לסביבות בלי zlib (דפדפן).
+// אותו פלט כמו zlib.inflateRawSync; מבחן השקילות בבדיקות S11 (both-paths).
+// =====================================================================
+class BitReader {
+  constructor(buf, startByte) {
+    this.buf = buf; this.pos = startByte << 3; this.bit = 0; // מספרי ביט מוחלטים
+  }
+  read(count) {
+    let v = 0;
+    for (let i = 0; i < count; i++) {
+      const byteIdx = this.pos >> 3;
+      if (byteIdx >= this.buf.length) throw new Error('deflate: out-of-input');
+      const bit = (this.buf[byteIdx] >> (this.pos & 7)) & 1;
+      v |= bit << i;
+      this.pos++;
+    }
+    return v;
+  }
+  alignByte() { this.pos = (this.pos + 7) & ~7; }
+}
+
+function buildHuffman(lengths) {
+  // קודי canonical Huffman לפי טבלאות אורך (DEFLATE spec 3.2.2)
+  const maxLen = 15;
+  const counts = new Array(maxLen + 1).fill(0);
+  for (const l of lengths) counts[l]++;
+  counts[0] = 0;
+  const next = new Array(maxLen + 2).fill(0);
+  let code = 0;
+  for (let b = 1; b <= maxLen; b++) { code = (code + counts[b - 1]) << 1; next[b] = code; }
+  const map = new Map();
+  for (let sym = 0; sym < lengths.length; sym++) {
+    const l = lengths[sym];
+    if (l === 0) continue;
+    const c = next[l]++;
+    map.set((c << 4) | l, sym); // מפתח: code<<4|len — פענוח לפי סדר עולה
+  }
+  return { map, counts, lengths };
+}
+
+function decodeSymbol(br, huff) {
+  // קריאה ביט־ביט־ביט ובניית קוד — ללא טבלה הפוכה (פשוט ונכון; קלטים קטנים)
+  let code = 0, len = 0;
+  for (;;) {
+    code = (code << 1) | br.read(1);
+    len++;
+    if (len > 15) throw new Error('deflate: bad-code');
+    const sym = huff.map.get((code << 4) | len);
+    if (sym !== undefined) return sym;
+  }
+}
+
+const LEN_BASE = [3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258];
+const LEN_EXTRA = [0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
+const DIST_BASE = [1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577];
+const DIST_EXTRA = [0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
+
+function fixedLitHuff() {
+  const lengths = [];
+  for (let i = 0; i < 144; i++) lengths.push(8);
+  for (let i = 144; i < 256; i++) lengths.push(9);
+  for (let i = 256; i < 280; i++) lengths.push(7);
+  for (let i = 280; i < 288; i++) lengths.push(8);
+  return buildHuffman(lengths);
+}
+function fixedDistHuff() { return buildHuffman(new Array(30).fill(5)); }
+
+/** מנפח raw DEFLATE טהור. הפלט כולו במערך אחד עד הסוף (backref ≤32K תקין תמיד). @returns {Uint8Array} */
+function inflateRawPure(buf, startByte = 0, expectedSize = -1) {
+  const br = new BitReader(buf, startByte);
+  const out = [];
+  const pushByte = (b) => { out.push(b); };
+
+  for (;;) {
+    const final = br.read(1);
+    const btype = br.read(2);
+    if (btype === 0) {
+      br.alignByte();
+      const lenPos = br.pos >> 3;
+      if (lenPos + 4 > buf.length) throw new Error('deflate: stored-header-oob');
+      const len = buf[lenPos] | (buf[lenPos + 1] << 8);
+      const nlen = buf[lenPos + 2] | (buf[lenPos + 3] << 8);
+      if ((len ^ 0xFFFF) !== nlen) throw new Error('deflate: stored-nlen-mismatch');
+      const dataStart = lenPos + 4;
+      if (dataStart + len > buf.length) throw new Error('deflate: stored-oob');
+      for (let i = 0; i < len; i++) pushByte(buf[dataStart + i]);
+      br.pos = (dataStart + len) << 3;
+    } else if (btype === 1 || btype === 2) {
+      let litHuff, distHuff;
+      if (btype === 1) {
+        litHuff = fixedLitHuff(); distHuff = fixedDistHuff();
+      } else {
+        const hlit = br.read(5) + 257;
+        const hdist = br.read(5) + 1;
+        const hclen = br.read(4) + 4;
+        const ORDER = [16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
+        const clLengths = new Array(19).fill(0);
+        for (let i = 0; i < hclen; i++) clLengths[ORDER[i]] = br.read(3);
+        const clHuff = buildHuffman(clLengths);
+        const lengths = [];
+        let prev = 0;
+        const total = hlit + hdist;
+        while (lengths.length < total) {
+          const sym = decodeSymbol(br, clHuff);
+          if (sym < 16) { lengths.push(sym); prev = sym; }
+          else if (sym === 16) { const rep = 3 + br.read(2); for (let i = 0; i < rep && lengths.length < total; i++) lengths.push(prev); }
+          else if (sym === 17) { const rep = 3 + br.read(3); for (let i = 0; i < rep && lengths.length < total; i++) lengths.push(0); prev = 0; }
+          else { const rep = 11 + br.read(7); for (let i = 0; i < rep && lengths.length < total; i++) lengths.push(0); prev = 0; }
+        }
+        litHuff = buildHuffman(lengths.slice(0, hlit));
+        distHuff = buildHuffman(lengths.slice(hlit));
+      }
+      // פענוח סמלים (LZ77: backref עד 32K לאחור — תקין תמיד במערך היחיד)
+      for (;;) {
+        const sym = decodeSymbol(br, litHuff);
+        if (sym < 256) {
+          pushByte(sym);
+        } else if (sym === 256) {
+          break;
+        } else {
+          const li = sym - 257;
+          if (li >= LEN_BASE.length) throw new Error('deflate: bad-length-symbol');
+          const len = LEN_BASE[li] + (LEN_EXTRA[li] ? br.read(LEN_EXTRA[li]) : 0);
+          const dsym = decodeSymbol(br, distHuff);
+          if (dsym >= DIST_BASE.length) throw new Error('deflate: bad-dist-symbol');
+          const dist = DIST_BASE[dsym] + (DIST_EXTRA[dsym] ? br.read(DIST_EXTRA[dsym]) : 0);
+          if (dist > out.length) throw new Error('deflate: dist-too-far');
+          const srcPos = out.length - dist;
+          for (let i = 0; i < len; i++) pushByte(out[srcPos + i]);
+        }
+      }
+    } else {
+      throw new Error('deflate: bad-btype');
+    }
+    if (final) break;
+    if (expectedSize >= 0 && out.length >= expectedSize) break;
+  }
+  return Uint8Array.from(out);
+}
+
+/** מנפח: zlib אם קיים (Node), אחרת המנפח הטהור (דפדפן). @returns {Uint8Array} */
+function inflateRaw(data) {
+  if (zlib) {
+    const out = zlib.inflateRawSync(data); // Node: מחזיר Buffer (Uint8Array) — זהה פונקציונלית
+    return out;
+  }
+  return inflateRawPure(data, 0, -1);
+}
+
+/** CRC32 של ZIP — לאימות שלמות רשומות (optional check; לא חוסם). */
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(buf) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+/** נורמליזציה + מדיניות שמות: רק נתיבים יחסיים פנימיים. */
+function safeName(raw) {
+  const name = String(raw || '').replace(/\\/g, '/');
+  if (!name || name.endsWith('/')) return null;      // תיקייה
+  if (name.startsWith('/')) return null;              // אבסולוטי
+  const parts = name.split('/');
+  if (parts.some(p => p === '..')) return null;       // traversal
+  if (/^[a-zA-Z]:/.test(name)) return null;           // כונן
+  if (/[<>:"|?*\u0000]/.test(name)) return null;      // תווים אסורים
+  return name;
+}
+
+/**
+ * פתיחת ארכיון ZIP מזיכרון — **ללא Buffer** (דפדפן ו-Node כאחד; תיקון 03.11).
+ * @param {Buffer|Uint8Array} bytes
+ * @returns {{ok:boolean, entries:Array<{name:string, data:Uint8Array, method:number, size:number}>, denied:Array<string>, error:string|null}}
+ */
+function readZip(bytes) {
+  const buf = bytes; // Buffer (Node) הוא Uint8Array — אינדוקסציה זהה; שום דבר לא נדרש כאן
+  const denied = [];
+  const entries = [];
+  // מציאת EOCD (End Of Central Directory) — מהסוף, חתימה 0x06054b50
+  let eocd = -1;
+  const minLen = 22;
+  for (let i = buf.length - minLen; i >= Math.max(0, buf.length - minLen - 65536); i--) {
+    if (u32le(buf, i) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) return { ok: false, entries: [], denied: [], error: 'not-a-zip' };
+  const totalEntries = u16le(buf, eocd + 10);
+  const cdOffset = u32le(buf, eocd + 16);
+
+  let p = cdOffset;
+  for (let n = 0; n < totalEntries; n++) {
+    if (p + 46 > buf.length || u32le(buf, p) !== 0x02014b50) {
+      return { ok: false, entries, denied, error: `bad-central-directory@${n}` };
+    }
+    const method = u16le(buf, p + 10);
+    const compSize = u32le(buf, p + 20);
+    const nameLen = u16le(buf, p + 28);
+    const extraLen = u16le(buf, p + 30);
+    const commentLen = u16le(buf, p + 32);
+    const localOffset = u32le(buf, p + 42);
+    const rawName = utf8Decode(u8sub(buf, p + 46, p + 46 + nameLen));
+    const name = safeName(rawName);
+    if (name == null) { denied.push(rawName); p += 46 + nameLen + extraLen + commentLen; continue; }
+
+    // קריאת ה-local header והנתונים
+    if (localOffset + 30 > buf.length || u32le(buf, localOffset) !== 0x04034b50) {
+      return { ok: false, entries, denied, error: `bad-local-header:${name}` };
+    }
+    const lhNameLen = u16le(buf, localOffset + 26);
+    const lhExtraLen = u16le(buf, localOffset + 28);
+    const dataStart = localOffset + 30 + lhNameLen + lhExtraLen;
+    // **S6.0 (R9 — קריאה קטועה בשקט):** compSize עלול לחרוג מהקובץ
+    // (ZIP קטוע/פגום) — subarray קוצץ בשקט והרשומה הוחזרה חלקית כתקינה.
+    if (dataStart + compSize > buf.length) {
+      return { ok: false, entries, denied, error: `truncated-entry:${name}` };
+    }
+    const raw = u8sub(buf, dataStart, dataStart + compSize);
+    let data;
+    try {
+      if (method === 0) data = Uint8Array.from(raw);
+      else if (method === 8) data = inflateRaw(raw);
+      else return { ok: false, entries, denied, error: `unsupported-method:${method}:${name}` };
+    } catch (e) {
+      return { ok: false, entries, denied, error: `inflate-failed:${name}` };
+    }
+    // **S6.0 (R9 — פצצת ZIP):** תקרת פריסה לרשומה (64MB) — מנע הקפאת
+    // לשונית של 42KB→4GB; ו-CRC מהמדריך המרכזי נשמר לאימות (verifyCrc
+    // היה מת — storedCrc מעולם לא אוכלס).
+    if (data.length > 64 * 1024 * 1024) {
+      return { ok: false, entries, denied, error: `entry-too-large:${name}` };
+    }
+    const entry = { name, data, method, size: data.length, storedCrc: u32le(buf, p + 16) };
+    if (crc32(entry.data) !== entry.storedCrc) {
+      return { ok: false, entries, denied, error: `crc-mismatch:${name}` };
+    }
+    entries.push(entry);
+    p += 46 + nameLen + extraLen + commentLen;
+  }
+  return { ok: true, entries, denied, error: null };
+}
+
+/** אימות CRC של רשומה (best-effort; מחזיר בוליאני). */
+function verifyCrc(entry) {
+  return crc32(entry.data) === entry.storedCrc;
+}
+
+module.exports = { readZip, safeName, crc32, verifyCrc, inflateRaw, inflateRawPure, utf8Decode };
 
 };
 __modules["src/engine/typography/measure-api.js"] = function (require, module, exports) {
@@ -2747,6 +4101,7 @@ class MeasureAPI {
 
   /**
    * מיקום שורות אופטימלי (KP) → מערך שורות עם רוחבים.
+   * @param {number|((lineIndex:number)=>number)} maxWidthPx — רוחב קבוע או רוחב זמין לפי אינדקס שורה.
    * @param {Function} [measureOverride] - הזרקת פונקציית מדידה (למשל פרופיל רוחב־גופן מהpipeline) — L1: entry יחיד דרך ההזרקה.
    * @returns {Array<{words:string[], widthPx:number, badness:number}>}
    */
@@ -2754,6 +4109,51 @@ class MeasureAPI {
     const knuth = require('./kp-linebreak');
     const measure = measureOverride || ((t) => this.measureTextWidth(t, sizePt));
     return knuth.breakLines(words, maxWidthPx, measure, this.lineHeightPx(sizePt), opts);
+  }
+
+  /**
+   * Parse canonical inline runs, measure every text segment in its effective
+   * registered family, resolve image boxes, then feed the shared atom solver.
+   * The returned fragments preserve sub-word font boundaries.
+   */
+  layoutInlineRuns(runs, maxWidthPx, opts = {}) {
+    const { createMeasuredInlineItems } = require('../layout/inline-item-factory');
+    const sizePt = opts.sizePt == null ? null : opts.sizePt;
+    const lineHeightPx = opts.lineHeightPx == null ? this.lineHeightPx(sizePt) : opts.lineHeightPx;
+    const measured = createMeasuredInlineItems(runs, {
+      ...opts,
+      sizePt,
+      lineHeightPx,
+      lineHeightForSize: size => size == null ? lineHeightPx : this.lineHeightPx(size),
+      defaultFontFamily: opts.defaultFontFamily || this.settings['body-font'],
+      measureText: (text, family, size) => {
+        const familyApi = family ? MeasureAPI.forFamily(family, this.settings) : null;
+        const defaultFamily = opts.defaultFontFamily || this.settings['body-font'];
+        if (family && family !== defaultFamily && !familyApi) {
+          throw new Error('MeasureAPI.layoutInlineRuns: font family is not registered: ' + family);
+        }
+        return (familyApi || this).measureTextWidth(text, size);
+      }
+    });
+    const layout = this.layoutMeasuredInlineItems(measured.items, maxWidthPx, lineHeightPx, opts);
+    return { ...layout, diagnostics: measured.diagnostics };
+  }
+
+  /**
+   * Layout already-measured mixed inline atoms through the shared Knuth–Plass
+   * solver. Text dimensions must originate from this MeasureAPI instance;
+   * image dimensions must come from the asset metadata resolver; custom item
+   * kinds use the same {kind,id,widthPx,heightPx} box contract.
+   *
+   * This is deliberately a measured-input API: the solver never measures,
+   * guesses image ratios, or dispatches to a per-kind line breaker.
+   */
+  layoutMeasuredInlineItems(items, maxWidthPx, lineHeightPx, opts = {}) {
+    if (!Number.isFinite(lineHeightPx) || lineHeightPx < 0) {
+      throw new RangeError('MeasureAPI.layoutMeasuredInlineItems: lineHeightPx must be finite and non-negative');
+    }
+    const knuth = require('./kp-linebreak');
+    return knuth.breakInlineItems(items, maxWidthPx, lineHeightPx, opts);
   }
 
   cacheStats() { return { ...this.stats, hitRate: this.stats.calls ? this.stats.hits / this.stats.calls : 0 }; }
@@ -3282,106 +4682,167 @@ function badness(ratio) {
 
 /**
  * @param {string[]} words - מילות הפסקה (NBSP כבר הוצמד ע"י protectors)
- * @param {number} maxWidthPx
+ * @param {number|((lineIndex:number)=>number)} maxWidthPx
  * @param {(t:string)=>number} measure
  * @param {number} lineHeightPx
- * @param {{runtMinPct?:number}} opts
+ * @param {{runtMinPct?:number,raggedEnd?:boolean}} opts
  * @returns {Array<{words:string[], widthPx:number, heightPx:number, isLast:boolean}>}
  */
-function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
+function solveBreaks(items, maxWidthPx, opts = {}) {
+  if (!Array.isArray(items)) throw new TypeError('kp-linebreak: measured items must be an array');
+  const widthProvider = typeof maxWidthPx === 'function' ? maxWidthPx : () => maxWidthPx;
+  if (typeof maxWidthPx !== 'function' && (!Number.isFinite(maxWidthPx) || maxWidthPx <= 0)) {
+    throw new RangeError('kp-linebreak: maxWidthPx must be a positive finite number or a line-width function');
+  }
+
+  // Resolve each line width once. A provider must be pure for a given line index;
+  // this cache prevents repeated geometry work while exploring DP candidates.
+  const lineWidths = new Map();
+  const widthForLine = (lineIndex) => {
+    if (!Number.isInteger(lineIndex) || lineIndex < 0) {
+      throw new RangeError('kp-linebreak: line index must be a non-negative integer');
+    }
+    if (!lineWidths.has(lineIndex)) {
+      const width = widthProvider(lineIndex);
+      if (!Number.isFinite(width) || width <= 0) {
+        throw new RangeError('kp-linebreak: width for line ' + lineIndex + ' must be positive and finite');
+      }
+      lineWidths.set(lineIndex, width);
+    }
+    return lineWidths.get(lineIndex);
+  };
+
   // **03.11 (ביקורת):** חיבור ההגדרה — runt-min-width-pct מגיע כ-runts מה-pipeline
   // וכ-runtMinPct מקריאות ישירות; שניהם נקראים (בעבר רק runtMinPct נקרא וההגדרה לא השפיעה).
   const runts = opts.runtMinPct != null ? opts.runtMinPct : (opts.runts != null ? opts.runts : 50);
-  const items = buildItems(words, measure);
   const n = items.length;
-  const cost = new Array(n + 1).fill(INF);
-  const parent = new Array(n + 1).fill(-1);
-  cost[0] = 0;
+
+  // The state includes both item position and the next line index.
+  // A single best-cost value per item position is insufficient when widths vary:
+  // paths at the same item may have different future geometry. This is still one
+  // Knuth–Plass solver, with a two-dimensional state.
+  const states = Array.from({ length: n + 1 }, () => new Map());
+  states[0].set(0, { cost: 0, action: 'origin' });
+  const constantWidth = typeof maxWidthPx !== 'function';
+  const updateState = (position, lineNo, candidate) => {
+    if (constantWidth) {
+      // With a scalar width, future geometry is independent of lineNo. The
+      // cheapest path therefore dominates every other path at this position,
+      // preserving the original O(n²) state-space behavior.
+      let best = null;
+      for (const state of states[position].values()) {
+        if (!best || state.cost < best.cost) best = state;
+      }
+      if (best && best.cost <= candidate.cost) return;
+      states[position].clear();
+    }
+    const prior = states[position].get(lineNo);
+    if (!prior || candidate.cost < prior.cost) states[position].set(lineNo, candidate);
+  };
 
   for (let i = 0; i < n; i++) {
-    if (cost[i] === INF) continue;
-    if (items[i].kind === 'glue' && !items[i].internal) { // דלג על glue רגיל בהתחלת שורה;
-      // glue פנימי (בתוך יחידת NBSP) אסור לדלג — הרוחב שלו חלק בלתי נפרד מהצמד.
-      if (cost[i + 1] > cost[i]) { cost[i + 1] = cost[i]; parent[i + 1] = i; }
-      continue;
-    }
-    let w = 0, stretch = 0, shrink = 0;
-    for (let j = i; j < n; j++) {
-      const it = items[j];
-      if (it.kind === 'box') w += it.width;
-      // **תיקון שורש (ביקורת 03.11): רוחב glue נכלל ברוחב הטבעי של השורה —
-      // כמו ב-TeX (Σ תיבות + Σ רווחים). בעבר נצברו רק stretch/shrink ⇒ ה־DP
-      // "חשב" ששורה נכנסת בעוד רוחבה הטבעי (כולל רווחים) חורג מהטור.
-      else if (it.kind === 'glue') { w += it.width; stretch += it.stretch; shrink += it.shrink; }
-      else if (it.kind === 'penalty') {
-        if (it.forbidden) continue; // תוך-יחידה: אין כאן מקום שבירה (legalCut כבר מבטל); ההצברה נמשכת
-        // סיום שורה (penalty סופי של הפסקה) — good break.
-        // **תיקון שורש (ביקורת 03.11): השבירה הסופית היא צומת סוף-הפסקה n —
-        // בעבר נכתבה ל-cost[j] (אינדקס הפריט עצמו, n−1) ⇒ cost[n] נותר INF לעולם
-        // ⇒ ה־DP מעולם לא סיפק פתרון וכל שבירות השורות במנוע מאז S1 יצאו מהגיבוי
-        // הגרידי (עם באג ה-NBSP). התיקון מחיה את Knuth-Plass בפועל.
-        const slack = maxWidthPx - w;
-        // raggedEnd: מתיחת סוף-שורה (D-79) — שורות ragged אינן נמדדות במתיחת
-        // בין-מילים אלא בכניסה טבעית; היתרה עד לקצה הטור "נבלעת" במתיחת הסוף.
-        const raggedEnd = opts.raggedEnd !== false;
-        const effStretch = stretch + (raggedEnd ? maxWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
-        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
-        let b = badness(ratio);
-        if (b < INF && w < maxWidthPx * (runts / 100)) b += 60; // עונש runt בשורת הסיום
-        if (b < INF) {
-          const cand = cost[i] + b + LINE_DEMERIT;
-          if (cand < cost[n]) { cost[n] = cand; parent[n] = i; }
-        }
-        break;
+    if (!states[i].size) continue;
+    for (const [lineNo, state] of states[i]) {
+      if (items[i].kind === 'glue' && !items[i].internal) {
+        // Skip regular glue at the beginning of a line; internal glue is atomic.
+        updateState(i + 1, lineNo, {
+          cost: state.cost,
+          action: 'skip',
+          prevIndex: i,
+          prevLineNo: lineNo
+        });
+        continue;
       }
-      // **S5.1 (D-92-DP):** הדפדפן מרנדר רוחב טבעי (white-space:normal) —
-      // שורה שרוחבה הטבעי חורג מהטור נעטפת בתצוגה (טקסט-על-טקסט) גם אם
-      // היישוב יכול לכווץ רווחים ב-PDF. לכן המבחן ברוחב הטבעי, בלי shrink.
-      // **S5.2 (תיקון 3 — המבחן היה מרחיב, לא שמרני):** בעבר `w > maxWidth+0.75`
-      // אִפשר קווים ברוחב טבעי עד maxWidth+0.75px (ובכך גם קבלת חיתוכים עם
-      // slack שלילי דרך כיווץ) — בזמן ש-FIT_EPS של המורשת שמרן (limit−eps).
-      // כעת החיתוך נעצר מוקדם: שורה שאינה נכנסת ב-maxWidth−0.75 אינה מוארכת
-      // עוד, וכל קו מקובל הוא ברוחב טבעי ≤ maxWidth−0.75 (גם בסוף פסקה —
-      // הפנלטי הסופי נמדר רק אחרי שכל הפריטים עברו את אותו מבחן). מילה רחבה
-      // מהטור עדיין יוצאת כשורה בפני עצמה דרך הגיבוי הגרידי (greedyFallback —
-      // התקדמות מובטחת, טוקן בודד אינו נחסם: pushTok עם toks ריק אינו מוסף).
-      if (w > maxWidthPx - 0.75) break; // חריגה שאינה ניתנת לתיקון — שמרני כמו FIT_EPS
 
-      if (it.kind === 'box') {
-        // מקומות שבירה חוקיים נקבעים **מבנית מראש** (static legal-cuts): cut בצומת c חוקי
-        // רק אם items[c-1] הוא glue לא־פנימי ו‑items[c] תיבה שפותחת יחידה חדשה.
-        // זה מבטל את באג V23: lock תלוי-נקודת-התחלה על צמתים משותפים ל‑DP.
-        // (תיקון S3: הבדיקה הייתה בתוך הלולאה עם אינדקס שגוי j+2 — כל השברים נחסמו.)
-        const cut = j + 1; // נקודת שבירה חוקית: אחרי תיבה, לפני ה‑glue העוקב
-        if (!(items[cut].kind === 'glue' && !items[cut].internal && items[cut + 1] && items[cut + 1].kind === 'box')) continue;
-        const slack = maxWidthPx - w;
-        // **S5.2 (תיקון 3 — שמרנות בקבלת חיתוך):** קו שאינו נכנס ברוחב הטבעי
-        // (slack < −FIT_EPS) הוא בלתי-אפשרי — badness INF, לא "כיווץ". המבחן
-        // השמרני למעלה אמור למנוע הגעה לכאן; השמירה הכפולה מתעדת את הכוונה.
-        if (slack < -0.75) continue;
-        const raggedEnd = opts.raggedEnd !== false;
-        const effStretch = stretch + (raggedEnd ? maxWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
-        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
-        const b = badness(ratio);
-        if (b >= INF) continue;
-        const cand = cost[i] + b + LINE_DEMERIT;
-        if (cand < cost[cut]) { cost[cut] = cand; parent[cut] = i; }
+      const lineWidthPx = widthForLine(lineNo);
+      let w = 0, stretch = 0, shrink = 0;
+      for (let j = i; j < n; j++) {
+        const it = items[j];
+        if (it.kind === 'box') w += it.width;
+        // Natural width includes boxes and glue; stretch/shrink are tracked separately.
+        else if (it.kind === 'glue') { w += it.width; stretch += it.stretch; shrink += it.shrink; }
+        else if (it.kind === 'penalty') {
+          if (it.forbidden) continue;
+          // Final paragraph break.
+          const slack = lineWidthPx - w;
+          const raggedEnd = opts.raggedEnd !== false;
+          const effStretch = stretch + (raggedEnd ? lineWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
+          const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
+          let b = badness(ratio);
+          if (b < INF && w < lineWidthPx * (runts / 100)) b += 60;
+          if (b < INF) {
+            updateState(n, lineNo + 1, {
+              cost: state.cost + b + LINE_DEMERIT,
+              action: 'line',
+              prevIndex: i,
+              prevLineNo: lineNo,
+              start: i,
+              end: n
+            });
+          }
+          break;
+        }
+
+        // Conservative natural-width fit check (same 0.75px safety margin).
+        if (w > lineWidthPx - 0.75) break;
+
+        if (it.kind === 'box') {
+          const cut = j + 1;
+          // Legal breaks are structural: before a new box and after non-internal glue.
+          if (!(items[cut].kind === 'glue' && !items[cut].internal && items[cut + 1] && items[cut + 1].kind === 'box')) continue;
+          const slack = lineWidthPx - w;
+          if (slack < -0.75) continue;
+          const raggedEnd = opts.raggedEnd !== false;
+          const effStretch = stretch + (raggedEnd ? lineWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
+          const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
+          const b = badness(ratio);
+          if (b >= INF) continue;
+          updateState(cut, lineNo + 1, {
+            cost: state.cost + b + LINE_DEMERIT,
+            action: 'line',
+            prevIndex: i,
+            prevLineNo: lineNo,
+            start: i,
+            end: cut
+          });
+        }
       }
     }
   }
 
-  if (cost[n] === INF) return greedyFallback(items, maxWidthPx, measure, lineHeightPx);
+  let best = null;
+  for (const [lineNo, state] of states[n]) {
+    if (!best || state.cost < best.state.cost) best = { lineNo, state };
+  }
+  if (!best) return { cuts: null, widthForLine };
 
+  // Reconstruct the selected line intervals from the 2D predecessor map.
   const cuts = [];
-  let p = n;
-  while (p > 0 && parent[p] >= 0) { cuts.push([parent[p], p]); p = parent[p]; }
+  let position = n, lineNo = best.lineNo;
+  while (position > 0) {
+    const state = states[position].get(lineNo);
+    if (!state || state.action === 'origin') {
+      throw new Error('kp-linebreak: broken predecessor chain while reconstructing lines');
+    }
+    if (state.action === 'line') cuts.push([state.start, state.end]);
+    position = state.prevIndex;
+    lineNo = state.prevLineNo;
+  }
   cuts.reverse();
+  return { cuts, widthForLine };
+}
 
+function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
+  if (!Array.isArray(words)) throw new TypeError('kp-linebreak: words must be an array');
+  if (typeof measure !== 'function') throw new TypeError('kp-linebreak: measure(text) is required');
+  const items = buildItems(words, measure);
+  const solution = solveBreaks(items, maxWidthPx, opts);
+  if (!solution.cuts) return greedyFallback(items, solution.widthForLine, measure, lineHeightPx);
+  const cuts = solution.cuts;
   const lines = [];
   for (let k = 0; k < cuts.length; k++) {
     const [a, b] = cuts[k];
-    // תת־קופסאות של אותה יחידת NBSP מאוחדות חזרה עם \u00A0 (הצמד שומר על זהותו)
-    const rawBoxes = items.slice(a, b).filter(x => x.kind === 'box');
+    // Recombine sub-boxes of one NBSP unit into one output token.
     const toks = [];
     let cur = null, prevPenaltyForbidden = false;
     for (let idx = a; idx < b; idx++) {
@@ -3392,18 +4853,125 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
       else { if (cur !== null) toks.push(cur); cur = it.text; prevPenaltyForbidden = false; }
     }
     if (cur !== null) toks.push(cur);
-    void rawBoxes;
     if (!toks.length) continue;
-    // רוחב אמיתי: סכום תת־הקופסאות + רווחי ה‑glue שביניהן (כולל internal)
+
     let widthPx = 0;
     for (let idx = a; idx < b; idx++) {
       const it = items[idx];
-      if (it.kind === 'box') widthPx += it.width;
-      else if (it.kind === 'glue') widthPx += it.width;
+      if (it.kind === 'box' || it.kind === 'glue') widthPx += it.width;
     }
     lines.push({ words: toks, widthPx, heightPx: lineHeightPx, isLast: k === cuts.length - 1 });
   }
   return lines;
+}
+/**
+ * Break an ordered sequence of already-measured atomic inline items with the
+ * same Knuth–Plass solver used by breakLines().
+ *
+ * Input is a stream of {kind:'text'|'image'|'anchor', widthPx, heightPx}
+ * atoms interleaved with explicit {kind:'glue', widthPx, stretchPx, shrinkPx}
+ * opportunities and optional {kind:'penalty', forbidden:true} constraints.
+ * Text atoms are indivisible words; whitespace is represented by glue. Any
+ * future item type can use the same measured-box contract without changing
+ * the optimizer.
+ *
+ * A layout that cannot fit an unbreakable item returns ok:false. Unlike the
+ * legacy word wrapper, this API never silently falls back to a second breaker.
+ */
+function breakInlineItems(inlineItems, maxWidthPx, lineHeightPx, opts = {}) {
+  if (!Array.isArray(inlineItems)) throw new TypeError('kp-linebreak: inlineItems must be an array');
+  if (!Number.isFinite(lineHeightPx) || lineHeightPx < 0) {
+    throw new RangeError('kp-linebreak: lineHeightPx must be finite and non-negative');
+  }
+  const measured = [];
+  let hasFinal = false;
+  for (let index = 0; index < inlineItems.length; index++) {
+    const item = inlineItems[index];
+    if (!item || typeof item !== 'object') {
+      throw new TypeError('kp-linebreak: invalid inline item at index ' + index);
+    }
+    if (item.kind === 'glue') {
+      const width = item.widthPx;
+      const stretch = item.stretchPx == null ? 0 : item.stretchPx;
+      const shrink = item.shrinkPx == null ? 0 : item.shrinkPx;
+      if (![width, stretch, shrink].every(Number.isFinite) || width < 0 || stretch < 0 || shrink < 0) {
+        throw new TypeError('kp-linebreak: glue geometry must be finite and non-negative');
+      }
+      measured.push({ kind: 'glue', width, stretch, shrink, internal: !!item.internal });
+      continue;
+    }
+    if (item.kind === 'penalty') {
+      const penalty = { kind: 'penalty', forbidden: !!item.forbidden, final: !!item.final };
+      measured.push(penalty);
+      hasFinal = hasFinal || penalty.final;
+      continue;
+    }
+    if (typeof item.kind !== 'string' || !item.kind.trim()) {
+      throw new TypeError('kp-linebreak: every atom requires a non-empty kind');
+    }
+    const width = item.widthPx, height = item.heightPx == null ? 0 : item.heightPx;
+    if (!Number.isFinite(width) || width < 0 || !Number.isFinite(height) || height < 0) {
+      throw new TypeError('kp-linebreak: atom geometry must be finite and non-negative');
+    }
+    if (item.kind === 'text') {
+      if (typeof item.text !== 'string' || !item.text || /[ \t\n\r]/.test(item.text)) {
+        throw new TypeError('kp-linebreak: text atoms must be non-empty single break units; represent spaces as glue');
+      }
+    } else if (item.kind === 'image' && (typeof item.resourcePath !== 'string' || !item.resourcePath.trim())) {
+      throw new TypeError('kp-linebreak: image atoms require resourcePath');
+    } else if (item.kind === 'anchor' && item.id == null) {
+      throw new TypeError('kp-linebreak: anchor atoms require a stable id');
+    } else if (!['text', 'image', 'anchor'].includes(item.kind) && item.id == null) {
+      throw new TypeError('kp-linebreak: custom atoms require a stable id');
+    }
+    measured.push({
+      kind: 'box',
+      text: item.kind === 'text' ? item.text : undefined,
+      width,
+      height,
+      payload: { ...item, widthPx: width, heightPx: height }
+    });
+  }
+  if (!hasFinal) measured.push({ kind: 'penalty', final: true });
+  const solution = solveBreaks(measured, maxWidthPx, opts);
+  if (!solution.cuts) {
+    const maxAtomWidthPx = measured.reduce((max, item) => item.kind === 'box' ? Math.max(max, item.width) : max, 0);
+    return { ok: false, reason: 'no-valid-line-break', maxAtomWidthPx, lines: [] };
+  }
+
+  const lines = [];
+  for (let lineIndex = 0; lineIndex < solution.cuts.length; lineIndex++) {
+    const [start, end] = solution.cuts[lineIndex];
+    const slice = measured.slice(start, end);
+    const fragments = [];
+    let pendingGapPx = 0;
+    for (const item of slice) {
+      if (item.kind === 'glue') {
+        pendingGapPx += item.width;
+        continue;
+      }
+      if (item.kind !== 'box') continue;
+      if (fragments.length) fragments[fragments.length - 1].gapAfterPx += pendingGapPx;
+      fragments.push({
+        ...item.payload,
+        widthPx: item.width,
+        heightPx: item.height,
+        gapAfterPx: 0
+      });
+      pendingGapPx = 0;
+    }
+    const widthPx = slice.reduce((sum, item) =>
+      sum + (item.kind === 'box' || item.kind === 'glue' ? item.width : 0), 0);
+    const heightPx = Math.max(lineHeightPx, ...fragments.map(item => item.heightPx || 0));
+    lines.push({
+      fragments,
+      words: fragments.filter(item => item.kind === 'text').map(item => item.text),
+      widthPx,
+      heightPx,
+      isLast: lineIndex === solution.cuts.length - 1
+    });
+  }
+  return { ok: true, lines };
 }
 
 /**
@@ -3419,7 +4987,7 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
  * 3. התקדמות מובטחת: טוקן שגולש פותח שורה חדשה; טוקן רחב מהעמודה נשאר לבד
  *    בשורה משלו — אין לולאה ואין דילוג תוכן. מעבר אחד על הפריטים.
  */
-function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
+function greedyFallback(items, widthForLine, measure, lineHeightPx) {
   const space = measure(' ');
   const lines = [];
   let toks = [];            // טוקנים של השורה הנוכחית
@@ -3437,7 +5005,7 @@ function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
     // **לפני** ה-flush ונוסף גם אחריו ⇒ כל שורה שנפתחה ב-flush נשאה רווח
     // אחד עודף ב-widthPx (מדידה שקרית לצרכי ריצת-שורה/איזון). תוקם:
     // הבדיקה וההוספה לפי המצב **אחרי** ההחלטה על flush.
-    if (toks.length && w + space + curW > maxWidthPx - 0.75) flush(); // הטוקן הבא ייפתח שורה חדשה
+    if (toks.length && w + space + curW > widthForLine(lines.length) - 0.75) flush(); // הטוקן הבא ייפתח שורה חדשה
     const sp = toks.length ? space : 0;
     toks.push(cur); w += sp + curW;
     cur = null; curW = 0; joinNext = false;
@@ -3462,7 +5030,257 @@ function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
   return lines;
 }
 
-module.exports = { breakLines, badness, STRETCH_RATIO, SHRINK_RATIO };
+module.exports = { breakLines, breakInlineItems, badness, STRETCH_RATIO, SHRINK_RATIO };
+
+};
+__modules["src/engine/layout/inline-item-factory.js"] = function (require, module, exports) {
+// src/engine/layout/inline-item-factory.js — canonical AST → measured inline atoms (S14 P0)
+'use strict';
+
+const DEFAULT_GLUE_STRETCH = 0.6;
+const DEFAULT_GLUE_SHRINK = 0.5;
+
+function finiteNonNegative(value, label) {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new RangeError('inline-item-factory: ' + label + ' must be finite and non-negative');
+  }
+  return value;
+}
+
+/**
+ * Convert canonical parser runs to the measured item contract used by the
+ * shared line solver. A word may contain multiple font-family segments; it
+ * remains one unbreakable text atom while its segments retain independent
+ * measurement and rendering metadata.
+ *
+ * options:
+ *   measureText(text, fontFamily, sizePt) -> widthPx
+ *   resolveImage(ImageRun, options) -> {ok:true,image} | {ok:false,code}
+ *   defaultFontFamily, sizePt, lineHeightPx, glueStretchRatio, glueShrinkRatio
+ */
+function createMeasuredInlineItems(runs, options = {}) {
+  if (!Array.isArray(runs)) throw new TypeError('inline-item-factory: runs must be an array');
+  if (typeof options.measureText !== 'function') {
+    throw new TypeError('inline-item-factory: measureText(text, fontFamily, sizePt) is required');
+  }
+
+  const sizePt = options.sizePt == null ? null : finiteNonNegative(options.sizePt, 'sizePt');
+  const lineHeightPx = options.lineHeightPx == null ? 0 : finiteNonNegative(options.lineHeightPx, 'lineHeightPx');
+  const stretchRatio = options.glueStretchRatio == null ? DEFAULT_GLUE_STRETCH : finiteNonNegative(options.glueStretchRatio, 'glueStretchRatio');
+  const shrinkRatio = options.glueShrinkRatio == null ? DEFAULT_GLUE_SHRINK : finiteNonNegative(options.glueShrinkRatio, 'glueShrinkRatio');
+  const defaultFontFamily = options.defaultFontFamily || null;
+  const lineHeightForSize = typeof options.lineHeightForSize === 'function'
+    ? options.lineHeightForSize
+    : () => lineHeightPx;
+  const items = [];
+  const diagnostics = [];
+  let wordSegments = [];
+
+  function effectiveFamily(run) {
+    return run && run.fontFamily ? String(run.fontFamily) : defaultFontFamily;
+  }
+
+  function effectiveSize(run) {
+    return run && run.sizePt != null
+      ? finiteNonNegative(run.sizePt, 'run sizePt')
+      : sizePt;
+  }
+
+  function measure(text, family, runSizePt) {
+    const clean = String(text).split(String.fromCharCode(0xE102)).join('');
+    const width = options.measureText(clean, family || null, runSizePt == null ? sizePt : runSizePt);
+    return finiteNonNegative(width, 'measured text width');
+  }
+
+  function flushWord() {
+    if (!wordSegments.length) return;
+    const text = wordSegments.map(segment => segment.text).join('');
+    const widthPx = wordSegments.reduce((sum, segment) => sum + segment.widthPx, 0);
+    const segments = wordSegments.map(segment => ({ ...segment }));
+    const sourceStarts = segments.map(segment => segment.sourceStart).filter(Number.isFinite);
+    const sourceEnds = segments.map(segment => segment.sourceEnd).filter(Number.isFinite);
+    const heightPx = Math.max(lineHeightPx, ...segments.map(segment => segment.heightPx || 0));
+    const sizeValues = [...new Set(segments.map(segment => segment.sizePt).filter(value => value != null))];
+    const item = {
+      kind: 'text',
+      text,
+      widthPx,
+      heightPx,
+      segments,
+      ...(sizeValues.length === 1 ? { sizePt: sizeValues[0] } : {}),
+      ...(segments.length === 1 ? { fontFamily: segments[0].fontFamily || null } : {}),
+      ...(sourceStarts.length ? { sourceStart: Math.min(...sourceStarts) } : {}),
+      ...(sourceEnds.length ? { sourceEnd: Math.max(...sourceEnds) } : {})
+    };
+    items.push(item);
+    wordSegments = [];
+  }
+
+  function appendGlue(run, sourceStart, sourceEnd) {
+    flushWord();
+    // Normalize a whitespace run to one break-space, matching the paragraph
+    // tokenizer/line-breaker contract. Never leave leading or duplicate glue.
+    const prior = items[items.length - 1];
+    if (!prior || prior.kind === 'glue') {
+      if (prior && prior.kind === 'glue') {
+        prior.sourceEnd = Number.isFinite(sourceEnd) ? sourceEnd : prior.sourceEnd;
+      }
+      return;
+    }
+    const family = effectiveFamily(run);
+    const runSizePt = effectiveSize(run);
+    const widthPx = measure(' ', family, runSizePt);
+    items.push({
+      kind: 'glue',
+      widthPx,
+      stretchPx: widthPx * stretchRatio,
+      shrinkPx: widthPx * shrinkRatio,
+      fontFamily: family,
+      ...(runSizePt != null ? { sizePt: runSizePt } : {}),
+      ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+      ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+    });
+  }
+
+  for (const run of runs) {
+    if (!run || typeof run !== 'object') {
+      throw new TypeError('inline-item-factory: every run must be an object');
+    }
+
+    if (run.kind === 'text') {
+      const value = String(run.text == null ? '' : run.text);
+      const family = effectiveFamily(run);
+      const runSizePt = effectiveSize(run);
+      // Ordinary spaces create legal break glue. NBSP and the private atomic
+      // note separator stay inside the same measured word box and are normalized
+      // to visible NBSP in the renderer.
+      let cursor = 0;
+      while (cursor < value.length) {
+        const first = value[cursor];
+        const isAtomic = first === String.fromCharCode(0x00A0) || first === String.fromCharCode(0xE000);
+        const isBreak = first === ' ' || first === '\t' || first === '\n' || first === '\r';
+        let end = cursor + 1;
+        if (isAtomic || isBreak) {
+          while (end < value.length) {
+            const ch = value[end];
+            const same = isAtomic
+              ? ch === String.fromCharCode(0x00A0) || ch === String.fromCharCode(0xE000)
+              : ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r';
+            if (!same) break;
+            end++;
+          }
+        } else {
+          while (end < value.length) {
+            const ch = value[end];
+            if (ch === String.fromCharCode(0x00A0) || ch === String.fromCharCode(0xE000)
+              || ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') break;
+            end++;
+          }
+        }
+        const token = value.slice(cursor, end);
+        const sourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart + cursor : undefined;
+        const sourceEnd = Number.isFinite(run.sourceStart) ? sourceStart + token.length : undefined;
+        if (isBreak) {
+          appendGlue(run, sourceStart, sourceEnd);
+        } else {
+          const visibleToken = isAtomic
+            ? token.split(String.fromCharCode(0xE000)).join(String.fromCharCode(0x00A0))
+            : token;
+          const measuredToken = isAtomic ? ' '.repeat(visibleToken.length) : visibleToken;
+          const widthPx = measure(measuredToken, family, runSizePt);
+          const heightPx = finiteNonNegative(lineHeightForSize(runSizePt), 'line height for run');
+          // Adjacent parser runs can split one lexical word at removed font markers.
+          // Only ordinary visible whitespace or an atomic non-text run ends the current word.
+          wordSegments.push({
+            text: visibleToken,
+            fontFamily: family,
+            widthPx,
+            heightPx,
+            ...(runSizePt != null ? { sizePt: runSizePt } : {}),
+            ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+            ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+          });
+        }
+        cursor = end;
+      }
+      continue;
+    }
+
+    if (run.kind === 'image') {
+      flushWord();
+      if (typeof options.resolveImage !== 'function') {
+        diagnostics.push({
+          code: 'INLINE_IMAGE_RESOLVER_MISSING',
+          resourcePath: run.resourcePath || null,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd
+        });
+        continue;
+      }
+      const resolved = options.resolveImage(run, options);
+      if (!resolved || resolved.ok !== true || !resolved.image) {
+        diagnostics.push({
+          code: (resolved && resolved.code) || 'INLINE_IMAGE_RESOURCE_MISSING',
+          resourcePath: run.resourcePath || null,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd
+        });
+        continue;
+      }
+      const image = resolved.image;
+      const widthPx = finiteNonNegative(image.widthPx, 'image width');
+      const heightPx = finiteNonNegative(image.heightPx, 'image height');
+      if (widthPx <= 0 || heightPx <= 0) {
+        diagnostics.push({
+          code: 'INLINE_IMAGE_DIMENSIONS_INVALID',
+          resourcePath: run.resourcePath || image.resourcePath || null,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd
+        });
+        continue;
+      }
+      items.push({
+        ...image,
+        kind: 'image',
+        widthPx,
+        heightPx,
+        sourceStart: Number.isFinite(run.sourceStart) ? run.sourceStart : image.sourceStart,
+        sourceEnd: Number.isFinite(run.sourceEnd) ? run.sourceEnd : image.sourceEnd
+      });
+      continue;
+    }
+
+    if (run.kind === 'anchor') {
+      flushWord();
+      items.push({
+        ...run,
+        kind: 'anchor',
+        widthPx: run.widthPx == null ? 0 : finiteNonNegative(run.widthPx, 'anchor width'),
+        heightPx: run.heightPx == null ? 0 : finiteNonNegative(run.heightPx, 'anchor height')
+      });
+      continue;
+    }
+
+    // Future page-item kinds use the same measured box contract. The solver
+    // and projector do not need a new branch for each new item type.
+    flushWord();
+    if (typeof run.kind !== 'string' || !run.kind.trim() || run.id == null) {
+      throw new TypeError('inline-item-factory: custom item kinds require kind and stable id');
+    }
+    items.push({
+      ...run,
+      widthPx: finiteNonNegative(run.widthPx, 'custom item width'),
+      heightPx: finiteNonNegative(run.heightPx, 'custom item height')
+    });
+  }
+
+  flushWord();
+  while (items.length && items[items.length - 1].kind === 'glue') items.pop();
+
+  return { items, diagnostics };
+}
+
+module.exports = { createMeasuredInlineItems };
 
 };
 __modules["src/engine/typography/protectors.js"] = function (require, module, exports) {
@@ -3716,10 +5534,51 @@ function reAlignColumns(page) {
   return orphaned;
 }
 
+/**
+ * Stable signature for a planned line. Legacy word-only lines retain their
+ * historical signature; measured inline lines additionally include the
+ * actual atom geometry and per-segment font metrics. This makes the layout
+ * hash sensitive to image/font changes even when the visible word sequence
+ * happens to remain unchanged.
+ */
+function lineLayoutSignature(line, includeGeometry = false) {
+  const words = (line.words || []).join('\\u00A7');
+  if (!Array.isArray(line.fragments)) return words;
+  // Keep the historical content hash stable for ordinary text and note
+  // markers. Only truly new inline page-item/font features extend layoutHash.
+  // The geometry hash remains exhaustive for every measured fragment.
+  if (!includeGeometry && !line.richSignatureRequired) return words;
+  const fragments = line.fragments.map(fragment => ({
+    kind: fragment.kind,
+    id: fragment.id == null ? null : fragment.id,
+    resourceId: fragment.resourceId == null ? null : fragment.resourceId,
+    text: fragment.kind === 'text' ? fragment.text : null,
+    widthPx: fragment.widthPx,
+    heightPx: fragment.heightPx,
+    gapAfterPx: fragment.gapAfterPx || 0,
+    sizePt: fragment.sizePt == null ? null : fragment.sizePt,
+    fontFamily: fragment.fontFamily || null,
+    sourceStart: fragment.sourceStart == null ? null : fragment.sourceStart,
+    sourceEnd: fragment.sourceEnd == null ? null : fragment.sourceEnd,
+    segments: Array.isArray(fragment.segments) ? fragment.segments.map(segment => ({
+      text: segment.text,
+      widthPx: segment.widthPx,
+      heightPx: segment.heightPx == null ? null : segment.heightPx,
+      sizePt: segment.sizePt == null ? null : segment.sizePt,
+      fontFamily: segment.fontFamily || null
+    })) : null
+  }));
+  return words + '\\u00B6' + JSON.stringify({
+    heightPx: line.heightPx,
+    aqStretch: line.aqStretch || 1,
+    fragments
+  });
+}
+
 function layoutHash(pages) {
   const canon = pages.map(p => ({
     i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}`)),
+    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${lineLayoutSignature(ln)}`)),
     // **S4.10:** דפנסיביות — עמודי מנוע המורשת אינם מחויבים לכל השדות
     // (לפני כן p.sideNotes.length קרס על undefined). לעמודי DP אין שינוי ערך.
     fn: (p.footnotes || []).length, sn: (p.sideNotes || []).length
@@ -3728,16 +5587,15 @@ function layoutHash(pages) {
 }
 
 /**
- * **D-47 (תיקון P0-6):** hash של **הגיאומטריה הנמדדת בלבד** (הטורים/השורות) —
- * זהו האינווריאנט T1: פאס העיטורים/ההערות אסור לו לשנות את הפריסה שנמדדה.
- * בעבר ההשוואה CP4==CP5 השוותה משתנה לעצמו — טאוטולוגיה שאינה יכולה להיכשל.
- * כאן: hash נפרד של הטורים בלבד (בלי מרזבים/הערות צד שמשתנים כחוק בשלב ההערות)
- * — נבדק לפני ואחרי פאס העיטורים בpipeline; שינוי אמיתי בשורות ⇒ הבדיקה נכשלת.
+ * **D-47 (תיקון P0-6):** hash של הגיאומטריה הנמדדת בלבד (הטורים/השורות).
+ * עבור שורות rich הוא כולל גם ממדי atoms ופרטי מקטעי הגופן, ולא רק מילים.
  */
 function bodyGeometryHash(pages) {
   const canon = pages.map(p => ({
     i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}:${ln.seq != null ? 's' + ln.seq : ''}`))
+    c: p.columns.map(col => col.map(ln =>
+      `${lineTokenId(ln)}:${lineLayoutSignature(ln, true)}:${ln.seq != null ? 's' + ln.seq : ''}`
+    ))
   }));
   return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
 }
@@ -6334,6 +8192,8 @@ const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = r
 // **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
+const { parseInlineRuns, parseInlineParagraph } = require('../parser/inline-content');
+const { packMarginNotes } = require('./margin-flow');
 
 // ---------- גיאומטריה (px @96dpi; PDF = px×0.75) — מכויל מהייחוס ----------
 const GEO = {
@@ -6604,7 +8464,7 @@ function readConfig(imud, settings) {
 }
 
 // ---------- טוקניזציה (כמו performTypeset של המקור) ----------
-function tokenizeDoc(rawText, cfg) {
+function tokenizeDoc(rawText, cfg, inlineOptions = {}) {
   let text = stripEditorialNotes(rawText);
   const { meta, text: noMeta } = parseMetadata(text);
   text = noMeta;
@@ -6686,7 +8546,118 @@ function tokenizeDoc(rawText, cfg) {
       syntheticTail: true
     });
   }
+  // S14 P0: the legacy adapter emits the same TextRun/ImageRun paragraph shape
+  // as the canonical tokenizer. Footnote payloads remain separate note units.
+  for (const token of tokens) {
+    if (token.type !== 'p') continue; // H0–H7/side notes are intentionally excluded
+    const parts = [];
+    const notes = [];
+    let cursor = 0;
+    for (const note of findNotes(token.text, cfg.fnOpen, cfg.fnClose)) {
+      const beforeRaw = token.text.slice(cursor, note.start);
+      const before = beforeRaw.trim();
+      if (before) {
+        const leading = beforeRaw.length - beforeRaw.trimStart().length;
+        const trailingEnd = beforeRaw.trimEnd().length;
+        parts.push({ kind: 'text', value: before, sourceStart: cursor + leading, sourceEnd: cursor + trailingEnd });
+      }
+      const sourceStart = note.start + cfg.fnOpen.length;
+      const rawNote = note.text;
+      const noteText = rawNote.trim();
+      const leading = rawNote.length - rawNote.trimStart().length;
+      const trailingEnd = rawNote.trimEnd().length;
+      notes.push({ text: noteText, sourceStart: sourceStart + leading, sourceEnd: sourceStart + trailingEnd });
+      parts.push({ kind: 'note-ref', noteIndex: notes.length - 1 });
+      cursor = note.end;
+    }
+    const tailRaw = token.text.slice(cursor);
+    const tail = tailRaw.trim();
+    if (tail) {
+      const leading = tailRaw.length - tailRaw.trimStart().length;
+      const trailingEnd = tailRaw.trimEnd().length;
+      parts.push({ kind: 'text', value: tail, sourceStart: cursor + leading, sourceEnd: cursor + trailingEnd });
+    }
+    token.inlineContent = parseInlineParagraph(parts, notes, inlineOptions);
+    token.inlineContent.endNote = token.endNote
+      ? parseInlineRuns(token.endNote, { ...inlineOptions, allowImages: false })
+      : null;
+  }
   return { meta, tokens };
+}
+
+
+/**
+ * Canonical source-word multiset for the legacy IMUD profile.
+ * It mirrors the source side of contentPreserved accounting, excluding only
+ * metadata fields and syntactic prefixes that are intentionally not rendered.
+ */
+/**
+ * Shared classification of a note-flow token. Only visible body text starts
+ * a note on a page; separator gaps, marker tokens and "(המשך)" do not.
+ */
+function isFootnoteBodyToken(token) {
+  return !!token
+    && Number.isInteger(token.noteIdx)
+    && !token.gap
+    && !token.mk
+    && token.t !== '(המשך)'
+    && typeof token.t === 'string'
+    && token.t.trim().length > 0;
+}
+
+function collectStartedFootnoteIndices(lines) {
+  const started = new Set();
+  for (const line of lines || []) {
+    for (const token of line || []) {
+      if (isFootnoteBodyToken(token)) started.add(token.noteIdx);
+    }
+  }
+  return started;
+}
+
+function legacySourceWordMultiset(meta, tokens, cfg) {
+  const norm = (s) => String(s == null ? '' : s).split(/[\s\u00A0]+/).filter(Boolean);
+  const bump = (m, words) => { for (const w of words) m.set(w, (m.get(w) || 0) + 1); };
+  const src = new Map();
+  const backOnlyFields = ['copyright', 'publisher', 'contact', 'extra'];
+  for (const [key, value] of Object.entries(meta || {})) {
+    if (key === 'year') continue;
+    if (!cfg.showBackShaar && backOnlyFields.includes(key)) continue;
+    bump(src, norm(value));
+  }
+  const sourceTextOf = (token) => {
+    let text = String(token && token.text != null ? token.text : '');
+    if (cfg.fnOpen) text = text.split(cfg.fnOpen).join(' ');
+    if (cfg.fnClose) text = text.split(cfg.fnClose).join(' ');
+    if (token && token.type === 'h1') {
+      const parts = text.split(/[-–—]/).map(part => part.trim()).filter(Boolean);
+      if (parts.length >= 2) text = parts[0] + ' ' + parts.slice(1).join(' - ');
+    }
+    if (token && token.type === 'h2') {
+      text = text.replace(/^סימן\s+[א-ת]+[:\-–—\s]*/i, '').trim();
+    }
+    return text;
+  };
+  for (const token of (tokens || [])) {
+    bump(src, norm(sourceTextOf(token)));
+    if (token && token.sideNote) bump(src, norm(token.sideNote));
+    if (token && token.endNote) bump(src, norm(token.endNote));
+  }
+  return src;
+}
+
+/** Count normalized source words without running layout or pagination. */
+function countLegacySourceWords(rawText, settings = {}) {
+  const cfg = readConfig(settings._imudRaw || {}, settings);
+  if (settings['footnotes-enabled'] === false) {
+    cfg.fnOpen = '';
+    cfg.fnClose = '';
+  }
+  const parsed = tokenizeDoc(rawText, cfg);
+  const counts = legacySourceWordMultiset(parsed.meta, parsed.tokens, cfg);
+  let total = 0;
+  for (const count of counts.values()) total += count;
+  return total;
 }
 
 // ---------- שבירת שורות: פורט של getLinesFromParagraph ----------
@@ -7376,7 +9347,12 @@ function legacyTypeset(rawText, settings, env) {
     );
   }
   const brk = new LineBreaker(api, cfg, windowApi, headingApi);
-  const { meta, tokens } = tokenizeDoc(rawText, cfg);
+  const inlineOptions = {
+    fontMarkers: settings._inlineFontStyles || settings._inlineFontMarkers || [],
+    knownFamilies: settings._inlineFontFamilies || [],
+    availableFamilies: Array.from(registeredMeasureFonts.keys())
+  };
+  const { meta, tokens } = tokenizeDoc(rawText, cfg, inlineOptions);
 
   const bookTitle = (meta.bookTitle || 'ספר').trim();
   const tw = bookTitle.split(/\s+/);
@@ -7949,6 +9925,7 @@ function legacyTypeset(rawText, settings, env) {
           const starts = []; // **S4.24:** דגלי קצה-סוגריים — ממופים דרך פיצול הסמנים
           const ends = [];
           const markerIdx = []; // אינדקסים של סמני ההערות (להסרה מדויקת במודל)
+          const markerKeys = []; // מפתחות מופע יציבים — אינם תלויים בסמן הגימטרי המוצג
           for (let wi = 0; wi < ln.words.length; wi++) {
             const w = ln.words[wi];
             // **S4.19:** דגל הסוגריים של המילה המקורית — מועבר לכל חלקיה
@@ -7977,6 +9954,7 @@ function legacyTypeset(rawText, settings, env) {
                   }
                   applyFnReserve(); // **S75:** גם בפליטת סמן — תקציב דרך נקודה אחת (clamp ב-body-first)
                   markerIdx.push(words.length);
+                  markerKeys.push(noteKey);
                   words.push(marker);
                   flags.push(false);
                   starts.push(false); ends.push(false);
@@ -7996,7 +9974,7 @@ function legacyTypeset(rawText, settings, env) {
             starts[firstAt] = wS;
             ends[words.length - 1] = wE;
           }
-          emitted.push({ ...ln, words, markerIdx, parenFlags: flags, parenStarts: starts, parenEnds: ends });
+          emitted.push({ ...ln, words, markerIdx, markerKeys, parenFlags: flags, parenStarts: starts, parenEnds: ends });
         }
         return emitted;
       };
@@ -8744,6 +10722,19 @@ function legacyTypeset(rawText, settings, env) {
       // ---- פריסת המחסנית לעמוד: פסים + בלוקים → טורים עם y מפורש ----
       layoutStack(pg, stack, top);
 
+      // Page-level placement: both columns have now contributed their
+      // anchored notes, so each physical margin is packed as one lane.
+      const marginPlacement = packMarginNotes(pg.marginNotes, {
+        top: GEO.FLOW_TOP,
+        bottom: GEO.FLOW_TOP + GEO.FLOW_H,
+        pitch: GEO.MN_PITCH,
+        gap: 1
+      });
+      pg.marginNotes = marginPlacement.notes;
+      if (marginPlacement.diagnostics.length) {
+        pg.layoutDiagnostics = (pg.layoutDiagnostics || []).concat(marginPlacement.diagnostics);
+      }
+
       // ---- הערות שוליים בתחתית (bottom-anchored) ----
       if (fnQueue.length) {
         // **S76:** אפשרויות הקיבולת — (א) flexSpacer: עמוד פתיחת מקטע
@@ -8895,8 +10886,7 @@ function legacyTypeset(rawText, settings, env) {
         pg.footnotes.push({ continuous: true, lines, centerLast: rest.length === 0, cutLast: midNoteCut });
       }
       if (rest.length) {
-        const started = new Set();
-        for (const tl of placed) for (const t of tl) started.add(t.noteIdx);
+        const started = collectStartedFootnoteIndices(placed);
         let curIdx = null, curTxt = [];
         const flushRest = () => {
           if (curIdx == null || !curTxt.length) return;
@@ -8915,7 +10905,7 @@ function legacyTypeset(rawText, settings, env) {
             // **S4.26:** סמנים ו-(המשך) אינם טקסט — המספר נשמר ב-num (והסמן
             // נוסף מחדש בעמוד הבא רק להערה שלא החלה); ההמשך מקבל '(המשך)'
             // מ-fnFlowFor בעמוד הבא לפי cont=true.
-            if (t.gap || t.mk || t.t === '(המשך)') continue;
+            if (!isFootnoteBodyToken(t)) continue;
             if (t.noteIdx !== curIdx) { flushRest(); curIdx = t.noteIdx; curTxt = []; }
             curTxt.push(t.t);
           }
@@ -8967,7 +10957,7 @@ function legacyTypeset(rawText, settings, env) {
     const totalH = placed.reduce((a, p) => a + p.lines.length * GEO.FN_PITCH, 0);
     let yy = FLOW_BOTTOM - totalH;
     for (const p of placed) {
-      const it = { marker: p.marker, lines: [], cont: p.cont };
+      const it = { marker: p.marker, noteKey: p.note.key, lines: [], cont: p.cont };
       if (p.cut) it.cutLast = true; // **S77 (בקשה 1):** שורת החיתוך — מיושבת לשני הצדדים
       for (const l of p.lines) { it.lines.push({ words: String(l).split(' '), y: yy }); yy += GEO.FN_PITCH; }
       pg.footnotes.push(it);
@@ -9019,16 +11009,16 @@ function legacyTypeset(rawText, settings, env) {
     // = פעמיים רווח) — אותו דבר ב-DOM (nbsp) וב-PDF (שני גאפים).
     const tokens = [];
     items.forEach((it, i) => {
-      if (i > 0) tokens.push({ t: '', gap: true, noteIdx: i, w: 0 });
+      if (i > 0) tokens.push({ t: '', gap: true, noteIdx: i, noteKey: it.note.key, w: 0 });
       if (it.note.cont) {
         const p = '(המשך)';
-        tokens.push({ t: p, w: fnApi.measureTextWidth(p, SZ.fnBody, 0), noteIdx: i });
+        tokens.push({ t: p, noteKey: it.note.key, w: fnApi.measureTextWidth(p, SZ.fnBody, 0), noteIdx: i });
       }
       if (it.marker) {
-        tokens.push({ t: it.marker, mk: true, sizePt: cfg.fnListingNumSize, w: fnMarkApi.measureTextWidth(it.marker, cfg.fnListingNumSize, 0), noteIdx: i });
+        tokens.push({ t: it.marker, mk: true, noteKey: it.note.key, sizePt: cfg.fnListingNumSize, w: fnMarkApi.measureTextWidth(it.marker, cfg.fnListingNumSize, 0), noteIdx: i });
       }
       for (const wd of String(it.note.text).split(/\s+/).filter(Boolean)) {
-        tokens.push({ t: wd, w: fnApi.measureTextWidth(wd, SZ.fnBody, 0), noteIdx: i });
+        tokens.push({ t: wd, noteKey: it.note.key, w: fnApi.measureTextWidth(wd, SZ.fnBody, 0), noteIdx: i });
       }
     });
     const flowLines = [];
@@ -9060,10 +11050,8 @@ function legacyTypeset(rawText, settings, env) {
       for (let i = 0; i < built.flowLines.length; i++) {
         for (const t of built.flowLines[i]) {
           if (t.noteIdx == null || seen.has(t.noteIdx)) continue;
-          // **S75:** "התחלה" = שורה עם מילה מגוף ההערה — לא שורת סמן בלבד
-          // (סמן ללא מילים הותיר "הערה ריקה" בעמוד הסמן; נמדר ב-very_long
-          // עמ' 562 — סמן יא. בלבד). סמן, רווח-כפול ותווית (המשך) אינם תוכן.
-          if (t.gap || t.mk || t.t === '(המשך)') continue;
+          // Same body-token rule as the page-break carry decision below.
+          if (!isFootnoteBodyToken(t)) continue;
           seen.add(t.noteIdx);
           const it = built.items[t.noteIdx];
           if (it && it.note && !it.note.cont) starts = i + 1;
@@ -9311,6 +11299,7 @@ function legacyTypeset(rawText, settings, env) {
       col.push({
         words: ln.words.slice(),
         markerIdx: ln.markerIdx || [],
+        markerKeys: ln.markerKeys || [],
         parenFlags: ln.parenFlags || null,
         parenStarts: ln.parenStarts || null,
         parenEnds: ln.parenEnds || null,
@@ -9807,44 +11796,7 @@ function legacyTypeset(rawText, settings, env) {
   const contentStats = (() => {
     const norm = (s) => String(s == null ? '' : s).split(/[\s\u00A0]+/).filter(Boolean);
     const bump = (m, words) => { for (const w of words) m.set(w, (m.get(w) || 0) + 1); };
-    const src = new Map();
-    // **S5.2:** שדה השנה/מקום (meta.year) אינו מוצג בשער המכויל-ייחוס — כמו
-    // בתוכנת המקור. לכן אינו נספר כחובת-תוכן.
-    // **S6.0 (F16):** שדות השער האחורי בלבד (copyright/publisher/contact/extra)
-    // נספרים כחובה רק כשהשער האחורי מוצג — בלי זה ביטול show-back-shaar
-    // גרם לדגל אובדן-תוכן שקרי (8 מילים חסרות בקורפוס ללא _imudRaw).
-    const backOnlyFields = ['copyright', 'publisher', 'contact', 'extra'];
-    for (const [mk, mv] of Object.entries(meta)) {
-      if (mk === 'year') continue;
-      if (!cfg.showBackShaar && backOnlyFields.includes(mk)) continue;
-      bump(src, norm(mv));
-    }
-    // **S5.2:** מסיר את תוחמי ההערה ([ ]) מצד המקור — המנוע מחלץ את גוף
-    // ההערה מבלי לכלול את התוחמים בפלט (הם תחביר, לא תוכן).
-    const srcTextOf = (t) => {
-      let s = String(t.text == null ? '' : t.text);
-      if (cfg.fnOpen) s = s.split(cfg.fnOpen).join(' ');
-      if (cfg.fnClose) s = s.split(cfg.fnClose).join(' ');
-      // **S5.2:** כותרת h1 מפוצלת בשער-המשנה לכותרת + משנה (split לפי
-      // המקף; join(' - ') לשאר) — מקף-ההפרדה הראשון הוא תחביר עימוד,
-      // כמו קידומת 'כותרת N -'. משקפים את אותה טרנספורמציה בצד המקור.
-      if (t.type === 'h1') {
-        const parts = s.split(/[-–—]/).map(x => x.trim()).filter(Boolean);
-        if (parts.length >= 2) s = parts[0] + ' ' + parts.slice(1).join(' - ');
-      }
-      // **S6.0 (F12):** כותרת h2 שמתחילה ב'סימן א - ' — המנוע מסיר את הקידומת
-      // ברינדור (:1017) אך צד המקור לא שיקף זאת ⇒ מילת המקף נספרה חסרה
-      // (דגל שקרי). עתה אותה טרנספורמציה בשני הצדדים.
-      if (t.type === 'h2') {
-        s = s.replace(/^סימן\s+[א-ת]+[:\-–—\s]*/i, '').trim();
-      }
-      return s;
-    };
-    for (const t of tokens) {
-      bump(src, norm(srcTextOf(t)));
-      if (t.sideNote) bump(src, norm(t.sideNote));
-      if (t.endNote) bump(src, norm(t.endNote));
-    }
+    const src = legacySourceWordMultiset(meta, tokens, cfg);
     const out = new Map();
     const addText = (s) => bump(out, norm(s));
     // **S6.0 (F10):** תוחמי הערה לא-מאוזנים ([ בלי ]) — הפלט מציג את המילה
@@ -10019,8 +11971,9 @@ function legacyLayoutHashDigest(pages) {
 module.exports = {
   GEO, SZ, HEADING_MODES, toGematria, stripEditorialNotes, parseMetadata,
   tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset,
+  collectStartedFootnoteIndices,
   FLOW_BOTTOM, SINGLE_W, wrapText, headingItemH, legacyLayoutHashDigest,
-  parenCenterRaisePx
+  countLegacySourceWords, parenCenterRaisePx
 };
 
 };
@@ -10084,6 +12037,120 @@ function hexColorToRgb(hex) {
 }
 
 module.exports = { lineFontSizePt, lineFontFamily, ptToPx, hexColorToRgb };
+
+};
+__modules["src/engine/layout/margin-flow.js"] = function (require, module, exports) {
+'use strict';
+
+/**
+ * Page-level allocator for anchored margin items.
+ *
+ * Column layout determines each note's preferred anchor. This pass runs only
+ * after every column has been projected, so notes from both columns share one
+ * vertical lane per physical margin. It preserves note order and text lines;
+ * only the y coordinates may move to prevent collisions.
+ */
+function packMarginNotes(notes = [], options = {}) {
+  const top = Number.isFinite(options.top) ? options.top : 0;
+  const bottom = Number.isFinite(options.bottom) ? options.bottom : Infinity;
+  const pitch = Number.isFinite(options.pitch) && options.pitch > 0 ? options.pitch : 1;
+  const gap = Number.isFinite(options.gap) && options.gap >= 0 ? options.gap : 1;
+  if (bottom <= top) throw new RangeError('margin-flow: bottom must be greater than top');
+
+  const output = (Array.isArray(notes) ? notes : []).map((note, index) => ({
+    ...note,
+    lines: Array.isArray(note && note.lines) ? note.lines.map(line => ({ ...line })) : [],
+    _marginOrder: index
+  }));
+  const diagnostics = [];
+  const groups = new Map([['right', []], ['left', []]]);
+
+  for (const note of output) {
+    if (!note || !groups.has(note.side)) {
+      diagnostics.push({ code: 'MARGIN_NOTE_INVALID_SIDE', index: note?._marginOrder ?? -1 });
+      continue;
+    }
+    if (!note.lines.length) continue;
+    const desiredTop = Number.isFinite(note.anchorY)
+      ? note.anchorY
+      : (Number.isFinite(note.lines[0].y) ? note.lines[0].y : top);
+    const lineYs = note.lines.map(line => line.y).filter(Number.isFinite);
+    if (lineYs.length !== note.lines.length) {
+      diagnostics.push({ code: 'MARGIN_NOTE_INVALID_GEOMETRY', index: note._marginOrder });
+      continue;
+    }
+    const oldTop = Math.min(...lineYs);
+    const height = (Math.max(...lineYs) - oldTop) + pitch;
+    if (!(height > 0) || !Number.isFinite(height)) {
+      diagnostics.push({ code: 'MARGIN_NOTE_INVALID_GEOMETRY', index: note._marginOrder });
+      continue;
+    }
+    groups.get(note.side).push({ note, desiredTop, oldTop, height, y: desiredTop });
+  }
+
+  for (const [side, entries] of groups) {
+    entries.sort((a, b) => a.desiredTop - b.desiredTop || a.note._marginOrder - b.note._marginOrder);
+    // Forward pass: honor every preferred anchor unless it collides with the
+    // preceding item in this same physical margin.
+    for (let i = 0; i < entries.length; i++) {
+      const item = entries[i];
+      item.y = Math.max(top, item.desiredTop);
+      if (i > 0) {
+        const prev = entries[i - 1];
+        item.y = Math.max(item.y, prev.y + prev.height + gap);
+      }
+    }
+
+    // If the lane overflows below the page, compact the entire ordered run
+    // upward from the bottom. This moves notes only as far as necessary.
+    if (entries.length) {
+      const last = entries[entries.length - 1];
+      if (last.y + last.height > bottom) {
+        last.y = bottom - last.height;
+        for (let i = entries.length - 2; i >= 0; i--) {
+          const next = entries[i + 1];
+          entries[i].y = Math.min(entries[i].y, next.y - gap - entries[i].height);
+        }
+      }
+    }
+
+    const totalHeight = entries.reduce((sum, item) => sum + item.height, 0)
+      + Math.max(0, entries.length - 1) * gap;
+    const capacity = bottom - top;
+    const overflow = totalHeight > capacity + 1e-7 || (entries[0] && entries[0].y < top - 1e-7);
+
+    // If the notes cannot physically fit, keep every line in order and
+    // non-overlapping, and report the page overflow instead of clipping text.
+    if (overflow && entries.length) {
+      let y = top;
+      for (const item of entries) {
+        item.y = y;
+        y += item.height + gap;
+      }
+      diagnostics.push({
+        code: 'MARGIN_NOTES_EXCEED_LANE',
+        side,
+        requiredHeight: totalHeight,
+        availableHeight: capacity,
+        overflowPx: Math.max(0, totalHeight - capacity)
+      });
+    }
+
+    for (const item of entries) {
+      const delta = item.y - item.oldTop;
+      item.note.anchorY = item.y;
+      item.note.lines = item.note.lines.map(line => ({
+        ...line,
+        y: Number.isFinite(line.y) ? line.y + delta : line.y
+      }));
+    }
+  }
+
+  for (const note of output) delete note._marginOrder;
+  return { notes: output, diagnostics };
+}
+
+module.exports = { packMarginNotes };
 
 };
 __modules["src/engine/decoration/legacy-ornaments.js"] = function (require, module, exports) {
@@ -12978,6 +15045,9 @@ function validateRequest(msg) {
     if (typeof msg.jobId !== 'string' || !msg.jobId) throw new Error('protocol: jobId required');
     if (typeof msg.text !== 'string') throw new Error('protocol: text must be string');
     if (!msg.settings || typeof msg.settings !== 'object') throw new Error('protocol: settings required');
+    if (msg.assetCollection != null && (typeof msg.assetCollection !== 'string' || !msg.assetCollection.trim())) {
+      throw new Error('protocol: assetCollection must be a non-empty string');
+    }
     return true;
   }
   if (msg.type === 'cancel') {
@@ -12998,6 +15068,21 @@ function validateRequest(msg) {
     if (typeof msg.jobId !== 'string' || !msg.jobId) throw new Error('protocol: jobId required');
     if (typeof msg.collection !== 'string' || !msg.collection) throw new Error('protocol: collection required');
     if (!Array.isArray(msg.items)) throw new Error('protocol: items array required');
+    return true;
+  }
+  // מסמכי מקור עם משאבי inline — נפרד מאוסף ה-SVG של העיטורים.
+  if (msg.type === 'register-inline-assets') {
+    if (typeof msg.jobId !== 'string' || !msg.jobId) throw new Error('protocol: jobId required');
+    if (typeof msg.collection !== 'string' || !msg.collection.trim()) throw new Error('protocol: collection required');
+    if (!Array.isArray(msg.items)) throw new Error('protocol: inline asset items array required');
+    for (let index = 0; index < msg.items.length; index++) {
+      const item = msg.items[index];
+      const bytes = item && (item.data != null ? item.data : item.bytes);
+      if (!item || typeof item.path !== 'string' || !item.path
+        || !(bytes instanceof ArrayBuffer) && !(ArrayBuffer.isView(bytes) && bytes.byteLength > 0)) {
+        throw new Error(`protocol: inline asset item ${index} requires path and non-empty bytes`);
+      }
+    }
     return true;
   }
   // **03.11 (v1.1):** בקשת ייצוא PDF/ZIP — רץ ב־Worker (המנוע המלא + שימת Buffer בדפדפן)
@@ -13396,6 +15481,24 @@ function nodeOnly(loader) {
   return loader();
 }
 
+/** Iterate actual drawable text segments. Mixed-font measured atoms store
+ * their per-family metadata on segments rather than on the flattened word. */
+function forEachLineTextSegment(line, callback) {
+  for (const word of (line && line.words) || []) {
+    const segments = Array.isArray(word.segments) && word.segments.length
+      ? word.segments
+      : [word];
+    for (const segment of segments) {
+      callback(
+        String(segment.text == null ? word.text || '' : segment.text),
+        segment.fontKey || word.fontKey || null,
+        word,
+        segment
+      );
+    }
+  }
+}
+
 /** **03.11(ג) תיקון קריסת ייצוא HTML בדפדפן:** ב-DOM האמיתי outerHTML מאפיין
  * (מחרוזת), ב-shim הבדיקות — פונקציה. הפונקציה הזו מטפלת בשניהם + נפילה
  * לסריאליזציה ידנית בסיסית (אף סביבה לא נותרת בלי פלט). */
@@ -13577,7 +15680,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const winParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'window') winParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'window') winParts.push(text);
+            });
           }
         }
         if (winParts.length) {
@@ -13608,7 +15713,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const headParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'heading') headParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'heading') headParts.push(text);
+            });
           }
         }
         if (headParts.length) {
@@ -13642,11 +15749,11 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         for (const pg of projected.pages) {
           const scan = (lines) => {
             for (const ln of lines) {
-              for (const w of (ln.words || [])) {
-                for (const ch of String(w.text || '')) {
+              forEachLineTextSegment(ln, text => {
+                for (const ch of text) {
                   if (fontForWriter.cidOf(ch) === 0 && glyphIdOf(frlProfile, ch) !== 0) missingChars.add(ch);
                 }
-              }
+              });
             }
           };
           scan(pg.spanning ? pg.spanning.lines : []);
@@ -13687,7 +15794,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const fnParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'fnbody') fnParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'fnbody') fnParts.push(text);
+            });
           }
           for (const fn of (pg.footnotes || [])) for (const w of (fn.words || [])) if (w.fontKey === 'fnbody') fnParts.push(w.text);
         }
@@ -13716,7 +15825,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const mnParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'margin') mnParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'margin') mnParts.push(text);
+            });
           }
         }
         if (mnParts.length) {
@@ -13753,7 +15864,7 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
     };
     for (const pg of projected.pages) {
       for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-        for (const w of ln.words) collectFam(w.text, w.fontKey);
+        forEachLineTextSegment(ln, (text, fontKey) => collectFam(text, fontKey));
       }
       for (const fn of (pg.footnotes || [])) {
         for (const w of (fn.words || [])) collectFam(w.text, w.fontKey);
@@ -14050,6 +16161,44 @@ function fontStack(family) {
   return out.join(', ');
 }
 
+const inlineItemRenderers = new Map();
+
+function registerInlineItemRenderer(kind, renderer) {
+  if (typeof kind !== 'string' || !kind.trim()) {
+    throw new TypeError('dom-renderer: inline item kind must be a non-empty string');
+  }
+  if (typeof renderer !== 'function') {
+    throw new TypeError('dom-renderer: inline item renderer must be a function');
+  }
+  inlineItemRenderers.set(kind, renderer);
+  return () => {
+    if (inlineItemRenderers.get(kind) === renderer) inlineItemRenderers.delete(kind);
+  };
+}
+
+function bytesToBase64(input) {
+  const bytes = input instanceof Uint8Array
+    ? input
+    : (ArrayBuffer.isView(input)
+      ? new Uint8Array(input.buffer, input.byteOffset, input.byteLength)
+      : (input instanceof ArrayBuffer ? new Uint8Array(input) : null));
+  if (!bytes) throw new TypeError('dom-renderer: image bytes must be an ArrayBuffer or byte view');
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let output = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i];
+    const hasB = i + 1 < bytes.length;
+    const hasC = i + 2 < bytes.length;
+    const b = hasB ? bytes[i + 1] : 0;
+    const c = hasC ? bytes[i + 2] : 0;
+    output += alphabet[a >> 2];
+    output += alphabet[((a & 3) << 4) | (b >> 4)];
+    output += hasB ? alphabet[((b & 15) << 2) | (c >> 6)] : '=';
+    output += hasC ? alphabet[c & 63] : '=';
+  }
+  return output;
+}
+
 function renderLine(ln, doc, settings = {}) {
   const el = doc.createElement('div');
   el.className = 'line' + (ln.isLast ? ' line--last' + lastLineClass(ln, settings) : '');
@@ -14100,6 +16249,67 @@ function renderLine(ln, doc, settings = {}) {
       prependChild(el, cm);
     }
   }
+  if (Array.isArray(ln.fragments)) {
+    for (const fragment of ln.fragments) {
+      if (fragment.kind === 'text') {
+        const word = doc.createElement('span');
+        word.className = 'w';
+        if (fragment.id != null) word.dataset.inlineId = String(fragment.id);
+        if (Array.isArray(fragment.segments) && fragment.segments.length) {
+          for (const segment of fragment.segments) {
+            const child = doc.createElement('span');
+            child.className = 'w__segment';
+            if (segment.fontFamily) child.style.fontFamily = fontStack(segment.fontFamily);
+            if (Number.isFinite(segment.sizePt) && segment.sizePt > 0) child.style.fontSize = String(ptToPx(segment.sizePt)) + 'px';
+            child.textContent = scrubPUAText(segment.text || '');
+            word.appendChild(child);
+          }
+        } else {
+          word.textContent = scrubPUAText(fragment.text || '');
+        }
+        el.appendChild(word);
+        continue;
+      }
+
+      if (fragment.kind === 'image') {
+        const image = doc.createElement('img');
+        image.className = 'inline-image';
+        image.alt = fragment.alt || fragment.resourcePath || '';
+        image.draggable = false;
+        image.style.display = 'inline-block';
+        image.style.width = String(fragment.widthPx) + 'px';
+        image.style.height = String(fragment.heightPx) + 'px';
+        image.style.maxWidth = '100%';
+        image.style.objectFit = 'contain';
+        image.style.verticalAlign = 'middle';
+        const mimeType = fragment.mimeType || 'application/octet-stream';
+        if (fragment.bytes && fragment.bytes.length) {
+          image.src = 'data:' + mimeType + ';base64,' + bytesToBase64(fragment.bytes);
+        } else {
+          image.dataset.resourceMissing = 'true';
+        }
+        if (fragment.resourceId) image.dataset.resourceId = fragment.resourceId;
+        el.appendChild(image);
+        continue;
+      }
+
+      const customRenderer = inlineItemRenderers.get(fragment.kind);
+      const customNode = customRenderer ? customRenderer(fragment, doc, settings) : null;
+      if (customNode) {
+        el.appendChild(customNode);
+      } else {
+        const placeholder = doc.createElement('span');
+        placeholder.className = 'inline-item inline-item--custom';
+        placeholder.dataset.inlineKind = fragment.kind;
+        if (fragment.id != null) placeholder.dataset.inlineId = String(fragment.id);
+        placeholder.style.display = 'inline-block';
+        placeholder.style.width = String(fragment.widthPx) + 'px';
+        placeholder.style.height = String(fragment.heightPx) + 'px';
+        placeholder.style.verticalAlign = 'middle';
+        el.appendChild(placeholder);
+      }
+    }
+  } else {
   // **D-42:** מילים בתוך סוגריים — span.w--paren עם font-size בסקאלה (geometry-neutral).
   // מילים רגילות — span.w אחיד (מיצג גם ב‑DOM אמיתי וגם ב‑shim של הבדיקות).
   // **S11:** טווחי inline מסגנון מותאך — span.w--custom עם data-style (גודל מוחל כבר במדידה).
@@ -14125,6 +16335,7 @@ function renderLine(ln, doc, settings = {}) {
     }
   } else {
     el.textContent = words.join(' ');
+  }
   }
   const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
   if (tok) el.dataset.token = tok;
@@ -14937,6 +17148,7 @@ function renderLegacyPage(pg, settings, doc) {
       // הייצוא, כמו S4.23).
       {
         const markerSet = new Set(Array.isArray(ln.markerIdx) ? ln.markerIdx : []);
+        const markerKeyByIndex = new Map((Array.isArray(ln.markerIdx) ? ln.markerIdx : []).map((index, markerIndex) => [index, Array.isArray(ln.markerKeys) ? ln.markerKeys[markerIndex] : null]));
         const imudSet = (settings && settings._imudRaw) || {};
         const markerSz = Number(imudSet['note-marker-size']) || 8;
         const parenPx = pt2px(SZ.body + SZ.parenDelta);
@@ -15003,6 +17215,8 @@ function renderLegacyPage(pg, settings, doc) {
           if (wi >= 0 && markerSet.has(wi)) {
             const m = doc.createElement('span');
             m.className = 'w w--fnmarker';
+            const noteKey = markerKeyByIndex.get(wi);
+            if (noteKey != null) m.dataset.noteKey = String(noteKey);
             m.textContent = scrubPUAText(w);
             m.style.fontSize = `${pt2px(markerSz)}px`;
             m.style.verticalAlign = 'super';
@@ -15123,6 +17337,7 @@ function renderLegacyPage(pg, settings, doc) {
             const s = doc.createElement('span');
             if (t.mk) {
               s.className = 'w w--fnmarker';
+              if (t.noteKey != null) s.dataset.noteKey = String(t.noteKey);
               s.style.fontSize = `${pt2px(listingSz)}px`;
               if (fnMarkFont) s.style.fontFamily = fnMarkFont; // **S74 (בעיה 5):** הסמן ב-FRL
             }
@@ -15141,6 +17356,7 @@ function renderLegacyPage(pg, settings, doc) {
         if (fn.marker) {
           const m = doc.createElement('span');
           m.className = 'w w--fnmarker';
+          if (fn.noteKey != null) m.dataset.noteKey = String(fn.noteKey);
           m.style.fontSize = `${pt2px(listingSz)}px`;
           if (fnMarkFont) m.style.fontFamily = fnMarkFont; // **S74 (בעיה 5):** הסמן ב-FRL
           m.textContent = scrubPUAText(fn.marker);
@@ -15449,7 +17665,7 @@ function renderPage(page, settings, doc, header) {
   return root;
 }
 
-module.exports = { renderPage, renderLine, scrubPUAText, bgRgba, PT_CLASS, renderSpanningBand, renderDecorations, renderPageBackgroundAndShaar, renderShaarContent, renderCustomPageContent, applyCustomStyleSpec, fontStack };
+module.exports = { renderPage, renderLine, scrubPUAText, bgRgba, PT_CLASS, renderSpanningBand, renderDecorations, renderPageBackgroundAndShaar, renderShaarContent, renderCustomPageContent, applyCustomStyleSpec, fontStack, registerInlineItemRenderer, bytesToBase64 };
 
 };
 __modules["src/engine/decoration/page-decorations.js"] = function (require, module, exports) {
@@ -16566,308 +18782,6 @@ function escapeHtml(s) {
 module.exports = { buildStandaloneHtml, assertOfflineSafe, BASE_CSS };
 
 };
-__modules["src/engine/import/zip-reader.js"] = function (require, module, exports) {
-// src/engine/import/zip-reader.js — קורא ZIP ללא תלות חיצונית (S11.1-3, DOCX import)
-'use strict';
-
-/**
- * קורא ZIP מינימלי לייבוא DOCX: פורמט STORE(0) + DEFLATE(8).
- * **סביבת-אגנוסטית (תיקון 03.11 — "Buffer is not defined" בדפדפן):** אין כל
- * שימוש ב-Buffer/שיטותיו — Uint8Array טהור + פונקציות עזר פרטיות (u16le/u32le/
- * utf8Decode). עובד זהה ב-Node (Buffer הוא sub-class של Uint8Array) ובדפדפן.
- * node:zlib (מובנה, לא תלות חיצונית) משמש כשקיים; אחרת המנפח הטהור להלן.
- * **אבטחה (S13 pass):**
- *  - path traversal: שמות רשומות עם ../ או / אבסולוטי או בריחת תחילית — נדחים
- *    ברשימה (denied) ולא נפתחים לעולם;
- *  - החזרת רשומות מנורמלות בלבד (שמות יחסיים נקיים);
- *  - אין eval; אין כתיבה לדיסק — הכל בזיכרון.
- */
-
-// ---------- עזרי בתים ללא Buffer (זהה לפלט readUInt16LE/readUInt32LE) ----------
-function u16le(b, o) { return b[o] | (b[o + 1] << 8); }
-function u32le(b, o) { return (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0; }
-function u8sub(b, s, e) { return b.subarray ? b.subarray(s, e) : b.slice(s, e); }
-
-/** פענוח UTF-8 טהור (TextDecoder כשקיים — אחרת מימוש ידני; תואם Buffer.toString('utf8')). */
-function utf8Decode(bytes) {
-  if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf-8').decode(bytes);
-  let s = '';
-  for (let i = 0; i < bytes.length;) {
-    const c = bytes[i];
-    if (c < 0x80) { s += String.fromCharCode(c); i++; }
-    else if (c < 0xe0) { s += String.fromCharCode(((c & 0x1f) << 6) | (bytes[i + 1] & 0x3f)); i += 2; }
-    else if (c < 0xf0) { s += String.fromCharCode(((c & 0x0f) << 12) | ((bytes[i + 1] & 0x3f) << 6) | (bytes[i + 2] & 0x3f)); i += 3; }
-    else {
-      const cp = ((c & 0x07) << 18) | ((bytes[i + 1] & 0x3f) << 12) | ((bytes[i + 2] & 0x3f) << 6) | (bytes[i + 3] & 0x3f);
-      const off = cp - 0x10000;
-      s += String.fromCharCode(0xd800 + (off >> 10), 0xdc00 + (off & 0x3ff));
-      i += 4;
-    }
-  }
-  return s;
-}
-
-const zlib = (() => {
-  try { return require('zlib'); } catch (e) { return null; } // בדפדפן אין zlib — מנפח טהור
-})();
-
-// =====================================================================
-// מנפח raw-DEFLATE טהור (BTYPE 00/01/10) — גיבוי לסביבות בלי zlib (דפדפן).
-// אותו פלט כמו zlib.inflateRawSync; מבחן השקילות בבדיקות S11 (both-paths).
-// =====================================================================
-class BitReader {
-  constructor(buf, startByte) {
-    this.buf = buf; this.pos = startByte << 3; this.bit = 0; // מספרי ביט מוחלטים
-  }
-  read(count) {
-    let v = 0;
-    for (let i = 0; i < count; i++) {
-      const byteIdx = this.pos >> 3;
-      if (byteIdx >= this.buf.length) throw new Error('deflate: out-of-input');
-      const bit = (this.buf[byteIdx] >> (this.pos & 7)) & 1;
-      v |= bit << i;
-      this.pos++;
-    }
-    return v;
-  }
-  alignByte() { this.pos = (this.pos + 7) & ~7; }
-}
-
-function buildHuffman(lengths) {
-  // קודי canonical Huffman לפי טבלאות אורך (DEFLATE spec 3.2.2)
-  const maxLen = 15;
-  const counts = new Array(maxLen + 1).fill(0);
-  for (const l of lengths) counts[l]++;
-  counts[0] = 0;
-  const next = new Array(maxLen + 2).fill(0);
-  let code = 0;
-  for (let b = 1; b <= maxLen; b++) { code = (code + counts[b - 1]) << 1; next[b] = code; }
-  const map = new Map();
-  for (let sym = 0; sym < lengths.length; sym++) {
-    const l = lengths[sym];
-    if (l === 0) continue;
-    const c = next[l]++;
-    map.set((c << 4) | l, sym); // מפתח: code<<4|len — פענוח לפי סדר עולה
-  }
-  return { map, counts, lengths };
-}
-
-function decodeSymbol(br, huff) {
-  // קריאה ביט־ביט־ביט ובניית קוד — ללא טבלה הפוכה (פשוט ונכון; קלטים קטנים)
-  let code = 0, len = 0;
-  for (;;) {
-    code = (code << 1) | br.read(1);
-    len++;
-    if (len > 15) throw new Error('deflate: bad-code');
-    const sym = huff.map.get((code << 4) | len);
-    if (sym !== undefined) return sym;
-  }
-}
-
-const LEN_BASE = [3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258];
-const LEN_EXTRA = [0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
-const DIST_BASE = [1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577];
-const DIST_EXTRA = [0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
-
-function fixedLitHuff() {
-  const lengths = [];
-  for (let i = 0; i < 144; i++) lengths.push(8);
-  for (let i = 144; i < 256; i++) lengths.push(9);
-  for (let i = 256; i < 280; i++) lengths.push(7);
-  for (let i = 280; i < 288; i++) lengths.push(8);
-  return buildHuffman(lengths);
-}
-function fixedDistHuff() { return buildHuffman(new Array(30).fill(5)); }
-
-/** מנפח raw DEFLATE טהור. הפלט כולו במערך אחד עד הסוף (backref ≤32K תקין תמיד). @returns {Uint8Array} */
-function inflateRawPure(buf, startByte = 0, expectedSize = -1) {
-  const br = new BitReader(buf, startByte);
-  const out = [];
-  const pushByte = (b) => { out.push(b); };
-
-  for (;;) {
-    const final = br.read(1);
-    const btype = br.read(2);
-    if (btype === 0) {
-      br.alignByte();
-      const lenPos = br.pos >> 3;
-      if (lenPos + 4 > buf.length) throw new Error('deflate: stored-header-oob');
-      const len = buf[lenPos] | (buf[lenPos + 1] << 8);
-      const nlen = buf[lenPos + 2] | (buf[lenPos + 3] << 8);
-      if ((len ^ 0xFFFF) !== nlen) throw new Error('deflate: stored-nlen-mismatch');
-      const dataStart = lenPos + 4;
-      if (dataStart + len > buf.length) throw new Error('deflate: stored-oob');
-      for (let i = 0; i < len; i++) pushByte(buf[dataStart + i]);
-      br.pos = (dataStart + len) << 3;
-    } else if (btype === 1 || btype === 2) {
-      let litHuff, distHuff;
-      if (btype === 1) {
-        litHuff = fixedLitHuff(); distHuff = fixedDistHuff();
-      } else {
-        const hlit = br.read(5) + 257;
-        const hdist = br.read(5) + 1;
-        const hclen = br.read(4) + 4;
-        const ORDER = [16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
-        const clLengths = new Array(19).fill(0);
-        for (let i = 0; i < hclen; i++) clLengths[ORDER[i]] = br.read(3);
-        const clHuff = buildHuffman(clLengths);
-        const lengths = [];
-        let prev = 0;
-        const total = hlit + hdist;
-        while (lengths.length < total) {
-          const sym = decodeSymbol(br, clHuff);
-          if (sym < 16) { lengths.push(sym); prev = sym; }
-          else if (sym === 16) { const rep = 3 + br.read(2); for (let i = 0; i < rep && lengths.length < total; i++) lengths.push(prev); }
-          else if (sym === 17) { const rep = 3 + br.read(3); for (let i = 0; i < rep && lengths.length < total; i++) lengths.push(0); prev = 0; }
-          else { const rep = 11 + br.read(7); for (let i = 0; i < rep && lengths.length < total; i++) lengths.push(0); prev = 0; }
-        }
-        litHuff = buildHuffman(lengths.slice(0, hlit));
-        distHuff = buildHuffman(lengths.slice(hlit));
-      }
-      // פענוח סמלים (LZ77: backref עד 32K לאחור — תקין תמיד במערך היחיד)
-      for (;;) {
-        const sym = decodeSymbol(br, litHuff);
-        if (sym < 256) {
-          pushByte(sym);
-        } else if (sym === 256) {
-          break;
-        } else {
-          const li = sym - 257;
-          if (li >= LEN_BASE.length) throw new Error('deflate: bad-length-symbol');
-          const len = LEN_BASE[li] + (LEN_EXTRA[li] ? br.read(LEN_EXTRA[li]) : 0);
-          const dsym = decodeSymbol(br, distHuff);
-          if (dsym >= DIST_BASE.length) throw new Error('deflate: bad-dist-symbol');
-          const dist = DIST_BASE[dsym] + (DIST_EXTRA[dsym] ? br.read(DIST_EXTRA[dsym]) : 0);
-          if (dist > out.length) throw new Error('deflate: dist-too-far');
-          const srcPos = out.length - dist;
-          for (let i = 0; i < len; i++) pushByte(out[srcPos + i]);
-        }
-      }
-    } else {
-      throw new Error('deflate: bad-btype');
-    }
-    if (final) break;
-    if (expectedSize >= 0 && out.length >= expectedSize) break;
-  }
-  return Uint8Array.from(out);
-}
-
-/** מנפח: zlib אם קיים (Node), אחרת המנפח הטהור (דפדפן). @returns {Uint8Array} */
-function inflateRaw(data) {
-  if (zlib) {
-    const out = zlib.inflateRawSync(data); // Node: מחזיר Buffer (Uint8Array) — זהה פונקציונלית
-    return out;
-  }
-  return inflateRawPure(data, 0, -1);
-}
-
-/** CRC32 של ZIP — לאימות שלמות רשומות (optional check; לא חוסם). */
-const CRC_TABLE = (() => {
-  const t = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-    t[n] = c >>> 0;
-  }
-  return t;
-})();
-function crc32(buf) {
-  let c = 0xFFFFFFFF;
-  for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
-  return (c ^ 0xFFFFFFFF) >>> 0;
-}
-
-/** נורמליזציה + מדיניות שמות: רק נתיבים יחסיים פנימיים. */
-function safeName(raw) {
-  const name = String(raw || '').replace(/\\/g, '/');
-  if (!name || name.endsWith('/')) return null;      // תיקייה
-  if (name.startsWith('/')) return null;              // אבסולוטי
-  const parts = name.split('/');
-  if (parts.some(p => p === '..')) return null;       // traversal
-  if (/^[a-zA-Z]:/.test(name)) return null;           // כונן
-  if (/[<>:"|?*\u0000]/.test(name)) return null;      // תווים אסורים
-  return name;
-}
-
-/**
- * פתיחת ארכיון ZIP מזיכרון — **ללא Buffer** (דפדפן ו-Node כאחד; תיקון 03.11).
- * @param {Buffer|Uint8Array} bytes
- * @returns {{ok:boolean, entries:Array<{name:string, data:Uint8Array, method:number, size:number}>, denied:Array<string>, error:string|null}}
- */
-function readZip(bytes) {
-  const buf = bytes; // Buffer (Node) הוא Uint8Array — אינדוקסציה זהה; שום דבר לא נדרש כאן
-  const denied = [];
-  const entries = [];
-  // מציאת EOCD (End Of Central Directory) — מהסוף, חתימה 0x06054b50
-  let eocd = -1;
-  const minLen = 22;
-  for (let i = buf.length - minLen; i >= Math.max(0, buf.length - minLen - 65536); i--) {
-    if (u32le(buf, i) === 0x06054b50) { eocd = i; break; }
-  }
-  if (eocd < 0) return { ok: false, entries: [], denied: [], error: 'not-a-zip' };
-  const totalEntries = u16le(buf, eocd + 10);
-  const cdOffset = u32le(buf, eocd + 16);
-
-  let p = cdOffset;
-  for (let n = 0; n < totalEntries; n++) {
-    if (p + 46 > buf.length || u32le(buf, p) !== 0x02014b50) {
-      return { ok: false, entries, denied, error: `bad-central-directory@${n}` };
-    }
-    const method = u16le(buf, p + 10);
-    const compSize = u32le(buf, p + 20);
-    const nameLen = u16le(buf, p + 28);
-    const extraLen = u16le(buf, p + 30);
-    const commentLen = u16le(buf, p + 32);
-    const localOffset = u32le(buf, p + 42);
-    const rawName = utf8Decode(u8sub(buf, p + 46, p + 46 + nameLen));
-    const name = safeName(rawName);
-    if (name == null) { denied.push(rawName); p += 46 + nameLen + extraLen + commentLen; continue; }
-
-    // קריאת ה-local header והנתונים
-    if (localOffset + 30 > buf.length || u32le(buf, localOffset) !== 0x04034b50) {
-      return { ok: false, entries, denied, error: `bad-local-header:${name}` };
-    }
-    const lhNameLen = u16le(buf, localOffset + 26);
-    const lhExtraLen = u16le(buf, localOffset + 28);
-    const dataStart = localOffset + 30 + lhNameLen + lhExtraLen;
-    // **S6.0 (R9 — קריאה קטועה בשקט):** compSize עלול לחרוג מהקובץ
-    // (ZIP קטוע/פגום) — subarray קוצץ בשקט והרשומה הוחזרה חלקית כתקינה.
-    if (dataStart + compSize > buf.length) {
-      return { ok: false, entries, denied, error: `truncated-entry:${name}` };
-    }
-    const raw = u8sub(buf, dataStart, dataStart + compSize);
-    let data;
-    try {
-      if (method === 0) data = Uint8Array.from(raw);
-      else if (method === 8) data = inflateRaw(raw);
-      else return { ok: false, entries, denied, error: `unsupported-method:${method}:${name}` };
-    } catch (e) {
-      return { ok: false, entries, denied, error: `inflate-failed:${name}` };
-    }
-    // **S6.0 (R9 — פצצת ZIP):** תקרת פריסה לרשומה (64MB) — מנע הקפאת
-    // לשונית של 42KB→4GB; ו-CRC מהמדריך המרכזי נשמר לאימות (verifyCrc
-    // היה מת — storedCrc מעולם לא אוכלס).
-    if (data.length > 64 * 1024 * 1024) {
-      return { ok: false, entries, denied, error: `entry-too-large:${name}` };
-    }
-    const entry = { name, data, method, size: data.length, storedCrc: u32le(buf, p + 16) };
-    if (crc32(entry.data) !== entry.storedCrc) {
-      return { ok: false, entries, denied, error: `crc-mismatch:${name}` };
-    }
-    entries.push(entry);
-    p += 46 + nameLen + extraLen + commentLen;
-  }
-  return { ok: true, entries, denied, error: null };
-}
-
-/** אימות CRC של רשומה (best-effort; מחזיר בוליאני). */
-function verifyCrc(entry) {
-  return crc32(entry.data) === entry.storedCrc;
-}
-
-module.exports = { readZip, safeName, crc32, verifyCrc, inflateRaw, inflateRawPure, utf8Decode };
-
-};
 __modules["src/engine/typography/font-subset.js"] = function (require, module, exports) {
 // src/engine/typography/font-subset.js — TrueType subsetting for exports (S12.1-8, REQ-EXP)
 'use strict';
@@ -17200,7 +19114,8 @@ const { MeasureAPI } = require('../typography/measure-api');
 const { NOTE_FONT_FACTORS } = require('../layout/footnote-budget');
 const { markerFor } = require('../notes/markers');
 const { SIDE_NOTE_FONT_FACTORS } = require('../layout/side-notes');
-const { lineFontSizePt, hexColorToRgb } = require('./line-font'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
+const { lineFontSizePt, hexColorToRgb } = require('./line-font');
+const { composeLineFragments } = require('../layout/line-fragments'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
 // **S73:** גופן השערים לפי מחלקת בלוק — מקור יחיד לשני הנתיבים (DOM+PDF)
 const { buildShaarBlocks, shaarFontOf } = require('./shaar-content');
 const { ornamentInk, parseSvgPaint, svgToPdfOps, svgInkBBox } = require('../decoration/ornament-ink'); // **EXT-4:** הדיו — מקור יחיד לכל הנתיבים // **03.11(ד):** תוכן השערים — אותו מודל כמו ה-DOM
@@ -17852,7 +19767,82 @@ function customFactorMapOf(settings) {
   return m;
 }
 
+function projectMeasuredLine(ln, colX, y, colW, settings, align, sizePt) {
+  const items = ln.fragments.map(fragment => ({ ...fragment }));
+  if (!items.length) return null;
+
+  if (align === 'justify' && !ln.isLast) {
+    const naturalWidth = items.reduce((sum, item) =>
+      sum + item.widthPx + (item.gapAfterPx || 0), 0);
+    const gapIndexes = [];
+    for (let i = 0; i < items.length - 1; i++) {
+      if ((items[i].gapAfterPx || 0) > 0) gapIndexes.push(i);
+    }
+    const extra = colW - naturalWidth;
+    if (extra > 0 && gapIndexes.length) {
+      const add = extra / gapIndexes.length;
+      for (const index of gapIndexes) items[index].gapAfterPx += add;
+    }
+  }
+
+  const placement = composeLineFragments(items, {
+    x: colX, y, widthPx: colW,
+    heightPx: ln.heightPx || 0,
+    direction: 'rtl',
+    align: align === 'justify' ? 'right' : align
+  });
+  if (!placement.ok) {
+    throw new Error('geometry-projector: measured inline fragments overflow line by ' +
+      roundTo3(placement.requiredWidthPx - placement.availableWidthPx) + 'px');
+  }
+
+  const bodyColor = colorOfSetting(settings['body-color']);
+  const fragments = placement.fragments.map(fragment => {
+    if (fragment.kind !== 'text') return fragment;
+    let segmentRight = fragment.x + fragment.widthPx;
+    const sourceSegments = Array.isArray(fragment.segments) && fragment.segments.length
+      ? fragment.segments
+      : [{ text: fragment.text, widthPx: fragment.widthPx, fontFamily: fragment.fontFamily || null }];
+    const segments = sourceSegments.map(segment => {
+      const widthPx = Number(segment.widthPx);
+      segmentRight -= widthPx;
+      const fontKey = familyFontKeyOf(segment.fontFamily, settings);
+      return {
+        ...segment, x: segmentRight, y, widthPx,
+        sizePt: segment.sizePt || fragment.sizePt || sizePt,
+        ...(fontKey ? { fontKey } : {})
+      };
+    });
+    return {
+      ...fragment,
+      segments,
+      sizePt: fragment.sizePt || sizePt,
+      ...(segments.length === 1 && segments[0].fontKey ? { fontKey: segments[0].fontKey } : {}),
+      ...(fragment.color ? {} : (bodyColor ? { color: bodyColor } : {}))
+    };
+  });
+
+  const words = fragments.filter(fragment => fragment.kind === 'text').map(fragment => ({
+    text: fragment.text, x: fragment.x, w: fragment.widthPx,
+    sizePt: fragment.sizePt || sizePt,
+    ...(fragment.fontKey ? { fontKey: fragment.fontKey } : {}),
+    ...(fragment.color ? { color: fragment.color } : {}),
+    segments: fragment.segments
+  }));
+  const heightPx = Math.max(ln.heightPx || 0, ...fragments.map(fragment => fragment.heightPx || 0));
+  return {
+    x: colX, y, w: colW, h: heightPx * (ln.aqStretch || 1),
+    words, fragments, align,
+    kind: ln.kind || 'paragraph', level: ln.level, isLast: !!ln.isLast,
+    sizePt,
+    tokenId: ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId),
+    baselineY: null
+  };
+}
+function roundTo3(value) { return Math.round(value * 1000) / 1000; }
+
 function projectLine(ln, colX, y, colW, settings, measure, align) {
+  if (Array.isArray(ln.fragments)) return projectMeasuredLine(ln, colX, y, colW, settings, align, lineFontSizePt(ln, settings));
   const sizePt = lineFontSizePt(ln, settings);
   // **S73 (תצוגה=ייצוא בגופני כותרות — נתיב DP):** ה-DOM מציג כותרות inline
   // בגופן הרמה מההגדרות (heading-N-font) ובצבען (heading-N-color); עד כאן
@@ -18055,12 +20045,167 @@ function projectDocument(result, settings, api) {
   return { pages, inkBounds, layoutHash: result.layoutHash };
 }
 
-module.exports = { projectPage, projectLine, projectDocument, lineFontSizePt, attachBaselines };
+module.exports = { projectPage, projectLine, projectDocument, projectMeasuredLine, lineFontSizePt, attachBaselines };
+
+};
+__modules["src/engine/layout/line-fragments.js"] = function (require, module, exports) {
+// src/engine/layout/line-fragments.js — shared mixed-item line geometry (S14 P0)
+'use strict';
+
+const EPSILON = 1e-7;
+
+function finiteNonNegative(value, name) {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new TypeError('line-fragments: ' + name + ' must be a finite non-negative number');
+  }
+  return value;
+}
+
+function normalizeInlineItems(items) {
+  if (!Array.isArray(items)) throw new TypeError('line-fragments: items must be an array');
+  return items.map((item, index) => {
+    if (!item || typeof item.kind !== 'string' || !item.kind.trim()) {
+      throw new TypeError('line-fragments: every item requires a non-empty kind');
+    }
+    const widthPx = finiteNonNegative(item.widthPx, 'item.widthPx');
+    const heightPx = finiteNonNegative(item.heightPx == null ? 0 : item.heightPx, 'item.heightPx');
+    const gapAfterPx = finiteNonNegative(item.gapAfterPx == null ? 0 : item.gapAfterPx, 'item.gapAfterPx');
+    if (item.kind === 'text' && typeof item.text !== 'string') {
+      throw new TypeError('line-fragments: text item requires a string');
+    }
+    if (item.kind === 'image' && (typeof item.resourcePath !== 'string' || !item.resourcePath.trim())) {
+      throw new TypeError('line-fragments: image item requires resourcePath');
+    }
+    if (item.kind === 'anchor' && item.id == null) {
+      throw new TypeError('line-fragments: anchor item requires a stable id');
+    }
+    if (!['text', 'image', 'anchor'].includes(item.kind) && item.id == null) {
+      throw new TypeError('line-fragments: custom item requires a stable id');
+    }
+    const sourceStart = item.sourceStart == null ? null : item.sourceStart;
+    const sourceEnd = item.sourceEnd == null ? null : item.sourceEnd;
+    if ((sourceStart == null) !== (sourceEnd == null)
+      || (sourceStart != null && (!Number.isInteger(sourceStart) || !Number.isInteger(sourceEnd) || sourceStart < 0 || sourceEnd < sourceStart))) {
+      throw new TypeError('line-fragments: source range must be a valid [start,end) pair');
+    }
+    return { ...item, widthPx, heightPx, gapAfterPx, sourceStart, sourceEnd };
+  });
+}
+
+/**
+ * Return the horizontal free intervals for a line band after subtracting
+ * rectangles occupied by floating inline items (normally images).
+ * Coordinates use the same page-space system as the Page Model.
+ */
+function availableIntervalsAtY(contentRect, exclusions, y, heightPx) {
+  if (!contentRect || !Number.isFinite(contentRect.x) || !Number.isFinite(contentRect.y)
+    || !Number.isFinite(contentRect.width) || contentRect.width <= 0) {
+    throw new TypeError('line-fragments: contentRect requires finite x/y and positive width');
+  }
+  finiteNonNegative(heightPx, 'line height');
+  if (!Number.isFinite(y)) throw new TypeError('line-fragments: y must be finite');
+  const left = contentRect.x;
+  const right = left + contentRect.width;
+  const bandTop = y;
+  const bandBottom = y + heightPx;
+  let intervals = [{ x: left, width: contentRect.width }];
+
+  for (const rect of exclusions || []) {
+    if (!rect || !Number.isFinite(rect.x) || !Number.isFinite(rect.y)
+      || !Number.isFinite(rect.width) || !Number.isFinite(rect.height)
+      || rect.width < 0 || rect.height < 0) {
+      throw new TypeError('line-fragments: every exclusion must be a finite rectangle');
+    }
+    if (rect.width === 0 || rect.height === 0
+      || rect.y >= bandBottom - EPSILON || rect.y + rect.height <= bandTop + EPSILON) continue;
+    const cutLeft = Math.max(left, rect.x);
+    const cutRight = Math.min(right, rect.x + rect.width);
+    if (cutRight <= cutLeft + EPSILON) continue;
+    const next = [];
+    for (const interval of intervals) {
+      const iLeft = interval.x;
+      const iRight = iLeft + interval.width;
+      if (cutRight <= iLeft + EPSILON || cutLeft >= iRight - EPSILON) {
+        next.push(interval);
+        continue;
+      }
+      if (cutLeft > iLeft + EPSILON) next.push({ x: iLeft, width: cutLeft - iLeft });
+      if (cutRight < iRight - EPSILON) next.push({ x: cutRight, width: iRight - cutRight });
+    }
+    intervals = next;
+  }
+  return intervals.filter(interval => interval.width > EPSILON).sort((a, b) => a.x - b.x);
+}
+
+/**
+ * Position an already-broken sequence of measured atomic items in one free
+ * interval. The function never splits or drops an item. RTL is the default:
+ * logical item order is preserved while the first item is placed at the right.
+ */
+function composeLineFragments(items, options = {}) {
+  const normalized = normalizeInlineItems(items);
+  const x = Number(options.x);
+  const y = Number(options.y);
+  const widthPx = Number(options.widthPx);
+  const heightPx = finiteNonNegative(options.heightPx == null ? 0 : options.heightPx, 'line height');
+  const direction = options.direction || 'rtl';
+  const align = options.align || 'right';
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(widthPx) || widthPx <= 0) {
+    throw new TypeError('line-fragments: x/y and positive widthPx are required');
+  }
+  if (direction !== 'rtl' && direction !== 'ltr') throw new TypeError('line-fragments: direction must be rtl or ltr');
+  if (!['right', 'left', 'center', 'start', 'end'].includes(align)) {
+    throw new TypeError('line-fragments: unsupported alignment');
+  }
+
+  // Gaps are part of the line geometry, not decoration: they contribute to
+  // the fit and to RTL/LTR cursor movement exactly once.
+  const totalWidth = normalized.reduce((sum, item) => sum + item.widthPx + item.gapAfterPx, 0);
+  if (totalWidth > widthPx + EPSILON) {
+    return { ok: false, reason: 'line-overflow', requiredWidthPx: totalWidth, availableWidthPx: widthPx, fragments: [] };
+  }
+  const resolvedAlign = align === 'start' ? (direction === 'rtl' ? 'right' : 'left')
+    : align === 'end' ? (direction === 'rtl' ? 'left' : 'right') : align;
+  const spare = Math.max(0, widthPx - totalWidth);
+  let cursor;
+  if (direction === 'rtl') {
+    cursor = resolvedAlign === 'right' ? x + widthPx
+      : resolvedAlign === 'center' ? x + (widthPx + totalWidth) / 2
+        : x + totalWidth;
+  } else {
+    const offset = resolvedAlign === 'right' ? spare : resolvedAlign === 'center' ? spare / 2 : 0;
+    cursor = x + offset;
+  }
+  const fragments = normalized.map(item => {
+    if (direction === 'rtl') cursor -= item.widthPx;
+    const fragment = {
+      ...item,
+      x: cursor,
+      y,
+      widthPx: item.widthPx,
+      heightPx: Math.max(heightPx, item.heightPx)
+    };
+    if (direction === 'rtl') cursor -= item.gapAfterPx;
+    else cursor += item.widthPx + item.gapAfterPx;
+    return fragment;
+  });
+  return {
+    ok: true,
+    x, y, widthPx, heightPx,
+    direction, align: resolvedAlign,
+    usedWidthPx: totalWidth,
+    fragments
+  };
+}
+
+module.exports = { normalizeInlineItems, availableIntervalsAtY, composeLineFragments };
 
 };
 __modules["src/engine/output/pdf-writer.js"] = function (require, module, exports) {
 // src/engine/output/pdf-writer.js — Pure-JS PDF 1.4 writer (S12.1-3, REQ-EXP-03)
 'use strict';
+
+const { crc32, inflateRawPure } = require('../import/zip-reader');
 
 /**
  * כותב PDF מהקרנת הגיאומטריה (geometry-projector — מקור יחיד) + תת־גופן
@@ -18248,6 +20393,264 @@ function buildToUnicode(font) {
   return lines.join('\n');
 }
 
+
+const pdfInlineItemRenderers = new Map();
+
+function registerPdfInlineItemRenderer(kind, renderer) {
+  if (typeof kind !== 'string' || !kind.trim()) {
+    throw new TypeError('pdf-writer: inline item kind must be a non-empty string');
+  }
+  if (typeof renderer !== 'function') {
+    throw new TypeError('pdf-writer: inline item renderer must be a function');
+  }
+  pdfInlineItemRenderers.set(kind, renderer);
+  return () => {
+    if (pdfInlineItemRenderers.get(kind) === renderer) pdfInlineItemRenderers.delete(kind);
+  };
+}
+
+function asByteView(input) {
+  if (input instanceof Uint8Array) return input;
+  if (ArrayBuffer.isView(input)) return new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
+  if (input instanceof ArrayBuffer) return new Uint8Array(input);
+  return null;
+}
+function readU32BE(bytes, offset) {
+  return ((bytes[offset] << 24) | (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3]) >>> 0;
+}
+function adler32(bytes) {
+  let a = 1, b = 0;
+  for (let i = 0; i < bytes.length; i++) {
+    a = (a + bytes[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+  return ((b << 16) | a) >>> 0;
+}
+function encodeZlibStored(bytesInput) {
+  const bytes = asByteView(bytesInput);
+  if (!bytes) throw new TypeError('pdf-writer: zlib input must be bytes');
+  const blockCount = Math.max(1, Math.ceil(bytes.length / 65535));
+  const out = new Uint8Array(2 + bytes.length + blockCount * 5 + 4);
+  let p = 0;
+  out[p++] = 0x78;
+  out[p++] = 0x01;
+  let offset = 0;
+  for (let block = 0; block < blockCount; block++) {
+    const length = Math.min(65535, bytes.length - offset);
+    out[p++] = block === blockCount - 1 ? 1 : 0; // BFINAL, BTYPE=00, aligned
+    out[p++] = length & 255;
+    out[p++] = (length >>> 8) & 255;
+    const inverse = (~length) & 0xffff;
+    out[p++] = inverse & 255;
+    out[p++] = (inverse >>> 8) & 255;
+    if (length) out.set(bytes.subarray(offset, offset + length), p);
+    p += length;
+    offset += length;
+  }
+  const checksum = adler32(bytes);
+  out[p++] = (checksum >>> 24) & 255;
+  out[p++] = (checksum >>> 16) & 255;
+  out[p++] = (checksum >>> 8) & 255;
+  out[p++] = checksum & 255;
+  return out;
+}
+
+/**
+ * Decode PNG pixels into DeviceRGB plus an optional 8-bit alpha plane.
+ * Supports color types 0/2/3/4/6, bit depths 1/2/4/8/16 and both standard
+ * and Adam7 interlaced images. PNG chunk CRCs and the zlib Adler checksum are
+ * validated before any PDF object is emitted.
+ */
+function decodePngForPdf(input) {
+  const bytes = asByteView(input);
+  const signature = [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a];
+  if (!bytes || bytes.length < 33 || !signature.every((v,i)=>bytes[i]===v)) {
+    throw new Error('pdf-writer: PNG signature or data is invalid');
+  }
+  let width=0,height=0,bitDepth=0,colorType=-1,interlace=0;
+  let palette=null, transparency=null, sawHeader=false, sawEnd=false;
+  const idat=[];
+  let idatLength=0;
+  for(let offset=8;offset<bytes.length;){
+    if(offset+12>bytes.length)throw new Error('pdf-writer: truncated PNG chunk');
+    const length=readU32BE(bytes,offset);
+    const typeStart=offset+4, dataStart=offset+8, dataEnd=dataStart+length, chunkEnd=dataEnd+4;
+    if(chunkEnd>bytes.length||dataEnd<dataStart)throw new Error('pdf-writer: PNG chunk exceeds input');
+    const type=String.fromCharCode(bytes[typeStart],bytes[typeStart+1],bytes[typeStart+2],bytes[typeStart+3]);
+    const crcExpected=readU32BE(bytes,dataEnd);
+    const crcActual=crc32(bytes.subarray(typeStart,dataEnd));
+    if(crcExpected!==crcActual)throw new Error('pdf-writer: PNG CRC mismatch in '+type);
+    if(!sawHeader){
+      if(type!=='IHDR'||length!==13)throw new Error('pdf-writer: PNG IHDR is missing or invalid');
+      width=readU32BE(bytes,dataStart);
+      height=readU32BE(bytes,dataStart+4);
+      bitDepth=bytes[dataStart+8];
+      colorType=bytes[dataStart+9];
+      if(bytes[dataStart+10]!==0||bytes[dataStart+11]!==0)throw new Error('pdf-writer: unsupported PNG compression or filter method');
+      interlace=bytes[dataStart+12];
+      sawHeader=true;
+    }else if(type==='IHDR'){
+      throw new Error('pdf-writer: duplicate PNG IHDR');
+    }
+    if(type==='PLTE')palette=bytes.slice(dataStart,dataEnd);
+    if(type==='tRNS')transparency=bytes.slice(dataStart,dataEnd);
+    if(type==='IDAT'){
+      idat.push(bytes.subarray(dataStart,dataEnd));
+      idatLength+=length;
+    }
+    if(type==='IEND'){
+      if(length!==0){throw new Error('pdf-writer: invalid PNG IEND');}
+      sawEnd=true;
+      if(chunkEnd!==bytes.length)throw new Error('pdf-writer: trailing data after PNG IEND');
+      break;
+    }
+    offset=chunkEnd;
+  }
+  const validDepths={0:[1,2,4,8,16],2:[8,16],3:[1,2,4,8],4:[8,16],6:[8,16]};
+  const channelsByType={0:1,2:3,3:1,4:2,6:4};
+  if(!sawHeader||!sawEnd||!idatLength)throw new Error('pdf-writer: incomplete PNG structure');
+  if(!validDepths[colorType]||!validDepths[colorType].includes(bitDepth))throw new Error('pdf-writer: unsupported PNG color type or bit depth');
+  if(interlace!==0&&interlace!==1)throw new Error('pdf-writer: unsupported PNG interlace mode');
+  if(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width*height>100000000) {
+    throw new Error('pdf-writer: PNG dimensions exceed safety limits');
+  }
+  if(colorType===3&&(!palette||palette.length%3!==0||palette.length>768))throw new Error('pdf-writer: indexed PNG palette is invalid');
+  if(colorType===3&&transparency&&transparency.length>palette.length/3)throw new Error('pdf-writer: indexed PNG transparency is invalid');
+
+  const zlibBytes=new Uint8Array(idatLength);
+  let zOffset=0;
+  for(const chunk of idat){zlibBytes.set(chunk,zOffset);zOffset+=chunk.length;}
+  if(zlibBytes.length<6||(zlibBytes[0]&15)!==8||(((zlibBytes[0]<<8)|zlibBytes[1])%31)!==0||(zlibBytes[1]&32)!==0) {
+    throw new Error('pdf-writer: invalid PNG zlib header');
+  }
+  const deflateBytes=zlibBytes.subarray(2,zlibBytes.length-4);
+  const inflated=inflateRawPure(deflateBytes,0,-1);
+  const adlerExpected=readU32BE(zlibBytes,zlibBytes.length-4);
+  if(adler32(inflated)!==adlerExpected)throw new Error('pdf-writer: PNG Adler checksum mismatch');
+
+  const passes=interlace===0
+    ? [[0,0,1,1]]
+    : [[0,0,8,8],[4,0,8,8],[0,4,4,8],[2,0,4,4],[0,2,2,4],[1,0,2,2],[0,1,1,2]];
+  const channels=channelsByType[colorType];
+  const sampleMax=bitDepth===16?65535:(1<<bitDepth)-1;
+  const rgb=new Uint8Array(width*height*3);
+  const alpha=new Uint8Array(width*height);
+  alpha.fill(255);
+  let hasAlpha=false, readOffset=0;
+
+  const scaleSample=value=>bitDepth===16?Math.round(value/257):(bitDepth===8?value:Math.round(value*255/sampleMax));
+  const sampleAt=(row,pixel,channel)=>{
+    const sampleIndex=pixel*channels+channel;
+    if(bitDepth===16)return (row[sampleIndex*2]<<8)|row[sampleIndex*2+1];
+    if(bitDepth===8)return row[sampleIndex];
+    const bitOffset=sampleIndex*bitDepth;
+    const shift=8-bitDepth-(bitOffset&7);
+    return (row[bitOffset>>3]>>shift)&sampleMax;
+  };
+  const paeth=(a,b,c)=>{
+    const p=a+b-c,pa=Math.abs(p-a),pb=Math.abs(p-b),pc=Math.abs(p-c);
+    return pa<=pb&&pa<=pc?a:(pb<=pc?b:c);
+  };
+
+  for(const pass of passes){
+    const [x0,y0,dx,dy]=pass;
+    const passWidth=width<=x0?0:Math.ceil((width-x0)/dx);
+    const passHeight=height<=y0?0:Math.ceil((height-y0)/dy);
+    if(!passWidth||!passHeight)continue;
+    const rowBytes=Math.ceil(passWidth*channels*bitDepth/8);
+    const bytesPerPixel=Math.max(1,Math.ceil(channels*bitDepth/8));
+    let previous=new Uint8Array(rowBytes);
+    for(let py=0;py<passHeight;py++){
+      if(readOffset+1+rowBytes>inflated.length)throw new Error('pdf-writer: truncated PNG scanline data');
+      const filter=inflated[readOffset++];
+      const raw=inflated.subarray(readOffset,readOffset+rowBytes);
+      readOffset+=rowBytes;
+      const row=new Uint8Array(rowBytes);
+      for(let i=0;i<rowBytes;i++){
+        const value=raw[i];
+        const left=i>=bytesPerPixel?row[i-bytesPerPixel]:0;
+        const up=previous[i]||0;
+        const upperLeft=i>=bytesPerPixel?previous[i-bytesPerPixel]||0:0;
+        if(filter===0)row[i]=value;
+        else if(filter===1)row[i]=(value+left)&255;
+        else if(filter===2)row[i]=(value+up)&255;
+        else if(filter===3)row[i]=(value+Math.floor((left+up)/2))&255;
+        else if(filter===4)row[i]=(value+paeth(left,up,upperLeft))&255;
+        else throw new Error('pdf-writer: unknown PNG scanline filter '+filter);
+      }
+      previous=row;
+      for(let px=0;px<passWidth;px++){
+        const x=x0+px*dx,y=y0+py*dy,pixel=y*width+x,out=pixel*3;
+        let r=0,g=0,b=0,a=255;
+        if(colorType===0){
+          const gray=sampleAt(row,px,0);
+          r=g=b=scaleSample(gray);
+          if(transparency&&transparency.length>=2&&gray===((transparency[0]<<8)|transparency[1]))a=0;
+        }else if(colorType===2){
+          const rr=sampleAt(row,px,0),gg=sampleAt(row,px,1),bb=sampleAt(row,px,2);
+          r=scaleSample(rr);g=scaleSample(gg);b=scaleSample(bb);
+          if(transparency&&transparency.length>=6&&rr===((transparency[0]<<8)|transparency[1])&&gg===((transparency[2]<<8)|transparency[3])&&bb===((transparency[4]<<8)|transparency[5]))a=0;
+        }else if(colorType===3){
+          const index=sampleAt(row,px,0),paletteAt=index*3;
+          if(!palette||paletteAt+2>=palette.length)throw new Error('pdf-writer: PNG palette index is out of range');
+          r=palette[paletteAt];g=palette[paletteAt+1];b=palette[paletteAt+2];
+          if(transparency&&index<transparency.length)a=transparency[index];
+        }else if(colorType===4){
+          const gray=sampleAt(row,px,0);
+          r=g=b=scaleSample(gray);
+          a=scaleSample(sampleAt(row,px,1));
+        }else{
+          r=scaleSample(sampleAt(row,px,0));
+          g=scaleSample(sampleAt(row,px,1));
+          b=scaleSample(sampleAt(row,px,2));
+          a=scaleSample(sampleAt(row,px,3));
+        }
+        rgb[out]=r;rgb[out+1]=g;rgb[out+2]=b;
+        alpha[pixel]=a;
+        if(a!==255)hasAlpha=true;
+      }
+    }
+  }
+  if(readOffset!==inflated.length)throw new Error('pdf-writer: unexpected trailing PNG scanline data');
+  return {width,height,rgbBytes:rgb,alphaBytes:hasAlpha?alpha:null};
+}
+
+function imageKey(fragment) {
+  const value=fragment.resourceId || fragment.id || fragment.resourcePath;
+  if(value==null||String(value).trim()==='')throw new Error('pdf-writer: image fragment requires stable resource identity');
+  return String(value);
+}
+function preparePdfImage(fragment) {
+  const bytes=asByteView(fragment.bytes);
+  if(!bytes||!bytes.length)throw new Error('pdf-writer: image '+imageKey(fragment)+' has no embedded bytes');
+  if(bytes.length>64*1024*1024)throw new Error('pdf-writer: image exceeds 64MB safety limit');
+  const mime=String(fragment.mimeType||'').toLowerCase();
+  if(mime==='image/jpeg'||mime==='image/jpg'){
+    if(bytes[0]!==0xff||bytes[1]!==0xd8||bytes[bytes.length-2]!==0xff||bytes[bytes.length-1]!==0xd9) {
+      throw new Error('pdf-writer: JPEG image '+imageKey(fragment)+' has invalid SOI/EOI markers');
+    }
+    const width=Number(fragment.intrinsicWidthPx||fragment.widthPx);
+    const height=Number(fragment.intrinsicHeightPx||fragment.heightPx);
+    if(!Number.isInteger(width)||!Number.isInteger(height)||width<=0||height<=0)throw new Error('pdf-writer: JPEG image has invalid intrinsic dimensions');
+    return {key:imageKey(fragment),name:null,width,height,filter:'DCTDecode',colorSpace:'DeviceRGB',bits:8,data:bytes,alphaBytes:null};
+  }
+  if(mime==='image/png'){
+    const decoded=decodePngForPdf(bytes);
+    if(fragment.intrinsicWidthPx!=null&&Number(fragment.intrinsicWidthPx)!==decoded.width)throw new Error('pdf-writer: PNG intrinsic width does not match metadata');
+    if(fragment.intrinsicHeightPx!=null&&Number(fragment.intrinsicHeightPx)!==decoded.height)throw new Error('pdf-writer: PNG intrinsic height does not match metadata');
+    return {key:imageKey(fragment),name:null,width:decoded.width,height:decoded.height,filter:'FlateDecode',colorSpace:'DeviceRGB',bits:8,data:encodeZlibStored(decoded.rgbBytes),alphaBytes:decoded.alphaBytes?encodeZlibStored(decoded.alphaBytes):null};
+  }
+  throw new Error('pdf-writer: unsupported raster image MIME type '+mime);
+}
+function streamBuffer(dictionary, bytes) {
+  const data=Buffer.from(bytes);
+  return Buffer.concat([
+    Buffer.from(dictionary.replace('__LENGTH__',String(data.length))+'\nstream\n','latin1'),
+    data,
+    Buffer.from('\nendstream','latin1')
+  ]);
+}
+
 /**
  * כתיבת מסמך PDF שלם.
  * @param {object} opts
@@ -18346,6 +20749,28 @@ function writePdf(opts) {
   }
   /** מפת key → {font, name} לציור מיידי ב-emitWord (נתיב יחיד). */
   const extraByKeys = new Map(extraFonts.map((ef, i) => [ef.key, { font: ef.font, name: `F${7 + i}` }]));
+  const inlineImages = [];
+  const inlineImageByKey = new Map();
+  for (const page of pages) {
+    const lines = [
+      ...(page.spanning && Array.isArray(page.spanning.lines) ? page.spanning.lines : []),
+      ...(Array.isArray(page.lines) ? page.lines : [])
+    ];
+    for (const line of lines) {
+      for (const fragment of (line.fragments || [])) {
+        if (!fragment || fragment.kind !== 'image') continue;
+        const key = imageKey(fragment);
+        if (inlineImageByKey.has(key)) continue;
+        const image = preparePdfImage(fragment);
+        image.name = 'Im' + String(inlineImages.length + 1);
+        image.objectId = pdf.reserve();
+        image.smaskId = image.alphaBytes ? pdf.reserve() : null;
+        inlineImages.push(image);
+        inlineImageByKey.set(key, image);
+      }
+    }
+  }
+
   const pageIds = pages.map(() => pdf.reserve());
   const contentIds = pages.map(() => pdf.reserve());
   const linkIds = new Map(); // pageIndex → [ids]
@@ -18462,12 +20887,51 @@ function writePdf(opts) {
       }
       ops.push('ET');
     };
+    const emitImage = (fragment) => {
+      const image = inlineImageByKey.get(imageKey(fragment));
+      if (!image) throw new Error('pdf-writer: image resource was not registered');
+      const x = round2(fragment.x * PX_TO_PT);
+      const y = round2(hPt - (fragment.y + fragment.heightPx) * PX_TO_PT);
+      const w = round2(fragment.widthPx * PX_TO_PT);
+      const h = round2(fragment.heightPx * PX_TO_PT);
+      ops.push('q ' + w + ' 0 0 ' + h + ' ' + x + ' ' + y + ' cm /' + image.name + ' Do Q');
+    };
     const emitLines = (lines) => {
       for (const ln of lines) {
         // **S12 (parity):** בסיס השורה מהמקרן (מודל תיבת שורה CSS — half-leading+ascent)
         const baselineY = ln.baselineY != null ? ln.baselineY : ln.y + ln.h - ln.sizePt * (96 / 72) * 0.78;
         // **S4.9 (legacy IMUD):** מילים עם גודל/בסיס משלהן (מילת-חלון 1.5×, סמני הערות)
-        for (const w of ln.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : baselineY, w.sizePt || ln.sizePt, w.fontKey, w.color);
+        if (Array.isArray(ln.fragments) && ln.fragments.length) {
+          for (const fragment of ln.fragments) {
+            if (fragment.kind === 'text') {
+              const segments = Array.isArray(fragment.segments) && fragment.segments.length
+                ? fragment.segments
+                : [{ text: fragment.text, x: fragment.x, sizePt: fragment.sizePt, fontKey: fragment.fontKey }];
+              for (const segment of segments) {
+                emitWord(
+                  segment.text,
+                  Number.isFinite(segment.x) ? segment.x : fragment.x,
+                  segment.baselineY != null ? segment.baselineY : baselineY,
+                  segment.sizePt || fragment.sizePt || ln.sizePt,
+                  segment.fontKey || fragment.fontKey,
+                  fragment.color
+                );
+              }
+            } else if (fragment.kind === 'image') {
+              emitImage(fragment);
+            } else {
+              const renderer = pdfInlineItemRenderers.get(fragment.kind);
+              if (!renderer) throw new Error('pdf-writer: no PDF renderer registered for inline item kind ' + fragment.kind);
+              const customOps = renderer(fragment, { pxToPt: PX_TO_PT, pageHeightPt: hPt, round2 });
+              if (!Array.isArray(customOps) || customOps.some(op => typeof op !== 'string')) {
+                throw new TypeError('pdf-writer: custom inline renderer must return an array of PDF operator strings');
+              }
+              ops.push(...customOps);
+            }
+          }
+        } else {
+          for (const w of (ln.words || [])) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : baselineY, w.sizePt || ln.sizePt, w.fontKey, w.color);
+        }
       }
     };
     if (pg.spanning) emitLines(pg.spanning.lines);
@@ -18742,6 +21206,23 @@ function writePdf(opts) {
     pdf.put(ef.ids.toUnicode, `<< /Length ${toUniE.length} >>\nstream\n${toUniE}\nendstream`);
   });
 
+  for (const image of inlineImages) {
+    const dictionary = image.filter === 'DCTDecode'
+      ? '<< /Type /XObject /Subtype /Image /Width ' + image.width + ' /Height ' + image.height +
+        ' /ColorSpace /' + image.colorSpace + ' /BitsPerComponent ' + image.bits +
+        ' /Filter /DCTDecode /Length __LENGTH__ >>'
+      : '<< /Type /XObject /Subtype /Image /Width ' + image.width + ' /Height ' + image.height +
+        ' /ColorSpace /' + image.colorSpace + ' /BitsPerComponent ' + image.bits +
+        ' /Filter /FlateDecode' + (image.smaskId ? ' /SMask ' + image.smaskId + ' 0 R' : '') +
+        ' /Length __LENGTH__ >>';
+    pdf.put(image.objectId, streamBuffer(dictionary, image.data));
+    if (image.smaskId) {
+      const smaskDictionary = '<< /Type /XObject /Subtype /Image /Width ' + image.width + ' /Height ' + image.height +
+        ' /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode /Length __LENGTH__ >>';
+      pdf.put(image.smaskId, streamBuffer(smaskDictionary, image.alphaBytes));
+    }
+  }
+
   // ---- עמודים ----
   // **S6.0 (R5-M6 — תיבות עמוד חוקיות):** TrimBox = גודל העמוד; BleedBox
   // בתוך ה-MediaBox (בעבר ה-BleedBox חרג **מחוץ** ל-MediaBox — הפרה של
@@ -18771,7 +21252,10 @@ function writePdf(opts) {
     // **S73:** הגופנים הדינמיים באותם משאבים לכל עמוד — סדר קבוע (דטרמיניזם)
     extraFonts.forEach((ef, i) => fontPairs.push([`/F${7 + i}`, ef.ids.type0]));
     const fontRes = `/Font << ${fontPairs.map(([n, id]) => `${n} ${id} 0 R`).join(' ')} >>`;
-    pdf.put(pageIds[i], `<< /Type /Page /Parent ${ID.pages} 0 R /MediaBox ${mediabox} /TrimBox ${trimbox} /BleedBox ${bleedbox} /Resources << ${fontRes} >> /Contents ${contentIds[i]} 0 R${annotsStr} >>`);
+    const xObjectRes = inlineImages.length
+      ? ' /XObject << ' + inlineImages.map(image => '/' + image.name + ' ' + image.objectId + ' 0 R').join(' ') + ' >>'
+      : '';
+    pdf.put(pageIds[i], `<< /Type /Page /Parent ${ID.pages} 0 R /MediaBox ${mediabox} /TrimBox ${trimbox} /BleedBox ${bleedbox} /Resources << ${fontRes}${xObjectRes} >> /Contents ${contentIds[i]} 0 R${annotsStr} >>`);
     pdf.put(contentIds[i], Buffer.concat([
       Buffer.from(`<< /Length ${contents[i].length} >>\nstream\n`, 'latin1'),
       contents[i],
@@ -18825,7 +21309,7 @@ function writePdf(opts) {
   return pdf.build();
 }
 
-module.exports = { writePdf, PdfBuilder, PX_TO_PT, MM_TO_PT, visualOrderRtl, BRACKET_MIRROR };
+module.exports = { writePdf, PdfBuilder, PX_TO_PT, MM_TO_PT, visualOrderRtl, BRACKET_MIRROR, decodePngForPdf, encodeZlibStored, registerPdfInlineItemRenderer };
 
 };
 __modules["src/engine/output/legacy-projector.js"] = function (require, module, exports) {

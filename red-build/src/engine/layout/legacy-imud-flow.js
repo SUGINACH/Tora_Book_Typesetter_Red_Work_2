@@ -30,6 +30,8 @@ const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = r
 // **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
+const { parseInlineRuns, parseInlineParagraph } = require('../parser/inline-content');
+const { packMarginNotes } = require('./margin-flow');
 
 // ---------- גיאומטריה (px @96dpi; PDF = px×0.75) — מכויל מהייחוס ----------
 const GEO = {
@@ -300,7 +302,7 @@ function readConfig(imud, settings) {
 }
 
 // ---------- טוקניזציה (כמו performTypeset של המקור) ----------
-function tokenizeDoc(rawText, cfg) {
+function tokenizeDoc(rawText, cfg, inlineOptions = {}) {
   let text = stripEditorialNotes(rawText);
   const { meta, text: noMeta } = parseMetadata(text);
   text = noMeta;
@@ -382,7 +384,118 @@ function tokenizeDoc(rawText, cfg) {
       syntheticTail: true
     });
   }
+  // S14 P0: the legacy adapter emits the same TextRun/ImageRun paragraph shape
+  // as the canonical tokenizer. Footnote payloads remain separate note units.
+  for (const token of tokens) {
+    if (token.type !== 'p') continue; // H0–H7/side notes are intentionally excluded
+    const parts = [];
+    const notes = [];
+    let cursor = 0;
+    for (const note of findNotes(token.text, cfg.fnOpen, cfg.fnClose)) {
+      const beforeRaw = token.text.slice(cursor, note.start);
+      const before = beforeRaw.trim();
+      if (before) {
+        const leading = beforeRaw.length - beforeRaw.trimStart().length;
+        const trailingEnd = beforeRaw.trimEnd().length;
+        parts.push({ kind: 'text', value: before, sourceStart: cursor + leading, sourceEnd: cursor + trailingEnd });
+      }
+      const sourceStart = note.start + cfg.fnOpen.length;
+      const rawNote = note.text;
+      const noteText = rawNote.trim();
+      const leading = rawNote.length - rawNote.trimStart().length;
+      const trailingEnd = rawNote.trimEnd().length;
+      notes.push({ text: noteText, sourceStart: sourceStart + leading, sourceEnd: sourceStart + trailingEnd });
+      parts.push({ kind: 'note-ref', noteIndex: notes.length - 1 });
+      cursor = note.end;
+    }
+    const tailRaw = token.text.slice(cursor);
+    const tail = tailRaw.trim();
+    if (tail) {
+      const leading = tailRaw.length - tailRaw.trimStart().length;
+      const trailingEnd = tailRaw.trimEnd().length;
+      parts.push({ kind: 'text', value: tail, sourceStart: cursor + leading, sourceEnd: cursor + trailingEnd });
+    }
+    token.inlineContent = parseInlineParagraph(parts, notes, inlineOptions);
+    token.inlineContent.endNote = token.endNote
+      ? parseInlineRuns(token.endNote, { ...inlineOptions, allowImages: false })
+      : null;
+  }
   return { meta, tokens };
+}
+
+
+/**
+ * Canonical source-word multiset for the legacy IMUD profile.
+ * It mirrors the source side of contentPreserved accounting, excluding only
+ * metadata fields and syntactic prefixes that are intentionally not rendered.
+ */
+/**
+ * Shared classification of a note-flow token. Only visible body text starts
+ * a note on a page; separator gaps, marker tokens and "(המשך)" do not.
+ */
+function isFootnoteBodyToken(token) {
+  return !!token
+    && Number.isInteger(token.noteIdx)
+    && !token.gap
+    && !token.mk
+    && token.t !== '(המשך)'
+    && typeof token.t === 'string'
+    && token.t.trim().length > 0;
+}
+
+function collectStartedFootnoteIndices(lines) {
+  const started = new Set();
+  for (const line of lines || []) {
+    for (const token of line || []) {
+      if (isFootnoteBodyToken(token)) started.add(token.noteIdx);
+    }
+  }
+  return started;
+}
+
+function legacySourceWordMultiset(meta, tokens, cfg) {
+  const norm = (s) => String(s == null ? '' : s).split(/[\s\u00A0]+/).filter(Boolean);
+  const bump = (m, words) => { for (const w of words) m.set(w, (m.get(w) || 0) + 1); };
+  const src = new Map();
+  const backOnlyFields = ['copyright', 'publisher', 'contact', 'extra'];
+  for (const [key, value] of Object.entries(meta || {})) {
+    if (key === 'year') continue;
+    if (!cfg.showBackShaar && backOnlyFields.includes(key)) continue;
+    bump(src, norm(value));
+  }
+  const sourceTextOf = (token) => {
+    let text = String(token && token.text != null ? token.text : '');
+    if (cfg.fnOpen) text = text.split(cfg.fnOpen).join(' ');
+    if (cfg.fnClose) text = text.split(cfg.fnClose).join(' ');
+    if (token && token.type === 'h1') {
+      const parts = text.split(/[-–—]/).map(part => part.trim()).filter(Boolean);
+      if (parts.length >= 2) text = parts[0] + ' ' + parts.slice(1).join(' - ');
+    }
+    if (token && token.type === 'h2') {
+      text = text.replace(/^סימן\s+[א-ת]+[:\-–—\s]*/i, '').trim();
+    }
+    return text;
+  };
+  for (const token of (tokens || [])) {
+    bump(src, norm(sourceTextOf(token)));
+    if (token && token.sideNote) bump(src, norm(token.sideNote));
+    if (token && token.endNote) bump(src, norm(token.endNote));
+  }
+  return src;
+}
+
+/** Count normalized source words without running layout or pagination. */
+function countLegacySourceWords(rawText, settings = {}) {
+  const cfg = readConfig(settings._imudRaw || {}, settings);
+  if (settings['footnotes-enabled'] === false) {
+    cfg.fnOpen = '';
+    cfg.fnClose = '';
+  }
+  const parsed = tokenizeDoc(rawText, cfg);
+  const counts = legacySourceWordMultiset(parsed.meta, parsed.tokens, cfg);
+  let total = 0;
+  for (const count of counts.values()) total += count;
+  return total;
 }
 
 // ---------- שבירת שורות: פורט של getLinesFromParagraph ----------
@@ -1072,7 +1185,12 @@ function legacyTypeset(rawText, settings, env) {
     );
   }
   const brk = new LineBreaker(api, cfg, windowApi, headingApi);
-  const { meta, tokens } = tokenizeDoc(rawText, cfg);
+  const inlineOptions = {
+    fontMarkers: settings._inlineFontStyles || settings._inlineFontMarkers || [],
+    knownFamilies: settings._inlineFontFamilies || [],
+    availableFamilies: Array.from(registeredMeasureFonts.keys())
+  };
+  const { meta, tokens } = tokenizeDoc(rawText, cfg, inlineOptions);
 
   const bookTitle = (meta.bookTitle || 'ספר').trim();
   const tw = bookTitle.split(/\s+/);
@@ -1645,6 +1763,7 @@ function legacyTypeset(rawText, settings, env) {
           const starts = []; // **S4.24:** דגלי קצה-סוגריים — ממופים דרך פיצול הסמנים
           const ends = [];
           const markerIdx = []; // אינדקסים של סמני ההערות (להסרה מדויקת במודל)
+          const markerKeys = []; // מפתחות מופע יציבים — אינם תלויים בסמן הגימטרי המוצג
           for (let wi = 0; wi < ln.words.length; wi++) {
             const w = ln.words[wi];
             // **S4.19:** דגל הסוגריים של המילה המקורית — מועבר לכל חלקיה
@@ -1673,6 +1792,7 @@ function legacyTypeset(rawText, settings, env) {
                   }
                   applyFnReserve(); // **S75:** גם בפליטת סמן — תקציב דרך נקודה אחת (clamp ב-body-first)
                   markerIdx.push(words.length);
+                  markerKeys.push(noteKey);
                   words.push(marker);
                   flags.push(false);
                   starts.push(false); ends.push(false);
@@ -1692,7 +1812,7 @@ function legacyTypeset(rawText, settings, env) {
             starts[firstAt] = wS;
             ends[words.length - 1] = wE;
           }
-          emitted.push({ ...ln, words, markerIdx, parenFlags: flags, parenStarts: starts, parenEnds: ends });
+          emitted.push({ ...ln, words, markerIdx, markerKeys, parenFlags: flags, parenStarts: starts, parenEnds: ends });
         }
         return emitted;
       };
@@ -2440,6 +2560,19 @@ function legacyTypeset(rawText, settings, env) {
       // ---- פריסת המחסנית לעמוד: פסים + בלוקים → טורים עם y מפורש ----
       layoutStack(pg, stack, top);
 
+      // Page-level placement: both columns have now contributed their
+      // anchored notes, so each physical margin is packed as one lane.
+      const marginPlacement = packMarginNotes(pg.marginNotes, {
+        top: GEO.FLOW_TOP,
+        bottom: GEO.FLOW_TOP + GEO.FLOW_H,
+        pitch: GEO.MN_PITCH,
+        gap: 1
+      });
+      pg.marginNotes = marginPlacement.notes;
+      if (marginPlacement.diagnostics.length) {
+        pg.layoutDiagnostics = (pg.layoutDiagnostics || []).concat(marginPlacement.diagnostics);
+      }
+
       // ---- הערות שוליים בתחתית (bottom-anchored) ----
       if (fnQueue.length) {
         // **S76:** אפשרויות הקיבולת — (א) flexSpacer: עמוד פתיחת מקטע
@@ -2591,8 +2724,7 @@ function legacyTypeset(rawText, settings, env) {
         pg.footnotes.push({ continuous: true, lines, centerLast: rest.length === 0, cutLast: midNoteCut });
       }
       if (rest.length) {
-        const started = new Set();
-        for (const tl of placed) for (const t of tl) started.add(t.noteIdx);
+        const started = collectStartedFootnoteIndices(placed);
         let curIdx = null, curTxt = [];
         const flushRest = () => {
           if (curIdx == null || !curTxt.length) return;
@@ -2611,7 +2743,7 @@ function legacyTypeset(rawText, settings, env) {
             // **S4.26:** סמנים ו-(המשך) אינם טקסט — המספר נשמר ב-num (והסמן
             // נוסף מחדש בעמוד הבא רק להערה שלא החלה); ההמשך מקבל '(המשך)'
             // מ-fnFlowFor בעמוד הבא לפי cont=true.
-            if (t.gap || t.mk || t.t === '(המשך)') continue;
+            if (!isFootnoteBodyToken(t)) continue;
             if (t.noteIdx !== curIdx) { flushRest(); curIdx = t.noteIdx; curTxt = []; }
             curTxt.push(t.t);
           }
@@ -2663,7 +2795,7 @@ function legacyTypeset(rawText, settings, env) {
     const totalH = placed.reduce((a, p) => a + p.lines.length * GEO.FN_PITCH, 0);
     let yy = FLOW_BOTTOM - totalH;
     for (const p of placed) {
-      const it = { marker: p.marker, lines: [], cont: p.cont };
+      const it = { marker: p.marker, noteKey: p.note.key, lines: [], cont: p.cont };
       if (p.cut) it.cutLast = true; // **S77 (בקשה 1):** שורת החיתוך — מיושבת לשני הצדדים
       for (const l of p.lines) { it.lines.push({ words: String(l).split(' '), y: yy }); yy += GEO.FN_PITCH; }
       pg.footnotes.push(it);
@@ -2715,16 +2847,16 @@ function legacyTypeset(rawText, settings, env) {
     // = פעמיים רווח) — אותו דבר ב-DOM (nbsp) וב-PDF (שני גאפים).
     const tokens = [];
     items.forEach((it, i) => {
-      if (i > 0) tokens.push({ t: '', gap: true, noteIdx: i, w: 0 });
+      if (i > 0) tokens.push({ t: '', gap: true, noteIdx: i, noteKey: it.note.key, w: 0 });
       if (it.note.cont) {
         const p = '(המשך)';
-        tokens.push({ t: p, w: fnApi.measureTextWidth(p, SZ.fnBody, 0), noteIdx: i });
+        tokens.push({ t: p, noteKey: it.note.key, w: fnApi.measureTextWidth(p, SZ.fnBody, 0), noteIdx: i });
       }
       if (it.marker) {
-        tokens.push({ t: it.marker, mk: true, sizePt: cfg.fnListingNumSize, w: fnMarkApi.measureTextWidth(it.marker, cfg.fnListingNumSize, 0), noteIdx: i });
+        tokens.push({ t: it.marker, mk: true, noteKey: it.note.key, sizePt: cfg.fnListingNumSize, w: fnMarkApi.measureTextWidth(it.marker, cfg.fnListingNumSize, 0), noteIdx: i });
       }
       for (const wd of String(it.note.text).split(/\s+/).filter(Boolean)) {
-        tokens.push({ t: wd, w: fnApi.measureTextWidth(wd, SZ.fnBody, 0), noteIdx: i });
+        tokens.push({ t: wd, noteKey: it.note.key, w: fnApi.measureTextWidth(wd, SZ.fnBody, 0), noteIdx: i });
       }
     });
     const flowLines = [];
@@ -2756,10 +2888,8 @@ function legacyTypeset(rawText, settings, env) {
       for (let i = 0; i < built.flowLines.length; i++) {
         for (const t of built.flowLines[i]) {
           if (t.noteIdx == null || seen.has(t.noteIdx)) continue;
-          // **S75:** "התחלה" = שורה עם מילה מגוף ההערה — לא שורת סמן בלבד
-          // (סמן ללא מילים הותיר "הערה ריקה" בעמוד הסמן; נמדר ב-very_long
-          // עמ' 562 — סמן יא. בלבד). סמן, רווח-כפול ותווית (המשך) אינם תוכן.
-          if (t.gap || t.mk || t.t === '(המשך)') continue;
+          // Same body-token rule as the page-break carry decision below.
+          if (!isFootnoteBodyToken(t)) continue;
           seen.add(t.noteIdx);
           const it = built.items[t.noteIdx];
           if (it && it.note && !it.note.cont) starts = i + 1;
@@ -3007,6 +3137,7 @@ function legacyTypeset(rawText, settings, env) {
       col.push({
         words: ln.words.slice(),
         markerIdx: ln.markerIdx || [],
+        markerKeys: ln.markerKeys || [],
         parenFlags: ln.parenFlags || null,
         parenStarts: ln.parenStarts || null,
         parenEnds: ln.parenEnds || null,
@@ -3503,44 +3634,7 @@ function legacyTypeset(rawText, settings, env) {
   const contentStats = (() => {
     const norm = (s) => String(s == null ? '' : s).split(/[\s\u00A0]+/).filter(Boolean);
     const bump = (m, words) => { for (const w of words) m.set(w, (m.get(w) || 0) + 1); };
-    const src = new Map();
-    // **S5.2:** שדה השנה/מקום (meta.year) אינו מוצג בשער המכויל-ייחוס — כמו
-    // בתוכנת המקור. לכן אינו נספר כחובת-תוכן.
-    // **S6.0 (F16):** שדות השער האחורי בלבד (copyright/publisher/contact/extra)
-    // נספרים כחובה רק כשהשער האחורי מוצג — בלי זה ביטול show-back-shaar
-    // גרם לדגל אובדן-תוכן שקרי (8 מילים חסרות בקורפוס ללא _imudRaw).
-    const backOnlyFields = ['copyright', 'publisher', 'contact', 'extra'];
-    for (const [mk, mv] of Object.entries(meta)) {
-      if (mk === 'year') continue;
-      if (!cfg.showBackShaar && backOnlyFields.includes(mk)) continue;
-      bump(src, norm(mv));
-    }
-    // **S5.2:** מסיר את תוחמי ההערה ([ ]) מצד המקור — המנוע מחלץ את גוף
-    // ההערה מבלי לכלול את התוחמים בפלט (הם תחביר, לא תוכן).
-    const srcTextOf = (t) => {
-      let s = String(t.text == null ? '' : t.text);
-      if (cfg.fnOpen) s = s.split(cfg.fnOpen).join(' ');
-      if (cfg.fnClose) s = s.split(cfg.fnClose).join(' ');
-      // **S5.2:** כותרת h1 מפוצלת בשער-המשנה לכותרת + משנה (split לפי
-      // המקף; join(' - ') לשאר) — מקף-ההפרדה הראשון הוא תחביר עימוד,
-      // כמו קידומת 'כותרת N -'. משקפים את אותה טרנספורמציה בצד המקור.
-      if (t.type === 'h1') {
-        const parts = s.split(/[-–—]/).map(x => x.trim()).filter(Boolean);
-        if (parts.length >= 2) s = parts[0] + ' ' + parts.slice(1).join(' - ');
-      }
-      // **S6.0 (F12):** כותרת h2 שמתחילה ב'סימן א - ' — המנוע מסיר את הקידומת
-      // ברינדור (:1017) אך צד המקור לא שיקף זאת ⇒ מילת המקף נספרה חסרה
-      // (דגל שקרי). עתה אותה טרנספורמציה בשני הצדדים.
-      if (t.type === 'h2') {
-        s = s.replace(/^סימן\s+[א-ת]+[:\-–—\s]*/i, '').trim();
-      }
-      return s;
-    };
-    for (const t of tokens) {
-      bump(src, norm(srcTextOf(t)));
-      if (t.sideNote) bump(src, norm(t.sideNote));
-      if (t.endNote) bump(src, norm(t.endNote));
-    }
+    const src = legacySourceWordMultiset(meta, tokens, cfg);
     const out = new Map();
     const addText = (s) => bump(out, norm(s));
     // **S6.0 (F10):** תוחמי הערה לא-מאוזנים ([ בלי ]) — הפלט מציג את המילה
@@ -3715,6 +3809,7 @@ function legacyLayoutHashDigest(pages) {
 module.exports = {
   GEO, SZ, HEADING_MODES, toGematria, stripEditorialNotes, parseMetadata,
   tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset,
+  collectStartedFootnoteIndices,
   FLOW_BOTTOM, SINGLE_W, wrapText, headingItemH, legacyLayoutHashDigest,
-  parenCenterRaisePx
+  countLegacySourceWords, parenCenterRaisePx
 };

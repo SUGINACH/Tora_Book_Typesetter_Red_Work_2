@@ -44,6 +44,48 @@ describe('REQ-LB-02 Knuth-Plass optimal breaking', () => {
     assert(Number.isFinite(costOf(kp)), 'kp produced finite layout');
     assert(kp.length >= 3 && kp.length <= 6, `reasonable line count, got ${kp.length}`);
   });
+  it('variable line widths use line-index DP state and can reclaim capacity on later lines', () => {
+    const words = Array.from({ length: 10 }, () => 'aaaa');
+    const measure = (text) => text === ' ' ? 5 : String(text).length * 10;
+    const widthsByLine = [];
+    const variable = breakLines(words, (lineIndex) => {
+      widthsByLine[lineIndex] = (widthsByLine[lineIndex] || 0) + 1;
+      return lineIndex < 2 ? 88 : 132;
+    }, measure, 20, { runts: 0 });
+    const fixed = breakLines(words, 88, measure, 20, { runts: 0 });
+
+    assertEq(variable.length, 4, 'two narrow lines followed by two wider lines');
+    assert(fixed.length >= 5, 'constant narrow width cannot reuse later-line capacity');
+    assertEq(variable.flatMap(line => line.words).length, words.length, 'all source words survive');
+    for (let i = 0; i < variable.length; i++) {
+      const limit = i < 2 ? 88 : 132;
+      assert(variable[i].widthPx <= limit - 0.75, 'line ' + i + ' respects its own available width');
+    }
+    assert(Array.from(widthsByLine.values()).every(count => count === 1), 'each line width is resolved once');
+  });
+
+  it('greedy fallback also advances through the variable line-width profile', () => {
+    const long = 'x'.repeat(20);
+    const tail = Array.from({ length: 8 }, (_, i) => String.fromCharCode(97 + i));
+    const words = [long, ...tail];
+    const measure = (text) => text === ' ' ? 5 : String(text).length * 10;
+    const lines = breakLines(words, (lineIndex) => lineIndex === 0 ? 88 : 132, measure, 20, { runts: 0 });
+    assertEq(lines.length, 2, 'the over-wide first token stays alone and the wider second line fits the tail');
+    assertEq(lines[0].words, [long]);
+    assertEq(lines[1].words, tail);
+    assert(lines[1].widthPx <= 132 - 0.75, 'fallback respects second-line width');
+  });
+
+  it('invalid variable line widths fail explicitly instead of silently falling back', () => {
+    let thrown = false;
+    try {
+      breakLines(['א', 'ב'], () => 0, W, 20, {});
+    } catch (error) {
+      thrown = /width for line 0/.test(String(error && error.message));
+    }
+    assert(thrown, 'zero width is rejected with a clear error');
+  });
+
   it('no hyphenation: word count conserved exactly', () => {
     const words = Array.from({ length: 40 }, () => 'דבר');
     const lines = breakLines(words, COLW, W, 20, {});

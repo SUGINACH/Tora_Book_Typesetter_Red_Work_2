@@ -199,6 +199,7 @@ class MeasureAPI {
 
   /**
    * מיקום שורות אופטימלי (KP) → מערך שורות עם רוחבים.
+   * @param {number|((lineIndex:number)=>number)} maxWidthPx — רוחב קבוע או רוחב זמין לפי אינדקס שורה.
    * @param {Function} [measureOverride] - הזרקת פונקציית מדידה (למשל פרופיל רוחב־גופן מהpipeline) — L1: entry יחיד דרך ההזרקה.
    * @returns {Array<{words:string[], widthPx:number, badness:number}>}
    */
@@ -206,6 +207,51 @@ class MeasureAPI {
     const knuth = require('./kp-linebreak');
     const measure = measureOverride || ((t) => this.measureTextWidth(t, sizePt));
     return knuth.breakLines(words, maxWidthPx, measure, this.lineHeightPx(sizePt), opts);
+  }
+
+  /**
+   * Parse canonical inline runs, measure every text segment in its effective
+   * registered family, resolve image boxes, then feed the shared atom solver.
+   * The returned fragments preserve sub-word font boundaries.
+   */
+  layoutInlineRuns(runs, maxWidthPx, opts = {}) {
+    const { createMeasuredInlineItems } = require('../layout/inline-item-factory');
+    const sizePt = opts.sizePt == null ? null : opts.sizePt;
+    const lineHeightPx = opts.lineHeightPx == null ? this.lineHeightPx(sizePt) : opts.lineHeightPx;
+    const measured = createMeasuredInlineItems(runs, {
+      ...opts,
+      sizePt,
+      lineHeightPx,
+      lineHeightForSize: size => size == null ? lineHeightPx : this.lineHeightPx(size),
+      defaultFontFamily: opts.defaultFontFamily || this.settings['body-font'],
+      measureText: (text, family, size) => {
+        const familyApi = family ? MeasureAPI.forFamily(family, this.settings) : null;
+        const defaultFamily = opts.defaultFontFamily || this.settings['body-font'];
+        if (family && family !== defaultFamily && !familyApi) {
+          throw new Error('MeasureAPI.layoutInlineRuns: font family is not registered: ' + family);
+        }
+        return (familyApi || this).measureTextWidth(text, size);
+      }
+    });
+    const layout = this.layoutMeasuredInlineItems(measured.items, maxWidthPx, lineHeightPx, opts);
+    return { ...layout, diagnostics: measured.diagnostics };
+  }
+
+  /**
+   * Layout already-measured mixed inline atoms through the shared Knuth–Plass
+   * solver. Text dimensions must originate from this MeasureAPI instance;
+   * image dimensions must come from the asset metadata resolver; custom item
+   * kinds use the same {kind,id,widthPx,heightPx} box contract.
+   *
+   * This is deliberately a measured-input API: the solver never measures,
+   * guesses image ratios, or dispatches to a per-kind line breaker.
+   */
+  layoutMeasuredInlineItems(items, maxWidthPx, lineHeightPx, opts = {}) {
+    if (!Number.isFinite(lineHeightPx) || lineHeightPx < 0) {
+      throw new RangeError('MeasureAPI.layoutMeasuredInlineItems: lineHeightPx must be finite and non-negative');
+    }
+    const knuth = require('./kp-linebreak');
+    return knuth.breakInlineItems(items, maxWidthPx, lineHeightPx, opts);
   }
 
   cacheStats() { return { ...this.stats, hitRate: this.stats.calls ? this.stats.hits / this.stats.calls : 0 }; }

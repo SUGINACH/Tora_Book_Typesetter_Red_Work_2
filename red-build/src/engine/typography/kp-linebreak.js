@@ -59,106 +59,167 @@ function badness(ratio) {
 
 /**
  * @param {string[]} words - מילות הפסקה (NBSP כבר הוצמד ע"י protectors)
- * @param {number} maxWidthPx
+ * @param {number|((lineIndex:number)=>number)} maxWidthPx
  * @param {(t:string)=>number} measure
  * @param {number} lineHeightPx
- * @param {{runtMinPct?:number}} opts
+ * @param {{runtMinPct?:number,raggedEnd?:boolean}} opts
  * @returns {Array<{words:string[], widthPx:number, heightPx:number, isLast:boolean}>}
  */
-function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
+function solveBreaks(items, maxWidthPx, opts = {}) {
+  if (!Array.isArray(items)) throw new TypeError('kp-linebreak: measured items must be an array');
+  const widthProvider = typeof maxWidthPx === 'function' ? maxWidthPx : () => maxWidthPx;
+  if (typeof maxWidthPx !== 'function' && (!Number.isFinite(maxWidthPx) || maxWidthPx <= 0)) {
+    throw new RangeError('kp-linebreak: maxWidthPx must be a positive finite number or a line-width function');
+  }
+
+  // Resolve each line width once. A provider must be pure for a given line index;
+  // this cache prevents repeated geometry work while exploring DP candidates.
+  const lineWidths = new Map();
+  const widthForLine = (lineIndex) => {
+    if (!Number.isInteger(lineIndex) || lineIndex < 0) {
+      throw new RangeError('kp-linebreak: line index must be a non-negative integer');
+    }
+    if (!lineWidths.has(lineIndex)) {
+      const width = widthProvider(lineIndex);
+      if (!Number.isFinite(width) || width <= 0) {
+        throw new RangeError('kp-linebreak: width for line ' + lineIndex + ' must be positive and finite');
+      }
+      lineWidths.set(lineIndex, width);
+    }
+    return lineWidths.get(lineIndex);
+  };
+
   // **03.11 (ביקורת):** חיבור ההגדרה — runt-min-width-pct מגיע כ-runts מה-pipeline
   // וכ-runtMinPct מקריאות ישירות; שניהם נקראים (בעבר רק runtMinPct נקרא וההגדרה לא השפיעה).
   const runts = opts.runtMinPct != null ? opts.runtMinPct : (opts.runts != null ? opts.runts : 50);
-  const items = buildItems(words, measure);
   const n = items.length;
-  const cost = new Array(n + 1).fill(INF);
-  const parent = new Array(n + 1).fill(-1);
-  cost[0] = 0;
+
+  // The state includes both item position and the next line index.
+  // A single best-cost value per item position is insufficient when widths vary:
+  // paths at the same item may have different future geometry. This is still one
+  // Knuth–Plass solver, with a two-dimensional state.
+  const states = Array.from({ length: n + 1 }, () => new Map());
+  states[0].set(0, { cost: 0, action: 'origin' });
+  const constantWidth = typeof maxWidthPx !== 'function';
+  const updateState = (position, lineNo, candidate) => {
+    if (constantWidth) {
+      // With a scalar width, future geometry is independent of lineNo. The
+      // cheapest path therefore dominates every other path at this position,
+      // preserving the original O(n²) state-space behavior.
+      let best = null;
+      for (const state of states[position].values()) {
+        if (!best || state.cost < best.cost) best = state;
+      }
+      if (best && best.cost <= candidate.cost) return;
+      states[position].clear();
+    }
+    const prior = states[position].get(lineNo);
+    if (!prior || candidate.cost < prior.cost) states[position].set(lineNo, candidate);
+  };
 
   for (let i = 0; i < n; i++) {
-    if (cost[i] === INF) continue;
-    if (items[i].kind === 'glue' && !items[i].internal) { // דלג על glue רגיל בהתחלת שורה;
-      // glue פנימי (בתוך יחידת NBSP) אסור לדלג — הרוחב שלו חלק בלתי נפרד מהצמד.
-      if (cost[i + 1] > cost[i]) { cost[i + 1] = cost[i]; parent[i + 1] = i; }
-      continue;
-    }
-    let w = 0, stretch = 0, shrink = 0;
-    for (let j = i; j < n; j++) {
-      const it = items[j];
-      if (it.kind === 'box') w += it.width;
-      // **תיקון שורש (ביקורת 03.11): רוחב glue נכלל ברוחב הטבעי של השורה —
-      // כמו ב-TeX (Σ תיבות + Σ רווחים). בעבר נצברו רק stretch/shrink ⇒ ה־DP
-      // "חשב" ששורה נכנסת בעוד רוחבה הטבעי (כולל רווחים) חורג מהטור.
-      else if (it.kind === 'glue') { w += it.width; stretch += it.stretch; shrink += it.shrink; }
-      else if (it.kind === 'penalty') {
-        if (it.forbidden) continue; // תוך-יחידה: אין כאן מקום שבירה (legalCut כבר מבטל); ההצברה נמשכת
-        // סיום שורה (penalty סופי של הפסקה) — good break.
-        // **תיקון שורש (ביקורת 03.11): השבירה הסופית היא צומת סוף-הפסקה n —
-        // בעבר נכתבה ל-cost[j] (אינדקס הפריט עצמו, n−1) ⇒ cost[n] נותר INF לעולם
-        // ⇒ ה־DP מעולם לא סיפק פתרון וכל שבירות השורות במנוע מאז S1 יצאו מהגיבוי
-        // הגרידי (עם באג ה-NBSP). התיקון מחיה את Knuth-Plass בפועל.
-        const slack = maxWidthPx - w;
-        // raggedEnd: מתיחת סוף-שורה (D-79) — שורות ragged אינן נמדדות במתיחת
-        // בין-מילים אלא בכניסה טבעית; היתרה עד לקצה הטור "נבלעת" במתיחת הסוף.
-        const raggedEnd = opts.raggedEnd !== false;
-        const effStretch = stretch + (raggedEnd ? maxWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
-        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
-        let b = badness(ratio);
-        if (b < INF && w < maxWidthPx * (runts / 100)) b += 60; // עונש runt בשורת הסיום
-        if (b < INF) {
-          const cand = cost[i] + b + LINE_DEMERIT;
-          if (cand < cost[n]) { cost[n] = cand; parent[n] = i; }
-        }
-        break;
+    if (!states[i].size) continue;
+    for (const [lineNo, state] of states[i]) {
+      if (items[i].kind === 'glue' && !items[i].internal) {
+        // Skip regular glue at the beginning of a line; internal glue is atomic.
+        updateState(i + 1, lineNo, {
+          cost: state.cost,
+          action: 'skip',
+          prevIndex: i,
+          prevLineNo: lineNo
+        });
+        continue;
       }
-      // **S5.1 (D-92-DP):** הדפדפן מרנדר רוחב טבעי (white-space:normal) —
-      // שורה שרוחבה הטבעי חורג מהטור נעטפת בתצוגה (טקסט-על-טקסט) גם אם
-      // היישוב יכול לכווץ רווחים ב-PDF. לכן המבחן ברוחב הטבעי, בלי shrink.
-      // **S5.2 (תיקון 3 — המבחן היה מרחיב, לא שמרני):** בעבר `w > maxWidth+0.75`
-      // אִפשר קווים ברוחב טבעי עד maxWidth+0.75px (ובכך גם קבלת חיתוכים עם
-      // slack שלילי דרך כיווץ) — בזמן ש-FIT_EPS של המורשת שמרן (limit−eps).
-      // כעת החיתוך נעצר מוקדם: שורה שאינה נכנסת ב-maxWidth−0.75 אינה מוארכת
-      // עוד, וכל קו מקובל הוא ברוחב טבעי ≤ maxWidth−0.75 (גם בסוף פסקה —
-      // הפנלטי הסופי נמדר רק אחרי שכל הפריטים עברו את אותו מבחן). מילה רחבה
-      // מהטור עדיין יוצאת כשורה בפני עצמה דרך הגיבוי הגרידי (greedyFallback —
-      // התקדמות מובטחת, טוקן בודד אינו נחסם: pushTok עם toks ריק אינו מוסף).
-      if (w > maxWidthPx - 0.75) break; // חריגה שאינה ניתנת לתיקון — שמרני כמו FIT_EPS
 
-      if (it.kind === 'box') {
-        // מקומות שבירה חוקיים נקבעים **מבנית מראש** (static legal-cuts): cut בצומת c חוקי
-        // רק אם items[c-1] הוא glue לא־פנימי ו‑items[c] תיבה שפותחת יחידה חדשה.
-        // זה מבטל את באג V23: lock תלוי-נקודת-התחלה על צמתים משותפים ל‑DP.
-        // (תיקון S3: הבדיקה הייתה בתוך הלולאה עם אינדקס שגוי j+2 — כל השברים נחסמו.)
-        const cut = j + 1; // נקודת שבירה חוקית: אחרי תיבה, לפני ה‑glue העוקב
-        if (!(items[cut].kind === 'glue' && !items[cut].internal && items[cut + 1] && items[cut + 1].kind === 'box')) continue;
-        const slack = maxWidthPx - w;
-        // **S5.2 (תיקון 3 — שמרנות בקבלת חיתוך):** קו שאינו נכנס ברוחב הטבעי
-        // (slack < −FIT_EPS) הוא בלתי-אפשרי — badness INF, לא "כיווץ". המבחן
-        // השמרני למעלה אמור למנוע הגעה לכאן; השמירה הכפולה מתעדת את הכוונה.
-        if (slack < -0.75) continue;
-        const raggedEnd = opts.raggedEnd !== false;
-        const effStretch = stretch + (raggedEnd ? maxWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
-        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
-        const b = badness(ratio);
-        if (b >= INF) continue;
-        const cand = cost[i] + b + LINE_DEMERIT;
-        if (cand < cost[cut]) { cost[cut] = cand; parent[cut] = i; }
+      const lineWidthPx = widthForLine(lineNo);
+      let w = 0, stretch = 0, shrink = 0;
+      for (let j = i; j < n; j++) {
+        const it = items[j];
+        if (it.kind === 'box') w += it.width;
+        // Natural width includes boxes and glue; stretch/shrink are tracked separately.
+        else if (it.kind === 'glue') { w += it.width; stretch += it.stretch; shrink += it.shrink; }
+        else if (it.kind === 'penalty') {
+          if (it.forbidden) continue;
+          // Final paragraph break.
+          const slack = lineWidthPx - w;
+          const raggedEnd = opts.raggedEnd !== false;
+          const effStretch = stretch + (raggedEnd ? lineWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
+          const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
+          let b = badness(ratio);
+          if (b < INF && w < lineWidthPx * (runts / 100)) b += 60;
+          if (b < INF) {
+            updateState(n, lineNo + 1, {
+              cost: state.cost + b + LINE_DEMERIT,
+              action: 'line',
+              prevIndex: i,
+              prevLineNo: lineNo,
+              start: i,
+              end: n
+            });
+          }
+          break;
+        }
+
+        // Conservative natural-width fit check (same 0.75px safety margin).
+        if (w > lineWidthPx - 0.75) break;
+
+        if (it.kind === 'box') {
+          const cut = j + 1;
+          // Legal breaks are structural: before a new box and after non-internal glue.
+          if (!(items[cut].kind === 'glue' && !items[cut].internal && items[cut + 1] && items[cut + 1].kind === 'box')) continue;
+          const slack = lineWidthPx - w;
+          if (slack < -0.75) continue;
+          const raggedEnd = opts.raggedEnd !== false;
+          const effStretch = stretch + (raggedEnd ? lineWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
+          const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
+          const b = badness(ratio);
+          if (b >= INF) continue;
+          updateState(cut, lineNo + 1, {
+            cost: state.cost + b + LINE_DEMERIT,
+            action: 'line',
+            prevIndex: i,
+            prevLineNo: lineNo,
+            start: i,
+            end: cut
+          });
+        }
       }
     }
   }
 
-  if (cost[n] === INF) return greedyFallback(items, maxWidthPx, measure, lineHeightPx);
+  let best = null;
+  for (const [lineNo, state] of states[n]) {
+    if (!best || state.cost < best.state.cost) best = { lineNo, state };
+  }
+  if (!best) return { cuts: null, widthForLine };
 
+  // Reconstruct the selected line intervals from the 2D predecessor map.
   const cuts = [];
-  let p = n;
-  while (p > 0 && parent[p] >= 0) { cuts.push([parent[p], p]); p = parent[p]; }
+  let position = n, lineNo = best.lineNo;
+  while (position > 0) {
+    const state = states[position].get(lineNo);
+    if (!state || state.action === 'origin') {
+      throw new Error('kp-linebreak: broken predecessor chain while reconstructing lines');
+    }
+    if (state.action === 'line') cuts.push([state.start, state.end]);
+    position = state.prevIndex;
+    lineNo = state.prevLineNo;
+  }
   cuts.reverse();
+  return { cuts, widthForLine };
+}
 
+function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
+  if (!Array.isArray(words)) throw new TypeError('kp-linebreak: words must be an array');
+  if (typeof measure !== 'function') throw new TypeError('kp-linebreak: measure(text) is required');
+  const items = buildItems(words, measure);
+  const solution = solveBreaks(items, maxWidthPx, opts);
+  if (!solution.cuts) return greedyFallback(items, solution.widthForLine, measure, lineHeightPx);
+  const cuts = solution.cuts;
   const lines = [];
   for (let k = 0; k < cuts.length; k++) {
     const [a, b] = cuts[k];
-    // תת־קופסאות של אותה יחידת NBSP מאוחדות חזרה עם \u00A0 (הצמד שומר על זהותו)
-    const rawBoxes = items.slice(a, b).filter(x => x.kind === 'box');
+    // Recombine sub-boxes of one NBSP unit into one output token.
     const toks = [];
     let cur = null, prevPenaltyForbidden = false;
     for (let idx = a; idx < b; idx++) {
@@ -169,18 +230,125 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
       else { if (cur !== null) toks.push(cur); cur = it.text; prevPenaltyForbidden = false; }
     }
     if (cur !== null) toks.push(cur);
-    void rawBoxes;
     if (!toks.length) continue;
-    // רוחב אמיתי: סכום תת־הקופסאות + רווחי ה‑glue שביניהן (כולל internal)
+
     let widthPx = 0;
     for (let idx = a; idx < b; idx++) {
       const it = items[idx];
-      if (it.kind === 'box') widthPx += it.width;
-      else if (it.kind === 'glue') widthPx += it.width;
+      if (it.kind === 'box' || it.kind === 'glue') widthPx += it.width;
     }
     lines.push({ words: toks, widthPx, heightPx: lineHeightPx, isLast: k === cuts.length - 1 });
   }
   return lines;
+}
+/**
+ * Break an ordered sequence of already-measured atomic inline items with the
+ * same Knuth–Plass solver used by breakLines().
+ *
+ * Input is a stream of {kind:'text'|'image'|'anchor', widthPx, heightPx}
+ * atoms interleaved with explicit {kind:'glue', widthPx, stretchPx, shrinkPx}
+ * opportunities and optional {kind:'penalty', forbidden:true} constraints.
+ * Text atoms are indivisible words; whitespace is represented by glue. Any
+ * future item type can use the same measured-box contract without changing
+ * the optimizer.
+ *
+ * A layout that cannot fit an unbreakable item returns ok:false. Unlike the
+ * legacy word wrapper, this API never silently falls back to a second breaker.
+ */
+function breakInlineItems(inlineItems, maxWidthPx, lineHeightPx, opts = {}) {
+  if (!Array.isArray(inlineItems)) throw new TypeError('kp-linebreak: inlineItems must be an array');
+  if (!Number.isFinite(lineHeightPx) || lineHeightPx < 0) {
+    throw new RangeError('kp-linebreak: lineHeightPx must be finite and non-negative');
+  }
+  const measured = [];
+  let hasFinal = false;
+  for (let index = 0; index < inlineItems.length; index++) {
+    const item = inlineItems[index];
+    if (!item || typeof item !== 'object') {
+      throw new TypeError('kp-linebreak: invalid inline item at index ' + index);
+    }
+    if (item.kind === 'glue') {
+      const width = item.widthPx;
+      const stretch = item.stretchPx == null ? 0 : item.stretchPx;
+      const shrink = item.shrinkPx == null ? 0 : item.shrinkPx;
+      if (![width, stretch, shrink].every(Number.isFinite) || width < 0 || stretch < 0 || shrink < 0) {
+        throw new TypeError('kp-linebreak: glue geometry must be finite and non-negative');
+      }
+      measured.push({ kind: 'glue', width, stretch, shrink, internal: !!item.internal });
+      continue;
+    }
+    if (item.kind === 'penalty') {
+      const penalty = { kind: 'penalty', forbidden: !!item.forbidden, final: !!item.final };
+      measured.push(penalty);
+      hasFinal = hasFinal || penalty.final;
+      continue;
+    }
+    if (typeof item.kind !== 'string' || !item.kind.trim()) {
+      throw new TypeError('kp-linebreak: every atom requires a non-empty kind');
+    }
+    const width = item.widthPx, height = item.heightPx == null ? 0 : item.heightPx;
+    if (!Number.isFinite(width) || width < 0 || !Number.isFinite(height) || height < 0) {
+      throw new TypeError('kp-linebreak: atom geometry must be finite and non-negative');
+    }
+    if (item.kind === 'text') {
+      if (typeof item.text !== 'string' || !item.text || /[ \t\n\r]/.test(item.text)) {
+        throw new TypeError('kp-linebreak: text atoms must be non-empty single break units; represent spaces as glue');
+      }
+    } else if (item.kind === 'image' && (typeof item.resourcePath !== 'string' || !item.resourcePath.trim())) {
+      throw new TypeError('kp-linebreak: image atoms require resourcePath');
+    } else if (item.kind === 'anchor' && item.id == null) {
+      throw new TypeError('kp-linebreak: anchor atoms require a stable id');
+    } else if (!['text', 'image', 'anchor'].includes(item.kind) && item.id == null) {
+      throw new TypeError('kp-linebreak: custom atoms require a stable id');
+    }
+    measured.push({
+      kind: 'box',
+      text: item.kind === 'text' ? item.text : undefined,
+      width,
+      height,
+      payload: { ...item, widthPx: width, heightPx: height }
+    });
+  }
+  if (!hasFinal) measured.push({ kind: 'penalty', final: true });
+  const solution = solveBreaks(measured, maxWidthPx, opts);
+  if (!solution.cuts) {
+    const maxAtomWidthPx = measured.reduce((max, item) => item.kind === 'box' ? Math.max(max, item.width) : max, 0);
+    return { ok: false, reason: 'no-valid-line-break', maxAtomWidthPx, lines: [] };
+  }
+
+  const lines = [];
+  for (let lineIndex = 0; lineIndex < solution.cuts.length; lineIndex++) {
+    const [start, end] = solution.cuts[lineIndex];
+    const slice = measured.slice(start, end);
+    const fragments = [];
+    let pendingGapPx = 0;
+    for (const item of slice) {
+      if (item.kind === 'glue') {
+        pendingGapPx += item.width;
+        continue;
+      }
+      if (item.kind !== 'box') continue;
+      if (fragments.length) fragments[fragments.length - 1].gapAfterPx += pendingGapPx;
+      fragments.push({
+        ...item.payload,
+        widthPx: item.width,
+        heightPx: item.height,
+        gapAfterPx: 0
+      });
+      pendingGapPx = 0;
+    }
+    const widthPx = slice.reduce((sum, item) =>
+      sum + (item.kind === 'box' || item.kind === 'glue' ? item.width : 0), 0);
+    const heightPx = Math.max(lineHeightPx, ...fragments.map(item => item.heightPx || 0));
+    lines.push({
+      fragments,
+      words: fragments.filter(item => item.kind === 'text').map(item => item.text),
+      widthPx,
+      heightPx,
+      isLast: lineIndex === solution.cuts.length - 1
+    });
+  }
+  return { ok: true, lines };
 }
 
 /**
@@ -196,7 +364,7 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
  * 3. התקדמות מובטחת: טוקן שגולש פותח שורה חדשה; טוקן רחב מהעמודה נשאר לבד
  *    בשורה משלו — אין לולאה ואין דילוג תוכן. מעבר אחד על הפריטים.
  */
-function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
+function greedyFallback(items, widthForLine, measure, lineHeightPx) {
   const space = measure(' ');
   const lines = [];
   let toks = [];            // טוקנים של השורה הנוכחית
@@ -214,7 +382,7 @@ function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
     // **לפני** ה-flush ונוסף גם אחריו ⇒ כל שורה שנפתחה ב-flush נשאה רווח
     // אחד עודף ב-widthPx (מדידה שקרית לצרכי ריצת-שורה/איזון). תוקם:
     // הבדיקה וההוספה לפי המצב **אחרי** ההחלטה על flush.
-    if (toks.length && w + space + curW > maxWidthPx - 0.75) flush(); // הטוקן הבא ייפתח שורה חדשה
+    if (toks.length && w + space + curW > widthForLine(lines.length) - 0.75) flush(); // הטוקן הבא ייפתח שורה חדשה
     const sp = toks.length ? space : 0;
     toks.push(cur); w += sp + curW;
     cur = null; curW = 0; joinNext = false;
@@ -239,4 +407,4 @@ function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
   return lines;
 }
 
-module.exports = { breakLines, badness, STRETCH_RATIO, SHRINK_RATIO };
+module.exports = { breakLines, breakInlineItems, badness, STRETCH_RATIO, SHRINK_RATIO };

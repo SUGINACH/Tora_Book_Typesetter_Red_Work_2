@@ -721,4 +721,32 @@ describe('S12 — רגרסיית רישום ו־UI אחרי הוספת מפתח�
   });
 });
 
+describe('S14 — inline segment fonts survive complete PDF export', () => {
+  it('collects and embeds a font used only by a segment inside a text atom', () => {
+    clearRegisteredFonts();
+    const inlineBytes = buildTtfFixture({ kern:false }).bytes;
+    assert(registerFont('Inline Alpha', inlineBytes).ok, 'inline family registers');
+    try {
+      const bodyBytes = fs.readFileSync(DEJAVU);
+      const source = 'גוף רגיל <Inline Alpha>מילה מעוצבת</> המשך רגיל';
+      const inlineSettings = {
+        ...getDefaultSettings(),
+        'body-font':'DejaVu Sans',
+        _inlineFontFamilies:['Inline Alpha']
+      };
+      const exported = exportPdf(source, inlineSettings, bodyBytes, 'DejaVu Sans');
+      assert(exported.ok, 'PDF export: ' + exported.error);
+      const latin = exported.bytes.toString('latin1');
+      assert(latin.includes('/F7 14 Tf'), 'the segment-only family is embedded as the first dynamic PDF font');
+      const line = exported.projected.pages.flatMap(page => page.lines)
+        .find(item => (item.words || []).some(word =>
+          (word.segments || []).some(segment => segment.fontKey === 'Inline Alpha')
+        ));
+      assert(line, 'projected PDF model retains the inline family key on the measured subsegment');
+    } finally {
+      clearRegisteredFonts();
+    }
+  });
+});
+
 report('s12-export');

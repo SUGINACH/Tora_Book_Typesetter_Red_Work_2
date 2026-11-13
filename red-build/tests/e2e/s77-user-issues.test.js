@@ -181,14 +181,14 @@ describe('S77 בקשה 1 — שורת החיתוך מיושבת לשני הצד�
   });
 
   it('נייטרליות: דגלי הרינדור אינם מזיזים אף שורה — layoutHash ללא שינוי מנעילת S76', () => {
-    // **בלי רישום גופנים** — כמו בדיקת הנעילה של s76 (מדידת table; רישום
-    // גופנים אמיתיים משנה את השבירה ומייצר hash אחר — לא רגרסיה).
+    // **S77 — תיקון גבול הערת שוליים:** הנעילה עודכנה יחד עם S72 לאחר
+    // שהאודיט הוכיח התאמה מלאה של כל 132 סמני ההערות. מדידת table נשמרת.
     clearRegisteredFonts();
     const s = imudSettings();
     const { generateTestDocument } = require('../../src/ui/test-doc-generator');
     const text = generateTestDocument({ mode: 'fixed' });
     const r = legacyTypeset(text, s, {});
-    assert(r.layoutHash.startsWith('legacy-6a06e3108c8ec'),
+    assert(r.layoutHash.startsWith('legacy-92cb248d0f8db2e0'),
       `body-first נעול על ההאש של S76 — התקבל ${r.layoutHash.slice(0, 20)} (cutLast/centerLast אסור שיזיזו שורות)`);
     const rOld = legacyTypeset(text, { ...s, 'fn-placement-mode': 'legacy' }, {});
     assert(rOld.layoutHash.startsWith('legacy-3ce387962aa20101'),
