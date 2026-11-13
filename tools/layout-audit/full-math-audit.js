@@ -810,7 +810,7 @@ if (typeof document !== 'undefined') {
         info.words += wc(l.textContent);
 
         const base = rec.last ? 'l' : (rec.head ? 'h' : 'b');
-        colRec.tops.push(Math.round((lr.y + origin.y) * 10));  // אבסולוטי — כמו determinism-sweep
+        colRec.tops.push(Math.round(lr.y * 10)); // יחסית לעמוד — אינו תלוי במיקום הגלילה
         colRec.f += base;
         colRec.at += (rec.window ? 'w' : '-') + (rec.markers.length ? 'm' : '-');
         if (prevTop !== null && base === 'b' && prevFlag === 'b') colRec.p.push(Math.round((rec.y - prevTop) * 10) / 10);
