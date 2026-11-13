@@ -98,7 +98,7 @@ describe('e2e-pipeline', () => {
     const anchor = pageLines.flatMap(line => line.fragments || [])
       .find(fragment => fragment.kind === 'text' && fragment.text.includes(footnote.marker));
     assert(anchor, 'the body marker survives as a measured text fragment');
-    assert(anchor.text.includes('\\u00A0'), 'the marker is nonbreakingly attached to its anchor word');
+    assert(anchor.text.includes(String.fromCharCode(0x00A0)), 'the marker is nonbreakingly attached to its anchor word');
     assert(anchor.text.includes(String.fromCharCode(0xE102)), 'the internal marker tag survives until renderer scrubbing');
   });
 
