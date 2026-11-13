@@ -382,6 +382,7 @@ function typeset(rawText, settingsIn, env = {}) {
   // **S11:** חשבונאות שימור תוכן לסגנונות שמסיטים פסקה שלמה מהגוף —
   // הסמן נספר במקור פעם אחת, בדיוק כמו note-ref רגיל (D-30).
   const customFootnoteMarkers = new Map(); // tokenId → סמן (מוצג בגוף, הטקסט במרזב)
+  const resolvedInlineImageRunsByToken = new Map(); // successful image atoms replace source command markers in content accounting
   const customEndnoteTokens = new Set();   // tokenIds שזרמו לעמודי ההערות (הסמן מודפס שם)
   let currentPart = 0;
   let fwCount = 0;
@@ -565,6 +566,7 @@ function typeset(rawText, settingsIn, env = {}) {
     const inlineImageRuns = inlineContent.parts.flatMap(part =>
       part && part.kind === 'text' ? (part.runs || []).filter(run => run.kind === 'image') : []
     );
+    const resolvedInlineImageBoxes = new Map();
     const inlineImageMeasurements = inlineImageRuns.map(run => {
       const base = {
         resourcePath: run.resourcePath,
@@ -577,6 +579,7 @@ function typeset(rawText, settingsIn, env = {}) {
         const measured = resolveInlineImageRun(run, inlineAssetResolver, { localWidthPx: colW });
         if (!measured.ok) return { ...base, resolved: false, code: measured.code };
         const image = measured.image;
+        resolvedInlineImageBoxes.set(run, image);
         return {
           ...base, resolved: true,
           resourceId: image.resourceId, mimeType: image.mimeType,
@@ -596,13 +599,13 @@ function typeset(rawText, settingsIn, env = {}) {
     // intentionally held on the established path until their semantic atoms
     // are migrated, rather than approximated or silently discarded.
     const hasInlineNotes = inlineContent.parts.some(part => part && part.kind === 'note-ref');
-    const hasInlineImages = inlineContent.parts.some(part =>
-      part && part.kind === 'text' && (part.runs || []).some(run => run && run.kind === 'image')
-    );
+    const hasInlineImages = inlineImageRuns.length > 0;
+    const allInlineImagesResolved = !hasInlineImages
+      || inlineImageRuns.every(run => resolvedInlineImageBoxes.has(run));
     const richRunEligible = inlineContent.parts.length === 1
       && inlineContent.parts[0].kind === 'text'
       && !hasInlineNotes
-      && !hasInlineImages
+      && allInlineImagesResolved
       && !dh
       && !csBlock
       && csInlineSpans.length === 0
@@ -621,7 +624,11 @@ function typeset(rawText, settingsIn, env = {}) {
       const richLayout = api.layoutInlineRuns(measuredRuns, colW, {
         sizePt: bodySizePt,
         lineHeightPx: api.lineHeightPx(bodySizePt),
-        runts: settings['runt-min-width-pct']
+        runts: settings['runt-min-width-pct'],
+        resolveImage: run => {
+          const image = resolvedInlineImageBoxes.get(run);
+          return image ? { ok: true, image } : { ok: false, code: 'INLINE_IMAGE_RESOURCE_MISSING' };
+        }
       });
       if (richLayout.ok) {
         lines = richLayout.lines;
@@ -633,6 +640,7 @@ function typeset(rawText, settingsIn, env = {}) {
         }
         stampMeasureW(lines, colW);
         usedMeasuredInlineLayout = true;
+        if (hasInlineImages) resolvedInlineImageRunsByToken.set(t.id, new Set(inlineImageRuns));
         markersByToken.set(t.id, noteAssignments);
         if (richLayout.diagnostics.length) {
           eventLog.emit('measure', 'inline-item-diagnostics', {
@@ -753,16 +761,14 @@ function typeset(rawText, settingsIn, env = {}) {
       // המונה מוצג בשורה הראשונה של הבלוק (הפס של full-width מטופל ברנדרר מהמידע על הפס)
       if (csInfo.counterMark && lines.length) lines[0].csCounterMark = csInfo.counterMark;
     }
-    const inlineImageFallbacks = inlineContent.parts.flatMap(part =>
-      part && part.kind === 'text'
-        ? (part.runs || []).filter(run => run.kind === 'image').map(run => ({
-          resourcePath: run.resourcePath,
-          sourceStart: run.sourceStart,
-          sourceEnd: run.sourceEnd,
-          sourceText: run.sourceText || ''
-        }))
-        : []
-    );
+    const inlineImageFallbacks = inlineImageRuns
+      .filter(run => !resolvedInlineImageRunsByToken.has(t.id) || !resolvedInlineImageRunsByToken.get(t.id).has(run))
+      .map(run => ({
+        resourcePath: run.resourcePath,
+        sourceStart: run.sourceStart,
+        sourceEnd: run.sourceEnd,
+        sourceText: run.sourceText || ''
+      }));
     const blk = {
       kind: 'paragraph', tokenId: t.id, parts: t.parts, inlineContent,
       inlineImageFallbacks, inlineImageMeasurements, notes, bodyMarkers, lines,
@@ -779,10 +785,13 @@ function typeset(rawText, settingsIn, env = {}) {
         }, null);
       }
       if (unresolvedImages.length) {
-        // Until line fragments and renderers consume ImageRuns, the source marker
-        // remains visible text. Missing resources are explicit, never guessed.
+        // Missing resources remain visible as source text; no dimensions are guessed.
         eventLog.emit('parse', 'inline-image-markers-retained-unresolved', {
           tokenId: t.id, images: unresolvedImages
+        }, null);
+      } else if (usedMeasuredInlineLayout) {
+        eventLog.emit('parse', 'inline-image-markers-consumed-by-inline-items', {
+          tokenId: t.id, images: resolvedImages.map(image => image.resourcePath)
         }, null);
       } else {
         eventLog.emit('parse', 'inline-image-markers-retained-pending-placement', {
@@ -1157,8 +1166,11 @@ function typeset(rawText, settingsIn, env = {}) {
     // paragraph: גוף + לכל note-ref: סמן (בעוגן שבגוף) + טקסט ההערה
     // (ממקום הצגתו). הסמן אחד לכל המצטרים — הוקצה אחדת
     // בשלב הבלוק (מדיניות + סגנון) — identity-by-construction (D-30).
+    const resolvedImages = resolvedInlineImageRunsByToken.get(t.id) || null;
     const body = t.inlineContent && Array.isArray(t.inlineContent.parts)
-      ? t.inlineContent.parts.filter(p => p.kind === 'text').map(p => inlineRunsSourceText(p.runs)).join(' ')
+      ? t.inlineContent.parts.filter(p => p.kind === 'text').map(p => inlineRunsSourceText(
+        resolvedImages ? p.runs.filter(run => !resolvedImages.has(run)) : p.runs
+      )).join(' ')
       : t.parts.filter(p => p.kind === 'text').map(p => p.value).join(' ');
     const refs = t.parts.filter(p => p.kind === 'note-ref');
     const assigns = markersByToken.get(t.id) || [];
