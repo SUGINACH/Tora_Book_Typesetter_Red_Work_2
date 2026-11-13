@@ -112,6 +112,87 @@ function offsetInSpans(at, spans) {
 }
 
 /**
+ * Turn a note-free canonical paragraph AST into the measured-run input stream.
+ * The same flat offsets used by the legacy prepasses are used to assign
+ * pre-measurement size changes; font-family boundaries remain explicit runs.
+ */
+function createStyledInlineRuns(parts, options = {}) {
+  if (!Array.isArray(parts)) throw new TypeError('pipeline: inline paragraph parts must be an array');
+  const baseSizePt = Number(options.baseSizePt);
+  if (!Number.isFinite(baseSizePt) || baseSizePt <= 0) {
+    throw new RangeError('pipeline: body font size must be positive and finite');
+  }
+  const parenScale = Number(options.parenScale) || 1;
+  const parenSpans = Array.isArray(options.parenSpans) ? options.parenSpans : [];
+  const customSpans = Array.isArray(options.customSpans) ? options.customSpans : [];
+  const result = [];
+  let flatOffset = 0;
+  let textPartCount = 0;
+
+  for (const part of parts) {
+    if (!part || part.kind !== 'text') {
+      throw new TypeError('pipeline: rich body layout only accepts note-free text parts');
+    }
+    if (textPartCount > 0) {
+      result.push({ kind: 'text', text: ' ', sizePt: baseSizePt });
+      flatOffset++;
+    }
+    for (const run of (part.runs || [])) {
+      if (!run || typeof run !== 'object') continue;
+      if (run.kind === 'image') {
+        result.push(run);
+        flatOffset += String(run.sourceText || '').length;
+        continue;
+      }
+      if (run.kind !== 'text') {
+        throw new TypeError('pipeline: unsupported canonical inline run kind: ' + String(run.kind));
+      }
+
+      const value = String(run.text || '');
+      let cursor = 0;
+      while (cursor < value.length) {
+        const first = value[cursor];
+        const isBreak = first === ' ' || first === '\\t' || first === '\\n' || first === '\\r';
+        let end = cursor + 1;
+        while (end < value.length) {
+          const ch = value[end];
+          const nextIsBreak = ch === ' ' || ch === '\\t' || ch === '\\n' || ch === '\\r';
+          if (nextIsBreak !== isBreak) break;
+          end++;
+        }
+        const token = value.slice(cursor, end);
+        const tokenOffset = flatOffset + cursor;
+        let sizePt = baseSizePt;
+        if (!isBreak) {
+          const custom = customSpans.find(span =>
+            tokenOffset < span.to && tokenOffset + token.length > span.from
+          );
+          if (custom && Number.isFinite(custom.factor) && custom.factor > 0) {
+            sizePt *= custom.factor;
+          } else if (parenSpans.length && offsetInSpans(tokenOffset, parenSpans)) {
+            sizePt *= parenScale;
+          }
+        }
+        const sourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart + cursor : undefined;
+        const sourceEnd = Number.isFinite(sourceStart) ? sourceStart + token.length : undefined;
+        result.push({
+          kind: 'text',
+          text: token,
+          fontFamily: run.fontFamily || null,
+          sizePt,
+          ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+          ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+        });
+        cursor = end;
+      }
+      flatOffset += value.length;
+    }
+    textPartCount++;
+  }
+  return result;
+}
+
+/**
  * @param {string} rawText - מקור הטקסט
  * @param {object} settings - merged settings (registry defaults + user)
  * @param {{doc?:object, onProgress?:(info:object)=>void}} env - optional DOM for oracle rendering;
@@ -297,6 +378,7 @@ function typeset(rawText, settingsIn, env = {}) {
   const endnoteTokens = [];        // טוקני הערת־סיום גלויים (endnotes mode)
   const endnoteTitleByPart = new Map(); // D-40: הוראות כותרת־מחלקה per-part
   const markersByToken = new Map(); // tokenId → [{noteIndex, marker}] (סמן אחיד — D-30)
+  const omittedInlineImagesByToken = new Map(); // intentional omission + warning when the referenced asset cannot be resolved
   // **S11:** חשבונאות שימור תוכן לסגנונות שמסיטים פסקה שלמה מהגוף —
   // הסמן נספר במקור פעם אחת, בדיוק כמו note-ref רגיל (D-30).
   const customFootnoteMarkers = new Map(); // tokenId → סמן (מוצג בגוף, הטקסט במרזב)
