@@ -65,7 +65,7 @@ test('PDF writer emits PNG XObject with a soft mask and invokes it at projected 
       kind:'image',id:'img:1',resourceId:'img:1',resourcePath:'image.png',
       mimeType:'image/png',bytes:pngRgba1x1(),
       intrinsicWidthPx:1,intrinsicHeightPx:1,
-      x:10,y:20,widthPx:40,heightPx:30,heightPx:30
+      x:10,y:20,widthPx:40,heightPx:30
     }])],
     pageSizeMm:{w:210,h:297},
     font:fakeFont(),
@@ -76,7 +76,7 @@ test('PDF writer emits PNG XObject with a soft mask and invokes it at projected 
   assert(pdf.includes('/SMask'));
   assert(pdf.includes('/XObject << /Im1'));
   assert(pdf.includes('/Im1 Do'));
-  assert(pdf.includes('40 0 0 30'));
+  assert(pdf.includes('30 0 0 22.5 7.5')); // 40×30 CSS px converted to PDF points at 72/96
 });
 
 test('PDF writer draws text subsegments using their registered family keys',()=>{
