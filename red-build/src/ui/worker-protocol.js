@@ -63,6 +63,9 @@ function validateRequest(msg) {
     if (typeof msg.jobId !== 'string' || !msg.jobId) throw new Error('protocol: jobId required');
     if (typeof msg.text !== 'string') throw new Error('protocol: text must be string');
     if (!msg.settings || typeof msg.settings !== 'object') throw new Error('protocol: settings required');
+    if (msg.assetCollection != null && (typeof msg.assetCollection !== 'string' || !msg.assetCollection.trim())) {
+      throw new Error('protocol: assetCollection must be a non-empty string');
+    }
     return true;
   }
   if (msg.type === 'cancel') {
@@ -83,6 +86,21 @@ function validateRequest(msg) {
     if (typeof msg.jobId !== 'string' || !msg.jobId) throw new Error('protocol: jobId required');
     if (typeof msg.collection !== 'string' || !msg.collection) throw new Error('protocol: collection required');
     if (!Array.isArray(msg.items)) throw new Error('protocol: items array required');
+    return true;
+  }
+  // מסמכי מקור עם משאבי inline — נפרד מאוסף ה-SVG של העיטורים.
+  if (msg.type === 'register-inline-assets') {
+    if (typeof msg.jobId !== 'string' || !msg.jobId) throw new Error('protocol: jobId required');
+    if (typeof msg.collection !== 'string' || !msg.collection.trim()) throw new Error('protocol: collection required');
+    if (!Array.isArray(msg.items)) throw new Error('protocol: inline asset items array required');
+    for (let index = 0; index < msg.items.length; index++) {
+      const item = msg.items[index];
+      const bytes = item && (item.data != null ? item.data : item.bytes);
+      if (!item || typeof item.path !== 'string' || !item.path
+        || !(bytes instanceof ArrayBuffer) && !(ArrayBuffer.isView(bytes) && bytes.byteLength > 0)) {
+        throw new Error(`protocol: inline asset item ${index} requires path and non-empty bytes`);
+      }
+    }
     return true;
   }
   // **03.11 (v1.1):** בקשת ייצוא PDF/ZIP — רץ ב־Worker (המנוע המלא + שימת Buffer בדפדפן)

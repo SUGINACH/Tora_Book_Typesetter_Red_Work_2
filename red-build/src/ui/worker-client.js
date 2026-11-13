@@ -31,7 +31,8 @@ class WorkerEngineClient {
     // respawn (terminate/קריסה): המופע החדש מתחיל עם זיכרון ריק, ובלי רישום
     // מחדש המדידה היתה נופלת בשקט לגופני fallback (סחף מדידה שקט).
     this._registeredFonts = new Map();   // name → bytes
-    this._registeredAssets = new Map(); // collection → items
+    this._registeredAssets = new Map(); // collection → decoration items
+    this._registeredInlineAssets = new Map(); // collection → document image items
     this._workerGeneration = typeof transport.getGeneration === 'function' ? transport.getGeneration() : null;
     transport.setHandler((m) => this._onMessage(m));
     if (typeof transport.setOnError === 'function') transport.setOnError((e) => this._onTransportError(e));
@@ -55,6 +56,11 @@ class WorkerEngineClient {
     for (const [collection, items] of this._registeredAssets) {
       const { jobId, promise } = this._newPendingJob('assets-replay');
       this.transport.post({ type: 'register-assets', jobId, collection, items });
+      promise.catch(() => {});
+    }
+    for (const [collection, items] of this._registeredInlineAssets) {
+      const { jobId, promise } = this._newPendingJob('inline-assets-replay');
+      this.transport.post({ type: 'register-inline-assets', jobId, collection, items });
       promise.catch(() => {});
     }
   }
@@ -163,6 +169,16 @@ class WorkerEngineClient {
     });
   }
 
+  /** רישום משאבי תמונה של מסמך. נפרד מרישום SVG של עיטורים. */
+  registerInlineAssets({ collection, items }) {
+    const { jobId, promise } = this._newPendingJob('inline-assets');
+    this.transport.post({ type: 'register-inline-assets', jobId, collection, items });
+    return promise.then((res) => {
+      this._registeredInlineAssets.set(collection, items);
+      return res;
+    });
+  }
+
   /** **03.11:** בקשת ייצוא PDF/ZIP במנוע המלא שב־Worker. bytes חוזר כ-Uint8Array. */
   requestExport({ kind, text, settings, fontBytes, fontName, extensions }) {
     this._maybeReplayRegistrations(); // **S70 (R8-M2):** הייצוא מודד כמו העימוד — גופנים חייבים להיות רשומים
@@ -175,7 +191,7 @@ class WorkerEngineClient {
    * בקשת עימוד. בקשה חדשה בזמן עבודה פעילה מבטלת את הקודמת (single-flight).
    * @returns {{promise:Promise<object>, jobId:string, cancel:()=>void}}
    */
-  requestTypeset({ text, settings, onProgress }) {
+  requestTypeset({ text, settings, onProgress, assetCollection }) {
     if (this.activeJob) this.cancel();
     this._maybeReplayRegistrations(); // **S70 (R8-M2):** רישום חוזר לפני העימוד אחרי respawn
     const jobId = `job-${Date.now().toString(36)}-${++jobSeq}`;
@@ -183,7 +199,9 @@ class WorkerEngineClient {
     const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
     const job = { jobId, resolve, reject, onProgress: onProgress || null, cancelled: false };
     this.activeJob = job;
-    this.transport.post({ type: 'typeset-request', jobId, text, settings });
+    const message = { type: 'typeset-request', jobId, text, settings };
+    if (assetCollection != null) message.assetCollection = assetCollection;
+    this.transport.post(message);
     return { promise, jobId, cancel: () => this.cancel() };
   }
 

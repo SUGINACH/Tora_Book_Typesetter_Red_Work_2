@@ -27,6 +27,7 @@ const { getDefaultSettings, derivePlacementFlags } = require('./settings-registr
 const { lexDocument } = require('../parser/dfa-lexer');
 const { tokenize, contentHash, normalizeText } = require('../parser/block-tokenizer');
 const { inlineParagraphSourceText, inlineNoteSourceText, inlineRunsSourceText } = require('../parser/inline-content');
+const { resolveInlineImageRun } = require('../import/document-assets');
 const { scanBrackets } = require('../parser/bracket-scanner');
 const { MeasureAPI, resolveMeasureImpl, registeredFonts } = require('../typography/measure-api');
 const { protectWords } = require('../typography/protectors');
@@ -199,7 +200,9 @@ function typeset(rawText, settingsIn, env = {}) {
   // בודקים את measure.impl ומדלגים על הפקטור ב-impl B.
   const measureWithImpl = (t, s) => api.measureTextWidth(t, s);
   measureWithImpl.impl = api.impl;
-  void env;
+  const inlineAssetResolver = env && env.inlineAssetResolver && typeof env.inlineAssetResolver.resolve === 'function'
+    ? env.inlineAssetResolver
+    : null;
 
   const FONT_WIDTH_PROFILES = {
     'Frank Ruhl Libre': null,
@@ -474,6 +477,35 @@ function typeset(rawText, settingsIn, env = {}) {
     const colW = (csBlock && csBlock.style.layoutMode === 'full-width')
       ? fullWidthWidth(settings)
       : columnWidthFor({ kind: 'paragraph' }, settings);
+    // Resolve image resources against this paragraph's actual flow-lane width.
+    // Geometry is recorded now; placement remains pending until inline fragments
+    // are carried through the DP planner and the shared Page Model.
+    const inlineImageRuns = inlineContent.parts.flatMap(part =>
+      part && part.kind === 'text' ? (part.runs || []).filter(run => run.kind === 'image') : []
+    );
+    const inlineImageMeasurements = inlineImageRuns.map(run => {
+      const base = {
+        resourcePath: run.resourcePath,
+        sourceStart: run.sourceStart,
+        sourceEnd: run.sourceEnd,
+        layoutPending: true
+      };
+      if (!inlineAssetResolver) return { ...base, resolved: false, code: 'INLINE_IMAGE_RESOLVER_MISSING' };
+      try {
+        const measured = resolveInlineImageRun(run, inlineAssetResolver, { localWidthPx: colW });
+        if (!measured.ok) return { ...base, resolved: false, code: measured.code };
+        const image = measured.image;
+        return {
+          ...base, resolved: true,
+          resourceId: image.resourceId, mimeType: image.mimeType,
+          intrinsicWidthPx: image.intrinsicWidthPx, intrinsicHeightPx: image.intrinsicHeightPx,
+          aspectRatio: image.aspectRatio, widthPx: image.widthPx, heightPx: image.heightPx,
+          align: image.align, widthPct: image.widthPct, scaledToFit: image.scaledToFit
+        };
+      } catch (error) {
+        return { ...base, resolved: false, code: 'INLINE_IMAGE_MEASUREMENT_INVALID', message: String(error && error.message || error) };
+      }
+    });
     const customFactorById = new Map(csInlineSpans.map(s => [s.styleId, s.factor]));
     let csInfo = null; // **S11:** סגנון הבלוק שיוצמד לשורות ולבלוק (מדלג על ערכי איטרציות קודמות)
 
@@ -593,19 +625,30 @@ function typeset(rawText, settingsIn, env = {}) {
     );
     const blk = {
       kind: 'paragraph', tokenId: t.id, parts: t.parts, inlineContent,
-      inlineImageFallbacks, notes, bodyMarkers, lines,
+      inlineImageFallbacks, inlineImageMeasurements, notes, bodyMarkers, lines,
       unmatchedClosers: t.unmatchedClosers || [], part: currentPart, dh,
       noteAssignments, parenCharSpans: parenSpans, flatWordOffsets,
       customStyle: csInfo
     };
-    if (inlineImageFallbacks.length) {
-      // A dimensioned asset resolver and raster PDF embedding are not yet
-      // connected. Keep each original marker as visible text for now; never
-      // drop an ImageRun silently or invent its intrinsic dimensions.
-      eventLog.emit('parse', 'inline-image-preserved-pending-asset-resolution', {
-        tokenId: t.id,
-        images: inlineImageFallbacks.map(image => image.resourcePath)
-      }, null);
+    if (inlineImageMeasurements.length) {
+      const resolvedImages = inlineImageMeasurements.filter(image => image.resolved);
+      const unresolvedImages = inlineImageMeasurements.filter(image => !image.resolved);
+      if (resolvedImages.length) {
+        eventLog.emit('measure', 'inline-image-resources-measured-awaiting-placement', {
+          tokenId: t.id, images: resolvedImages
+        }, null);
+      }
+      if (unresolvedImages.length) {
+        // Until line fragments and renderers consume ImageRuns, the source marker
+        // remains visible text. Missing resources are explicit, never guessed.
+        eventLog.emit('parse', 'inline-image-markers-retained-unresolved', {
+          tokenId: t.id, images: unresolvedImages
+        }, null);
+      } else {
+        eventLog.emit('parse', 'inline-image-markers-retained-pending-placement', {
+          tokenId: t.id, images: resolvedImages.map(image => image.resourcePath)
+        }, null);
+      }
     }
     if (blk.customStyle) {
       blk.fullWidth = blk.customStyle.layoutMode === 'full-width';

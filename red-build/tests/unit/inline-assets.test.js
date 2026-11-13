@@ -10,6 +10,9 @@ const {
   readDocumentZip
 } = require('../../src/engine/import/document-assets');
 const { crc32 } = require('../../src/engine/import/zip-reader');
+const { typeset } = require('../../src/engine/core/pipeline');
+const { getDefaultSettings } = require('../../src/engine/core/settings-registry');
+const { createEngineWorkerMain } = require('../../src/ui/engine-worker-main');
 
 let passed = 0;
 function test(name, fn) {
@@ -182,6 +185,54 @@ test('ZIP import rejects missing or ambiguous root text without starting layout'
   ]));
   assert.equal(multiple.ok, false);
   assert.equal(multiple.error, 'zip-ambiguous-root-text');
+});
+
+
+test('the engine resolves real image dimensions through its measurement environment without dropping source text', () => {
+  const text = 'תחילת פסקה #images/plate.png# סוף פסקה';
+  const settings = getDefaultSettings();
+  const resolver = createInlineAssetResolver([{ path: 'images/plate.png', data: png(320, 160) }]);
+  const result = typeset(text, settings, { inlineAssetResolver: resolver });
+  const events = result.events.toTraceV2().events;
+  const measured = events.find(event => event.label === 'inline-image-resources-measured-awaiting-placement');
+  assert.ok(measured, 'resolved image measurement is present in the engine trace');
+  assert.equal(measured.stage, 'measure');
+  assert.equal(measured.payload.images[0].resolved, true);
+  assert.equal(measured.payload.images[0].intrinsicWidthPx, 320);
+  assert.ok(measured.payload.images[0].widthPx > 0);
+  assert.equal(measured.payload.images[0].layoutPending, true, 'measurement is not misreported as page placement');
+  assert.ok(events.some(event => event.label === 'inline-image-markers-retained-pending-placement'),
+    'source marker remains until shared fragments are integrated');
+});
+
+test('missing image resources remain explicit and never receive guessed dimensions', () => {
+  const text = 'תחילת פסקה #images/missing.png# סוף פסקה';
+  const result = typeset(text, getDefaultSettings(), { inlineAssetResolver: createInlineAssetResolver([]) });
+  const event = result.events.toTraceV2().events.find(item => item.label === 'inline-image-markers-retained-unresolved');
+  assert.ok(event, 'missing resource is recorded');
+  assert.equal(event.payload.images[0].code, 'INLINE_IMAGE_RESOURCE_MISSING');
+  assert.equal(event.payload.images[0].widthPx, undefined);
+  assert.equal(event.payload.images[0].layoutPending, true);
+});
+
+test('Worker registration is isolated from decoration assets and reaches the measurement pipeline', () => {
+  const posted = [];
+  const worker = createEngineWorkerMain(message => posted.push(message));
+  const items = [{ path: 'images/worker.png', data: png(96, 48) }];
+  worker({ type: 'register-inline-assets', jobId: 'assets-1', collection: 'doc-1', items });
+  const registered = posted.find(message => message.type === 'register-inline-assets-result');
+  assert.ok(registered && registered.ok, 'asset collection acknowledged');
+  assert.equal(registered.registered, 1);
+  worker({
+    type: 'typeset-request', jobId: 'typeset-1',
+    text: 'טקסט #images/worker.png# המשך',
+    settings: getDefaultSettings(), assetCollection: 'doc-1'
+  });
+  const completed = posted.find(message => message.type === 'typeset-result');
+  assert.ok(completed, 'typeset request completes');
+  const measured = completed.result.trace.events.find(event => event.label === 'inline-image-resources-measured-awaiting-placement');
+  assert.ok(measured, 'Worker passed the registered resolver into typeset');
+  assert.equal(measured.payload.images[0].intrinsicHeightPx, 48);
 });
 
 console.log('inline-assets: ' + passed + ' tests passed');
