@@ -16890,8 +16890,8 @@ function badness(ratio) {
  * @param {{runtMinPct?:number,raggedEnd?:boolean}} opts
  * @returns {Array<{words:string[], widthPx:number, heightPx:number, isLast:boolean}>}
  */
-function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
-  if (typeof measure !== 'function') throw new TypeError('kp-linebreak: measure(text) is required');
+function solveBreaks(items, maxWidthPx, opts = {}) {
+  if (!Array.isArray(items)) throw new TypeError('kp-linebreak: measured items must be an array');
   const widthProvider = typeof maxWidthPx === 'function' ? maxWidthPx : () => maxWidthPx;
   if (typeof maxWidthPx !== 'function' && (!Number.isFinite(maxWidthPx) || maxWidthPx <= 0)) {
     throw new RangeError('kp-linebreak: maxWidthPx must be a positive finite number or a line-width function');
@@ -16917,7 +16917,6 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
   // **03.11 (ביקורת):** חיבור ההגדרה — runt-min-width-pct מגיע כ-runts מה-pipeline
   // וכ-runtMinPct מקריאות ישירות; שניהם נקראים (בעבר רק runtMinPct נקרא וההגדרה לא השפיעה).
   const runts = opts.runtMinPct != null ? opts.runtMinPct : (opts.runts != null ? opts.runts : 50);
-  const items = buildItems(words, measure);
   const n = items.length;
 
   // The state includes both item position and the next line index.
@@ -17017,7 +17016,7 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
   for (const [lineNo, state] of states[n]) {
     if (!best || state.cost < best.state.cost) best = { lineNo, state };
   }
-  if (!best) return greedyFallback(items, widthForLine, measure, lineHeightPx);
+  if (!best) return { cuts: null, widthForLine };
 
   // Reconstruct the selected line intervals from the 2D predecessor map.
   const cuts = [];
@@ -17032,7 +17031,16 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
     lineNo = state.prevLineNo;
   }
   cuts.reverse();
+  return { cuts, widthForLine };
+}
 
+function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
+  if (!Array.isArray(words)) throw new TypeError('kp-linebreak: words must be an array');
+  if (typeof measure !== 'function') throw new TypeError('kp-linebreak: measure(text) is required');
+  const items = buildItems(words, measure);
+  const solution = solveBreaks(items, maxWidthPx, opts);
+  if (!solution.cuts) return greedyFallback(items, solution.widthForLine, measure, lineHeightPx);
+  const cuts = solution.cuts;
   const lines = [];
   for (let k = 0; k < cuts.length; k++) {
     const [a, b] = cuts[k];
@@ -17058,6 +17066,114 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
   }
   return lines;
 }
+/**
+ * Break an ordered sequence of already-measured atomic inline items with the
+ * same Knuth–Plass solver used by breakLines().
+ *
+ * Input is a stream of {kind:'text'|'image'|'anchor', widthPx, heightPx}
+ * atoms interleaved with explicit {kind:'glue', widthPx, stretchPx, shrinkPx}
+ * opportunities and optional {kind:'penalty', forbidden:true} constraints.
+ * Text atoms are indivisible words; whitespace is represented by glue. Any
+ * future item type can use the same measured-box contract without changing
+ * the optimizer.
+ *
+ * A layout that cannot fit an unbreakable item returns ok:false. Unlike the
+ * legacy word wrapper, this API never silently falls back to a second breaker.
+ */
+function breakInlineItems(inlineItems, maxWidthPx, lineHeightPx, opts = {}) {
+  if (!Array.isArray(inlineItems)) throw new TypeError('kp-linebreak: inlineItems must be an array');
+  if (!Number.isFinite(lineHeightPx) || lineHeightPx < 0) {
+    throw new RangeError('kp-linebreak: lineHeightPx must be finite and non-negative');
+  }
+  const measured = [];
+  let hasFinal = false;
+  for (let index = 0; index < inlineItems.length; index++) {
+    const item = inlineItems[index];
+    if (!item || typeof item !== 'object') {
+      throw new TypeError('kp-linebreak: invalid inline item at index ' + index);
+    }
+    if (item.kind === 'glue') {
+      const width = item.widthPx;
+      const stretch = item.stretchPx == null ? 0 : item.stretchPx;
+      const shrink = item.shrinkPx == null ? 0 : item.shrinkPx;
+      if (![width, stretch, shrink].every(Number.isFinite) || width < 0 || stretch < 0 || shrink < 0) {
+        throw new TypeError('kp-linebreak: glue geometry must be finite and non-negative');
+      }
+      measured.push({ kind: 'glue', width, stretch, shrink, internal: !!item.internal });
+      continue;
+    }
+    if (item.kind === 'penalty') {
+      const penalty = { kind: 'penalty', forbidden: !!item.forbidden, final: !!item.final };
+      measured.push(penalty);
+      hasFinal = hasFinal || penalty.final;
+      continue;
+    }
+    if (!['text', 'image', 'anchor'].includes(item.kind)) {
+      throw new TypeError('kp-linebreak: unsupported inline item kind at index ' + index);
+    }
+    const width = item.widthPx, height = item.heightPx == null ? 0 : item.heightPx;
+    if (!Number.isFinite(width) || width < 0 || !Number.isFinite(height) || height < 0) {
+      throw new TypeError('kp-linebreak: atom geometry must be finite and non-negative');
+    }
+    if (item.kind === 'text') {
+      if (typeof item.text !== 'string' || !item.text || /[ \t\n\r]/.test(item.text)) {
+        throw new TypeError('kp-linebreak: text atoms must be non-empty single break units; represent spaces as glue');
+      }
+    } else if (item.kind === 'image' && (typeof item.resourcePath !== 'string' || !item.resourcePath.trim())) {
+      throw new TypeError('kp-linebreak: image atoms require resourcePath');
+    } else if (item.kind === 'anchor' && item.id == null) {
+      throw new TypeError('kp-linebreak: anchor atoms require a stable id');
+    }
+    measured.push({
+      kind: 'box',
+      text: item.kind === 'text' ? item.text : undefined,
+      width,
+      height,
+      payload: { ...item, widthPx: width, heightPx: height }
+    });
+  }
+  if (!hasFinal) measured.push({ kind: 'penalty', final: true });
+  const solution = solveBreaks(measured, maxWidthPx, opts);
+  if (!solution.cuts) {
+    const maxAtomWidthPx = measured.reduce((max, item) => item.kind === 'box' ? Math.max(max, item.width) : max, 0);
+    return { ok: false, reason: 'no-valid-line-break', maxAtomWidthPx, lines: [] };
+  }
+
+  const lines = [];
+  for (let lineIndex = 0; lineIndex < solution.cuts.length; lineIndex++) {
+    const [start, end] = solution.cuts[lineIndex];
+    const slice = measured.slice(start, end);
+    const fragments = [];
+    let pendingGapPx = 0;
+    for (const item of slice) {
+      if (item.kind === 'glue') {
+        pendingGapPx += item.width;
+        continue;
+      }
+      if (item.kind !== 'box') continue;
+      if (fragments.length) fragments[fragments.length - 1].gapAfterPx += pendingGapPx;
+      fragments.push({
+        ...item.payload,
+        widthPx: item.width,
+        heightPx: item.height,
+        gapAfterPx: 0
+      });
+      pendingGapPx = 0;
+    }
+    const widthPx = slice.reduce((sum, item) =>
+      sum + (item.kind === 'box' || item.kind === 'glue' ? item.width : 0), 0);
+    const heightPx = Math.max(lineHeightPx, ...fragments.map(item => item.heightPx || 0));
+    lines.push({
+      fragments,
+      words: fragments.filter(item => item.kind === 'text').map(item => item.text),
+      widthPx,
+      heightPx,
+      isLast: lineIndex === solution.cuts.length - 1
+    });
+  }
+  return { ok: true, lines };
+}
+
 /**
  * מסלול גיבוי (כשה־DP לא מצא פתרון אפשרי, למשל מילה רחבה מהעמודה — אין מקף).
  * תיקון שורש (ביקורת 03.11, S13): בגיבוי חלים **אותם איסורי שבירה** כמו במסלול
@@ -17114,7 +17230,7 @@ function greedyFallback(items, widthForLine, measure, lineHeightPx) {
   return lines;
 }
 
-module.exports = { breakLines, badness, STRETCH_RATIO, SHRINK_RATIO };
+module.exports = { breakLines, breakInlineItems, badness, STRETCH_RATIO, SHRINK_RATIO };
 
 };
 __modules["src/engine/core/events.js"] = function (require, module, exports) {
