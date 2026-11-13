@@ -337,6 +337,7 @@ var __paths = {
   "src/engine/typography/measure-api.js|./measure-table": "src/engine/typography/measure-table.js",
   "src/engine/typography/measure-api.js|./font-metrics": "src/engine/typography/font-metrics.js",
   "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
+  "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
   "src/engine/layout/dp-planner.js|./page-templates": "src/engine/layout/page-templates.js",
   "src/engine/layout/dp-planner.js|../core/ledger": "src/engine/core/ledger.js",
   "src/engine/layout/dp-planner.js|./protections-matrix": "src/engine/layout/protections-matrix.js",
@@ -3138,6 +3139,23 @@ class MeasureAPI {
     return knuth.breakLines(words, maxWidthPx, measure, this.lineHeightPx(sizePt), opts);
   }
 
+  /**
+   * Layout already-measured mixed inline atoms through the shared Knuth–Plass
+   * solver. Text dimensions must originate from this MeasureAPI instance;
+   * image dimensions must come from the asset metadata resolver; custom item
+   * kinds use the same {kind,id,widthPx,heightPx} box contract.
+   *
+   * This is deliberately a measured-input API: the solver never measures,
+   * guesses image ratios, or dispatches to a per-kind line breaker.
+   */
+  layoutMeasuredInlineItems(items, maxWidthPx, lineHeightPx, opts = {}) {
+    if (!Number.isFinite(lineHeightPx) || lineHeightPx < 0) {
+      throw new RangeError('MeasureAPI.layoutMeasuredInlineItems: lineHeightPx must be finite and non-negative');
+    }
+    const knuth = require('./kp-linebreak');
+    return knuth.breakInlineItems(items, maxWidthPx, lineHeightPx, opts);
+  }
+
   cacheStats() { return { ...this.stats, hitRate: this.stats.calls ? this.stats.hits / this.stats.calls : 0 }; }
 }
 
@@ -3888,8 +3906,8 @@ function breakInlineItems(inlineItems, maxWidthPx, lineHeightPx, opts = {}) {
       hasFinal = hasFinal || penalty.final;
       continue;
     }
-    if (!['text', 'image', 'anchor'].includes(item.kind)) {
-      throw new TypeError('kp-linebreak: unsupported inline item kind at index ' + index);
+    if (typeof item.kind !== 'string' || !item.kind.trim()) {
+      throw new TypeError('kp-linebreak: every atom requires a non-empty kind');
     }
     const width = item.widthPx, height = item.heightPx == null ? 0 : item.heightPx;
     if (!Number.isFinite(width) || width < 0 || !Number.isFinite(height) || height < 0) {
@@ -3903,6 +3921,8 @@ function breakInlineItems(inlineItems, maxWidthPx, lineHeightPx, opts = {}) {
       throw new TypeError('kp-linebreak: image atoms require resourcePath');
     } else if (item.kind === 'anchor' && item.id == null) {
       throw new TypeError('kp-linebreak: anchor atoms require a stable id');
+    } else if (!['text', 'image', 'anchor'].includes(item.kind) && item.id == null) {
+      throw new TypeError('kp-linebreak: custom atoms require a stable id');
     }
     measured.push({
       kind: 'box',
