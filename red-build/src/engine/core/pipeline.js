@@ -688,6 +688,14 @@ function typeset(rawText, settingsIn, env = {}) {
           ln.tokenId = t.id;
           ln.part = currentPart;
           ln.sizePt = bodySizePt;
+          ln.richSignatureRequired = hasInlineImages || inlineContent.parts.some(part =>
+            part && part.kind === 'text' && (part.runs || []).some(run =>
+              run && run.kind === 'text' && (
+                (run.fontFamily && run.fontFamily !== settings['body-font']) ||
+                (run.sizePt != null && Number(run.sizePt) !== bodySizePt)
+              )
+            )
+          );
         }
         stampMeasureW(lines, colW);
         usedMeasuredInlineLayout = true;
