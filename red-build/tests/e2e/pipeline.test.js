@@ -86,6 +86,22 @@ describe('e2e-pipeline', () => {
     }
   });
 
+  it('external footnote anchors are measured as indivisible text atoms in the shared stream', () => {
+    const settings = { ...getDefaultSettings(), 'footnotes-enabled': true, 'notes-mode':'footnotes' };
+    const source = 'מילת עוגן [הערת שוליים קצרה] המשך הפסקה עם תוכן';
+    const result = typeset(source, settings);
+    assert(result.contentPreserved === true, 'body marker and footnote text are both accounted for');
+    const pageLines = result.pages.flatMap(page => page.columns.flat());
+    const footnote = result.pages.flatMap(page => page.footnotes || [])
+      .find(note => note && note.marker);
+    assert(footnote, 'external note is placed in the footnote model');
+    const anchor = pageLines.flatMap(line => line.fragments || [])
+      .find(fragment => fragment.kind === 'text' && fragment.text.includes(footnote.marker));
+    assert(anchor, 'the body marker survives as a measured text fragment');
+    assert(anchor.text.includes('\\u00A0'), 'the marker is nonbreakingly attached to its anchor word');
+    assert(anchor.text.includes(String.fromCharCode(0xE102)), 'the internal marker tag survives until renderer scrubbing');
+  });
+
   it('determinism: two runs yield identical layoutHash', () => {
     const s = getDefaultSettings();
     const a = typeset(FIXTURE, s);
