@@ -370,8 +370,17 @@ const gotoView = async () => {
     fs.writeFileSync(path.join(OUT, `${TAG}-determinism-raw.json`), detRaw, 'utf8');
     const det = JSON.parse(detRaw);
     const canonMain = {}, canonDet = {};
-    for (const p of (report.pages || [])) canonMain[p.i] = [p.t, (p.cols || []).map((c) => c.tops)];
-    for (const p of (det.pages || [])) canonDet[p.i] = [p.t, p.cols];
+    // Both collectors use page-relative tenths of a CSS pixel. The audit's
+    // compact columns store x once + y per line; the sweep stores [x,y] per
+    // line. Normalize to the same two-axis signature before comparing.
+    for (const p of (report.pages || [])) {
+      canonMain[p.i] = [p.t, (p.cols || []).map((c) =>
+        (c.tops || []).map((y) => [Math.round(c.x * 10), y]))];
+    }
+    for (const p of (det.pages || [])) {
+      canonDet[p.i] = [p.t, (p.cols || []).map((col) =>
+        (col || []).map((point) => [point[0], point[1]]))];
+    }
     const keys1 = Object.keys(canonMain).sort((a, b) => a - b);
     const keys2 = Object.keys(canonDet).sort((a, b) => a - b);
     const diffs = [];
