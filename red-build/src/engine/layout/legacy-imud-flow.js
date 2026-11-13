@@ -2700,8 +2700,7 @@ function legacyTypeset(rawText, settings, env) {
         pg.footnotes.push({ continuous: true, lines, centerLast: rest.length === 0, cutLast: midNoteCut });
       }
       if (rest.length) {
-        const started = new Set();
-        for (const tl of placed) for (const t of tl) started.add(t.noteIdx);
+        const started = collectStartedFootnoteIndices(placed);
         let curIdx = null, curTxt = [];
         const flushRest = () => {
           if (curIdx == null || !curTxt.length) return;
@@ -2720,7 +2719,7 @@ function legacyTypeset(rawText, settings, env) {
             // **S4.26:** סמנים ו-(המשך) אינם טקסט — המספר נשמר ב-num (והסמן
             // נוסף מחדש בעמוד הבא רק להערה שלא החלה); ההמשך מקבל '(המשך)'
             // מ-fnFlowFor בעמוד הבא לפי cont=true.
-            if (t.gap || t.mk || t.t === '(המשך)') continue;
+            if (!isFootnoteBodyToken(t)) continue;
             if (t.noteIdx !== curIdx) { flushRest(); curIdx = t.noteIdx; curTxt = []; }
             curTxt.push(t.t);
           }
@@ -2816,6 +2815,34 @@ function legacyTypeset(rawText, settings, env) {
    * מוצגים בגודל הרישום בתוך הזרם; המשך נפתח ב-'(המשך)' בלבד. מחזיר
    * שורות זרימה — כל שורה רשימת טוקנים {t, mk?, gap?, noteIdx} — מקור
    * יחיד לתקציב (fnReserveFor) ולפריסה (placeFootnoteArea). */
+  /**
+   * A note becomes "started on this page" only after visible note-body text
+   * has actually been placed. A separator gap, marker, or continuation label
+   * can fall at a page boundary before the note itself starts.
+   *
+   * The same predicate drives the body-first reservation floor and the
+   * continuous-flow carry decision, so those two decisions cannot disagree.
+   */
+  function isFootnoteBodyToken(token) {
+    return !!token
+      && Number.isInteger(token.noteIdx)
+      && !token.gap
+      && !token.mk
+      && token.t !== '(המשך)'
+      && typeof token.t === 'string'
+      && token.t.trim().length > 0;
+  }
+
+  function collectStartedFootnoteIndices(lines) {
+    const started = new Set();
+    for (const line of lines || []) {
+      for (const token of line || []) {
+        if (isFootnoteBodyToken(token)) started.add(token.noteIdx);
+      }
+    }
+    return started;
+  }
+
   function fnFlowFor(queue) {
     const items = fnItemsFor(queue);
     const spaceW = fnApi.measureTextWidth(' ', SZ.fnBody, 0);
@@ -2865,10 +2892,8 @@ function legacyTypeset(rawText, settings, env) {
       for (let i = 0; i < built.flowLines.length; i++) {
         for (const t of built.flowLines[i]) {
           if (t.noteIdx == null || seen.has(t.noteIdx)) continue;
-          // **S75:** "התחלה" = שורה עם מילה מגוף ההערה — לא שורת סמן בלבד
-          // (סמן ללא מילים הותיר "הערה ריקה" בעמוד הסמן; נמדר ב-very_long
-          // עמ' 562 — סמן יא. בלבד). סמן, רווח-כפול ותווית (המשך) אינם תוכן.
-          if (t.gap || t.mk || t.t === '(המשך)') continue;
+          // Same body-token rule as the page-break carry decision below.
+          if (!isFootnoteBodyToken(t)) continue;
           seen.add(t.noteIdx);
           const it = built.items[t.noteIdx];
           if (it && it.note && !it.note.cont) starts = i + 1;
@@ -3788,6 +3813,7 @@ function legacyLayoutHashDigest(pages) {
 module.exports = {
   GEO, SZ, HEADING_MODES, toGematria, stripEditorialNotes, parseMetadata,
   tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset,
+  collectStartedFootnoteIndices,
   FLOW_BOTTOM, SINGLE_W, wrapText, headingItemH, legacyLayoutHashDigest,
   countLegacySourceWords, parenCenterRaisePx
 };
