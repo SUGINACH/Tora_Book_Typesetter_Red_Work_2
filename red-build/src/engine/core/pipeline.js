@@ -26,6 +26,7 @@
 const { getDefaultSettings, derivePlacementFlags } = require('./settings-registry');
 const { lexDocument } = require('../parser/dfa-lexer');
 const { tokenize, contentHash, normalizeText } = require('../parser/block-tokenizer');
+const { inlineParagraphSourceText, inlineNoteSourceText, inlineRunsSourceText } = require('../parser/inline-content');
 const { scanBrackets } = require('../parser/bracket-scanner');
 const { MeasureAPI, resolveMeasureImpl, registeredFonts } = require('../typography/measure-api');
 const { protectWords } = require('../typography/protectors');
@@ -398,8 +399,15 @@ function typeset(rawText, settingsIn, env = {}) {
     // breaking the lines — the causal root of V23 (9 geometry changes from late application).
     // Word mapping: the words of the text parts (in order) correspond 1:1 to the words of the flattened
     // text from which flatBody was built — a shared running index (exact, no searches).
-    const textParts = t.parts.filter(p => p.kind === 'text');
-    const flatBody = textParts.map(p => p.value).join(' ');
+    // S14: inlineContent is the canonical source for paragraph text and note
+    // payloads. t.parts/t.notes remain on the token only as compatibility
+    // metadata for older consumers; measurement no longer rebuilds content
+    // from that parallel representation.
+    const inlineContent = t.inlineContent;
+    if (!inlineContent || !Array.isArray(inlineContent.parts) || !Array.isArray(inlineContent.notes)) {
+      throw new TypeError('pipeline: paragraph token is missing canonical inlineContent');
+    }
+    const flatBody = inlineParagraphSourceText(inlineContent);
     const parenSpans = parenScale !== 1 ? parenSpansOfFlat(flatBody) : [];
     const flatWordOffsets = [];
     {
@@ -469,9 +477,9 @@ function typeset(rawText, settingsIn, env = {}) {
     const customFactorById = new Map(csInlineSpans.map(s => [s.styleId, s.factor]));
     let csInfo = null; // **S11:** סגנון הבלוק שיוצמד לשורות ולבלוק (מדלג על ערכי איטרציות קודמות)
 
-    for (const p of t.parts) {
+    for (const p of inlineContent.parts) {
       if (p.kind === 'text') {
-        const src = normalizeText(p.value);
+        const src = normalizeText(inlineRunsSourceText(p.runs));
         for (const wordRaw of src.split(/\s+/).filter(Boolean)) {
           const info = flatWordOffsets[Math.min(flatWordIdx, flatWordOffsets.length - 1)];
           flatWordIdx++;
@@ -488,7 +496,7 @@ function typeset(rawText, settingsIn, env = {}) {
         }
       } else {
         // note-ref: uniform marker allocation (D-30/D-41) — policy numbering + style
-        const noteRaw = t.notes[p.noteIndex];
+        const noteRaw = inlineNoteSourceText(inlineContent, p.noteIndex, ATOMIC);
         const marker = markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
         assignedMarkers.add(marker);
         noteAssignments.push({ noteIndex: p.noteIndex, marker });
@@ -573,12 +581,32 @@ function typeset(rawText, settingsIn, env = {}) {
       // המונה מוצג בשורה הראשונה של הבלוק (הפס של full-width מטופל ברנדרר מהמידע על הפס)
       if (csInfo.counterMark && lines.length) lines[0].csCounterMark = csInfo.counterMark;
     }
+    const inlineImageFallbacks = inlineContent.parts.flatMap(part =>
+      part && part.kind === 'text'
+        ? (part.runs || []).filter(run => run.kind === 'image').map(run => ({
+          resourcePath: run.resourcePath,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd,
+          sourceText: run.sourceText || ''
+        }))
+        : []
+    );
     const blk = {
-      kind: 'paragraph', tokenId: t.id, parts: t.parts, notes, bodyMarkers, lines,
+      kind: 'paragraph', tokenId: t.id, parts: t.parts, inlineContent,
+      inlineImageFallbacks, notes, bodyMarkers, lines,
       unmatchedClosers: t.unmatchedClosers || [], part: currentPart, dh,
       noteAssignments, parenCharSpans: parenSpans, flatWordOffsets,
       customStyle: csInfo
     };
+    if (inlineImageFallbacks.length) {
+      // A dimensioned asset resolver and raster PDF embedding are not yet
+      // connected. Keep each original marker as visible text for now; never
+      // drop an ImageRun silently or invent its intrinsic dimensions.
+      eventLog.emit('parse', 'inline-image-preserved-pending-asset-resolution', {
+        tokenId: t.id,
+        images: inlineImageFallbacks.map(image => image.resourcePath)
+      }, null);
+    }
     if (blk.customStyle) {
       blk.fullWidth = blk.customStyle.layoutMode === 'full-width';
       blk.forcePageBreakBefore = blk.customStyle.layoutMode === 'new-location';
