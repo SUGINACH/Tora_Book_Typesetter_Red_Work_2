@@ -283,8 +283,8 @@ function breakInlineItems(inlineItems, maxWidthPx, lineHeightPx, opts = {}) {
       hasFinal = hasFinal || penalty.final;
       continue;
     }
-    if (!['text', 'image', 'anchor'].includes(item.kind)) {
-      throw new TypeError('kp-linebreak: unsupported inline item kind at index ' + index);
+    if (typeof item.kind !== 'string' || !item.kind.trim()) {
+      throw new TypeError('kp-linebreak: every atom requires a non-empty kind');
     }
     const width = item.widthPx, height = item.heightPx == null ? 0 : item.heightPx;
     if (!Number.isFinite(width) || width < 0 || !Number.isFinite(height) || height < 0) {
@@ -298,6 +298,8 @@ function breakInlineItems(inlineItems, maxWidthPx, lineHeightPx, opts = {}) {
       throw new TypeError('kp-linebreak: image atoms require resourcePath');
     } else if (item.kind === 'anchor' && item.id == null) {
       throw new TypeError('kp-linebreak: anchor atoms require a stable id');
+    } else if (!['text', 'image', 'anchor'].includes(item.kind) && item.id == null) {
+      throw new TypeError('kp-linebreak: custom atoms require a stable id');
     }
     measured.push({
       kind: 'box',
