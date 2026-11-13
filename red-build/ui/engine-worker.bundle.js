@@ -1,6 +1,6 @@
 // ui/engine-worker.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת ה־Worker (המנוע המלא — אין לטעון בחוט ה־UI)
-// מודולים: 66 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 68 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -294,6 +294,7 @@ function __resolve(from, name) {
 var __paths = {
   "src/ui/engine-worker-main.js|../engine/core/pipeline": "src/engine/core/pipeline.js",
   "src/ui/engine-worker-main.js|./worker-protocol": "src/ui/worker-protocol.js",
+  "src/ui/engine-worker-main.js|../engine/import/document-assets": "src/engine/import/document-assets.js",
   "src/ui/engine-worker-main.js|../engine/typography/measure-api": "src/engine/typography/measure-api.js",
   "src/ui/engine-worker-main.js|../engine/decoration/asset-registry": "src/engine/decoration/asset-registry.js",
   "src/ui/engine-worker-main.js|../engine/output/export-api": "src/engine/output/export-api.js",
@@ -301,6 +302,7 @@ var __paths = {
   "src/engine/core/pipeline.js|../parser/dfa-lexer": "src/engine/parser/dfa-lexer.js",
   "src/engine/core/pipeline.js|../parser/block-tokenizer": "src/engine/parser/block-tokenizer.js",
   "src/engine/core/pipeline.js|../parser/inline-content": "src/engine/parser/inline-content.js",
+  "src/engine/core/pipeline.js|../import/document-assets": "src/engine/import/document-assets.js",
   "src/engine/core/pipeline.js|../parser/bracket-scanner": "src/engine/parser/bracket-scanner.js",
   "src/engine/core/pipeline.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/core/pipeline.js|../typography/protectors": "src/engine/typography/protectors.js",
@@ -335,9 +337,11 @@ var __paths = {
   "src/engine/parser/block-tokenizer.js|./dfa-lexer": "src/engine/parser/dfa-lexer.js",
   "src/engine/parser/block-tokenizer.js|./bracket-scanner": "src/engine/parser/bracket-scanner.js",
   "src/engine/parser/block-tokenizer.js|./inline-content": "src/engine/parser/inline-content.js",
+  "src/engine/import/document-assets.js|./zip-reader": "src/engine/import/zip-reader.js",
   "src/engine/typography/measure-api.js|./measure-table": "src/engine/typography/measure-table.js",
   "src/engine/typography/measure-api.js|./font-metrics": "src/engine/typography/font-metrics.js",
   "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
+  "src/engine/typography/measure-api.js|../layout/inline-item-factory": "src/engine/layout/inline-item-factory.js",
   "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
   "src/engine/layout/dp-planner.js|./page-templates": "src/engine/layout/page-templates.js",
   "src/engine/layout/dp-planner.js|../core/ledger": "src/engine/core/ledger.js",
@@ -453,6 +457,7 @@ __modules["src/ui/engine-worker-main.js"] = function (require, module, exports) 
 
 const { typeset } = require('../engine/core/pipeline');
 const { serializeTypesetResult, validateRequest, progressMessage } = require('./worker-protocol');
+const { createInlineAssetResolver } = require('../engine/import/document-assets');
 
 let cancelledJobs = new Set();
 
@@ -514,6 +519,7 @@ function handleExportRequest(msg, post) {
 /** מטפל הודעות — pure, מקבל post חיצוני (מבודד לבדיקות). */
 function createEngineWorkerMain(post) {
   if (typeof post !== 'function') throw new Error('engine-worker-main: post(message) required');
+  const inlineAssetResolvers = new Map();
   return function onMessage(msg) {
     try {
       validateRequest(msg);
@@ -527,10 +533,34 @@ function createEngineWorkerMain(post) {
     }
     if (msg.type === 'register-font') { handleRegisterFont(msg, post); return; }
     if (msg.type === 'register-assets') { handleRegisterAssets(msg, post); return; }
+    if (msg.type === 'register-inline-assets') {
+      try {
+        const resolver = createInlineAssetResolver(msg.items);
+        inlineAssetResolvers.set(msg.collection, resolver);
+        post({
+          type: 'register-inline-assets-result', jobId: msg.jobId, collection: msg.collection,
+          ok: true, registered: resolver.count, diagnostics: resolver.diagnostics
+        });
+      } catch (e) {
+        post({
+          type: 'register-inline-assets-result', jobId: msg.jobId, collection: msg.collection,
+          ok: false, error: e && e.message ? e.message : String(e)
+        });
+      }
+      return;
+    }
     if (msg.type === 'export-request') { handleExportRequest(msg, post); return; }
     const jobId = msg.jobId;
     try {
+      const inlineAssetResolver = msg.assetCollection
+        ? inlineAssetResolvers.get(msg.assetCollection)
+        : null;
+      if (msg.assetCollection && !inlineAssetResolver) {
+        post({ type: 'typeset-error', jobId, message: `inline asset collection not registered: ${msg.assetCollection}` });
+        return;
+      }
       const result = typeset(msg.text, msg.settings, {
+        inlineAssetResolver,
         onProgress: (info) => {
           if (!cancelledJobs.has(jobId)) post(progressMessage(jobId, info));
         }
@@ -591,6 +621,7 @@ const { getDefaultSettings, derivePlacementFlags } = require('./settings-registr
 const { lexDocument } = require('../parser/dfa-lexer');
 const { tokenize, contentHash, normalizeText } = require('../parser/block-tokenizer');
 const { inlineParagraphSourceText, inlineNoteSourceText, inlineRunsSourceText } = require('../parser/inline-content');
+const { resolveInlineImageRun } = require('../import/document-assets');
 const { scanBrackets } = require('../parser/bracket-scanner');
 const { MeasureAPI, resolveMeasureImpl, registeredFonts } = require('../typography/measure-api');
 const { protectWords } = require('../typography/protectors');
@@ -763,7 +794,9 @@ function typeset(rawText, settingsIn, env = {}) {
   // בודקים את measure.impl ומדלגים על הפקטור ב-impl B.
   const measureWithImpl = (t, s) => api.measureTextWidth(t, s);
   measureWithImpl.impl = api.impl;
-  void env;
+  const inlineAssetResolver = env && env.inlineAssetResolver && typeof env.inlineAssetResolver.resolve === 'function'
+    ? env.inlineAssetResolver
+    : null;
 
   const FONT_WIDTH_PROFILES = {
     'Frank Ruhl Libre': null,
@@ -1038,6 +1071,35 @@ function typeset(rawText, settingsIn, env = {}) {
     const colW = (csBlock && csBlock.style.layoutMode === 'full-width')
       ? fullWidthWidth(settings)
       : columnWidthFor({ kind: 'paragraph' }, settings);
+    // Resolve image resources against this paragraph's actual flow-lane width.
+    // Geometry is recorded now; placement remains pending until inline fragments
+    // are carried through the DP planner and the shared Page Model.
+    const inlineImageRuns = inlineContent.parts.flatMap(part =>
+      part && part.kind === 'text' ? (part.runs || []).filter(run => run.kind === 'image') : []
+    );
+    const inlineImageMeasurements = inlineImageRuns.map(run => {
+      const base = {
+        resourcePath: run.resourcePath,
+        sourceStart: run.sourceStart,
+        sourceEnd: run.sourceEnd,
+        layoutPending: true
+      };
+      if (!inlineAssetResolver) return { ...base, resolved: false, code: 'INLINE_IMAGE_RESOLVER_MISSING' };
+      try {
+        const measured = resolveInlineImageRun(run, inlineAssetResolver, { localWidthPx: colW });
+        if (!measured.ok) return { ...base, resolved: false, code: measured.code };
+        const image = measured.image;
+        return {
+          ...base, resolved: true,
+          resourceId: image.resourceId, mimeType: image.mimeType,
+          intrinsicWidthPx: image.intrinsicWidthPx, intrinsicHeightPx: image.intrinsicHeightPx,
+          aspectRatio: image.aspectRatio, widthPx: image.widthPx, heightPx: image.heightPx,
+          align: image.align, widthPct: image.widthPct, scaledToFit: image.scaledToFit
+        };
+      } catch (error) {
+        return { ...base, resolved: false, code: 'INLINE_IMAGE_MEASUREMENT_INVALID', message: String(error && error.message || error) };
+      }
+    });
     const customFactorById = new Map(csInlineSpans.map(s => [s.styleId, s.factor]));
     let csInfo = null; // **S11:** סגנון הבלוק שיוצמד לשורות ולבלוק (מדלג על ערכי איטרציות קודמות)
 
@@ -1157,19 +1219,30 @@ function typeset(rawText, settingsIn, env = {}) {
     );
     const blk = {
       kind: 'paragraph', tokenId: t.id, parts: t.parts, inlineContent,
-      inlineImageFallbacks, notes, bodyMarkers, lines,
+      inlineImageFallbacks, inlineImageMeasurements, notes, bodyMarkers, lines,
       unmatchedClosers: t.unmatchedClosers || [], part: currentPart, dh,
       noteAssignments, parenCharSpans: parenSpans, flatWordOffsets,
       customStyle: csInfo
     };
-    if (inlineImageFallbacks.length) {
-      // A dimensioned asset resolver and raster PDF embedding are not yet
-      // connected. Keep each original marker as visible text for now; never
-      // drop an ImageRun silently or invent its intrinsic dimensions.
-      eventLog.emit('parse', 'inline-image-preserved-pending-asset-resolution', {
-        tokenId: t.id,
-        images: inlineImageFallbacks.map(image => image.resourcePath)
-      }, null);
+    if (inlineImageMeasurements.length) {
+      const resolvedImages = inlineImageMeasurements.filter(image => image.resolved);
+      const unresolvedImages = inlineImageMeasurements.filter(image => !image.resolved);
+      if (resolvedImages.length) {
+        eventLog.emit('measure', 'inline-image-resources-measured-awaiting-placement', {
+          tokenId: t.id, images: resolvedImages
+        }, null);
+      }
+      if (unresolvedImages.length) {
+        // Until line fragments and renderers consume ImageRuns, the source marker
+        // remains visible text. Missing resources are explicit, never guessed.
+        eventLog.emit('parse', 'inline-image-markers-retained-unresolved', {
+          tokenId: t.id, images: unresolvedImages
+        }, null);
+      } else {
+        eventLog.emit('parse', 'inline-image-markers-retained-pending-placement', {
+          tokenId: t.id, images: resolvedImages.map(image => image.resourcePath)
+        }, null);
+      }
     }
     if (blk.customStyle) {
       blk.fullWidth = blk.customStyle.layoutMode === 'full-width';
@@ -2990,6 +3063,622 @@ function parseInlineParagraph(parts = [], notes = [], options = {}) {
 module.exports = { parseInlineRuns, parseInlineParagraph, parseImagePayload, inlineRunsSourceText, inlineParagraphSourceText, inlineNoteSourceText };
 
 };
+__modules["src/engine/import/document-assets.js"] = function (require, module, exports) {
+// src/engine/import/document-assets.js — deterministic local document assets (S14.1)
+'use strict';
+
+const { readZip, utf8Decode, crc32 } = require('./zip-reader');
+
+const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+const JPEG_SOF = new Set([
+  0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7,
+  0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf
+]);
+
+function asBytes(value) {
+  if (value instanceof Uint8Array) return value;
+  if (value instanceof ArrayBuffer) return new Uint8Array(value);
+  if (ArrayBuffer.isView(value)) return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  return null;
+}
+
+/** Normalize a document-relative path without resolving it against the host filesystem. */
+function normalizeDocumentPath(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const raw = value.normalize('NFC').replace(/\\/g, '/');
+  if (
+    raw.startsWith('/') ||
+    raw.startsWith('//') ||
+    /^[a-z][a-z0-9+.-]*:/i.test(raw) ||
+    raw.includes('?') ||
+    raw.includes('#') ||
+    raw.includes('\0')
+  ) return null;
+  const segments = raw.split('/');
+  if (segments.some(part => !part || part === '.' || part === '..')) return null;
+  return segments.join('/');
+}
+
+function imageExtension(path) {
+  const match = String(path).match(/\.([^.\/]+)$/);
+  return match ? match[1].toLowerCase() : '';
+}
+
+function positiveDimensions(width, height) {
+  return Number.isInteger(width) && width > 0
+    && Number.isInteger(height) && height > 0
+    && width <= 100000 && height <= 100000;
+}
+
+/** Read intrinsic dimensions from PNG IHDR or a JPEG SOF marker. */
+function readImageDimensions(input, expectedFormat = null) {
+  const bytes = asBytes(input);
+  if (!bytes || bytes.length < 10) return { ok: false, code: 'image-data-invalid' };
+
+  if (bytes.length >= 8 && PNG_SIGNATURE.every((byte,index)=>bytes[index]===byte)) {
+    let offset=8, width=0, height=0, bitDepth=0, colorType=-1;
+    let sawHeader=false, sawData=false, sawEnd=false;
+    const allowedDepths = {
+      0:[1,2,4,8,16], 2:[8,16], 3:[1,2,4,8], 4:[8,16], 6:[8,16]
+    };
+    while (offset < bytes.length) {
+      if (offset + 12 > bytes.length) return { ok:false, code:'image-png-chunk-truncated' };
+      const length = ((bytes[offset]<<24)|(bytes[offset+1]<<16)|(bytes[offset+2]<<8)|bytes[offset+3])>>>0;
+      const typeStart=offset+4, dataStart=offset+8, dataEnd=dataStart+length, chunkEnd=dataEnd+4;
+      if (chunkEnd > bytes.length || dataEnd < dataStart) return { ok:false, code:'image-png-chunk-truncated' };
+      const type=String.fromCharCode(bytes[typeStart],bytes[typeStart+1],bytes[typeStart+2],bytes[typeStart+3]);
+      const expectedCrc=((bytes[dataEnd]<<24)|(bytes[dataEnd+1]<<16)|(bytes[dataEnd+2]<<8)|bytes[dataEnd+3])>>>0;
+      const actualCrc=crc32(bytes.subarray(typeStart,dataEnd));
+      if (actualCrc !== expectedCrc) return { ok:false, code:'image-png-crc-mismatch', chunk:type };
+
+      if (!sawHeader) {
+        if (type !== 'IHDR' || length !== 13) return { ok:false, code:'image-png-header-invalid' };
+        width=((bytes[dataStart]<<24)|(bytes[dataStart+1]<<16)|(bytes[dataStart+2]<<8)|bytes[dataStart+3])>>>0;
+        height=((bytes[dataStart+4]<<24)|(bytes[dataStart+5]<<16)|(bytes[dataStart+6]<<8)|bytes[dataStart+7])>>>0;
+        bitDepth=bytes[dataStart+8];
+        colorType=bytes[dataStart+9];
+        const compression=bytes[dataStart+10], filter=bytes[dataStart+11], interlace=bytes[dataStart+12];
+        if (!positiveDimensions(width,height) || width*height > 200000000) {
+          return { ok:false, code:'image-dimensions-invalid' };
+        }
+        if (!allowedDepths[colorType] || !allowedDepths[colorType].includes(bitDepth)
+          || compression!==0 || filter!==0 || (interlace!==0 && interlace!==1)) {
+          return { ok:false, code:'image-png-header-invalid' };
+        }
+        sawHeader=true;
+      } else if (type === 'IHDR') {
+        return { ok:false, code:'image-png-duplicate-header' };
+      }
+      if (type === 'IDAT') sawData=true;
+      if (type === 'IEND') {
+        if (length!==0 || !sawData) return { ok:false, code:'image-png-end-invalid' };
+        sawEnd=true;
+        offset=chunkEnd;
+        break;
+      }
+      offset=chunkEnd;
+    }
+    if (!sawHeader || !sawData || !sawEnd || offset!==bytes.length) {
+      return { ok:false, code:'image-png-structure-incomplete' };
+    }
+    if (expectedFormat && expectedFormat!=='png') return { ok:false, code:'image-format-mismatch' };
+    return { ok:true, format:'png', mimeType:'image/png', width, height, aspectRatio:width/height };
+  }
+
+  if (bytes[0]!==0xff || bytes[1]!==0xd8) return { ok:false, code:'image-format-unsupported' };
+  if (expectedFormat && expectedFormat!=='jpg' && expectedFormat!=='jpeg') {
+    return { ok:false, code:'image-format-mismatch' };
+  }
+  let offset=2, width=0, height=0, sawSof=false, sawScan=false, sawEoi=false;
+  while (offset < bytes.length) {
+    if (bytes[offset]!==0xff) {
+      if (!sawScan) return { ok:false, code:'image-jpeg-marker-invalid' };
+      offset++;
+      continue;
+    }
+    while (offset<bytes.length && bytes[offset]===0xff) offset++;
+    if (offset>=bytes.length) break;
+    const marker=bytes[offset++];
+    if (marker===0x00) {
+      if (!sawScan) return { ok:false, code:'image-jpeg-marker-invalid' };
+      continue;
+    }
+    if (marker===0xd9) { sawEoi=true; break; }
+    if (marker===0xd8 || marker===0x01 || (marker>=0xd0 && marker<=0xd7)) continue;
+    if (offset+2>bytes.length) return { ok:false, code:'image-jpeg-segment-truncated' };
+    const length=(bytes[offset]<<8)|bytes[offset+1];
+    if (length<2 || offset+length>bytes.length) return { ok:false, code:'image-jpeg-segment-invalid' };
+    if (JPEG_SOF.has(marker)) {
+      if (length<8) return { ok:false, code:'image-jpeg-sof-invalid' };
+      height=(bytes[offset+3]<<8)|bytes[offset+4];
+      width=(bytes[offset+5]<<8)|bytes[offset+6];
+      if (!positiveDimensions(width,height) || width*height>200000000) {
+        return { ok:false, code:'image-dimensions-invalid' };
+      }
+      sawSof=true;
+    }
+    if (marker===0xda) {
+      if (!sawSof) return { ok:false, code:'image-jpeg-sof-missing' };
+      sawScan=true;
+      // Entropy-coded scan: skip stuffed FF00 and restart markers; other markers
+      // terminate the scan and are parsed by the outer loop (including EOI).
+      offset += length;
+      continue;
+    }
+    offset += length;
+  }
+  if (!sawSof) return { ok:false, code:'image-jpeg-dimensions-not-found' };
+  if (!sawScan || !sawEoi) return { ok:false, code:'image-jpeg-structure-incomplete' };
+  if (expectedFormat && expectedFormat!=='jpg' && expectedFormat!=='jpeg') {
+    return { ok:false, code:'image-format-mismatch' };
+  }
+  return { ok:true, format:'jpeg', mimeType:'image/jpeg', width, height, aspectRatio:width/height };
+}
+
+/**
+ * Build a resolver from a ZIP entry sequence or a deterministic folder scan.
+ * Exact paths win; basename lookup uses first-seen order.
+ */
+function createInlineAssetResolver(entries = []) {
+  if (!Array.isArray(entries)) throw new TypeError('document-assets: entries must be an array');
+  const byPath = new Map();
+  const byBasename = new Map();
+  const assets = [];
+  const diagnostics = [];
+
+  for (let index = 0; index < entries.length; index++) {
+    const entry = entries[index] || {};
+    const path = normalizeDocumentPath(entry.path || entry.name || '');
+    if (!path) {
+      diagnostics.push({ code: 'INLINE_ASSET_PATH_INVALID', index, path: entry.path || entry.name || null });
+      continue;
+    }
+    const extension = imageExtension(path);
+    if (!['png', 'jpg', 'jpeg'].includes(extension)) {
+      diagnostics.push({ code: 'INLINE_ASSET_FORMAT_UNSUPPORTED', index, path });
+      continue;
+    }
+    const bytes = asBytes(entry.data != null ? entry.data : entry.bytes);
+    if (!bytes || !bytes.length) {
+      diagnostics.push({ code: 'INLINE_ASSET_DATA_MISSING', index, path });
+      continue;
+    }
+    const dimensions = readImageDimensions(bytes, extension);
+    if (!dimensions.ok) {
+      diagnostics.push({ code: 'INLINE_ASSET_INVALID', index, path, reason: dimensions.code });
+      continue;
+    }
+    const asset = {
+      id: 'inline-asset:' + index + ':' + path,
+      path,
+      basename: path.slice(path.lastIndexOf('/') + 1),
+      order: index,
+      bytes,
+      ...dimensions
+    };
+    if (!byPath.has(path)) byPath.set(path, asset);
+    else diagnostics.push({ code: 'INLINE_ASSET_DUPLICATE_PATH', index, path, keptOrder: byPath.get(path).order });
+    if (!byBasename.has(asset.basename)) byBasename.set(asset.basename, asset);
+    assets.push(asset);
+  }
+
+  function resolve(resourcePath) {
+    const normalized = normalizeDocumentPath(resourcePath);
+    if (!normalized) return { ok: false, code: 'INLINE_IMAGE_PATH_INVALID', resourcePath };
+    const asset = normalized.includes('/')
+      ? byPath.get(normalized)
+      : (byPath.get(normalized) || byBasename.get(normalized));
+    if (!asset) return { ok: false, code: 'INLINE_IMAGE_RESOURCE_MISSING', resourcePath: normalized };
+    return { ok: true, asset };
+  }
+
+  return { resolve, assets: assets.slice(), diagnostics: diagnostics.slice(), count: assets.length };
+}
+
+/** Resolve one ImageRun and calculate its box from the local flow-lane width. */
+function resolveInlineImageRun(run, resolver, options = {}) {
+  if (!run || run.kind !== 'image') throw new TypeError('document-assets: ImageRun required');
+  if (!resolver || typeof resolver.resolve !== 'function') {
+    return { ok: false, code: 'INLINE_IMAGE_RESOLVER_MISSING', resourcePath: run.resourcePath };
+  }
+  const result = resolver.resolve(run.resourcePath);
+  if (!result.ok) return result;
+
+  const widthPct = run.widthPct == null ? (options.defaultWidthPct == null ? 50 : options.defaultWidthPct) : run.widthPct;
+  const align = run.align || options.defaultAlign || 'center';
+  const localWidthPx = options.localWidthPx;
+  if (!Number.isFinite(localWidthPx) || localWidthPx <= 0) {
+    throw new RangeError('document-assets: localWidthPx must be positive and finite');
+  }
+  if (!Number.isInteger(widthPct) || widthPct < 1 || widthPct > 100) {
+    throw new RangeError('document-assets: widthPct must be an integer from 1 to 100');
+  }
+  if (!['left', 'center', 'right'].includes(align)) {
+    throw new RangeError('document-assets: align must be left, center or right');
+  }
+
+  const asset = result.asset;
+  let widthPx = localWidthPx * widthPct / 100;
+  let heightPx = widthPx / asset.aspectRatio;
+  let scaledToFit = false;
+  const maxHeightPx = options.maxHeightPx;
+  if (Number.isFinite(maxHeightPx) && maxHeightPx > 0 && heightPx > maxHeightPx) {
+    const scale = maxHeightPx / heightPx;
+    widthPx *= scale;
+    heightPx *= scale;
+    scaledToFit = true;
+  }
+  return {
+    ok: true,
+    image: {
+      kind: 'image',
+      id: asset.id,
+      resourceId: asset.id,
+      resourcePath: asset.path,
+      bytes: asset.bytes,
+      mimeType: asset.mimeType,
+      intrinsicWidthPx: asset.width,
+      intrinsicHeightPx: asset.height,
+      aspectRatio: asset.aspectRatio,
+      widthPct,
+      align,
+      widthPx,
+      heightPx,
+      scaledToFit,
+      sourceStart: run.sourceStart,
+      sourceEnd: run.sourceEnd,
+      sourceText: run.sourceText || ''
+    }
+  };
+}
+
+/** Read a ZIP document package: exactly one root-level TXT plus supported images. */
+function readDocumentZip(input) {
+  const bytes = asBytes(input);
+  if (!bytes) return { ok: false, error: 'zip-data-invalid', text: null, textPath: null, assets: [], denied: [] };
+  const archive = readZip(bytes);
+  if (!archive.ok) {
+    return { ok: false, error: archive.error, text: null, textPath: null, assets: [], denied: archive.denied || [] };
+  }
+  const rootTexts = archive.entries.filter(entry =>
+    !entry.name.includes('/') && /\.txt$/i.test(entry.name)
+  );
+  if (rootTexts.length !== 1) {
+    return {
+      ok: false,
+      error: rootTexts.length ? 'zip-ambiguous-root-text' : 'zip-root-text-missing',
+      text: null,
+      textPath: null,
+      assets: [],
+      denied: archive.denied
+    };
+  }
+  const textEntry = rootTexts[0];
+  const assetEntries = archive.entries
+    .filter(entry => entry !== textEntry && ['png', 'jpg', 'jpeg'].includes(imageExtension(entry.name)))
+    .map(entry => ({ path: entry.name, data: entry.data }));
+  const resolver = createInlineAssetResolver(assetEntries);
+  return {
+    ok: true,
+    text: utf8Decode(textEntry.data),
+    textPath: textEntry.name,
+    assets: assetEntries,
+    assetDiagnostics: resolver.diagnostics,
+    denied: archive.denied
+  };
+}
+
+module.exports = {
+  normalizeDocumentPath,
+  readImageDimensions,
+  createInlineAssetResolver,
+  resolveInlineImageRun,
+  readDocumentZip
+};
+
+};
+__modules["src/engine/import/zip-reader.js"] = function (require, module, exports) {
+// src/engine/import/zip-reader.js — קורא ZIP ללא תלות חיצונית (S11.1-3, DOCX import)
+'use strict';
+
+/**
+ * קורא ZIP מינימלי לייבוא DOCX: פורמט STORE(0) + DEFLATE(8).
+ * **סביבת-אגנוסטית (תיקון 03.11 — "Buffer is not defined" בדפדפן):** אין כל
+ * שימוש ב-Buffer/שיטותיו — Uint8Array טהור + פונקציות עזר פרטיות (u16le/u32le/
+ * utf8Decode). עובד זהה ב-Node (Buffer הוא sub-class של Uint8Array) ובדפדפן.
+ * node:zlib (מובנה, לא תלות חיצונית) משמש כשקיים; אחרת המנפח הטהור להלן.
+ * **אבטחה (S13 pass):**
+ *  - path traversal: שמות רשומות עם ../ או / אבסולוטי או בריחת תחילית — נדחים
+ *    ברשימה (denied) ולא נפתחים לעולם;
+ *  - החזרת רשומות מנורמלות בלבד (שמות יחסיים נקיים);
+ *  - אין eval; אין כתיבה לדיסק — הכל בזיכרון.
+ */
+
+// ---------- עזרי בתים ללא Buffer (זהה לפלט readUInt16LE/readUInt32LE) ----------
+function u16le(b, o) { return b[o] | (b[o + 1] << 8); }
+function u32le(b, o) { return (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0; }
+function u8sub(b, s, e) { return b.subarray ? b.subarray(s, e) : b.slice(s, e); }
+
+/** פענוח UTF-8 טהור (TextDecoder כשקיים — אחרת מימוש ידני; תואם Buffer.toString('utf8')). */
+function utf8Decode(bytes) {
+  if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf-8').decode(bytes);
+  let s = '';
+  for (let i = 0; i < bytes.length;) {
+    const c = bytes[i];
+    if (c < 0x80) { s += String.fromCharCode(c); i++; }
+    else if (c < 0xe0) { s += String.fromCharCode(((c & 0x1f) << 6) | (bytes[i + 1] & 0x3f)); i += 2; }
+    else if (c < 0xf0) { s += String.fromCharCode(((c & 0x0f) << 12) | ((bytes[i + 1] & 0x3f) << 6) | (bytes[i + 2] & 0x3f)); i += 3; }
+    else {
+      const cp = ((c & 0x07) << 18) | ((bytes[i + 1] & 0x3f) << 12) | ((bytes[i + 2] & 0x3f) << 6) | (bytes[i + 3] & 0x3f);
+      const off = cp - 0x10000;
+      s += String.fromCharCode(0xd800 + (off >> 10), 0xdc00 + (off & 0x3ff));
+      i += 4;
+    }
+  }
+  return s;
+}
+
+const zlib = (() => {
+  try { return require('zlib'); } catch (e) { return null; } // בדפדפן אין zlib — מנפח טהור
+})();
+
+// =====================================================================
+// מנפח raw-DEFLATE טהור (BTYPE 00/01/10) — גיבוי לסביבות בלי zlib (דפדפן).
+// אותו פלט כמו zlib.inflateRawSync; מבחן השקילות בבדיקות S11 (both-paths).
+// =====================================================================
+class BitReader {
+  constructor(buf, startByte) {
+    this.buf = buf; this.pos = startByte << 3; this.bit = 0; // מספרי ביט מוחלטים
+  }
+  read(count) {
+    let v = 0;
+    for (let i = 0; i < count; i++) {
+      const byteIdx = this.pos >> 3;
+      if (byteIdx >= this.buf.length) throw new Error('deflate: out-of-input');
+      const bit = (this.buf[byteIdx] >> (this.pos & 7)) & 1;
+      v |= bit << i;
+      this.pos++;
+    }
+    return v;
+  }
+  alignByte() { this.pos = (this.pos + 7) & ~7; }
+}
+
+function buildHuffman(lengths) {
+  // קודי canonical Huffman לפי טבלאות אורך (DEFLATE spec 3.2.2)
+  const maxLen = 15;
+  const counts = new Array(maxLen + 1).fill(0);
+  for (const l of lengths) counts[l]++;
+  counts[0] = 0;
+  const next = new Array(maxLen + 2).fill(0);
+  let code = 0;
+  for (let b = 1; b <= maxLen; b++) { code = (code + counts[b - 1]) << 1; next[b] = code; }
+  const map = new Map();
+  for (let sym = 0; sym < lengths.length; sym++) {
+    const l = lengths[sym];
+    if (l === 0) continue;
+    const c = next[l]++;
+    map.set((c << 4) | l, sym); // מפתח: code<<4|len — פענוח לפי סדר עולה
+  }
+  return { map, counts, lengths };
+}
+
+function decodeSymbol(br, huff) {
+  // קריאה ביט־ביט־ביט ובניית קוד — ללא טבלה הפוכה (פשוט ונכון; קלטים קטנים)
+  let code = 0, len = 0;
+  for (;;) {
+    code = (code << 1) | br.read(1);
+    len++;
+    if (len > 15) throw new Error('deflate: bad-code');
+    const sym = huff.map.get((code << 4) | len);
+    if (sym !== undefined) return sym;
+  }
+}
+
+const LEN_BASE = [3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258];
+const LEN_EXTRA = [0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
+const DIST_BASE = [1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577];
+const DIST_EXTRA = [0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
+
+function fixedLitHuff() {
+  const lengths = [];
+  for (let i = 0; i < 144; i++) lengths.push(8);
+  for (let i = 144; i < 256; i++) lengths.push(9);
+  for (let i = 256; i < 280; i++) lengths.push(7);
+  for (let i = 280; i < 288; i++) lengths.push(8);
+  return buildHuffman(lengths);
+}
+function fixedDistHuff() { return buildHuffman(new Array(30).fill(5)); }
+
+/** מנפח raw DEFLATE טהור. הפלט כולו במערך אחד עד הסוף (backref ≤32K תקין תמיד). @returns {Uint8Array} */
+function inflateRawPure(buf, startByte = 0, expectedSize = -1) {
+  const br = new BitReader(buf, startByte);
+  const out = [];
+  const pushByte = (b) => { out.push(b); };
+
+  for (;;) {
+    const final = br.read(1);
+    const btype = br.read(2);
+    if (btype === 0) {
+      br.alignByte();
+      const lenPos = br.pos >> 3;
+      if (lenPos + 4 > buf.length) throw new Error('deflate: stored-header-oob');
+      const len = buf[lenPos] | (buf[lenPos + 1] << 8);
+      const nlen = buf[lenPos + 2] | (buf[lenPos + 3] << 8);
+      if ((len ^ 0xFFFF) !== nlen) throw new Error('deflate: stored-nlen-mismatch');
+      const dataStart = lenPos + 4;
+      if (dataStart + len > buf.length) throw new Error('deflate: stored-oob');
+      for (let i = 0; i < len; i++) pushByte(buf[dataStart + i]);
+      br.pos = (dataStart + len) << 3;
+    } else if (btype === 1 || btype === 2) {
+      let litHuff, distHuff;
+      if (btype === 1) {
+        litHuff = fixedLitHuff(); distHuff = fixedDistHuff();
+      } else {
+        const hlit = br.read(5) + 257;
+        const hdist = br.read(5) + 1;
+        const hclen = br.read(4) + 4;
+        const ORDER = [16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
+        const clLengths = new Array(19).fill(0);
+        for (let i = 0; i < hclen; i++) clLengths[ORDER[i]] = br.read(3);
+        const clHuff = buildHuffman(clLengths);
+        const lengths = [];
+        let prev = 0;
+        const total = hlit + hdist;
+        while (lengths.length < total) {
+          const sym = decodeSymbol(br, clHuff);
+          if (sym < 16) { lengths.push(sym); prev = sym; }
+          else if (sym === 16) { const rep = 3 + br.read(2); for (let i = 0; i < rep && lengths.length < total; i++) lengths.push(prev); }
+          else if (sym === 17) { const rep = 3 + br.read(3); for (let i = 0; i < rep && lengths.length < total; i++) lengths.push(0); prev = 0; }
+          else { const rep = 11 + br.read(7); for (let i = 0; i < rep && lengths.length < total; i++) lengths.push(0); prev = 0; }
+        }
+        litHuff = buildHuffman(lengths.slice(0, hlit));
+        distHuff = buildHuffman(lengths.slice(hlit));
+      }
+      // פענוח סמלים (LZ77: backref עד 32K לאחור — תקין תמיד במערך היחיד)
+      for (;;) {
+        const sym = decodeSymbol(br, litHuff);
+        if (sym < 256) {
+          pushByte(sym);
+        } else if (sym === 256) {
+          break;
+        } else {
+          const li = sym - 257;
+          if (li >= LEN_BASE.length) throw new Error('deflate: bad-length-symbol');
+          const len = LEN_BASE[li] + (LEN_EXTRA[li] ? br.read(LEN_EXTRA[li]) : 0);
+          const dsym = decodeSymbol(br, distHuff);
+          if (dsym >= DIST_BASE.length) throw new Error('deflate: bad-dist-symbol');
+          const dist = DIST_BASE[dsym] + (DIST_EXTRA[dsym] ? br.read(DIST_EXTRA[dsym]) : 0);
+          if (dist > out.length) throw new Error('deflate: dist-too-far');
+          const srcPos = out.length - dist;
+          for (let i = 0; i < len; i++) pushByte(out[srcPos + i]);
+        }
+      }
+    } else {
+      throw new Error('deflate: bad-btype');
+    }
+    if (final) break;
+    if (expectedSize >= 0 && out.length >= expectedSize) break;
+  }
+  return Uint8Array.from(out);
+}
+
+/** מנפח: zlib אם קיים (Node), אחרת המנפח הטהור (דפדפן). @returns {Uint8Array} */
+function inflateRaw(data) {
+  if (zlib) {
+    const out = zlib.inflateRawSync(data); // Node: מחזיר Buffer (Uint8Array) — זהה פונקציונלית
+    return out;
+  }
+  return inflateRawPure(data, 0, -1);
+}
+
+/** CRC32 של ZIP — לאימות שלמות רשומות (optional check; לא חוסם). */
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(buf) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+/** נורמליזציה + מדיניות שמות: רק נתיבים יחסיים פנימיים. */
+function safeName(raw) {
+  const name = String(raw || '').replace(/\\/g, '/');
+  if (!name || name.endsWith('/')) return null;      // תיקייה
+  if (name.startsWith('/')) return null;              // אבסולוטי
+  const parts = name.split('/');
+  if (parts.some(p => p === '..')) return null;       // traversal
+  if (/^[a-zA-Z]:/.test(name)) return null;           // כונן
+  if (/[<>:"|?*\u0000]/.test(name)) return null;      // תווים אסורים
+  return name;
+}
+
+/**
+ * פתיחת ארכיון ZIP מזיכרון — **ללא Buffer** (דפדפן ו-Node כאחד; תיקון 03.11).
+ * @param {Buffer|Uint8Array} bytes
+ * @returns {{ok:boolean, entries:Array<{name:string, data:Uint8Array, method:number, size:number}>, denied:Array<string>, error:string|null}}
+ */
+function readZip(bytes) {
+  const buf = bytes; // Buffer (Node) הוא Uint8Array — אינדוקסציה זהה; שום דבר לא נדרש כאן
+  const denied = [];
+  const entries = [];
+  // מציאת EOCD (End Of Central Directory) — מהסוף, חתימה 0x06054b50
+  let eocd = -1;
+  const minLen = 22;
+  for (let i = buf.length - minLen; i >= Math.max(0, buf.length - minLen - 65536); i--) {
+    if (u32le(buf, i) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) return { ok: false, entries: [], denied: [], error: 'not-a-zip' };
+  const totalEntries = u16le(buf, eocd + 10);
+  const cdOffset = u32le(buf, eocd + 16);
+
+  let p = cdOffset;
+  for (let n = 0; n < totalEntries; n++) {
+    if (p + 46 > buf.length || u32le(buf, p) !== 0x02014b50) {
+      return { ok: false, entries, denied, error: `bad-central-directory@${n}` };
+    }
+    const method = u16le(buf, p + 10);
+    const compSize = u32le(buf, p + 20);
+    const nameLen = u16le(buf, p + 28);
+    const extraLen = u16le(buf, p + 30);
+    const commentLen = u16le(buf, p + 32);
+    const localOffset = u32le(buf, p + 42);
+    const rawName = utf8Decode(u8sub(buf, p + 46, p + 46 + nameLen));
+    const name = safeName(rawName);
+    if (name == null) { denied.push(rawName); p += 46 + nameLen + extraLen + commentLen; continue; }
+
+    // קריאת ה-local header והנתונים
+    if (localOffset + 30 > buf.length || u32le(buf, localOffset) !== 0x04034b50) {
+      return { ok: false, entries, denied, error: `bad-local-header:${name}` };
+    }
+    const lhNameLen = u16le(buf, localOffset + 26);
+    const lhExtraLen = u16le(buf, localOffset + 28);
+    const dataStart = localOffset + 30 + lhNameLen + lhExtraLen;
+    // **S6.0 (R9 — קריאה קטועה בשקט):** compSize עלול לחרוג מהקובץ
+    // (ZIP קטוע/פגום) — subarray קוצץ בשקט והרשומה הוחזרה חלקית כתקינה.
+    if (dataStart + compSize > buf.length) {
+      return { ok: false, entries, denied, error: `truncated-entry:${name}` };
+    }
+    const raw = u8sub(buf, dataStart, dataStart + compSize);
+    let data;
+    try {
+      if (method === 0) data = Uint8Array.from(raw);
+      else if (method === 8) data = inflateRaw(raw);
+      else return { ok: false, entries, denied, error: `unsupported-method:${method}:${name}` };
+    } catch (e) {
+      return { ok: false, entries, denied, error: `inflate-failed:${name}` };
+    }
+    // **S6.0 (R9 — פצצת ZIP):** תקרת פריסה לרשומה (64MB) — מנע הקפאת
+    // לשונית של 42KB→4GB; ו-CRC מהמדריך המרכזי נשמר לאימות (verifyCrc
+    // היה מת — storedCrc מעולם לא אוכלס).
+    if (data.length > 64 * 1024 * 1024) {
+      return { ok: false, entries, denied, error: `entry-too-large:${name}` };
+    }
+    const entry = { name, data, method, size: data.length, storedCrc: u32le(buf, p + 16) };
+    if (crc32(entry.data) !== entry.storedCrc) {
+      return { ok: false, entries, denied, error: `crc-mismatch:${name}` };
+    }
+    entries.push(entry);
+    p += 46 + nameLen + extraLen + commentLen;
+  }
+  return { ok: true, entries, denied, error: null };
+}
+
+/** אימות CRC של רשומה (best-effort; מחזיר בוליאני). */
+function verifyCrc(entry) {
+  return crc32(entry.data) === entry.storedCrc;
+}
+
+module.exports = { readZip, safeName, crc32, verifyCrc, inflateRaw, inflateRawPure, utf8Decode };
+
+};
 __modules["src/engine/typography/measure-api.js"] = function (require, module, exports) {
 // src/engine/typography/measure-api.js — Measurement single entry (REQ-LB-01) + Hebrew glyph-width metrics
 'use strict';
@@ -3200,6 +3889,32 @@ class MeasureAPI {
     const knuth = require('./kp-linebreak');
     const measure = measureOverride || ((t) => this.measureTextWidth(t, sizePt));
     return knuth.breakLines(words, maxWidthPx, measure, this.lineHeightPx(sizePt), opts);
+  }
+
+  /**
+   * Parse canonical inline runs, measure every text segment in its effective
+   * registered family, resolve image boxes, then feed the shared atom solver.
+   * The returned fragments preserve sub-word font boundaries.
+   */
+  layoutInlineRuns(runs, maxWidthPx, opts = {}) {
+    const { createMeasuredInlineItems } = require('../layout/inline-item-factory');
+    const sizePt = opts.sizePt == null ? null : opts.sizePt;
+    const lineHeightPx = opts.lineHeightPx == null ? this.lineHeightPx(sizePt) : opts.lineHeightPx;
+    const measured = createMeasuredInlineItems(runs, {
+      ...opts,
+      sizePt,
+      lineHeightPx,
+      defaultFontFamily: opts.defaultFontFamily || this.settings['body-font'],
+      measureText: (text, family, size) => {
+        const familyApi = family ? MeasureAPI.forFamily(family, this.settings) : null;
+        if (family && !familyApi) {
+          throw new Error('MeasureAPI.layoutInlineRuns: font family is not registered: ' + family);
+        }
+        return (familyApi || this).measureTextWidth(text, size);
+      }
+    });
+    const layout = this.layoutMeasuredInlineItems(measured.items, maxWidthPx, lineHeightPx, opts);
+    return { ...layout, diagnostics: measured.diagnostics };
   }
 
   /**
@@ -4094,6 +4809,213 @@ function greedyFallback(items, widthForLine, measure, lineHeightPx) {
 }
 
 module.exports = { breakLines, breakInlineItems, badness, STRETCH_RATIO, SHRINK_RATIO };
+
+};
+__modules["src/engine/layout/inline-item-factory.js"] = function (require, module, exports) {
+// src/engine/layout/inline-item-factory.js — canonical AST → measured inline atoms (S14 P0)
+'use strict';
+
+const DEFAULT_GLUE_STRETCH = 0.6;
+const DEFAULT_GLUE_SHRINK = 0.5;
+
+function finiteNonNegative(value, label) {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new RangeError('inline-item-factory: ' + label + ' must be finite and non-negative');
+  }
+  return value;
+}
+
+/**
+ * Convert canonical parser runs to the measured item contract used by the
+ * shared line solver. A word may contain multiple font-family segments; it
+ * remains one unbreakable text atom while its segments retain independent
+ * measurement and rendering metadata.
+ *
+ * options:
+ *   measureText(text, fontFamily, sizePt) -> widthPx
+ *   resolveImage(ImageRun, options) -> {ok:true,image} | {ok:false,code}
+ *   defaultFontFamily, sizePt, lineHeightPx, glueStretchRatio, glueShrinkRatio
+ */
+function createMeasuredInlineItems(runs, options = {}) {
+  if (!Array.isArray(runs)) throw new TypeError('inline-item-factory: runs must be an array');
+  if (typeof options.measureText !== 'function') {
+    throw new TypeError('inline-item-factory: measureText(text, fontFamily, sizePt) is required');
+  }
+
+  const sizePt = options.sizePt == null ? null : finiteNonNegative(options.sizePt, 'sizePt');
+  const lineHeightPx = options.lineHeightPx == null ? 0 : finiteNonNegative(options.lineHeightPx, 'lineHeightPx');
+  const stretchRatio = options.glueStretchRatio == null ? DEFAULT_GLUE_STRETCH : finiteNonNegative(options.glueStretchRatio, 'glueStretchRatio');
+  const shrinkRatio = options.glueShrinkRatio == null ? DEFAULT_GLUE_SHRINK : finiteNonNegative(options.glueShrinkRatio, 'glueShrinkRatio');
+  const defaultFontFamily = options.defaultFontFamily || null;
+  const items = [];
+  const diagnostics = [];
+  let wordSegments = [];
+
+  function effectiveFamily(run) {
+    return run && run.fontFamily ? String(run.fontFamily) : defaultFontFamily;
+  }
+
+  function measure(text, family) {
+    const width = options.measureText(String(text), family || null, sizePt);
+    return finiteNonNegative(width, 'measured text width');
+  }
+
+  function flushWord() {
+    if (!wordSegments.length) return;
+    const text = wordSegments.map(segment => segment.text).join('');
+    const widthPx = wordSegments.reduce((sum, segment) => sum + segment.widthPx, 0);
+    const segments = wordSegments.map(segment => ({ ...segment }));
+    const sourceStarts = segments.map(segment => segment.sourceStart).filter(Number.isFinite);
+    const sourceEnds = segments.map(segment => segment.sourceEnd).filter(Number.isFinite);
+    const item = {
+      kind: 'text',
+      text,
+      widthPx,
+      heightPx: lineHeightPx,
+      segments,
+      ...(segments.length === 1 ? { fontFamily: segments[0].fontFamily || null } : {}),
+      ...(sourceStarts.length ? { sourceStart: Math.min(...sourceStarts) } : {}),
+      ...(sourceEnds.length ? { sourceEnd: Math.max(...sourceEnds) } : {})
+    };
+    items.push(item);
+    wordSegments = [];
+  }
+
+  function appendGlue(run, sourceStart, sourceEnd) {
+    flushWord();
+    // Normalize a whitespace run to one break-space, matching the paragraph
+    // tokenizer/line-breaker contract. Never leave leading or duplicate glue.
+    const prior = items[items.length - 1];
+    if (!prior || prior.kind === 'glue') {
+      if (prior && prior.kind === 'glue') {
+        prior.sourceEnd = Number.isFinite(sourceEnd) ? sourceEnd : prior.sourceEnd;
+      }
+      return;
+    }
+    const family = effectiveFamily(run);
+    const widthPx = measure(' ', family);
+    items.push({
+      kind: 'glue',
+      widthPx,
+      stretchPx: widthPx * stretchRatio,
+      shrinkPx: widthPx * shrinkRatio,
+      fontFamily: family,
+      ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+      ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+    });
+  }
+
+  for (const run of runs) {
+    if (!run || typeof run !== 'object') {
+      throw new TypeError('inline-item-factory: every run must be an object');
+    }
+
+    if (run.kind === 'text') {
+      const value = String(run.text == null ? '' : run.text);
+      const family = effectiveFamily(run);
+      const matcher = /\s+|\S+/gu;
+      let match;
+      while ((match = matcher.exec(value))) {
+        const token = match[0];
+        const sourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart + match.index : undefined;
+        const sourceEnd = Number.isFinite(run.sourceStart) ? sourceStart + token.length : undefined;
+        if (/^\s+$/u.test(token)) {
+          appendGlue(run, sourceStart, sourceEnd);
+          continue;
+        }
+        const widthPx = measure(token, family);
+        const previous = wordSegments[wordSegments.length - 1];
+        // Adjacent parser runs can split a single lexical word at a font
+        // marker. Keep that word atomic, but preserve each measured segment.
+        if (previous && previous.sourceEnd != null && sourceStart != null && previous.sourceEnd !== sourceStart) {
+          flushWord();
+        }
+        wordSegments.push({
+          text: token,
+          fontFamily: family,
+          widthPx,
+          ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+          ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+        });
+      }
+      continue;
+    }
+
+    if (run.kind === 'image') {
+      flushWord();
+      if (typeof options.resolveImage !== 'function') {
+        diagnostics.push({
+          code: 'INLINE_IMAGE_RESOLVER_MISSING',
+          resourcePath: run.resourcePath || null,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd
+        });
+        continue;
+      }
+      const resolved = options.resolveImage(run, options);
+      if (!resolved || resolved.ok !== true || !resolved.image) {
+        diagnostics.push({
+          code: (resolved && resolved.code) || 'INLINE_IMAGE_RESOURCE_MISSING',
+          resourcePath: run.resourcePath || null,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd
+        });
+        continue;
+      }
+      const image = resolved.image;
+      const widthPx = finiteNonNegative(image.widthPx, 'image width');
+      const heightPx = finiteNonNegative(image.heightPx, 'image height');
+      if (widthPx <= 0 || heightPx <= 0) {
+        diagnostics.push({
+          code: 'INLINE_IMAGE_DIMENSIONS_INVALID',
+          resourcePath: run.resourcePath || image.resourcePath || null,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd
+        });
+        continue;
+      }
+      items.push({
+        ...image,
+        kind: 'image',
+        widthPx,
+        heightPx,
+        sourceStart: Number.isFinite(run.sourceStart) ? run.sourceStart : image.sourceStart,
+        sourceEnd: Number.isFinite(run.sourceEnd) ? run.sourceEnd : image.sourceEnd
+      });
+      continue;
+    }
+
+    if (run.kind === 'anchor') {
+      flushWord();
+      items.push({
+        ...run,
+        kind: 'anchor',
+        widthPx: run.widthPx == null ? 0 : finiteNonNegative(run.widthPx, 'anchor width'),
+        heightPx: run.heightPx == null ? 0 : finiteNonNegative(run.heightPx, 'anchor height')
+      });
+      continue;
+    }
+
+    // Future page-item kinds use the same measured box contract. The solver
+    // and projector do not need a new branch for each new item type.
+    flushWord();
+    if (typeof run.kind !== 'string' || !run.kind.trim() || run.id == null) {
+      throw new TypeError('inline-item-factory: custom item kinds require kind and stable id');
+    }
+    items.push({
+      ...run,
+      widthPx: finiteNonNegative(run.widthPx, 'custom item width'),
+      heightPx: finiteNonNegative(run.heightPx, 'custom item height')
+    });
+  }
+
+  flushWord();
+  while (items.length && items[items.length - 1].kind === 'glue') items.pop();
+
+  return { items, diagnostics };
+}
+
+module.exports = { createMeasuredInlineItems };
 
 };
 __modules["src/engine/typography/protectors.js"] = function (require, module, exports) {
@@ -13818,6 +14740,9 @@ function validateRequest(msg) {
     if (typeof msg.jobId !== 'string' || !msg.jobId) throw new Error('protocol: jobId required');
     if (typeof msg.text !== 'string') throw new Error('protocol: text must be string');
     if (!msg.settings || typeof msg.settings !== 'object') throw new Error('protocol: settings required');
+    if (msg.assetCollection != null && (typeof msg.assetCollection !== 'string' || !msg.assetCollection.trim())) {
+      throw new Error('protocol: assetCollection must be a non-empty string');
+    }
     return true;
   }
   if (msg.type === 'cancel') {
@@ -13838,6 +14763,21 @@ function validateRequest(msg) {
     if (typeof msg.jobId !== 'string' || !msg.jobId) throw new Error('protocol: jobId required');
     if (typeof msg.collection !== 'string' || !msg.collection) throw new Error('protocol: collection required');
     if (!Array.isArray(msg.items)) throw new Error('protocol: items array required');
+    return true;
+  }
+  // מסמכי מקור עם משאבי inline — נפרד מאוסף ה-SVG של העיטורים.
+  if (msg.type === 'register-inline-assets') {
+    if (typeof msg.jobId !== 'string' || !msg.jobId) throw new Error('protocol: jobId required');
+    if (typeof msg.collection !== 'string' || !msg.collection.trim()) throw new Error('protocol: collection required');
+    if (!Array.isArray(msg.items)) throw new Error('protocol: inline asset items array required');
+    for (let index = 0; index < msg.items.length; index++) {
+      const item = msg.items[index];
+      const bytes = item && (item.data != null ? item.data : item.bytes);
+      if (!item || typeof item.path !== 'string' || !item.path
+        || !(bytes instanceof ArrayBuffer) && !(ArrayBuffer.isView(bytes) && bytes.byteLength > 0)) {
+        throw new Error(`protocol: inline asset item ${index} requires path and non-empty bytes`);
+      }
+    }
     return true;
   }
   // **03.11 (v1.1):** בקשת ייצוא PDF/ZIP — רץ ב־Worker (המנוע המלא + שימת Buffer בדפדפן)
@@ -17409,308 +18349,6 @@ function escapeHtml(s) {
 }
 
 module.exports = { buildStandaloneHtml, assertOfflineSafe, BASE_CSS };
-
-};
-__modules["src/engine/import/zip-reader.js"] = function (require, module, exports) {
-// src/engine/import/zip-reader.js — קורא ZIP ללא תלות חיצונית (S11.1-3, DOCX import)
-'use strict';
-
-/**
- * קורא ZIP מינימלי לייבוא DOCX: פורמט STORE(0) + DEFLATE(8).
- * **סביבת-אגנוסטית (תיקון 03.11 — "Buffer is not defined" בדפדפן):** אין כל
- * שימוש ב-Buffer/שיטותיו — Uint8Array טהור + פונקציות עזר פרטיות (u16le/u32le/
- * utf8Decode). עובד זהה ב-Node (Buffer הוא sub-class של Uint8Array) ובדפדפן.
- * node:zlib (מובנה, לא תלות חיצונית) משמש כשקיים; אחרת המנפח הטהור להלן.
- * **אבטחה (S13 pass):**
- *  - path traversal: שמות רשומות עם ../ או / אבסולוטי או בריחת תחילית — נדחים
- *    ברשימה (denied) ולא נפתחים לעולם;
- *  - החזרת רשומות מנורמלות בלבד (שמות יחסיים נקיים);
- *  - אין eval; אין כתיבה לדיסק — הכל בזיכרון.
- */
-
-// ---------- עזרי בתים ללא Buffer (זהה לפלט readUInt16LE/readUInt32LE) ----------
-function u16le(b, o) { return b[o] | (b[o + 1] << 8); }
-function u32le(b, o) { return (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0; }
-function u8sub(b, s, e) { return b.subarray ? b.subarray(s, e) : b.slice(s, e); }
-
-/** פענוח UTF-8 טהור (TextDecoder כשקיים — אחרת מימוש ידני; תואם Buffer.toString('utf8')). */
-function utf8Decode(bytes) {
-  if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf-8').decode(bytes);
-  let s = '';
-  for (let i = 0; i < bytes.length;) {
-    const c = bytes[i];
-    if (c < 0x80) { s += String.fromCharCode(c); i++; }
-    else if (c < 0xe0) { s += String.fromCharCode(((c & 0x1f) << 6) | (bytes[i + 1] & 0x3f)); i += 2; }
-    else if (c < 0xf0) { s += String.fromCharCode(((c & 0x0f) << 12) | ((bytes[i + 1] & 0x3f) << 6) | (bytes[i + 2] & 0x3f)); i += 3; }
-    else {
-      const cp = ((c & 0x07) << 18) | ((bytes[i + 1] & 0x3f) << 12) | ((bytes[i + 2] & 0x3f) << 6) | (bytes[i + 3] & 0x3f);
-      const off = cp - 0x10000;
-      s += String.fromCharCode(0xd800 + (off >> 10), 0xdc00 + (off & 0x3ff));
-      i += 4;
-    }
-  }
-  return s;
-}
-
-const zlib = (() => {
-  try { return require('zlib'); } catch (e) { return null; } // בדפדפן אין zlib — מנפח טהור
-})();
-
-// =====================================================================
-// מנפח raw-DEFLATE טהור (BTYPE 00/01/10) — גיבוי לסביבות בלי zlib (דפדפן).
-// אותו פלט כמו zlib.inflateRawSync; מבחן השקילות בבדיקות S11 (both-paths).
-// =====================================================================
-class BitReader {
-  constructor(buf, startByte) {
-    this.buf = buf; this.pos = startByte << 3; this.bit = 0; // מספרי ביט מוחלטים
-  }
-  read(count) {
-    let v = 0;
-    for (let i = 0; i < count; i++) {
-      const byteIdx = this.pos >> 3;
-      if (byteIdx >= this.buf.length) throw new Error('deflate: out-of-input');
-      const bit = (this.buf[byteIdx] >> (this.pos & 7)) & 1;
-      v |= bit << i;
-      this.pos++;
-    }
-    return v;
-  }
-  alignByte() { this.pos = (this.pos + 7) & ~7; }
-}
-
-function buildHuffman(lengths) {
-  // קודי canonical Huffman לפי טבלאות אורך (DEFLATE spec 3.2.2)
-  const maxLen = 15;
-  const counts = new Array(maxLen + 1).fill(0);
-  for (const l of lengths) counts[l]++;
-  counts[0] = 0;
-  const next = new Array(maxLen + 2).fill(0);
-  let code = 0;
-  for (let b = 1; b <= maxLen; b++) { code = (code + counts[b - 1]) << 1; next[b] = code; }
-  const map = new Map();
-  for (let sym = 0; sym < lengths.length; sym++) {
-    const l = lengths[sym];
-    if (l === 0) continue;
-    const c = next[l]++;
-    map.set((c << 4) | l, sym); // מפתח: code<<4|len — פענוח לפי סדר עולה
-  }
-  return { map, counts, lengths };
-}
-
-function decodeSymbol(br, huff) {
-  // קריאה ביט־ביט־ביט ובניית קוד — ללא טבלה הפוכה (פשוט ונכון; קלטים קטנים)
-  let code = 0, len = 0;
-  for (;;) {
-    code = (code << 1) | br.read(1);
-    len++;
-    if (len > 15) throw new Error('deflate: bad-code');
-    const sym = huff.map.get((code << 4) | len);
-    if (sym !== undefined) return sym;
-  }
-}
-
-const LEN_BASE = [3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258];
-const LEN_EXTRA = [0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
-const DIST_BASE = [1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577];
-const DIST_EXTRA = [0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
-
-function fixedLitHuff() {
-  const lengths = [];
-  for (let i = 0; i < 144; i++) lengths.push(8);
-  for (let i = 144; i < 256; i++) lengths.push(9);
-  for (let i = 256; i < 280; i++) lengths.push(7);
-  for (let i = 280; i < 288; i++) lengths.push(8);
-  return buildHuffman(lengths);
-}
-function fixedDistHuff() { return buildHuffman(new Array(30).fill(5)); }
-
-/** מנפח raw DEFLATE טהור. הפלט כולו במערך אחד עד הסוף (backref ≤32K תקין תמיד). @returns {Uint8Array} */
-function inflateRawPure(buf, startByte = 0, expectedSize = -1) {
-  const br = new BitReader(buf, startByte);
-  const out = [];
-  const pushByte = (b) => { out.push(b); };
-
-  for (;;) {
-    const final = br.read(1);
-    const btype = br.read(2);
-    if (btype === 0) {
-      br.alignByte();
-      const lenPos = br.pos >> 3;
-      if (lenPos + 4 > buf.length) throw new Error('deflate: stored-header-oob');
-      const len = buf[lenPos] | (buf[lenPos + 1] << 8);
-      const nlen = buf[lenPos + 2] | (buf[lenPos + 3] << 8);
-      if ((len ^ 0xFFFF) !== nlen) throw new Error('deflate: stored-nlen-mismatch');
-      const dataStart = lenPos + 4;
-      if (dataStart + len > buf.length) throw new Error('deflate: stored-oob');
-      for (let i = 0; i < len; i++) pushByte(buf[dataStart + i]);
-      br.pos = (dataStart + len) << 3;
-    } else if (btype === 1 || btype === 2) {
-      let litHuff, distHuff;
-      if (btype === 1) {
-        litHuff = fixedLitHuff(); distHuff = fixedDistHuff();
-      } else {
-        const hlit = br.read(5) + 257;
-        const hdist = br.read(5) + 1;
-        const hclen = br.read(4) + 4;
-        const ORDER = [16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
-        const clLengths = new Array(19).fill(0);
-        for (let i = 0; i < hclen; i++) clLengths[ORDER[i]] = br.read(3);
-        const clHuff = buildHuffman(clLengths);
-        const lengths = [];
-        let prev = 0;
-        const total = hlit + hdist;
-        while (lengths.length < total) {
-          const sym = decodeSymbol(br, clHuff);
-          if (sym < 16) { lengths.push(sym); prev = sym; }
-          else if (sym === 16) { const rep = 3 + br.read(2); for (let i = 0; i < rep && lengths.length < total; i++) lengths.push(prev); }
-          else if (sym === 17) { const rep = 3 + br.read(3); for (let i = 0; i < rep && lengths.length < total; i++) lengths.push(0); prev = 0; }
-          else { const rep = 11 + br.read(7); for (let i = 0; i < rep && lengths.length < total; i++) lengths.push(0); prev = 0; }
-        }
-        litHuff = buildHuffman(lengths.slice(0, hlit));
-        distHuff = buildHuffman(lengths.slice(hlit));
-      }
-      // פענוח סמלים (LZ77: backref עד 32K לאחור — תקין תמיד במערך היחיד)
-      for (;;) {
-        const sym = decodeSymbol(br, litHuff);
-        if (sym < 256) {
-          pushByte(sym);
-        } else if (sym === 256) {
-          break;
-        } else {
-          const li = sym - 257;
-          if (li >= LEN_BASE.length) throw new Error('deflate: bad-length-symbol');
-          const len = LEN_BASE[li] + (LEN_EXTRA[li] ? br.read(LEN_EXTRA[li]) : 0);
-          const dsym = decodeSymbol(br, distHuff);
-          if (dsym >= DIST_BASE.length) throw new Error('deflate: bad-dist-symbol');
-          const dist = DIST_BASE[dsym] + (DIST_EXTRA[dsym] ? br.read(DIST_EXTRA[dsym]) : 0);
-          if (dist > out.length) throw new Error('deflate: dist-too-far');
-          const srcPos = out.length - dist;
-          for (let i = 0; i < len; i++) pushByte(out[srcPos + i]);
-        }
-      }
-    } else {
-      throw new Error('deflate: bad-btype');
-    }
-    if (final) break;
-    if (expectedSize >= 0 && out.length >= expectedSize) break;
-  }
-  return Uint8Array.from(out);
-}
-
-/** מנפח: zlib אם קיים (Node), אחרת המנפח הטהור (דפדפן). @returns {Uint8Array} */
-function inflateRaw(data) {
-  if (zlib) {
-    const out = zlib.inflateRawSync(data); // Node: מחזיר Buffer (Uint8Array) — זהה פונקציונלית
-    return out;
-  }
-  return inflateRawPure(data, 0, -1);
-}
-
-/** CRC32 של ZIP — לאימות שלמות רשומות (optional check; לא חוסם). */
-const CRC_TABLE = (() => {
-  const t = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-    t[n] = c >>> 0;
-  }
-  return t;
-})();
-function crc32(buf) {
-  let c = 0xFFFFFFFF;
-  for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
-  return (c ^ 0xFFFFFFFF) >>> 0;
-}
-
-/** נורמליזציה + מדיניות שמות: רק נתיבים יחסיים פנימיים. */
-function safeName(raw) {
-  const name = String(raw || '').replace(/\\/g, '/');
-  if (!name || name.endsWith('/')) return null;      // תיקייה
-  if (name.startsWith('/')) return null;              // אבסולוטי
-  const parts = name.split('/');
-  if (parts.some(p => p === '..')) return null;       // traversal
-  if (/^[a-zA-Z]:/.test(name)) return null;           // כונן
-  if (/[<>:"|?*\u0000]/.test(name)) return null;      // תווים אסורים
-  return name;
-}
-
-/**
- * פתיחת ארכיון ZIP מזיכרון — **ללא Buffer** (דפדפן ו-Node כאחד; תיקון 03.11).
- * @param {Buffer|Uint8Array} bytes
- * @returns {{ok:boolean, entries:Array<{name:string, data:Uint8Array, method:number, size:number}>, denied:Array<string>, error:string|null}}
- */
-function readZip(bytes) {
-  const buf = bytes; // Buffer (Node) הוא Uint8Array — אינדוקסציה זהה; שום דבר לא נדרש כאן
-  const denied = [];
-  const entries = [];
-  // מציאת EOCD (End Of Central Directory) — מהסוף, חתימה 0x06054b50
-  let eocd = -1;
-  const minLen = 22;
-  for (let i = buf.length - minLen; i >= Math.max(0, buf.length - minLen - 65536); i--) {
-    if (u32le(buf, i) === 0x06054b50) { eocd = i; break; }
-  }
-  if (eocd < 0) return { ok: false, entries: [], denied: [], error: 'not-a-zip' };
-  const totalEntries = u16le(buf, eocd + 10);
-  const cdOffset = u32le(buf, eocd + 16);
-
-  let p = cdOffset;
-  for (let n = 0; n < totalEntries; n++) {
-    if (p + 46 > buf.length || u32le(buf, p) !== 0x02014b50) {
-      return { ok: false, entries, denied, error: `bad-central-directory@${n}` };
-    }
-    const method = u16le(buf, p + 10);
-    const compSize = u32le(buf, p + 20);
-    const nameLen = u16le(buf, p + 28);
-    const extraLen = u16le(buf, p + 30);
-    const commentLen = u16le(buf, p + 32);
-    const localOffset = u32le(buf, p + 42);
-    const rawName = utf8Decode(u8sub(buf, p + 46, p + 46 + nameLen));
-    const name = safeName(rawName);
-    if (name == null) { denied.push(rawName); p += 46 + nameLen + extraLen + commentLen; continue; }
-
-    // קריאת ה-local header והנתונים
-    if (localOffset + 30 > buf.length || u32le(buf, localOffset) !== 0x04034b50) {
-      return { ok: false, entries, denied, error: `bad-local-header:${name}` };
-    }
-    const lhNameLen = u16le(buf, localOffset + 26);
-    const lhExtraLen = u16le(buf, localOffset + 28);
-    const dataStart = localOffset + 30 + lhNameLen + lhExtraLen;
-    // **S6.0 (R9 — קריאה קטועה בשקט):** compSize עלול לחרוג מהקובץ
-    // (ZIP קטוע/פגום) — subarray קוצץ בשקט והרשומה הוחזרה חלקית כתקינה.
-    if (dataStart + compSize > buf.length) {
-      return { ok: false, entries, denied, error: `truncated-entry:${name}` };
-    }
-    const raw = u8sub(buf, dataStart, dataStart + compSize);
-    let data;
-    try {
-      if (method === 0) data = Uint8Array.from(raw);
-      else if (method === 8) data = inflateRaw(raw);
-      else return { ok: false, entries, denied, error: `unsupported-method:${method}:${name}` };
-    } catch (e) {
-      return { ok: false, entries, denied, error: `inflate-failed:${name}` };
-    }
-    // **S6.0 (R9 — פצצת ZIP):** תקרת פריסה לרשומה (64MB) — מנע הקפאת
-    // לשונית של 42KB→4GB; ו-CRC מהמדריך המרכזי נשמר לאימות (verifyCrc
-    // היה מת — storedCrc מעולם לא אוכלס).
-    if (data.length > 64 * 1024 * 1024) {
-      return { ok: false, entries, denied, error: `entry-too-large:${name}` };
-    }
-    const entry = { name, data, method, size: data.length, storedCrc: u32le(buf, p + 16) };
-    if (crc32(entry.data) !== entry.storedCrc) {
-      return { ok: false, entries, denied, error: `crc-mismatch:${name}` };
-    }
-    entries.push(entry);
-    p += 46 + nameLen + extraLen + commentLen;
-  }
-  return { ok: true, entries, denied, error: null };
-}
-
-/** אימות CRC של רשומה (best-effort; מחזיר בוליאני). */
-function verifyCrc(entry) {
-  return crc32(entry.data) === entry.storedCrc;
-}
-
-module.exports = { readZip, safeName, crc32, verifyCrc, inflateRaw, inflateRawPure, utf8Decode };
 
 };
 __modules["src/engine/typography/font-subset.js"] = function (require, module, exports) {
