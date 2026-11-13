@@ -762,7 +762,7 @@ function typeset(rawText, settingsIn, env = {}) {
           // footnotes / endnotes: only the marker is pushed in the body (counted once — at the anchor);
           // the text of the note flows to its display location (gutter / pages of notes — D-30).
           if (!richNoteMarkers.has(p.noteIndex)) {
-            notes.push({ text: String(noteRaw).replace(/\\uE000/g, ' '), marker, tokenId: t.id, noteIndex: p.noteIndex, part: currentPart || 1 });
+            notes.push({ text: String(noteRaw).split(String.fromCharCode(0xE000)).join(' '), marker, tokenId: t.id, noteIndex: p.noteIndex, part: currentPart || 1 });
             bodyMarkers.push(marker);
           }
           allWords.push(marker);
