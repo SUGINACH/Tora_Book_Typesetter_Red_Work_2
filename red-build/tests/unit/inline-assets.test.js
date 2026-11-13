@@ -200,9 +200,18 @@ test('the engine resolves real image dimensions through its measurement environm
   assert.equal(measured.payload.images[0].resolved, true);
   assert.equal(measured.payload.images[0].intrinsicWidthPx, 320);
   assert.ok(measured.payload.images[0].widthPx > 0);
-  assert.equal(measured.payload.images[0].layoutPending, true, 'measurement is not misreported as page placement');
-  assert.ok(events.some(event => event.label === 'inline-image-markers-retained-pending-placement'),
-    'source marker remains until shared fragments are integrated');
+  assert.equal(measured.payload.images[0].layoutPending, true, 'page coordinates are finalized by the projector after measurement');
+  assert.ok(result.contentPreserved, 'the resolved image command is accounted for as an image, not printable marker text');
+  const consumed = events.find(event => event.label === 'inline-image-markers-consumed-by-inline-items');
+  assert.ok(consumed, 'the source command is consumed only after an image box enters the shared solver');
+  const image = result.pages.flatMap(page => page.columns.flat())
+    .flatMap(line => line.fragments || [])
+    .find(fragment => fragment.kind === 'image');
+  assert.ok(image, 'the image atom survives DP page planning');
+  assert.equal(image.resourceId, measured.payload.images[0].resourceId);
+  assert.equal(image.widthPx, measured.payload.images[0].widthPx);
+  const printableWords = result.pages.flatMap(page => page.columns.flat()).flatMap(line => line.words || []);
+  assert(!printableWords.includes('#images/plate.png#'), 'a resolved image marker is not emitted as visible body text');
 });
 
 test('missing image resources remain explicit and never receive guessed dimensions', () => {
