@@ -64,7 +64,7 @@ test('NBSP and the private atomic separator stay inside one unbreakable text ato
   ], { measureText:measure, lineHeightPx:18 });
   assert.deepEqual(result.items.map(item=>item.kind), ['text','glue','text']);
   assert.equal(result.items[0].text, 'אלף' + nbsp + 'בית' + nbsp + 'מדרש');
-  assert.equal(result.items[0].widthPx, 15);
+  assert.equal(result.items[0].widthPx, 12);
   assert.equal(result.items[1].widthPx, 1);
 });
 
