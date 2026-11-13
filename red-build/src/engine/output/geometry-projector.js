@@ -715,7 +715,7 @@ function projectMeasuredLine(ln, colX, y, colW, settings, align, sizePt) {
       const fontKey = familyFontKeyOf(segment.fontFamily, settings);
       return {
         ...segment, x: segmentRight, y, widthPx,
-        sizePt: fragment.sizePt || sizePt,
+        sizePt: segment.sizePt || fragment.sizePt || sizePt,
         ...(fontKey ? { fontKey } : {})
       };
     });
