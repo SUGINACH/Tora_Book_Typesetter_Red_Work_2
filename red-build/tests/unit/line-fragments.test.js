@@ -29,11 +29,21 @@ test('normalization preserves text, image, anchor identity and source ranges', (
 });
 
 test('normalization rejects unknown items, invalid geometry and incomplete source ranges', () => {
-  assert.throws(() => normalizeInlineItems([{ kind: 'widget', widthPx: 1 }]), /unsupported item kind/);
+  assert.throws(() => normalizeInlineItems([{ widthPx: 1 }]), /non-empty kind/);
+  assert.throws(() => normalizeInlineItems([{ kind: 'widget', widthPx: 1 }]), /custom item requires a stable id/);
   assert.throws(() => normalizeInlineItems([{ kind: 'text', text: 'x', widthPx: -1 }]), /non-negative/);
   assert.throws(() => normalizeInlineItems([{ kind: 'text', text: 'x', widthPx: 1, sourceStart: 2 }]), /source range/);
   assert.throws(() => normalizeInlineItems([{ kind: 'image', widthPx: 1, heightPx: 1 }]), /resourcePath/);
   assert.throws(() => normalizeInlineItems([{ kind: 'anchor', widthPx: 0 }]), /stable id/);
+});
+
+test('custom measured item kinds pass through the generic geometry contract unchanged', () => {
+  const [item] = normalizeInlineItems([
+    { kind: 'qr-code', id: 'qr:chapter-4', widthPx: 28, heightPx: 28, payload: { value: 'chapter-4' } }
+  ]);
+  assert.equal(item.kind, 'qr-code');
+  assert.equal(item.id, 'qr:chapter-4');
+  assert.deepEqual(item.payload, { value: 'chapter-4' });
 });
 
 test('available intervals subtract overlapping image exclusions deterministically', () => {
