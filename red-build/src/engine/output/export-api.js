@@ -29,6 +29,24 @@ function nodeOnly(loader) {
   return loader();
 }
 
+/** Iterate actual drawable text segments. Mixed-font measured atoms store
+ * their per-family metadata on segments rather than on the flattened word. */
+function forEachLineTextSegment(line, callback) {
+  for (const word of (line && line.words) || []) {
+    const segments = Array.isArray(word.segments) && word.segments.length
+      ? word.segments
+      : [word];
+    for (const segment of segments) {
+      callback(
+        String(segment.text == null ? word.text || '' : segment.text),
+        segment.fontKey || word.fontKey || null,
+        word,
+        segment
+      );
+    }
+  }
+}
+
 /** **03.11(ג) תיקון קריסת ייצוא HTML בדפדפן:** ב-DOM האמיתי outerHTML מאפיין
  * (מחרוזת), ב-shim הבדיקות — פונקציה. הפונקציה הזו מטפלת בשניהם + נפילה
  * לסריאליזציה ידנית בסיסית (אף סביבה לא נותרת בלי פלט). */
@@ -210,7 +228,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const winParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'window') winParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'window') winParts.push(text);
+            });
           }
         }
         if (winParts.length) {
@@ -241,7 +261,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const headParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'heading') headParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'heading') headParts.push(text);
+            });
           }
         }
         if (headParts.length) {
@@ -275,11 +297,11 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         for (const pg of projected.pages) {
           const scan = (lines) => {
             for (const ln of lines) {
-              for (const w of (ln.words || [])) {
-                for (const ch of String(w.text || '')) {
+              forEachLineTextSegment(ln, text => {
+                for (const ch of text) {
                   if (fontForWriter.cidOf(ch) === 0 && glyphIdOf(frlProfile, ch) !== 0) missingChars.add(ch);
                 }
-              }
+              });
             }
           };
           scan(pg.spanning ? pg.spanning.lines : []);
@@ -320,7 +342,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const fnParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'fnbody') fnParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'fnbody') fnParts.push(text);
+            });
           }
           for (const fn of (pg.footnotes || [])) for (const w of (fn.words || [])) if (w.fontKey === 'fnbody') fnParts.push(w.text);
         }
@@ -349,7 +373,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const mnParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'margin') mnParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'margin') mnParts.push(text);
+            });
           }
         }
         if (mnParts.length) {
@@ -386,7 +412,7 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
     };
     for (const pg of projected.pages) {
       for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-        for (const w of ln.words) collectFam(w.text, w.fontKey);
+        forEachLineTextSegment(ln, (text, fontKey) => collectFam(text, fontKey));
       }
       for (const fn of (pg.footnotes || [])) {
         for (const w of (fn.words || [])) collectFam(w.text, w.fontKey);
