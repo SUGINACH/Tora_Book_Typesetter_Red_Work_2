@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 63 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 64 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -354,6 +354,7 @@ var __paths = {
   "src/engine/typography/measure-api.js|./measure-table": "src/engine/typography/measure-table.js",
   "src/engine/typography/measure-api.js|./font-metrics": "src/engine/typography/font-metrics.js",
   "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
+  "src/engine/typography/measure-api.js|../layout/inline-item-factory": "src/engine/layout/inline-item-factory.js",
   "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
   "src/engine/decoration/legacy-ornaments.js|./ornament-fit": "src/engine/decoration/ornament-fit.js",
   "src/ui/testing-tab.js|../audit/report-schema": "src/audit/report-schema.js",
@@ -16360,6 +16361,32 @@ class MeasureAPI {
   }
 
   /**
+   * Parse canonical inline runs, measure every text segment in its effective
+   * registered family, resolve image boxes, then feed the shared atom solver.
+   * The returned fragments preserve sub-word font boundaries.
+   */
+  layoutInlineRuns(runs, maxWidthPx, opts = {}) {
+    const { createMeasuredInlineItems } = require('../layout/inline-item-factory');
+    const sizePt = opts.sizePt == null ? null : opts.sizePt;
+    const lineHeightPx = opts.lineHeightPx == null ? this.lineHeightPx(sizePt) : opts.lineHeightPx;
+    const measured = createMeasuredInlineItems(runs, {
+      ...opts,
+      sizePt,
+      lineHeightPx,
+      defaultFontFamily: opts.defaultFontFamily || this.settings['body-font'],
+      measureText: (text, family, size) => {
+        const familyApi = family ? MeasureAPI.forFamily(family, this.settings) : null;
+        if (family && !familyApi) {
+          throw new Error('MeasureAPI.layoutInlineRuns: font family is not registered: ' + family);
+        }
+        return (familyApi || this).measureTextWidth(text, size);
+      }
+    });
+    const layout = this.layoutMeasuredInlineItems(measured.items, maxWidthPx, lineHeightPx, opts);
+    return { ...layout, diagnostics: measured.diagnostics };
+  }
+
+  /**
    * Layout already-measured mixed inline atoms through the shared Knuth–Plass
    * solver. Text dimensions must originate from this MeasureAPI instance;
    * image dimensions must come from the asset metadata resolver; custom item
@@ -17251,6 +17278,213 @@ function greedyFallback(items, widthForLine, measure, lineHeightPx) {
 }
 
 module.exports = { breakLines, breakInlineItems, badness, STRETCH_RATIO, SHRINK_RATIO };
+
+};
+__modules["src/engine/layout/inline-item-factory.js"] = function (require, module, exports) {
+// src/engine/layout/inline-item-factory.js — canonical AST → measured inline atoms (S14 P0)
+'use strict';
+
+const DEFAULT_GLUE_STRETCH = 0.6;
+const DEFAULT_GLUE_SHRINK = 0.5;
+
+function finiteNonNegative(value, label) {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new RangeError('inline-item-factory: ' + label + ' must be finite and non-negative');
+  }
+  return value;
+}
+
+/**
+ * Convert canonical parser runs to the measured item contract used by the
+ * shared line solver. A word may contain multiple font-family segments; it
+ * remains one unbreakable text atom while its segments retain independent
+ * measurement and rendering metadata.
+ *
+ * options:
+ *   measureText(text, fontFamily, sizePt) -> widthPx
+ *   resolveImage(ImageRun, options) -> {ok:true,image} | {ok:false,code}
+ *   defaultFontFamily, sizePt, lineHeightPx, glueStretchRatio, glueShrinkRatio
+ */
+function createMeasuredInlineItems(runs, options = {}) {
+  if (!Array.isArray(runs)) throw new TypeError('inline-item-factory: runs must be an array');
+  if (typeof options.measureText !== 'function') {
+    throw new TypeError('inline-item-factory: measureText(text, fontFamily, sizePt) is required');
+  }
+
+  const sizePt = options.sizePt == null ? null : finiteNonNegative(options.sizePt, 'sizePt');
+  const lineHeightPx = options.lineHeightPx == null ? 0 : finiteNonNegative(options.lineHeightPx, 'lineHeightPx');
+  const stretchRatio = options.glueStretchRatio == null ? DEFAULT_GLUE_STRETCH : finiteNonNegative(options.glueStretchRatio, 'glueStretchRatio');
+  const shrinkRatio = options.glueShrinkRatio == null ? DEFAULT_GLUE_SHRINK : finiteNonNegative(options.glueShrinkRatio, 'glueShrinkRatio');
+  const defaultFontFamily = options.defaultFontFamily || null;
+  const items = [];
+  const diagnostics = [];
+  let wordSegments = [];
+
+  function effectiveFamily(run) {
+    return run && run.fontFamily ? String(run.fontFamily) : defaultFontFamily;
+  }
+
+  function measure(text, family) {
+    const width = options.measureText(String(text), family || null, sizePt);
+    return finiteNonNegative(width, 'measured text width');
+  }
+
+  function flushWord() {
+    if (!wordSegments.length) return;
+    const text = wordSegments.map(segment => segment.text).join('');
+    const widthPx = wordSegments.reduce((sum, segment) => sum + segment.widthPx, 0);
+    const segments = wordSegments.map(segment => ({ ...segment }));
+    const sourceStarts = segments.map(segment => segment.sourceStart).filter(Number.isFinite);
+    const sourceEnds = segments.map(segment => segment.sourceEnd).filter(Number.isFinite);
+    const item = {
+      kind: 'text',
+      text,
+      widthPx,
+      heightPx: lineHeightPx,
+      segments,
+      ...(segments.length === 1 ? { fontFamily: segments[0].fontFamily || null } : {}),
+      ...(sourceStarts.length ? { sourceStart: Math.min(...sourceStarts) } : {}),
+      ...(sourceEnds.length ? { sourceEnd: Math.max(...sourceEnds) } : {})
+    };
+    items.push(item);
+    wordSegments = [];
+  }
+
+  function appendGlue(run, sourceStart, sourceEnd) {
+    flushWord();
+    // Normalize a whitespace run to one break-space, matching the paragraph
+    // tokenizer/line-breaker contract. Never leave leading or duplicate glue.
+    const prior = items[items.length - 1];
+    if (!prior || prior.kind === 'glue') {
+      if (prior && prior.kind === 'glue') {
+        prior.sourceEnd = Number.isFinite(sourceEnd) ? sourceEnd : prior.sourceEnd;
+      }
+      return;
+    }
+    const family = effectiveFamily(run);
+    const widthPx = measure(' ', family);
+    items.push({
+      kind: 'glue',
+      widthPx,
+      stretchPx: widthPx * stretchRatio,
+      shrinkPx: widthPx * shrinkRatio,
+      fontFamily: family,
+      ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+      ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+    });
+  }
+
+  for (const run of runs) {
+    if (!run || typeof run !== 'object') {
+      throw new TypeError('inline-item-factory: every run must be an object');
+    }
+
+    if (run.kind === 'text') {
+      const value = String(run.text == null ? '' : run.text);
+      const family = effectiveFamily(run);
+      const matcher = /\s+|\S+/gu;
+      let match;
+      while ((match = matcher.exec(value))) {
+        const token = match[0];
+        const sourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart + match.index : undefined;
+        const sourceEnd = Number.isFinite(run.sourceStart) ? sourceStart + token.length : undefined;
+        if (/^\s+$/u.test(token)) {
+          appendGlue(run, sourceStart, sourceEnd);
+          continue;
+        }
+        const widthPx = measure(token, family);
+        const previous = wordSegments[wordSegments.length - 1];
+        // Adjacent parser runs can split a single lexical word at a font
+        // marker. Keep that word atomic, but preserve each measured segment.
+        if (previous && previous.sourceEnd != null && sourceStart != null && previous.sourceEnd !== sourceStart) {
+          flushWord();
+        }
+        wordSegments.push({
+          text: token,
+          fontFamily: family,
+          widthPx,
+          ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+          ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+        });
+      }
+      continue;
+    }
+
+    if (run.kind === 'image') {
+      flushWord();
+      if (typeof options.resolveImage !== 'function') {
+        diagnostics.push({
+          code: 'INLINE_IMAGE_RESOLVER_MISSING',
+          resourcePath: run.resourcePath || null,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd
+        });
+        continue;
+      }
+      const resolved = options.resolveImage(run, options);
+      if (!resolved || resolved.ok !== true || !resolved.image) {
+        diagnostics.push({
+          code: (resolved && resolved.code) || 'INLINE_IMAGE_RESOURCE_MISSING',
+          resourcePath: run.resourcePath || null,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd
+        });
+        continue;
+      }
+      const image = resolved.image;
+      const widthPx = finiteNonNegative(image.widthPx, 'image width');
+      const heightPx = finiteNonNegative(image.heightPx, 'image height');
+      if (widthPx <= 0 || heightPx <= 0) {
+        diagnostics.push({
+          code: 'INLINE_IMAGE_DIMENSIONS_INVALID',
+          resourcePath: run.resourcePath || image.resourcePath || null,
+          sourceStart: run.sourceStart,
+          sourceEnd: run.sourceEnd
+        });
+        continue;
+      }
+      items.push({
+        ...image,
+        kind: 'image',
+        widthPx,
+        heightPx,
+        sourceStart: Number.isFinite(run.sourceStart) ? run.sourceStart : image.sourceStart,
+        sourceEnd: Number.isFinite(run.sourceEnd) ? run.sourceEnd : image.sourceEnd
+      });
+      continue;
+    }
+
+    if (run.kind === 'anchor') {
+      flushWord();
+      items.push({
+        ...run,
+        kind: 'anchor',
+        widthPx: run.widthPx == null ? 0 : finiteNonNegative(run.widthPx, 'anchor width'),
+        heightPx: run.heightPx == null ? 0 : finiteNonNegative(run.heightPx, 'anchor height')
+      });
+      continue;
+    }
+
+    // Future page-item kinds use the same measured box contract. The solver
+    // and projector do not need a new branch for each new item type.
+    flushWord();
+    if (typeof run.kind !== 'string' || !run.kind.trim() || run.id == null) {
+      throw new TypeError('inline-item-factory: custom item kinds require kind and stable id');
+    }
+    items.push({
+      ...run,
+      widthPx: finiteNonNegative(run.widthPx, 'custom item width'),
+      heightPx: finiteNonNegative(run.heightPx, 'custom item height')
+    });
+  }
+
+  flushWord();
+  while (items.length && items[items.length - 1].kind === 'glue') items.pop();
+
+  return { items, diagnostics };
+}
+
+module.exports = { createMeasuredInlineItems };
 
 };
 __modules["src/engine/core/events.js"] = function (require, module, exports) {
@@ -20409,7 +20643,8 @@ class WorkerEngineClient {
     // respawn (terminate/קריסה): המופע החדש מתחיל עם זיכרון ריק, ובלי רישום
     // מחדש המדידה היתה נופלת בשקט לגופני fallback (סחף מדידה שקט).
     this._registeredFonts = new Map();   // name → bytes
-    this._registeredAssets = new Map(); // collection → items
+    this._registeredAssets = new Map(); // collection → decoration items
+    this._registeredInlineAssets = new Map(); // collection → document image items
     this._workerGeneration = typeof transport.getGeneration === 'function' ? transport.getGeneration() : null;
     transport.setHandler((m) => this._onMessage(m));
     if (typeof transport.setOnError === 'function') transport.setOnError((e) => this._onTransportError(e));
@@ -20433,6 +20668,11 @@ class WorkerEngineClient {
     for (const [collection, items] of this._registeredAssets) {
       const { jobId, promise } = this._newPendingJob('assets-replay');
       this.transport.post({ type: 'register-assets', jobId, collection, items });
+      promise.catch(() => {});
+    }
+    for (const [collection, items] of this._registeredInlineAssets) {
+      const { jobId, promise } = this._newPendingJob('inline-assets-replay');
+      this.transport.post({ type: 'register-inline-assets', jobId, collection, items });
       promise.catch(() => {});
     }
   }
@@ -20541,6 +20781,16 @@ class WorkerEngineClient {
     });
   }
 
+  /** רישום משאבי תמונה של מסמך. נפרד מרישום SVG של עיטורים. */
+  registerInlineAssets({ collection, items }) {
+    const { jobId, promise } = this._newPendingJob('inline-assets');
+    this.transport.post({ type: 'register-inline-assets', jobId, collection, items });
+    return promise.then((res) => {
+      this._registeredInlineAssets.set(collection, items);
+      return res;
+    });
+  }
+
   /** **03.11:** בקשת ייצוא PDF/ZIP במנוע המלא שב־Worker. bytes חוזר כ-Uint8Array. */
   requestExport({ kind, text, settings, fontBytes, fontName, extensions }) {
     this._maybeReplayRegistrations(); // **S70 (R8-M2):** הייצוא מודד כמו העימוד — גופנים חייבים להיות רשומים
@@ -20553,7 +20803,7 @@ class WorkerEngineClient {
    * בקשת עימוד. בקשה חדשה בזמן עבודה פעילה מבטלת את הקודמת (single-flight).
    * @returns {{promise:Promise<object>, jobId:string, cancel:()=>void}}
    */
-  requestTypeset({ text, settings, onProgress }) {
+  requestTypeset({ text, settings, onProgress, assetCollection }) {
     if (this.activeJob) this.cancel();
     this._maybeReplayRegistrations(); // **S70 (R8-M2):** רישום חוזר לפני העימוד אחרי respawn
     const jobId = `job-${Date.now().toString(36)}-${++jobSeq}`;
@@ -20561,7 +20811,9 @@ class WorkerEngineClient {
     const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
     const job = { jobId, resolve, reject, onProgress: onProgress || null, cancelled: false };
     this.activeJob = job;
-    this.transport.post({ type: 'typeset-request', jobId, text, settings });
+    const message = { type: 'typeset-request', jobId, text, settings };
+    if (assetCollection != null) message.assetCollection = assetCollection;
+    this.transport.post(message);
     return { promise, jobId, cancel: () => this.cancel() };
   }
 
