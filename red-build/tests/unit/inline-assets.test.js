@@ -99,7 +99,7 @@ test('PNG and JPEG intrinsic dimensions are read without DOM or network access',
 test('resolver prioritizes exact relative paths and first-seen basename matches', () => {
   const resolver = createInlineAssetResolver([
     { path: 'chapter-a/plate.png', data: png(300, 150) },
-    { path: 'chapter-b/plate.png', data: jpeg(600, 300) },
+    { path: 'chapter-b/plate.png', data: png(600, 300) },
     { path: 'chapter-b/portrait.jpg', data: jpeg(300, 600) }
   ]);
   assert.equal(resolver.count, 3);
