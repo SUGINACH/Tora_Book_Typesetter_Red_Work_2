@@ -78,7 +78,7 @@ describe('e2e-pipeline', () => {
         .find(fragment => fragment.kind === 'text'
           && (fragment.segments || []).some(segment => segment.fontFamily === 'Inline Alpha'));
       assert(styled, 'the page model must retain measured rich fragments');
-      assert.equal(styled.text, 'מילה');
+      assertEq(styled.text, 'מילה', 'styled word fragment is retained as one atom');
       assert(styled.segments.some(segment => segment.fontFamily === 'Inline Alpha'));
       assert(lines.some(line => line.words.includes('מעוצבת')), 'all styled words remain in the line stream');
     } finally {
