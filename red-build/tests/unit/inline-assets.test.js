@@ -19,13 +19,17 @@ function test(name, fn) {
 }
 
 function png(width, height) {
-  const bytes = new Uint8Array(33);
-  bytes.set([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a], 0);
-  bytes.set([0,0,0,13,0x49,0x48,0x44,0x52], 8);
-  bytes[16]=(width>>>24)&255; bytes[17]=(width>>>16)&255; bytes[18]=(width>>>8)&255; bytes[19]=width&255;
-  bytes[20]=(height>>>24)&255; bytes[21]=(height>>>16)&255; bytes[22]=(height>>>8)&255; bytes[23]=height&255;
-  bytes.set([8,6,0,0,0],24);
-  return bytes;
+  const signature = Uint8Array.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]);
+  const u32be = (v) => Uint8Array.from([(v>>>24)&255,(v>>>16)&255,(v>>>8)&255,v&255]);
+  const chunk = (type, data) => {
+    const typeBytes = new TextEncoder().encode(type);
+    const crcInput = concat([typeBytes,data]);
+    return concat([u32be(data.length),crcInput,u32be(crc32(crcInput))]);
+  };
+  const header = concat([u32be(width),u32be(height),Uint8Array.from([8,6,0,0,0])]);
+  // Structural fixture: a non-empty IDAT chunk with a valid chunk CRC.
+  // Pixel decoding is tested separately by the browser renderer integration.
+  return concat([signature,chunk('IHDR',header),chunk('IDAT',Uint8Array.from([0x78,0x01,0x00,0x00,0x00,0x01])),chunk('IEND',new Uint8Array(0))]);
 }
 
 function jpeg(width, height) {
@@ -94,6 +98,12 @@ test('PNG and JPEG intrinsic dimensions are read without DOM or network access',
   });
   assert.equal(readImageDimensions(png(3, 4), 'jpeg').code, 'image-format-mismatch');
   assert.equal(readImageDimensions(new Uint8Array([1,2,3])).ok, false);
+  const corruptPng = png(10, 10).slice();
+  corruptPng[corruptPng.length - 1] ^= 1;
+  assert.equal(readImageDimensions(corruptPng, 'png').code, 'image-png-crc-mismatch');
+  assert.equal(readImageDimensions(png(10, 10).slice(0, 25), 'png').ok, false);
+  assert.equal(readImageDimensions(jpeg(10, 20).slice(0, -2), 'jpg').code, 'image-jpeg-structure-incomplete');
+
 });
 
 test('resolver prioritizes exact relative paths and first-seen basename matches', () => {
