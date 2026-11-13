@@ -73,7 +73,8 @@ test('a variable width provider is evaluated by line index in the shared solver'
   assert.equal(result.lines.length, 2);
   assert.deepEqual(result.lines[0].words, ['w0']);
   assert.deepEqual(result.lines[1].words, ['w1', 'w2', 'w3']);
-  assert.deepEqual([...new Set(widths)].sort(), [0, 1]);
+  assert.equal(widths.length, new Set(widths).size, 'each candidate line width is resolved once');
+  assert.ok(widths.includes(0) && widths.includes(1), 'the selected first and second lines use their own widths');
 });
 
 test('an atom wider than the available line is rejected explicitly, never dropped', () => {
