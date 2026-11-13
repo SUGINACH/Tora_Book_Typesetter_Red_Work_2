@@ -101,7 +101,9 @@ test('mixed line fragments can be positioned by the shared RTL geometry composer
   });
   assert.equal(positioned.ok, true);
   assert.deepEqual(positioned.fragments.map(item => item.kind), ['text', 'image']);
-  assert.equal(positioned.fragments[1].x, 10 + 60 - 18);
+  assert.equal(positioned.fragments[0].gapAfterPx, 4, 'the inter-item glue remains on the line fragment');
+  assert.equal(positioned.fragments[0].x - (positioned.fragments[1].x + positioned.fragments[1].widthPx), 4,
+    'RTL placement preserves the measured gap between text and image');
 });
 
 test('generic item validation rejects implicit whitespace and malformed atoms', () => {
