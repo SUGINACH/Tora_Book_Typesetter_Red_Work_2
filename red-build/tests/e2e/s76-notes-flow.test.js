@@ -207,11 +207,11 @@ describe('S76 — נייטרליות legacy מלאה (התיקונים ב-body-f
       `legacy אינו נייטרלי — התקבל ${r.layoutHash.slice(0, 20)} (צפוי נעילת S74)`);
   });
 
-  it('body-first במסמך הבדיקה הקבוע: ההאש החדש של S76 (שינוי מכוון, מתועד ב-s72)', () => {
+  it('body-first במסמך הבדיקה הקבוע: ההאש לאחר תיקון גבול הערות S77 (מתועד ב-s72)', () => {
     const { generateTestDocument } = require('../../src/ui/test-doc-generator');
     const text = generateTestDocument({ mode: 'fixed' });
     const r = legacyTypeset(text, imudSettings(), {});
-    assert(r.layoutHash.startsWith('legacy-6a06e3108c8ec'),
+    assert(r.layoutHash.startsWith('legacy-92cb248d0f8db2e0'),
       `body-first נעול על ההאש החדש — התקבל ${r.layoutHash.slice(0, 20)}`);
     assertEq(r.contentPreserved, true, 'שימור תוכן');
   });
