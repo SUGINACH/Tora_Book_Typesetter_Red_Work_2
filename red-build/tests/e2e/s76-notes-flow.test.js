@@ -217,4 +217,35 @@ describe('S76 — נייטרליות legacy מלאה (התיקונים ב-body-f
   });
 });
 
+// =====================================================================
+describe('S77 — גבול שורה אינו מסמן הערה ככזו שהתחילה', () => {
+  it('gap, marker ו-(המשך) לבדם אינם תחילת הערה', () => {
+    const started = collectStartedFootnoteIndices([
+      [
+        { t: 'טקסט הערה קודמת', noteIdx: 0 },
+        { t: '', gap: true, noteIdx: 1 },
+        { t: 'יז.', mk: true, noteIdx: 1 },
+        { t: '(המשך)', noteIdx: 2 }
+      ]
+    ]);
+    assert.deepEqual([...started], [0],
+      'רק תוכן ממשי של הערה שהונח מסמן אותה כמתחילה בעמוד');
+  });
+
+  it('הערה שמתחילה אחרי gap בעמוד הבא נשארת טרייה ומקבלת את הסמן שלה', () => {
+    const previousPage = collectStartedFootnoteIndices([
+      [{ t: 'מילה אחרונה של הערה א', noteIdx: 0 }, { t: '', gap: true, noteIdx: 1 }]
+    ]);
+    assert.equal(previousPage.has(0), true);
+    assert.equal(previousPage.has(1), false,
+      'רווח ההפרדה של הערה ב אינו הופך אותה להמשך');
+
+    const nextPage = collectStartedFootnoteIndices([
+      [{ t: 'מילה ראשונה של הערה ב', noteIdx: 1 }]
+    ]);
+    assert.equal(nextPage.has(1), true,
+      'מילה ראשונה שמונחת בפועל היא תחילת ההערה');
+  });
+});
+
 report('s76-notes-flow');
