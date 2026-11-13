@@ -17725,6 +17725,7 @@ function parseInlineRuns(value, options = {}) {
             resourcePath: parsed.resourcePath,
             align: parsed.align,
             widthPct: parsed.widthPct,
+            sourceText: source.slice(index, close + 1),
             sourceStart: index + sourceOffset,
             sourceEnd: close + 1 + sourceOffset
           });
@@ -17882,6 +17883,39 @@ function parseInlineRuns(value, options = {}) {
 }
 
 
+/**
+ * Return the lossless source projection of canonical inline runs.
+ * Images are projected back to their original marker until a dimensioned
+ * resource resolver is supplied; this prevents silent content loss.
+ */
+function inlineRunsSourceText(runs = []) {
+  return (Array.isArray(runs) ? runs : []).map(run => {
+    if (!run) return '';
+    if (run.kind === 'text') return run.text || '';
+    if (run.kind === 'image') return run.sourceText || '';
+    return '';
+  }).join('');
+}
+
+/** Plain source text of a canonical paragraph, with note references omitted. */
+function inlineParagraphSourceText(inlineContent) {
+  if (!inlineContent || !Array.isArray(inlineContent.parts)) {
+    throw new TypeError('inline-content: canonical paragraph parts are required');
+  }
+  return inlineContent.parts
+    .filter(part => part && part.kind === 'text')
+    .map(part => inlineRunsSourceText(part.runs))
+    .join(' ');
+}
+
+/** Source text of a canonical note; optional atomic-space projection for layout. */
+function inlineNoteSourceText(inlineContent, noteIndex, atomicSpace = null) {
+  const note = inlineContent && Array.isArray(inlineContent.notes) ? inlineContent.notes[noteIndex] : null;
+  if (!note) throw new RangeError('inline-content: note index is out of range');
+  const source = inlineRunsSourceText(note.runs);
+  return atomicSpace == null ? source : source.replace(/ +/g, atomicSpace);
+}
+
 /** Parse paragraph text fragments and footnotes into one shared inline AST. */
 function parseInlineParagraph(parts = [], notes = [], options = {}) {
   const parsedParts = [];
@@ -17918,7 +17952,7 @@ function parseInlineParagraph(parts = [], notes = [], options = {}) {
 
   return { version: 1, parts: parsedParts, notes: parsedNotes, warnings, hasImages, hasFontRanges };
 }
-module.exports = { parseInlineRuns, parseInlineParagraph, parseImagePayload };
+module.exports = { parseInlineRuns, parseInlineParagraph, parseImagePayload, inlineRunsSourceText, inlineParagraphSourceText, inlineNoteSourceText };
 
 };
 __modules["src/engine/layout/margin-flow.js"] = function (require, module, exports) {
