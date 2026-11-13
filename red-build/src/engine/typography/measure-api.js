@@ -210,6 +210,32 @@ class MeasureAPI {
   }
 
   /**
+   * Parse canonical inline runs, measure every text segment in its effective
+   * registered family, resolve image boxes, then feed the shared atom solver.
+   * The returned fragments preserve sub-word font boundaries.
+   */
+  layoutInlineRuns(runs, maxWidthPx, opts = {}) {
+    const { createMeasuredInlineItems } = require('../layout/inline-item-factory');
+    const sizePt = opts.sizePt == null ? null : opts.sizePt;
+    const lineHeightPx = opts.lineHeightPx == null ? this.lineHeightPx(sizePt) : opts.lineHeightPx;
+    const measured = createMeasuredInlineItems(runs, {
+      ...opts,
+      sizePt,
+      lineHeightPx,
+      defaultFontFamily: opts.defaultFontFamily || this.settings['body-font'],
+      measureText: (text, family, size) => {
+        const familyApi = family ? MeasureAPI.forFamily(family, this.settings) : null;
+        if (family && !familyApi) {
+          throw new Error('MeasureAPI.layoutInlineRuns: font family is not registered: ' + family);
+        }
+        return (familyApi || this).measureTextWidth(text, size);
+      }
+    });
+    const layout = this.layoutMeasuredInlineItems(measured.items, maxWidthPx, lineHeightPx, opts);
+    return { ...layout, diagnostics: measured.diagnostics };
+  }
+
+  /**
    * Layout already-measured mixed inline atoms through the shared Knuth–Plass
    * solver. Text dimensions must originate from this MeasureAPI instance;
    * image dimensions must come from the asset metadata resolver; custom item
