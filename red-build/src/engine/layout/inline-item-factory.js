@@ -116,9 +116,8 @@ function createMeasuredInlineItems(runs, options = {}) {
       const family = effectiveFamily(run);
       const runSizePt = effectiveSize(run);
       // Ordinary spaces create legal break glue. NBSP and the private atomic
-      // note separator stay inside the same measured word box.
-      // Ordinary spaces create break glue. NBSP and the private atomic
-      // note separator stay inside the current word and are normalized for drawing.
+      // note separator stay inside the same measured word box and are normalized
+      // to visible NBSP in the renderer.
       let cursor = 0;
       while (cursor < value.length) {
         const first = value[cursor];
