@@ -152,11 +152,11 @@ function createStyledInlineRuns(parts, options = {}) {
       let cursor = 0;
       while (cursor < value.length) {
         const first = value[cursor];
-        const isBreak = first === ' ' || first === '\\t' || first === '\\n' || first === '\\r';
+        const isBreak = first === ' ' || first.charCodeAt(0) === 9 || first.charCodeAt(0) === 10 || first.charCodeAt(0) === 13;
         let end = cursor + 1;
         while (end < value.length) {
           const ch = value[end];
-          const nextIsBreak = ch === ' ' || ch === '\\t' || ch === '\\n' || ch === '\\r';
+          const nextIsBreak = ch === ' ' || ch.charCodeAt(0) === 9 || ch.charCodeAt(0) === 10 || ch.charCodeAt(0) === 13;
           if (nextIsBreak !== isBreak) break;
           end++;
         }
