@@ -19,7 +19,7 @@ function textOf(result) {
 
 test('canonical source projection preserves ImageRun markers and note payloads', () => {
   const paragraph = tokenize(['לפני #assets/diagram.png# אחרי [הערה #notes/ref.jpg#] סוף'])[0].inlineContent;
-  assert.equal(inlineParagraphSourceText(paragraph), 'לפני #assets/diagram.png# אחרי  סוף');
+  assert.equal(inlineParagraphSourceText(paragraph), 'לפני #assets/diagram.png# אחרי סוף');
   assert.equal(inlineNoteSourceText(paragraph, 0), 'הערה #notes/ref.jpg#');
   const atomic = String.fromCharCode(0xE000);
   assert.equal(inlineNoteSourceText(paragraph, 0, atomic), 'הערה' + atomic + '#notes/ref.jpg#');
