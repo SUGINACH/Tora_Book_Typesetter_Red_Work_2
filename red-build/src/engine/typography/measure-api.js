@@ -222,6 +222,7 @@ class MeasureAPI {
       ...opts,
       sizePt,
       lineHeightPx,
+      lineHeightForSize: size => size == null ? lineHeightPx : this.lineHeightPx(size),
       defaultFontFamily: opts.defaultFontFamily || this.settings['body-font'],
       measureText: (text, family, size) => {
         const familyApi = family ? MeasureAPI.forFamily(family, this.settings) : null;
