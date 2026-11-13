@@ -99,6 +99,32 @@ test('LTR composition and center alignment are symmetric', () => {
   assert.deepEqual(center.fragments.map(f => f.x), [45, 55]);
 });
 
+test('measured inter-item gaps participate in fitting and RTL/LTR placement', () => {
+  const items = [
+    { kind: 'text', text: 'א', widthPx: 10, gapAfterPx: 5 },
+    { kind: 'image', resourcePath: 'assets/gap.png', widthPx: 20, heightPx: 18 }
+  ];
+  const rtl = composeLineFragments(items, {
+    x: 0, y: 0, widthPx: 35, direction: 'rtl', align: 'right'
+  });
+  assert.equal(rtl.ok, true);
+  assert.equal(rtl.usedWidthPx, 35);
+  assert.equal(rtl.fragments[0].x - (rtl.fragments[1].x + rtl.fragments[1].widthPx), 5);
+  assert.equal(rtl.fragments[0].gapAfterPx, 5);
+
+  const ltr = composeLineFragments(items, {
+    x: 0, y: 0, widthPx: 35, direction: 'ltr', align: 'left'
+  });
+  assert.equal(ltr.ok, true);
+  assert.equal(ltr.fragments[1].x - (ltr.fragments[0].x + rtl.fragments[0].widthPx), 5);
+
+  const overflow = composeLineFragments(items, {
+    x: 0, y: 0, widthPx: 34, direction: 'rtl', align: 'right'
+  });
+  assert.equal(overflow.ok, false, 'gaps count toward the required line width');
+  assert.equal(overflow.requiredWidthPx, 35);
+});
+
 test('overwide line is rejected explicitly and no item is silently dropped', () => {
   const result = composeLineFragments([
     { kind: 'text', text: 'א', widthPx: 60 },
