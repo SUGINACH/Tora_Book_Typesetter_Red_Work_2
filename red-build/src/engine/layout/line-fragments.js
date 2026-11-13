@@ -19,6 +19,7 @@ function normalizeInlineItems(items) {
     }
     const widthPx = finiteNonNegative(item.widthPx, 'item.widthPx');
     const heightPx = finiteNonNegative(item.heightPx == null ? 0 : item.heightPx, 'item.heightPx');
+    const gapAfterPx = finiteNonNegative(item.gapAfterPx == null ? 0 : item.gapAfterPx, 'item.gapAfterPx');
     if (item.kind === 'text' && typeof item.text !== 'string') {
       throw new TypeError('line-fragments: text item requires a string');
     }
@@ -34,7 +35,7 @@ function normalizeInlineItems(items) {
       || (sourceStart != null && (!Number.isInteger(sourceStart) || !Number.isInteger(sourceEnd) || sourceStart < 0 || sourceEnd < sourceStart))) {
       throw new TypeError('line-fragments: source range must be a valid [start,end) pair');
     }
-    return { ...item, widthPx, heightPx, sourceStart, sourceEnd };
+    return { ...item, widthPx, heightPx, gapAfterPx, sourceStart, sourceEnd };
   });
 }
 
@@ -104,7 +105,9 @@ function composeLineFragments(items, options = {}) {
     throw new TypeError('line-fragments: unsupported alignment');
   }
 
-  const totalWidth = normalized.reduce((sum, item) => sum + item.widthPx, 0);
+  // Gaps are part of the line geometry, not decoration: they contribute to
+  // the fit and to RTL/LTR cursor movement exactly once.
+  const totalWidth = normalized.reduce((sum, item) => sum + item.widthPx + item.gapAfterPx, 0);
   if (totalWidth > widthPx + EPSILON) {
     return { ok: false, reason: 'line-overflow', requiredWidthPx: totalWidth, availableWidthPx: widthPx, fragments: [] };
   }
@@ -129,7 +132,8 @@ function composeLineFragments(items, options = {}) {
       widthPx: item.widthPx,
       heightPx: Math.max(heightPx, item.heightPx)
     };
-    if (direction === 'ltr') cursor += item.widthPx;
+    if (direction === 'rtl') cursor -= item.gapAfterPx;
+    else cursor += item.widthPx + item.gapAfterPx;
     return fragment;
   });
   return {
