@@ -15,7 +15,7 @@ function concat(parts){
 }
 function pngRgba1x1(){
   const signature=Uint8Array.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]);
-  const zlib=Uint8Array.from([0x78,0x01,0x01,0x05,0x00,0xfa,0xff,0x00,0xff,0x00,0x00,0x80,0x00,0x00,0x01,0x01,0x00,0x80]);
+  const zlib=Uint8Array.from([0x78,0x01,0x01,0x05,0x00,0xfa,0xff,0x00,0xff,0x00,0x00,0x80,0x04,0x81,0x01,0x80]);
   const chunk=(type,data)=>{
     const t=Uint8Array.from([...type].map(c=>c.charCodeAt(0)));
     const check=concat([t,data]);
@@ -46,6 +46,17 @@ test('PNG decoder validates and extracts RGB plus alpha from a local RGBA PNG',(
   assert.equal(decoded.height,1);
   assert.deepEqual([...decoded.rgbBytes],[255,0,0]);
   assert.deepEqual([...decoded.alphaBytes],[128]);
+});
+
+test('PNG decoder rejects a corrupt zlib Adler checksum after PNG chunk CRC is recomputed',()=>{
+  const bytes=pngRgba1x1();
+  const idatChunkStart=8+25;
+  const idatLength=(bytes[idatChunkStart]<<24)|(bytes[idatChunkStart+1]<<16)|(bytes[idatChunkStart+2]<<8)|bytes[idatChunkStart+3];
+  const dataStart=idatChunkStart+8;
+  const dataEnd=dataStart+idatLength;
+  bytes[dataEnd-1]^=1;
+  bytes.set(u32(crc32(bytes.subarray(idatChunkStart+4,dataEnd))),dataEnd);
+  assert.throws(()=>decodePngForPdf(bytes),/Adler checksum mismatch/);
 });
 
 test('PDF writer emits PNG XObject with a soft mask and invokes it at projected geometry',()=>{
