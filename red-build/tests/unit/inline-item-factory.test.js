@@ -56,6 +56,32 @@ test('an explicit whitespace boundary separates adjacent font runs and keeps the
   assert.equal(result.items[2].widthPx,12);
 });
 
+test('NBSP and the private atomic separator stay inside one unbreakable text atom', () => {
+  const result = createMeasuredInlineItems([
+    { kind:'text', text:'אלף\\u00A0בית עוד', sourceStart:0, sourceEnd:12 }
+  ], { measureText:measure, lineHeightPx:18 });
+  assert.deepEqual(result.items.map(item=>item.kind), ['text','glue','text']);
+  assert.equal(result.items[0].text, 'אלף\\u00A0בית');
+  assert.equal(result.items[0].widthPx, 80);
+  assert.equal(result.items[1].widthPx, 2);
+});
+
+test('run-specific sizes are measured and retained on every segment', () => {
+  const result = createMeasuredInlineItems([
+    { kind:'text', text:'א', sizePt:8, sourceStart:0, sourceEnd:1 },
+    { kind:'text', text:'ב', sizePt:16, sourceStart:1, sourceEnd:2 }
+  ], {
+    sizePt:12,
+    lineHeightPx:20,
+    lineHeightForSize:size=>size*2,
+    measureText:(text,family,size)=>[...String(text)].length*size
+  });
+  assert.equal(result.items.length,1);
+  assert.deepEqual(result.items[0].segments.map(segment=>segment.sizePt),[8,16]);
+  assert.deepEqual(result.items[0].segments.map(segment=>segment.widthPx),[8,16]);
+  assert.equal(result.items[0].heightPx,32);
+});
+
 test('images are measured atomic boxes and retain source/resource identity', () => {
   const result = createMeasuredInlineItems([
     { kind:'text', text:'לפני ', sourceStart:0, sourceEnd:5 },
