@@ -1,6 +1,6 @@
 // ui/engine-worker.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת ה־Worker (המנוע המלא — אין לטעון בחוט ה־UI)
-// מודולים: 68 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 69 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -427,6 +427,7 @@ var __paths = {
   "src/engine/output/geometry-projector.js|../notes/markers": "src/engine/notes/markers.js",
   "src/engine/output/geometry-projector.js|../layout/side-notes": "src/engine/layout/side-notes.js",
   "src/engine/output/geometry-projector.js|./line-font": "src/engine/output/line-font.js",
+  "src/engine/output/geometry-projector.js|../layout/line-fragments": "src/engine/layout/line-fragments.js",
   "src/engine/output/geometry-projector.js|./shaar-content": "src/engine/output/shaar-content.js",
   "src/engine/output/geometry-projector.js|../decoration/ornament-ink": "src/engine/decoration/ornament-ink.js",
   "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
@@ -15826,6 +15827,44 @@ function fontStack(family) {
   return out.join(', ');
 }
 
+const inlineItemRenderers = new Map();
+
+function registerInlineItemRenderer(kind, renderer) {
+  if (typeof kind !== 'string' || !kind.trim()) {
+    throw new TypeError('dom-renderer: inline item kind must be a non-empty string');
+  }
+  if (typeof renderer !== 'function') {
+    throw new TypeError('dom-renderer: inline item renderer must be a function');
+  }
+  inlineItemRenderers.set(kind, renderer);
+  return () => {
+    if (inlineItemRenderers.get(kind) === renderer) inlineItemRenderers.delete(kind);
+  };
+}
+
+function bytesToBase64(input) {
+  const bytes = input instanceof Uint8Array
+    ? input
+    : (ArrayBuffer.isView(input)
+      ? new Uint8Array(input.buffer, input.byteOffset, input.byteLength)
+      : (input instanceof ArrayBuffer ? new Uint8Array(input) : null));
+  if (!bytes) throw new TypeError('dom-renderer: image bytes must be an ArrayBuffer or byte view');
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let output = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i];
+    const hasB = i + 1 < bytes.length;
+    const hasC = i + 2 < bytes.length;
+    const b = hasB ? bytes[i + 1] : 0;
+    const c = hasC ? bytes[i + 2] : 0;
+    output += alphabet[a >> 2];
+    output += alphabet[((a & 3) << 4) | (b >> 4)];
+    output += hasB ? alphabet[((b & 15) << 2) | (c >> 6)] : '=';
+    output += hasC ? alphabet[c & 63] : '=';
+  }
+  return output;
+}
+
 function renderLine(ln, doc, settings = {}) {
   const el = doc.createElement('div');
   el.className = 'line' + (ln.isLast ? ' line--last' + lastLineClass(ln, settings) : '');
@@ -15876,6 +15915,67 @@ function renderLine(ln, doc, settings = {}) {
       prependChild(el, cm);
     }
   }
+  if (Array.isArray(ln.fragments)) {
+    for (const fragment of ln.fragments) {
+      if (fragment.kind === 'text') {
+        const word = doc.createElement('span');
+        word.className = 'w';
+        if (fragment.id != null) word.dataset.inlineId = String(fragment.id);
+        if (Array.isArray(fragment.segments) && fragment.segments.length) {
+          for (const segment of fragment.segments) {
+            const child = doc.createElement('span');
+            child.className = 'w__segment';
+            if (segment.fontFamily) child.style.fontFamily = fontStack(segment.fontFamily);
+            if (Number.isFinite(segment.sizePt) && segment.sizePt > 0) child.style.fontSize = String(ptToPx(segment.sizePt)) + 'px';
+            child.textContent = scrubPUAText(segment.text || '');
+            word.appendChild(child);
+          }
+        } else {
+          word.textContent = scrubPUAText(fragment.text || '');
+        }
+        el.appendChild(word);
+        continue;
+      }
+
+      if (fragment.kind === 'image') {
+        const image = doc.createElement('img');
+        image.className = 'inline-image';
+        image.alt = fragment.alt || fragment.resourcePath || '';
+        image.draggable = false;
+        image.style.display = 'inline-block';
+        image.style.width = String(fragment.widthPx) + 'px';
+        image.style.height = String(fragment.heightPx) + 'px';
+        image.style.maxWidth = '100%';
+        image.style.objectFit = 'contain';
+        image.style.verticalAlign = 'middle';
+        const mimeType = fragment.mimeType || 'application/octet-stream';
+        if (fragment.bytes && fragment.bytes.length) {
+          image.src = 'data:' + mimeType + ';base64,' + bytesToBase64(fragment.bytes);
+        } else {
+          image.dataset.resourceMissing = 'true';
+        }
+        if (fragment.resourceId) image.dataset.resourceId = fragment.resourceId;
+        el.appendChild(image);
+        continue;
+      }
+
+      const customRenderer = inlineItemRenderers.get(fragment.kind);
+      const customNode = customRenderer ? customRenderer(fragment, doc, settings) : null;
+      if (customNode) {
+        el.appendChild(customNode);
+      } else {
+        const placeholder = doc.createElement('span');
+        placeholder.className = 'inline-item inline-item--custom';
+        placeholder.dataset.inlineKind = fragment.kind;
+        if (fragment.id != null) placeholder.dataset.inlineId = String(fragment.id);
+        placeholder.style.display = 'inline-block';
+        placeholder.style.width = String(fragment.widthPx) + 'px';
+        placeholder.style.height = String(fragment.heightPx) + 'px';
+        placeholder.style.verticalAlign = 'middle';
+        el.appendChild(placeholder);
+      }
+    }
+  } else {
   // **D-42:** מילים בתוך סוגריים — span.w--paren עם font-size בסקאלה (geometry-neutral).
   // מילים רגילות — span.w אחיד (מיצג גם ב‑DOM אמיתי וגם ב‑shim של הבדיקות).
   // **S11:** טווחי inline מסגנון מותאך — span.w--custom עם data-style (גודל מוחל כבר במדידה).
@@ -15901,6 +16001,7 @@ function renderLine(ln, doc, settings = {}) {
     }
   } else {
     el.textContent = words.join(' ');
+  }
   }
   const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
   if (tok) el.dataset.token = tok;
@@ -17230,7 +17331,7 @@ function renderPage(page, settings, doc, header) {
   return root;
 }
 
-module.exports = { renderPage, renderLine, scrubPUAText, bgRgba, PT_CLASS, renderSpanningBand, renderDecorations, renderPageBackgroundAndShaar, renderShaarContent, renderCustomPageContent, applyCustomStyleSpec, fontStack };
+module.exports = { renderPage, renderLine, scrubPUAText, bgRgba, PT_CLASS, renderSpanningBand, renderDecorations, renderPageBackgroundAndShaar, renderShaarContent, renderCustomPageContent, applyCustomStyleSpec, fontStack, registerInlineItemRenderer, bytesToBase64 };
 
 };
 __modules["src/engine/decoration/page-decorations.js"] = function (require, module, exports) {
@@ -18679,7 +18780,8 @@ const { MeasureAPI } = require('../typography/measure-api');
 const { NOTE_FONT_FACTORS } = require('../layout/footnote-budget');
 const { markerFor } = require('../notes/markers');
 const { SIDE_NOTE_FONT_FACTORS } = require('../layout/side-notes');
-const { lineFontSizePt, hexColorToRgb } = require('./line-font'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
+const { lineFontSizePt, hexColorToRgb } = require('./line-font');
+const { composeLineFragments } = require('../layout/line-fragments'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
 // **S73:** גופן השערים לפי מחלקת בלוק — מקור יחיד לשני הנתיבים (DOM+PDF)
 const { buildShaarBlocks, shaarFontOf } = require('./shaar-content');
 const { ornamentInk, parseSvgPaint, svgToPdfOps, svgInkBBox } = require('../decoration/ornament-ink'); // **EXT-4:** הדיו — מקור יחיד לכל הנתיבים // **03.11(ד):** תוכן השערים — אותו מודל כמו ה-DOM
@@ -19331,7 +19433,82 @@ function customFactorMapOf(settings) {
   return m;
 }
 
+function projectMeasuredLine(ln, colX, y, colW, settings, align, sizePt) {
+  const items = ln.fragments.map(fragment => ({ ...fragment }));
+  if (!items.length) return null;
+
+  if (align === 'justify' && !ln.isLast) {
+    const naturalWidth = items.reduce((sum, item) =>
+      sum + item.widthPx + (item.gapAfterPx || 0), 0);
+    const gapIndexes = [];
+    for (let i = 0; i < items.length - 1; i++) {
+      if ((items[i].gapAfterPx || 0) > 0) gapIndexes.push(i);
+    }
+    const extra = colW - naturalWidth;
+    if (extra > 0 && gapIndexes.length) {
+      const add = extra / gapIndexes.length;
+      for (const index of gapIndexes) items[index].gapAfterPx += add;
+    }
+  }
+
+  const placement = composeLineFragments(items, {
+    x: colX, y, widthPx: colW,
+    heightPx: ln.heightPx || 0,
+    direction: 'rtl',
+    align: align === 'justify' ? 'right' : align
+  });
+  if (!placement.ok) {
+    throw new Error('geometry-projector: measured inline fragments overflow line by ' +
+      roundTo3(placement.requiredWidthPx - placement.availableWidthPx) + 'px');
+  }
+
+  const bodyColor = colorOfSetting(settings['body-color']);
+  const fragments = placement.fragments.map(fragment => {
+    if (fragment.kind !== 'text') return fragment;
+    let segmentRight = fragment.x + fragment.widthPx;
+    const sourceSegments = Array.isArray(fragment.segments) && fragment.segments.length
+      ? fragment.segments
+      : [{ text: fragment.text, widthPx: fragment.widthPx, fontFamily: fragment.fontFamily || null }];
+    const segments = sourceSegments.map(segment => {
+      const widthPx = Number(segment.widthPx);
+      segmentRight -= widthPx;
+      const fontKey = familyFontKeyOf(segment.fontFamily, settings);
+      return {
+        ...segment, x: segmentRight, y, widthPx,
+        sizePt: fragment.sizePt || sizePt,
+        ...(fontKey ? { fontKey } : {})
+      };
+    });
+    return {
+      ...fragment,
+      segments,
+      sizePt: fragment.sizePt || sizePt,
+      ...(segments.length === 1 && segments[0].fontKey ? { fontKey: segments[0].fontKey } : {}),
+      ...(fragment.color ? {} : (bodyColor ? { color: bodyColor } : {}))
+    };
+  });
+
+  const words = fragments.filter(fragment => fragment.kind === 'text').map(fragment => ({
+    text: fragment.text, x: fragment.x, w: fragment.widthPx,
+    sizePt: fragment.sizePt || sizePt,
+    ...(fragment.fontKey ? { fontKey: fragment.fontKey } : {}),
+    ...(fragment.color ? { color: fragment.color } : {}),
+    segments: fragment.segments
+  }));
+  const heightPx = Math.max(ln.heightPx || 0, ...fragments.map(fragment => fragment.heightPx || 0));
+  return {
+    x: colX, y, w: colW, h: heightPx * (ln.aqStretch || 1),
+    words, fragments, align,
+    kind: ln.kind || 'paragraph', level: ln.level, isLast: !!ln.isLast,
+    sizePt,
+    tokenId: ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId),
+    baselineY: null
+  };
+}
+function roundTo3(value) { return Math.round(value * 1000) / 1000; }
+
 function projectLine(ln, colX, y, colW, settings, measure, align) {
+  if (Array.isArray(ln.fragments)) return projectMeasuredLine(ln, colX, y, colW, settings, align, lineFontSizePt(ln, settings));
   const sizePt = lineFontSizePt(ln, settings);
   // **S73 (תצוגה=ייצוא בגופני כותרות — נתיב DP):** ה-DOM מציג כותרות inline
   // בגופן הרמה מההגדרות (heading-N-font) ובצבען (heading-N-color); עד כאן
@@ -19534,7 +19711,160 @@ function projectDocument(result, settings, api) {
   return { pages, inkBounds, layoutHash: result.layoutHash };
 }
 
-module.exports = { projectPage, projectLine, projectDocument, lineFontSizePt, attachBaselines };
+module.exports = { projectPage, projectLine, projectDocument, projectMeasuredLine, lineFontSizePt, attachBaselines };
+
+};
+__modules["src/engine/layout/line-fragments.js"] = function (require, module, exports) {
+// src/engine/layout/line-fragments.js — shared mixed-item line geometry (S14 P0)
+'use strict';
+
+const EPSILON = 1e-7;
+
+function finiteNonNegative(value, name) {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new TypeError('line-fragments: ' + name + ' must be a finite non-negative number');
+  }
+  return value;
+}
+
+function normalizeInlineItems(items) {
+  if (!Array.isArray(items)) throw new TypeError('line-fragments: items must be an array');
+  return items.map((item, index) => {
+    if (!item || typeof item.kind !== 'string' || !item.kind.trim()) {
+      throw new TypeError('line-fragments: every item requires a non-empty kind');
+    }
+    const widthPx = finiteNonNegative(item.widthPx, 'item.widthPx');
+    const heightPx = finiteNonNegative(item.heightPx == null ? 0 : item.heightPx, 'item.heightPx');
+    const gapAfterPx = finiteNonNegative(item.gapAfterPx == null ? 0 : item.gapAfterPx, 'item.gapAfterPx');
+    if (item.kind === 'text' && typeof item.text !== 'string') {
+      throw new TypeError('line-fragments: text item requires a string');
+    }
+    if (item.kind === 'image' && (typeof item.resourcePath !== 'string' || !item.resourcePath.trim())) {
+      throw new TypeError('line-fragments: image item requires resourcePath');
+    }
+    if (item.kind === 'anchor' && item.id == null) {
+      throw new TypeError('line-fragments: anchor item requires a stable id');
+    }
+    if (!['text', 'image', 'anchor'].includes(item.kind) && item.id == null) {
+      throw new TypeError('line-fragments: custom item requires a stable id');
+    }
+    const sourceStart = item.sourceStart == null ? null : item.sourceStart;
+    const sourceEnd = item.sourceEnd == null ? null : item.sourceEnd;
+    if ((sourceStart == null) !== (sourceEnd == null)
+      || (sourceStart != null && (!Number.isInteger(sourceStart) || !Number.isInteger(sourceEnd) || sourceStart < 0 || sourceEnd < sourceStart))) {
+      throw new TypeError('line-fragments: source range must be a valid [start,end) pair');
+    }
+    return { ...item, widthPx, heightPx, gapAfterPx, sourceStart, sourceEnd };
+  });
+}
+
+/**
+ * Return the horizontal free intervals for a line band after subtracting
+ * rectangles occupied by floating inline items (normally images).
+ * Coordinates use the same page-space system as the Page Model.
+ */
+function availableIntervalsAtY(contentRect, exclusions, y, heightPx) {
+  if (!contentRect || !Number.isFinite(contentRect.x) || !Number.isFinite(contentRect.y)
+    || !Number.isFinite(contentRect.width) || contentRect.width <= 0) {
+    throw new TypeError('line-fragments: contentRect requires finite x/y and positive width');
+  }
+  finiteNonNegative(heightPx, 'line height');
+  if (!Number.isFinite(y)) throw new TypeError('line-fragments: y must be finite');
+  const left = contentRect.x;
+  const right = left + contentRect.width;
+  const bandTop = y;
+  const bandBottom = y + heightPx;
+  let intervals = [{ x: left, width: contentRect.width }];
+
+  for (const rect of exclusions || []) {
+    if (!rect || !Number.isFinite(rect.x) || !Number.isFinite(rect.y)
+      || !Number.isFinite(rect.width) || !Number.isFinite(rect.height)
+      || rect.width < 0 || rect.height < 0) {
+      throw new TypeError('line-fragments: every exclusion must be a finite rectangle');
+    }
+    if (rect.width === 0 || rect.height === 0
+      || rect.y >= bandBottom - EPSILON || rect.y + rect.height <= bandTop + EPSILON) continue;
+    const cutLeft = Math.max(left, rect.x);
+    const cutRight = Math.min(right, rect.x + rect.width);
+    if (cutRight <= cutLeft + EPSILON) continue;
+    const next = [];
+    for (const interval of intervals) {
+      const iLeft = interval.x;
+      const iRight = iLeft + interval.width;
+      if (cutRight <= iLeft + EPSILON || cutLeft >= iRight - EPSILON) {
+        next.push(interval);
+        continue;
+      }
+      if (cutLeft > iLeft + EPSILON) next.push({ x: iLeft, width: cutLeft - iLeft });
+      if (cutRight < iRight - EPSILON) next.push({ x: cutRight, width: iRight - cutRight });
+    }
+    intervals = next;
+  }
+  return intervals.filter(interval => interval.width > EPSILON).sort((a, b) => a.x - b.x);
+}
+
+/**
+ * Position an already-broken sequence of measured atomic items in one free
+ * interval. The function never splits or drops an item. RTL is the default:
+ * logical item order is preserved while the first item is placed at the right.
+ */
+function composeLineFragments(items, options = {}) {
+  const normalized = normalizeInlineItems(items);
+  const x = Number(options.x);
+  const y = Number(options.y);
+  const widthPx = Number(options.widthPx);
+  const heightPx = finiteNonNegative(options.heightPx == null ? 0 : options.heightPx, 'line height');
+  const direction = options.direction || 'rtl';
+  const align = options.align || 'right';
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(widthPx) || widthPx <= 0) {
+    throw new TypeError('line-fragments: x/y and positive widthPx are required');
+  }
+  if (direction !== 'rtl' && direction !== 'ltr') throw new TypeError('line-fragments: direction must be rtl or ltr');
+  if (!['right', 'left', 'center', 'start', 'end'].includes(align)) {
+    throw new TypeError('line-fragments: unsupported alignment');
+  }
+
+  // Gaps are part of the line geometry, not decoration: they contribute to
+  // the fit and to RTL/LTR cursor movement exactly once.
+  const totalWidth = normalized.reduce((sum, item) => sum + item.widthPx + item.gapAfterPx, 0);
+  if (totalWidth > widthPx + EPSILON) {
+    return { ok: false, reason: 'line-overflow', requiredWidthPx: totalWidth, availableWidthPx: widthPx, fragments: [] };
+  }
+  const resolvedAlign = align === 'start' ? (direction === 'rtl' ? 'right' : 'left')
+    : align === 'end' ? (direction === 'rtl' ? 'left' : 'right') : align;
+  const spare = Math.max(0, widthPx - totalWidth);
+  let cursor;
+  if (direction === 'rtl') {
+    cursor = resolvedAlign === 'right' ? x + widthPx
+      : resolvedAlign === 'center' ? x + (widthPx + totalWidth) / 2
+        : x + totalWidth;
+  } else {
+    const offset = resolvedAlign === 'right' ? spare : resolvedAlign === 'center' ? spare / 2 : 0;
+    cursor = x + offset;
+  }
+  const fragments = normalized.map(item => {
+    if (direction === 'rtl') cursor -= item.widthPx;
+    const fragment = {
+      ...item,
+      x: cursor,
+      y,
+      widthPx: item.widthPx,
+      heightPx: Math.max(heightPx, item.heightPx)
+    };
+    if (direction === 'rtl') cursor -= item.gapAfterPx;
+    else cursor += item.widthPx + item.gapAfterPx;
+    return fragment;
+  });
+  return {
+    ok: true,
+    x, y, widthPx, heightPx,
+    direction, align: resolvedAlign,
+    usedWidthPx: totalWidth,
+    fragments
+  };
+}
+
+module.exports = { normalizeInlineItems, availableIntervalsAtY, composeLineFragments };
 
 };
 __modules["src/engine/output/pdf-writer.js"] = function (require, module, exports) {
