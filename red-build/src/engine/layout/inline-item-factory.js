@@ -33,6 +33,9 @@ function createMeasuredInlineItems(runs, options = {}) {
   const stretchRatio = options.glueStretchRatio == null ? DEFAULT_GLUE_STRETCH : finiteNonNegative(options.glueStretchRatio, 'glueStretchRatio');
   const shrinkRatio = options.glueShrinkRatio == null ? DEFAULT_GLUE_SHRINK : finiteNonNegative(options.glueShrinkRatio, 'glueShrinkRatio');
   const defaultFontFamily = options.defaultFontFamily || null;
+  const lineHeightForSize = typeof options.lineHeightForSize === 'function'
+    ? options.lineHeightForSize
+    : () => lineHeightPx;
   const items = [];
   const diagnostics = [];
   let wordSegments = [];
@@ -41,8 +44,15 @@ function createMeasuredInlineItems(runs, options = {}) {
     return run && run.fontFamily ? String(run.fontFamily) : defaultFontFamily;
   }
 
-  function measure(text, family) {
-    const width = options.measureText(String(text), family || null, sizePt);
+  function effectiveSize(run) {
+    return run && run.sizePt != null
+      ? finiteNonNegative(run.sizePt, 'run sizePt')
+      : sizePt;
+  }
+
+  function measure(text, family, runSizePt) {
+    const clean = String(text).replace(/\\uE102/g, '');
+    const width = options.measureText(clean, family || null, runSizePt == null ? sizePt : runSizePt);
     return finiteNonNegative(width, 'measured text width');
   }
 
@@ -53,12 +63,15 @@ function createMeasuredInlineItems(runs, options = {}) {
     const segments = wordSegments.map(segment => ({ ...segment }));
     const sourceStarts = segments.map(segment => segment.sourceStart).filter(Number.isFinite);
     const sourceEnds = segments.map(segment => segment.sourceEnd).filter(Number.isFinite);
+    const heightPx = Math.max(lineHeightPx, ...segments.map(segment => segment.heightPx || 0));
+    const sizeValues = [...new Set(segments.map(segment => segment.sizePt).filter(value => value != null))];
     const item = {
       kind: 'text',
       text,
       widthPx,
-      heightPx: lineHeightPx,
+      heightPx,
       segments,
+      ...(sizeValues.length === 1 ? { sizePt: sizeValues[0] } : {}),
       ...(segments.length === 1 ? { fontFamily: segments[0].fontFamily || null } : {}),
       ...(sourceStarts.length ? { sourceStart: Math.min(...sourceStarts) } : {}),
       ...(sourceEnds.length ? { sourceEnd: Math.max(...sourceEnds) } : {})
@@ -79,13 +92,15 @@ function createMeasuredInlineItems(runs, options = {}) {
       return;
     }
     const family = effectiveFamily(run);
-    const widthPx = measure(' ', family);
+    const runSizePt = effectiveSize(run);
+    const widthPx = measure(' ', family, runSizePt);
     items.push({
       kind: 'glue',
       widthPx,
       stretchPx: widthPx * stretchRatio,
       shrinkPx: widthPx * shrinkRatio,
       fontFamily: family,
+      ...(runSizePt != null ? { sizePt: runSizePt } : {}),
       ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
       ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
     });
@@ -99,23 +114,32 @@ function createMeasuredInlineItems(runs, options = {}) {
     if (run.kind === 'text') {
       const value = String(run.text == null ? '' : run.text);
       const family = effectiveFamily(run);
-      const matcher = /\s+|\S+/gu;
+      const runSizePt = effectiveSize(run);
+      // Ordinary spaces create legal break glue. NBSP and the private atomic
+      // note separator stay inside the same measured word box.
+      const matcher = /[\\u00A0\\uE000]+|[ \\t\\n\\r]+|\\S+/gu;
       let match;
       while ((match = matcher.exec(value))) {
         const token = match[0];
         const sourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart + match.index : undefined;
         const sourceEnd = Number.isFinite(run.sourceStart) ? sourceStart + token.length : undefined;
-        if (/^\s+$/u.test(token)) {
+        if (/^[ \\t\\n\\r]+$/u.test(token)) {
           appendGlue(run, sourceStart, sourceEnd);
           continue;
         }
-        const widthPx = measure(token, family);
+        const atomicSpace = /^[\\u00A0\\uE000]+$/u.test(token);
+        const visibleToken = atomicSpace ? token.replace(/\\uE000/g, '\\u00A0') : token;
+        const measuredToken = atomicSpace ? ' '.repeat(visibleToken.length) : visibleToken;
+        const widthPx = measure(measuredToken, family, runSizePt);
+        const heightPx = finiteNonNegative(lineHeightForSize(runSizePt), 'line height for run');
         // Adjacent parser runs can split one lexical word at removed font markers.
-        // Only visible whitespace or an atomic non-text run ends the current word.
+        // Only ordinary visible whitespace or an atomic non-text run ends the current word.
         wordSegments.push({
-          text: token,
+          text: visibleToken,
           fontFamily: family,
           widthPx,
+          heightPx,
+          ...(runSizePt != null ? { sizePt: runSizePt } : {}),
           ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
           ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
         });
