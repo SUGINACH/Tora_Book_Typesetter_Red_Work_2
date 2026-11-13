@@ -57,13 +57,15 @@ test('an explicit whitespace boundary separates adjacent font runs and keeps the
 });
 
 test('NBSP and the private atomic separator stay inside one unbreakable text atom', () => {
+  const nbsp = String.fromCharCode(0x00A0);
+  const atomic = String.fromCharCode(0xE000);
   const result = createMeasuredInlineItems([
-    { kind:'text', text:'אלף\\u00A0בית עוד', sourceStart:0, sourceEnd:12 }
+    { kind:'text', text:'אלף' + nbsp + 'בית' + atomic + 'מדרש עוד', sourceStart:0, sourceEnd:16 }
   ], { measureText:measure, lineHeightPx:18 });
   assert.deepEqual(result.items.map(item=>item.kind), ['text','glue','text']);
-  assert.equal(result.items[0].text, 'אלף\\u00A0בית');
-  assert.equal(result.items[0].widthPx, 80);
-  assert.equal(result.items[1].widthPx, 2);
+  assert.equal(result.items[0].text, 'אלף' + nbsp + 'בית' + nbsp + 'מדרש');
+  assert.equal(result.items[0].widthPx, 15);
+  assert.equal(result.items[1].widthPx, 1);
 });
 
 test('run-specific sizes are measured and retained on every segment', () => {
