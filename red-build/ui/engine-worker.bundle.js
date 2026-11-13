@@ -708,6 +708,89 @@ function offsetInSpans(at, spans) {
 }
 
 /**
+ * Turn a note-free canonical paragraph AST into the measured-run input stream.
+ * The same flat offsets used by the legacy prepasses are used to assign
+ * pre-measurement size changes; font-family boundaries remain explicit runs.
+ */
+function createStyledInlineRuns(parts, options = {}) {
+  if (!Array.isArray(parts)) throw new TypeError('pipeline: inline paragraph parts must be an array');
+  const baseSizePt = Number(options.baseSizePt);
+  if (!Number.isFinite(baseSizePt) || baseSizePt <= 0) {
+    throw new RangeError('pipeline: body font size must be positive and finite');
+  }
+  const parenScale = Number(options.parenScale) || 1;
+  const parenSpans = Array.isArray(options.parenSpans) ? options.parenSpans : [];
+  const customSpans = Array.isArray(options.customSpans) ? options.customSpans : [];
+  const result = [];
+  let flatOffset = 0;
+  let textPartCount = 0;
+
+  for (const part of parts) {
+    if (!part || part.kind !== 'text') {
+      throw new TypeError('pipeline: rich body layout only accepts note-free text parts');
+    }
+    if (textPartCount > 0) {
+      result.push({ kind: 'text', text: ' ', sizePt: baseSizePt });
+      flatOffset++;
+    }
+    for (const run of (part.runs || [])) {
+      if (!run || typeof run !== 'object') continue;
+      if (run.kind === 'image') {
+        result.push(run);
+        flatOffset += String(run.sourceText || '').length;
+        continue;
+      }
+      if (run.kind !== 'text') {
+        throw new TypeError('pipeline: unsupported canonical inline run kind: ' + String(run.kind));
+      }
+
+      const value = String(run.text || '');
+      let cursor = 0;
+      while (cursor < value.length) {
+        const first = value[cursor];
+        const isBreak = first === ' ' || first.charCodeAt(0) === 9 || first.charCodeAt(0) === 10 || first.charCodeAt(0) === 13;
+        let end = cursor + 1;
+        while (end < value.length) {
+          const ch = value[end];
+          const nextIsBreak = ch === ' ' || ch.charCodeAt(0) === 9 || ch.charCodeAt(0) === 10 || ch.charCodeAt(0) === 13;
+          if (nextIsBreak !== isBreak) break;
+          end++;
+        }
+        const token = value.slice(cursor, end);
+        const tokenOffset = flatOffset + cursor;
+        let sizePt = baseSizePt;
+        if (!isBreak) {
+          const custom = customSpans.find(span =>
+            tokenOffset < span.to && tokenOffset + token.length > span.from
+          );
+          if (custom && Number.isFinite(custom.factor) && custom.factor > 0) {
+            sizePt *= custom.factor;
+          } else if (parenSpans.some(span =>
+            tokenOffset < span.to && tokenOffset + token.length > span.from
+          )) {
+            sizePt *= parenScale;
+          }
+        }
+        const sourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart + cursor : undefined;
+        const sourceEnd = Number.isFinite(sourceStart) ? sourceStart + token.length : undefined;
+        result.push({
+          kind: 'text',
+          text: token,
+          fontFamily: run.fontFamily || null,
+          sizePt,
+          ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+          ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+        });
+        cursor = end;
+      }
+      flatOffset += value.length;
+    }
+    textPartCount++;
+  }
+  return result;
+}
+
+/**
  * @param {string} rawText - מקור הטקסט
  * @param {object} settings - merged settings (registry defaults + user)
  * @param {{doc?:object, onProgress?:(info:object)=>void}} env - optional DOM for oracle rendering;
@@ -893,9 +976,11 @@ function typeset(rawText, settingsIn, env = {}) {
   const endnoteTokens = [];        // טוקני הערת־סיום גלויים (endnotes mode)
   const endnoteTitleByPart = new Map(); // D-40: הוראות כותרת־מחלקה per-part
   const markersByToken = new Map(); // tokenId → [{noteIndex, marker}] (סמן אחיד — D-30)
+  const omittedInlineImagesByToken = new Map(); // intentional omission + warning when the referenced asset cannot be resolved
   // **S11:** חשבונאות שימור תוכן לסגנונות שמסיטים פסקה שלמה מהגוף —
   // הסמן נספר במקור פעם אחת, בדיוק כמו note-ref רגיל (D-30).
   const customFootnoteMarkers = new Map(); // tokenId → סמן (מוצג בגוף, הטקסט במרזב)
+  const resolvedInlineImageRunsByToken = new Map(); // successful image atoms replace source command markers in content accounting
   const customEndnoteTokens = new Set();   // tokenIds שזרמו לעמודי ההערות (הסמן מודפס שם)
   let currentPart = 0;
   let fwCount = 0;
@@ -1079,6 +1164,7 @@ function typeset(rawText, settingsIn, env = {}) {
     const inlineImageRuns = inlineContent.parts.flatMap(part =>
       part && part.kind === 'text' ? (part.runs || []).filter(run => run.kind === 'image') : []
     );
+    const resolvedInlineImageBoxes = new Map();
     const inlineImageMeasurements = inlineImageRuns.map(run => {
       const base = {
         resourcePath: run.resourcePath,
@@ -1091,6 +1177,7 @@ function typeset(rawText, settingsIn, env = {}) {
         const measured = resolveInlineImageRun(run, inlineAssetResolver, { localWidthPx: colW });
         if (!measured.ok) return { ...base, resolved: false, code: measured.code };
         const image = measured.image;
+        resolvedInlineImageBoxes.set(run, image);
         return {
           ...base, resolved: true,
           resourceId: image.resourceId, mimeType: image.mimeType,
@@ -1105,88 +1192,205 @@ function typeset(rawText, settingsIn, env = {}) {
     const customFactorById = new Map(csInlineSpans.map(s => [s.styleId, s.factor]));
     let csInfo = null; // **S11:** סגנון הבלוק שיוצמד לשורות ולבלוק (מדלג על ערכי איטרציות קודמות)
 
-    for (const p of inlineContent.parts) {
-      if (p.kind === 'text') {
-        const src = normalizeText(inlineRunsSourceText(p.runs));
-        for (const wordRaw of src.split(/\s+/).filter(Boolean)) {
-          const info = flatWordOffsets[Math.min(flatWordIdx, flatWordOffsets.length - 1)];
-          flatWordIdx++;
-          const inParen = parenSpans.length > 0 && info && offsetInSpans(info.at, parenSpans);
-          // **S11:** חברות בטווח inline = **חפיפה** (לא הכלה): מילה הפותחת במפריד «
-          // («וזה) חופפת את טווח התוכן שאחריו; מילה שלפני הפתיחה לא. וכך גם בסגירה.
-          const wLen = info ? String(info.word || wordRaw).length : String(wordRaw).length;
-          const inCustom = csInlineSpans.length > 0 && info
-            ? csInlineSpans.find(s => info.at < s.to && (info.at + wLen) > s.from) : null;
-          // עדיפות: טווח inline מותאם על פני סוגריים (שניהם לא יכולים לחפור בפועל — הסגנון תופס ראשון)
-          if (inCustom) allWords.push(CUSTOM_SENTINEL + inCustom.styleId + CUSTOM_SEP + wordRaw);
-          else if (inParen && parenScale !== 1) allWords.push(PAREN_SENTINEL + wordRaw);
-          else allWords.push(wordRaw);
-        }
-      } else {
-        // note-ref: uniform marker allocation (D-30/D-41) — policy numbering + style
-        const noteRaw = inlineNoteSourceText(inlineContent, p.noteIndex, ATOMIC);
-        const marker = markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
-        assignedMarkers.add(marker);
-        noteAssignments.push({ noteIndex: p.noteIndex, marker });
-        if (notesMode === 'inline' || (!settings['footnotes-enabled'] && notesMode !== 'endnotes')) {
-          // (c) inline / fn-off: full placeholder in the body — `${marker}\uE000${text}`
-          // (D-30: the separator is the first \uE000 — atomic in measurement, exact in extraction)
-          const noteFlat = String(noteRaw).replace(/\uE000/g, ' ');
-          const placeholder = `${MARK_TAG}${marker}${ATOMIC}${noteFlat.replace(/ /g, ATOMIC)}`; // תג (D-53): אחרי kp ה‑E000 נהיה NBSP — התג מזהה את הסמן
-          const prev = allWords.length ? allWords[allWords.length - 1] : null;
-          if (prev && !prev.includes('\u00A0') && !prev.includes(ATOMIC)) {
-            allWords[allWords.length - 1] = `${prev}\u00A0${placeholder}`; // the marker sticks to its anchor (BRZ-11)
-          } else {
-            allWords.push(placeholder);
+    // S14: one measured-item stream is now the primary path for ordinary
+    // note-free, image-free body paragraphs. Exceptional note/style modes are
+    // intentionally held on the established path until their semantic atoms
+    // are migrated, rather than approximated or silently discarded.
+    const hasInlineNotes = inlineContent.parts.some(part => part && part.kind === 'note-ref');
+    const hasInlineImages = inlineImageRuns.length > 0;
+    const allInlineImagesResolved = !hasInlineImages
+      || inlineImageRuns.every(run => resolvedInlineImageBoxes.has(run));
+    const richNoteMode = notesMode !== 'inline'
+      && (settings['footnotes-enabled'] || notesMode === 'endnotes');
+    const richNotesEligible = !hasInlineNotes || richNoteMode;
+    const richRunEligible = inlineContent.parts.length > 0
+      && inlineContent.parts.every(part => part && (part.kind === 'text' || part.kind === 'note-ref'))
+      && richNotesEligible
+      && allInlineImagesResolved
+      && !dh
+      && !csBlock
+      && (!hasInlineNotes || (csInlineSpans.length === 0 && parenSpans.length === 0));
+    let lines = null;
+    let usedMeasuredInlineLayout = false;
+    const richNoteMarkers = new Map();
+
+    if (richRunEligible) {
+      const bodySizePt = Number(settings['body-font-size-pt']);
+      const richRuns = [];
+      let canAttachMarkerBackward = false;
+      let ordinaryGlueAfterMarker = false;
+
+      for (let partIndex = 0; partIndex < inlineContent.parts.length; partIndex++) {
+        const part = inlineContent.parts[partIndex];
+        if (part.kind === 'text') {
+          if (ordinaryGlueAfterMarker) {
+            richRuns.push({ kind: 'text', text: ' ' });
+            ordinaryGlueAfterMarker = false;
+          }
+          for (const run of (part.runs || [])) {
+            richRuns.push(run);
+            if (run.kind === 'text') {
+              const value = String(run.text || '');
+              if (value.length) {
+                const last = value[value.length - 1];
+                canAttachMarkerBackward = last !== ' ' && last.charCodeAt(0) !== 9 && last.charCodeAt(0) !== 10 && last.charCodeAt(0) !== 13;
+              }
+            } else {
+              canAttachMarkerBackward = false;
+            }
           }
           continue;
         }
-        // footnotes / endnotes: only the marker is pushed in the body (counted once — at the anchor);
-        // the text of the note flows to its display location (gutter / pages of notes — D-30).
-        notes.push({ text: String(noteRaw).replace(/\uE000/g, ' '), marker, tokenId: t.id, noteIndex: p.noteIndex, part: currentPart || 1 });
+
+        const noteIndex = part.noteIndex;
+        const noteRaw = inlineNoteSourceText(inlineContent, noteIndex, ATOMIC);
+        const marker = markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
+        richNoteMarkers.set(noteIndex, marker);
+        assignedMarkers.add(marker);
+        noteAssignments.push({ noteIndex, marker });
+        notes.push({ text: String(noteRaw).split(String.fromCharCode(0xE000)).join(' '), marker, tokenId: t.id, noteIndex, part: currentPart || 1 });
         bodyMarkers.push(marker);
-        allWords.push(marker);
+
+        const nextPart = inlineContent.parts[partIndex + 1];
+        const hasNextText = !!(nextPart && nextPart.kind === 'text');
+        const hasNextNote = !!(nextPart && nextPart.kind === 'note-ref');
+        const markerText = canAttachMarkerBackward
+          ? String.fromCharCode(0x00A0) + MARK_TAG + marker
+          : MARK_TAG + marker + (hasNextText ? String.fromCharCode(0x00A0) : '');
+        richRuns.push({ kind: 'text', text: markerText });
+        ordinaryGlueAfterMarker = canAttachMarkerBackward ? (hasNextText || hasNextNote) : hasNextNote;
+        canAttachMarkerBackward = false;
+      }
+
+      const measuredRuns = createStyledInlineRuns([{ kind: 'text', runs: richRuns }], {
+        baseSizePt: bodySizePt,
+        parenScale,
+        parenSpans: hasInlineNotes ? [] : parenSpans,
+        customSpans: hasInlineNotes ? [] : csInlineSpans
+      });
+      const richLayout = api.layoutInlineRuns(measuredRuns, colW, {
+        sizePt: bodySizePt,
+        lineHeightPx: api.lineHeightPx(bodySizePt),
+        runts: settings['runt-min-width-pct'],
+        resolveImage: run => {
+          const image = resolvedInlineImageBoxes.get(run);
+          return image ? { ok: true, image } : { ok: false, code: 'INLINE_IMAGE_RESOURCE_MISSING' };
+        }
+      });
+      if (richLayout.ok) {
+        lines = richLayout.lines;
+        for (const ln of lines) {
+          ln.kind = 'paragraph';
+          ln.tokenId = t.id;
+          ln.part = currentPart;
+          ln.sizePt = bodySizePt;
+        }
+        stampMeasureW(lines, colW);
+        usedMeasuredInlineLayout = true;
+        if (hasInlineImages) resolvedInlineImageRunsByToken.set(t.id, new Set(inlineImageRuns));
+        markersByToken.set(t.id, noteAssignments);
+        if (richLayout.diagnostics.length) {
+          eventLog.emit('measure', 'inline-item-diagnostics', {
+            tokenId: t.id, diagnostics: richLayout.diagnostics
+          }, null);
+        }
+      } else {
+        eventLog.emit('measure', 'inline-item-layout-infeasible', {
+          tokenId: t.id, reason: richLayout.reason, maxAtomWidthPx: richLayout.maxAtomWidthPx
+        }, null);
       }
     }
-    markersByToken.set(t.id, noteAssignments);
 
-    // Pasting lone markers to their neighbors (BRZ-11) — before measurement
-    const boundWords = bindMarkersToNeighbors(allWords, assignedMarkers);
-
-    // Measurement with a pre-pass of parentheses (D-42) + custom inline styles (S11):
-    // PAREN_SENTINEL → parenScale; CUSTOM_SENTINEL<id> → size factor of the style.
-    const measureWithParen = (x) => {
-      const clean0 = String(x).replace(/\uE102/g, ''); // תג סמן — מוסר ממדידה (D-53)
-      const csM = CUSTOM_RE.exec(clean0);
-      if (csM) {
-        const f = customFactorById.get(csM[1]);
-        const base = api.measureTextWidth(clean0.slice(csM[0].length));
-        return f != null ? base * f : base;
-      }
-      const isParen = clean0.startsWith(PAREN_SENTINEL);
-      const clean = isParen ? clean0.slice(PAREN_SENTINEL.length) : clean0;
-      const base = api.measureTextWidth(clean);
-      return isParen ? base * parenScale : base;
-    };
-    const protectedWords = protectWords(boundWords, measureWithParen, colW);
-    const lines = api.layoutLines(protectedWords, colW, null, { runts: settings['runt-min-width-pct'] }, measureWithParen);
-    stampMeasureW(lines, colW); // **S4.21:** המידה שבה השורה נשברה בפועל (runt-check אמת) — פסקת ההקדמה נמדדת במידת טור הגוף, לא ברוחב העמוד החד-טורי
-
-    // Cleaning the sentinels from the lines + tagging parenSpans/customSpans for rendering
-    for (const ln of lines) {
-      const spans = [];
-      const customSpans = [];
-      ln.words = (ln.words || []).map((w, wi) => {
-        if (CUSTOM_RE.test(w)) {
-          const m = CUSTOM_RE.exec(w);
-          customSpans.push({ wi, styleId: m[1] });
-          return w.slice(m[0].length);
+    if (!usedMeasuredInlineLayout) {
+      for (const p of inlineContent.parts) {
+        if (p.kind === 'text') {
+          const src = normalizeText(inlineRunsSourceText(p.runs));
+          for (const wordRaw of src.split(/\s+/).filter(Boolean)) {
+            const info = flatWordOffsets[Math.min(flatWordIdx, flatWordOffsets.length - 1)];
+            flatWordIdx++;
+            const inParen = parenSpans.length > 0 && info && offsetInSpans(info.at, parenSpans);
+            // **S11:** חברות בטווח inline = **חפיפה** (לא הכלה): מילה הפותחת במפריד «
+            // («וזה) חופפת את טווח התוכן שאחריו; מילה שלפני הפתיחה לא. וכך גם בסגירה.
+            const wLen = info ? String(info.word || wordRaw).length : String(wordRaw).length;
+            const inCustom = csInlineSpans.length > 0 && info
+              ? csInlineSpans.find(s => info.at < s.to && (info.at + wLen) > s.from) : null;
+            // עדיפות: טווח inline מותאם על פני סוגריים (שניהם לא יכולים לחפור בפועל — הסגנון תופס ראשון)
+            if (inCustom) allWords.push(CUSTOM_SENTINEL + inCustom.styleId + CUSTOM_SEP + wordRaw);
+            else if (inParen && parenScale !== 1) allWords.push(PAREN_SENTINEL + wordRaw);
+            else allWords.push(wordRaw);
+          }
+        } else {
+          // note-ref: uniform marker allocation (D-30/D-41) — policy numbering + style
+          const noteRaw = inlineNoteSourceText(inlineContent, p.noteIndex, ATOMIC);
+          let marker = richNoteMarkers.get(p.noteIndex);
+          if (!marker) {
+            marker = markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
+            assignedMarkers.add(marker);
+            noteAssignments.push({ noteIndex: p.noteIndex, marker });
+          }
+          if (notesMode === 'inline' || (!settings['footnotes-enabled'] && notesMode !== 'endnotes')) {
+            // (c) inline / fn-off: full placeholder in the body — `${marker}\uE000${text}`
+            // (D-30: the separator is the first \uE000 — atomic in measurement, exact in extraction)
+            const noteFlat = String(noteRaw).replace(/\uE000/g, ' ');
+            const placeholder = `${MARK_TAG}${marker}${ATOMIC}${noteFlat.replace(/ /g, ATOMIC)}`; // תג (D-53): אחרי kp ה‑E000 נהיה NBSP — התג מזהה את הסמן
+            const prev = allWords.length ? allWords[allWords.length - 1] : null;
+            if (prev && !prev.includes('\u00A0') && !prev.includes(ATOMIC)) {
+              allWords[allWords.length - 1] = `${prev}\u00A0${placeholder}`; // the marker sticks to its anchor (BRZ-11)
+            } else {
+              allWords.push(placeholder);
+            }
+            continue;
+          }
+          // footnotes / endnotes: only the marker is pushed in the body (counted once — at the anchor);
+          // the text of the note flows to its display location (gutter / pages of notes — D-30).
+          if (!richNoteMarkers.has(p.noteIndex)) {
+            notes.push({ text: String(noteRaw).replace(/\\uE000/g, ' '), marker, tokenId: t.id, noteIndex: p.noteIndex, part: currentPart || 1 });
+            bodyMarkers.push(marker);
+          }
+          allWords.push(marker);
         }
-        if (w.startsWith(PAREN_SENTINEL)) { spans.push(wi); return w.slice(PAREN_SENTINEL.length); }
-        return w;
-      });
-      if (spans.length && parenScale !== 1) ln.parenSpans = spans;
-      if (customSpans.length) ln.customSpans = customSpans;
+      }
+      markersByToken.set(t.id, noteAssignments);
+  
+      // Pasting lone markers to their neighbors (BRZ-11) — before measurement
+      const boundWords = bindMarkersToNeighbors(allWords, assignedMarkers);
+  
+      // Measurement with a pre-pass of parentheses (D-42) + custom inline styles (S11):
+      // PAREN_SENTINEL → parenScale; CUSTOM_SENTINEL<id> → size factor of the style.
+      const measureWithParen = (x) => {
+        const clean0 = String(x).replace(/\uE102/g, ''); // תג סמן — מוסר ממדידה (D-53)
+        const csM = CUSTOM_RE.exec(clean0);
+        if (csM) {
+          const f = customFactorById.get(csM[1]);
+          const base = api.measureTextWidth(clean0.slice(csM[0].length));
+          return f != null ? base * f : base;
+        }
+        const isParen = clean0.startsWith(PAREN_SENTINEL);
+        const clean = isParen ? clean0.slice(PAREN_SENTINEL.length) : clean0;
+        const base = api.measureTextWidth(clean);
+        return isParen ? base * parenScale : base;
+      };
+      const protectedWords = protectWords(boundWords, measureWithParen, colW);
+      lines = api.layoutLines(protectedWords, colW, null, { runts: settings['runt-min-width-pct'] }, measureWithParen);
+      stampMeasureW(lines, colW); // **S4.21:** המידה שבה השורה נשברה בפועל (runt-check אמת) — פסקת ההקדמה נמדדת במידת טור הגוף, לא ברוחב העמוד החד-טורי
+  
+      // Cleaning the sentinels from the lines + tagging parenSpans/customSpans for rendering
+      for (const ln of lines) {
+        const spans = [];
+        const customSpans = [];
+        ln.words = (ln.words || []).map((w, wi) => {
+          if (CUSTOM_RE.test(w)) {
+            const m = CUSTOM_RE.exec(w);
+            customSpans.push({ wi, styleId: m[1] });
+            return w.slice(m[0].length);
+          }
+          if (w.startsWith(PAREN_SENTINEL)) { spans.push(wi); return w.slice(PAREN_SENTINEL.length); }
+          return w;
+        });
+        if (spans.length && parenScale !== 1) ln.parenSpans = spans;
+        if (customSpans.length) ln.customSpans = customSpans;
+      }
+  
     }
     // **S11:** הסגנון ברמת הבלוק על הפסקה (לא-footnote): דגלי פריסה + מונה + עיטורים מקושרים
     if (csBlock && csBlock.style.layoutMode !== 'footnote' && csBlock.style.layoutMode !== 'endnote') {
@@ -1209,16 +1413,14 @@ function typeset(rawText, settingsIn, env = {}) {
       // המונה מוצג בשורה הראשונה של הבלוק (הפס של full-width מטופל ברנדרר מהמידע על הפס)
       if (csInfo.counterMark && lines.length) lines[0].csCounterMark = csInfo.counterMark;
     }
-    const inlineImageFallbacks = inlineContent.parts.flatMap(part =>
-      part && part.kind === 'text'
-        ? (part.runs || []).filter(run => run.kind === 'image').map(run => ({
-          resourcePath: run.resourcePath,
-          sourceStart: run.sourceStart,
-          sourceEnd: run.sourceEnd,
-          sourceText: run.sourceText || ''
-        }))
-        : []
-    );
+    const inlineImageFallbacks = inlineImageRuns
+      .filter(run => !resolvedInlineImageRunsByToken.has(t.id) || !resolvedInlineImageRunsByToken.get(t.id).has(run))
+      .map(run => ({
+        resourcePath: run.resourcePath,
+        sourceStart: run.sourceStart,
+        sourceEnd: run.sourceEnd,
+        sourceText: run.sourceText || ''
+      }));
     const blk = {
       kind: 'paragraph', tokenId: t.id, parts: t.parts, inlineContent,
       inlineImageFallbacks, inlineImageMeasurements, notes, bodyMarkers, lines,
@@ -1235,10 +1437,13 @@ function typeset(rawText, settingsIn, env = {}) {
         }, null);
       }
       if (unresolvedImages.length) {
-        // Until line fragments and renderers consume ImageRuns, the source marker
-        // remains visible text. Missing resources are explicit, never guessed.
+        // Missing resources remain visible as source text; no dimensions are guessed.
         eventLog.emit('parse', 'inline-image-markers-retained-unresolved', {
           tokenId: t.id, images: unresolvedImages
+        }, null);
+      } else if (usedMeasuredInlineLayout) {
+        eventLog.emit('parse', 'inline-image-markers-consumed-by-inline-items', {
+          tokenId: t.id, images: resolvedImages.map(image => image.resourcePath)
         }, null);
       } else {
         eventLog.emit('parse', 'inline-image-markers-retained-pending-placement', {
@@ -1613,7 +1818,12 @@ function typeset(rawText, settingsIn, env = {}) {
     // paragraph: גוף + לכל note-ref: סמן (בעוגן שבגוף) + טקסט ההערה
     // (ממקום הצגתו). הסמן אחד לכל המצטרים — הוקצה אחדת
     // בשלב הבלוק (מדיניות + סגנון) — identity-by-construction (D-30).
-    const body = t.parts.filter(p => p.kind === 'text').map(p => p.value).join(' ');
+    const resolvedImages = resolvedInlineImageRunsByToken.get(t.id) || null;
+    const body = t.inlineContent && Array.isArray(t.inlineContent.parts)
+      ? t.inlineContent.parts.filter(p => p.kind === 'text').map(p => inlineRunsSourceText(
+        resolvedImages ? p.runs.filter(run => !resolvedImages.has(run)) : p.runs
+      )).join(' ')
+      : t.parts.filter(p => p.kind === 'text').map(p => p.value).join(' ');
     const refs = t.parts.filter(p => p.kind === 'note-ref');
     const assigns = markersByToken.get(t.id) || [];
     const out = [...wordSeq(body)];
@@ -3906,10 +4116,12 @@ class MeasureAPI {
       ...opts,
       sizePt,
       lineHeightPx,
+      lineHeightForSize: size => size == null ? lineHeightPx : this.lineHeightPx(size),
       defaultFontFamily: opts.defaultFontFamily || this.settings['body-font'],
       measureText: (text, family, size) => {
         const familyApi = family ? MeasureAPI.forFamily(family, this.settings) : null;
-        if (family && !familyApi) {
+        const defaultFamily = opts.defaultFontFamily || this.settings['body-font'];
+        if (family && family !== defaultFamily && !familyApi) {
           throw new Error('MeasureAPI.layoutInlineRuns: font family is not registered: ' + family);
         }
         return (familyApi || this).measureTextWidth(text, size);
@@ -4849,6 +5061,9 @@ function createMeasuredInlineItems(runs, options = {}) {
   const stretchRatio = options.glueStretchRatio == null ? DEFAULT_GLUE_STRETCH : finiteNonNegative(options.glueStretchRatio, 'glueStretchRatio');
   const shrinkRatio = options.glueShrinkRatio == null ? DEFAULT_GLUE_SHRINK : finiteNonNegative(options.glueShrinkRatio, 'glueShrinkRatio');
   const defaultFontFamily = options.defaultFontFamily || null;
+  const lineHeightForSize = typeof options.lineHeightForSize === 'function'
+    ? options.lineHeightForSize
+    : () => lineHeightPx;
   const items = [];
   const diagnostics = [];
   let wordSegments = [];
@@ -4857,8 +5072,15 @@ function createMeasuredInlineItems(runs, options = {}) {
     return run && run.fontFamily ? String(run.fontFamily) : defaultFontFamily;
   }
 
-  function measure(text, family) {
-    const width = options.measureText(String(text), family || null, sizePt);
+  function effectiveSize(run) {
+    return run && run.sizePt != null
+      ? finiteNonNegative(run.sizePt, 'run sizePt')
+      : sizePt;
+  }
+
+  function measure(text, family, runSizePt) {
+    const clean = String(text).split(String.fromCharCode(0xE102)).join('');
+    const width = options.measureText(clean, family || null, runSizePt == null ? sizePt : runSizePt);
     return finiteNonNegative(width, 'measured text width');
   }
 
@@ -4869,12 +5091,15 @@ function createMeasuredInlineItems(runs, options = {}) {
     const segments = wordSegments.map(segment => ({ ...segment }));
     const sourceStarts = segments.map(segment => segment.sourceStart).filter(Number.isFinite);
     const sourceEnds = segments.map(segment => segment.sourceEnd).filter(Number.isFinite);
+    const heightPx = Math.max(lineHeightPx, ...segments.map(segment => segment.heightPx || 0));
+    const sizeValues = [...new Set(segments.map(segment => segment.sizePt).filter(value => value != null))];
     const item = {
       kind: 'text',
       text,
       widthPx,
-      heightPx: lineHeightPx,
+      heightPx,
       segments,
+      ...(sizeValues.length === 1 ? { sizePt: sizeValues[0] } : {}),
       ...(segments.length === 1 ? { fontFamily: segments[0].fontFamily || null } : {}),
       ...(sourceStarts.length ? { sourceStart: Math.min(...sourceStarts) } : {}),
       ...(sourceEnds.length ? { sourceEnd: Math.max(...sourceEnds) } : {})
@@ -4895,13 +5120,15 @@ function createMeasuredInlineItems(runs, options = {}) {
       return;
     }
     const family = effectiveFamily(run);
-    const widthPx = measure(' ', family);
+    const runSizePt = effectiveSize(run);
+    const widthPx = measure(' ', family, runSizePt);
     items.push({
       kind: 'glue',
       widthPx,
       stretchPx: widthPx * stretchRatio,
       shrinkPx: widthPx * shrinkRatio,
       fontFamily: family,
+      ...(runSizePt != null ? { sizePt: runSizePt } : {}),
       ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
       ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
     });
@@ -4915,26 +5142,58 @@ function createMeasuredInlineItems(runs, options = {}) {
     if (run.kind === 'text') {
       const value = String(run.text == null ? '' : run.text);
       const family = effectiveFamily(run);
-      const matcher = /\s+|\S+/gu;
-      let match;
-      while ((match = matcher.exec(value))) {
-        const token = match[0];
-        const sourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart + match.index : undefined;
-        const sourceEnd = Number.isFinite(run.sourceStart) ? sourceStart + token.length : undefined;
-        if (/^\s+$/u.test(token)) {
-          appendGlue(run, sourceStart, sourceEnd);
-          continue;
+      const runSizePt = effectiveSize(run);
+      // Ordinary spaces create legal break glue. NBSP and the private atomic
+      // note separator stay inside the same measured word box and are normalized
+      // to visible NBSP in the renderer.
+      let cursor = 0;
+      while (cursor < value.length) {
+        const first = value[cursor];
+        const isAtomic = first === String.fromCharCode(0x00A0) || first === String.fromCharCode(0xE000);
+        const isBreak = first === ' ' || first === '\t' || first === '\n' || first === '\r';
+        let end = cursor + 1;
+        if (isAtomic || isBreak) {
+          while (end < value.length) {
+            const ch = value[end];
+            const same = isAtomic
+              ? ch === String.fromCharCode(0x00A0) || ch === String.fromCharCode(0xE000)
+              : ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r';
+            if (!same) break;
+            end++;
+          }
+        } else {
+          while (end < value.length) {
+            const ch = value[end];
+            if (ch === String.fromCharCode(0x00A0) || ch === String.fromCharCode(0xE000)
+              || ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') break;
+            end++;
+          }
         }
-        const widthPx = measure(token, family);
-        // Adjacent parser runs can split one lexical word at removed font markers.
-        // Only visible whitespace or an atomic non-text run ends the current word.
-        wordSegments.push({
-          text: token,
-          fontFamily: family,
-          widthPx,
-          ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
-          ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
-        });
+        const token = value.slice(cursor, end);
+        const sourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart + cursor : undefined;
+        const sourceEnd = Number.isFinite(run.sourceStart) ? sourceStart + token.length : undefined;
+        if (isBreak) {
+          appendGlue(run, sourceStart, sourceEnd);
+        } else {
+          const visibleToken = isAtomic
+            ? token.split(String.fromCharCode(0xE000)).join(String.fromCharCode(0x00A0))
+            : token;
+          const measuredToken = isAtomic ? ' '.repeat(visibleToken.length) : visibleToken;
+          const widthPx = measure(measuredToken, family, runSizePt);
+          const heightPx = finiteNonNegative(lineHeightForSize(runSizePt), 'line height for run');
+          // Adjacent parser runs can split one lexical word at removed font markers.
+          // Only ordinary visible whitespace or an atomic non-text run ends the current word.
+          wordSegments.push({
+            text: visibleToken,
+            fontFamily: family,
+            widthPx,
+            heightPx,
+            ...(runSizePt != null ? { sizePt: runSizePt } : {}),
+            ...(Number.isFinite(sourceStart) ? { sourceStart } : {}),
+            ...(Number.isFinite(sourceEnd) ? { sourceEnd } : {})
+          });
+        }
+        cursor = end;
       }
       continue;
     }
@@ -5267,10 +5526,47 @@ function reAlignColumns(page) {
   return orphaned;
 }
 
+/**
+ * Stable signature for a planned line. Legacy word-only lines retain their
+ * historical signature; measured inline lines additionally include the
+ * actual atom geometry and per-segment font metrics. This makes the layout
+ * hash sensitive to image/font changes even when the visible word sequence
+ * happens to remain unchanged.
+ */
+function lineLayoutSignature(line) {
+  const words = (line.words || []).join('\u00A7');
+  if (!Array.isArray(line.fragments)) return words;
+  const fragments = line.fragments.map(fragment => ({
+    kind: fragment.kind,
+    id: fragment.id == null ? null : fragment.id,
+    resourceId: fragment.resourceId == null ? null : fragment.resourceId,
+    text: fragment.kind === 'text' ? fragment.text : null,
+    widthPx: fragment.widthPx,
+    heightPx: fragment.heightPx,
+    gapAfterPx: fragment.gapAfterPx || 0,
+    sizePt: fragment.sizePt == null ? null : fragment.sizePt,
+    fontFamily: fragment.fontFamily || null,
+    sourceStart: fragment.sourceStart == null ? null : fragment.sourceStart,
+    sourceEnd: fragment.sourceEnd == null ? null : fragment.sourceEnd,
+    segments: Array.isArray(fragment.segments) ? fragment.segments.map(segment => ({
+      text: segment.text,
+      widthPx: segment.widthPx,
+      heightPx: segment.heightPx == null ? null : segment.heightPx,
+      sizePt: segment.sizePt == null ? null : segment.sizePt,
+      fontFamily: segment.fontFamily || null
+    })) : null
+  }));
+  return words + '\u00B6' + JSON.stringify({
+    heightPx: line.heightPx,
+    aqStretch: line.aqStretch || 1,
+    fragments
+  });
+}
+
 function layoutHash(pages) {
   const canon = pages.map(p => ({
     i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}`)),
+    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${lineLayoutSignature(ln)}`)),
     // **S4.10:** דפנסיביות — עמודי מנוע המורשת אינם מחויבים לכל השדות
     // (לפני כן p.sideNotes.length קרס על undefined). לעמודי DP אין שינוי ערך.
     fn: (p.footnotes || []).length, sn: (p.sideNotes || []).length
@@ -5279,16 +5575,15 @@ function layoutHash(pages) {
 }
 
 /**
- * **D-47 (תיקון P0-6):** hash של **הגיאומטריה הנמדדת בלבד** (הטורים/השורות) —
- * זהו האינווריאנט T1: פאס העיטורים/ההערות אסור לו לשנות את הפריסה שנמדדה.
- * בעבר ההשוואה CP4==CP5 השוותה משתנה לעצמו — טאוטולוגיה שאינה יכולה להיכשל.
- * כאן: hash נפרד של הטורים בלבד (בלי מרזבים/הערות צד שמשתנים כחוק בשלב ההערות)
- * — נבדק לפני ואחרי פאס העיטורים בpipeline; שינוי אמיתי בשורות ⇒ הבדיקה נכשלת.
+ * **D-47 (תיקון P0-6):** hash של הגיאומטריה הנמדדת בלבד (הטורים/השורות).
+ * עבור שורות rich הוא כולל גם ממדי atoms ופרטי מקטעי הגופן, ולא רק מילים.
  */
 function bodyGeometryHash(pages) {
   const canon = pages.map(p => ({
     i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}:${ln.seq != null ? 's' + ln.seq : ''}`))
+    c: p.columns.map(col => col.map(ln =>
+      `${lineTokenId(ln)}:${lineLayoutSignature(ln)}:${ln.seq != null ? 's' + ln.seq : ''}`
+    ))
   }));
   return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
 }
@@ -15174,6 +15469,24 @@ function nodeOnly(loader) {
   return loader();
 }
 
+/** Iterate actual drawable text segments. Mixed-font measured atoms store
+ * their per-family metadata on segments rather than on the flattened word. */
+function forEachLineTextSegment(line, callback) {
+  for (const word of (line && line.words) || []) {
+    const segments = Array.isArray(word.segments) && word.segments.length
+      ? word.segments
+      : [word];
+    for (const segment of segments) {
+      callback(
+        String(segment.text == null ? word.text || '' : segment.text),
+        segment.fontKey || word.fontKey || null,
+        word,
+        segment
+      );
+    }
+  }
+}
+
 /** **03.11(ג) תיקון קריסת ייצוא HTML בדפדפן:** ב-DOM האמיתי outerHTML מאפיין
  * (מחרוזת), ב-shim הבדיקות — פונקציה. הפונקציה הזו מטפלת בשניהם + נפילה
  * לסריאליזציה ידנית בסיסית (אף סביבה לא נותרת בלי פלט). */
@@ -15355,7 +15668,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const winParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'window') winParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'window') winParts.push(text);
+            });
           }
         }
         if (winParts.length) {
@@ -15386,7 +15701,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const headParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'heading') headParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'heading') headParts.push(text);
+            });
           }
         }
         if (headParts.length) {
@@ -15420,11 +15737,11 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         for (const pg of projected.pages) {
           const scan = (lines) => {
             for (const ln of lines) {
-              for (const w of (ln.words || [])) {
-                for (const ch of String(w.text || '')) {
+              forEachLineTextSegment(ln, text => {
+                for (const ch of text) {
                   if (fontForWriter.cidOf(ch) === 0 && glyphIdOf(frlProfile, ch) !== 0) missingChars.add(ch);
                 }
-              }
+              });
             }
           };
           scan(pg.spanning ? pg.spanning.lines : []);
@@ -15465,7 +15782,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const fnParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'fnbody') fnParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'fnbody') fnParts.push(text);
+            });
           }
           for (const fn of (pg.footnotes || [])) for (const w of (fn.words || [])) if (w.fontKey === 'fnbody') fnParts.push(w.text);
         }
@@ -15494,7 +15813,9 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         const mnParts = [];
         for (const pg of projected.pages) {
           for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-            for (const w of ln.words) if (w.fontKey === 'margin') mnParts.push(w.text);
+            forEachLineTextSegment(ln, (text, fontKey) => {
+              if (fontKey === 'margin') mnParts.push(text);
+            });
           }
         }
         if (mnParts.length) {
@@ -15531,7 +15852,7 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
     };
     for (const pg of projected.pages) {
       for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
-        for (const w of ln.words) collectFam(w.text, w.fontKey);
+        forEachLineTextSegment(ln, (text, fontKey) => collectFam(text, fontKey));
       }
       for (const fn of (pg.footnotes || [])) {
         for (const w of (fn.words || [])) collectFam(w.text, w.fontKey);
@@ -19476,7 +19797,7 @@ function projectMeasuredLine(ln, colX, y, colW, settings, align, sizePt) {
       const fontKey = familyFontKeyOf(segment.fontFamily, settings);
       return {
         ...segment, x: segmentRight, y, widthPx,
-        sizePt: fragment.sizePt || sizePt,
+        sizePt: segment.sizePt || fragment.sizePt || sizePt,
         ...(fontKey ? { fontKey } : {})
       };
     });
