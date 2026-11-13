@@ -50,7 +50,7 @@ function reAlignColumns(page) {
  * happens to remain unchanged.
  */
 function lineLayoutSignature(line) {
-  const words = (line.words || []).join('\\u00A7');
+  const words = (line.words || []).join('\u00A7');
   if (!Array.isArray(line.fragments)) return words;
   const fragments = line.fragments.map(fragment => ({
     kind: fragment.kind,
@@ -72,7 +72,7 @@ function lineLayoutSignature(line) {
       fontFamily: segment.fontFamily || null
     })) : null
   }));
-  return words + '\\u00B6' + JSON.stringify({
+  return words + '\u00B6' + JSON.stringify({
     heightPx: line.heightPx,
     aqStretch: line.aqStretch || 1,
     fragments
