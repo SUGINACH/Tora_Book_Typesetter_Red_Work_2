@@ -226,7 +226,8 @@ class MeasureAPI {
       defaultFontFamily: opts.defaultFontFamily || this.settings['body-font'],
       measureText: (text, family, size) => {
         const familyApi = family ? MeasureAPI.forFamily(family, this.settings) : null;
-        if (family && !familyApi) {
+        const defaultFamily = opts.defaultFontFamily || this.settings['body-font'];
+        if (family && family !== defaultFamily && !familyApi) {
           throw new Error('MeasureAPI.layoutInlineRuns: font family is not registered: ' + family);
         }
         return (familyApi || this).measureTextWidth(text, size);
