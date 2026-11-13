@@ -637,7 +637,7 @@ function typeset(rawText, settingsIn, env = {}) {
               const value = String(run.text || '');
               if (value.length) {
                 const last = value[value.length - 1];
-                canAttachMarkerBackward = last !== ' ' && last !== '\\t' && last !== '\\n' && last !== '\\r';
+                canAttachMarkerBackward = last !== ' ' && last.charCodeAt(0) !== 9 && last.charCodeAt(0) !== 10 && last.charCodeAt(0) !== 13;
               }
             } else {
               canAttachMarkerBackward = false;
@@ -652,15 +652,15 @@ function typeset(rawText, settingsIn, env = {}) {
         richNoteMarkers.set(noteIndex, marker);
         assignedMarkers.add(marker);
         noteAssignments.push({ noteIndex, marker });
-        notes.push({ text: String(noteRaw).replace(/\\uE000/g, ' '), marker, tokenId: t.id, noteIndex, part: currentPart || 1 });
+        notes.push({ text: String(noteRaw).split(String.fromCharCode(0xE000)).join(' '), marker, tokenId: t.id, noteIndex, part: currentPart || 1 });
         bodyMarkers.push(marker);
 
         const nextPart = inlineContent.parts[partIndex + 1];
         const hasNextText = !!(nextPart && nextPart.kind === 'text');
         const hasNextNote = !!(nextPart && nextPart.kind === 'note-ref');
         const markerText = canAttachMarkerBackward
-          ? '\\u00A0' + MARK_TAG + marker
-          : MARK_TAG + marker + (hasNextText ? '\\u00A0' : '');
+          ? String.fromCharCode(0x00A0) + MARK_TAG + marker
+          : MARK_TAG + marker + (hasNextText ? String.fromCharCode(0x00A0) : '');
         richRuns.push({ kind: 'text', text: markerText });
         ordinaryGlueAfterMarker = canAttachMarkerBackward ? (hasNextText || hasNextNote) : hasNextNote;
         canAttachMarkerBackward = false;
