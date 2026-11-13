@@ -217,6 +217,7 @@ function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
   const solution = solveBreaks(items, maxWidthPx, opts);
   if (!solution.cuts) return greedyFallback(items, solution.widthForLine, measure, lineHeightPx);
   const cuts = solution.cuts;
+  const lines = [];
   for (let k = 0; k < cuts.length; k++) {
     const [a, b] = cuts[k];
     // Recombine sub-boxes of one NBSP unit into one output token.
