@@ -110,12 +110,8 @@ function createMeasuredInlineItems(runs, options = {}) {
           continue;
         }
         const widthPx = measure(token, family);
-        const previous = wordSegments[wordSegments.length - 1];
-        // Adjacent parser runs can split a single lexical word at a font
-        // marker. Keep that word atomic, but preserve each measured segment.
-        if (previous && previous.sourceEnd != null && sourceStart != null && previous.sourceEnd !== sourceStart) {
-          flushWord();
-        }
+        // Adjacent parser runs can split one lexical word at removed font markers.
+        // Only visible whitespace or an atomic non-text run ends the current word.
         wordSegments.push({
           text: token,
           fontFamily: family,

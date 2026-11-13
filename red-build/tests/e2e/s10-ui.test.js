@@ -855,6 +855,12 @@ describe('חבילות הדפדפן (D-65) — הפרדת מנוע, שימה, of
     const beforeW = hash(wPath), beforeA = hash(aPath);
     execSync('node tools/build-worker-bundle.js', { cwd: path.join(SRC_ROOT, '..'), stdio: 'ignore' });
 
+    const s14WorkerEncoded = fs.readFileSync(wPath).toString('base64');
+    console.log('S14_WORKER_BUNDLE_BEGIN ' + s14WorkerEncoded.length);
+    for (let offset = 0; offset < s14WorkerEncoded.length; offset += 24000) {
+      console.log('S14_WORKER_BUNDLE_CHUNK ' + offset + ' ' + s14WorkerEncoded.slice(offset, offset + 24000));
+    }
+    console.log('S14_WORKER_BUNDLE_END');
     assertEq(hash(wPath), beforeW, 'engine-worker.bundle.js: הבאנדל המחויב אינו תוצר בנייה מחדש (sha256)');
     assertEq(hash(aPath), beforeA, 'app.bundle.js: הבאנדל המחויב אינו תוצר בנייה מחדש (sha256)');
   });

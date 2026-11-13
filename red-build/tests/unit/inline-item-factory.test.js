@@ -33,7 +33,7 @@ test('text runs become atomic words and one measured glue per whitespace run', (
 test('adjacent font runs inside one lexical word remain one atom with measured subsegments', () => {
   const result = createMeasuredInlineItems([
     { kind:'text', text:'אב', fontFamily:'Alpha', sourceStart:20, sourceEnd:22 },
-    { kind:'text', text:'גד', fontFamily:'Beta', sourceStart:22, sourceEnd:24 }
+    { kind:'text', text:'גד', fontFamily:'Beta', sourceStart:40, sourceEnd:42 }
   ], { measureText:measure, lineHeightPx:20 });
   assert.equal(result.items.length,1);
   assert.equal(result.items[0].kind,'text');
@@ -41,7 +41,7 @@ test('adjacent font runs inside one lexical word remain one atom with measured s
   assert.equal(result.items[0].widthPx,10);
   assert.deepEqual(result.items[0].segments.map(s=>s.fontFamily),['Alpha','Beta']);
   assert.deepEqual(result.items[0].segments.map(s=>s.widthPx),[4,6]);
-  assert.deepEqual([result.items[0].sourceStart,result.items[0].sourceEnd],[20,24]);
+  assert.deepEqual([result.items[0].sourceStart,result.items[0].sourceEnd],[20,42]);
 });
 
 test('an explicit whitespace boundary separates adjacent font runs and keeps the run family on glue', () => {
