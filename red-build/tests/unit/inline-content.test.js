@@ -2,7 +2,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { parseInlineRuns } = require('../../src/engine/parser/inline-content');
+const { parseInlineRuns, inlineRunsSourceText, inlineParagraphSourceText, inlineNoteSourceText } = require('../../src/engine/parser/inline-content');
 const { tokenize } = require('../../src/engine/parser/block-tokenizer');
 const { tokenizeDoc: tokenizeLegacyDoc } = require('../../src/engine/layout/legacy-imud-flow');
 
@@ -16,6 +16,17 @@ function test(name, fn) {
 function textOf(result) {
   return result.runs.filter(run => run.kind === 'text').map(run => run.text).join('');
 }
+
+test('canonical source projection preserves ImageRun markers and note payloads', () => {
+  const paragraph = tokenize(['לפני #assets/diagram.png# אחרי [הערה #notes/ref.jpg#] סוף'])[0].inlineContent;
+  assert.equal(inlineParagraphSourceText(paragraph), 'לפני #assets/diagram.png# אחרי  סוף');
+  assert.equal(inlineNoteSourceText(paragraph, 0), 'הערה #notes/ref.jpg#');
+  assert.equal(inlineNoteSourceText(paragraph, 0, '\\uE000'), 'הערה\\uE000#notes/ref.jpg#');
+  assert.equal(
+    inlineRunsSourceText([{ kind: 'text', text: 'א' }, { kind: 'image', sourceText: '#x.png#' }, { kind: 'text', text: 'ב' }]),
+    'א#x.png#ב'
+  );
+});
 
 test('plain text is represented as a lossless TextRun', () => {
   const result = parseInlineRuns('שלום עולם');
