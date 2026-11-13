@@ -2,7 +2,6 @@
 'use strict';
 
 const EPSILON = 1e-7;
-const ITEM_KINDS = new Set(['text', 'image', 'anchor']);
 
 function finiteNonNegative(value, name) {
   if (!Number.isFinite(value) || value < 0) {
@@ -14,8 +13,8 @@ function finiteNonNegative(value, name) {
 function normalizeInlineItems(items) {
   if (!Array.isArray(items)) throw new TypeError('line-fragments: items must be an array');
   return items.map((item, index) => {
-    if (!item || !ITEM_KINDS.has(item.kind)) {
-      throw new TypeError('line-fragments: unsupported item kind at index ' + index);
+    if (!item || typeof item.kind !== 'string' || !item.kind.trim()) {
+      throw new TypeError('line-fragments: every item requires a non-empty kind');
     }
     const widthPx = finiteNonNegative(item.widthPx, 'item.widthPx');
     const heightPx = finiteNonNegative(item.heightPx == null ? 0 : item.heightPx, 'item.heightPx');
@@ -28,6 +27,9 @@ function normalizeInlineItems(items) {
     }
     if (item.kind === 'anchor' && item.id == null) {
       throw new TypeError('line-fragments: anchor item requires a stable id');
+    }
+    if (!['text', 'image', 'anchor'].includes(item.kind) && item.id == null) {
+      throw new TypeError('line-fragments: custom item requires a stable id');
     }
     const sourceStart = item.sourceStart == null ? null : item.sourceStart;
     const sourceEnd = item.sourceEnd == null ? null : item.sourceEnd;
