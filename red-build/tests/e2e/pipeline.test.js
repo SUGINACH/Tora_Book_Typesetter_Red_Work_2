@@ -7,6 +7,8 @@ const path = require('path');
 const { describe, it, assert, assertEq, report } = require('../harness');
 
 const { typeset } = require('../../src/engine/core/pipeline');
+const { registerFont, clearRegisteredFonts } = require('../../src/engine/typography/measure-api');
+const { buildTtfFixture } = require('../fixtures/gen_ttf_fixture');
 const { getDefaultSettings } = require('../../src/engine/core/settings-registry');
 const { renderPage } = require('../../src/engine/output/dom-renderer');
 const { buildStandaloneHtml, assertOfflineSafe } = require('../../src/engine/output/html-export');
@@ -60,6 +62,28 @@ describe('e2e-pipeline', () => {
     assert(result.pages.length > 0, 'must produce pages');
     assert(result.contentPreserved === true, 'word multiset must be preserved');
     assert(typeof result.layoutHash === 'string' && result.layoutHash.length >= 16, 'layout hash present');
+  });
+
+  it('canonical inline font runs reach the shared measured solver and survive pagination', () => {
+    clearRegisteredFonts();
+    const fontBytes = buildTtfFixture({ kern:false }).bytes;
+    assert(registerFont('Inline Alpha', fontBytes).ok, 'inline font fixture must register');
+    try {
+      const settings = { ...getDefaultSettings(), _inlineFontFamilies:['Inline Alpha'] };
+      const source = 'טקסט רגיל <Inline Alpha>מילה מעוצבת</> המשך הפסקה';
+      const result = typeset(source, settings);
+      assert(result.contentPreserved === true, 'inline delimiters are markup, not printable content');
+      const lines = result.pages.flatMap(page => page.columns.flat());
+      const styled = lines.flatMap(line => line.fragments || [])
+        .find(fragment => fragment.kind === 'text'
+          && (fragment.segments || []).some(segment => segment.fontFamily === 'Inline Alpha'));
+      assert(styled, 'the page model must retain measured rich fragments');
+      assert.equal(styled.text, 'מילה');
+      assert(styled.segments.some(segment => segment.fontFamily === 'Inline Alpha'));
+      assert(lines.some(line => line.words.includes('מעוצבת')), 'all styled words remain in the line stream');
+    } finally {
+      clearRegisteredFonts();
+    }
   });
 
   it('determinism: two runs yield identical layoutHash', () => {
