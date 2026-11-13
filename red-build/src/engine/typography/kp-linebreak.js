@@ -335,31 +335,6 @@ function breakInlineItems(inlineItems, maxWidthPx, lineHeightPx, opts = {}) {
   return { ok: true, lines };
 }
 
-  const lines = [];
-  for (let k = 0; k < cuts.length; k++) {
-    const [a, b] = cuts[k];
-    // Recombine sub-boxes of one NBSP unit into one output token.
-    const toks = [];
-    let cur = null, prevPenaltyForbidden = false;
-    for (let idx = a; idx < b; idx++) {
-      const it = items[idx];
-      if (it.kind === 'penalty' && it.forbidden) { prevPenaltyForbidden = true; continue; }
-      if (it.kind !== 'box') continue;
-      if (cur !== null && prevPenaltyForbidden) { cur += '\u00A0' + it.text; prevPenaltyForbidden = false; }
-      else { if (cur !== null) toks.push(cur); cur = it.text; prevPenaltyForbidden = false; }
-    }
-    if (cur !== null) toks.push(cur);
-    if (!toks.length) continue;
-
-    let widthPx = 0;
-    for (let idx = a; idx < b; idx++) {
-      const it = items[idx];
-      if (it.kind === 'box' || it.kind === 'glue') widthPx += it.width;
-    }
-    lines.push({ words: toks, widthPx, heightPx: lineHeightPx, isLast: k === cuts.length - 1 });
-  }
-  return lines;
-}
 /**
  * מסלול גיבוי (כשה־DP לא מצא פתרון אפשרי, למשל מילה רחבה מהעמודה — אין מקף).
  * תיקון שורש (ביקורת 03.11, S13): בגיבוי חלים **אותם איסורי שבירה** כמו במסלול
