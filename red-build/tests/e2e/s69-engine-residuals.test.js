@@ -314,11 +314,21 @@ describe('S70 (R3-M2/M3) — כיול orphan/widow: רק הפרות אמיתיו
     const r = typeset(t, S);
     // **S72/D-106:** הנעילה עודכנה מ-531f2154 — מעבר יישור-התחתיות משנה את הגיאומטריה
     // ⇒ הערת-צד אחת ("שמירתו") הוסטה במפל בין עמ' 119←120 (תוכן נשמר, 2/1335 עמודים).
-    assert(r.layoutHash.startsWith('77d5d5d3'), `layout unchanged (got ${r.layoutHash.slice(0, 8)})`);
+    // **S78/D-107 (נעילה מחודשת — תיקון שורש מאושר):** שלושה שורשים: (1) מועמדי הפיצול
+    // מוגבלים כעת למקום הפנוי (maxFit היה מת — cut נבחר ללא קשר לקיבולת ⇒ פליטות
+    // מרומזות ⇒ 205 עמודים כמעט-ריקים); (2) הערות עוקבות אחר עוגנן (3 הערות הוצגו
+    // לפני עוגנן); (3) חותמי מדדים בניקוז הזנב. ההשפעה מדודה ומתועדת:
+    // ‏1335→1090 עמודים (אותן 100% שורות/מילים בדיוק — חסרום עמודי הבזבוז בלבד),
+    // underfill ‏356→86, כמעט-ריקים 205→7, איזון 617→458, הכלה 69→58, orphan-bottom
+    // ‏29→0 (כולם היו על עמודי הפתולוגיה; הגלאי עצמו נבדק בבדיקות היחידה לעיל).
+    assert(r.layoutHash.startsWith('42a7e435'), `layout unchanged (got ${r.layoutHash.slice(0, 8)})`);
     const count = (kind) => [...r.ledger.issues.values()].filter(x => x.kind === kind && x.status === 'persists').length;
     assertEq(count('widow-bottom'), 0, 'false widow-bottom flood eliminated (was 1176)');
     assertEq(count('orphan-top'), 0, 'false orphan-top flood eliminated (was 791)');
-    assert(count('orphan-bottom') > 0, 'REAL single-line violations still reported (not weakened)');
+    // **S78/D-107:** ה-29 אלמנות-הסיום של הבסיס חיו כולן על עמודי הפתולוגיה שחוסלו
+    // (פיצולים שחרגו מהמקום הפנוי); בפריסה הנקייה אינן נוצרות — הגלאי ממשיך
+    // להיבדק בבדיקות היחידה שלעיל (mkPage סינתטיות, אותן 4 נעילות).
+    assertEq(count('orphan-bottom'), 0, 'S78: no real single-line violations remain on the cleaned layout (detector covered by unit tests above)');
     assert(count('column-imbalance') > 0, 'documented imbalance residuals unchanged (D-95)');
     assert(r.contentPreserved === true, 'content preserved');
   });

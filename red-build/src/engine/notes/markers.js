@@ -183,4 +183,27 @@ function renumberPageScopedMarkers(pages, opts) {
   return { renumbered, touchedWords, skipped: null };
 }
 
-module.exports = { markerFor, makeCounter, hebrewMarkFinish, HEB_LETTERS, renumberPageScopedMarkers, MARK_TAG: '\uE102' };
+/**
+ * **S78 (D-107 — עוזר זיהוי סמן מתויג):** חילוץ שבר הסמן ממילת גוף לפי
+ * תבנית D-53 — `עוגן\u00A0\uE102סמן` (מודבק) או סמן מתויג בודד. מקור יחיד
+ * לפענוח: ה-pipeline (countKnown) וה-dp-planner (מיקום הערה אצל עוגנה)
+ * קוראים את אותה פונקציה — לא עוד העתקים של אותה לוגיקה.
+ * @param {string} word - מילת גוף (עשויה להכיל MARK_TAG ו/או placeholder E000)
+ * @returns {string|null} שבר הסמן, או null אם המילה אינה נושאת סמן מתויג
+ */
+function markerFragmentOf(word) {
+  const sw = String(word);
+  if (sw.includes('\uE000')) {
+    // placeholder עם E000 (reject-to-body): הסמן הוא הפרגמנט המוכר שלפני ה‑E000
+    // (עשוי להיות ממוזג לעוגן ב‑NBSP — מנורמל לרווח לפני הפיצול, כמו countKnown).
+    const at = sw.indexOf('\uE000');
+    const frags = sw.slice(0, at).replace(/\u00A0/g, ' ').split(' ').filter(Boolean);
+    return frags.length ? frags[frags.length - 1] : null;
+  }
+  if (!sw.includes('\uE102')) return null;
+  const at = sw.indexOf('\uE102');
+  const frag = sw.slice(at + 1).split(/[\u00A0 ]/)[0];
+  return frag || null;
+}
+
+module.exports = { markerFor, makeCounter, hebrewMarkFinish, HEB_LETTERS, renumberPageScopedMarkers, markerFragmentOf, MARK_TAG: '\uE102' };

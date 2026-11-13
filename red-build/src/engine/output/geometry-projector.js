@@ -17,7 +17,8 @@ const { scrubPUAText } = require('./dom-renderer');
 const { MeasureAPI } = require('../typography/measure-api');
 // **S5.4 (P-5):** מקורות יחידים להקרנת ההערות — פקטורי רוחב הגופן מהתקציב
 // (אותם מספרים שקבעו את גובה ההערה) וסמן אחיד מ-notes/markers (כמו ה-DOM).
-const { NOTE_FONT_FACTORS } = require('../layout/footnote-budget');
+const { NOTE_FONT_FACTORS, noteMetrics } = require('../layout/footnote-budget'); // **S78 (D-107):** noteMetrics — מקור יחיד למדדי ההערה
+const { assignFootnoteLanes } = require('../layout/footnote-lanes'); // **S78 (D-107):** חלוקת נתיבים — מקור יחיד
 const { markerFor } = require('../notes/markers');
 const { SIDE_NOTE_FONT_FACTORS } = require('../layout/side-notes');
 const { lineFontSizePt, hexColorToRgb } = require('./line-font'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
@@ -331,7 +332,7 @@ function colWidthOf(tpl) {
 // ============ S5.4 (P-5) — הקרנת הערות-שוליים / עמודי-הערות / הערות-צד / מפרידים ============
 
 /** גודל גוף הערה — 0.8× הגוף (כמו .footnotes{font-size:.8em} ו-noteHeight בתקציב). */
-function fnNoteSizePt(settings) { return settings['body-font-size-pt'] * 0.8; }
+function fnNoteSizePt(settings) { return noteMetrics(settings).sizePt; } // **S78:** מקור יחד (footnote-budget.noteMetrics)
 
 /**
  * שבירת אסימוני הערה לשורות ממוקמות מילה-במילה (RTL) — אותו חוזה של placeWords
@@ -423,12 +424,11 @@ function projectFootnoteGutter(page, settings, measure, out) {
   if (!twoLanes) {
     lanes[0] = notes.slice();
   } else {
-    // LPT — אותו אלגוריתם כמו getFootnotesReservedHeight; הסדר הפנימי בכל נתיב נשמר
-    const order = notes.map((n, i) => ({ i, h: n.heightPx || 0 })).sort((a, b) => b.h - a.h || a.i - b.i);
-    const totals = [0, 0];
-    const laneOf = new Map();
-    for (const s of order) { const li = totals[0] <= totals[1] ? 0 : 1; totals[li] += s.h; laneOf.set(s.i, li); }
-    notes.forEach((n, i) => lanes[laneOf.get(i)].push(n));
+    // **S78 (D-107):** חלוקת הנתיבים — מקור יחיד (footnote-lanes.assignFootnoteLanes);
+    // אותה חלוקה כמו התקציב והתצוגה החיה; הסדר הפנימי בכל נתיב נשמר.
+    const { lanes: laneIdx } = assignFootnoteLanes(notes);
+    for (const i of laneIdx[0]) lanes[0].push(notes[i]);
+    for (const i of laneIdx[1]) lanes[1].push(notes[i]);
   }
   const reserved = page.fnReservedHeightPx > 0
     ? page.fnReservedHeightPx
@@ -439,7 +439,7 @@ function projectFootnoteGutter(page, settings, measure, out) {
   lanes.forEach((laneNotes, li) => {
     let y = gutterTop;
     for (const n of laneNotes) {
-      const pitch = n.lineH || Math.round(fnSize * (96 / 72) * 1.25);
+      const pitch = n.lineH || noteMetrics(settings).lineHeightPx; // **S78:** מקור יחד לפיטץ'
       const cont = n.isContinuation === true || n.mode === 'split-rest';
       const marker = noteMarkerOf(n, settings);
       const tokens = [];
@@ -478,7 +478,7 @@ function projectFootnoteGutter(page, settings, measure, out) {
 function projectEndnotePage(page, settings, measure, out) {
   const tpl = page.template;
   const bodyPt = settings['body-font-size-pt'];
-  const notePt = bodyPt * 0.8;
+  const notePt = noteMetrics(settings).sizePt; // **S78:** מקור יחד
   // **S71.1 (R7-M4 שארית — בדיקה כפולה):** כמו המרזב והערות-הצד — הפקטור
   // הוא תיקון טבלת impl A; ב-impl B (ייצוא PDF) הוא מנפח את רוחבי המילים
   // בהקרנה ⇒ שבירה מוקדמת מזו שהמודל תיקצב (estimateNoteHeight ללא פקטור)
@@ -503,7 +503,7 @@ function projectEndnotePage(page, settings, measure, out) {
       : (tpl.columns[ci] || { x: colLeftOf(tpl), w: colWidthOf(tpl) / cols });
     let y = top;
     for (const n of colNotes) {
-      const pitch = measure.lineHeightPx ? measure.lineHeightPx(notePt) : Math.round(notePt * (96 / 72) * 1.34);
+      const pitch = measure.lineHeightPx ? measure.lineHeightPx(notePt) : noteMetrics(settings).lineHeightPx; // **S78:** נפילה מותאמת למקור היחיד
       const marker = noteMarkerOf(n, settings);
       const tokens = [];
       if (marker) tokens.push({ text: scrubPUAText(marker) });

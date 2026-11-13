@@ -1,6 +1,6 @@
 // ui/engine-worker.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת ה־Worker (המנוע המלא — אין לטעון בחוט ה־UI)
-// מודולים: 64 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 66 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -347,12 +347,17 @@ var __paths = {
   "src/engine/layout/dp-planner.js|./ordering": "src/engine/layout/ordering.js",
   "src/engine/layout/dp-planner.js|./balancing": "src/engine/layout/balancing.js",
   "src/engine/layout/dp-planner.js|./footnote-budget": "src/engine/layout/footnote-budget.js",
+  "src/engine/layout/dp-planner.js|./constraint-matrix": "src/engine/layout/constraint-matrix.js",
   "src/engine/layout/protections-matrix.js|./balancing": "src/engine/layout/balancing.js",
   "src/engine/layout/protections-matrix.js|./column-flow": "src/engine/layout/column-flow.js",
+  "src/engine/layout/protections-matrix.js|./constraint-matrix": "src/engine/layout/constraint-matrix.js",
   "src/engine/layout/protections-matrix.js|../notes/markers": "src/engine/notes/markers.js",
   "src/engine/layout/balancing.js|./column-flow": "src/engine/layout/column-flow.js",
+  "src/engine/layout/balancing.js|./constraint-matrix": "src/engine/layout/constraint-matrix.js",
   "src/engine/layout/column-flow.js|./page-templates": "src/engine/layout/page-templates.js",
   "src/engine/layout/candidate-generator.js|./column-flow": "src/engine/layout/column-flow.js",
+  "src/engine/layout/candidate-generator.js|./constraint-matrix": "src/engine/layout/constraint-matrix.js",
+  "src/engine/layout/footnote-budget.js|./footnote-lanes": "src/engine/layout/footnote-lanes.js",
   "src/engine/audit/editing-recommendations.js|../core/pipeline": "src/engine/core/pipeline.js",
   "src/engine/audit/editing-recommendations.js|../parser/dfa-lexer": "src/engine/parser/dfa-lexer.js",
   "src/engine/audit/editing-recommendations.js|../parser/block-tokenizer": "src/engine/parser/block-tokenizer.js",
@@ -408,6 +413,7 @@ var __paths = {
   "src/engine/output/dom-renderer.js|../decoration/folio": "src/engine/decoration/folio.js",
   "src/engine/output/dom-renderer.js|./line-font": "src/engine/output/line-font.js",
   "src/engine/output/dom-renderer.js|./shaar-content": "src/engine/output/shaar-content.js",
+  "src/engine/output/dom-renderer.js|../layout/footnote-lanes": "src/engine/layout/footnote-lanes.js",
   "src/engine/output/dom-renderer.js|../layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
   "src/engine/decoration/page-decorations.js|../layout/page-templates": "src/engine/layout/page-templates.js",
   "src/engine/decoration/ornament-ink.js|./asset-registry": "src/engine/decoration/asset-registry.js",
@@ -415,6 +421,7 @@ var __paths = {
   "src/engine/output/geometry-projector.js|./dom-renderer": "src/engine/output/dom-renderer.js",
   "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/output/geometry-projector.js|../layout/footnote-budget": "src/engine/layout/footnote-budget.js",
+  "src/engine/output/geometry-projector.js|../layout/footnote-lanes": "src/engine/layout/footnote-lanes.js",
   "src/engine/output/geometry-projector.js|../notes/markers": "src/engine/notes/markers.js",
   "src/engine/output/geometry-projector.js|../layout/side-notes": "src/engine/layout/side-notes.js",
   "src/engine/output/geometry-projector.js|./line-font": "src/engine/output/line-font.js",
@@ -3681,12 +3688,13 @@ const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
 const { runRetreatLoop } = require('./retreat-loop');
 const { generateCandidates } = require('./candidate-generator');
-const { blockGapPx, colCapacityOf } = require('./column-flow');
+const { blockGapPx, colCapacityOf, planningUsedHeight } = require('./column-flow'); // **S78:** planningUsedHeight — מקור יחיד לגובה התפוס בזמן תכנון
 const { fixDropWordInColumns } = require('../typography/protectors');
-const { MARK_TAG } = require('../notes/markers');
+const { MARK_TAG, markerFragmentOf } = require('../notes/markers'); // **S78:** עוזר זיהוי סמן מתויג (D-53) — מקור יחיד
 const { moveLineForward } = require('./ordering');
 const { optimalSplit } = require('./balancing'); // **EXT-8:** חלוקה גלובלית אופטימלית
-const { getFootnotesReservedHeight, noteHeight } = require('./footnote-budget');
+const { getFootnotesReservedHeight, noteHeight, noteMetrics } = require('./footnote-budget'); // **S78:** noteMetrics — מקור יחיד למדדי ההערה
+const { escortNeedLines, legalSplitWindow } = require('./constraint-matrix'); // **S78 (D-107):** מטריצת האילוצים המאוחדת
 
 /** חתימת פריסה דטרמיניסטית — ללא Date/random (REQ-GOV determinism).
  * תיקון S7-E2E: tokenId נמצא ב‑meta של pushLines (לא על השורה עצמה) — יש לחלץ משם,
@@ -3804,13 +3812,9 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
    * זהים (F-17). התקציב נרשם פעם אחת בסוף הטור האחרון.
    * תיקון P1-8: חתימה (col, page) — page חובה; אין עוד עמוד ברירת־מחדל שגוי.
    */
-  function usedHeight(col, page = cur) {
-    let h = col.reduce((s, ln) => s + (ln.heightPx || 0), 0);
-    if (page && page.fnReservedHeightPx > 0 && page.columns[page.columns.length - 1] === col) {
-      h += page.fnReservedHeightPx; // נשמר פעם אחת — בסוף הטור האחרון
-    }
-    return h;
-  }
+  // **S78 (D-107):** גובה תפוס בזמן תכנון — מקור יחיד (column-flow.planningUsedHeight);
+  // סמנטיקת הרינדור (עם aqStretch) חיה ב-balancing.usedHeight — שני דגלים, שני מקורות מתועדים.
+  const usedHeight = (col, page = cur) => planningUsedHeight(col, page);
 
   /**
    * **איחוד P1-1 (מנגנום תאום):** recomputeFnBudget ממשיך כעת דרך
@@ -3928,8 +3932,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       if (Number.isFinite(barMax) && h > barMax && settings['long-footnote-policy'] !== 'allow') {
         if (settings['long-footnote-policy'] === 'split') {
           // **פיצול אמיתי של הטקסט**: החלק הראשון נכנס למרזב הזה, השאר לעמוד הבא
-          const fnSize = settings['body-font-size-pt'] * 0.8;
-          const fnLH = Math.round(fnSize * (96 / 72) * 1.25);
+          const { sizePt: fnSize, lineHeightPx: fnLH } = noteMetrics(settings); // **S78 (D-107):** מקור יחיד למדדי ההערה
           const laneW = settings._fnColWidthPx || 200;
           const words = String(n.text).replace(/\uE000/g, ' ').split(/\s+/).filter(Boolean);
           const linesFit = Math.max(1, Math.floor(barMax / fnLH));
@@ -4140,7 +4143,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     if (blk.kind === 'heading' && blk.level <= 6) {
       const following = (next && next.lines) ? next.lines.length : 0;
       if (following >= 1) {
-        const needLines = 1 + Math.min(2, following); // כותרת + 2 שורות ליווי (או כמה שיש)
+        const needLines = escortNeedLines(1, following); // **S78 (D-107):** כותרת + ליווי — constraint-matrix (REQ-BAL-10) // כותרת + 2 שורות ליווי (או כמה שיש)
         let room = ensureRoom(needLines);
         if (room === -1) {
           flushPage(); cur = newPage(blk.level === 2 ? PAGE_TYPES.SIGN_OPEN : PAGE_TYPES.REGULAR);
@@ -4156,6 +4159,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     }
 
     // REQ-BAL-01: candidate search עם capacityBefore/capacityAfter + הקשר הבלוק הבא
+    const startPageIdx = cur.index; // **S78 (D-107):** תחילת ההצבה — ליישור הערות-עוגן לאחר פליטה מרומזת
     const need = blk.lines.length;
     let chosenCol = ensureRoom(need);
     if (chosenCol === -1) {
@@ -4163,14 +4167,34 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       if (splitAt > 0) {
         pushLines(blk.lines.slice(0, splitAt - 1), { tokenId: blk.tokenId, part: 'first' });
         pushLines([blk.lines[splitAt - 1]], { tokenId: blk.tokenId, part: 'first', isLast: true });
-        flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
+        flushPage();
+        const sealed = pages[pages.length - 1]; // **S78 (D-107):** העמוד שנאטם — הערות הבלוק רשומות בו
+        cur = newPage(PAGE_TYPES.REGULAR);
+        // **S78 (D-107 — הערה עוקבת אחר עוגנה):** הערות שעוגנו בחלק המוסט עוברות לעמוד החדש **לפני**
+        // הצבת שורות ההמשך — תקציב המרזב קודם לשורות (אין חריגת קיבולת בהכרח; העמוד הישן רק מרוויח).
+        // בעבר ההערה נשארה בעמוד שבו החלה ההצבה גם כשעוגנה עבר לעמוד הבא
+        // (מדידה: 3/11 הערות בספר-האמת הוצגו לפני עוגנן).
+        moveNotesAnchoredFrom(blk, pages, startPageIdx, cur, splitAt, { settings, eventLog, recomputeFnBudget });
         pushLines(blk.lines.slice(splitAt), { tokenId: blk.tokenId, part: 'rest' });
+        // **S78:** פליטה מרומזת בתוך ההמשך — יישור הערות לעוגניהן (מוגן-קיבולת).
+        reconcileNotesAfterPlacement(blk, pages, cur, startPageIdx, { settings, ledger, eventLog, recomputeFnBudget });
         continue;
       }
-      flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
+      // **S78 (D-107 — הזזה מלאה):** אם העמוד ריק משורות גוף — אין טעם לאוטרבו; הבלוק
+      // נכנס לכאן (בעבר נאטם עמוד ריק עם הערות יתומות — סמן בלי הערה ליווי).
+      if (cur.columns.some(c => c.length)) {
+        flushPage();
+        const sealed = pages[pages.length - 1];
+        cur = newPage(PAGE_TYPES.REGULAR);
+        // **S78 (D-107):** הבלוק כולו עבר — כל הערותיו עוקבות אחריו (אף עוגן לא נשאר מאחור).
+        moveNotesAnchoredFrom(blk, pages, startPageIdx, cur, 0, { settings, eventLog, recomputeFnBudget });
+      }
       chosenCol = 0;
     }
     pushLines(blk.lines, { tokenId: blk.tokenId, firstOfBlock: true, docPart: blk.part });
+    // **S78 (D-107):** פליטה מרומזת בתוך pushLines (שורה שלא נכנסה) יכולה להשאיר
+    // הערה מופנית מעוגנה — מישור חזיר (מוגן-קיבולת; חסימה — ממצא כן ב-ledger).
+    reconcileNotesAfterPlacement(blk, pages, cur, startPageIdx, { settings, ledger, eventLog, recomputeFnBudget });
 
     if (blk.sideNoteText) cur.sideNotes.push({ text: blk.sideNoteText, anchorToken: blk.tokenId });
   }
@@ -4185,8 +4209,17 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   // המשכים שנותרו בתור בסוף המסמך — לא ראוי לגנוז (BRZ-15): נדחפים לעמוד האחרון
   if (pendingBarNotes.length) {
     const last = pages[pages.length - 1];
+    const { lineHeightPx: tailLineH } = noteMetrics(settings);
     for (const n of pendingBarNotes) {
-      last.footnotes.push({ ...n }); // mode/isContinuation preserved (moved-whole stays whole)
+      // **S78 (D-107 — חותמי מדדים בניקוז הזנב):** התקציב (recomputeFnBudget) מחשב
+      // את הגובה מ-noteHeight ממילא, אך ההקרנה צורכת את n.heightPx/n.lineH — בלי החותמים,
+      // המשך שנדחף לסוף המסמך מתקדם שורה אחת בלבד ושורותיו חופפות את ההערה שאחריו
+      // (תקציב≠הקרנה — בדיוק מחלקת הכשל ש-S70/S71.1 רדפו אחריה).
+      last.footnotes.push({
+        ...n, // mode/isContinuation preserved (moved-whole stays whole)
+        ...(n.heightPx != null ? {} : { heightPx: noteHeight(n, settings, measureFn) }),
+        ...(n.lineH != null ? {} : { lineH: tailLineH })
+      });
     }
     recomputeFnBudget(last);
     eventLog.emit('notes-budget', 'fn-tail-continuation', { count: pendingBarNotes.length, page: last.index }, last.index);
@@ -4292,7 +4325,9 @@ function findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, s
   const cap = colCapacity(cur.template, cur);
   const free = cap - usedHeight(cur.columns[cur.columns.length - 1], cur);
   const maxFit = Math.floor(free / lineH);
-  if (maxFit < 2 || blk.lines.length - maxFit < 2) return 0; // אין פיצול חוקי → הזזה מלאה
+  // **S78 (D-107):** חלון הפיצול החוקי — מקור יחיד (constraint-matrix.legalSplitWindow):
+  // ≥2 שורות לכל צד (SRS §5.1). null ⇒ אין פיצול חוקי → הזזה מלאה.
+  if (!legalSplitWindow(blk.lines.length, maxFit)) return 0; // אין פיצול חוקי → הזזה מלאה
 
   if (candidatesFn) {
     const cands = candidatesFn(blk, maxFit, cap, settings, ledger);
@@ -4305,7 +4340,150 @@ function findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, s
   return maxFit;
 }
 
-module.exports = { planPages, layoutHash, bodyGeometryHash, lineTokenId, moveLineForward, balancePageSafe };
+
+// ============ S78 (D-107) — הערות עוקבות-עוגן: גרעין האופטימיזציה המשותפת ============
+
+/**
+ * אינדקס השורה בבלוק שבה מעוגן הסמן (תבנית D-53 — `עוגן\u00A0\uE102סמן`).
+ * זיהוי דרך markerFragmentOf (notes/markers) — אותו פענוח של ה-pipeline
+ * (countKnown). -1 אם הסמן לא נמצא (הגנה — ההערה נשארת במקומה).
+ */
+function anchorLineIndexOf(blk, marker) {
+  const lines = blk.lines || [];
+  const m = String(marker);
+  for (let i = 0; i < lines.length; i++) {
+    for (const w of (lines[i].words || [])) {
+      if (markerFragmentOf(w) === m) return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * העברת הערות הבלוק שעוגנו בשורות [fromLineIdx..) מ-fromPage אל toPage.
+ * נקראת **לפני** הצבת שורות ההמשך בעמוד החדש — תקציב המרזב שלו נרשם לפני
+ * ששורה כלשהי הוצבה בו (אין חריגת קיבולת בהכרח); העמוד הישן רק מרוויח
+ * קיבולת (הסרת תקציב בלבד — כיוון בטוח). המשכים (split-rest) אינם מוזזים —
+ * הם זורמים ממילא בתור ההמשכים (pendingBarNotes).
+ */
+function moveNotesAnchoredFrom(blk, pages, fromIdxStart, toPage, fromLineIdx, ctx) {
+  if (!blk || !(blk.notes || []).length || !toPage) return 0;
+  if (!ctx.settings['footnotes-enabled']) return 0;
+  const moved = [];
+  const sources = new Set();
+  // חלון כל העמודים האטומים מתחילת ההצבה — ההערות נרשמו בעמוד הפתיחה, אך
+  // פליטות מרומזות בתוך pushLines עשויות לפזר את הבלוק על כמה עמודים
+  // (ההערה יושבת בעמוד הפתיחה; ההזזה חייבת לסרוק את כל החלון, לא רק את האחרון).
+  for (let pi = Math.max(0, fromIdxStart); pi < pages.length; pi++) {
+    const pg = pages[pi];
+    if (!pg || pg === toPage || !(pg.footnotes || []).length) continue;
+    const keep = [];
+    let pgMoved = 0;
+    for (const n of pg.footnotes) {
+      const isBlockNote = n && n.tokenId === blk.tokenId
+        && !(n.isContinuation === true || n.mode === 'split-rest');
+      if (isBlockNote && anchorLineIndexOf(blk, n.marker) >= fromLineIdx) {
+        moved.push(n); pgMoved++;
+        continue;
+      }
+      keep.push(n);
+    }
+    if (pgMoved) { pg.footnotes = keep; sources.add(pg); }
+  }
+  if (!moved.length) return 0;
+  for (const n of moved) toPage.footnotes.push(n);
+  for (const pg of sources) ctx.recomputeFnBudget(pg);
+  ctx.recomputeFnBudget(toPage);
+  ctx.eventLog.emit('notes-budget', 'fn-followed-anchor', {
+    token: blk.tokenId, moved: moved.length, from: Math.max(0, fromIdxStart), to: toPage.index
+  }, toPage.index);
+  return moved.length;
+}
+
+/**
+ * יישור הערות לעוגניהן לאחר הצבה שכללה **פליטה מרומזת** (pushLines רשאי
+ * לסגור עמוד באמצע בלוק כששורה בודדת אינה נכנסת). הערה שעוגנה בעמוד מאוחר
+ * יותר מועברת אליו **רק אם יש בו שארית קיבולת** לתקציב הנוסף (בדיקת הכלה
+ * מצטברת פר-יעד, לפני כל תזוזה); אחרת — ממצא כן ב-ledger
+ * (fn-anchor-compromise) וההערה נשארת במקומה ("מדווח, לא מתוקן" כשאין
+ * תיקון חוקי). דטרמיניסטי לחלוטין: סריקה לפי סדר עמודים/מערכים.
+ */
+function reconcileNotesAfterPlacement(blk, pages, cur, startIdx, ctx) {
+  if (!blk || !(blk.notes || []).length) return;
+  if (!ctx.settings['footnotes-enabled']) return;
+  const { ledger, eventLog, recomputeFnBudget } = ctx;
+  // עמוד העוגן לכל סמן של הבלוק (הסמנים ייחודיים בזמן ה-DP — הקצאה רציפה, D-41/S67).
+  // **תיקון חלון (S78 v2):** העמוד הפתוח (cur) אינו ב-pages עדיין — בלי סריקתו
+  // עוגן בעמוד הנוכחי לא זוהה מעולם וההערה נשארה מופנית מעוגנה.
+  const anchorPageOf = new Map();
+  const scanWindow = [];
+  for (let pi = Math.max(0, startIdx); pi < pages.length; pi++) scanWindow.push(pages[pi]);
+  if (cur && (pages.length === 0 || pages[pages.length - 1] !== cur)) scanWindow.push(cur);
+  for (const pg of scanWindow) {
+    if (!pg) continue;
+    for (const col of pg.columns) {
+      for (const ln of col) {
+        if (!(ln.meta && ln.meta.tokenId === blk.tokenId)) continue;
+        for (const w of (ln.words || [])) {
+          const frag = markerFragmentOf(w);
+          if (frag != null && !anchorPageOf.has(frag)) anchorPageOf.set(frag, pg);
+        }
+      }
+    }
+  }
+  const endIdx = pages.length;
+  for (let pi = Math.max(0, startIdx); pi < endIdx; pi++) {
+    const pg = pages[pi];
+    if (!pg || !(pg.footnotes || []).length) continue;
+    const candidates = [];
+    for (let i = 0; i < pg.footnotes.length; i++) {
+      const n = pg.footnotes[i];
+      if (!n || n.tokenId !== blk.tokenId) continue;
+      if (n.isContinuation === true || n.mode === 'split-rest') continue;
+      const target = anchorPageOf.get(String(n.marker));
+      if (!target || target === pg || target.index < pg.index) continue;
+      candidates.push({ i, n, target, blocked: false });
+    }
+    if (!candidates.length) continue;
+    // בדיקת הכלה מצטברת פר-יעד — כמה הערות עשויות להידחף לאותו עמוד
+    const byTarget = new Map();
+    for (const c of candidates) {
+      if (!byTarget.has(c.target)) byTarget.set(c.target, []);
+      byTarget.get(c.target).push(c);
+    }
+    for (const [target, list] of byTarget) {
+      const cap = colCapacityOf(target, { fnBudget: false });
+      const lastCol = target.columns[target.columns.length - 1];
+      const used = planningUsedHeight(lastCol, target);
+      let acc = 0;
+      for (const c of list) {
+        acc += (c.n.heightPx || 0);
+        c.blocked = used + acc > cap + 0.5;
+      }
+    }
+    const dropIdx = new Set(candidates.filter(c => !c.blocked).map(c => c.i));
+    if (!dropIdx.size) continue;
+    pg.footnotes = pg.footnotes.filter((_, i) => !dropIdx.has(i));
+    const touched = new Set();
+    for (const c of candidates) {
+      if (c.blocked) {
+        const rec = ledger.create('fn-anchor-compromise', `${c.n.marker}@p${pg.index}->p${c.target.index}`, pg.index,
+          { marker: c.n.marker, from: pg.index, to: c.target.index, noteH: c.n.heightPx || 0 }, 'notes-budget');
+        ledger.transition(rec.issue_id, 'correction-blocked', 'notes-budget', 'note kept before its anchor — moving it would overflow the anchor page');
+        continue;
+      }
+      c.target.footnotes.push(c.n);
+      touched.add(c.target);
+      eventLog.emit('notes-budget', 'fn-followed-anchor', {
+        token: blk.tokenId, marker: c.n.marker, from: pg.index, to: c.target.index
+      }, c.target.index);
+    }
+    recomputeFnBudget(pg);
+    for (const t of touched) recomputeFnBudget(t);
+  }
+}
+
+module.exports = { planPages, layoutHash, bodyGeometryHash, lineTokenId, moveLineForward, balancePageSafe, anchorLineIndexOf };
 
 };
 __modules["src/engine/layout/page-templates.js"] = function (require, module, exports) {
@@ -4510,6 +4688,7 @@ __modules["src/engine/layout/protections-matrix.js"] = function (require, module
 
 const { usedHeight, pageImbalance } = require('./balancing');
 const { colCapacityOf } = require('./column-flow'); // **S5.2 (P-2):** קיבולת טור — מקור יחיד
+const { widowOrphanPolicy } = require('./constraint-matrix'); // **S78 (D-107):** דגלי המדיניות — קריאה מרוכזת אחת
 const { MARK_TAG } = require('../notes/markers');
 
 /** עמודים מבניים שאינם זרימת-תוכן — כותרת בודדת בהם היא מכוונת-עיצוב,
@@ -4545,6 +4724,9 @@ function isNoteMarkerWord(w) {
 const CHECKS = {
   widowOrphan(page, settings, ledger) {
     const violations = [];
+    // **S78 (D-107):** דגלי המדיניות — constraint-matrix.widowOrphanPolicy (מקור יחיד;
+    // עד כאן גישות settings[...] מפוזרות בגוף הבדיקה).
+    const WO = widowOrphanPolicy(settings);
     for (let c = 0; c < page.columns.length; c++) {
       const col = page.columns[c];
       if (!col.length) continue;
@@ -4559,9 +4741,9 @@ const CHECKS = {
         let run = 0;
         for (const l of col) { if (l.meta && l.meta.tokenId === first.meta.tokenId) run++; else break; }
         if (run < 2) {
-          if (settings['prevent-widows-top'] && first.isLast) {
+          if (WO.preventWidowsTop && first.isLast) {
             violations.push({ kind: 'widow-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { run }, ledgerRef: ledger.create('widow-top', `p${page.index}c${c}`, page.index, { run }, 'protections').issue_id });
-          } else if (settings['prevent-orphans-top'] && settings['widow-strictness'] !== 'relaxed') {
+          } else if (WO.preventOrphansTop && WO.strictness !== 'relaxed') {
             violations.push({ kind: 'orphan-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { run }, ledgerRef: ledger.create('orphan-top', `p${page.index}c${c}`, page.index, { run }, 'protections').issue_id });
           }
         }
@@ -4574,9 +4756,9 @@ const CHECKS = {
       if (last.meta && last.meta.part === 'first') {
         const sameTokenInCol = col.filter(x => x.meta && x.meta.tokenId === last.meta.tokenId).length;
         if (sameTokenInCol === 1) {
-          if (settings['prevent-orphans-bottom']) {
+          if (WO.preventOrphansBottom) {
             violations.push({ kind: 'orphan-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { sameTokenInCol }, ledgerRef: ledger.create('orphan-bottom', `p${page.index}c${c}`, page.index, { sameTokenInCol }, 'protections').issue_id });
-          } else if (settings['prevent-widows-bottom']) {
+          } else if (WO.preventWidowsBottom) {
             violations.push({ kind: 'widow-bottom', target: `page#${page.index}c${c}`, page: page.index, evidence: { sameTokenInCol }, ledgerRef: ledger.create('widow-bottom', `p${page.index}c${c}`, page.index, { sameTokenInCol }, 'protections').issue_id });
           }
         }
@@ -4786,6 +4968,7 @@ __modules["src/engine/layout/balancing.js"] = function (require, module, exports
 // (moveLineForward אינו נדרש עוד באיזון: optimalSplit מכסה את מרחב המצבים כולו — EXT-8)
 
 const { colCapacityOf } = require('./column-flow'); // **S5.2 (P-2):** קיבולת הטור — מקור יחיד
+const { seamIsClean } = require('./constraint-matrix'); // **S78 (D-107):** תפר נקי — מקור יחיד (ווידוא/יתום בגבול)
 
 function usedHeight(col) {
   // **EXT-20:** גובה בפועל — כולל מקדם ה-AQ האנכי (לפני ה-AQ כל המקדמים 1).
@@ -4824,25 +5007,10 @@ function optimalSplit(cols, opts = {}) {
   const total = pre[n];
   const k0 = c0.length;
 
-  // גבול-תפר נקי (ווידוא/יתום קלאסיים, מבוסס ריצות tokenId):
-  //  - widow-bottom: לבלוק שחוצה את הגבול יש **שורה אחת בדיוק** בתחתית col0
-  //    (השורה שלפני הגבול היא ראשונת הריצה שלו ב-seq).
-  //  - widow-top: לבלוק שחוצה את הגבול יש **שורה אחת בדיוק** בראש col1 והיא
-  //    גם אחרונת הבלוק (הריצה מסתיימת מיד אחריה).
-  // לא נעזר בדגלי part ('first'/'rest') — הם מוטבעים לכל שורות הצ'אנק
-  // ב-pushLinks ואינם מעידים על מיקום בבלוק (נלכד בניפוי EXT-8: כל 39
-  // שורות הפיצול נשאו part='first' וסימנו כל גבול פנימי כ-widow).
-  const cleanBoundary = (k) => {
-    if (k > 0 && k < n) {
-      const lt = seq[k - 1].meta && seq[k - 1].meta.tokenId;
-      const rt = seq[k].meta && seq[k].meta.tokenId;
-      if (lt != null && lt === rt) { // הבלוק ממשיך מעבר לגבול
-        if (k - 2 < 0 || (seq[k - 2].meta && seq[k - 2].meta.tokenId) !== lt) return false; // widow-bottom
-        if (k + 1 >= n || (seq[k + 1].meta && seq[k + 1].meta.tokenId) !== rt) return false; // widow-top
-      }
-    }
-    return true;
-  };
+  // גבול-תפר נקי — **S78 (D-107):** constraint-matrix.seamIsClean (מקור יחיד;
+  // ווידוא-תחתית/ווידוא-ראש לפי ריצות tokenId ב-meta — לא דגלי part, שאינם
+  // מעידים על מיקום בבלוק; נלכד בניפוי EXT-8).
+  const cleanBoundary = (k) => seamIsClean(seq, k);
 
   let best = null;
   for (let k = 0; k <= n; k++) {
@@ -5132,7 +5300,123 @@ function colCapacityOf(page, opts = {}) {
   return cap;
 }
 
-module.exports = { columnWidths, blockGapPx, isFullWidthBlock, colCapacityOf, buildPageTemplate };
+/**
+ * **S78 (D-107 — גובה תפוס בזמן תכנון, מקור יחיד):** Σ גבהי שורות +
+ * יתרת תקציב ההערות של העמוד — נרשם על הטור האחרון (F-17). זו סמנטיקת
+ * ה-**תכנון** (לפני AQ — בלי מקדם מתיחה); סמנטיקת ה-**רינדור** (עם
+ * aqStretch) חיה ב-balancing.usedHeight. עד כאן היו שני מימושים מקבילים
+ * באותו שם בשני מודולים — כעת הצרכן (dp-planner) מקבל מכאן.
+ */
+function planningUsedHeight(col, page) {
+  let h = col.reduce((s, ln) => s + (ln.heightPx || 0), 0);
+  if (page && page.fnReservedHeightPx > 0 && page.columns[page.columns.length - 1] === col) {
+    h += page.fnReservedHeightPx; // נשמר פעם אחת — בסוף הטור האחרון
+  }
+  return h;
+}
+
+module.exports = { columnWidths, blockGapPx, isFullWidthBlock, colCapacityOf, planningUsedHeight, buildPageTemplate };
+
+};
+__modules["src/engine/layout/constraint-matrix.js"] = function (require, module, exports) {
+// src/engine/layout/constraint-matrix.js — מטריצת האילוצים הטיפוגרפיים המאוחדת (S78, D-107)
+'use strict';
+
+/**
+ * **מקור-אמת יחיד למדיניות שלמות-הפריסה** — האילוצים שהיו עד כאן פזורים
+ * בין ארבעה מודולים (dp-planner / candidate-generator / balancing /
+ * protections-matrix) מתנסחים כאן פעם אחת, והצרכנים קוראים מכאן בלבד:
+ *
+ *  1. **חלון פיצול חוקי** — `MIN_LINES_PER_SIDE`: לכל צד של נקודת החיתוך
+ *     (שורות שנשארות בעמוד מול שורות שעוברות) דרושות לפחות 2 שורות
+ *     (SRS §5.1 — מניעת יתום/אלמנה בגבול התפר). עד כאן הכלל חי בשני
+ *     העתקים: `findSplit` (dp-planner: `maxFit < 2 || lines−maxFit < 2`)
+ *     ו-`generateCandidates` (candidate-generator: לולאת `cut = 2`).
+ *
+ *  2. **תפר נקי** — `seamIsClean(seq, k)`: הפרדת גבול-טורים בין שתי שורות
+ *     של אותה פסקה חוקית רק אם לפחות 2 שורות מכל צד (ווידוא-תחתית /
+ *     ווידוא-ראש). עד כאן חי בתוך `optimalSplit` (balancing) בלבד — כעת
+ *     זמין גם למאבחן (protections) ולמועמדי הפיצול.
+ *
+ *  3. **דגלי ווידוא/יתום** — `widowOrphanPolicy(settings)`: קריאה אחת
+ *     של חמשת מפתחות המדיניות (במקום גישות מפוזרות בגוף הבדיקות).
+ *
+ *  4. **ליווי כותרת** — `escortNeedLines(headingLines, followingLines)`:
+ *     כותרת + min(2, שורות-העוקבות) שורות ליווי באותו טור (REQ-BAL-10).
+ *     עד כאן נוסחאת הצורך הייתה מוטבעת בלולאת הבלוקים של dp-planner.
+ *
+ * החוזה: פונקציות טהורות, אפס מצב, אפס תלות — מודול עלים שכל מודולי
+ * הפריסה רשאים לדרוש (אין תלות מעגלית).
+ */
+
+/** מספר שורות מינימלי לכל צד של חיתוך פסקה (SRS §5.1; איסור יתום/אלמנה בגבול). */
+const MIN_LINES_PER_SIDE = 2;
+
+/**
+ * חלון הפיצול החוקי של בלוק בן `linesCount` שורות כשמתאימות `maxFit`
+ * שורות במקום הפנוי: חיתוך חוקי רק ב-[lo..hi] כאשר lo = 2 (שתי שורות
+ * לפחות יישארו) ו-hi = linesCount − 2 (שתיים לפחות יעברו).
+ * @returns {{lo:number, hi:number}|null} — null אם אין חלון חוקי כלל
+ *   (הבלוק קצר מדי או שהמקום הפנוי קטן מדי ⇒ ההזזה מלאה, לא פיצול).
+ */
+function legalSplitWindow(linesCount, maxFit) {
+  if (maxFit < MIN_LINES_PER_SIDE) return null;
+  if (linesCount - maxFit < MIN_LINES_PER_SIDE) return null;
+  const lo = MIN_LINES_PER_SIDE;
+  const hi = linesCount - MIN_LINES_PER_SIDE;
+  return hi >= lo ? { lo, hi } : null;
+}
+
+/**
+ * תפר נקי בין טורים: הגבול k (col0 = seq[0..k), col1 = seq[k..n)) כאשר
+ * הפסקה ממשיכה מעבר לו — חוקי רק אם מכל צד יש לפחות 2 שורות של אותה
+ * פסקה (ווידוא-תחתית: השורה שלפני הגבול אינה ראשונת הריצה; ווידוא-ראש:
+ * השורה שאחרי הגבול אינה אחרונת הריצה). זהות פסקה לפי ריצות tokenId
+ * ב-meta — לא לפי דגלי part (שאינם מעידים על מיקום בבלוק; נלכד בניפוי EXT-8).
+ * @param {Array} seq - רצף הקריאה המלא של העמוד ([...col0, ...col1])
+ * @param {number} k - נקודת הגבול הנבדקת
+ * @returns {boolean}
+ */
+function seamIsClean(seq, k) {
+  const n = seq.length;
+  if (k > 0 && k < n) {
+    const lt = seq[k - 1].meta && seq[k - 1].meta.tokenId;
+    const rt = seq[k].meta && seq[k].meta.tokenId;
+    if (lt != null && lt === rt) { // הבלוק ממשיך מעבר לגבול
+      if (k - 2 < 0 || (seq[k - 2].meta && seq[k - 2].meta.tokenId) !== lt) return false; // widow-bottom
+      if (k + 1 >= n || (seq[k + 1].meta && seq[k + 1].meta.tokenId) !== rt) return false; // widow-top
+    }
+  }
+  return true;
+}
+
+/**
+ * דגלי מדיניות ווידוא/יתום — קריאה מרוכזת אחת (מקור: settings-registry).
+ * @returns {{preventWidowsTop:boolean, preventWidowsBottom:boolean,
+ *            preventOrphansTop:boolean, preventOrphansBottom:boolean,
+ *            strictness:string}}
+ */
+function widowOrphanPolicy(settings) {
+  return {
+    preventWidowsTop: settings['prevent-widows-top'] === true,
+    preventWidowsBottom: settings['prevent-widows-bottom'] === true,
+    preventOrphansTop: settings['prevent-orphans-top'] === true,
+    preventOrphansBottom: settings['prevent-orphans-bottom'] === true,
+    strictness: settings['widow-strictness'] || 'standard'
+  };
+}
+
+/**
+ * מספר השורות שחייבות להיכנס יחד עם כותרת לטור (REQ-BAL-10):
+ * הכותרת + עד 2 שורות ליווי (או כמה שיש אם העוקב קצר).
+ * @param {number} headingLines - שורות הכותרת עצמה (בדרך כלל 1)
+ * @param {number} followingLines - שורות הבלוק העוקב (0 אם אין)
+ */
+function escortNeedLines(headingLines, followingLines) {
+  return headingLines + Math.min(MIN_LINES_PER_SIDE, Math.max(0, followingLines));
+}
+
+module.exports = { MIN_LINES_PER_SIDE, legalSplitWindow, seamIsClean, widowOrphanPolicy, escortNeedLines };
 
 };
 __modules["src/engine/notes/markers.js"] = function (require, module, exports) {
@@ -5321,7 +5605,30 @@ function renumberPageScopedMarkers(pages, opts) {
   return { renumbered, touchedWords, skipped: null };
 }
 
-module.exports = { markerFor, makeCounter, hebrewMarkFinish, HEB_LETTERS, renumberPageScopedMarkers, MARK_TAG: '\uE102' };
+/**
+ * **S78 (D-107 — עוזר זיהוי סמן מתויג):** חילוץ שבר הסמן ממילת גוף לפי
+ * תבנית D-53 — `עוגן\u00A0\uE102סמן` (מודבק) או סמן מתויג בודד. מקור יחיד
+ * לפענוח: ה-pipeline (countKnown) וה-dp-planner (מיקום הערה אצל עוגנה)
+ * קוראים את אותה פונקציה — לא עוד העתקים של אותה לוגיקה.
+ * @param {string} word - מילת גוף (עשויה להכיל MARK_TAG ו/או placeholder E000)
+ * @returns {string|null} שבר הסמן, או null אם המילה אינה נושאת סמן מתויג
+ */
+function markerFragmentOf(word) {
+  const sw = String(word);
+  if (sw.includes('\uE000')) {
+    // placeholder עם E000 (reject-to-body): הסמן הוא הפרגמנט המוכר שלפני ה‑E000
+    // (עשוי להיות ממוזג לעוגן ב‑NBSP — מנורמל לרווח לפני הפיצול, כמו countKnown).
+    const at = sw.indexOf('\uE000');
+    const frags = sw.slice(0, at).replace(/\u00A0/g, ' ').split(' ').filter(Boolean);
+    return frags.length ? frags[frags.length - 1] : null;
+  }
+  if (!sw.includes('\uE102')) return null;
+  const at = sw.indexOf('\uE102');
+  const frag = sw.slice(at + 1).split(/[\u00A0 ]/)[0];
+  return frag || null;
+}
+
+module.exports = { markerFor, makeCounter, hebrewMarkFinish, HEB_LETTERS, renumberPageScopedMarkers, markerFragmentOf, MARK_TAG: '\uE102' };
 
 };
 __modules["src/engine/layout/retreat-loop.js"] = function (require, module, exports) {
@@ -5486,6 +5793,7 @@ __modules["src/engine/layout/candidate-generator.js"] = function (require, modul
 'use strict';
 
 const { blockGapPx } = require('./column-flow');
+const { MIN_LINES_PER_SIDE } = require('./constraint-matrix'); // **S78 (D-107):** חלון הפיצול — מקור יחיד
 
 /**
  * מחזיר מועמדי פיצול לבלוק בתוך טור:
@@ -5493,17 +5801,30 @@ const { blockGapPx } = require('./column-flow');
  *  - scoring = f(Δ height, capacityBefore/capacityAfter justify, next-block context)
  *  - ladder עונשין: whole-paragraph moves > line moves > leading > para-spacing
  *
+ * **S78 (D-107 — תיקון שורש: מועמד מוגבל למקום הפנוי):** עד כאן פרמטר `cur`
+ * (maxFit — השורות שנכנסות במקום הפנוי) היה **מת**: המועמד המנוצח נבחר
+ * לפי איזון בלבד ויכול היה לחרוג מהמקום הפנוי ⇒ pushLines פלט את העודף
+ * בפליטה מרומזת ⇒ עמוד כמעט-ריק באמצע הספר (נמדד: עמד עם 4+4
+ * שורות בלבד בספר-האמת; מקורו cut=16 מול maxFit≈8). כעת מועמד שחורג
+ * מ-maxFit נדחה HARD עם רישום סיבה — כמו דחיית ה-overflow (D-11).
+ *
  * @param {object} blk        בלוק עם .lines (נמדדו)
- * @param {number} cur        שורות שנכנסות כרגע לטור
+ * @param {number} cur        maxFit — שורות שנכנסות במקום הפנוי (חוטר החלון — S78)
  * @param {number} colCapacityPx
  * @param {object} settings
  * @param {object} ledger     Ledger (core/ledger) — כתיבת סיבה לכל דחייה (S5.1.10)
  */
 function generateCandidates(blk, cur, colCapacityPx, settings, ledger) {
+  const maxFit = Number(cur) || 0; // **S78 (D-107):** maxFit חי — גבול עליון חוקי למועמדים
   const out = [];
   const lineH = blk.lineHeightPx || 20;
   const gap = blockGapPx(settings, lineH);
-  for (let cut = 2; cut < blk.lines.length; cut++) {
+  for (let cut = MIN_LINES_PER_SIDE; cut < blk.lines.length; cut++) {
+    // HARD reject: חיתוך שחורג מהמקום הפנוי — החלק הראשון לא ייכנס לעמוד (S78, D-107)
+    if (cut > maxFit) {
+      if (ledger) ledger.create('candidate-rejected', `${blk.tokenId}@${cut}`, null, { why: 'exceeds-free-space', cut, maxFit }, 'candidate-gen');
+      continue;
+    }
     const before = blk.lines.slice(0, cut).reduce((s, l) => s + (l.heightPx || lineH), 0) + gap;
     const after = blk.lines.slice(cut).reduce((s, l) => s + (l.heightPx || lineH), 0);
     // HARD reject: overflow אינו נענש במשקל אלא נפסל לחלוטין (D-11)
@@ -5560,6 +5881,8 @@ __modules["src/engine/layout/footnote-budget.js"] = function (require, module, e
 // src/engine/layout/footnote-budget.js — Footnote reservation (REQ-FN-01/02/07)
 'use strict';
 
+const { assignFootnoteLanes } = require('./footnote-lanes'); // **S78 (D-107):** מקור-אמת יחיד לחלוקת נתיבי המרזב
+
 /**
  * **מקור־הסמכות היחיד לתקציב המרזב** (תיקון P1-1): הן probe הן reservation
  * עוברים כאן — getFootnotesReservedHeight — וה‑dp-planner קורא לזה בלבד
@@ -5573,9 +5896,19 @@ __modules["src/engine/layout/footnote-budget.js"] = function (require, module, e
 /** פרופילי רוחב גופן לגוף ההערה (f-note-body-font). */
 const NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
 
+/** **S78 (D-107 — מדדי ההערה, מקור יחיד):** גודל גוף-ההערה (0.8× הגוף —
+ * כמו .footnotes{font-size:.8em} ב-DOM) ופיץ' השורה שלו (1.25 — כמו המרזב
+ * בשני הרנדרים). עד כאן הנוסחה שוכפלה בשלושה אתרים (כאן, פיצול
+ * ההערה-הארוכה ב-dp-planner, הקרנת המרזב ב-geometry-projector) — כל
+ * נגזרת שהתרחקה מחברותיה הזיזה את התקציב מול ההקרנה. */
+function noteMetrics(settings) {
+  const sizePt = settings['body-font-size-pt'] * 0.8;
+  const lineHeightPx = Math.round(sizePt * (96 / 72) * 1.25);
+  return { sizePt, lineHeightPx };
+}
+
 function noteHeight(note, settings, measure) {
-  const size = settings['body-font-size-pt'] * 0.8; // גופן הערה קטן
-  const lh = Math.round(size * (96 / 72) * 1.25);
+  const { sizePt, lineHeightPx: lh } = noteMetrics(settings); // **S78:** מקור יחיד לגודל/פיץ'
   const words = String(note.text).replace(/\uE000/g, ' ').split(/\s+/).filter(Boolean);
   const colW = laneWidth(settings);
   // **S70 (R7-M4):** הפקטור מתקן את טבלת impl A בלבד; ב-impl B
@@ -5587,12 +5920,12 @@ function noteHeight(note, settings, measure) {
   // ⇒ כל הערה הגובלת בשבירת-שורה נמדדה שורה אחת פחות (19–21px) וההערה
   // שאחריה חפפה אותה (32% מ-230 הערות בדגימה). נכללים גם הסמן ורווח
   // ההמשך בשורה הראשונה — כמו שמצויר בפועל.
-  const spaceW = measure(' ', size) * factor;
+  const spaceW = measure(' ', sizePt) * factor;
   const mkTxt = note && note.marker != null ? String(note.marker) : '';
-  const mkW = mkTxt ? measure(mkTxt, size) * factor + spaceW : 0;
+  const mkW = mkTxt ? measure(mkTxt, sizePt) * factor + spaceW : 0;
   let lines = 1, w = Math.min(mkW, colW);
   for (const word of words) {
-    const ww = measure(word, size) * factor;
+    const ww = measure(word, sizePt) * factor;
     const addW = (w > 0 ? spaceW : 0) + ww;
     if (w + addW > colW && w > 0) { lines++; w = ww; } else w += addW;
   }
@@ -5623,12 +5956,64 @@ function getFootnotesReservedHeight(pageNotes, settings, measure) {
   const heights = pageNotes.map(n => n.heightPx != null ? n.heightPx : noteHeight(n, settings, measure));
   if (cols === 1) return heights.reduce((a, b) => a + b, 0);
   // 2 טורים: חלוקה שווה־גובה (greedy LPT דטרמיניסטית)
-  const t = [0, 0];
-  for (const h of [...heights].sort((a, b) => b - a)) { const i = t[0] <= t[1] ? 0 : 1; t[i] += h; }
-  return Math.max(t[0], t[1]);
+  // **S78 (D-107):** חלוקת הנתיבים — מקור יחיד (footnote-lanes). שקול מתמטית למימוש
+  // הקודם (סדר גובה-יורד/אינדקס-עולה, חמדני לנמוך) — נעול בבדיקת שקילות; מעתה
+  // תקציב/הקרנה/תצוגה משתפים את אותה חלוקה ממקור אחד.
+  const { totals } = assignFootnoteLanes(pageNotes, (n, i) => heights[i]);
+  return Math.max(totals[0], totals[1]);
 }
 
-module.exports = { getFootnotesReservedHeight, noteHeight, laneWidth, NOTE_FONT_FACTORS };
+module.exports = { getFootnotesReservedHeight, noteHeight, noteMetrics, laneWidth, NOTE_FONT_FACTORS };
+
+};
+__modules["src/engine/layout/footnote-lanes.js"] = function (require, module, exports) {
+// src/engine/layout/footnote-lanes.js — מקור-אמת יחיד לחלוקת נתיבי מרזב ההערות (S78, D-107)
+'use strict';
+
+/**
+ * **חלוקת LPT דטרמיניסטית — מימוש אחד, שלושה צרכנים.**
+ *
+ * עד כאן היו שלושה העתקים מקבילים של אותו אלגוריתם:
+ *  1. `footnote-budget.getFootnotesReservedHeight` — התקציב בזמן ההצבה
+ *     (סכום גבהים ממוין ⇐ מקסימום שני הנתיבים);
+ *  2. `geometry-projector.projectFootnoteGutter` — הקרנת ה-PDF;
+ *  3. `dom-renderer.renderFootnoteArea` — התצוגה החיה.
+ *
+ * מחלקת הכשל (ההיסטוריה של S70/S71.1): כל העתק שאינו מתוחזק בדיוק כמו
+ * חבריו מייצרת מצב "תקציב ≠ תצוגה ≠ ייצוא" — ההערה מתוקצבת בנתיב אחד
+ * ומוצגת בנתיב אחר. כעת: הצרכנים קוראים `assignFootnoteLanes` בלבד.
+ *
+ * האלגוריתם (זהה מתמטית לשלושת המימושים הקודמים — נעול בבדיקת שקילות):
+ *  - סדר עיבוד: לפי גובה יורד; שווי-גובה לפי אינדקס עולה (סדר מסמך).
+ *  - הצבה חמדנית: כל הערה נכנסת לנתיב שסכומו המצטבר הנמוך; תיקו ⇒ נתיב 0
+ *    (הנתיב הימני ב-RTL — "הראשון").
+ *  - הסדר הפנימי בכל נתיב נשמר (סדר מסמך).
+ *
+ * @param {Array} notes - רשימת הערות (כל אובייקט; הגובה נקרא דרך heightOf)
+ * @param {(n:object, i:number)=>number} [heightOf] - גובה אפקטיבי;
+ *   ברירת מחדל (n) => n.heightPx || 0 (כמו המקרנים). התקציב מעביר נפילה
+ *   ל-noteHeight — שקילות המימושים נשמרת כי בעמודי DP כל הערה חתומה
+ *   ב-heightPx (ראה תיקון הניקוז בסוף המסמך ב-dp-planner, D-107).
+ * @returns {{lanes:[number[], number[]], totals:[number, number]}}
+ *   lanes[i] = אינדקסים ברשימת הקלט (בסדר מסמך) שהוקצו לנתיב i.
+ */
+function assignFootnoteLanes(notes, heightOf) {
+  const h = typeof heightOf === 'function' ? heightOf : (n) => (n && n.heightPx) || 0;
+  const n = (notes || []).length;
+  const lanes = [[], []];
+  const totals = [0, 0];
+  if (!n) return { lanes, totals };
+  const order = notes.map((note, i) => ({ i, h: h(note, i) }))
+    .sort((a, b) => (b.h - a.h) || (a.i - b.i));
+  for (const s of order) {
+    const li = totals[0] <= totals[1] ? 0 : 1;
+    lanes[li].push(s.i);
+    totals[li] += s.h;
+  }
+  return { lanes, totals };
+}
+
+module.exports = { assignFootnoteLanes };
 
 };
 __modules["src/engine/decoration/folio.js"] = function (require, module, exports) {
@@ -14219,12 +14604,11 @@ function renderFootnoteArea(page, settings, doc) {
     && tpl && Array.isArray(tpl.columns) && tpl.columns.length >= 2
     && page.fnReservedHeightPx > 0;
   if (twoLanes) {
-    const order = page.footnotes.map((n, i) => ({ i, h: n.heightPx || 0 })).sort((a, b) => b.h - a.h || a.i - b.i);
-    const totals = [0, 0];
-    const laneOf = new Map();
-    for (const s of order) { const li = totals[0] <= totals[1] ? 0 : 1; totals[li] += s.h; laneOf.set(s.i, li); }
-    const lanes = [[], []];
-    page.footnotes.forEach((n, i) => lanes[laneOf.get(i)].push(n));
+    // **S78 (D-107):** חלוקת הנתיבים — מקור יחד (footnote-lanes.assignFootnoteLanes),
+    // כמו התקציב וההקרנה — תצוגה=ייצוא=תקציב מאותו חלוקה.
+    const { assignFootnoteLanes } = require('../layout/footnote-lanes');
+    const { lanes: laneIdx } = assignFootnoteLanes(page.footnotes);
+    const lanes = [laneIdx[0].map(i => page.footnotes[i]), laneIdx[1].map(i => page.footnotes[i])];
     const row = doc.createElement('div');
     row.style.display = 'flex';
     row.style.flexDirection = 'row-reverse'; // RTL — הנתיב הראשון מימין
@@ -17197,7 +17581,8 @@ const { scrubPUAText } = require('./dom-renderer');
 const { MeasureAPI } = require('../typography/measure-api');
 // **S5.4 (P-5):** מקורות יחידים להקרנת ההערות — פקטורי רוחב הגופן מהתקציב
 // (אותם מספרים שקבעו את גובה ההערה) וסמן אחיד מ-notes/markers (כמו ה-DOM).
-const { NOTE_FONT_FACTORS } = require('../layout/footnote-budget');
+const { NOTE_FONT_FACTORS, noteMetrics } = require('../layout/footnote-budget'); // **S78 (D-107):** noteMetrics — מקור יחיד למדדי ההערה
+const { assignFootnoteLanes } = require('../layout/footnote-lanes'); // **S78 (D-107):** חלוקת נתיבים — מקור יחיד
 const { markerFor } = require('../notes/markers');
 const { SIDE_NOTE_FONT_FACTORS } = require('../layout/side-notes');
 const { lineFontSizePt, hexColorToRgb } = require('./line-font'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
@@ -17511,7 +17896,7 @@ function colWidthOf(tpl) {
 // ============ S5.4 (P-5) — הקרנת הערות-שוליים / עמודי-הערות / הערות-צד / מפרידים ============
 
 /** גודל גוף הערה — 0.8× הגוף (כמו .footnotes{font-size:.8em} ו-noteHeight בתקציב). */
-function fnNoteSizePt(settings) { return settings['body-font-size-pt'] * 0.8; }
+function fnNoteSizePt(settings) { return noteMetrics(settings).sizePt; } // **S78:** מקור יחד (footnote-budget.noteMetrics)
 
 /**
  * שבירת אסימוני הערה לשורות ממוקמות מילה-במילה (RTL) — אותו חוזה של placeWords
@@ -17603,12 +17988,11 @@ function projectFootnoteGutter(page, settings, measure, out) {
   if (!twoLanes) {
     lanes[0] = notes.slice();
   } else {
-    // LPT — אותו אלגוריתם כמו getFootnotesReservedHeight; הסדר הפנימי בכל נתיב נשמר
-    const order = notes.map((n, i) => ({ i, h: n.heightPx || 0 })).sort((a, b) => b.h - a.h || a.i - b.i);
-    const totals = [0, 0];
-    const laneOf = new Map();
-    for (const s of order) { const li = totals[0] <= totals[1] ? 0 : 1; totals[li] += s.h; laneOf.set(s.i, li); }
-    notes.forEach((n, i) => lanes[laneOf.get(i)].push(n));
+    // **S78 (D-107):** חלוקת הנתיבים — מקור יחיד (footnote-lanes.assignFootnoteLanes);
+    // אותה חלוקה כמו התקציב והתצוגה החיה; הסדר הפנימי בכל נתיב נשמר.
+    const { lanes: laneIdx } = assignFootnoteLanes(notes);
+    for (const i of laneIdx[0]) lanes[0].push(notes[i]);
+    for (const i of laneIdx[1]) lanes[1].push(notes[i]);
   }
   const reserved = page.fnReservedHeightPx > 0
     ? page.fnReservedHeightPx
@@ -17619,7 +18003,7 @@ function projectFootnoteGutter(page, settings, measure, out) {
   lanes.forEach((laneNotes, li) => {
     let y = gutterTop;
     for (const n of laneNotes) {
-      const pitch = n.lineH || Math.round(fnSize * (96 / 72) * 1.25);
+      const pitch = n.lineH || noteMetrics(settings).lineHeightPx; // **S78:** מקור יחד לפיטץ'
       const cont = n.isContinuation === true || n.mode === 'split-rest';
       const marker = noteMarkerOf(n, settings);
       const tokens = [];
@@ -17658,7 +18042,7 @@ function projectFootnoteGutter(page, settings, measure, out) {
 function projectEndnotePage(page, settings, measure, out) {
   const tpl = page.template;
   const bodyPt = settings['body-font-size-pt'];
-  const notePt = bodyPt * 0.8;
+  const notePt = noteMetrics(settings).sizePt; // **S78:** מקור יחד
   // **S71.1 (R7-M4 שארית — בדיקה כפולה):** כמו המרזב והערות-הצד — הפקטור
   // הוא תיקון טבלת impl A; ב-impl B (ייצוא PDF) הוא מנפח את רוחבי המילים
   // בהקרנה ⇒ שבירה מוקדמת מזו שהמודל תיקצב (estimateNoteHeight ללא פקטור)
@@ -17683,7 +18067,7 @@ function projectEndnotePage(page, settings, measure, out) {
       : (tpl.columns[ci] || { x: colLeftOf(tpl), w: colWidthOf(tpl) / cols });
     let y = top;
     for (const n of colNotes) {
-      const pitch = measure.lineHeightPx ? measure.lineHeightPx(notePt) : Math.round(notePt * (96 / 72) * 1.34);
+      const pitch = measure.lineHeightPx ? measure.lineHeightPx(notePt) : noteMetrics(settings).lineHeightPx; // **S78:** נפילה מותאמת למקור היחיד
       const marker = noteMarkerOf(n, settings);
       const tokens = [];
       if (marker) tokens.push({ text: scrubPUAText(marker) });

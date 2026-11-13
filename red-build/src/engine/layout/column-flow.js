@@ -65,4 +65,19 @@ function colCapacityOf(page, opts = {}) {
   return cap;
 }
 
-module.exports = { columnWidths, blockGapPx, isFullWidthBlock, colCapacityOf, buildPageTemplate };
+/**
+ * **S78 (D-107 — גובה תפוס בזמן תכנון, מקור יחיד):** Σ גבהי שורות +
+ * יתרת תקציב ההערות של העמוד — נרשם על הטור האחרון (F-17). זו סמנטיקת
+ * ה-**תכנון** (לפני AQ — בלי מקדם מתיחה); סמנטיקת ה-**רינדור** (עם
+ * aqStretch) חיה ב-balancing.usedHeight. עד כאן היו שני מימושים מקבילים
+ * באותו שם בשני מודולים — כעת הצרכן (dp-planner) מקבל מכאן.
+ */
+function planningUsedHeight(col, page) {
+  let h = col.reduce((s, ln) => s + (ln.heightPx || 0), 0);
+  if (page && page.fnReservedHeightPx > 0 && page.columns[page.columns.length - 1] === col) {
+    h += page.fnReservedHeightPx; // נשמר פעם אחת — בסוף הטור האחרון
+  }
+  return h;
+}
+
+module.exports = { columnWidths, blockGapPx, isFullWidthBlock, colCapacityOf, planningUsedHeight, buildPageTemplate };

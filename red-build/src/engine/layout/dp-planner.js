@@ -7,12 +7,13 @@ const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
 const { runRetreatLoop } = require('./retreat-loop');
 const { generateCandidates } = require('./candidate-generator');
-const { blockGapPx, colCapacityOf } = require('./column-flow');
+const { blockGapPx, colCapacityOf, planningUsedHeight } = require('./column-flow'); // **S78:** planningUsedHeight — מקור יחיד לגובה התפוס בזמן תכנון
 const { fixDropWordInColumns } = require('../typography/protectors');
-const { MARK_TAG } = require('../notes/markers');
+const { MARK_TAG, markerFragmentOf } = require('../notes/markers'); // **S78:** עוזר זיהוי סמן מתויג (D-53) — מקור יחיד
 const { moveLineForward } = require('./ordering');
 const { optimalSplit } = require('./balancing'); // **EXT-8:** חלוקה גלובלית אופטימלית
-const { getFootnotesReservedHeight, noteHeight } = require('./footnote-budget');
+const { getFootnotesReservedHeight, noteHeight, noteMetrics } = require('./footnote-budget'); // **S78:** noteMetrics — מקור יחיד למדדי ההערה
+const { escortNeedLines, legalSplitWindow } = require('./constraint-matrix'); // **S78 (D-107):** מטריצת האילוצים המאוחדת
 
 /** חתימת פריסה דטרמיניסטית — ללא Date/random (REQ-GOV determinism).
  * תיקון S7-E2E: tokenId נמצא ב‑meta של pushLines (לא על השורה עצמה) — יש לחלץ משם,
@@ -130,13 +131,9 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
    * זהים (F-17). התקציב נרשם פעם אחת בסוף הטור האחרון.
    * תיקון P1-8: חתימה (col, page) — page חובה; אין עוד עמוד ברירת־מחדל שגוי.
    */
-  function usedHeight(col, page = cur) {
-    let h = col.reduce((s, ln) => s + (ln.heightPx || 0), 0);
-    if (page && page.fnReservedHeightPx > 0 && page.columns[page.columns.length - 1] === col) {
-      h += page.fnReservedHeightPx; // נשמר פעם אחת — בסוף הטור האחרון
-    }
-    return h;
-  }
+  // **S78 (D-107):** גובה תפוס בזמן תכנון — מקור יחיד (column-flow.planningUsedHeight);
+  // סמנטיקת הרינדור (עם aqStretch) חיה ב-balancing.usedHeight — שני דגלים, שני מקורות מתועדים.
+  const usedHeight = (col, page = cur) => planningUsedHeight(col, page);
 
   /**
    * **איחוד P1-1 (מנגנום תאום):** recomputeFnBudget ממשיך כעת דרך
@@ -254,8 +251,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       if (Number.isFinite(barMax) && h > barMax && settings['long-footnote-policy'] !== 'allow') {
         if (settings['long-footnote-policy'] === 'split') {
           // **פיצול אמיתי של הטקסט**: החלק הראשון נכנס למרזב הזה, השאר לעמוד הבא
-          const fnSize = settings['body-font-size-pt'] * 0.8;
-          const fnLH = Math.round(fnSize * (96 / 72) * 1.25);
+          const { sizePt: fnSize, lineHeightPx: fnLH } = noteMetrics(settings); // **S78 (D-107):** מקור יחיד למדדי ההערה
           const laneW = settings._fnColWidthPx || 200;
           const words = String(n.text).replace(/\uE000/g, ' ').split(/\s+/).filter(Boolean);
           const linesFit = Math.max(1, Math.floor(barMax / fnLH));
@@ -466,7 +462,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     if (blk.kind === 'heading' && blk.level <= 6) {
       const following = (next && next.lines) ? next.lines.length : 0;
       if (following >= 1) {
-        const needLines = 1 + Math.min(2, following); // כותרת + 2 שורות ליווי (או כמה שיש)
+        const needLines = escortNeedLines(1, following); // **S78 (D-107):** כותרת + ליווי — constraint-matrix (REQ-BAL-10) // כותרת + 2 שורות ליווי (או כמה שיש)
         let room = ensureRoom(needLines);
         if (room === -1) {
           flushPage(); cur = newPage(blk.level === 2 ? PAGE_TYPES.SIGN_OPEN : PAGE_TYPES.REGULAR);
@@ -482,6 +478,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     }
 
     // REQ-BAL-01: candidate search עם capacityBefore/capacityAfter + הקשר הבלוק הבא
+    const startPageIdx = cur.index; // **S78 (D-107):** תחילת ההצבה — ליישור הערות-עוגן לאחר פליטה מרומזת
     const need = blk.lines.length;
     let chosenCol = ensureRoom(need);
     if (chosenCol === -1) {
@@ -489,14 +486,34 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       if (splitAt > 0) {
         pushLines(blk.lines.slice(0, splitAt - 1), { tokenId: blk.tokenId, part: 'first' });
         pushLines([blk.lines[splitAt - 1]], { tokenId: blk.tokenId, part: 'first', isLast: true });
-        flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
+        flushPage();
+        const sealed = pages[pages.length - 1]; // **S78 (D-107):** העמוד שנאטם — הערות הבלוק רשומות בו
+        cur = newPage(PAGE_TYPES.REGULAR);
+        // **S78 (D-107 — הערה עוקבת אחר עוגנה):** הערות שעוגנו בחלק המוסט עוברות לעמוד החדש **לפני**
+        // הצבת שורות ההמשך — תקציב המרזב קודם לשורות (אין חריגת קיבולת בהכרח; העמוד הישן רק מרוויח).
+        // בעבר ההערה נשארה בעמוד שבו החלה ההצבה גם כשעוגנה עבר לעמוד הבא
+        // (מדידה: 3/11 הערות בספר-האמת הוצגו לפני עוגנן).
+        moveNotesAnchoredFrom(blk, pages, startPageIdx, cur, splitAt, { settings, eventLog, recomputeFnBudget });
         pushLines(blk.lines.slice(splitAt), { tokenId: blk.tokenId, part: 'rest' });
+        // **S78:** פליטה מרומזת בתוך ההמשך — יישור הערות לעוגניהן (מוגן-קיבולת).
+        reconcileNotesAfterPlacement(blk, pages, cur, startPageIdx, { settings, ledger, eventLog, recomputeFnBudget });
         continue;
       }
-      flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
+      // **S78 (D-107 — הזזה מלאה):** אם העמוד ריק משורות גוף — אין טעם לאטום אותו; הבלוק
+      // נכנס לכאן (בעבר נאטם עמוד ריק עם הערות יתומות — סמן בלי הערה ליווי).
+      if (cur.columns.some(c => c.length)) {
+        flushPage();
+        const sealed = pages[pages.length - 1];
+        cur = newPage(PAGE_TYPES.REGULAR);
+        // **S78 (D-107):** הבלוק כולו עבר — כל הערותיו עוקבות אחריו (אף עוגן לא נשאר מאחור).
+        moveNotesAnchoredFrom(blk, pages, startPageIdx, cur, 0, { settings, eventLog, recomputeFnBudget });
+      }
       chosenCol = 0;
     }
     pushLines(blk.lines, { tokenId: blk.tokenId, firstOfBlock: true, docPart: blk.part });
+    // **S78 (D-107):** פליטה מרומזת בתוך pushLines (שורה שלא נכנסה) יכולה להשאיר
+    // הערה מופנית מעוגנה — מישור חזיר (מוגן-קיבולת; חסימה — ממצא כן ב-ledger).
+    reconcileNotesAfterPlacement(blk, pages, cur, startPageIdx, { settings, ledger, eventLog, recomputeFnBudget });
 
     if (blk.sideNoteText) cur.sideNotes.push({ text: blk.sideNoteText, anchorToken: blk.tokenId });
   }
@@ -511,8 +528,17 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   // המשכים שנותרו בתור בסוף המסמך — לא ראוי לגנוז (BRZ-15): נדחפים לעמוד האחרון
   if (pendingBarNotes.length) {
     const last = pages[pages.length - 1];
+    const { lineHeightPx: tailLineH } = noteMetrics(settings);
     for (const n of pendingBarNotes) {
-      last.footnotes.push({ ...n }); // mode/isContinuation preserved (moved-whole stays whole)
+      // **S78 (D-107 — חותמי מדדים בניקוז הזנב):** התקציב (recomputeFnBudget) מחשב
+      // את הגובה מ-noteHeight ממילא, אך ההקרנה צורכת את n.heightPx/n.lineH — בלי החותמים,
+      // המשך שנדחף לסוף המסמך מתקדם שורה אחת בלבד ושורותיו חופפות את ההערה שאחריו
+      // (תקציב≠הקרנה — בדיוק מחלקת הכשל ש-S70/S71.1 רדפו אחריה).
+      last.footnotes.push({
+        ...n, // mode/isContinuation preserved (moved-whole stays whole)
+        ...(n.heightPx != null ? {} : { heightPx: noteHeight(n, settings, measureFn) }),
+        ...(n.lineH != null ? {} : { lineH: tailLineH })
+      });
     }
     recomputeFnBudget(last);
     eventLog.emit('notes-budget', 'fn-tail-continuation', { count: pendingBarNotes.length, page: last.index }, last.index);
@@ -618,7 +644,9 @@ function findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, s
   const cap = colCapacity(cur.template, cur);
   const free = cap - usedHeight(cur.columns[cur.columns.length - 1], cur);
   const maxFit = Math.floor(free / lineH);
-  if (maxFit < 2 || blk.lines.length - maxFit < 2) return 0; // אין פיצול חוקי → הזזה מלאה
+  // **S78 (D-107):** חלון הפיצול החוקי — מקור יחיד (constraint-matrix.legalSplitWindow):
+  // ≥2 שורות לכל צד (SRS §5.1). null ⇒ אין פיצול חוקי → הזזה מלאה.
+  if (!legalSplitWindow(blk.lines.length, maxFit)) return 0; // אין פיצול חוקי → הזזה מלאה
 
   if (candidatesFn) {
     const cands = candidatesFn(blk, maxFit, cap, settings, ledger);
@@ -631,4 +659,147 @@ function findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, s
   return maxFit;
 }
 
-module.exports = { planPages, layoutHash, bodyGeometryHash, lineTokenId, moveLineForward, balancePageSafe };
+
+// ============ S78 (D-107) — הערות עוקבות-עוגן: גרעין האופטימיזציה המשותפת ============
+
+/**
+ * אינדקס השורה בבלוק שבה מעוגן הסמן (תבנית D-53 — `עוגן\u00A0\uE102סמן`).
+ * זיהוי דרך markerFragmentOf (notes/markers) — אותו פענוח של ה-pipeline
+ * (countKnown). -1 אם הסמן לא נמצא (הגנה — ההערה נשארת במקומה).
+ */
+function anchorLineIndexOf(blk, marker) {
+  const lines = blk.lines || [];
+  const m = String(marker);
+  for (let i = 0; i < lines.length; i++) {
+    for (const w of (lines[i].words || [])) {
+      if (markerFragmentOf(w) === m) return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * העברת הערות הבלוק שעוגנו בשורות [fromLineIdx..) מ-fromPage אל toPage.
+ * נקראת **לפני** הצבת שורות ההמשך בעמוד החדש — תקציב המרזב שלו נרשם לפני
+ * ששורה כלשהי הוצבה בו (אין חריגת קיבולת בהכרח); העמוד הישן רק מרוויח
+ * קיבולת (הסרת תקציב בלבד — כיוון בטוח). המשכים (split-rest) אינם מוזזים —
+ * הם זורמים ממילא בתור ההמשכים (pendingBarNotes).
+ */
+function moveNotesAnchoredFrom(blk, pages, fromIdxStart, toPage, fromLineIdx, ctx) {
+  if (!blk || !(blk.notes || []).length || !toPage) return 0;
+  if (!ctx.settings['footnotes-enabled']) return 0;
+  const moved = [];
+  const sources = new Set();
+  // חלון כל העמודים האטומים מתחילת ההצבה — ההערות נרשמו בעמוד הפתיחה, אך
+  // פליטות מרומזות בתוך pushLines עשויות לפזר את הבלוק על כמה עמודים
+  // (ההערה יושבת בעמוד הפתיחה; ההזזה חייבת לסרוק את כל החלון, לא רק את האחרון).
+  for (let pi = Math.max(0, fromIdxStart); pi < pages.length; pi++) {
+    const pg = pages[pi];
+    if (!pg || pg === toPage || !(pg.footnotes || []).length) continue;
+    const keep = [];
+    let pgMoved = 0;
+    for (const n of pg.footnotes) {
+      const isBlockNote = n && n.tokenId === blk.tokenId
+        && !(n.isContinuation === true || n.mode === 'split-rest');
+      if (isBlockNote && anchorLineIndexOf(blk, n.marker) >= fromLineIdx) {
+        moved.push(n); pgMoved++;
+        continue;
+      }
+      keep.push(n);
+    }
+    if (pgMoved) { pg.footnotes = keep; sources.add(pg); }
+  }
+  if (!moved.length) return 0;
+  for (const n of moved) toPage.footnotes.push(n);
+  for (const pg of sources) ctx.recomputeFnBudget(pg);
+  ctx.recomputeFnBudget(toPage);
+  ctx.eventLog.emit('notes-budget', 'fn-followed-anchor', {
+    token: blk.tokenId, moved: moved.length, from: Math.max(0, fromIdxStart), to: toPage.index
+  }, toPage.index);
+  return moved.length;
+}
+
+/**
+ * יישור הערות לעוגניהן לאחר הצבה שכללה **פליטה מרומזת** (pushLines רשאי
+ * לסגור עמוד באמצע בלוק כששורה בודדת אינה נכנסת). הערה שעוגנה בעמוד מאוחר
+ * יותר מועברת אליו **רק אם יש בו שארית קיבולת** לתקציב הנוסף (בדיקת הכלה
+ * מצטברת פר-יעד, לפני כל תזוזה); אחרת — ממצא כן ב-ledger
+ * (fn-anchor-compromise) וההערה נשארת במקומה ("מדווח, לא מתוקן" כשאין
+ * תיקון חוקי). דטרמיניסטי לחלוטין: סריקה לפי סדר עמודים/מערכים.
+ */
+function reconcileNotesAfterPlacement(blk, pages, cur, startIdx, ctx) {
+  if (!blk || !(blk.notes || []).length) return;
+  if (!ctx.settings['footnotes-enabled']) return;
+  const { ledger, eventLog, recomputeFnBudget } = ctx;
+  // עמוד העוגן לכל סמן של הבלוק (הסמנים ייחודיים בזמן ה-DP — הקצאה רציפה, D-41/S67).
+  // **תיקון חלון (S78 v2):** העמוד הפתוח (cur) אינו ב-pages עדיין — בלי סריקתו
+  // עוגן בעמוד הנוכחי לא זוהה מעולם וההערה נשארה מופנית מעוגנה.
+  const anchorPageOf = new Map();
+  const scanWindow = [];
+  for (let pi = Math.max(0, startIdx); pi < pages.length; pi++) scanWindow.push(pages[pi]);
+  if (cur && (pages.length === 0 || pages[pages.length - 1] !== cur)) scanWindow.push(cur);
+  for (const pg of scanWindow) {
+    if (!pg) continue;
+    for (const col of pg.columns) {
+      for (const ln of col) {
+        if (!(ln.meta && ln.meta.tokenId === blk.tokenId)) continue;
+        for (const w of (ln.words || [])) {
+          const frag = markerFragmentOf(w);
+          if (frag != null && !anchorPageOf.has(frag)) anchorPageOf.set(frag, pg);
+        }
+      }
+    }
+  }
+  const endIdx = pages.length;
+  for (let pi = Math.max(0, startIdx); pi < endIdx; pi++) {
+    const pg = pages[pi];
+    if (!pg || !(pg.footnotes || []).length) continue;
+    const candidates = [];
+    for (let i = 0; i < pg.footnotes.length; i++) {
+      const n = pg.footnotes[i];
+      if (!n || n.tokenId !== blk.tokenId) continue;
+      if (n.isContinuation === true || n.mode === 'split-rest') continue;
+      const target = anchorPageOf.get(String(n.marker));
+      if (!target || target === pg || target.index < pg.index) continue;
+      candidates.push({ i, n, target, blocked: false });
+    }
+    if (!candidates.length) continue;
+    // בדיקת הכלה מצטברת פר-יעד — כמה הערות עשויות להידחף לאותו עמוד
+    const byTarget = new Map();
+    for (const c of candidates) {
+      if (!byTarget.has(c.target)) byTarget.set(c.target, []);
+      byTarget.get(c.target).push(c);
+    }
+    for (const [target, list] of byTarget) {
+      const cap = colCapacityOf(target, { fnBudget: false });
+      const lastCol = target.columns[target.columns.length - 1];
+      const used = planningUsedHeight(lastCol, target);
+      let acc = 0;
+      for (const c of list) {
+        acc += (c.n.heightPx || 0);
+        c.blocked = used + acc > cap + 0.5;
+      }
+    }
+    const dropIdx = new Set(candidates.filter(c => !c.blocked).map(c => c.i));
+    if (!dropIdx.size) continue;
+    pg.footnotes = pg.footnotes.filter((_, i) => !dropIdx.has(i));
+    const touched = new Set();
+    for (const c of candidates) {
+      if (c.blocked) {
+        const rec = ledger.create('fn-anchor-compromise', `${c.n.marker}@p${pg.index}->p${c.target.index}`, pg.index,
+          { marker: c.n.marker, from: pg.index, to: c.target.index, noteH: c.n.heightPx || 0 }, 'notes-budget');
+        ledger.transition(rec.issue_id, 'correction-blocked', 'notes-budget', 'note kept before its anchor — moving it would overflow the anchor page');
+        continue;
+      }
+      c.target.footnotes.push(c.n);
+      touched.add(c.target);
+      eventLog.emit('notes-budget', 'fn-followed-anchor', {
+        token: blk.tokenId, marker: c.n.marker, from: pg.index, to: c.target.index
+      }, c.target.index);
+    }
+    recomputeFnBudget(pg);
+    for (const t of touched) recomputeFnBudget(t);
+  }
+}
+
+module.exports = { planPages, layoutHash, bodyGeometryHash, lineTokenId, moveLineForward, balancePageSafe, anchorLineIndexOf };
