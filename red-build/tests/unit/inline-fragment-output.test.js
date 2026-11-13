@@ -4,6 +4,7 @@
 const assert = require('node:assert/strict');
 const { projectLine } = require('../../src/engine/output/geometry-projector');
 const { renderLine, registerInlineItemRenderer, bytesToBase64 } = require('../../src/engine/output/dom-renderer');
+const { layoutHash, bodyGeometryHash } = require('../../src/engine/layout/dp-planner');
 const { MeasureAPI } = require('../../src/engine/typography/measure-api');
 const { getDefaultSettings } = require('../../src/engine/core/settings-registry');
 
@@ -32,6 +33,23 @@ function createElement(tagName) {
   };
 }
 const doc={createElement};
+
+test('layout signatures detect rich font and image geometry changes without changing legacy signatures',()=>{
+  const makePage=(sizePt,widthPx,kind='text')=>{
+    const fragment=kind==='text'
+      ? {kind:'text',text:'מילה',widthPx,heightPx:18,gapAfterPx:0,sizePt,
+         segments:[{text:'מילה',fontFamily:'Inline Alpha',widthPx,sizePt}]}
+      : {kind:'image',id:'asset-1',resourceId:'asset-1',resourcePath:'a.png',widthPx,heightPx:30,gapAfterPx:0};
+    const line={tokenId:'t1',words:['מילה'],heightPx:18,fragments:[fragment]};
+    return {index:0,type:'regular',columns:[[line]],footnotes:[],sideNotes:[]};
+  };
+  const small=makePage(10,30);
+  const large=makePage(14,42);
+  assert.notEqual(layoutHash([small]),layoutHash([large]));
+  assert.notEqual(bodyGeometryHash([small]),bodyGeometryHash([large]));
+  const image=makePage(null,50,'image');
+  assert.notEqual(layoutHash([small]),layoutHash([image]));
+});
 
 test('projectLine positions text, font segments and images from measured widths only',()=>{
   const settings=getDefaultSettings();
