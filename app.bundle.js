@@ -498,7 +498,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-17-h3fbl'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-17-brand1'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -912,8 +912,9 @@ function createApp(doc, opts = {}) {
   // policy-help) ברוחב כל הדף — מעל הכרטיסיות והתצוגה. תוכן העזרה נפתח
   // כתפריט צף מתחת לשורה ואינו מרחיב אותה.
   const title = doc.createElement('h1');
-  title.className = 'app-title';
-  title.textContent = 'ספר תורה — מערך עימוד (Red)';
+  title.className = 'app-title app-title--brand';
+  title.textContent = 'Imudify';
+  title.setAttribute('aria-label', 'Imudify — תוכנת עימוד תורנית');
   header.appendChild(title);
   header.appendChild(status.root);
   // טבלת המדיניות מוצגת בעזרה (REQ-UI-02: policy table rendered in UI help)
