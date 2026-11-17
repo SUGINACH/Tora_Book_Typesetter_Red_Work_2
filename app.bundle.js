@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 73 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 75 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -330,6 +330,7 @@ var __paths = {
   "src/engine/import/docx-import.js|./zip-reader": "src/engine/import/zip-reader.js",
   "src/engine/import/docx-import.js|./xml-lite": "src/engine/import/xml-lite.js",
   "src/ui/preview-tab.js|../engine/output/dom-renderer": "src/engine/output/dom-renderer.js",
+  "src/ui/preview-tab.js|../engine/output/pagemodel-dom-renderer": "src/engine/output/pagemodel-dom-renderer.js",
   "src/engine/output/dom-renderer.js|../core/pua-text": "src/engine/core/pua-text.js",
   "src/engine/output/dom-renderer.js|../notes/markers": "src/engine/notes/markers.js",
   "src/engine/output/dom-renderer.js|../decoration/page-decorations": "src/engine/decoration/page-decorations.js",
@@ -368,6 +369,11 @@ var __paths = {
   "src/engine/layout/legacy-imud-flow.js|../core/h3-contract": "src/engine/core/h3-contract.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/legacy-ornaments": "src/engine/decoration/legacy-ornaments.js",
   "src/engine/decoration/legacy-ornaments.js|./ornament-fit": "src/engine/decoration/ornament-fit.js",
+  "src/engine/output/pagemodel-dom-renderer.js|../core/pua-text": "src/engine/core/pua-text.js",
+  "src/engine/output/pagemodel-dom-renderer.js|../typography/font-keys": "src/engine/typography/font-keys.js",
+  "src/engine/output/pagemodel-dom-renderer.js|../decoration/asset-registry": "src/engine/decoration/asset-registry.js",
+  "src/engine/output/pagemodel-dom-renderer.js|./dom-renderer": "src/engine/output/dom-renderer.js",
+  "src/engine/typography/font-keys.js|./measure-api": "src/engine/typography/measure-api.js",
   "src/ui/testing-tab.js|../audit/report-schema": "src/audit/report-schema.js",
   "src/ui/testing-tab.js|../engine/core/ledger": "src/engine/core/ledger.js",
   "src/audit/report-schema.js|../engine/layout/dp-planner": "src/engine/layout/dp-planner.js",
@@ -498,7 +504,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-17-brand1'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-17-s8d2'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -582,7 +588,13 @@ function boot() {
   // הראשונה (David Libre/Frank Ruhl Libre/Bellefair, שער ראשי+אחורי+משנה,
   // כותרות עליונות בכל עמוד). כשל טעינה (למשל פתיחה מקומית בלי assets) —
   // נשארות ברירות RED, האפליקציה עובדת; ההודעה מתועדת במצב.
-  imud.loadFontCatalog().then(() => imud.loadLegacyDefaults()).then(async ({ settings: imported, report }) => {
+  // **פרוסה 3 (§7 בהוראה — ביקורת מסלול unified לפני שלב 9):** דגל ביקורת
+  // מפורש ?engine=unified — מדלג על יישום ברירות המחדל של IMUD בעלייה ומריץ
+  // את האפליקציה בפרופיל המאוחד (PageModel renderer). זהו מתג ביקורת בלבד:
+  // ברירת המחדל של המשתמש אינה משתנה (עמוד רגיל = legacy, כמו קודם).
+  const auditUnified = /[?&]engine=unified\b/.test(String((typeof location !== 'undefined' && location && location.search) || ''));
+  const bootLegacy = !auditUnified && imud.loadFontCatalog().then(() => imud.loadLegacyDefaults());
+  (auditUnified ? Promise.resolve({ settings: {}, report: { note: 'unified-audit-boot' } }) : bootLegacy).then(async ({ settings: imported, report }) => {
     // **S6.2 (בקשת משתמש — "האם כל העיטורים, שערים... יובאו?"): ערכת הנושא
     // הפעילה של המקור.** ברירת המחדל של המקור היא active-theme-select =
     // "json_theme_40" — כלומר עמודי השערים נולדים עם רקע מעוצב (שער ראשי/
@@ -705,6 +717,7 @@ function createApp(doc, opts = {}) {
   let text = '';
   let result = null;            // תוצאה מסוריאליזת פרוטוקול (D-65)
   let pageModelObj = null;      // **שלב 8 פרוסה 2 (§4.4):** PageModel שהתקבל מה-Worker — מאומת וקפוא מחדש
+  let engineProfile = 'legacy'; // **פרוסה 3 (§2.3):** פרופיל המנוע של התוצאה הנוכחית (legacy/unified)
   let caretMapObj = null;
   let lightDirty = false, heavyDirty = false;
   let typesetGen = 0; // **S5.2 (5):** דור עימוד — מונה תוצאות שהושלמו; חוזה: st.gen (אודיט חי בוחן שינוי)
@@ -893,7 +906,11 @@ function createApp(doc, opts = {}) {
     onActivatePage: (pageIndex) => onActivatePage(pageIndex),
     onDebugDownload: (pageIndex) => opts.onDebugDownload && opts.onDebugDownload(buildDebugJson(pageIndex), pageIndex),
     // **S12 (REQ-EXP-01..04):** נתיב הייצוא האחיד — מקור יחיד לטקסט/הגדרות/הרחבות.
-    onExport: (kind) => onExportRequest(kind)
+    onExport: (kind) => onExportRequest(kind),
+    // **פרוסה 3 (§2.3/§2.6-5):** שגיאת פרופיל ודיאגנוסטיקות מקרין המודל — גלויות
+    // בפס המצב (אין השתקה; שום פריט לא נעלם בשקט).
+    onProfileError: (msg) => status.setNotice('שגיאת תצוגה: ' + msg),
+    onModelDiagnostic: (pageIndex, d) => status.setNotice(`אבחון תצוגה (עמוד ${pageIndex + 1}): ${d.kind}`)
   });
 
   const testing = buildTestingTab(doc, {
@@ -1080,6 +1097,10 @@ function createApp(doc, opts = {}) {
       } catch (e) {
         pageModelObj = null;
       }
+      // **פרוסה 3 (§2.3):** פרופיל המנוע שרץ (מה-Worker דרך ui-result-v1) —
+      // נשמר לכל רינדור חוזר (גם keepView) כדי שהתצוגה לא תחליף רנדרר
+      // באמצע סשן.
+      engineProfile = (res && res.legacyProfile) ? 'legacy' : 'unified';
       typesetGen++; // **S5.2 (5):** +1 על כל עימוד שהושלם (בדיוק במקום ההשמה ל-result) — ביטול/החלפה אינם נספרים
       applyResultToViews();
       status.setEngineState('idle');
@@ -1121,6 +1142,7 @@ function createApp(doc, opts = {}) {
       editor.setText('');
       result = null;
       pageModelObj = null; // **פרוסה 2:** ניקוי המודל עם המסמך
+      engineProfile = 'legacy'; // **פרוסה 3:** איפוס הפרופיל עם המסמך
       caretMapObj = null;
       preview.setResult({ pages: [], report: { findings: [], counts: {} }, trace: { events: [] }, tokens: [], droppedEvents: 0 }, settings);
       testing.setResult({ pages: [], report: { findings: [], counts: {} }, trace: { events: [] }, tokens: [], droppedEvents: 0 });
@@ -1193,7 +1215,7 @@ function createApp(doc, opts = {}) {
     const t0 = perf.now();
     // **S5.2 (7):** רינדור־קל שומר זום ויעד גלילה (עדכון צבע רקע לא אמור לקפוץ
     // לראש המסמך); רק מסמך חדש באמת מאפס תצוגה — הנתיב הזה הוא keepView.
-    preview.setResult(result, settings, { keepView: true }); // רינדור בלבד — אותם עמודים, הגדרות חדשות
+    preview.setResult(result, settings, { keepView: true, pageModel: pageModelObj, profile: engineProfile }); // רינדור בלבד — אותם עמודים, הגדרות חדשות, אותו פרופיל
     lastLightRefreshMs = perf.now() - t0;
     lightDirty = false;
     status.setPending({ light: false, heavy: heavyDirty });
@@ -1350,7 +1372,10 @@ function createApp(doc, opts = {}) {
 
   function applyResultToViews() {
     caretMapObj = buildCaretMap(text, result);
-    preview.setResult(result, settings);
+    // **פרוסה 3 (§2.1–§2.3):** התצוגה מחוברת ל-PageModel בפרופיל המאוחד —
+    // profile=unified כשהתוצאה ממנוע ה-DP ומודל קיים; legacy ממשיך ברנדרר
+    // הישן (מצב תעבור מפורש עד שלב 9). ברירת המחדל החיה אינה משתנה.
+    preview.setResult(result, settings, { pageModel: pageModelObj, profile: engineProfile });
     testing.setResult(result);
     testing.setRecommendations(result.recommendations || null); // **S11:** המלצות עם הוכחות
     // מפת שבירות עמודים לעורך (⏎ — תצוגה בלבד, F-01)
@@ -8779,6 +8804,9 @@ __modules["src/ui/preview-tab.js"] = function (require, module, exports) {
  */
 
 const { renderPage } = require('../engine/output/dom-renderer');
+// **שלב 8 פרוסה 3 (§2):** המקרין הטהור מה-PageModel — פרופיל unified בלבד.
+// פרופיל legacy ממשיך להשתמש ב-renderPage הישן (מצב תאימות מפורש עד שלב 9).
+const { renderModelPage } = require('../engine/output/pagemodel-dom-renderer');
 
 /** פענוח מספר עברי (גימטריה) — עבור "קפיצה לפי מספר עברי". */
 const GEMATRIA = { 'א': 1, 'ב': 2, 'ג': 3, 'ד': 4, 'ה': 5, 'ו': 6, 'ז': 7, 'ח': 8, 'ט': 9,
@@ -8908,11 +8936,21 @@ function buildPreviewTab(doc, opts) {
   const VIRTUAL_THRESHOLD = 60;
   const VIRTUAL_WINDOW = 4; // ריפוד משני צידי הטווח הנראה
   const virtual = { on: false, pages: [], settings: null, rendered: new Set(), phW: 794, phH: 1123 };
+  // **פרוסה 3 (§2.3 — הפרדת פרופילים מפורשת):** legacy = הרנדרר הישן (עד
+  // שלב 9); unified = המקרין הטהור מה-PageModel בלבד. בפרופיל unified היעדר
+  // מודל הוא **שגיאה מפורשת** — לא נפילה שקטה לרנדרר הישן (§2.3).
+  let profile = 'legacy';
+  let profileError = null;
   let scrollRaf = null;
 
-  /** בניית אלמנט עמוד אחד (מקור יחיד לרינדור מלא ולווירטואלי) — כולל ⏬ ולחיצה. */
+  /** בניית אלמנט עמוד אחד (מקור יחיד לרינדור מלא ולווירטואלי) — כולל ⏬ ולחיצה.
+   * פרופיל unified: העמוד הוא עמוד PageModel והרינדור טהור מהמודל (§2.2). */
   function buildPageEl(page) {
-    const el = renderPage(page, virtual.settings, doc);
+    const el = profile === 'unified'
+      ? renderModelPage(page, virtual.settings, doc, {
+          onDiagnostic: (d) => { if (opts.onModelDiagnostic) opts.onModelDiagnostic(page.index, d); }
+        })
+      : renderPage(page, virtual.settings, doc);
     el.classList.add('preview-page');
     // כפתור דיבאג פר־עמוד (V21): גיאומטריה + פרוסת ledger — בלי לגעת ברינדור
     const dbg = doc.createElement('button');
@@ -8940,8 +8978,10 @@ function buildPreviewTab(doc, opts) {
     ph.setAttribute('data-page-index', String(i));
     ph.setAttribute('aria-hidden', 'true');
     const page = virtual.pages[i];
-    const w = page && page.template && page.template.width || virtual.phW;
-    const h = page && page.template && page.template.height || virtual.phH;
+    // **פרוסה 3 (§2.5):** מידות ה-placeholder מה-PageModel בפרופיל המאוחד.
+    const g = page && page.geometry;
+    const w = (g && g.width) || (page && page.template && page.template.width) || virtual.phW;
+    const h = (g && g.height) || (page && page.template && page.template.height) || virtual.phH;
     if (ph.style) { ph.style.width = `${w}px`; ph.style.height = `${h}px`; }
     return ph;
   }
@@ -9202,9 +9242,28 @@ function buildPreviewTab(doc, opts) {
     rebuildFolioIndex(); // **S5.2 (12):** המפה נבנית מחדש עם כל תוצאה
     canvas.textContent = '';
     pageEls = new Map();
-    virtual.on = Array.isArray(serializedResult.pages) && serializedResult.pages.length > VIRTUAL_THRESHOLD;
+    // **פרוסה 3 (§2.3):** קביעת הפרופיל — מפורשת מהקריאה; ברירת המחדל
+    // לתוצאות ללא סימון היא legacy (מצב המעבר). בפרופיל unified חסר-מודל
+    // = שגיאה מפורשת וגלויה — שום נפילה שקטה לרנדרר הישן (§2.3).
+    profile = (options && options.profile) || (serializedResult.legacyProfile ? 'legacy' : (options && options.pageModel ? 'unified' : 'legacy'));
+    const modelPages = (options && options.pageModel && Array.isArray(options.pageModel.pages)) ? options.pageModel.pages : null;
+    profileError = null;
+    if (profile === 'unified' && !modelPages) {
+      profileError = 'פרופיל מאוחד ללא PageModel — שגיאה מפורשת (אין נפילה שקטה לרנדרר הישן)';
+      if (opts.onProfileError) opts.onProfileError(profileError);
+      const errEl = doc.createElement('div');
+      errEl.className = 'preview-profile-error';
+      errEl.setAttribute('role', 'alert');
+      errEl.textContent = profileError;
+      canvas.appendChild(errEl);
+      virtual.on = false; virtual.pages = []; virtual.rendered = new Set();
+      pageIndicator.textContent = 'שגיאת פרופיל — אין מודל עמוד';
+      return;
+    }
+    const pageSource = profile === 'unified' ? modelPages : (serializedResult.pages || []);
+    virtual.on = Array.isArray(pageSource) && pageSource.length > VIRTUAL_THRESHOLD;
     virtual.settings = settings;
-    virtual.pages = serializedResult.pages || [];
+    virtual.pages = pageSource;
     virtual.rendered = new Set();
     if (!virtual.on) {
       // מסמך קטן — רינדור מלא (ההתנהגות המקורית, ללא שינוי)
@@ -9215,9 +9274,10 @@ function buildPreviewTab(doc, opts) {
       }
     } else {
       // ספר ארוך — placeholders לכולם + חלון חי ראשוני (D-84)
-      const t0 = virtual.pages[0] && virtual.pages[0].template;
-      virtual.phW = (t0 && t0.width) || 794;
-      virtual.phH = (t0 && t0.height) || 1123;
+      // **פרוסה 3 (§2.5):** בפרופיל המאוחד המידות מ-geometry של המודל.
+      const p0 = virtual.pages[0] || {};
+      virtual.phW = (p0.geometry && p0.geometry.width) || (p0.template && p0.template.width) || 794;
+      virtual.phH = (p0.geometry && p0.geometry.height) || (p0.template && p0.template.height) || 1123;
       for (let i = 0; i < virtual.pages.length; i++) {
         const ph = makePlaceholder(i);
         canvas.appendChild(ph);
@@ -12679,7 +12739,18 @@ function shaarFontOf(cls, settings) {
   }
 }
 
-module.exports = { buildShaarBlocks, shaarBoxOf, shaarFontOf, splitPartTitle, MM_TO_PX };
+/** **פרוסה 3 (§2.2 — הדיו מגיע מהמודל):** SVG הכתרים של השערים — מקור יחיד.
+ * עד כאן היו מוטמעים בתוך dom-renderer.renderShaarContent (innerHTML) —
+ * המקרין של ה-PageModel חייב את אותו דיו בדיוק; ההטבעה עוברת לכאן ושני
+ * המקרינים צורכים ממקור אחד (אין עותק שני של הנתיבים). */
+function crownSvgOf(graphic) {
+  if (graphic === 'crown-sub') {
+    return '<svg viewBox="0 0 300 30" xmlns="http://www.w3.org/2000/svg"><path d="M10,15 Q75,5 140,15 Q145,10 150,5 Q155,10 160,15 Q225,5 290,15 Q225,25 160,15 Q155,20 150,25 Q145,20 140,15 Q75,25 10,15 Z" fill="#222"/></svg>';
+  }
+  return '<svg viewBox="0 0 400 40" xmlns="http://www.w3.org/2000/svg"><circle cx="200" cy="20" r="10" fill="none" stroke="#000" stroke-width="4.5"/><circle cx="200" cy="20" r="4.5" fill="#000"/><path d="M182,20 C182,24 165,27 140,27 C90,27 40,22 5,20 C40,18 90,13 140,13 C165,13 182,16 182,20 Z" fill="#000"/><path d="M218,20 C218,24 235,27 260,27 C310,27 360,22 395,20 C360,18 310,13 260,13 C235,13 218,16 218,20 Z" fill="#000"/></svg>';
+}
+
+module.exports = { buildShaarBlocks, shaarBoxOf, shaarFontOf, crownSvgOf, splitPartTitle, MM_TO_PX };
 
 };
 __modules["src/engine/typography/measure-api.js"] = function (require, module, exports) {
@@ -12862,6 +12933,21 @@ class MeasureAPI {
       && fm.advanceUnitsOf(this.fontProfile, ch) === 0;
   }
 
+  /**
+   * **פרוסה 3 (RLM — שורש פער דיו במקרין ה-PageModel, 17.11):** תווי בקרת
+   * bidi/פורמט (U+200B..200F, U+202A..202E, U+FEFF) הם **אפס-רוחב לפי
+   * הגדרת יוניקוד** וכך מציגים אותם כל מנועי התצוגה (דפדפנים, מציגי PDF).
+   * חלק מהגופנים נותנים להם advance ב-hmtx (נמדד: 6.4px ל-RLM ב-12pt) —
+   * המדידה ספרה אותם והתצוגה לא ⇒ פער דיו של ~7px בכל מילה מסומנת-RLM
+   * (INK_NOT_JUSTIFIED באודיט החי; 230 מופעי RLM ב-very_long — תוכן המקור).
+   * תיקון השורש בסמכות המדידה: אפס advance גם כשהגופן טוען אחרת —
+   * מילה, מודל, PDF ו-DOM מסכימים ביט-לביט.
+   */
+  _isZeroWidthControl(ch) {
+    const c = ch.codePointAt(0);
+    return (c >= 0x200B && c <= 0x200F) || (c >= 0x202A && c <= 0x202E) || c === 0xFEFF;
+  }
+
   /** קרנינג בין תווים סמוכים ב־em (מימוש A: 0 תמיד — כמו S1–S11). */
   _kernEm(a, b) {
     if (this.impl === 'font-metrics' && this.fontProfile) {
@@ -12888,6 +12974,7 @@ class MeasureAPI {
       // (הסימן נצמד לבסיס שלו; letter-spacing אינו חל על סימנים משולבים במדידת
       // הדפדפן). prev נשאר הבסיס האחרון — קרנינג בין בסיסים דרך הניקוד נשמר.
       if (this._isMappedMark(ch)) continue;
+      if (this._isZeroWidthControl(ch)) continue; // RLM/bidi — אפס-רוחב בכל מנוע תצוגה
       if (prev !== null) w += this._kernEm(prev, ch);
       w += this._charEm(ch) + trackingEm;
       prev = ch;
@@ -19123,6 +19210,581 @@ function planLegacyOrnaments(pages, settings, measureFn, io = {}) {
 }
 
 module.exports = { planLegacyOrnaments };
+
+};
+__modules["src/engine/output/pagemodel-dom-renderer.js"] = function (require, module, exports) {
+// src/engine/output/pagemodel-dom-renderer.js — **שלב 8 פרוסה 3 (§2): מקרין DOM טהור מ-PageModel בלבד.**
+'use strict';
+
+/**
+ * חוזה (הוראת שלב 8 §2.2): המקרין הזה מקבל **עמוד מתוך PageModel** ומצייר
+ * אותו בלבד. אסור לו למדוד גופנים/מילים, לחשב רוחבים, לשבור שורות, לבצע
+ * wrapping/reflow, להחליט מיקום/סדר, לחשב מחדש חלוקת הערות, גיאומטריית
+ * עיטורים, מידות תמונות או fit — ולא להשלים מידע חסר ב-fallback שקט.
+ *
+ * כל x/y/w/h, baseline, מידות, סדר שכבות, מפתח גופן, צבע, asset identity
+ * ועוגן מגיעים מהמודל. מה שמותר: טעינת/פענוח משאבים לצורך ציור (תמונות,
+ * data-URI של SVG) ואריזת-תצוגה בלבד (מחלקות CSS, כרום). אם חסר מידע
+ * חיוני — המקרין מדווח diagnostic גלוי (dataset + onDiagnostic) ולא משלים
+ * בעצמו (התיקון שייך לבונה המודל).
+ *
+ * מבנה ה-DOM שומר במכוון על אותם עוגנים שהאודיט החי בודק (.page/.column/
+ * .line/.footnotes/.fn-rule/.side-note/.orn) — כך שכל כלי הבדיקה הקיימים
+ * עובדים על הפרופיל המאוחד בלי שכפול מנגנונים.
+ */
+
+const { scrubPUAText } = require('../core/pua-text');
+const { familyOfFontKey } = require('../typography/font-keys');
+const { resolveAssetRef } = require('../decoration/asset-registry');
+const { PT_CLASS, bgRgba, fontStack } = require('./dom-renderer');
+
+const PT_TO_PX = 96 / 72;
+const px2 = (v) => Math.round(v * 100) / 100;
+
+/** צבע שאינו שחור — null אחרת (כמו הרנדרר הקיים; שחור ⇒ ירושת ברירת מחדל). */
+function nonBlack(c) {
+  if (!c || typeof c !== 'string') return null;
+  const s = c.trim().toLowerCase();
+  if (s === '#000' || s === '#000000' || s === 'black' || s === 'rgb(0, 0, 0)') return null;
+  return c;
+}
+
+/** משפחת תצוגה למפתח גופן מהמודל (§2.2 — זהות מהמודל; 'body'/null ⇒ ירושת שורש). */
+function familyOf(key) {
+  const fam = familyOfFontKey(key);
+  return fam ? fontStack(fam) : null;
+}
+
+// ─── שורת טקסט: תיבה ממוקמת מהמודל + מילים ממוקמות מהמודל ───
+/**
+ * כל שורה = div.line ממוקם ב-(x,y,w,h) מהמודל; כל מילה = span.w ממוקם
+ * ב-x הסופי שלה (כולל הקצאת דבק/יישור שנקבעה בתכנון). הדפדפר אינו זז
+ * דבר — גם לא מילים בתוך השורה. הקו-בסיס נופל באותה נוסחת half-leading
+ * שבה הסמכות (attachBaselines) חישבה את baselineY במודל.
+ */
+function renderModelLine(ml, doc, relX, relY) {
+  const el = doc.createElement('div');
+  el.className = 'line' + (ml.isLast ? ' line--last' : '');
+  el.setAttribute('dir', 'rtl');
+  el.style.position = 'absolute';
+  el.style.left = `${px2(ml.x - relX)}px`;
+  el.style.top = `${px2(ml.y - relY)}px`;
+  el.style.width = `${px2(ml.w)}px`;
+  el.style.height = `${px2(ml.h)}px`;
+  el.style.lineHeight = `${px2(ml.h)}px`;
+  if (ml.align) el.style.textAlign = ml.align === 'stretch' ? 'justify' : ml.align;
+  if (ml.sizePt != null) el.style.fontSize = `${px2(ml.sizePt * PT_TO_PX)}px`;
+  if (ml.bold) el.style.fontWeight = '700';
+  if (ml.letterSpacingPx) el.style.letterSpacing = `${px2(ml.letterSpacingPx)}px`;
+  if (ml.styleClass) el.dataset.styleClass = ml.styleClass;
+  if (ml.id) el.dataset.id = ml.id;
+  const tok = ml.sourceTokenId != null ? ml.sourceTokenId : null;
+  if (tok != null) el.dataset.token = tok;
+  // **תוויות רווח בין המילים:** המילים ממוקמות-מוחלט ולכן אין רווחי-זרימה
+  // ביניהן; בלי צומת רווח מפורשת textContent מתמזג למילה אחת — שובר
+  // ספירת נפח (רצפת האודיט), העתקה ונגישות. הרווח אינו נראה.
+  let firstWord = true;
+  for (const wd of (ml.words || [])) {
+    if (!firstWord && typeof doc.createTextNode === 'function') el.appendChild(doc.createTextNode(' '));
+    firstWord = false;
+    const span = doc.createElement('span');
+    span.className = 'w';
+    span.style.position = 'absolute';
+    span.style.left = `${px2(wd.x - ml.x)}px`;
+    span.style.top = '0';
+    span.style.whiteSpace = 'pre';
+    if (wd.sizePt != null) span.style.fontSize = `${px2(wd.sizePt * PT_TO_PX)}px`;
+    const fam = familyOf(wd.fontKey);
+    if (fam) span.style.fontFamily = fam;
+    const col = nonBlack(wd.color);
+    if (col) span.style.color = col;
+    span.textContent = scrubPUAText(wd.text);
+    el.appendChild(span);
+  }
+  return el;
+}
+
+// ─── עיטור: דיו מהמודל בלבד (§2.2) ───
+function renderModelDecoration(d, doc, diags) {
+  const el = doc.createElement('div');
+  el.className = d.cssClass || 'orn';
+  if (d.slot) el.dataset.slot = d.slot;
+  if (d.kindStyle) el.dataset.kindStyle = d.kindStyle;
+  el.style.position = 'absolute';
+  el.style.left = `${px2(d.x)}px`;
+  el.style.top = `${px2(d.y)}px`;
+  el.style.width = `${px2(d.w)}px`;
+  el.style.height = `${px2(d.h)}px`;
+  if (d.ornId) el.dataset.ornId = d.ornId;
+  if (d.zOrder != null) el.style.zIndex = String(d.zOrder);
+  const ink = d.ink || (d.image ? { type: 'image', uri: null, ref: d.image } : null);
+  if (ink && ink.type === 'image') {
+    const uri = (ink.ref ? (resolveAssetRef(ink.ref) || {}).uri : null) || ink.uri || (d.image ? (resolveAssetRef(d.image) || {}).uri : null);
+    if (uri) {
+      el.style.backgroundImage = `url("${uri}")`;
+      el.style.backgroundSize = '100% 100%';
+      el.style.backgroundRepeat = 'no-repeat';
+    } else {
+      el.dataset.inkMissing = '1';
+      diags.push({ kind: 'pmr-decoration-ink-missing', ornId: d.ornId || null, slot: d.slot || null });
+    }
+  } else if (ink && ink.type === 'svg' && ink.uri) {
+    el.style.backgroundImage = `url("${ink.uri}")`;
+    el.style.backgroundSize = 'contain';
+    el.style.backgroundPosition = 'center center';
+    el.style.backgroundRepeat = 'no-repeat';
+  } else if (ink && ink.type === 'rule') {
+    el.style.borderTop = '0.75px solid #000';
+    el.style.height = '0px';
+  } else if (ink && ink.type === 'rect' && ink.color) {
+    el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;
+  } else if (d.kindStyle && d.kindStyle !== 'none') {
+    el.dataset.inkMissing = '1';
+    diags.push({ kind: 'pmr-decoration-ink-missing', ornId: d.ornId || null, slot: d.slot || null });
+  }
+  if (d.inkMissing) { el.dataset.inkMissing = '1'; if (!d.kindStyle) diags.push({ kind: 'pmr-decoration-ink-missing', ornId: d.ornId || null, slot: d.slot || null }); }
+  return el;
+}
+
+// ─── עמוד שלם ───
+/**
+ * @param {object} mp — עמוד מתוך PageModel (model.pages[i])
+ * @param {object} settings — הגדרות (ברירות מחדל גלובליות בלבד: גוף/רקע/כרום)
+ * @param {object} doc — מפעל DOM
+ * @param {object} [opts] — { onDiagnostic?: (d)=>void }
+ * @returns {HTMLElement} אלמנט העמוד
+ */
+function renderModelPage(mp, settings, doc, opts = {}) {
+  const diags = [];
+  const geo = mp.geometry || {};
+  const root = doc.createElement('article');
+  root.className = (PT_CLASS[mp.type] || 'page') + ' pmr-page';
+  root.dataset.pageIndex = String(mp.index);
+  root.setAttribute('id', `page-${mp.index}`);
+  root.setAttribute('dir', 'rtl');
+  if (geo.width != null) root.style.width = `${px2(geo.width)}px`;
+  if (geo.height != null) root.style.height = `${px2(geo.height)}px`;
+  // ברירות מחדל גלובליות (הגדרות משתמש — לא החלטות עימוד): גוף/רקע
+  const bf = settings['body-font'];
+  if (bf) root.style.fontFamily = fontStack(bf);
+  const bodyCol = nonBlack(settings['body-color']);
+  if (bodyCol) root.style.color = bodyCol;
+  const bsPt = Number(settings['body-font-size-pt']);
+  if (Number.isFinite(bsPt) && bsPt > 0) root.style.fontSize = `${px2(bsPt * PT_TO_PX)}px`;
+  const bg = settings['background-color'];
+  const bgOp = settings['background-opacity'];
+  if (bg && bg !== '#ffffff') root.style.backgroundColor = bgRgba(bg, bgOp != null ? bgOp : 1);
+  else if (Number.isFinite(bgOp) && bgOp < 1) root.style.backgroundColor = bgRgba('#ffffff', bgOp);
+
+  // (1) עיטורי רקע (סלוטים מהמודל: page-*/shaar-* — מתחת לתוכן)
+  const decoAll = mp.decorations || [];
+  const isBg = (d) => /^(page-|shaar-)/.test(String(d.slot || '')) || d.kind === 'page-background' || d.kind === 'page-texture' || d.kind === 'shaar-crown';
+  for (const d of decoAll) {
+    if (!isBg(d)) continue;
+    root.appendChild(renderModelDecoration(d, doc, diags));
+  }
+
+  // (2) תיבת השער (כרום בלבד — variant + rect מהמודל) ושורותיה החותמות
+  if (mp.shaar) {
+    const wrap = doc.createElement('div');
+    wrap.className = `shaar-content shaar-content--${mp.shaar.variant}`;
+    wrap.setAttribute('dir', 'rtl');
+    wrap.style.position = 'absolute';
+    wrap.style.left = `${px2(mp.shaar.box.x)}px`;
+    wrap.style.top = `${px2(mp.shaar.box.y)}px`;
+    wrap.style.width = `${px2(mp.shaar.box.w)}px`;
+    wrap.style.height = `${px2(mp.shaar.box.h)}px`;
+    for (const ln of mp.lines.filter(l => l.area === 'structural')) {
+      wrap.appendChild(renderModelLine(ln, doc, mp.shaar.box.x, mp.shaar.box.y));
+    }
+    root.appendChild(wrap);
+  } else if ((mp.lines || []).some(l => l.area === 'structural')) {
+    // שורות מובנות בלי תיבה (TOC/כותרת הערות) — מוקרנות ישירות בקואורדינטות העמוד
+    for (const ln of mp.lines.filter(l => l.area === 'structural')) {
+      root.appendChild(renderModelLine(ln, doc, 0, 0));
+    }
+  }
+
+  // (3) עמוד מותאם — תיבות ותמונות בגיאומטריה סופית מהמודל
+  if (mp.custom) {
+    for (const b of (mp.custom.boxes || [])) {
+      const el = doc.createElement('div');
+      el.className = 'custom-box';
+      el.setAttribute('dir', 'rtl');
+      el.style.position = 'absolute';
+      el.style.left = `${px2(b.x)}px`; el.style.top = `${px2(b.y)}px`;
+      el.style.width = `${px2(b.w)}px`; el.style.height = `${px2(b.h)}px`;
+      el.textContent = scrubPUAText(b.text || '');
+      root.appendChild(el);
+    }
+    for (const im of (mp.custom.images || [])) {
+      const el = doc.createElement('div');
+      el.className = 'custom-image';
+      el.style.position = 'absolute';
+      el.style.left = `${px2(im.x)}px`; el.style.top = `${px2(im.y)}px`;
+      el.style.width = `${px2(im.w)}px`; el.style.height = `${px2(im.h)}px`;
+      if (im.src) el.style.backgroundImage = `url("${im.src}")`;
+      else { el.dataset.assetMissing = '1'; diags.push({ kind: 'pmr-custom-image-missing' }); }
+      root.appendChild(el);
+    }
+  }
+
+  // (4) פס חוצה-טורים — מלבן הפס מהמודל; שורותיו בתוכו בקואורדינטות יחסיות
+  if (mp.spanning) {
+    const band = doc.createElement('div');
+    band.className = 'spanning-band';
+    band.setAttribute('dir', 'rtl');
+    band.style.position = 'absolute';
+    band.style.left = `${px2(mp.spanning.x)}px`;
+    band.style.top = `${px2(mp.spanning.y)}px`;
+    band.style.width = `${px2(mp.spanning.w)}px`;
+    band.style.height = `${px2(mp.spanning.h)}px`;
+    for (const ln of mp.lines.filter(l => l.area === 'spanning')) {
+      band.appendChild(renderModelLine(ln, doc, mp.spanning.x, mp.spanning.y));
+    }
+    root.appendChild(band);
+  }
+
+  // (4.5) עמודי הערות-סיום — שורות area=endnotes בקואורדינטות עמוד מוחלטות
+  // מההקרנה (החותמות של buildEndnotePages). הקרנה טהורה — המיקומים סופיים
+  // במודל; הקיבוץ לפי kind/sourceTokenId (נתוני זהות מהמודל) מייצר את
+  // העוגנים שהאודיט והנגישות מצפים להם: .endnote-title + .endnote-note.
+  const enLines = mp.lines.filter(l => l.area === 'endnotes');
+  if (enLines.length) {
+    const enWrap = doc.createElement('div');
+    enWrap.className = 'endnote-list';
+    enWrap.setAttribute('dir', 'rtl');
+    enWrap.style.position = 'absolute';
+    enWrap.style.left = '0';
+    enWrap.style.top = '0';
+    enWrap.style.width = '100%';
+    for (const ln of enLines) {
+      if (ln.kind === 'endnote-title') {
+        const h = doc.createElement('h2');
+        h.className = 'endnote-title';
+        h.setAttribute('dir', 'rtl');
+        h.style.position = 'absolute';
+        h.style.left = `${px2(ln.x)}px`;
+        h.style.top = `${px2(ln.y)}px`;
+        h.style.width = `${px2(ln.w)}px`;
+        h.style.height = `${px2(ln.h)}px`;
+        h.style.lineHeight = `${px2(ln.h)}px`;
+        if (ln.sizePt != null) h.style.fontSize = `${px2(ln.sizePt * PT_TO_PX)}px`;
+        const fam = familyOf((ln.words || [])[0] && ln.words[0].fontKey);
+        if (fam) h.style.fontFamily = fam;
+        h.textContent = scrubPUATText((ln.words || []).map(w => w.text).join(' '));
+        enWrap.appendChild(h);
+        continue;
+      }
+      const note = doc.createElement('div');
+      note.className = 'endnote-note';
+      note.setAttribute('dir', 'rtl');
+      if (ln.sourceTokenId != null) note.dataset.token = ln.sourceTokenId;
+      note.style.position = 'absolute';
+      note.style.left = `${px2(ln.x)}px`;
+      note.style.top = `${px2(ln.y)}px`;
+      note.style.width = `${px2(ln.w)}px`;
+      note.appendChild(renderModelLine(ln, doc, ln.x, ln.y));
+      enWrap.appendChild(note);
+    }
+    root.appendChild(enWrap);
+  }
+
+  // (5) טורים — התיבות מ-geometry; השורות ילדות ישירות של הטור (עוגן האודיט)
+  const colTops = (geo.columns || []).map(() => (geo.contentBox ? geo.contentBox.top : 0) + (geo.spanOffset || 0));
+  const colsWrap = doc.createElement('div');
+  colsWrap.className = 'columns';
+  (geo.columns || []).forEach((c, ci) => {
+    const colEl = doc.createElement('section');
+    colEl.className = 'column';
+    colEl.style.position = 'absolute';
+    colEl.style.left = `${px2(c.x)}px`;
+    colEl.style.width = `${px2(c.w)}px`;
+    colEl.style.top = `${px2(colTops[ci])}px`;
+    colEl.style.height = `${px2(Math.max(0, (geo.contentBox ? geo.contentBox.height : 0) - (geo.spanOffset || 0)))}px`;
+    for (const ln of mp.lines.filter(l => l.area === 'column' && l.col === ci)) {
+      colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci]));
+    }
+    colsWrap.appendChild(colEl);
+  });
+  root.appendChild(colsWrap);
+
+  // (6) תמונות — מלאי הנכסים בגיאומטריה סופית מהמודל (כולל צפים; §2.2)
+  for (const im of (mp.images || [])) {
+    if (im.x == null || im.y == null) {
+      // נתון חסר במודל — diagnostic גלוי, לא השלמה שקטה (§2.2)
+      diags.push({ kind: 'pmr-image-without-geometry', itemId: im.itemId || null, assetId: im.assetId || null });
+      continue;
+    }
+    const el = doc.createElement('div');
+    el.className = 'pmr-img';
+    el.setAttribute('role', 'img');
+    if (im.altText) el.setAttribute('aria-label', scrubPUAText(im.altText));
+    if (im.itemId != null) el.dataset.itemId = String(im.itemId);
+    if (im.assetId != null) el.dataset.assetId = String(im.assetId);
+    el.style.position = 'absolute';
+    el.style.left = `${px2(im.x)}px`; el.style.top = `${px2(im.y)}px`;
+    el.style.width = `${px2(im.w)}px`; el.style.height = `${px2(im.h)}px`;
+    const ref = im.resourcePath || null;
+    const uri = ref ? (resolveAssetRef(ref) || {}).uri : null;
+    if (uri) {
+      el.style.backgroundImage = `url("${uri}")`;
+      el.style.backgroundSize = '100% 100%';
+      el.style.backgroundRepeat = 'no-repeat';
+    } else {
+      el.dataset.assetMissing = '1';
+      diags.push({ kind: 'pmr-image-asset-unresolved', itemId: im.itemId || null, assetId: im.assetId || null });
+    }
+    root.appendChild(el);
+  }
+
+  // (7) הערות-צד/תיבות מידע — כרום+זהות מהרשומה; שורות הטקסט בתוכה (עוגן
+  // האודיט: .side-note/.margin-note עם textContent לספירת המילים).
+  const marginLines = mp.lines.filter(l => l.area === 'margin');
+  for (const sn of (mp.sideNotes || [])) {
+    const isBox = sn.itemKind === 'info-box';
+    const el = doc.createElement('aside');
+    el.className = 'side-note' + (isBox ? ' info-box' : '');
+    if (sn.noteId != null) el.dataset.noteId = String(sn.noteId);
+    if (sn.anchorId != null) el.dataset.anchor = String(sn.anchorId);
+    el.setAttribute('dir', 'rtl');
+    el.style.position = 'absolute';
+    if (sn.x != null) { el.style.left = `${px2(sn.x)}px`; el.style.right = 'auto'; }
+    if (sn.yTop != null) el.style.top = `${px2(sn.yTop)}px`;
+    if (sn.w) el.style.width = `${px2(sn.w)}px`;
+    if (sn.heightPx != null) el.style.height = `${px2(sn.heightPx)}px`;
+    if (sn.boxChrome && isBox) {
+      const ch = sn.boxChrome;
+      if (ch.background) el.style.backgroundColor = ch.background;
+      if (ch.border > 0) el.style.border = `${ch.border}px solid ${ch.borderColor || '#1a1a1a'}`;
+      if (ch.pad) el.style.padding = `${ch.pad}px`;
+    }
+    // שורות הטקסט של אותה הערה: אותו עמוד-שוליים (x) בטווח התיבה (yTop..yTop+h)
+    const own = marginLines.filter(l => l.x != null && sn.x != null && Math.abs(l.x - sn.x) < 0.01
+      && l.y != null && sn.yTop != null && l.y >= sn.yTop - 0.01 && l.y <= sn.yTop + (sn.heightPx || 0) + 0.01);
+    for (const ln of own) el.appendChild(renderModelLine(ln, doc, sn.x, sn.yTop));
+    if (!own.length && sn.text) {
+      // רשומה בלי שורות מוקרנות — דיאגנוסטיק גלוי; הטקסט אינו נעלם (§2.4)
+      diags.push({ kind: 'pmr-side-note-without-lines', noteId: sn.noteId || null, anchorId: sn.anchorId || null });
+      const p = doc.createElement('div');
+      p.className = 'pmr-missing';
+      p.dataset.missing = 'side-note-lines';
+      p.textContent = scrubPUAText(sn.text).slice(0, 200);
+      el.appendChild(p);
+    }
+    root.appendChild(el);
+  }
+  // שורות margin שלא שויכו לשום רשומה — מוקרנות בקואורדינטות העמוד + דיאגנוסטיק
+  const claimed = new Set();
+  for (const sn of (mp.sideNotes || [])) {
+    for (const l of marginLines) {
+      if (l.x != null && sn.x != null && Math.abs(l.x - sn.x) < 0.01
+        && l.y != null && sn.yTop != null && l.y >= sn.yTop - 0.01 && l.y <= sn.yTop + (sn.heightPx || 0) + 0.01) claimed.add(l.id);
+    }
+  }
+  for (const ln of marginLines) {
+    if (claimed.has(ln.id)) continue;
+    diags.push({ kind: 'pmr-margin-line-orphan', lineId: ln.id || null });
+    const el = renderModelLine(ln, doc, 0, 0);
+    el.classList.add('pmr-orphan-margin');
+    root.appendChild(el);
+  }
+
+  // (8) מרזב הערות — אריזת-תצוגה של כיסוי הרשומות (נגזרת מנתוני המודל בלבד);
+  // הקו-המפריד (עיטור fn-rule מהמודל) מוצב בתוכה — כמו שהאודיט בודק.
+  const fnNotes = mp.footnotes || [];
+  if (fnNotes.length) {
+    const fnRules = decoAll.filter(d => d.kind === 'fn-rule');
+    const xs = fnNotes.map(n => n.x).filter(v => v != null).concat(fnRules.map(r => r.x));
+    const ys = fnNotes.map(n => n.y).filter(v => v != null).concat(fnRules.map(r => r.y));
+    const area = doc.createElement('div');
+    area.className = `footnotes footnotes--${settings['fn-layout-mode']}`;
+    area.style.position = 'absolute';
+    if (xs.length && ys.length) {
+      const minX = Math.min(...xs), minY = Math.min(...ys);
+      const maxX = Math.max(...fnNotes.map(n => (n.x != null && n.w != null ? n.x + n.w : null)).filter(v => v != null)
+        .concat(fnRules.map(r => r.x + r.w)));
+      area.style.left = `${px2(minX)}px`;
+      area.style.top = `${px2(minY)}px`;
+      if (maxX != null) area.style.width = `${px2(maxX - minX)}px`;
+      area.style.bottom = 'auto';
+    }
+    for (const r of fnRules) area.appendChild(renderModelDecoration(r, doc, diags));
+    for (const n of fnNotes) {
+      const el = doc.createElement('div');
+      el.className = 'footnote';
+      if (n.noteId != null) el.dataset.noteId = String(n.noteId);
+      if (n.anchorId != null) el.dataset.anchor = String(n.anchorId);
+      if (n.continuationOf != null) el.dataset.continuationOf = String(n.continuationOf);
+      el.setAttribute('dir', 'rtl');
+      el.style.position = 'absolute';
+      if (n.x != null) el.style.left = `${px2(n.x - (xs.length ? Math.min(...xs) : 0))}px`;
+      if (n.y != null) el.style.top = `${px2(n.y - (ys.length ? Math.min(...ys) : 0))}px`;
+      if (n.w) el.style.width = `${px2(n.w)}px`;
+      // שורות ההערה: קיבוץ לפי baselineY (נתון מהמודל) — שורה k בגובה lineH
+      const lineH = n.lineH || 0;
+      const rows = new Map();
+      for (const wd of (n.words || [])) {
+        const key = wd.baselineY != null ? wd.baselineY : 0;
+        if (!rows.has(key)) rows.set(key, []);
+        rows.get(key).push(wd);
+      }
+      const sortedRows = [...rows.entries()].sort((a, b) => a[0] - b[0]);
+      if (!sortedRows.length && n.text) {
+        diags.push({ kind: 'pmr-footnote-without-words', noteId: n.noteId || null });
+      }
+      sortedRows.forEach(([baselineY, words], k) => {
+        const row = doc.createElement('div');
+        row.className = 'fn-row';
+        row.style.position = 'relative';
+        if (lineH > 0) { row.style.height = `${px2(lineH)}px`; row.style.lineHeight = `${px2(lineH)}px`; }
+        let firstFnWord = true;
+        for (const wd of words) {
+          if (!firstFnWord && typeof doc.createTextNode === 'function') row.appendChild(doc.createTextNode(' '));
+          firstFnWord = false;
+          const span = doc.createElement('span');
+          span.className = 'w';
+          span.style.position = 'absolute';
+          span.style.left = `${px2(wd.x - (n.x != null ? n.x : 0))}px`;
+          span.style.top = '0';
+          span.style.whiteSpace = 'pre';
+          if (wd.sizePt != null) span.style.fontSize = `${px2(wd.sizePt * PT_TO_PX)}px`;
+          const fam = familyOf(wd.fontKey);
+          if (fam) span.style.fontFamily = fam;
+          span.textContent = scrubPUAText(wd.text);
+          row.appendChild(span);
+        }
+        void baselineY; void k;
+        el.appendChild(row);
+      });
+      area.appendChild(el);
+    }
+    root.appendChild(area);
+  }
+
+  // (9) כותרת עליונה — סלוטים במיקומים סופיים מהמודל
+  if (mp.header && (mp.header.slots || []).length) {
+    const el = doc.createElement('div');
+    el.className = `running-head head--sep-${settings['header-separator-style'] || 'none'}`;
+    el.style.position = 'absolute';
+    el.style.top = `${px2(mp.header.y)}px`;
+    el.style.left = '0';
+    el.style.width = '100%';
+    el.style.height = '14px';
+    for (const s of mp.header.slots) {
+      if (!s.text) continue;
+      const span = doc.createElement('span');
+      span.className = `rh rh--${s.pos}`;
+      span.style.position = 'absolute';
+      if (s.x != null) { span.style.left = `${px2(s.x)}px`; span.style.right = 'auto'; }
+      if (s.w != null) span.style.width = `${px2(s.w)}px`;
+      if (s.align) span.style.textAlign = s.align;
+      if (s.sizePt != null) span.style.fontSize = `${px2(s.sizePt * PT_TO_PX)}px`;
+      const fam = familyOf(s.fontKey);
+      if (fam) span.style.fontFamily = fam;
+      const col = nonBlack(s.color);
+      if (col) span.style.color = col;
+      span.textContent = scrubPUAText(s.text);
+      el.appendChild(span);
+    }
+    root.appendChild(el);
+  }
+
+  // (10) גיליון — מלבן+טקסט+זהות מהמודל; הכרום (מסגרת) מההגדרות
+  if (mp.folio && mp.folio.text && settings['page-num-position'] !== 'none') {
+    const el = doc.createElement('footer');
+    el.className = `folio folio--${settings['page-num-position']} folio--frame-${settings['page-num-frame']}`;
+    el.style.position = 'absolute';
+    if (mp.folio.x != null) { el.style.left = `${px2(mp.folio.x)}px`; el.style.right = 'auto'; }
+    if (mp.folio.y != null) { el.style.top = `${px2(mp.folio.y)}px`; el.style.bottom = 'auto'; }
+    if (mp.folio.w != null) el.style.width = `${px2(mp.folio.w)}px`;
+    if (mp.folio.sizePt != null) el.style.fontSize = `${px2(mp.folio.sizePt * PT_TO_PX)}px`;
+    const fam = familyOf(mp.folio.fontKey);
+    if (fam) el.style.fontFamily = fam;
+    const col = nonBlack(mp.folio.color);
+    if (col) el.style.color = col;
+    if (mp.folio.baselineY != null && mp.folio.y != null) el.style.lineHeight = `${px2(mp.folio.baselineY - mp.folio.y)}px`;
+    if (isCssFrame(settings['page-num-frame'])) {
+      const badge = doc.createElement('span');
+      badge.className = `page-num-badge page-num-frame-${settings['page-num-frame'] === 'circle' ? 'circle' : 'box'}`;
+      badge.textContent = mp.folio.text;
+      el.appendChild(badge);
+    } else {
+      el.textContent = mp.folio.text;
+    }
+    root.appendChild(el);
+  }
+
+  // (11) עיטורי חזית — השאר (מעל התוכן; zOrder מהמודל)
+  for (const d of decoAll) {
+    if (isBg(d) || d.kind === 'fn-rule') continue;
+    root.appendChild(renderModelDecoration(d, doc, diags));
+  }
+
+  // חשבונאות גלויה (§2.4): פריט שלא מוקרן — diagnostic בר-צפייה, לא היעלמות
+  const projectedLineIds = new Set([...(mp.lines || [])].map(l => l.id));
+  for (const ln of (mp.lines || [])) {
+    if (ln.projected === false) diags.push({ kind: 'pmr-line-not-projected', lineId: ln.id || null });
+  }
+  void projectedLineIds;
+  if (diags.length) {
+    root.dataset.pmDiagnostics = String(diags.length);
+    if (opts.onDiagnostic) for (const d of diags) opts.onDiagnostic(d);
+  }
+  return root;
+}
+
+function isCssFrame(v) { return v === 'circle' || v === 'square'; }
+
+module.exports = { renderModelPage };
+
+};
+__modules["src/engine/typography/font-keys.js"] = function (require, module, exports) {
+// src/engine/typography/font-keys.js — מפתח משפחת גופן רשומה ⇒ תת-גופן ייצוא (S73)
+'use strict';
+
+/**
+ * **מקור יחיד למיפוי משפחה→מפתח גופן** (הוצא מכפילות: עד כאן היו שני עותקים
+ * זהים — core/materialize.js ו-layout/structural-stamps.js — ועותק שלישי
+ * במקרן המורשת שייסגר בשלב 9). המיפוי טהור: בדיקת רישום בלבד (registeredFonts),
+ * בלי מדידה ובלי תלות ברנדרר.
+ *
+ * משפחה רשומה ⇒ המשפחה עצמה כמפתח (תת-גופן ייעודי בייצוא); אחרת null
+ * (=גוף הטקסט /F1). התפקידים הפונקציונליים (window/fnbody/margin/heading)
+ * ממופים לשמות הקצרים של תתי-הגופנים ב-pdf-writer.
+ */
+
+const { registeredFonts } = require('./measure-api');
+
+/** @param {string} fam — שם משפחה מההגדרות (heading-N-font וכו'); ריק ⇒ null */
+function familyFontKeyOf(fam) {
+  if (!fam || !registeredFonts.has(fam)) return null;
+  if (fam === 'Frank Ruhl Libre') return 'fnbody';
+  if (fam === 'Hadassah Friedlaender') return 'margin';
+  if (fam === 'FrankReal-Bold' || fam === 'FrankReal') return 'window';
+  if (fam === 'David Libre' || fam === 'DavidLibre-Bold') return 'heading';
+  return fam;
+}
+
+/** **פרוסה 3 (§2.2 — זהות גופן מהמודל):** היפוך המיפוי לצורך הקרנה —
+ * מפתח גופן (על שורות/מילים ב-PageModel) ⇒ שם משפחה לתצוגה. משפחה רשומה
+ * היא המפתח עצמו; המפתחות הפונקציונליים ממופים למשפחה הקנונית שיצרה אותם
+ * (אותה טבלה, כיוון אחד — אין עותק שני של הידע). */
+const KEY_FAMILY = {
+  fnbody: 'Frank Ruhl Libre',
+  margin: 'Hadassah Friedlaender',
+  window: 'FrankReal',
+  heading: 'DavidLibre-Bold'
+};
+
+/** @param {string} key — מפתח מהמודל; null ⇒ null (גוף הטקסט — ירושת שורש) */
+function familyOfFontKey(key) {
+  if (!key) return null;
+  if (key === 'body') return null;
+  return KEY_FAMILY[key] || key;
+}
+
+module.exports = { familyFontKeyOf, familyOfFontKey };
 
 };
 __modules["src/ui/testing-tab.js"] = function (require, module, exports) {
