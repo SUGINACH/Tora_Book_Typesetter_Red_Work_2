@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 61 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 70 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -333,25 +333,37 @@ var __paths = {
   "src/engine/output/dom-renderer.js|../decoration/page-decorations": "src/engine/decoration/page-decorations.js",
   "src/engine/output/dom-renderer.js|../decoration/shaar-boxes": "src/engine/decoration/shaar-boxes.js",
   "src/engine/output/dom-renderer.js|../decoration/ornament-fit": "src/engine/decoration/ornament-fit.js",
+  "src/engine/output/dom-renderer.js|../layout/furniture-geometry": "src/engine/layout/furniture-geometry.js",
   "src/engine/output/dom-renderer.js|../decoration/asset-registry": "src/engine/decoration/asset-registry.js",
   "src/engine/output/dom-renderer.js|../decoration/ornament-ink": "src/engine/decoration/ornament-ink.js",
   "src/engine/output/dom-renderer.js|../layout/page-templates": "src/engine/layout/page-templates.js",
   "src/engine/output/dom-renderer.js|../decoration/folio": "src/engine/decoration/folio.js",
+  "src/engine/output/dom-renderer.js|../layout/footnote-lanes": "src/engine/layout/footnote-lanes.js",
   "src/engine/output/dom-renderer.js|./line-font": "src/engine/output/line-font.js",
   "src/engine/output/dom-renderer.js|./shaar-content": "src/engine/output/shaar-content.js",
+  "src/engine/output/dom-renderer.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/output/dom-renderer.js|../layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
   "src/engine/decoration/page-decorations.js|../layout/page-templates": "src/engine/layout/page-templates.js",
   "src/engine/decoration/asset-registry.js|./svg-sanitize": "src/engine/decoration/svg-sanitize.js",
   "src/engine/decoration/ornament-ink.js|./asset-registry": "src/engine/decoration/asset-registry.js",
+  "src/engine/typography/measure-api.js|./measure-table": "src/engine/typography/measure-table.js",
+  "src/engine/typography/measure-api.js|./font-metrics": "src/engine/typography/font-metrics.js",
+  "src/engine/typography/measure-api.js|../assets/hash256": "src/engine/assets/hash256.js",
+  "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
+  "src/engine/typography/measure-api.js|./units": "src/engine/typography/units.js",
+  "src/engine/typography/measure-api.js|./font-resolver": "src/engine/typography/font-resolver.js",
+  "src/engine/typography/kp-linebreak.js|../line/breaks": "src/engine/line/breaks.js",
+  "src/engine/typography/font-resolver.js|../assets/hash256": "src/engine/assets/hash256.js",
+  "src/engine/typography/font-resolver.js|./font-metrics": "src/engine/typography/font-metrics.js",
+  "src/engine/typography/font-resolver.js|./measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/typography/font-resolver.js|./measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/typography/font-resolver.js|./measure-api": "src/engine/typography/measure-api.js",
   "src/engine/layout/legacy-imud-flow.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/layout/legacy-imud-flow.js|../core/events": "src/engine/core/events.js",
   "src/engine/layout/legacy-imud-flow.js|../core/ledger": "src/engine/core/ledger.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/headers-builder": "src/engine/decoration/headers-builder.js",
   "src/engine/layout/legacy-imud-flow.js|../output/line-font": "src/engine/output/line-font.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/legacy-ornaments": "src/engine/decoration/legacy-ornaments.js",
-  "src/engine/typography/measure-api.js|./measure-table": "src/engine/typography/measure-table.js",
-  "src/engine/typography/measure-api.js|./font-metrics": "src/engine/typography/font-metrics.js",
-  "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
   "src/engine/decoration/legacy-ornaments.js|./ornament-fit": "src/engine/decoration/ornament-fit.js",
   "src/ui/testing-tab.js|../audit/report-schema": "src/audit/report-schema.js",
   "src/ui/testing-tab.js|../engine/core/ledger": "src/engine/core/ledger.js",
@@ -368,12 +380,22 @@ var __paths = {
   "src/engine/layout/dp-planner.js|./ordering": "src/engine/layout/ordering.js",
   "src/engine/layout/dp-planner.js|./balancing": "src/engine/layout/balancing.js",
   "src/engine/layout/dp-planner.js|./footnote-budget": "src/engine/layout/footnote-budget.js",
+  "src/engine/layout/dp-planner.js|./notes-model": "src/engine/layout/notes-model.js",
+  "src/engine/layout/dp-planner.js|./constraint-matrix": "src/engine/layout/constraint-matrix.js",
+  "src/engine/layout/dp-planner.js|./decision-trace": "src/engine/layout/decision-trace.js",
   "src/engine/layout/protections-matrix.js|./balancing": "src/engine/layout/balancing.js",
   "src/engine/layout/protections-matrix.js|./column-flow": "src/engine/layout/column-flow.js",
   "src/engine/layout/protections-matrix.js|../notes/markers": "src/engine/notes/markers.js",
+  "src/engine/layout/protections-matrix.js|./constraint-matrix": "src/engine/layout/constraint-matrix.js",
   "src/engine/layout/balancing.js|./column-flow": "src/engine/layout/column-flow.js",
+  "src/engine/layout/balancing.js|./constraint-matrix": "src/engine/layout/constraint-matrix.js",
   "src/engine/layout/column-flow.js|./page-templates": "src/engine/layout/page-templates.js",
   "src/engine/layout/candidate-generator.js|./column-flow": "src/engine/layout/column-flow.js",
+  "src/engine/layout/candidate-generator.js|./constraint-matrix": "src/engine/layout/constraint-matrix.js",
+  "src/engine/typography/protectors.js|../line/breaks": "src/engine/line/breaks.js",
+  "src/engine/layout/ordering.js|./column-flow": "src/engine/layout/column-flow.js",
+  "src/engine/layout/footnote-budget.js|./footnote-lanes": "src/engine/layout/footnote-lanes.js",
+  "src/engine/layout/footnote-budget.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/ui/caret-map.js|../engine/parser/dfa-lexer": "src/engine/parser/dfa-lexer.js",
   "src/engine/output/export-api.js|../core/settings-registry": "src/engine/core/settings-registry.js",
   "src/engine/output/export-api.js|./dom-renderer": "src/engine/output/dom-renderer.js",
@@ -7473,7 +7495,10 @@ __modules["src/engine/extensions/style-schema.js"] = function (require, module, 
  * דטרמיניזם: אין Date/Math.random; סדר האימות קבוע; הודעות קבועות.
  */
 
-const LAYOUT_MODES = ['regular', 'full-width', 'side-note', 'footnote', 'endnote', 'new-location'];
+const LAYOUT_MODES = ['regular', 'full-width', 'side-note', 'footnote', 'endnote', 'new-location', 'info-box'];
+// **שלב 6 פרוסה 2 (§11):** info-box — פריט עוגן מורחב (תיבת מידע בשוליים עם
+// רוחב/ריפוד/מסגרת מוגדרים). נכנס דרך אותו שסע הרחבה של החוזה (ה-enum) —
+// בלי מנוע מקבילי: הפריט רוכב על מסלול העוגן הקיים ונרשם ב-registry.
 const ORNAMENTS = ['pyramid', 'lance', 'shoshanta', 'scroll'];
 const COUNTER_FORMATS = ['hebrew-geresh', 'decimal'];
 const COUNTER_RESETS = ['part', 'page', 'never'];
@@ -7685,6 +7710,23 @@ function parseCustomStyles(json) {
       errors.push({ code: 'bad-layout-mode', path: `${where}.layoutMode`, styleId: id, message: `בסגנון «${id}»: מצב פריסה חייב להיות אחד מ ${LAYOUT_MODES.join(', ')} (קיבל ${JSON.stringify(d.layoutMode)}).` });
       ok = false;
     }
+    // **שלב 6 פרוסה 2 (§11):** מפרט תיבת המידע — רוחב (em, 3..8), ריפוד (em, 0..1.5).
+    // הסמכות על המסגרת/הרקע היא שדות ה-style הקיימים (border/background).
+    let infoBox = null;
+    if (layoutMode === 'info-box') {
+      const ib = isPlainObject(d.infoBox) ? d.infoBox : {};
+      const widthEm = ib.widthEm != null ? Number(ib.widthEm) : 4.5; // ברירת מחדל — רוחב בינוני בשוליים
+      const padEm = ib.padEm != null ? Number(ib.padEm) : 0.3;
+      if (!(widthEm >= 3 && widthEm <= 8)) {
+        errors.push({ code: 'info-box-bad-width', path: `${where}.infoBox.widthEm`, styleId: id, message: `בסגנון «${id}» (info-box): רוחב התיבה חייב להיות בין 3 ל־8em (קיבל ${JSON.stringify(ib.widthEm)}).` });
+        ok = false;
+      }
+      if (!(padEm >= 0 && padEm <= 1.5)) {
+        errors.push({ code: 'info-box-bad-pad', path: `${where}.infoBox.padEm`, styleId: id, message: `בסגנון «${id}» (info-box): הריפוד חייב להיות בין 0 ל־1.5em (קיבל ${JSON.stringify(ib.padEm)}).` });
+        ok = false;
+      }
+      infoBox = { widthEm, padEm };
+    }
     if ('style' in d) ok = validateStyle(d.style, id, errors, `${where}.style`) && ok;
     ok = validateCounter(d.counter, id, errors, `${where}.counter`) && ok;
     ok = validateOrnaments(d.linkedOrnaments, id, errors, `${where}.linkedOrnaments`) && ok;
@@ -7700,7 +7742,8 @@ function parseCustomStyles(json) {
         format: d.counter.format || 'decimal',
         reset: d.counter.reset || 'never'
       } : null,
-      linkedOrnaments: d.linkedOrnaments || null
+      linkedOrnaments: d.linkedOrnaments || null,
+      ...(infoBox ? { infoBox } : {})
     });
   });
   return { ok: errors.length === 0, styles, errors };
@@ -9330,11 +9373,13 @@ function bgRgba(color, opacity) {
 const { markerFor } = require('../notes/markers');
 const { planDecorations } = require('../decoration/page-decorations');
 const { resolveShaarBox } = require('../decoration/shaar-boxes');
-const { columnDividerHeightPx } = require('../decoration/ornament-fit');
+const { columnDividerHeightPx } = require('../decoration/ornament-fit');const { folioGeometry } = require('../layout/furniture-geometry'); // **שלב 6:** גיאומטריית הגיליון — מקור יחיד עם הפרויקטור ל-PDF
+
 const { resolveAssetRef } = require('../decoration/asset-registry');
 const { ornamentInk } = require('../decoration/ornament-ink'); // **03.11:** imud: → data-URI
 const { MM_TO_PX } = require('../layout/page-templates');
 const { isCssFrame } = require('../decoration/folio'); // **S9:** מסגרות גיליון CSS (circle/square)
+const { assignFootnoteLanes } = require('../layout/footnote-lanes'); // **שלב 5:** מקור-אמת יחיד לחלוקת נתיבי המרזב
 const { lineFontSizePt, lineFontFamily, ptToPx } = require('./line-font');
 const { buildShaarBlocks, shaarFontOf } = require('./shaar-content'); // **03.11(ד)** // **03.11(ג):** מקור יחיד לגופן/גודל שורה
 
@@ -9398,6 +9443,13 @@ function renderLine(ln, doc, settings = {}) {
   // (תיקון S5.1 הוחל בנתיב המורשת בלבד ולא כאן).
   if (Number.isFinite(ln.heightPx)) {
     el.style.lineHeight = `${Math.round(ln.heightPx * (ln.aqStretch || 1) * 100) / 100}px`;
+  }
+  // **FX-6 (פרוסה 2 — הפער מהחוזה הגיאומטרי):** פער הבלוקים מוקרן מהחותמת
+  // שנקבעה בתכנון (gapBeforePx) — מקור יחיד; המקרין קורא ואינו מוסיף כלום
+  // מעצמו. margin-top (ולא גובה שורה) — הפער אינו מערבב בין גובה השורה
+  // למרווח הבלוק; זהה ביט-לביט להתקדמות ה-y של הפרויקטור ל-PDF.
+  if (ln.gapBeforePx > 0) {
+    el.style.marginTop = `${Math.round(ln.gapBeforePx * 100) / 100}px`;
   }
   // **S8 (F-08):** הזמנת עיטורי H2 בתוך תיבת השורה — הטקסט יורד/עולה ב־padding;
   // הגובה כבר תוקצב בפריסה, הרנדור רק מצייר בתוך התיבה (מקור יחיד — F-09).
@@ -9495,6 +9547,38 @@ function renderFootnoteArea(page, settings, doc) {
     rule.className = `fn-rule fn-rule--${settings['footnote-separator-rule']}`;
     area.appendChild(rule);
   }
+  // **שלב 6 פרוסה 2 (§9 — הקרנה מהחותמת):** גוף ההערה מוקרן משורות החותמת
+  // (noteRows/noteWords/lineH מ-notes-model) — תיבת-שורה מפורשת לכל שורה:
+  // פיץ' אנכי מדויק מהמודל (בעבר line-height יחידת-יחס מה-CSS סטה ~0.4px/שורה
+  // מהתקציב ⇒ הערות נחתכו/חפפו בין שורות בתצוגה בעוד ה-PDF והתקציב הסכימו),
+  // והמילים של כל שורה — ממש כפי שנמדדו. הדפדפן משלים את הזרימה האופקית
+  // בתוך תיבת השורה (white-space:nowrap — אין שבירה מחדש של הדפדפן).
+  // חותמה חסרה ⇒ data-stamp-missing + נפילת טקסט חירום (התוכן לעולם לא אובד) —
+  // לא מדידה חלופית שקטה (§9.8).
+  const mkRows = (n) => {
+    const rows = [];
+    const isCont = n.isContinuation === true || n.mode === 'split-rest';
+    for (let li = 0; li < (n.noteRows || []).length; li++) {
+      const row = n.noteRows[li];
+      const div = doc.createElement('div');
+      div.className = 'fn-row';
+      div.style.whiteSpace = 'nowrap';
+      if (Number(n.lineH) > 0) {
+        div.style.lineHeight = `${n.lineH}px`;
+        div.style.height = `${n.lineH}px`;
+      }
+      const parts = [];
+      if (li === 0) {
+        if (isCont) parts.push('(המשך)');
+        if (n.marker != null && String(n.marker) !== '') parts.push(`${n.marker}\u200F`);
+      }
+      for (let i = row.wFrom; i < row.wTo; i++) parts.push(scrubPUAText(String(n.noteWords[i])));
+      div.textContent = parts.join(' ');
+      rows.push(div);
+    }
+    return rows;
+  };
+  const hasStamp = (n) => Array.isArray(n.noteRows) && n.noteRows.length > 0 && Array.isArray(n.noteWords) && Number(n.lineH) > 0;
   // סמן אחיד (notes/markers) + סימון המשך למקטעי פיצול (S7.1.3 long-note policy)
   const mkNote = (n) => {
     const marker = n.marker || markerFor(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings['footnote-marker-style']);
@@ -9503,13 +9587,20 @@ function renderFootnoteArea(page, settings, doc) {
     el.className = 'footnote' + (cont ? ' fn--continuation' : '') + (n.customStyle ? ' footnote--custom' : '');
     if (n.customStyle) el.dataset.style = n.customStyle;
     el.dir = 'rtl';
-    el.textContent = `${cont ? '(המשך) ' : ''}${marker}\u200F ${scrubPUAText(n.text || n)}`;
+    if (hasStamp(n)) {
+      el.style.margin = '0'; // התקציב אינו כולל שוליים — תצוגה=ייצוא=תקציב
+      for (const r of mkRows(n)) el.appendChild(r);
+    } else {
+      el.dataset.stampMissing = '1'; // diagnostic גלוי — בלי מדידה חלופית שקטה
+      el.textContent = `${cont ? '(המשך) ' : ''}${marker}\u200F ${scrubPUAText(n.text || n)}`;
+    }
     return el;
   };
   // **S70 (fn-continuous ב-DP — סגירת שארית S5.4):** גרסת inline של ההערה —
   // לזרימה רציפה: הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה (רווח-
   // כפול בין הערות — כמו המורשת). המודל כבר תיקצב במצב זה בלי הצמדת
   // תקרה פר-הערה (D-34); התצוגה משלימה את החזות בלבד — הגיאומטריה לא זזה.
+  // **פרוסה 2:** פיץ' השורה גם כאן מהחותמת (px מפורש) — אותו פיץ' של ה-PDF.
   const mkNoteInline = (n) => {
     const marker = n.marker || markerFor(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings['footnote-marker-style']);
     const el = doc.createElement('span');
@@ -9524,6 +9615,8 @@ function renderFootnoteArea(page, settings, doc) {
     const flow = doc.createElement('div');
     flow.className = 'footnotes-flow';
     flow.dir = 'rtl';
+    const firstStamped = notes.find(hasStamp);
+    if (firstStamped) flow.style.lineHeight = `${firstStamped.lineH}px`; // פיץ' מהחותמת — תצוגה=ייצוא
     notes.forEach((n, i) => {
       if (i > 0) flow.appendChild(doc.createTextNode('\u00A0 ')); // רווח-כפול בין הערות
       flow.appendChild(mkNoteInline(n));
@@ -9537,12 +9630,12 @@ function renderFootnoteArea(page, settings, doc) {
     && tpl && Array.isArray(tpl.columns) && tpl.columns.length >= 2
     && page.fnReservedHeightPx > 0;
   if (twoLanes) {
-    const order = page.footnotes.map((n, i) => ({ i, h: n.heightPx || 0 })).sort((a, b) => b.h - a.h || a.i - b.i);
-    const totals = [0, 0];
-    const laneOf = new Map();
-    for (const s of order) { const li = totals[0] <= totals[1] ? 0 : 1; totals[li] += s.h; laneOf.set(s.i, li); }
+    // **שלב 5 (חילוץ שורש מ-#16):** חלוקת הנתיבים — מקור יחיד (footnote-lanes).
+    // שקול מתמטית ל-LPT המקומי הקודם — נעול בבדיקת שקילות; תקציב/הקרנה/תצוגה
+    // משתפים את אותה חלוקה ממקור אחד.
+    const { lanes: idxLanes } = assignFootnoteLanes(page.footnotes);
     const lanes = [[], []];
-    page.footnotes.forEach((n, i) => lanes[laneOf.get(i)].push(n));
+    for (const li of [0, 1]) lanes[li] = idxLanes[li].map(i => page.footnotes[i]);
     const row = doc.createElement('div');
     row.style.display = 'flex';
     row.style.flexDirection = 'row-reverse'; // RTL — הנתיב הראשון מימין
@@ -9590,6 +9683,23 @@ function renderFolio(page, settings, doc) {
     folio.appendChild(badge);
   } else {
     folio.textContent = page.folioDisplay;
+  }
+  // **שלב 6 פרוסה 1 (§8 בהוראה — "אין לחשב מיקומם בנפרד ב-DOM וב-PDF"):**
+  // המיקום המפורש מגיע מאותו מקור יחיד של הפרויקטור ל-PDF
+  // (layout/furniture-geometry). ה-class נשאר אחראי לעור בלבד (מסגרת/צבע);
+  // הגיאומטריה — top/line-height מפורשים מהמודל, לא מהתנהגות CSS משוערת.
+  // המדידה בגופן הגיליון כשרשום — אותו אינסטנס שהפרויקטור בונה.
+  const pnFontGeo = settings['page-num-font'] || '';
+  const folioMeasure = pnFontGeo
+    ? new (require('../typography/measure-api').MeasureAPI)({ ...settings, 'body-font': pnFontGeo }, 'font-metrics')
+    : null;
+  if (folioMeasure) {
+    const geo = folioGeometry(page, settings, folioMeasure);
+    if (geo) {
+      folio.style.top = `${Math.round(geo.y * 100) / 100}px`;
+      folio.style.lineHeight = `${geo.lineHeightPx}px`;
+      folio.style.bottom = 'auto';
+    }
   }
   return folio;
 }
@@ -9679,7 +9789,9 @@ function renderTocPageContent(page, doc) {
 function renderColumnDivider(page, settings, doc) {
   const style = settings['column-divider-style'];
   if (!style || style === 'none' || page.columns.length < 2) return null;
-  const used = page.columns.map(col => col.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1), 0));
+  // **FX-6 (פרוסה 2):** הגובה כולל את פערי הבלוקים — אותה סמנטיקה כמו
+  // usedHeight של האיזון וכמו הפרויקטור ל-PDF (תצוגה = ייצוא).
+  const used = page.columns.map(col => col.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1) + (ln.gapBeforePx || 0), 0));
   // **S6.0 (R4-M5):** גובה המפריד כולל aqStretch — כמו הפרויקטור/PDF
   // (בעבר ה-DOM חישב גובה ללא המתיחה ⇒ מפריד באורך שונה בין תצוגה לייצוא).
   const h = columnDividerHeightPx(used);
@@ -9742,34 +9854,35 @@ function renderDecorations(page, doc) {
     el.style.top = `${Math.round(d.y)}px`;
     el.style.width = `${Math.round(d.w)}px`;
     el.style.height = `${Math.round(d.h)}px`;
-    // **03.11 (EXT-14):** עיטור מסוג 'image' — רקע מההפניה הפתורה (asset-registry)
-    if (d.image) {
-      const uri = assetUri(d.image);
+    // **השלמת חוזה העיטורים (שלב 6 — §6.1-6/§6.1-10):** הדיו נצרך מההצהרה
+    // (ornId/ink) שנקבעה בתכנון — המקרן קורא ואינו מחליט מחדש (F-09). נכס
+    // חיצוני (imud:) נפתר כאן בזמן הציור — טעינת משאב, לא החלטת גיאומטריה.
+    // דיו שאינו פתיר — דיאגנוסטיק גלוי (dataset.inkMissing), לא השתקה.
+    if (d.ornId) el.dataset.ornId = d.ornId;
+    const ink = d.ink || (d.image ? { type: 'image', uri: null, ref: d.image } : null);
+    if (ink && ink.type === 'image') {
+      const uri = (ink.ref ? assetUri(ink.ref) : null) || ink.uri || (d.image ? assetUri(d.image) : null);
       if (uri) {
         el.style.backgroundImage = `url("${uri}")`;
         el.style.backgroundSize = '100% 100%';
         el.style.backgroundRepeat = 'no-repeat';
+      } else {
+        el.dataset.inkMissing = '1'; // asset חיצוני שלא נפתר — מדווח, לא ריק בשקט
       }
+    } else if (ink && ink.type === 'svg' && ink.uri) {
+      el.style.backgroundImage = `url("${ink.uri}")`;
+      el.style.backgroundSize = 'contain';
+      el.style.backgroundPosition = 'center center';
+      el.style.backgroundRepeat = 'no-repeat';
+    } else if (ink && ink.type === 'rule') {
+      el.style.borderTop = '0.75px solid #000';
+      el.style.height = '0px';
+    } else if (ink && ink.type === 'rect' && ink.color) {
+      el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;
     } else if (d.kindStyle && d.kindStyle !== 'none') {
-      // **EXT-4:** הדיו של kindStyle — מקור יחיד (ornament-ink): SVG מובנה
-      // (pyramid/lance/shoshanta/scroll) או מספריית העיצובים (imud:...) —
-      // רקע data-URI מותאם לתיבה; 'thin' — קו מפריד דק.
-      const ink = ornamentInk(d.kindStyle);
-      if (ink && ink.type === 'svg') {
-        el.style.backgroundImage = `url("${ink.uri}")`;
-        el.style.backgroundSize = 'contain';
-        el.style.backgroundPosition = 'center center';
-        el.style.backgroundRepeat = 'no-repeat';
-      } else if (ink && ink.type === 'rule') {
-        el.style.borderTop = '0.75px solid #000';
-        el.style.height = '0px';
-      } else if (ink && ink.type === 'image') {
-        el.style.backgroundImage = `url("${ink.uri}")`;
-        el.style.backgroundSize = 'contain';
-        el.style.backgroundPosition = 'center center';
-        el.style.backgroundRepeat = 'no-repeat';
-      }
+      el.dataset.inkMissing = '1'; // הצהרה בלי דיו פתיר — גלוי, לא ריק בשקט
     }
+    if (d.inkMissing) el.dataset.inkMissing = '1';
     els.push(el);
   }
   return els;
@@ -10666,7 +10779,29 @@ function renderPage(page, settings, doc, header) {
           el.style.left = `${Math.round(col.x)}px`;
           el.style.top = `${Math.round(y)}px`;
           el.style.width = `${Math.round(col.w)}px`;
-          el.textContent = `${n.marker || ''}\u200F ${scrubPUAText(n.text || '')}`;
+          // **שלב 6 פרוסה 2 (§9):** שורות ההערה מהחותמת — פיץ' מדויק מהמודל
+          // (בדיוק כמו הפרויקטור ל-PDF וכמו התקציב שקבע buildEndnotePages).
+          const stamped = Array.isArray(n.noteRows) && n.noteRows.length > 0 && Array.isArray(n.noteWords) && Number(n.lineH) > 0;
+          if (stamped) {
+            el.style.margin = '0'; // התקציב אינו כולל שוליים — תצוגה=ייצוא=תקציב
+            el.dataset.rows = String(n.noteRows.length);
+            for (let li = 0; li < n.noteRows.length; li++) {
+              const row = n.noteRows[li];
+              const div = doc.createElement('div');
+              div.className = 'fn-row';
+              div.style.whiteSpace = 'nowrap';
+              div.style.lineHeight = `${n.lineH}px`;
+              div.style.height = `${n.lineH}px`;
+              const parts = [];
+              if (li === 0 && n.marker != null && String(n.marker) !== '') parts.push(`${n.marker}\u200F`);
+              for (let i = row.wFrom; i < row.wTo; i++) parts.push(scrubPUAText(String(n.noteWords[i])));
+              div.textContent = parts.join(' ');
+              el.appendChild(div);
+            }
+          } else {
+            el.dataset.stampMissing = '1'; // diagnostic גלוי (§9.8)
+            el.textContent = `${n.marker || ''}\u200F ${scrubPUAText(n.text || '')}`;
+          }
           list.appendChild(el);
           y += (n.heightPx || 0);
         }
@@ -10748,10 +10883,17 @@ function renderPage(page, settings, doc, header) {
   // **S8 (REQ-ORN-01..04):** עיטורים — ציור מה־rectים בלבד (F-09 מקור יחיד)
   for (const el of renderDecorations(page, doc)) root.appendChild(el);
 
-  // הערות צד: מיקום מוחלט לפי ה‑placement (S7.1.2) — anchor לפסקה המארחת
+  // הערות צד / תיבות מידע: מיקום מוחלט לפי ה‑placement (S7.1.2) — anchor לפסקה המארחת.
+  // **שלב 6 פרוסה 2 (§§9-10):** הגוף מוקרן משורות החותמת — תיבת-שורה מפורשת
+  // לכל שורה (line-height/height = lineH מהמודל; nowrap — הדפדפן אינו שובר
+  // מחדש). בעבר ה-aside עטף טקסט חופשי עם line-height:1.15 יחסי מה-CSS —
+  // סטייה של עד ~0.4px לשורה מהתקציב שצברה על שורות רבות ⇒ חפיפות
+  // SIDE_NOTE_OVERLAP בפועל בעמוד 107 (האודיט החי). תיבת מידע: ריפוד/מסגרת/
+  // רקע מהחוזה (styleSpec+boxChrome) — אותה גיאומטריה שהוקצתה (§11).
   for (const sn of page.sideNotes || []) {
+    const isBox = sn.itemKind === 'info-box';
     const el = doc.createElement('aside');
-    el.className = 'side-note' + (sn.isCustomStyle ? ' side-note--custom' : '');
+    el.className = 'side-note' + (sn.isCustomStyle ? ' side-note--custom' : '') + (isBox ? ' info-box' : '');
     if (sn.isCustomStyle) el.dataset.style = sn.isCustomStyle;
     el.dataset.anchor = sn.anchorToken || '';
     el.dir = 'rtl';
@@ -10760,8 +10902,35 @@ function renderPage(page, settings, doc, header) {
       el.style.left = `${Math.round(sn.x)}px`;
       el.style.right = 'auto';
     }
-    if (sn.colWidth) el.style.width = `${sn.colWidth}px`;
-    el.textContent = (sn.counterMark ? `${sn.counterMark} ` : '') + scrubPUAText(sn.text);
+    const boxW = (sn.boxSpec && Number(sn.boxSpec.widthPx) > 0) ? sn.boxSpec.widthPx : sn.colWidth;
+    if (boxW) el.style.width = `${Math.round(boxW)}px`;
+    if (isBox) {
+      const chrome = sn.boxChrome || { pad: 0, border: 0 };
+      if (chrome.pad) el.style.padding = `${chrome.pad}px`;
+      if (chrome.border) el.style.border = '1px solid #000';
+      if (sn.styleSpec && sn.styleSpec.background) el.style.backgroundColor = sn.styleSpec.background;
+      if (sn.styleSpec && sn.styleSpec.fontSizePt) el.style.fontSize = `${Math.round(sn.styleSpec.fontSizePt * (96 / 72) * 100) / 100}px`;
+    }
+    const stamped = Array.isArray(sn.noteRows) && sn.noteRows.length > 0 && Array.isArray(sn.noteWords) && Number(sn.lineH) > 0;
+    if (stamped) {
+      el.dataset.rows = String(sn.noteRows.length);
+      for (let li = 0; li < sn.noteRows.length; li++) {
+        const row = sn.noteRows[li];
+        const div = doc.createElement('div');
+        div.className = 'sn-row';
+        div.style.whiteSpace = 'nowrap';
+        div.style.lineHeight = `${sn.lineH}px`;
+        div.style.height = `${sn.lineH}px`;
+        const parts = [];
+        if (li === 0 && !isBox && sn.counterMark != null && String(sn.counterMark) !== '') parts.push(String(sn.counterMark));
+        for (let i = row.wFrom; i < row.wTo; i++) parts.push(scrubPUAText(String(sn.noteWords[i])));
+        div.textContent = parts.join(' ');
+        el.appendChild(div);
+      }
+    } else {
+      el.dataset.stampMissing = '1'; // diagnostic גלוי — בלי מדידה חלופית שקטה (§9.8)
+      el.textContent = (sn.counterMark ? `${sn.counterMark} ` : '') + scrubPUAText(sn.text);
+    }
     root.appendChild(el);
   }
   return root;
@@ -10956,7 +11125,29 @@ function renumberPageScopedMarkers(pages, opts) {
   return { renumbered, touchedWords, skipped: null };
 }
 
-module.exports = { markerFor, makeCounter, hebrewMarkFinish, HEB_LETTERS, renumberPageScopedMarkers, MARK_TAG: '\uE102' };
+/**
+ * **שלב 5 (חילוץ שורש מ-PR #16, S78/D-107 — עוזר זיהוי סמן מתויג):**
+ * חילוץ טקסט הסמן ממילת גוף — אותו פענוח של ה-pipeline (countKnown) ושל
+ * המתכנן (הערות עוקבות-עוגן): מקור יחיד לתבנית D-53.
+ *  - מילה עם E000 (הערה שנדחתה לגוף): הסמן הוא הפרגמנט שלפני ה-E000
+ *    (עשוי להיות ממוזג לעוגן ב-NBSP — מנורמל לרווח לפני הפיצול).
+ *  - מילה עם תג \uE102 (סמן מתויג): הפרגמנט שאחרי התג עד NBSP/רווח.
+ * @returns {string|null} — טקסט הסמן או null אם המילה אינה נושאת סמן.
+ */
+function markerFragmentOf(word) {
+  const sw = String(word);
+  if (sw.includes('\uE000')) {
+    const at = sw.indexOf('\uE000');
+    const frags = sw.slice(0, at).replace(/\u00A0/g, ' ').split(' ').filter(Boolean);
+    return frags.length ? frags[frags.length - 1] : null;
+  }
+  if (!sw.includes('\uE102')) return null;
+  const at = sw.indexOf('\uE102');
+  const frag = sw.slice(at + 1).split(/[\u00A0 ]/)[0];
+  return frag || null;
+}
+
+module.exports = { markerFor, makeCounter, hebrewMarkFinish, HEB_LETTERS, renumberPageScopedMarkers, markerFragmentOf, MARK_TAG: '\uE102' };
 
 };
 __modules["src/engine/decoration/page-decorations.js"] = function (require, module, exports) {
@@ -11407,6 +11598,75 @@ module.exports = {
   h2OrnamentMarginsPx, sideOrnamentLiftPx, h2OrnamentScope, chapterEndOrnamentFit,
   h2OrnamentReservedHeight,
   dividerInsertable, assertSingleSourceSizing, CHAPTER_END_KINDS, H2_ORN_W_EM, H2_ORN_H_EM
+};
+
+};
+__modules["src/engine/layout/furniture-geometry.js"] = function (require, module, exports) {
+// src/engine/layout/furniture-geometry.js — גיאומטריית ריהוט עמוד ממקור יחיד (שלב 6 פרוסה 1)
+'use strict';
+
+/**
+ * **מעמד (הוראת שלב 6 §8):** "כותרות עליונות, תחתונות ומספרי עמוד יהיו Page
+ * Items בעלי placement model אחיד; **אין לחשב את מיקומם בנפרד ב-DOM וב-PDF**."
+ *
+ * עד כאן המקרן ל-PDF חישב את תיבת הגיליון והבסיס במתמטיקה מפורשת
+ * (FOLIO_BOTTOM_PX=25, half-leading, ascent) בעוד ה-DOM הסתמך על CSS חי
+ * (.folio{bottom:25px} וכו') שכויל להתאים בעבר (S69/S5.1) — שני מקורות
+ * של אותה גיאומטריה שכל אחד מהם יכול לסטות בשקט. מעתה שני המקרינים
+ * קוראים מכאן: המקרן מציב את המספרים כמות שהם; ה-DOM מציב אותם כסגנון
+ * מפורש (top/lineHeight) לצד ה-class הקיים שנשאר אחראי לעור (מסגרת/צבע).
+ */
+
+/** תחתית תיבת הגיליון מה-CSS החי (styles.css: .folio{bottom:25px}) — קבוע המקור. */
+const FOLIO_BOTTOM_PX = 25;
+/** ראש תיבת גיליון במצב top (styles.css: .folio--top{top:4px}). */
+const FOLIO_TOP_PX = 4;
+/** ראש תיבת גיליון בתוך הכותרת העליונה (styles.css: .folio--in-header{top:6px}). */
+const FOLIO_IN_HEADER_PX = 6;
+
+/**
+ * גיאומטריית הגיליון — מחושבת פעם אחת מאותם קלטים ששני המקרינים צורכים.
+ * @param {object} page — עמוד (index, folioDisplay, template)
+ * @param {object} settings
+ * @param {{measureTextWidth:(t:string,pt:number)=>number, ascentEm:()=>number, descentEm:()=>number}} folioMeasure
+ *   מדידת הגיליון (גופן הגיליון כשרשום — אותו מופע שהמקרן בונה)
+ * @returns {null|{y, baselineY, x, w, sizePt, text, lineHeightPx, position}}
+ */
+function folioGeometry(page, settings, folioMeasure) {
+  const pos = String((settings && settings['page-num-position']) || 'bottom-center');
+  if (pos === 'none' || !page || !page.folioDisplay) return null;
+  const tpl = page.template;
+  const text = String(page.folioDisplay);
+  const folioSz = Number(settings['page-num-size-pt']) > 0 ? Number(settings['page-num-size-pt']) : 10;
+  const fw = Math.max(1, Math.round(folioMeasure.measureTextWidth(text, folioSz)));
+  const folioPx = folioSz * (96 / 72);
+  // line-height: normal ≈ 1.2 (חסר הגדרה מפורשת ב-CSS לגיליון) — הנוסחה ההיסטורית
+  const folioLineH = Math.round(folioPx * 1.2);
+  const ascEm = folioMeasure.ascentEm(), descEm = folioMeasure.descentEm();
+  const halfLead = Math.max(0, (folioLineH - (ascEm + descEm) * folioPx) / 2);
+  const recto = (page.index % 2 === 0);
+  let fx = Math.round((tpl.width - fw) / 2);
+  let boxTop = tpl.height - FOLIO_BOTTOM_PX - folioLineH;
+  let baselineY = boxTop + halfLead + ascEm * folioPx;
+  if (pos === 'outer-left' || (pos === 'outer' && recto)) fx = 8;
+  else if (pos === 'outer-right' || (pos === 'outer' && !recto)) fx = Math.max(8, Math.round(tpl.width - fw - 8));
+  else if (pos === 'top') { boxTop = FOLIO_TOP_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
+  else if (pos === 'in-header') { boxTop = FOLIO_IN_HEADER_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
+  return {
+    y: boxTop, baselineY, x: fx, w: fw, sizePt: folioSz, text,
+    lineHeightPx: folioLineH, position: pos
+  };
+}
+
+/** ראש אזור הכותרת העליונה במרחב העמוד (מקור: המקרן ההיסטורי — contentBox.top − 18). */
+function headerGeometry(page) {
+  const tpl = page.template;
+  return { y: Math.max(0, tpl.contentBox.top - 18) };
+}
+
+module.exports = {
+  FOLIO_BOTTOM_PX, FOLIO_TOP_PX, FOLIO_IN_HEADER_PX,
+  folioGeometry, headerGeometry
 };
 
 };
@@ -12146,6 +12406,56 @@ module.exports = {
 };
 
 };
+__modules["src/engine/layout/footnote-lanes.js"] = function (require, module, exports) {
+// src/engine/layout/footnote-lanes.js — מקור-אמת יחיד לחלוקת נתיבי מרזב ההערות (שלב 5; חילוץ שורש מ-PR #16, S78/D-107)
+'use strict';
+
+/**
+ * **חלוקת LPT דטרמיניסטית — מימוש אחד, שלושה צרכנים.**
+ *
+ * עד כאן היו שלושה העתקים מקבילים של אותו אלגוריתם:
+ *  1. `footnote-budget.getFootnotesReservedHeight` — התקציב בזמן ההצבה
+ *     (סכום גבהים ממוין ⇐ מקסימום שני הנתיבים);
+ *  2. `geometry-projector.projectFootnoteGutter` — הקרנת ה-PDF;
+ *  3. `dom-renderer.renderFootnoteArea` — התצוגה החיה.
+ *
+ * מחלקת הכשל (ההיסטוריה של S70/S71.1): כל העתק שאינו מתוחזק בדיוק כמו
+ * חבריו מייצר מצב "תקציב ≠ תצוגה ≠ ייצוא" — ההערה מתוקצבת בנתיב אחד
+ * ומוצגת בנתיב אחר. כעת: הצרכנים קוראים `assignFootnoteLanes` בלבד.
+ *
+ * האלגוריתם (זהה מתמטית לשלושת המימושים הקודמים — נעול בבדיקת שקילות):
+ *  - סדר עיבוד: לפי גובה יורד; שווי-גובה לפי אינדקס עולה (סדר מסמך).
+ *  - הצבה חמדנית: כל הערה נכנסת לנתיב שסכומו המצטבר הנמוך; תיקו ⇒ נתיב 0
+ *    (הנתיב הימני ב-RTL — "הראשון").
+ *  - הסדר הפנימי בכל נתיב נשמר (סדר מסמך).
+ *
+ * @param {Array} notes - רשימת הערות (כל אובייקט; הגובה נקרא דרך heightOf)
+ * @param {(n:object, i:number)=>number} [heightOf] - גובה אפקטיבי;
+ *   ברירת מחדל (n) => n.heightPx || 0 (כמו המקרנים). התקציב מעביר נפילה
+ *   ל-noteHeight — שקילות המימושים נשמרת כי בעמודי DP כל הערה חתומה
+ *   ב-heightPx (ראה תיקון הניקוז בסוף המסמך ב-dp-planner).
+ * @returns {{lanes:[number[], number[]], totals:[number, number]}}
+ *   lanes[i] = אינדקסים ברשימת הקלט (בסדר מסמך) שהוקצו לנתיב i.
+ */
+function assignFootnoteLanes(notes, heightOf) {
+  const h = typeof heightOf === 'function' ? heightOf : (n) => (n && n.heightPx) || 0;
+  const n = (notes || []).length;
+  const lanes = [[], []];
+  const totals = [0, 0];
+  if (!n) return { lanes, totals };
+  const order = notes.map((note, i) => ({ i, h: h(note, i) }))
+    .sort((a, b) => (b.h - a.h) || (a.i - b.i));
+  for (const s of order) {
+    const li = totals[0] <= totals[1] ? 0 : 1;
+    lanes[li].push(s.i);
+    totals[li] += s.h;
+  }
+  return { lanes, totals };
+}
+
+module.exports = { assignFootnoteLanes };
+
+};
 __modules["src/engine/output/line-font.js"] = function (require, module, exports) {
 // src/engine/output/line-font.js — מפרט גופן/גודל של שורה לפי סוגה (03.11(ג))
 'use strict';
@@ -12319,6 +12629,2147 @@ function shaarFontOf(cls, settings) {
 }
 
 module.exports = { buildShaarBlocks, shaarBoxOf, shaarFontOf, splitPartTitle, MM_TO_PX };
+
+};
+__modules["src/engine/typography/measure-api.js"] = function (require, module, exports) {
+// src/engine/typography/measure-api.js — Measurement single entry (REQ-LB-01) + Hebrew glyph-width metrics
+'use strict';
+
+/**
+ * MeasureAPI — הכניסה היחידה למדידת רוחב/גובה. אסור לקרוא offsetHeight מפוזר (lint ב‑CI).
+ * מימוש A = 'table' (טבלאות מכוילות — ברירת המחדל, המשך רציפות S1–S11);
+ * מימוש B = 'font-metrics' (S12: טבלאות אמת מקובץ גופן שנטען — hmtx/cmap/kern/GPOS)
+ * חתימה זהה; הפרופיל נרשם דרך registerFont ומופעל דרך ההגדרה measure-impl.
+ */
+
+const { charWidthEm, FONT_PROFILES } = require('./measure-table');
+const fm = require('./font-metrics');
+const { sha256Hex } = require('../assets/hash256');
+
+// **S5.2 (תיקון 5 — tracking שאין לאף מרנדר):** ברירת המחדל הייתה 0.02em —
+// המדידה "הרחיבה" כל שורה ב~2% יחסית לדיו: אף מרנדר (DOM/PDF) אינו מצייר
+// letter-spacing, והפרויקטור הגיאומטרי ערבב באותה שורה מדידות עם tracking=0
+// (מפורש) וברירת המחדל. כעת 0 — המודל = הדיו. נתיב המורשת אינו מושפע:
+// כל קריאותיו מעבירות tracking=0 במפורש (אומת בסקירה).
+const DEFAULT_TRACKING = 0; // em
+
+/** גופנים רשומים (פרופיל → פרנסר). ההרשמה מפורשת — אין טעינת רשת (offline). */
+const registeredFonts = new Map();
+/** **תיקון ביקורת PR #22 (מפתח מטמון):** זהות תוכן לכל רישום — `fnt-<sha256[:14]>`
+ * (אותה נוסחה כמו font-resolver). השם הוא כינוי בלבד; החית של הסביבה ומפתח
+ * המטמון נגזרים מהזהות, לא מהשם — שני קבצים שונים תחת אותו שם לא יחלקו מדידות. */
+const _fontContentIds = new Map();
+/** מנעול סנכרון ניקוי דו-כיווני measure-api ↔ font-resolver (מונע נצנוץ). */
+let _fontClearSync = false;
+/** מזכר חית סביבה (מבוטל בכל שינוי רישום) — מדידות רבות לא ימיינו שמות שוב ושוב. */
+let _envFpMemo = null;
+
+/** טביעת מבנה לגופן שנרשם ללא בתים (שחזור) — חלשה מזהות-תוכן אך דטרמיניסטית. */
+function _structuralFontFp(font) {
+  if (!font) return 'none';
+  return `u${font.unitsPerEm || 0}g${font.numGlyphs || 0}a${font.ascender || 0}d${font.descender || 0}`;
+}
+
+function _invalidateEnvFp() { _envFpMemo = null; }
+
+/**
+ * רישום גופן למדידת אמת (S12.1-5). קלט: בתים בלבד (Uint8Array/Buffer).
+ * @returns {{ok:boolean, error?:string, profile?:object, glyphCount?:number, mappedChars?:number}}
+ */
+function registerFont(profileName, bytes) {
+  const res = fm.parseFont(bytes);
+  if (!res.ok) return { ok: false, error: res.error };
+  registeredFonts.set(String(profileName), res.font);
+  _fontContentIds.set(String(profileName), `fnt-${sha256Hex(bytes).slice(0, 14)}`);
+  _invalidateEnvFp();
+  // **S6.0 (R7-L2):** גם רישום מנקה את מטמון ה-API-פר-משפחה — בעבר רק
+  // ההסרה ניקתה ⇒ רישום מחדש של אותה משפחה החזיר מופע ישן מהמטמון
+  // (קשור לגופן הקודם) והמדידה המשיכה במטריקות הישנות.
+  _familyApiCache.clear();
+  // **S4.26 (גליפים חסרים):** 'Frank Ruhl Libre' הוא fallback הפיסוק
+  // של מחסנית הרינדור (fontStack מוסיף אותו שני) — גם המדידה תשתמש
+  // בו לתווים שחסרים בגופן הראשי (בדיוק כמו הדפדפן).
+  if (String(profileName) === 'Frank Ruhl Libre') {
+    fm.setMissingGlyphFallbackFont(res.font);
+  }
+  return { ok: true, profile: res.font, glyphCount: res.font.numGlyphs, mappedChars: res.font.charToGlyph.size };
+}
+
+/** **S6.0 (R2-C1):** שחזור רישום קודם אחרי שימוש זמני (exportPdf) —
+ * font=null ⇒ הסרה רגילה. מונע מצב שבו ייצוא מוחק ל-worker את רישום
+ * הגופן של התצוגה החיה (המדידה היתה נופלת בשקט ל'table'). */
+function restoreFontRegistration(profileName, font, bytes) {
+  if (!font) { unregisterFont(profileName); return; }
+  const name = String(profileName);
+  registeredFonts.set(name, font);
+  if (bytes && bytes.length) {
+    _fontContentIds.set(name, `fnt-${sha256Hex(bytes).slice(0, 14)}`);
+  } else {
+    // בלי בתים: זהות מדויקת אם ה-resolver מחזיק את אותו פרנסר תחת הכינוי; אחרת — מבנית
+    let cid = null;
+    const fid = fontResolver.fontIdOfAlias(name);
+    if (fid && fontResolver.fontOf(fid) === font) cid = fid;
+    _fontContentIds.set(name, cid || `struct-${_structuralFontFp(font)}`);
+  }
+  if (String(profileName) === 'Frank Ruhl Libre') fm.setMissingGlyphFallbackFont(font);
+  _familyApiCache.clear();
+  _invalidateEnvFp();
+}
+
+/** הסרת גופן רשום. **תיקון ביקורת PR #22 (סנכרון ניקוי):** מסונכרן גם ל-font-resolver
+ * (הסרת הכינוי) — אין מצב שבו ה-resolver אומר "לא רשום" אך המדידה עדיין מודדת
+ * דרך רישום ישן, ולהפך. */
+function unregisterFont(profileName) {
+  const name = String(profileName);
+  registeredFonts.delete(name);
+  _fontContentIds.delete(name);
+  if (name === 'Frank Ruhl Libre') fm.setMissingGlyphFallbackFont(null);
+  _familyApiCache.clear(); // **S5.2:** מטמון ה-API-פר-משפחה נגרר אחרי ההרשמה
+  _invalidateEnvFp();
+  if (!_fontClearSync) {
+    _fontClearSync = true;
+    try { fontResolver.unregisterAlias(name); } catch (_) { /* מחזור טעינה — יסונכרן בטעינתו */ }
+    finally { _fontClearSync = false; }
+  }
+}
+function clearRegisteredFonts() {
+  registeredFonts.clear();
+  _fontContentIds.clear();
+  fm.setMissingGlyphFallbackFont(null);
+  _familyApiCache.clear();
+  _invalidateEnvFp();
+  if (!_fontClearSync) {
+    _fontClearSync = true;
+    try { fontResolver.clearFontResolver(); } catch (_) { /* מחזור טעינה */ }
+    finally { _fontClearSync = false; }
+  }
+}
+
+class MeasureAPI {
+  constructor(settings, impl = 'table') {
+    this.settings = settings;
+    this.impl = impl === 'font-metrics' ? 'font-metrics' : 'table'; // 'table' | 'font-metrics'
+    this.fontProfileName = null;
+    this.fontProfile = null;
+    this.fontFactor = 1;
+    this.cache = new Map();
+    this.stats = { calls: 0, hits: 0, fontFallbacks: 0 };
+    if (this.impl === 'font-metrics') this._bindProfile();
+  }
+
+  /** קשירת פרופיל הגופן לפי שם הגופן בהגדרות; fallback שקוף לטבלה אם לא נרשם. */
+  _bindProfile() {
+    const name = this.settings['body-font'];
+    if (name && registeredFonts.has(name)) {
+      this.fontProfileName = name;
+      this.fontProfile = registeredFonts.get(name);
+      this.fontFactor = FONT_PROFILES[name] || 1;
+    } else {
+      // לא נרשם גופן — מימוש B נופל בשקיפות לטבלה (מדידה עקבית, לא כשל שקט)
+      this.impl = 'table';
+      this.stats.fontFallbacks++;
+    }
+  }
+
+  _fontSpec(sizePt) {
+    return sizePt || this.settings['body-font-size-pt'];
+  }
+
+  /**
+   * **S4.16 (תיקון שורש — מדידת ניקוד):** סימן משולב הממופה בגופן עם advance=0
+   * (ניקוד עברי: דגש/תנועות/טעמים) הוא **שכבת-אפס אמיתית** — כך מודד אותו
+   * הדפדפן (hmtx=0, שכבת-גליף על הבסיס). בעבר נפל לסל העברי של הטבלה (0.5em
+   * = 6pt בגוף 12) ⇒ מילה מנוקדת כמו המצוּוֶה נמדדה רחבה ב~12pt, שבירת השורות
+   * נגררה מילה-מילה והדריפט הצטבר לכל העימוד (P7 0.919). מבחינים עתה בין
+   * "לא ממופה כלל" (fallback מכויל — מונה fontFallbacks) לבין "ממופה
+   * עם advance=0" (אפס אמיתי).
+   */
+  _charEm(ch) {
+    if (this.impl === 'font-metrics' && this.fontProfile) {
+      const gid = fm.glyphIdOf(this.fontProfile, ch);
+      if (gid !== 0 && gid < this.fontProfile.numGlyphs) {
+        // ממופה בגופן — רוחב hmtx אמיתי (כולל 0 לניקוד)
+        return (fm.advanceUnitsOf(this.fontProfile, ch) / this.fontProfile.unitsPerEm) * this.fontFactor;
+      }
+      // **S4.26 (גליף חסר — fallback כמו הדפדפן):** פיסוק שחסר בגופנים
+      // תורניים מצויר בדפדפן במשפחת ה-fallback שבמחסנית ('Frank Ruhl
+      // Libre') — המדידה באותם מטריקות בדיוק. בלי גופן כזה רשום — הקירוב
+      // המכויל (התנהגות קודמת).
+      this.stats.fontFallbacks++;
+      const fbEm = fm.missingGlyphFallbackEm(ch);
+      if (fbEm > 0) return fbEm;
+      return charWidthEm(ch);
+    }
+    return charWidthEm(ch);
+  }
+
+  /** סימן משולב ממופה עם advance=0 (ניקוד): שכבת-אפס — לא חלק מאשכול מדידה. */
+  _isMappedMark(ch) {
+    if (this.impl !== 'font-metrics' || !this.fontProfile) return false;
+    const gid = fm.glyphIdOf(this.fontProfile, ch);
+    return gid !== 0 && gid < this.fontProfile.numGlyphs
+      && fm.advanceUnitsOf(this.fontProfile, ch) === 0;
+  }
+
+  /** קרנינג בין תווים סמוכים ב־em (מימוש A: 0 תמיד — כמו S1–S11). */
+  _kernEm(a, b) {
+    if (this.impl === 'font-metrics' && this.fontProfile) {
+      const k = fm.kernUnitsOf(this.fontProfile, a, b);
+      if (k !== 0) return (k / this.fontProfile.unitsPerEm) * this.fontFactor;
+    }
+    return 0;
+  }
+
+  /**
+   * רוחב טקסט ב‑px. מימוש B כולל קרנינג בר־מילה (hmtx + kern/GPOS) —
+   * ההבדל היחיד מ־A בנוסף לרוחבי הגליפים עצמם.
+   */
+  measureTextWidth(text, sizePt = null, trackingEm = DEFAULT_TRACKING) {
+    const size = this._fontSpec(sizePt);
+    const key = `${this.impl}|${this.fontProfileName || ''}|${size}|${trackingEm}|${text}`;
+    this.stats.calls++;
+    if (this.cache.has(key)) { this.stats.hits++; return this.cache.get(key); }
+    const str = String(text);
+    let w = 0;
+    let prev = null;
+    for (const ch of str) {
+      // **S4.16:** ניקוד ממופה (advance=0) — אין רוחב, אין tracking ואין קרנינג
+      // (הסימן נצמד לבסיס שלו; letter-spacing אינו חל על סימנים משולבים במדידת
+      // הדפדפן). prev נשאר הבסיס האחרון — קרנינג בין בסיסים דרך הניקוד נשמר.
+      if (this._isMappedMark(ch)) continue;
+      if (prev !== null) w += this._kernEm(prev, ch);
+      w += this._charEm(ch) + trackingEm;
+      prev = ch;
+    }
+    const px = Math.max(0, w * size * (96 / 72)); // pt→px
+    this.cache.set(key, px);
+    return px;
+  }
+
+  /**
+   * **S12.1-6 — cap-height מטבלאות אמת** (OS/2 sCapHeight; נפילה: ascender×0.7).
+   * משמש את יישור המילה הראשונה (dropword) במקום הקירוב הקבוע.
+   */
+  capHeightEm() {
+    if (this.impl === 'font-metrics' && this.fontProfile) {
+      return fm.capHeightEmOf(this.fontProfile) * this.fontFactor;
+    }
+    return 0.7; // הקירוב ההיסטורי (תיעוד dropword CSS)
+  }
+
+  /** **S12 (parity גיאומטרי):** ascent/descent ב־em — מפרופיל הגופן (hhea)
+   * כשנטען, אחרת הפרופיל המכויל (0.80/0.20 — תואם קו הבסיס ההיסטורי). */
+  ascentEm() {
+    if (this.impl === 'font-metrics' && this.fontProfile) {
+      return (this.fontProfile.ascender / this.fontProfile.unitsPerEm) * this.fontFactor;
+    }
+    return 0.80;
+  }
+  descentEm() {
+    if (this.impl === 'font-metrics' && this.fontProfile) {
+      return Math.abs(this.fontProfile.descender / this.fontProfile.unitsPerEm) * this.fontFactor;
+    }
+    return 0.20;
+  }
+
+  /** שורת "גובה" אחידה (baseline grid): fontSize × lineHeight (BRZ-2). */
+  lineHeightPx(sizePt = null) {
+    const size = this._fontSpec(sizePt);
+    // **S5.1:** בלי Math.round — 12pt×1.34=21.44px אורגל ל-21 ⇒ +2 שורות לעמוד
+    // (סוג המוקש שתוקן במנוע המורשת ב-S4.13, לא הופץ לנתיב ה-DP).
+    // **S5.1:** בלי Math.round — 12pt×1.34=21.44px אורגל ל-21 ⇒ +2 שורות לעמוד
+    // (סוג המוקש שתוקן במנוע המורשת ב-S4.13, לא הופץ לנתיב ה-DP).
+    return size * (96 / 72) * this.settings['body-line-height'];
+  }
+
+  /**
+   * מיקום שורות אופטימלי (KP) → מערך שורות עם רוחבים.
+   * @param {Function} [measureOverride] - הזרקת פונקציית מדידה (למשל פרופיל רוחב־גופן מהpipeline) — L1: entry יחיד דרך ההזרקה.
+   * @returns {Array<{words:string[], widthPx:number, badness:number}>}
+   */
+  layoutLines(words, maxWidthPx, sizePt = null, opts = {}, measureOverride = null) {
+    const knuth = require('./kp-linebreak');
+    const measure = measureOverride || ((t) => this.measureTextWidth(t, sizePt));
+    return knuth.breakLines(words, maxWidthPx, measure, this.lineHeightPx(sizePt), opts);
+  }
+
+  cacheStats() { return { ...this.stats, hitRate: this.stats.calls ? this.stats.hits / this.stats.calls : 0 }; }
+}
+
+/** **S5.2 (תיקון 6 — מדידת כותרות בגופן רשום):** API כבול למשפחה שנרשמה ב‑registerFont
+ * (מטריקות אמת hmtx/kern בגודל הכותרת), או null כשהמשפחה אינה רשומה —
+ * דפוס apiFor(family) של legacy-projector, מיוצא כאן כסטטי על המחלקה כדי
+ * שה-pipeline (widthFor) ישתמש בו בלי לרדוף אחרי מפת הגופנים בעצמו.
+ * מטומן לפי משפחה; המטמון מתרוקן בהסרת/איפוס גופנים (unregister/clear). */
+const _familyApiCache = new Map();
+MeasureAPI.forFamily = function forFamily(family, settings) {
+  if (!family || !registeredFonts.has(String(family))) return null;
+  const fam = String(family);
+  const sizeKey = settings && settings['body-font-size-pt'] != null ? String(settings['body-font-size-pt']) : '';
+  const key = `${fam}|${sizeKey}`;
+  if (!_familyApiCache.has(key)) {
+    _familyApiCache.set(key, new MeasureAPI({ ...(settings || {}), 'body-font': fam }, 'font-metrics'));
+  }
+  return _familyApiCache.get(key);
+};
+
+/** **EXT-13 (איחוד מקור המדידה live↔ייצוא):** כשגוף הגוף רשום בפועל
+ * (registerFont) — מדידת האמת (font-metrics) מועדפת גם כשההגדרה היא
+ * 'table' (ברירת המחדל). בלי זה ה-live מדד בטבלאות המקורבות בזמן שהייצוא
+ * מדד במטריקות האמיתיות — סחף עמודים של 2% בספר אמת (1,021 מול 1,000;
+ * real-book-matrix.json) ועד 17% בקורפוס הגדול (794 מול 678). ההעדפה
+ * בטוחה: MeasureAPI נופל בשקיפות לטבלה כשאין גופן (_bindProfile). */
+function resolveMeasureImpl(settings) {
+  if (settings && settings['measure-impl'] === 'font-metrics') return 'font-metrics';
+  const name = settings && settings['body-font'];
+  if (name && registeredFonts.has(name)) return 'font-metrics';
+  return 'table';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// שלב 3 (§3.1-7/8/10/11) — מדידה קנונית של פריטי המודל: MeasuredItem.
+// **הרחבה בלבד** — המדידות הקיימות (measureTextWidth וכו') לא נגעו; לא נוצר
+// API שני: measureItem הוא שכבת הפריט-והסגנון מעל אותן פונקציות בסיס.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const { ptToPx, UNITS_VERSION } = require('./units');
+const fontResolver = require('./font-resolver');
+
+/** **שלב 4 מקטע ב׳ (§7 בהוראה — חיבור גופנים):** פרופילי רוחב-גופן למשפחות
+ * שאינן רשומות — מקור יחיד. הועברו לכאן מ-pipeline.js (widthFor המקומי נמחק
+ * במעבר למנוע השורות המאוחד); שתי הדרכים — החי והקנוני — קוראות מכאן.
+ * משפחה רשומה ⇒ מטריקות אמת (forFontId/forFamily) ואין פקטור; משפחה בפרופיל
+ * ⇒ פקטור על הטבלה המכוילת; משפחה לא-מוכרת ⇒ רצפת 0.6em/תו. */
+const FONT_WIDTH_PROFILES = {
+  'Frank Ruhl Libre': null,
+  'David HB': { factor: 1.06 },
+  'David': { factor: 1.04 },
+  'Narkisim': { factor: 1.10 },
+  'Nachlieli': { factor: 0.96 },
+  'Alef': { factor: 1.02 },
+  'Rubin': { factor: 1.05 }
+};
+
+/** פתרון רוחב למשפחה שאינה רשומה — אותה החלטה שהייתה ב-widthFor של ה-pipeline,
+ * מנוסחת פעם אחת: { factor, floor } | null (null ⇒ משפחת הגוף — בסיס ישר).
+ * הקנוני (measureItem) והנתיב החי קוראים את אותה הפונקציה — אין עותקים. */
+function familyWidthProfileOf(family, settings) {
+  const fam = String(family || '');
+  const bodyFont = settings && settings['body-font'];
+  if (!fam || fam === bodyFont) return null; // גוף הטקסט — בסיס ללא פקטור
+  if (registeredFonts.has(fam)) return null; // רשומה — מטריקות אמת (forFontId)
+  const prof = FONT_WIDTH_PROFILES[fam];
+  if (prof && prof.factor) return { factor: prof.factor, floor: false };
+  return { factor: 1, floor: true }; // לא-מוכרת — רצפת 0.6em/תו (כמו החי)
+}
+
+/** גרסת מנוע המדידה — חלק ממפתח המטמון ומחית הסביבה (§3.1-10). */
+const MEASURE_ENGINE_VERSION = 'measure-v1(item+style+env;advance/ink-split)';
+
+/** חית סביבת מדידה: יחידות + גרסת מנוע + מימוש + זהויות-תוכן של הגופנים הרשומים.
+ * **תיקון ביקורת PR #22:** הזהות היא content-addressed (`fnt-<sha256[:14]>`) — לא
+ * שם+מספר-גליפים בלבד. סט גופנים שונה (או אותו שם עם בתים שונים) ⇒ חית שונה
+ * ⇒ אין שיתוף מטמון שגוי בין סביבות הגדרה. */
+function environmentFingerprint(extra = '') {
+  if (!extra && _envFpMemo) return _envFpMemo;
+  const fams = Array.from(registeredFonts.keys()).sort();
+  const fontsFp = fams.length
+    ? fams.map((f) => `${f}=${_fontContentIds.get(f) || 'struct-' + _structuralFontFp(registeredFonts.get(f))}`).join('|')
+    : 'none';
+  const fp = `${MEASURE_ENGINE_VERSION}|${UNITS_VERSION}|fonts=${fontsFp}${extra ? '|' + extra : ''}`;
+  if (!extra) _envFpMemo = fp;
+  return fp;
+}
+
+/** **תיקון ביקורת PR #22 (סריאליזציה קנונית):** מחרוזת דטרמיניסטית ויציבה-בין-
+ * סביבות: מפתחות אובייקט ממוינים רקורסיבית (סדר הכנסה אינו חלק מהתוכן); סדר
+ * מערכים נשמר (הסדר חלק מהתוכן — ריצות טקסט); בתים (TypedArray/Buffer) נטחנים
+ * לזהות תוכן (אורך+SHA-256) — לא מחרוזת תלוית-סביבה; פונקציות/סמלים — שם טיפוס.
+ * מחליף את JSON.stringify הלא-יציב שעמד קודם במפתח המטמון. */
+function _canonicalStringify(value, depth = 0) {
+  if (value === null) return 'null';
+  const t = typeof value;
+  if (t === 'string') return JSON.stringify(value);
+  if (t === 'number' || t === 'boolean' || t === 'undefined') return String(value);
+  if (t === 'bigint') return `${value}n`;
+  if (t === 'function' || t === 'symbol') return `<${t}>`;
+  if (depth > 32) return '<deep>';
+  if (Array.isArray(value)) return '[' + value.map((v) => _canonicalStringify(v, depth + 1)).join(',') + ']';
+  if (value instanceof ArrayBuffer) return `ab(${value.byteLength})`;
+  if (ArrayBuffer.isView(value)) {
+    const u8 = value instanceof Uint8Array ? value : new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+    return `bytes(${u8.length}):${sha256Hex(u8)}`;
+  }
+  if (t === 'object') {
+    const keys = Object.keys(value).sort();
+    return '{' + keys.map((k) => JSON.stringify(k) + ':' + _canonicalStringify(value[k], depth + 1)).join(',') + '}';
+  }
+  return String(value);
+}
+
+/** זהות נכס content-addressed לפי שרשרת המועמדים של הפריט — מה-resolver בלבד
+ * (הזהות מחושבת מהבתים, לא מההצהרה). אותה הפניה (resourcePath) עם תוכן נכס
+ * אחר ⇒ מזהה אחר ⇒ מפתח מטמון אחר. פותר את הפגם שבו item.id לבדו קבע את המפתח. */
+function _assetIdentityFp(item, ctx) {
+  const ar = ctx && ctx.assetResolver;
+  if (!ar || !item || item.kind !== 'image') return '';
+  const p = item.payload || {};
+  const cands = [];
+  if (p.contentAssetId != null) cands.push(String(p.contentAssetId));
+  if (p.assetId != null) cands.push(String(p.assetId));
+  if (p.resourcePath != null) cands.push(String(p.resourcePath));
+  if (!cands.length) return 'no-candidates';
+  for (const c of cands) {
+    let r = null;
+    try { r = c.startsWith('ast-') ? ar.resolveById(c) : ar.resolve(c); } catch (_) { r = null; }
+    if (r && r.ok) return `id:${r.assetId}`;
+  }
+  return 'unresolved(' + cands.join('|') + ')';
+}
+
+/** מפתח מטמון מדידת פריט (§3.1-10) — **קנוני ודטרמיניסטי**.
+ * **תיקון שורש (ביקורת PR #22):** הקוד הקודם השתמש ב-item.id לבדו כשקיים מזהה —
+ * שני פריטים בעלי אותו מזהה ו-payload שונה (טקסט/תמונה/widthPct/ריצות גופן/
+ * אילוצי רוחב) קיבלו את אותה מדידה. כעת המזהה הוא רכיב אחד מיני רבים:
+ * (1) item.id אם קיים; (2) טביעת payload מלאה (טקסט, ריצות, widthPct, מזהי נכסים);
+ * (3) סוג הפריט; (4) טביעת סגנון מלאה (גודל, גובה-שורה, משקל, family);
+ * (5) זהויות גופן קנוניות — fontIds כתובות-תוכן + חית סביבה מזהויות-תוכן;
+ * (6) זהות נכס content-addressed מה-resolver (שרשרת המועמדים);
+ * (7) שפה וכיוון; (8) אילוצי מדידה מלאים (availableWidth/fit/align/widthPct)
+ * + מפתח הקשר; (9) גרסת מנוע המדידה; (10) חית סביבה **חיה** (מחושבת כעת
+ * מהרישומים בפועל — לא הצהרת caller) + חית ההקשר שהועברה. */
+function _itemCacheKey(item, style, ctx) {
+  // **מקטע ב׳ (זיכרון):** המפתח קומפקטי — sha256 יחיד על שריות הקנוניות המלאות
+  // (אותה חד-משמעיות, כולל זהות-תוכן של החלקים) — בספרים גדולים
+  // מיליוני מחרוזות-מפתח משוריבות זיכרון משמעותית.
+  const it = item || {};
+  return 'ik2:' + sha256Hex([
+    'item-key-v2',
+    MEASURE_ENGINE_VERSION,
+    environmentFingerprint(),
+    (ctx && ctx.environmentFingerprint) || '',
+    it.kind || '',
+    it.id != null ? String(it.id) : '',
+    _canonicalStringify(it.payload !== undefined ? it.payload : it),
+    _canonicalStringify(it.constraints || null),
+    _canonicalStringify(style || null),
+    (ctx && ctx.direction) || '',
+    (ctx && ctx.language) || '',
+    _canonicalStringify((ctx && ctx.constraints) || null),
+    (ctx && ctx.constraintsKey) || '',
+    (ctx && ctx.assetId) != null ? String(ctx.assetId) : '',
+    _assetIdentityFp(item, ctx)
+  ].join('~'));
+}
+
+/** **תיקון ביקורת PR #22 (immutability אמיתי):** הקפאה עמוקה — כל המבנים
+ * הפנימיים: inkBounds, segments וכל אובייקט segment, breakOpportunities וכל
+ * הזדמנות, diagnostics, natural, fit, placement. ידידותי למחזורים (seen)
+ * ודלג מוקדם על אובייקטים שכבר הוקפאו. */
+function _deepFreeze(value, seen) {
+  if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  if (seen === undefined) seen = new Set();
+  else if (seen.has(value)) return value;
+  seen.add(value);
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) _deepFreeze(value[i], seen);
+  } else {
+    for (const k of Object.keys(value)) _deepFreeze(value[k], seen);
+  }
+  Object.freeze(value);
+  return value;
+}
+
+/**
+ * measureItem — המדידה הקנונית של פריט מודל אחד.
+ * @param {object} item — פריט Inline Item Model (text/noteMarker/image/atomicToken/anchor/glue/penalty)
+ * @param {object} style — סגנון פתור: { sizePt, lineHeight, weight, fontIds: [fontId לפי ריצה או יחיד] }
+ * @param {object} ctx — הקשר: { direction, language, assetResolver, environmentFingerprint,
+ *                               constraints: { availableWidthPx, imageFit, imageAlign, imageWidthPct } , constraintsKey }
+ * @returns {object} MeasuredItem בלתי-ניתן לשינוי (Object.freeze) — או {ok:false, code, message}
+ *           כאשר הפריט אינו ניתן למדידה (לא נעלם — §3.1-11).
+ *
+ * **הפרדת advance/ink (§3.1-8):** advance = רוחב הקידום לשבירת שורות; inkBounds
+ * = תיבת הדיו המשוערת מהתווים (מקור: advance-approximation — מתועד; עיגול
+ * גליפים אמיתי יתווסף כשמנוע המדידה יחשוף glyf — בלי שינוי החוזה).
+ */
+function measureItem(item, style, ctx) {
+  if (!item || typeof item !== 'object') return { ok: false, code: 'no-item', message: 'measureItem: פריט חסר' };
+  const sizePt = (style && Number.isFinite(style.sizePt)) ? style.sizePt : 12;
+  const lineHeight = (style && Number.isFinite(style.lineHeight)) ? style.lineHeight : 1.34;
+  const dir = (ctx && ctx.direction) || 'rtl';
+  const lang = (ctx && ctx.language) || 'he';
+  const key = _itemCacheKey(item, style, ctx);
+  const hit = _itemCacheGet(key);
+  if (hit !== undefined) return hit;
+
+  let out;
+  const kind = item.kind;
+
+  if (kind === 'text') {
+    const runs = (item.payload && item.payload.runs) || [];
+    if (!runs.length) {
+      out = { ok: false, code: 'text-no-runs', message: `פריט טקסט ללא ריצות: ${item.id}` };
+    } else {
+      // מדידה פר-ריצה בגופן שלה — כמה משפחות באותה מילה (§3.1-6)
+      // **שלב 4 מקטע ב׳ (סגנון אמת — הוראה §7):** style.advanceFactor (סוגריים/
+      // סגנון inline — הכפלת רוחב בלבד, בדיוק כמו measureWithParen של הנתיב
+      // החי; גובה/בסיס נשארים בגודל השורה) ו-style.familyFactor/familyUnknownFloor
+      // (פרופיל רוחב למשפחה שאינה רשומה — מקור יחיד familyWidthProfileOf)
+      // משתתפים כאן ובשום מקום אחר.
+      const advanceFactor = (style && Number.isFinite(style.advanceFactor) && style.advanceFactor > 0) ? style.advanceFactor : 1;
+      const segments = [];
+      let advance = 0;
+      let ascentEmMax = 0, descentEmMax = 0;
+      const diagnostics = [];
+      for (let ri = 0; ri < runs.length; ri++) {
+        const run = runs[ri];
+        const fontId = (style && style.fontIds && style.fontIds[ri]) || (style && style.fontIds && style.fontIds[0]) || null;
+        const api = fontId ? MeasureAPI.forFontId(fontId, { 'body-font-size-pt': sizePt }) : null;
+        if (api) {
+          const w = api.measureTextWidth(run.text, sizePt, 0);
+          segments.push({ fontId, text: run.text, advancePx: w, family: api.fontProfileName });
+          ascentEmMax = Math.max(ascentEmMax, api.ascentEm());
+          descentEmMax = Math.max(descentEmMax, api.descentEm());
+          advance += w;
+        } else {
+          // אין זהות גופן — דרך המשפחה המבוקשת ב-resolver (fallback מאובחן)
+          const res = fontResolver.resolveFont(run.fontFamily || (style && style.family), {
+            defaultFamily: style && style.defaultFamily
+          });
+          if (res.ok) {
+            const api2 = MeasureAPI.forFontId(res.fontId, { 'body-font-size-pt': sizePt });
+            const w = api2.measureTextWidth(run.text, sizePt, 0);
+            segments.push({ fontId: res.fontId, text: run.text, advancePx: w, family: res.record.face, fallbackUsed: res.fallbackUsed });
+            ascentEmMax = Math.max(ascentEmMax, api2.ascentEm());
+            descentEmMax = Math.max(descentEmMax, api2.descentEm());
+            advance += w;
+            if (res.fallbackUsed) diagnostics.push({ code: 'font-fallback', from: run.fontFamily, to: res.record.face, reason: 'not-registered' });
+          } else {
+            // מימוש הטבלה — הקירוב המכויל; מתועד במפורש ולא שקט
+            // **§7:** פרופיל רוחב למשפחה — factor על הבסיס / רצפת 0.6em ללא-מוכרת,
+            // בדיוק כפי ש-widthFor של הנתיב החי עשה; מקור ההחלטה אחד.
+            const famFactor = (style && Number.isFinite(style.familyFactor) && style.familyFactor > 0) ? style.familyFactor : 1;
+            const famFloor = !!(style && style.familyUnknownFloor);
+            const fallbackApi = new MeasureAPI({ 'body-font-size-pt': sizePt, 'body-font': (style && style.defaultFamily) || '' }, 'table');
+            let w = fallbackApi.measureTextWidth(run.text, sizePt, 0) * famFactor;
+            if (famFloor) w = Math.max(w, String(run.text).length * 0.6 * sizePt * (96 / 72));
+            segments.push({ fontId: null, text: run.text, advancePx: w, family: null, tableApproximation: true });
+            ascentEmMax = Math.max(ascentEmMax, fallbackApi.ascentEm());
+            descentEmMax = Math.max(descentEmMax, fallbackApi.descentEm());
+            advance += w;
+            diagnostics.push({ code: 'font-unavailable-table-approximation', requested: run.fontFamily || (style && style.family), message: res.message });
+          }
+        }
+      }
+      if (advanceFactor !== 1) {
+        advance *= advanceFactor;
+        for (const s of segments) s.advancePx *= advanceFactor;
+      }
+      const sizePx = ptToPx(sizePt);
+      out = {
+        ok: true, kind: 'text', itemId: item.id,
+        unit: 'px', direction: dir, language: lang,
+        advance, width: advance, // advance = רוחב לשבירה
+        inkBounds: { left: 0, right: advance, top: -ascentEmMax * sizePx, bottom: descentEmMax * sizePx, source: 'advance-approximation' },
+        ascent: ascentEmMax * sizePx, descent: descentEmMax * sizePx,
+        baseline: ascentEmMax * sizePx,
+        height: sizePx * lineHeight,
+        segments,
+        breakOpportunities: _textBreaks(runs),
+        diagnostics
+      };
+    }
+  } else if (kind === 'image') {
+    const ar = ctx && ctx.assetResolver;
+    if (!ar) {
+      out = { ok: false, code: 'no-asset-resolver', message: `תמונה ללא resolver בהקשר: ${item.id}` };
+    } else {
+      // שרשרת זהות מפורשת: זהות-תוכן (מה-resolver, אם נבנתה עם assets) → זהות המסמך
+      // (מהמקור) → הפניית המקור (resourcePath). כל דילוג — ניסיון הבא; כולם נכשלו — אבחון.
+      const candidates = [];
+      if (item.payload && item.payload.contentAssetId) candidates.push(item.payload.contentAssetId);
+      if (item.payload && item.payload.assetId) candidates.push(item.payload.assetId);
+      if (item.payload && item.payload.resourcePath) candidates.push(item.payload.resourcePath);
+      let m = null, lastFail = null;
+      for (const c of candidates) {
+        const r = ar.measure(c);
+        if (r.ok) { m = r; break; }
+        lastFail = r;
+      }
+      if (!m) {
+        out = { ok: false, code: (lastFail && lastFail.code) || 'asset-measure-failed', message: (lastFail && lastFail.message) || 'מדידת הנכס נכשלה', assetId: item.payload && item.payload.assetId };
+      } else {
+        // fit/scale מהאילוצים (§3.1-4): widthPct מרוחב זמין; יחס-גובה נשמר תמיד
+        const cons = (ctx && ctx.constraints) || {};
+        const available = Number.isFinite(cons.availableWidthPx) ? cons.availableWidthPx : null;
+        const widthPct = item.payload && Number.isFinite(item.payload.widthPct) ? item.payload.widthPct : 100;
+        let displayW;
+        if (available != null) displayW = available * (widthPct / 100);
+        else displayW = m.displayWidth;
+        const displayH = displayW / m.aspectRatio;
+        out = {
+          ok: true, kind: 'image', itemId: item.id,
+          unit: 'px', direction: dir, language: lang,
+          advance: displayW, width: displayW, height: displayH,
+          inkBounds: { left: 0, right: displayW, top: 0, bottom: displayH, source: 'asset-bounds' },
+          ascent: 0, descent: 0, baseline: displayH,
+          natural: { width: m.width, height: m.height, aspectRatio: m.aspectRatio, orientation: m.orientation, format: m.format },
+          fit: { policy: widthPct !== 100 ? 'width-pct' : 'natural', widthPct, availableWidthPx: available, scaled: displayW !== m.displayWidth },
+          breakOpportunities: [], // אטום — אין שבירה בתוך תמונה
+          placement: { participates: (item.constraints && item.constraints.participates) || 'inline', align: (item.payload && item.payload.align) || 'center', wrap: (item.constraints && item.constraints.wrap) || 'none' },
+          diagnostics: []
+        };
+      }
+    }
+  } else if (kind === 'noteMarker') {
+    // סמן הערה אטומי — רוחב הסמן בגודל הרישום (גימטריה); נמדד כפריט יחיד
+    const markerText = (item.payload && item.payload.markerText) || 'א.';
+    const fnSizePt = (style && Number.isFinite(style.sizePt)) ? style.sizePt : 8;
+    const api = new MeasureAPI({ 'body-font-size-pt': fnSizePt }, 'table');
+    const w = api.measureTextWidth(markerText, fnSizePt, 0);
+    const sizePx = ptToPx(fnSizePt);
+    out = {
+      ok: true, kind: 'noteMarker', itemId: item.id,
+      unit: 'px', direction: dir, language: lang,
+      advance: w, width: w, height: sizePx * 1.2,
+      inkBounds: { left: 0, right: w, top: -0.8 * sizePx, bottom: 0.2 * sizePx, source: 'advance-approximation' },
+      ascent: 0.8 * sizePx, descent: 0.2 * sizePx, baseline: 0.8 * sizePx,
+      segments: [{ fontId: null, text: markerText, advancePx: w, noteSize: true }],
+      breakOpportunities: [], // אטום
+      diagnostics: []
+    };
+  } else if (kind === 'atomicToken' || kind === 'anchor' || kind === 'glue' || kind === 'penalty' || kind === 'custom' || (kind && kind.startsWith('custom:'))) {
+    const text = (item.payload && (item.payload.text != null ? item.payload.text : item.payload.atomicText)) || '';
+    const api = new MeasureAPI({ 'body-font-size-pt': sizePt, 'body-font': (style && style.defaultFamily) || '' },
+      (style && style.fontIds && style.fontIds[0]) ? 'font-metrics' : 'table');
+    // **§5 (מדידה יחידה — הוראת שלב 4 ב׳):** advanceFactor חל גם כאן (אטומים
+    // עם שכבת סגנון) — אותו חוזה כמו פריטי טקסט.
+    const advanceFactor = (style && Number.isFinite(style.advanceFactor) && style.advanceFactor > 0) ? style.advanceFactor : 1;
+    let w = text ? api.measureTextWidth(text, sizePt, 0) : 0;
+    if (advanceFactor !== 1) w *= advanceFactor;
+    const sizePx = ptToPx(sizePt);
+    out = {
+      ok: true, kind, itemId: item.id,
+      unit: 'px', direction: dir, language: lang,
+      advance: w, width: w, height: sizePx * lineHeight,
+      inkBounds: { left: 0, right: w, top: -0.8 * sizePx, bottom: 0.2 * sizePx, source: 'advance-approximation' },
+      ascent: 0.8 * sizePx, descent: 0.2 * sizePx, baseline: 0.8 * sizePx,
+      segments: text ? [{ fontId: (style && style.fontIds && style.fontIds[0]) || null, text, advancePx: w }] : [],
+      breakOpportunities: kind === 'atomicToken' ? [] : (text ? _textBreaks([{ text }]) : []),
+      atomic: true,
+      diagnostics: []
+    };
+  } else {
+    out = { ok: false, code: 'unsupported-item-kind', message: `measureItem: סוג פריט לא נתמך: ${kind} (${item.id})` };
+  }
+
+  if (out && out.ok) {
+    // החית המתועדת בתוצאה = הסביבה החיה שבה נמדד בפועל (לא הצהרת ה-caller)
+    out.environmentFingerprint = environmentFingerprint();
+    out.measureEngineVersion = MEASURE_ENGINE_VERSION;
+    _deepFreeze(out);
+    _itemCacheSet(key, out);
+  } else if (out) {
+    _deepFreeze(out); // דחייה — גם היא בלתי-ניתנת לשינוי (אותו חוזה)
+  }
+  return out;
+}
+
+/** הזדמנויות שבירה של רצף ריצות טקסט — מיקומי רווחים (מפתחות לשלב 4). */
+const EMPTY_ARR = Object.freeze([]);
+function _textBreaks(runs) {
+  // מקטע ב׳: מילה בדרך כלל איננה מכילה רווחים — מערך ריק משותף
+  // (חיסכון מיליוני הקצאות בספרים גדולים).
+  let any = false;
+  for (const run of runs) { if (String(run.text).includes(' ')) { any = true; break; } }
+  if (!any) return EMPTY_ARR;
+  const breaks = [];
+  let pos = 0;
+  for (const run of runs) {
+    const text = String(run.text);
+    for (let i = 0; i < text.length; i++) {
+      if (text[i] === ' ') breaks.push({ offset: pos + i, after: true });
+    }
+    pos += text.length;
+  }
+  return breaks;
+}
+
+/** מטמון מדידות פריט — מפתח מלא בלבד (§3.1-10).
+ *
+ * **חסימת זיכרון (שלב 4 מקטע ב׳, תיקון שורש שנמצא באימות ה-PR):** מדידת
+ * פריט היא מֵימוּז של פונקציה דטרמיניסטית טהורה — חסימת המטמון אינה יכולה
+ * לשנות פלט, אלא זמן CPU בלבד (ולכן גם ה-hash אטום לה). בלי חסימה,
+ * המטמון שומר לנצח MeasuredItem לכל פריט-שורה שנמדד אי-פעם בתהליך:
+ * ספר של 3.4MB השאיר ~682 אלף ערכים ≈ 766MB (נמדד) — דליפה גם ב-Worker
+ * של המוצר וגם קריסת OOM בבדיקות הספרים הארוכים (4 ספרים בתהליך אחד
+ * הצטברו ל-1.9GB+). התועלת שנמדדה בריצה-חוזרת זהה (טקסט+סגנון ללא
+ * שינוי): האצה של ×1.35 בלבד — שולית מול העלות. התקרה נגזרת מתקציב
+ * הזיכרון הקיים של s13 (memoryMaxMB=1500 לספר גדול): 65,536 ערכים
+ * ≈ 75MB (~1.16KB לפריט, נמדד) ≈ 5% מהתקציב — המטמון לעולם אינו דומיננטי.
+ * מסמכים עד ~130 עמ' נשמרים במלואם; ספרים גדולים יותר שומרים את הערכים
+ * האחרונים בלבד. גם בתוך typeset בודד אין לחסימה השפעה: חוזה גבול המדידה
+ * היחיד מבטיח שכל פריט נמדד בדיוק פעם אחת (מוכח ב-s4b-production-path)
+ * — המטמון משרת רק בניות-חוזרות של אותו מסמך ללא שינוי.
+ *
+ * **ניפוי באצוות (נמדד):** ניפוי של ערך-בודד בכל הכנסה מעל התקרה האט את
+ * ההכנסות פי ~2 (יצירת איטרטור + מחיקה לכל אחת מ-617 אלף ההכנסות של
+ * ספר גדול). ניפוי באצוות של 8,192 מחזיר את המהירות לקו הבסיס (13.0s
+ * מול 27.4s — נמדד על very_long) בלי לפגוע בחסימה. */
+const ITEM_MEASURE_CACHE_MAX_ENTRIES = 65536;
+const ITEM_CACHE_EVICT_BATCH = 8192;
+const _itemMeasureCache = new Map();
+function _itemCacheGet(key) {
+  if (!_itemMeasureCache.has(key)) return undefined;
+  const v = _itemMeasureCache.get(key);
+  // LRU: חידוש עדכניות — מחיקה והחזרה לסוף (סדר ה-Map = סדר הכנסה)
+  _itemMeasureCache.delete(key);
+  _itemMeasureCache.set(key, v);
+  return v;
+}
+function _itemCacheSet(key, value) {
+  if (_itemMeasureCache.size >= ITEM_MEASURE_CACHE_MAX_ENTRIES) {
+    // ניפוי הערכים העתיקים ביותר באצווה אחת (הראשונים שהוכנסו ולא נגעו בהם מאז)
+    const it = _itemMeasureCache.keys();
+    for (let i = 0; i < ITEM_CACHE_EVICT_BATCH; i++) {
+      const k = it.next().value;
+      _itemMeasureCache.delete(k);
+    }
+  }
+  _itemMeasureCache.set(key, value);
+}
+function itemCacheStats() {
+  return { entries: _itemMeasureCache.size, capacity: ITEM_MEASURE_CACHE_MAX_ENTRIES };
+}
+function clearItemMeasureCache() { _itemMeasureCache.clear(); }
+
+/** API כבול לזהות גופן קנונית (fontId מה-resolver) — לא לשם בלבד. */
+MeasureAPI.forFontId = function forFontId(fontId, settings) {
+  const font = fontResolver.fontOf(fontId);
+  if (!font) return null;
+  const key = String(fontId);
+  if (!_familyApiCache.has(key)) {
+    const api = new MeasureAPI({ ...(settings || {}), 'body-font': fontResolverAliasOf(fontId) || key }, 'font-metrics');
+    // קשירה ישירה לפרנסר של הזהות — לא דרך רישום שם (הזהות היא המקור)
+    api.fontProfileName = fontResolverAliasOf(fontId) || key;
+    api.fontProfile = font;
+    _familyApiCache.set(key, api);
+  }
+  return _familyApiCache.get(key);
+};
+function fontResolverAliasOf(fontId) {
+  const rec = fontResolver.resolveFontById(fontId);
+  return rec.ok ? rec.record.aliases[0] : null;
+}
+
+module.exports = {
+  MeasureAPI, registerFont, unregisterFont, clearRegisteredFonts, restoreFontRegistration,
+  charWidthEm, registeredFonts, resolveMeasureImpl,
+  measureItem, environmentFingerprint, MEASURE_ENGINE_VERSION, itemCacheStats, clearItemMeasureCache,
+  FONT_WIDTH_PROFILES, familyWidthProfileOf,
+  deepFreeze: _deepFreeze, canonicalStringify: _canonicalStringify
+};
+
+};
+__modules["src/engine/typography/measure-table.js"] = function (require, module, exports) {
+// src/engine/typography/measure-table.js — טבלאות רוחב מכוילות (מקור יחיד; S12 הפרדה מ־measure-api)
+'use strict';
+
+/**
+ * טבלת רוחות אותיות עברית (יחסיים ל‑em, קירוב Frank-Ruhl/David) — הפרופיל
+ * המכויל של מימוש A (ברירת המחדל). הפרופילים הללו משמשים גם כ־fallback
+ * למימוש B (font-metrics) לתווים לא־ממופים בגופן שנטען.
+ */
+
+const HEBREW_WIDTHS = {
+  'א': 0.66, 'ב': 0.58, 'ג': 0.56, 'ד': 0.62, 'ה': 0.60, 'ו': 0.42, 'ז': 0.44, 'ח': 0.70, 'ט': 0.60,
+  'י': 0.32, 'כ': 0.58, 'ך': 0.58, 'ל': 0.52, 'מ': 0.70, 'ם': 0.72, 'נ': 0.60, 'ן': 0.60, 'ס': 0.62,
+  'ע': 0.62, 'פ': 0.60, 'ף': 0.62, 'צ': 0.62, 'ץ': 0.64, 'ק': 0.64, 'ר': 0.52, 'ש': 0.66, 'ת': 0.60
+};
+// **S5.2 (T7):** NBSP (U+00A0) = רוחב הרווח (0.26) — בעבר נפל לסל 0.4em
+// (+2.24px @12pt לכל NBSP) במימוש A כשנמדד גולמי (יחידות מודבקות לפני
+// רישום הגופנים / טסטים). impl B בטוח כבר היום (הפיצול מבוצע לפני המדידה).
+// **S6.0 (R7-M1):** המקש היה כתוב '\\u00A0' (מחרוזת 6-תווים מילולית) ולא
+// התו עצמו ⇒ התיקון המתועד מעולם לא פעל (charWidthEm('\u00A0') החזיר 0.4).
+// תוקם למקש התו האמיתי.
+const WIDE_MARKS = { ' ': 0.26, '\u00A0': 0.26, '\uE000': 0.26, '.': 0.24, ',': 0.24, ';': 0.24, ':': 0.24, '-': 0.34, '–': 0.5, '"': 0.28, "'": 0.16, '“': 0.4, '”': 0.4, '״': 0.36, '׳': 0.18, '[': 0.3, ']': 0.3, '(': 0.3, ')': 0.3 };
+
+/** פרופילי רוחב לפי שם גופן (fontFactor מתוקן ב־endnote-pages; כאן — רוחב בסיס). */
+const FONT_PROFILES = {
+  'David HB': 1.00, 'David': 1.00, 'Frank Ruhl Libre': 1.00,
+  'Narkisim': 1.05, 'Nachlieli': 0.96, 'Alef': 1.00, 'Rubin': 1.03,
+  'DejaVu Sans': 1.00, 'DejaVu Serif': 1.00
+};
+
+function charWidthEm(ch) {
+  if (HEBREW_WIDTHS[ch] !== undefined) return HEBREW_WIDTHS[ch];
+  // **תיקון שורש (ביקורת 03.11): בדיקת WIDE_MARKS לפני סל העברי — בעבר הסל
+  // 0x0590–0x05FF (=0.5em) לכד את ׳(U+05F3) ו״(U+05F4) לפני שנבדקו ב-WIDE_MARKS
+  // (0.18em/0.36em) ⇒ הגדרות מתות וגרשיים נמדדו 0.5em; impl B (פיקסטשור, שנבנה
+  // מ-WIDE_MARKS) מדד אותם נכון — והפער בין המימושים הוסט את שבירות ה-DP.
+  if (WIDE_MARKS[ch] !== undefined) return WIDE_MARKS[ch];
+  const c = ch.codePointAt(0);
+  if (c >= 0x0590 && c <= 0x05FF) return 0.5;   // ניקוד/תווים עבריים נוספים
+  if (/[A-Za-z0-9]/.test(ch)) return 0.52;
+  return 0.4;
+}
+
+module.exports = { HEBREW_WIDTHS, WIDE_MARKS, FONT_PROFILES, charWidthEm };
+
+};
+__modules["src/engine/typography/font-metrics.js"] = function (require, module, exports) {
+// src/engine/typography/font-metrics.js — TrueType/OpenType metrics parser (S12.1-5, REQ-LB-01 impl B)
+'use strict';
+
+/**
+ * **שכבת המדידה המתמטית (מימוש B):** קריאת טבלאות אמת מקובץ גופן אמיתי —
+ * רוחבי גליפים (hmtx/hhea/cmap), קרנינג (kern fmt0 + GPOS PairPos fmt1),
+ * unitsPerEm (head), cap-height (OS/2 v≥2; נפילה ל־hhea.ascender×0.7), וזיהוי
+ * סימנים מאפסי־רוחב (ניקוד — advance=0) לפי המפה עצמה.
+ *
+ * עצמאי לחלוטין: אין תלות חיצונית (HarfBuzz-WASM/fontkit אינם נדרשים —
+ * אותה מטרה, טבלאות אמת, אפס תלות זרה; דוקטרינת הריפו). הפרנסר נבדק
+ * מול אורקל צולב (fontTools) על גופן אמיתי (DejaVu) — ערכי האמת נעולים בבדיקות.
+ *
+ * דטרמיניזם: קריאה בלבד; אין Date/Math.random; סדר קבוע.
+ */
+
+const MAX_TABLES = 64;
+const MAX_SEGMENTS = 8192; // cmap fmt4 הגנת שפיות
+const MAX_GPOS_PAIRSETS = 4096;
+
+function u8(b, o) { return b[o]; }
+function u16(b, o) { return (b[o] << 8) | b[o + 1]; }
+function s16(b, o) { const v = u16(b, o); return v >= 0x8000 ? v - 0x10000 : v; }
+function u32(b, o) { return ((b[o] << 24) | (b[o + 1] << 16) | (b[o + 2] << 8) | b[o + 3]) >>> 0; }
+function tag(b, o) { return String.fromCharCode(b[o], b[o + 1], b[o + 2], b[o + 3]); }
+
+/**
+ * @param {Uint8Array|Buffer} bytes — בתי הגופן (TTF/OTF sfnt)
+ * @returns {{ok:boolean, error?:string, font?:object}}
+ */
+function parseFont(bytes) {
+  if (!bytes || bytes.length < 12) return { ok: false, error: 'too-small' };
+  const b = bytes;
+  const sfntVersion = u32(b, 0);
+  if (sfntVersion !== 0x00010000 && sfntVersion !== 0x4F54544F /* 'OTTO' */ && sfntVersion !== 0x74746366 /* 'ttcf' */) {
+    return { ok: false, error: `bad-sfnt-version:0x${sfntVersion.toString(16)}` };
+  }
+  if (sfntVersion === 0x74746366) return { ok: false, error: 'ttcf-collections-unsupported' };
+  const numTables = u16(b, 4);
+  if (numTables === 0 || numTables > MAX_TABLES) return { ok: false, error: `bad-table-count:${numTables}` };
+
+  // תוכן העניינים של sfnt
+  const tables = new Map(); // tag → {offset, length}
+  for (let i = 0; i < numTables; i++) {
+    const rec = 12 + i * 16;
+    if (rec + 16 > b.length) return { ok: false, error: 'table-dir-truncated' };
+    const t = tag(b, rec);
+    const off = u32(b, rec + 8);
+    const len = u32(b, rec + 12);
+    if (off + len > b.length) return { ok: false, error: `table-out-of-range:${t}` };
+    tables.set(t, { offset: off, length: len });
+  }
+  const need = ['head', 'maxp', 'hhea', 'hmtx', 'cmap'];
+  for (const t of need) if (!tables.has(t)) return { ok: false, error: `missing-table:${t}` };
+
+  // head: unitsPerEm + indexToLocFormat
+  const hO = tables.get('head').offset;
+  const unitsPerEm = u16(b, hO + 18);
+  if (!(unitsPerEm >= 16 && unitsPerEm <= 16384)) return { ok: false, error: `bad-units-per-em:${unitsPerEm}` };
+  const indexToLocFormat = s16(b, hO + 50);
+
+  // maxp: numGlyphs
+  const numGlyphs = u16(b, tables.get('maxp').offset + 4);
+  if (numGlyphs === 0) return { ok: false, error: 'bad-num-glyphs:0' };
+
+  // hhea: numberOfHMetrics + ascender/descender/lineGap
+  const hhO = tables.get('hhea').offset;
+  const numberOfHMetrics = u16(b, hhO + 34);
+  const ascender = s16(b, hhO + 4);
+  const descender = s16(b, hhO + 6);
+  const lineGap = s16(b, hhO + 8);
+  if (numberOfHMetrics === 0 || numberOfHMetrics > numGlyphs) return { ok: false, error: `bad-hmtx-count:${numberOfHMetrics}` };
+
+  // hmtx: advance widths (+lsb)
+  const hmO = tables.get('hmtx').offset;
+  const advanceUnits = new Uint16Array(numGlyphs);
+  for (let g = 0; g < numGlyphs; g++) {
+    if (g < numberOfHMetrics) advanceUnits[g] = u16(b, hmO + g * 4);
+    else advanceUnits[g] = advanceUnits[numberOfHMetrics - 1];
+  }
+
+  // cmap: Unicode → glyph (fmt 4 BMP + fmt 12 full)
+  const charToGlyph = new Map();
+  const cmErr = parseCmap(b, tables.get('cmap').offset, charToGlyph);
+  if (cmErr) return { ok: false, error: `cmap:${cmErr}` };
+
+  // OS/2 (אופציונלי): sCapHeight (v≥2, offset 88)
+  let capHeight = null;
+  if (tables.has('OS/2')) {
+    const osO = tables.get('OS/2').offset;
+    if (tables.get('OS/2').length >= 90) {
+      const osVer = u16(b, osO);
+      const cap = s16(b, osO + 88);
+      if (osVer >= 2 && cap > 0) capHeight = cap;
+    }
+  }
+
+  // kern fmt0 (אופציונלי) + GPOS PairPos fmt1 (אופציונלי) — מפות קרנינג בר־מילה (units)
+  const kernPairs = new Map(); // "gidA,gidB" → units
+  if (tables.has('kern')) parseKernFmt0(b, tables.get('kern').offset, tables.get('kern').length, kernPairs);
+  if (tables.has('GPOS')) parseGposPairPos(b, tables.get('GPOS').offset, tables.get('GPOS').length, kernPairs);
+
+  const font = {
+    sfntVersion, unitsPerEm, numGlyphs, indexToLocFormat,
+    numberOfHMetrics, ascender, descender, lineGap, capHeight,
+    advanceUnits, charToGlyph, kernPairs,
+    tables: Object.fromEntries([...tables.entries()].map(([t, v]) => [t, { ...v }])),
+    bytes: b
+  };
+  return { ok: true, font };
+}
+
+/** cmap subtable parsing — fmt 4 (BMP) ו־fmt 12 (full); מדגים גם fmt 6 (מינימלי). */
+function parseCmap(b, base, charToGlyph) {
+  const numSub = u16(b, base + 2);
+  if (numSub > 64) return `too-many-subtables:${numSub}`;
+  let best4 = -1, best12 = -1;
+  for (let i = 0; i < numSub; i++) {
+    const rec = base + 4 + i * 8;
+    const platform = u16(b, rec);
+    const encoding = u16(b, rec + 2);
+    const off = u32(b, rec + 4);
+    const fmt = u16(b, base + off);
+    const unicodeish = (platform === 3 && (encoding === 1 || encoding === 10)) || platform === 0;
+    if (!unicodeish) continue;
+    if (fmt === 4 && best4 < 0) best4 = base + off;
+    if (fmt === 12 && best12 < 0) best12 = base + off;
+  }
+  if (best12 >= 0) {
+    const e = parseCmap12(b, best12, charToGlyph);
+    if (e) return e;
+  }
+  if (best4 >= 0) {
+    const e = parseCmap4(b, best4, charToGlyph);
+    if (e) return e;
+  }
+  if (charToGlyph.size === 0) return 'no-unicode-subtable';
+  return null;
+}
+
+function parseCmap4(b, off, charToGlyph) {
+  if (off + 14 > b.length) return 'fmt4-truncated';
+  const segCountX2 = u16(b, off + 6);
+  const segCount = segCountX2 / 2;
+  if (segCount === 0 || segCount > MAX_SEGMENTS) return `fmt4-bad-segcount:${segCount}`;
+  const endBase = off + 14;
+  const startBase = endBase + segCountX2 + 2;
+  const deltaBase = startBase + segCountX2;
+  const rangeBase = deltaBase + segCountX2;
+  if (rangeBase + segCountX2 > b.length) return 'fmt4-truncated-tables';
+  for (let i = 0; i < segCount; i++) {
+    const end = u16(b, endBase + i * 2);
+    const start = u16(b, startBase + i * 2);
+    const delta = s16(b, deltaBase + i * 2);
+    const rangeOff = u16(b, rangeBase + i * 2);
+    if (start > end) continue;
+    if (end - start > 0xFFFF) continue; // הגנה
+    for (let c = start; c <= end; c++) {
+      let gid;
+      if (rangeOff === 0) {
+        gid = (c + delta) & 0xFFFF;
+      } else {
+        const gidPos = rangeBase + i * 2 + rangeOff + (c - start) * 2;
+        if (gidPos + 2 > b.length) return 'fmt4-gid-out-of-range';
+        gid = u16(b, gidPos);
+        if (gid !== 0) gid = (gid + delta) & 0xFFFF;
+      }
+      if (gid !== 0 && !charToGlyph.has(c)) charToGlyph.set(c, gid);
+    }
+  }
+  return null;
+}
+
+function parseCmap12(b, off, charToGlyph) {
+  if (off + 16 > b.length) return 'fmt12-truncated';
+  const nGroups = u32(b, off + 12);
+  if (nGroups > 65536) return `fmt12-bad-groups:${nGroups}`;
+  for (let i = 0; i < nGroups; i++) {
+    const rec = off + 16 + i * 12;
+    if (rec + 12 > b.length) return 'fmt12-truncated-groups';
+    const start = u32(b, rec), end = u32(b, rec + 4), gid = u32(b, rec + 8);
+    if (end < start || end - start > 0x10FFFF) continue;
+    for (let c = start; c <= end; c++) {
+      const g = gid + (c - start);
+      if (g !== 0 && !charToGlyph.has(c)) charToGlyph.set(c, g);
+    }
+  }
+  return null;
+}
+
+/** kern table — מטפל רק בפורמט 0 (subtable version 0); שאר הפורמטים נדלגים בשקיפות. */
+function parseKernFmt0(b, off, len, kernPairs) {
+  if (off + 4 > b.length) return;
+  const nTables = u16(b, off + 2);
+  let p = off + 4;
+  for (let i = 0; i < nTables && p + 6 <= b.length; i++) {
+    const version = u16(b, p);
+    const length = u16(b, p + 2);
+    const coverage = u16(b, p + 4);
+    const format = coverage >> 8;
+    if (format === 0 && version === 0 && p + 14 <= b.length) {
+      const nPairs = u16(b, p + 6);
+      if (nPairs <= MAX_GPOS_PAIRSETS) {
+        for (let k = 0; k < nPairs; k++) {
+          const rec = p + 14 + k * 6;
+          if (rec + 6 > b.length || rec >= off + len) break;
+          const left = u16(b, rec), right = u16(b, rec + 2), value = s16(b, rec + 4);
+          if (value !== 0) kernPairs.set(`${left},${right}`, value);
+        }
+      }
+    }
+    if (length === 0) break;
+    p += length;
+  }
+}
+
+/**
+ * GPOS (v1.0) — נתיב מינימלי אמין: LookupList → Lookup type 2 (PairPos) format 1,
+ * ValueFormat1=XAdvance בלבד (0x0004), Coverage fmt 1/2. שאר הסוגים נדלגים בשקיפות
+ * (רשומים בדגל). זה מכסה את משפחת הקרנינג הסטנדרטית (GSUB לא נדרש למדידת רוחב).
+ */
+function parseGposPairPos(b, off, len, kernPairs) {
+  if (off + 10 > b.length) return;
+  const ver = u32(b, off);
+  if (ver !== 0x00010000) return;
+  const lookupListOff = u16(b, off + 8);
+  const ll = off + lookupListOff;
+  if (ll + 2 > b.length) return;
+  const lookups = u16(b, ll);
+  if (lookups > 256) return;
+  for (let i = 0; i < lookups; i++) {
+    const lOff = ll + u16(b, ll + 2 + i * 2);
+    if (lOff + 8 > b.length) continue;
+    const type = u16(b, lOff);
+    if (type !== 2) continue; // PairPos בלבד
+    const subCount = u16(b, lOff + 4);
+    if (subCount > 64) continue;
+    for (let s = 0; s < subCount; s++) {
+      const sOff = lOff + u16(b, lOff + 6 + s * 2);
+      parsePairPosSubtable(b, sOff, kernPairs);
+    }
+  }
+}
+
+function parsePairPosSubtable(b, off, kernPairs) {
+  if (off + 10 > b.length) return;
+  const fmt = u16(b, off);
+  if (fmt !== 1) return; // format 2 (matrix) — נדלג (נדיר בקרנינג לטיני/עברי)
+  const covOff = u16(b, off + 2);
+  const vf1 = u16(b, off + 4);
+  const vf2 = u16(b, off + 6);
+  const setCount = u16(b, off + 8);
+  if (setCount > MAX_GPOS_PAIRSETS) return;
+  if (vf1 !== 0x0004 || vf2 !== 0) return; // XAdvance בלבד — חוזה הקרנינג שלנו
+  const covGids = coverageGlyphs(b, off + covOff);
+  if (!covGids) return;
+  for (let i = 0; i < setCount && i < covGids.length; i++) {
+    const left = covGids[i];
+    const psOff = off + u16(b, off + 10 + i * 2);
+    if (psOff + 2 > b.length) continue;
+    const pvCount = u16(b, psOff);
+    if (pvCount > MAX_GPOS_PAIRSETS) continue;
+    for (let k = 0; k < pvCount; k++) {
+      // **S5.2 (תיקון צעד רשומה — T1):** בחוזה vf1===0x0004 && vf2===0 אין
+      // כלל value2 — PairValueRecord = gid2(2) + XAdvance(2) = **4 בתים**,
+      // לא 6. הצעד 6 קרא כל רשומה אחרי הראשונה מוסטת (מפת קרנינג משובשת:
+      // 171 זוגות זבל מ-Hadassah). היום הקרנינג אינו נצרך במדידה (מדיניות
+      // ללא-קרנינג — תצוגה=ייצוא; ראה font-kerning:none ב-BASE_CSS), אך
+      // הפרסר חייב להיות נכון לכל שימוש עתידי.
+      const rec = psOff + 2 + k * 4; // gid2(2) + value1 XAdvance(2) — vf2=0 ⇒ אין value2
+      if (rec + 4 > b.length) break;
+      const right = u16(b, rec);
+      const xAdv = s16(b, rec + 2);
+      if (xAdv !== 0) kernPairs.set(`${left},${right}`, xAdv);
+    }
+  }
+}
+
+/** Coverage table fmt 1/2 → מערך gid-ים לפי אינדקס. */
+function coverageGlyphs(b, off) {
+  if (off + 4 > b.length) return null;
+  const fmt = u16(b, off);
+  const out = [];
+  if (fmt === 1) {
+    const count = u16(b, off + 2);
+    if (count > MAX_GPOS_PAIRSETS) return null;
+    for (let i = 0; i < count; i++) {
+      if (off + 4 + i * 2 + 2 > b.length) return null;
+      out.push(u16(b, off + 4 + i * 2));
+    }
+    return out;
+  }
+  if (fmt === 2) {
+    const ranges = u16(b, off + 2);
+    if (ranges > 4096) return null;
+    for (let i = 0; i < ranges; i++) {
+      const rec = off + 4 + i * 6;
+      if (rec + 6 > b.length) return null;
+      const start = u16(b, rec), end = u16(b, rec + 2), startCov = u16(b, rec + 4);
+      if (end < start || end - start > 0xFFFF) continue;
+      for (let g = start; g <= end; g++) out[g - start + startCov] = g;
+    }
+    // מלא חורים (undefined) ב־-1 — סימון לא־קיים
+    for (let i = 0; i < out.length; i++) if (out[i] === undefined) out[i] = -1;
+    return out;
+  }
+  return null;
+}
+
+// ============ שכבת שאילתות (המידע שמעניין את המדידה) ============
+
+/** **S4.26:** גופן ה-fallback לגליפים חסרים — כמו מחסנית ה-CSS בדפדפן. */
+let missingGlyphFallbackFont = null;
+function setMissingGlyphFallbackFont(font) { missingGlyphFallbackFont = font || null; }
+
+/** **S4.26:** רוחב-גליף-חסר בגופן ה-fallback (em) — 0 אם אין fallback/גם בו חסר. */
+function missingGlyphFallbackEm(ch) {
+  if (!missingGlyphFallbackFont) return 0;
+  return advanceEmOf(missingGlyphFallbackFont, ch);
+}
+
+/** מזהה גליף של תו (או 0 = .notdef). */
+function glyphIdOf(font, ch) {
+  const cp = typeof ch === 'number' ? ch : ch.codePointAt(0);
+  const g = font.charToGlyph.get(cp);
+  return g === undefined ? 0 : g;
+}
+
+/** רוחב advance ביחידות גופן (0 ללא מיפוי). */
+function advanceUnitsOf(font, ch) {
+  const g = glyphIdOf(font, ch);
+  if (g === 0 || g >= font.numGlyphs) {
+    // **S4.26 (גליפים חסרים — fallback כמו הדפדפן):** לגופנים תורניים
+    // (למשל גוטמן רש"י) אין גליפים לפיסוק בסיסי (' . ׳) — הדפדפן מצייר
+    // אותם במשפחת ה-fallback שבמחסנית ('Frank Ruhl Libre'); המדידה
+    // בלי זה החזירה 0 ושורות ממורכזות נבדקו צרות מהרינדור (נצפה:
+    // INK_OUTSIDE 3px בשורת "הרי בהכרח שהם גדרים... וכו'."). המרה
+    // ליחידות הגופן הראשי משמרת את היחס הנכון בשרשרת.
+    if (missingGlyphFallbackFont && missingGlyphFallbackFont !== font) {
+      const em = advanceEmOf(missingGlyphFallbackFont, ch);
+      if (em > 0) return em * font.unitsPerEm;
+    }
+    return 0;
+  }
+  return font.advanceUnits[g];
+}
+
+/** רוחב advance ב־em (יחסי ל־unitsPerEm). */
+function advanceEmOf(font, ch) {
+  return advanceUnitsOf(font, ch) / font.unitsPerEm;
+}
+
+/** קרנינג בין שני תווים ביחידות גופן (0 כשאין ערך/מיפוי). */
+function kernUnitsOf(font, a, b) {
+  const ga = glyphIdOf(font, a), gb = glyphIdOf(font, b);
+  if (ga === 0 || gb === 0) return 0;
+  const v = font.kernPairs.get(`${ga},${gb}`);
+  return v === undefined ? 0 : v;
+}
+
+/** cap-height ב־em (מטבלת OS/2 אמיתית; נפילה: ascender×0.7 — קירוב ספרות מוכר). */
+function capHeightEmOf(font) {
+  if (font.capHeight != null) return font.capHeight / font.unitsPerEm;
+  return (font.ascender / font.unitsPerEm) * 0.7;
+}
+
+/** האם תו הוא סימן מאפס־רוחב (ניקוד/טעמים): ממופה עם advance=0. */
+function isZeroAdvanceMark(font, ch) {
+  const g = glyphIdOf(font, ch);
+  return g !== 0 && font.advanceUnits[g] === 0;
+}
+
+module.exports = {
+  parseFont, glyphIdOf, advanceUnitsOf, advanceEmOf, kernUnitsOf,
+  capHeightEmOf, isZeroAdvanceMark, setMissingGlyphFallbackFont, missingGlyphFallbackEm
+};
+
+};
+__modules["src/engine/assets/hash256.js"] = function (require, module, exports) {
+// src/engine/assets/hash256.js — SHA-256 על בתים, סביבת-אגנוסטי (שלב 3)
+'use strict';
+
+/**
+ * מטרה: זהות נכס/גופן יציבה ודטרמיניסטית מהתוכן (content-addressed) — **בלי
+ * תלות ב-Node crypto** (ה-Worker בדפדפן) ובלי מודולים חיצוניים.
+ * ב-Node, כש-crypto זמין, נעשה שימוש בו (מהיר יותר) — הפלט זהה ביט-לביט
+ * למימוש הטהור (נעול בבדיקות שלב 3: hash256-vs-crypto).
+ */
+
+const K = new Uint32Array([
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+]);
+
+function rotr(x, n) { return ((x >>> n) | (x << (32 - n))) >>> 0; }
+
+/** sha256Hex(bytes) — הקס של 64 תווים. bytes: Uint8Array/Buffer/Array-like/string (UTF-8). */
+function sha256Hex(bytes) {
+  // קלט מחרוזת — קידוד UTF-8 מפורש (מונע המרה שקטה לאפסים)
+  if (typeof bytes === 'string') {
+    bytes = typeof TextEncoder !== 'undefined' ? new TextEncoder().encode(bytes) : Buffer.from(bytes, 'utf8');
+  }
+  // Node fast-path — פלט זהה ביט-לביט (נעול בבדיקה)
+  if (typeof require === 'function') {
+    try {
+      const crypto = require('crypto');
+      if (crypto && crypto.createHash) return crypto.createHash('sha256').update(bytes).digest('hex');
+    } catch (_) { /* דפדפן/bundle — המימוש הטהור להלן */ }
+  }
+
+  const b = bytes;
+  const len = b.length;
+  // פדינג: 0x80, אפסים, ואורך-ביטים בן 64 ביט בסוף. מספר הבלוקים = מספר שלם.
+  const bitLenHi = Math.floor(len / 0x20000000);
+  const bitLenLo = (len << 3) >>> 0;
+  const totalLen = (((len + 9) + 63) & ~63);
+  const padded = new Uint8Array(totalLen);
+  if (len) padded.set(b.subarray ? b.subarray(0, len) : Array.prototype.slice.call(b, 0, len), 0);
+  padded[len] = 0x80;
+  const dv = new DataView(padded.buffer);
+  dv.setUint32(totalLen - 8, bitLenHi, false);
+  dv.setUint32(totalLen - 4, bitLenLo, false);
+
+  const H = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
+  const w = new Uint32Array(64);
+  for (let block = 0; block < totalLen; block += 64) {
+    for (let t = 0; t < 16; t++) w[t] = dv.getUint32(block + t * 4, false);
+    for (let t = 16; t < 64; t++) {
+      const s0 = rotr(w[t - 15], 7) ^ rotr(w[t - 15], 18) ^ (w[t - 15] >>> 3);
+      const s1 = rotr(w[t - 2], 17) ^ rotr(w[t - 2], 19) ^ (w[t - 2] >>> 10);
+      w[t] = (w[t - 16] + s0 + w[t - 7] + s1) >>> 0;
+    }
+    let a = H[0], b2 = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
+    for (let t = 0; t < 64; t++) {
+      const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const t1 = (h + S1 + ch + K[t] + w[t]) >>> 0;
+      const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+      const mj = (a & b2) ^ (a & c) ^ (b2 & c);
+      const t2 = (S0 + mj) >>> 0;
+      h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b2; b2 = a; a = (t1 + t2) >>> 0;
+    }
+    H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b2) >>> 0; H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
+    H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0; H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+  }
+  let hex = '';
+  for (let i = 0; i < 8; i++) hex += H[i].toString(16).padStart(8, '0');
+  return hex;
+}
+
+module.exports = { sha256Hex };
+
+};
+__modules["src/engine/typography/kp-linebreak.js"] = function (require, module, exports) {
+// src/engine/typography/kp-linebreak.js — Knuth-Plass optimal line breaking (REQ-LB-02/03/07)
+'use strict';
+
+/**
+ * מימוש KP: boxes/glues/penalties, badness³, עונשי runt/widow/orphan, active-list DP.
+ * - אין מקף סוף־שורה (no hyphenation — אסור בספרות תורנית).
+ * - \u00A0 = צמידת NBSP (protectors); \uE000 = רווח אטומי בתוך הערה — ההערה אינה נקרעת (REQ-LB-04).
+ * - RTL מדידה: rect.right − colRect.left (לקח Z.ai #5) — מתמטי כאן; DOM oracle יזהה.
+ */
+
+const INF = Number.POSITIVE_INFINITY;
+const STRETCH_RATIO = 0.6;   // מתיחות רווח יחסית
+const SHRINK_RATIO = 0.5;    // כיווץ רווח יחסית
+const LINE_DEMERIT = 100;    // עלות בסיס לכל שורה: ברירת מחדל במודל ragged — ה־DP
+                            // ממזער מספר שורות (הרינדור מצייר מרווחים טבעיים).
+// **FIT_EPS (ריכוז §4.1-9/§3.8):** סבילת התאמה שמרנית לרוחב טבעי — זהה לנתיב
+// המורשת. שורה שאינה נכנסת ב-maxWidth−FIT_EPS אינה מוארכת עוד; מילה רחבה
+// מהטור יוצאת בערוץ ה-overflow המפורש (itemGreedyFallback) עם אבחון.
+const FIT_EPS = 0.75;
+const { breakBetweenItems, canStartLineWith, canEndLineWith } = require('../line/breaks');
+// השלמת ביקורת 03.11 (D-79): הרינדור של המנוע ragged (יישור לימין; מרווחים
+// טבעיים ב-DOM וב-PDF). לכן במודל השבירה כל שורה מקבלת "מתיחת סוף-שורה"
+// כמו \raggedright של TeX — אחרת שורה במילה בודדת (stretch=0 ⇒ ratio=0)
+// היא "חינם" וה־DP מתפוצץ לשורות מילה-בודדת. כשהשורות מיושרות בפועל
+// (align=stretch) ניתן לכבות: opts.raggedEnd=false.
+const RAGGED_END_STRETCH_FACTOR = 10; // × maxWidthPx — מתיחה גדולה סופית-מעשית
+
+function buildItems(words, measure) {
+  const items = [];
+  const sp = measure(' ');
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
+    // יחידת NBSP פוצלת לתת־קופסאות עם **אי־שבירה אסורה** (INF penalty) ביניהן:
+    // כך DP רואה את הרוחב האמיתי (כולל רווחים פנימיים) אך לעולם לא קורע את הצמד.
+    // (לקח V23: רוחב חסר של unit צמוד → מדידת שורה שגויה → badness מוטה.)
+    // U+E000 (רווח אטומי בתוך הערה) אינו מקום שבירה כלל — נשמר בתוך תת־הקופסה
+    // ומוחלף ל‑NBSP רק בפליטה; כך unit שלם לעולם לא נקרע (REQ-LB-04).
+    const parts = w.split('\u00A0');
+    for (let k = 0; k < parts.length; k++) {
+      if (k > 0) items.push({ kind: 'penalty', forbidden: true, cost: INF });
+      // **S5.2 (תיקון 4 — תיבת פנטום 1px):** חלק ריק (NBSP כפול, פתיחה/סיום
+      // ב-NBSP) נמדד עכשיו ברוחב 0 — בעבר Math.max(1,…) יצר תיבת 1px שאינה
+      // קיימת בדיו והעלתה את רוחב השורה. אין חשש מכניסה לרווח: מנגנוני ה-badness
+      // מוגנים (effStretch>0 / shrink>0 — ראה breakLines) וההתקדמות מובטחת
+      // (תיבה ריקה אינה מקום שבירה; הטוקן שלה משוחזר עם ה-NBSP שלו).
+      items.push({ kind: 'box', text: parts[k].replace(/\uE000/g, '\u00A0'), width: Math.max(0, measure(parts[k])) });
+      if (k < parts.length - 1) items.push({ kind: 'glue', width: sp, stretch: sp * STRETCH_RATIO, shrink: sp * SHRINK_RATIO, internal: true });
+    }
+    if (i < words.length - 1) {
+      items.push({ kind: 'glue', width: sp, stretch: sp * STRETCH_RATIO, shrink: sp * SHRINK_RATIO });
+    }
+  }
+  items.push({ kind: 'penalty', final: true }); // סיום פסקה — שבירה חובה
+  return items;
+}
+
+function badness(ratio) {
+  if (!isFinite(ratio)) return 0;
+  if (ratio < -1) return INF;               // אי־אפשר לכווץ מעל הגבול
+  const r = Math.abs(ratio);
+  if (r <= 1) return Math.round(Math.pow(r * 100, 3) / 10000); // 0..100
+  return 100 + Math.round(Math.pow((r - 1) * 100, 2) / 100);   // דחיסה/מתיחת יתר
+}
+
+/**
+ * @param {string[]} words - מילות הפסקה (NBSP כבר הוצמד ע"י protectors)
+ * @param {number} maxWidthPx
+ * @param {(t:string)=>number} measure
+ * @param {number} lineHeightPx
+ * @param {{runtMinPct?:number}} opts
+ * @returns {Array<{words:string[], widthPx:number, heightPx:number, isLast:boolean}>}
+ */
+function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
+  // **03.11 (ביקורת):** חיבור ההגדרה — runt-min-width-pct מגיע כ-runts מה-pipeline
+  // וכ-runtMinPct מקריאות ישירות; שניהם נקראים (בעבר רק runtMinPct נקרא וההגדרה לא השפיעה).
+  const runts = opts.runtMinPct != null ? opts.runtMinPct : (opts.runts != null ? opts.runts : 50);
+  const items = buildItems(words, measure);
+  const n = items.length;
+  const cost = new Array(n + 1).fill(INF);
+  const parent = new Array(n + 1).fill(-1);
+  cost[0] = 0;
+
+  for (let i = 0; i < n; i++) {
+    if (cost[i] === INF) continue;
+    if (items[i].kind === 'glue' && !items[i].internal) { // דלג על glue רגיל בהתחלת שורה;
+      // glue פנימי (בתוך יחידת NBSP) אסור לדלג — הרוחב שלו חלק בלתי נפרד מהצמד.
+      if (cost[i + 1] > cost[i]) { cost[i + 1] = cost[i]; parent[i + 1] = i; }
+      continue;
+    }
+    let w = 0, stretch = 0, shrink = 0;
+    for (let j = i; j < n; j++) {
+      const it = items[j];
+      if (it.kind === 'box') w += it.width;
+      // **תיקון שורש (ביקורת 03.11): רוחב glue נכלל ברוחב הטבעי של השורה —
+      // כמו ב-TeX (Σ תיבות + Σ רווחים). בעבר נצברו רק stretch/shrink ⇒ ה־DP
+      // "חשב" ששורה נכנסת בעוד רוחבה הטבעי (כולל רווחים) חורג מהטור.
+      else if (it.kind === 'glue') { w += it.width; stretch += it.stretch; shrink += it.shrink; }
+      else if (it.kind === 'penalty') {
+        if (it.forbidden) continue; // תוך-יחידה: אין כאן מקום שבירה (legalCut כבר מבטל); ההצברה נמשכת
+        // סיום שורה (penalty סופי של הפסקה) — good break.
+        // **תיקון שורש (ביקורת 03.11): השבירה הסופית היא צומת סוף-הפסקה n —
+        // בעבר נכתבה ל-cost[j] (אינדקס הפריט עצמו, n−1) ⇒ cost[n] נותר INF לעולם
+        // ⇒ ה־DP מעולם לא סיפק פתרון וכל שבירות השורות במנוע מאז S1 יצאו מהגיבוי
+        // הגרידי (עם באג ה-NBSP). התיקון מחיה את Knuth-Plass בפועל.
+        const slack = maxWidthPx - w;
+        // raggedEnd: מתיחת סוף-שורה (D-79) — שורות ragged אינן נמדדות במתיחת
+        // בין-מילים אלא בכניסה טבעית; היתרה עד לקצה הטור "נבלעת" במתיחת הסוף.
+        const raggedEnd = opts.raggedEnd !== false;
+        const effStretch = stretch + (raggedEnd ? maxWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
+        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
+        let b = badness(ratio);
+        if (b < INF && w < maxWidthPx * (runts / 100)) b += 60; // עונש runt בשורת הסיום
+        if (b < INF) {
+          const cand = cost[i] + b + LINE_DEMERIT;
+          if (cand < cost[n]) { cost[n] = cand; parent[n] = i; }
+        }
+        break;
+      }
+      // **S5.1 (D-92-DP):** הדפדפן מרנדר רוחב טבעי (white-space:normal) —
+      // שורה שרוחבה הטבעי חורג מהטור נעטפת בתצוגה (טקסט-על-טקסט) גם אם
+      // היישוב יכול לכווץ רווחים ב-PDF. לכן המבחן ברוחב הטבעי, בלי shrink.
+      // **S5.2 (תיקון 3 — המבחן היה מרחיב, לא שמרני):** בעבר `w > maxWidth+0.75`
+      // אִפשר קווים ברוחב טבעי עד maxWidth+0.75px (ובכך גם קבלת חיתוכים עם
+      // slack שלילי דרך כיווץ) — בזמן ש-FIT_EPS של המורשת שמרן (limit−eps).
+      // כעת החיתוך נעצר מוקדם: שורה שאינה נכנסת ב-maxWidth−0.75 אינה מוארכת
+      // עוד, וכל קו מקובל הוא ברוחב טבעי ≤ maxWidth−0.75 (גם בסוף פסקה —
+      // הפנלטי הסופי נמדר רק אחרי שכל הפריטים עברו את אותו מבחן). מילה רחבה
+      // מהטור עדיין יוצאת כשורה בפני עצמה דרך הגיבוי הגרידי (greedyFallback —
+      // התקדמות מובטחת, טוקן בודד אינו נחסם: pushTok עם toks ריק אינו מוסף).
+      if (w > maxWidthPx - FIT_EPS) break; // חריגה שאינה ניתנת לתיקון — שמרני כמו FIT_EPS
+
+      if (it.kind === 'box') {
+        // מקומות שבירה חוקיים נקבעים **מבנית מראש** (static legal-cuts): cut בצומת c חוקי
+        // רק אם items[c-1] הוא glue לא־פנימי ו‑items[c] תיבה שפותחת יחידה חדשה.
+        // זה מבטל את באג V23: lock תלוי-נקודת-התחלה על צמתים משותפים ל‑DP.
+        // (תיקון S3: הבדיקה הייתה בתוך הלולאה עם אינדקס שגוי j+2 — כל השברים נחסמו.)
+        const cut = j + 1; // נקודת שבירה חוקית: אחרי תיבה, לפני ה‑glue העוקב
+        if (!(items[cut].kind === 'glue' && !items[cut].internal && items[cut + 1] && items[cut + 1].kind === 'box')) continue;
+        const slack = maxWidthPx - w;
+        // **S5.2 (תיקון 3 — שמרנות בקבלת חיתוך):** קו שאינו נכנס ברוחב הטבעי
+        // (slack < −FIT_EPS) הוא בלתי-אפשרי — badness INF, לא "כיווץ". המבחן
+        // השמרני למעלה אמור למנוע הגעה לכאן; השמירה הכפולה מתעדת את הכוונה.
+        if (slack < -FIT_EPS) continue;
+        const raggedEnd = opts.raggedEnd !== false;
+        const effStretch = stretch + (raggedEnd ? maxWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
+        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
+        const b = badness(ratio);
+        if (b >= INF) continue;
+        const cand = cost[i] + b + LINE_DEMERIT;
+        if (cand < cost[cut]) { cost[cut] = cand; parent[cut] = i; }
+      }
+    }
+  }
+
+  if (cost[n] === INF) return greedyFallback(items, maxWidthPx, measure, lineHeightPx);
+
+  const cuts = [];
+  let p = n;
+  while (p > 0 && parent[p] >= 0) { cuts.push([parent[p], p]); p = parent[p]; }
+  cuts.reverse();
+
+  const lines = [];
+  for (let k = 0; k < cuts.length; k++) {
+    const [a, b] = cuts[k];
+    // תת־קופסאות של אותה יחידת NBSP מאוחדות חזרה עם \u00A0 (הצמד שומר על זהותו)
+    const rawBoxes = items.slice(a, b).filter(x => x.kind === 'box');
+    const toks = [];
+    let cur = null, prevPenaltyForbidden = false;
+    for (let idx = a; idx < b; idx++) {
+      const it = items[idx];
+      if (it.kind === 'penalty' && it.forbidden) { prevPenaltyForbidden = true; continue; }
+      if (it.kind !== 'box') continue;
+      if (cur !== null && prevPenaltyForbidden) { cur += '\u00A0' + it.text; prevPenaltyForbidden = false; }
+      else { if (cur !== null) toks.push(cur); cur = it.text; prevPenaltyForbidden = false; }
+    }
+    if (cur !== null) toks.push(cur);
+    void rawBoxes;
+    if (!toks.length) continue;
+    // רוחב אמיתי: סכום תת־הקופסאות + רווחי ה‑glue שביניהן (כולל internal)
+    let widthPx = 0;
+    for (let idx = a; idx < b; idx++) {
+      const it = items[idx];
+      if (it.kind === 'box') widthPx += it.width;
+      else if (it.kind === 'glue') widthPx += it.width;
+    }
+    lines.push({ words: toks, widthPx, heightPx: lineHeightPx, isLast: k === cuts.length - 1 });
+  }
+  return lines;
+}
+
+/**
+ * מסלול גיבוי (כשה־DP לא מצא פתרון אפשרי, למשל מילה רחבה מהעמודה — אין מקף).
+ * תיקון שורש (ביקורת 03.11, S13): בגיבוי חלים **אותם איסורי שבירה** כמו במסלול
+ * הראשי — בעבר כל penalty חתם שורה, כולל `forbidden` (בין תתי־קופסות של יחידת
+ * NBSP) ⇒ היחידה נקרעה בין שורות **ואיבדה את \u00A0 שלה** (אובדן תוכן, BRZ-15;
+ * ורוחב פנימי נמדד כרווח רגיל). כעת:
+ * 1. penalty אסור לעולם אינו מסיים שורה — היחידה משוחזרת כטוקן אחד עם \u00A0
+ *    (זהה לשחזור המסלור הראשי).
+ * 2. רוחב טוקן נצבר מהפריטים (תיבות + glue פנימי 0.26em) — זהה למסלור הראשי,
+ *    לא מדידה מחודשת של מחרוזת NBSP (הייתה מודדת 0.4em פנימי — עיוות רוחב).
+ * 3. התקדמות מובטחת: טוקן שגולש פותח שורה חדשה; טוקן רחב מהעמודה נשאר לבד
+ *    בשורה משלו — אין לולאה ואין דילוג תוכן. מעבר אחד על הפריטים.
+ */
+function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
+  const space = measure(' ');
+  const lines = [];
+  let toks = [];            // טוקנים של השורה הנוכחית
+  let w = 0;                // רוחב השורה (כולל רווחים בין טוקנים)
+  let cur = null, curW = 0, joinNext = false;  // טוקן בבנייה + רוחבו מהפריטים
+
+  const flush = () => {
+    if (!toks.length) return;
+    lines.push({ words: toks, widthPx: w, heightPx: lineHeightPx, isLast: false });
+    toks = []; w = 0;
+  };
+  const pushTok = () => {
+    if (cur === null) return;
+    // **S6.0 (R7-M2 — רווח רפאים בגיבוי הגרידי):** sp חושב לפי מצב השורה
+    // **לפני** ה-flush ונוסף גם אחריו ⇒ כל שורה שנפתחה ב-flush נשאה רווח
+    // אחד עודף ב-widthPx (מדידה שקרית לצרכי ריצת-שורה/איזון). תוקם:
+    // הבדיקה וההוספה לפי המצב **אחרי** ההחלטה על flush.
+    if (toks.length && w + space + curW > maxWidthPx - FIT_EPS) flush(); // הטוקן הבא ייפתח שורה חדשה
+    const sp = toks.length ? space : 0;
+    toks.push(cur); w += sp + curW;
+    cur = null; curW = 0; joinNext = false;
+  };
+
+  for (const it of items) {
+    if (it.kind === 'penalty') {
+      if (it.final) continue;            // סוף פסקה — הטיפול שלאחר הלולאה סוגר את האחרון
+      if (it.forbidden) { joinNext = true; continue; } // אין חיתוך בתוך יחידה — לעולם
+      continue;
+    }
+    if (it.kind === 'glue') {
+      if (it.internal && cur !== null) { curW += it.width; } // רווח פנימי בתוך היחידה
+      continue; // glue רגיל בין טוקנים: רוחבו נכנס כ־sp בעת pushTok
+    }
+    if (it.kind !== 'box') continue;
+    if (cur !== null && joinNext) { cur += '\u00A0' + it.text; curW += it.width; joinNext = false; } // המשך הצמד — ואיפוס: המילה הרגילה הבאה לא תיבלע
+    else { pushTok(); cur = it.text; curW = it.width; }
+  }
+  pushTok(); flush();
+  if (lines.length) lines[lines.length - 1].isLast = true;
+  return lines;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// שלב 4 (§4.1-2/6/9) — breakItemSequence: הזנת הרצף הקנוני ל-Knuth–Plass.
+// **הרחבת המנוע הקיים**, לא breaker חדש: אותם קבועים (STRETCH_RATIO/
+// SHRINK_RATIO/LINE_DEMERIT/RAGGED_END_STRETCH_FACTOR), אותה פונקציית badness,
+// אותו מבנה חיתוכים חוקיים סטטיים — על פריטי LineItem (מדודים מראש דרך
+// measureItem היחיד) במקום words[]. breakLines(words) נשאר לנתיב הקיים עד
+// להשלמת המעבר; שום סוג פריט (תמונה/סמן/פריט מותאם) אינו מקבל breaker משלו.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * breakItemSequence — שבירת רצף LineItem לשורות.
+ * @param {Array<object>} items — רצף מ-buildLineSequences (בלי ה-penalty הסופי; נוסף כאן)
+ * @param {number} maxWidthPx — רוחב הטור/האזור
+ * @param {{runts?:number, raggedEnd?:boolean, lineWidthAt?: (lineIndex:number)=>number}} opts
+ *   lineWidthAt: אילוצי אזור/שורה (§4.1-7 — wrap-around): רוחב אפקטיבי לפי מספר
+ *   השורה (תמונה צפה מקטינה רוחב לשורות שבגובהה). אין מנגנון שבירה שני לטקסט
+ *   שעוקף תמונה — אותו DP, אילוץ אחד.
+ * @returns {{lines:Array<{from:number,to:number,badness:number,reason:string}>, fallback:boolean, diagnostics:Array}}
+ */
+function breakItemSequence(items, maxWidthPx, opts = {}) {
+  const runts = opts.runts != null ? opts.runts : 50;
+  const raggedEnd = opts.raggedEnd !== false;
+  const lineWidthAt = typeof opts.lineWidthAt === 'function' ? opts.lineWidthAt : null;
+  if (!Array.isArray(items) || !items.length) {
+    return { lines: [], fallback: false, diagnostics: [{ code: 'empty-sequence', message: 'breakItemSequence: רצף ריק' }] };
+  }
+  const seq = items.concat([{ role: 'penalty', penaltyType: 'final', cost: 0, measuredAdvance: 0, internal: false, itemId: '#final' }]);
+  const n = seq.length;
+  const cost = new Array(n + 1).fill(INF);
+  const parent = new Array(n + 1).fill(-1);
+  const cutBad = new Array(n + 1).fill(0);
+  const cutReason = new Array(n + 1).fill('');
+  cost[0] = 0;
+  // מספר השורה של צומת i (קו שמתחיל ב-i) — לאילוץ רוחב לפי שורה (wrap-around).
+  // cost/parent/lineOf מתעדכנים יחד אטומית בכל שיפור, ולכן lineOf לאורך שרשרת
+  // האב הסופית = מספר השורה האמיתי במסלול שנבחר (מוכח באימות השוט-אחרי להלן).
+  const lineOf = new Array(n + 1).fill(0);
+
+  for (let i = 0; i < n; i++) {
+    if (cost[i] === INF) continue;
+    const it = seq[i];
+    if (it.role === 'glue' && !it.internal) {
+      // דלג על glue רגיל בפתיחת שורה (כמו breakLines); glue פנימי של יחידה צמודה — אסור לדלג
+      if (cost[i + 1] > cost[i]) { cost[i + 1] = cost[i]; parent[i + 1] = i; lineOf[i + 1] = lineOf[i]; }
+      continue;
+    }
+    let w = 0, stretch = 0, shrink = 0;
+    for (let j = i; j < n; j++) {
+      const cur = seq[j];
+      if (cur.role === 'box') w += cur.measuredAdvance;
+      else if (cur.role === 'glue') {
+        const g = glueWidths(cur);
+        w += g.width; stretch += g.stretch; shrink += g.shrink;
+      } else if (cur.role === 'penalty') {
+        if (cur.penaltyType === 'forbidden') continue; // בתוך יחידה צמודה — אין חיתוך; ההצברה נמשכת
+        // final — סוף הרצף: צומת n (אותו תיקון שורש של breakLines — לא אינדקס הפריט)
+        const maxW = lineMax(lineWidthAt, lineOf[i], maxWidthPx);
+        const slack = maxW - w;
+        const effStretch = stretch + (raggedEnd ? maxW * RAGGED_END_STRETCH_FACTOR : 0);
+        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
+        let b = badness(ratio);
+        if (b < INF && w < maxW * (runts / 100)) b += 60; // עונש runt בשורת הסיום
+        if (b < INF) {
+          const cand = cost[i] + b + LINE_DEMERIT;
+          if (cand < cost[n]) { cost[n] = cand; parent[n] = i; cutBad[n] = b; cutReason[n] = 'final'; }
+        }
+        break;
+      }
+      // מבחן רוחב טבעי שמרני (S5.2 תיקון 3 — כמו breakLines; מילה רחבה מהטור תטופל
+      // בערוץ ה-overflow המפורש של ה-fallback הדטרמיניסטי, עם אבחון — לא בשקט)
+      const maxW = lineMax(lineWidthAt, lineOf[i], maxWidthPx);
+      if (w > maxW - FIT_EPS) break;
+
+      if (cur.role === 'box') {
+        // חיתוך חוקי: אחרי תיבה, כשאחריה glue לא-פנימי ואחריו תיבה (אותו כלל
+        // סטטי של breakLines — מבטל נעילה תלוית-נקודת-התחלה)
+        const cut = j + 1;
+        if (!(seq[cut] && seq[cut].role === 'glue' && !seq[cut].internal && seq[cut + 1] && seq[cut + 1].role === 'box')) continue;
+        // **§4.1-4/§3.6 — מקור אמת אחד משתתף בהחלטה:** breaks.breakBetweenItems
+        // מאשר/אוסר את החיתוך הסמנטי, ושולי השורה נבדקים ב-canStartLineWith/
+        // canEndLineWith (איסור פיסוק תלוי בפתיחה/סגירה — R-03). אין לכללים
+        // האלה העתקים במנוע.
+        const nextBox = seq[cut + 1];
+        const br = breakBetweenItems(cur, nextBox, { joined: false });
+        if (!br.allowed) continue;
+        const nextText = boxEdgeText(nextBox, 'first');
+        if (nextText != null && !canStartLineWith(nextText)) continue;
+        const curText = boxEdgeText(cur, 'last');
+        if (curText != null && !canEndLineWith(curText)) continue;
+        const slack2 = maxW - w;
+        if (slack2 < -FIT_EPS) continue; // כיווץ בלתי-אפשרי — INF מתועד
+        const effStretch2 = stretch + (raggedEnd ? maxW * RAGGED_END_STRETCH_FACTOR : 0);
+        const ratio2 = slack2 >= 0 ? (effStretch2 > 0 ? slack2 / effStretch2 : 0) : (shrink > 0 ? slack2 / shrink : -2);
+        const b2 = badness(ratio2);
+        if (b2 >= INF) continue;
+        const cand2 = cost[i] + b2 + LINE_DEMERIT + (br.penalty || 0);
+        if (cand2 < cost[cut]) { cost[cut] = cand2; parent[cut] = i; cutBad[cut] = b2; cutReason[cut] = 'legal-cut'; lineOf[cut] = lineOf[i] + 1; }
+      }
+    }
+  }
+
+  if (cost[n] === INF) {
+    const fb = itemGreedyFallback(seq, maxWidthPx, opts);
+    return { lines: fb.lines, fallback: true, diagnostics: fb.diagnostics };
+  }
+  const cuts = [];
+  let p = n;
+  while (p > 0 && parent[p] >= 0) { cuts.push({ from: parent[p], to: p, badness: cutBad[p], reason: cutReason[p] }); p = parent[p]; }
+  cuts.reverse();
+  // קציצות ריקות (glue בלבד — שלבי דילוג השרושים) אינן שורות; מסננים כמו ש-breakLines מסנן שורות ללא טוקנים.
+  const real = cuts.filter((c) => {
+    for (let k = c.from; k < c.to; k++) if (seq[k].role === 'box') return true;
+    return false;
+  });
+  // **אימות שוט-אחרי (§3.8):** הרוחב הטבעי של כל שורה מול הרוחב האפקטיבי לפי
+  // מספר השורה האמיתי במסלול שנבחר (האינדקס הסופי של השורה בפלט). חריגה —
+  // אבחון wrap-width-mismatch מפורש; אין הסתרה של חריגה בשום מצב.
+  const diagnostics = [];
+  if (lineWidthAt) {
+    real.forEach((c, li) => {
+      let from = c.from;
+      while (from < c.to && seq[from].role === 'glue' && !seq[from].internal) from++; // גלישת glue פותח — אינה ברוחב השורה
+      let w = 0;
+      for (let k = from; k < c.to; k++) {
+        const it = seq[k];
+        if (it.role === 'box') w += it.measuredAdvance;
+        else if (it.role === 'glue') w += glueWidths(it).width;
+      }
+      const maxW = lineMax(lineWidthAt, li, maxWidthPx);
+      if (w > maxW + 0.01) {
+        diagnostics.push({ code: 'wrap-width-mismatch', lineIndex: li, naturalWidthPx: +w.toFixed(3), maxWidthPx: +maxW.toFixed(3), message: `שורה ${li}: רוחב טבעי ${w.toFixed(2)} חורג מהרוחב האפקטיבי ${maxW.toFixed(2)} לפי מספר השורה האמיתי` });
+      }
+    });
+  }
+  return { lines: real, fallback: false, diagnostics };
+}
+
+/** טקסט שפת של תיבה (התו הראשון/האחרון) — לכללי שוליים של breaks.js.
+ * תיבה ללא פרגמנטים (קלט גולמי של המנוע) — null (הכלל אינו חל). */
+function boxEdgeText(box, edge) {
+  const frags = box && box.fragments;
+  if (!Array.isArray(frags) || !frags.length) return null;
+  const texts = frags.map((f) => String(f.text || '')).filter(Boolean);
+  if (!texts.length) return null;
+  return edge === 'first' ? texts[0] : texts[texts.length - 1];
+}
+
+/** רוחב אפקטיבי לשורה: אילוץ אזור (wrap) אם הוגדר, אחרת רוחב הטור. */
+function lineMax(lineWidthAt, lineIdx, maxWidthPx) {
+  return lineWidthAt ? lineWidthAt(lineIdx) : maxWidthPx;
+}
+
+/** רוחבי glue של פריט — מהמדידה שלו (sep נמדד דרך measureItem; מתיחות לפי הקבועים המרוכזים). */
+function glueWidths(glueItem) {
+  // פלובק ל-measuredAdvance לקריאות גולמיות של המנוע; הבנאי הרצף הקנוני מספקיים את הקישור המלא.
+  const width = glueItem.measured && glueItem.measured.ok
+    ? glueItem.measured.advance
+    : (Number.isFinite(glueItem.measuredAdvance) ? glueItem.measuredAdvance : 0);
+  return { width, stretch: width * STRETCH_RATIO, shrink: width * SHRINK_RATIO };
+}
+
+/**
+ * ערוץ overflow דטרמיניסטי (§4.1-6 / §19 / §3.4 בהוראה): מעבר אחד, ללא לולאת
+ * fallback. **יחידה צמודה (עוגן+סמן, מקושרת ב-glue פנימי + forbidden penalty)
+ * היא יחידת מעבר אטומית גם כאן** — הגיבוי אינו רשאי להתעלם מה-penalty האסור
+ * ולקרוע את הצמד בין שורות (התיקון שהוחזר בנתיב המורשת, P-1). יחידה שלמה
+ * רחבה מהרוחב ⇒ שורה בפני עצמה + אבחון overflow-joined-unit מפורש —
+ * לא פירוק, לא מחיקת פריט, לא המרה שקטה, לא שורה ריקה.
+ */
+function itemGreedyFallback(seq, maxWidthPx, opts = {}) {
+  const lineWidthAt = typeof opts.lineWidthAt === 'function' ? opts.lineWidthAt : null;
+  const lines = [];
+  const diagnostics = [];
+  let cur = [];             // אינדקסים של השורה הנוכחית
+  let w = 0;
+  let lineIdx = 0;
+  // סריקה מקדימה: גבולות יחידות צמודות — [תיבה][glue פנימי][penalty אסור][תיבה]
+  const unitEnd = new Array(seq.length).fill(-1);
+  for (let i = 0; i + 3 < seq.length; i++) {
+    if (seq[i].role !== 'box') continue;
+    if (seq[i + 1] && seq[i + 1].role === 'glue' && seq[i + 1].internal
+      && seq[i + 2] && seq[i + 2].role === 'penalty' && seq[i + 2].penaltyType === 'forbidden'
+      && seq[i + 3] && seq[i + 3].role === 'box') {
+      unitEnd[i] = i + 3;
+    }
+  }
+  const flush = (reason) => {
+    if (!cur.length) return;
+    lines.push({ from: cur[0], to: cur[cur.length - 1] + 1, badness: 0, reason: reason || 'overflow-own-line' });
+    cur = []; w = 0; lineIdx++;
+  };
+  for (let i = 0; i < seq.length; i++) {
+    const it = seq[i];
+    if (it.role === 'penalty') {
+      if (it.penaltyType === 'final') continue;
+      if (it.penaltyType === 'forbidden') continue; // יחידה צמודה — לעולם אינה נקרעת
+      continue;
+    }
+    if (it.role === 'glue') {
+      if (it.internal && cur.length) { w += glueWidths(it).width; } // רווח פנימי בתוך היחידה
+      continue; // glue רגיל נכנס בעת פתיחת התיבה הבאה
+    }
+    const maxW = lineWidthAt ? lineWidthAt(lineIdx) : maxWidthPx;
+    // ── יחידה צמודה שלמה — מעבר אטומי אחד ──
+    if (unitEnd[i] > i) {
+      const unitW = seq[i].measuredAdvance + glueWidths(seq[i + 1]).width + seq[i + 3].measuredAdvance;
+      const noteRef = seq[i + 3].noteRef || seq[i].noteRef || null; // קישור לפי זהות העוגן
+      if (unitW > maxW - FIT_EPS) {
+        diagnostics.push({
+          code: 'overflow-joined-unit',
+          itemId: seq[i].itemId, joinedItemId: seq[i + 3].itemId, noteRef,
+          anchorSourceRange: seq[i].sourceRange || null, markerSourceRange: seq[i + 3].sourceRange || null,
+          advancePx: +unitW.toFixed(3), maxWidthPx: +maxW.toFixed(3),
+          message: `יחידה צמודה (עוגן+סמן${noteRef ? ', ' + noteRef : ''}) רחבה מהרוחב — שורה בפני עצמה, בלי פירוק (${seq[i].itemId} + ${seq[i + 3].itemId})`
+        });
+        flush('overflow-wrap');
+        cur = [i, i + 1, i + 2, i + 3]; w = unitW; flush('overflow-joined-unit');
+      } else {
+        const addW = (cur.length ? leadingGlueWidth(seq, i) + unitW : unitW);
+        if (cur.length && w + addW > maxW - FIT_EPS) flush('overflow-wrap');
+        if (cur.length) w += leadingGlueWidth(seq, i);
+        cur.push(i, i + 1, i + 2, i + 3); w += unitW;
+      }
+      i = unitEnd[i]; // שאר היחידה טופל — הלולאה ממשיכה מהפריט שאחריה
+      continue;
+    }
+    // ── תיבה בודדת: רוחבה מהמדידה; תיבה רחבה מהרוחב — שורה משלה + אבחון מפורש ──
+    const bw = it.measuredAdvance;
+    if (bw > maxW - FIT_EPS) {
+      diagnostics.push({ code: 'overflow-item-own-line', itemId: it.itemId, kind: it.kind, advancePx: +bw.toFixed(3), maxWidthPx: +maxW.toFixed(3), message: `פריט רחב מהרוחב — שורה בפני עצמו (${it.itemId})` });
+      flush('overflow-own-line');
+      cur = [i]; w = bw; flush('overflow-own-line');
+      continue;
+    }
+    const addW = (cur.length ? leadingGlueWidth(seq, i) + bw : bw);
+    if (cur.length && w + addW > maxW - FIT_EPS) flush('overflow-wrap');
+    if (cur.length) w += leadingGlueWidth(seq, i);
+    cur.push(i); w += bw;
+  }
+  flush('overflow-final');
+  return { lines, diagnostics };
+}
+
+/** רוחב ה-glue הרגיל שלפני תיבה i (הראשון שאינו פנימי/penalty משמאל). */
+function leadingGlueWidth(seq, i) {
+  for (let k = i - 1; k >= 0; k--) {
+    const it = seq[k];
+    if (it.role === 'penalty') continue;
+    if (it.role === 'glue' && !it.internal) return glueWidths(it).width;
+    if (it.role === 'box') return 0; // אין glue מיד לפני — יחידה צמודה מטופלת ב-penalty
+  }
+  return 0;
+}
+
+module.exports = { breakLines, badness, breakItemSequence, STRETCH_RATIO, SHRINK_RATIO, LINE_DEMERIT, RAGGED_END_STRETCH_FACTOR, FIT_EPS };
+
+};
+__modules["src/engine/line/breaks.js"] = function (require, module, exports) {
+// src/engine/line/breaks.js — מקור אמת אחיד להזדמנויות שבירה (שלב 4, §4.1-4/5)
+'use strict';
+
+/**
+ * **חוזה:** spec/00 §4.1-4 — "להגדיר break opportunities במפורש: רווחים, מקפים
+ * מותרים, NBSP, מגיני תווים, קיצורים, צירופי אות/סמן הערה, וסוגי פריטים
+ * אטומיים." ו-§4.1-5 — "סמן הערה והצירוף שהוא שייך אליו אינם נפרדים; אטומים
+ * אינם נחתכים באמצע."
+ *
+ * מקור אחד לכל החלטת שבירה. כל הכללים הקיימים בפועל במנוע (protectors,
+ * bindMarkersToNeighbors, buildItems) מנוסחים כאן פעם אחת על פריטי הקנון —
+ * לא כטלאי על מחרוזות words[].
+ *
+ * **ייצוג:** פונקציות טהורות; שום מצב. המנוע (kp-linebreak) קורא אותן בעת
+ * בניית הרצף ובעת חיפוש חיתוכים חוקיים — אין לו שיקול דעת משלו.
+ */
+
+// ─── תווים וסוגים (ריכוז במקום אחד — §4.1-9) ───────────────────────────────
+
+const SPACE = ' ';
+const NBSP = '\u00A0';
+/** מקף עברי (מקף מחבר, U+05BE): מחבר את שני צדדיו — אסור לשבור אחריו. */
+const HEBREW_MAQAF = '\u05BE';
+/** מקף לועזי (U+002D): בספרות תורנית אין מקף סוף-שורה (REQ-LB) — לא הזדמנות. */
+const LATIN_HYPHEN = '-';
+/** גרשיים (U+05F4) וגרש (U+05F3): חלק בלתי-נפרד מהמילה/הסמן. */
+const GERESHAYIM = '\u05F4';
+const GERESH = '\u05F3';
+/** טווח הניקוד והטעמים (U+0591–U+05C7) — סימנים משולבים; אינם גבול שבירה. */
+function isCombiningMark(ch) {
+  const c = code(ch);
+  return (c >= 0x0591 && c <= 0x05C7) // ניקוד וטעמים
+    || (c >= 0x0300 && c <= 0x036F)  // diacritics כלליים
+    || (c >= 0xFE00 && c <= 0xFE0F)  // variation selectors
+    || (c >= 0x200D && c <= 0x200D); // ZWJ
+}
+function code(ch) { return typeof ch === 'string' && ch ? ch.codePointAt(0) : 0; }
+
+/** תווים שאינם יכולים לפתוח שורה (איסור תלייה בפתיחה — פיסוק צמוד). */
+const NO_LINE_START = new Set(['.', ',', ':', ';', '!', '?', ')', ']', '}', '…', '%', GERESHAYIM, GERESH]);
+/** תווים שאינם יכולים לסגור שורה (פתיחה של סוגריים חייבת את הבא אחריה). */
+const NO_LINE_END = new Set(['(', '[', '{', '"', '«']);
+
+// ─── הזדמנויות בתוך טקסט (בין תווים) ─────────────────────────────────────
+
+/**
+ * סיווג גבול בין שני תווים בתוך fragment טקסט.
+ * @returns {{allowed:boolean, type?:string, reason?:string}}
+ * - allowed=false ⇒ הגבול אינו הזדמנות שבירה (מבני — לא עונש).
+ */
+function charBoundary(prev, next) {
+  if (prev == null || next == null) return { allowed: false, reason: 'edge' };
+  // ניקוד/טעמים: סימן משולב נצמד לבסיס שלו — לעולם לא גבול.
+  if (isCombiningMark(next)) return { allowed: false, type: 'combining-mark', reason: 'mark-follows-base' };
+  if (isCombiningMark(prev)) return { allowed: false, type: 'combining-mark', reason: 'mark-ends-cluster' };
+  // רווח רגיל: הזדמנות חופשית (בין מילים — מטופל ברמת הפריט).
+  if (prev === SPACE) return { allowed: false, reason: 'space-consumed-by-glue' };
+  if (next === SPACE) return { allowed: false, reason: 'space-consumed-by-glue' };
+  // NBSP: צמידה — אין שבירה.
+  if (prev === NBSP || next === NBSP) return { allowed: false, type: 'nbsp', reason: 'nbsp-glue' };
+  // מקף עברי מחבר: אין שבירה אחריו ולא לפניו.
+  if (prev === HEBREW_MAQAF || next === HEBREW_MAQAF) return { allowed: false, type: 'maqaf', reason: 'hebrew-maqaf-joins' };
+  // מקף לועזי: אין מקף סוף-שורה בספרות תורנית (REQ-LB) — לא הזדמנות.
+  if (prev === LATIN_HYPHEN) return { allowed: false, type: 'hyphen', reason: 'no-hyphenation' };
+  // גרש/גרשיים בתוך מילה: חלק מהמילה.
+  if (prev === GERESH || prev === GERESHAYIM || next === GERESHAYIM) return { allowed: false, type: 'geresh', reason: 'intra-word' };
+  return { allowed: false, reason: 'intra-word' }; // ברירת מחדל: בתוך מילה — אין שבירה
+}
+
+/**
+ * פיצול טקסט ריצה למילים לפי גבולות שבירה מותרים (מקור האמת לפיצול).
+ * @param {string} text — טקסט הריצה (עם קיזוז sourceStart שלה)
+ * @returns {Array<{text:string, start:number, end:number, sepAfter:string|null}>}
+ *   sepAfter = המפריד המדויק שנמצא אחרי המילה (נשמר לשחזור מדויק של המקור).
+ */
+function splitWordsOfRun(text) {
+  const out = [];
+  let wordStart = -1;
+  let i = 0;
+  const n = text.length;
+  while (i < n) {
+    const ch = text[i];
+    if (ch === SPACE) {
+      if (wordStart >= 0) {
+        let j = i;
+        while (j < n && text[j] === SPACE) j++; // רצף רווחים — מפריד אחד מדויק
+        out.push({ text: text.slice(wordStart, i), start: wordStart, end: i, sepAfter: text.slice(i, j) });
+        i = j; wordStart = -1; continue;
+      }
+      i++; continue;
+    }
+    if (wordStart < 0) wordStart = i;
+    i++;
+  }
+  if (wordStart >= 0) out.push({ text: text.slice(wordStart), start: wordStart, end: n, sepAfter: null });
+  return out;
+}
+
+// ─── הזדמנויות בין פריטים (בין תיבות) ─────────────────────────────────────
+
+/**
+ * החלטת שבירה בין שני תיבות LineItem סמוכות.
+ * @param {{kind:string, atomic?:boolean, constraints?:object}} left
+ * @param {{kind:string, atomic?:boolean, constraints?:object}} right
+ * @param {{joined?:boolean}} [rel] — יחס מפורש מהמודל (צמידת סמן-עוגן, קיצור)
+ * @returns {{allowed:boolean, penalty:number, type:string, reason:string}}
+ */
+function breakBetweenItems(left, right, rel = {}) {
+  // צמידה מפורשת (סמן הערה מוצמד לעוגן / קיצור): אין שבירה — עונש אינסופי מבני.
+  if (rel.joined) return { allowed: false, penalty: Number.POSITIVE_INFINITY, type: 'joined-unit', reason: 'explicit-join' };
+  // תמונה/פריט אטומי: שבירה לפניהם ואחריהם מותרת; בתוכם — מבנית (אין תת-פריטים).
+  if (right.kind === 'image' || right.kind === 'atomicToken' || right.kind === 'noteMarker' || right.atomic) {
+    return { allowed: true, penalty: 0, type: 'before-atomic', reason: 'atomic-boundary' };
+  }
+  if (left.kind === 'image' || left.kind === 'atomicToken' || left.kind === 'noteMarker' || left.atomic) {
+    return { allowed: true, penalty: 0, type: 'after-atomic', reason: 'atomic-boundary' };
+  }
+  return { allowed: true, penalty: 0, type: 'inter-word', reason: 'space-glue' };
+}
+
+/** איסור תליית פיסוק בפתיחת שורה / סגירה בסוף שורה — נבדק על שולי השורה. */
+function canStartLineWith(text) {
+  const first = typeof text === 'string' && text ? text[0] : null;
+  return !NO_LINE_START.has(first);
+}
+function canEndLineWith(text) {
+  const last = typeof text === 'string' && text ? text[text.length - 1] : null;
+  return !NO_LINE_END.has(last);
+}
+
+// ─── קיצורים וסמניטקסט (§4.1-4: "קיצורים, צירופי אות/סמן הערה") — מקור אחד לשני הנתיבים ───
+
+/** רשימת קיצורים להדבקה (מקור יחיד: גם protectors של נתיב המורשת קורא מכאן). */
+const ABBREVIATIONS = ['ר"ת', 'רשב"א', "תוס'", 'מרדכי', 'שב"ע', 'רמב"ם', 'רש"י', 'תוספות'];
+
+/** סמן טקסטואליטרי (Pattern גרש): אות עברית עם גרש (א׳) או זוג-אותיות עם גרשיים (אב״) —
+ * מדבק למילה שאחריו (מקור יחיד גם ל-protectors). */
+const NOTE_MARKER_WORD_RE = /([א-ת]׳|[א-ת]{1,2}״)$/;
+const isTextNoteMarkerWord = (word) => NOTE_MARKER_WORD_RE.test(String(word || ''));
+const isAbbreviationWord = (word) => ABBREVIATIONS.includes(String(word || ''));
+
+module.exports = {
+  SPACE, NBSP, HEBREW_MAQAF, LATIN_HYPHEN, GERESH, GERESHAYIM,
+  ABBREVIATIONS, NOTE_MARKER_WORD_RE, isTextNoteMarkerWord, isAbbreviationWord,
+  isCombiningMark, charBoundary, splitWordsOfRun, breakBetweenItems,
+  canStartLineWith, canEndLineWith
+};
+
+};
+__modules["src/engine/typography/units.js"] = function (require, module, exports) {
+// src/engine/typography/units.js — יחידות ומדיניות rounding אחת לכל המנוע (שלב 3, §3.1-9)
+'use strict';
+
+/**
+ * **חוזה:** spec/00_CURRENT_ENGINE_COMPLETION_PLAN.md §3.1-9 — "להגדיר יחידות
+ * קבועות ומדיניות rounding אחת. כל המרות px/pt/mm נעשות בגבור מוגדר; אין
+ * rounding עצמאי בכל מודול."
+ *
+ * **ההחלטה הקנונית (זהה להתנהגות המנוע כיום — נעול, לא נגרע):**
+ * - יחידת המדידה הפנימית: **px CSS** (96 לאינץ').
+ * - pt = 1/72 אינץ'; ההמרה pt→px = ×(96/72) = ×(4/3).
+ * - mm = 1/25.4 אינץ'; mm→px = ×(96/25.4).
+ * - **מדיניות rounding:** המדידה הקנונית אינה מעגלת כלל (מספר ממשי מלא —
+ *   "בלי Math.round" כמו S5.1); עיגול שלם מתבצע **רק בגבול ההקרנה**
+ *   (render-round) ובחוזה שדורש זאת במפורש (legacy px שלמים). כל עיגול
+ *   עובר דרך כאן — מונע עיגול עצמאי מפוזר.
+ */
+
+const PX_PER_IN = 96;
+const PT_PER_IN = 72;
+const MM_PER_IN = 25.4;
+
+/** pt → px (ההמרה היחידה במנוע; 12pt = 16px בדיוק). */
+function ptToPx(pt) { return (pt * PX_PER_IN) / PT_PER_IN; }
+/** px → pt. */
+function pxToPt(px) { return (px * PT_PER_IN) / PX_PER_IN; }
+/** mm → px. */
+function mmToPx(mm) { return (mm * PX_PER_IN) / MM_PER_IN; }
+/** px → mm. */
+function pxToMm(px) { return (px * MM_PER_IN) / PX_PER_IN; }
+
+/**
+ * מדיניות העיגול היחידה.
+ * - 'none' (ברירת המחדל הקנונית): מחזיר כמו שהוא.
+ * - 'render': עיגול לשלם בגבול ההקרנה בלבד (CSS/folio מקבלים px שלם).
+ * - 'up'/'down'/'half-up': נדרשים במפורש בלבד (למשל תקציבי שורות).
+ */
+function roundPx(px, policy = 'none') {
+  switch (policy) {
+    case 'none': return px;
+    case 'render': return Math.round(px);
+    case 'up': return Math.ceil(px);
+    case 'down': return Math.floor(px);
+    case 'half-up': return Math.floor(px + 0.5);
+    default: throw new Error(`units: מדיניות עיגול לא מוכרת: ${policy}`);
+  }
+}
+
+/** טביעת יחידות — חלק מ-environment fingerprint של המדידה. */
+const UNITS_VERSION = 'units-v1(px=96dpi;pt=72/in;mm=25.4/in;round=none-canonical,render-at-boundary)';
+
+module.exports = { ptToPx, pxToPt, mmToPx, pxToMm, roundPx, UNITS_VERSION, PX_PER_IN, PT_PER_IN, MM_PER_IN };
+
+};
+__modules["src/engine/typography/font-resolver.js"] = function (require, module, exports) {
+// src/engine/typography/font-resolver.js — Font Resolver יחיד (שלב 3, §3.1-5/6)
+'use strict';
+
+/**
+ * **חוזה:** spec/00_CURRENT_ENGINE_COMPLETION_PLAN.md §3.1-5 — "להגדיר Font
+ * Resolver יחיד שמחזיר font identity, face, metrics, fallback שנבחר והסיבה
+ * לבחירה. אין fallback שקט שאינו מופיע באבחון."
+ *
+ * **הרחבת הקיים, לא מערכת מקבילה (§3.1-12):** הרישום הגולמי נשאר
+ * measure-api.registerFont (hmtx/cmap/kern/GPOS/OS2 — font-metrics). ה-resolver
+ * הוא השכבה הקנונית מעליו: זהות מהבתים (content-addressed, fnt-<sha256[:14]>),
+ * מטריקות מסוכמות, שרשרת fallback מפורשת עם סיבה, ואבחון לכל דילוג.
+ *
+ * **אין להסתמך על שם גופן בלבד כשקיימים קבצי גופן אמיתיים** — הזהות
+ * המדויקת היא מהבתים; השם הוא כינוי בלבד (alias), ורישום שני קבצים שונים
+ * תחת אותו alias מדווח במפורש.
+ */
+
+const { sha256Hex } = require('../assets/hash256');
+const fm = require('./font-metrics');
+
+/** רשומות ה-resolver: fontId → record; alias (שם משפחה) → fontId. */
+const _fonts = new Map();
+const _aliases = new Map();
+/** מנעול סנכרון ניקוי דו-כיווני font-resolver ↔ measure-api (מונע נצנוץ). */
+let _clearSync = false;
+
+/**
+ * רישום גופן קנוני — בתים אמיתיים + כינוי.
+ * @param {string} alias — כינוי המשפחה מההגדרות (למשל 'Frank Ruhl Libre')
+ * @param {Uint8Array|Buffer} bytes
+ * @param {{face?:string, source?:string, role?:string}} meta
+ * @returns {{ok:boolean, fontId?:string, record?:object, code?:string, message?:string}}
+ */
+function registerFont(alias, bytes, meta = {}) {
+  if (typeof alias !== 'string' || !alias.trim()) return { ok: false, code: 'bad-alias', message: 'כינוי גופן ריק' };
+  if (!bytes || !bytes.length) return { ok: false, code: 'empty-bytes', message: `גופן ללא בתים: ${alias}` };
+  const parsed = fm.parseFont(bytes);
+  if (!parsed.ok) return { ok: false, code: 'unparseable-font', message: `פענוח הגופן נכשל (${alias}): ${parsed.error}` };
+  const fontId = `fnt-${sha256Hex(bytes).slice(0, 14)}`;
+  let record = _fonts.get(fontId);
+  const isNew = !record;
+  if (isNew) {
+    record = {
+      fontId,
+      aliases: [],
+      face: meta.face || alias,
+      source: meta.source || null,
+      fingerprint: sha256Hex(bytes).slice(14, 28), // טביעת אצבע משלימה (מעבר המזהה)
+      unitsPerEm: parsed.font.unitsPerEm,
+      numGlyphs: parsed.font.numGlyphs,
+      metrics: {
+        unitsPerEm: parsed.font.unitsPerEm,
+        ascenderEm: parsed.font.ascender / parsed.font.unitsPerEm,
+        descenderEm: Math.abs(parsed.font.descender) / parsed.font.unitsPerEm,
+        capHeightEm: fm.capHeightEmOf(parsed.font),
+        hasKerning: !!(parsed.font.kernPairs && parsed.font.kernPairs.size)
+      },
+      // הפרנסר החי — לשימוש MeasureAPI (font-metrics) דרך זהות, לא דרך שם
+      font: parsed.font
+    };
+    _fonts.set(fontId, record);
+  }
+  // alias כפול על גופן שונה — דחייה מפורשת (לא החלפה שקטה)
+  const prevId = _aliases.get(alias);
+  if (prevId != null && prevId !== fontId) {
+    return { ok: false, code: 'alias-conflict', message: `הכינוי '${alias}' רשום כבר לגופן אחר (${prevId}); רישום כפול נדחה`, fontId: prevId };
+  }
+  if (prevId == null) {
+    _aliases.set(alias, fontId);
+    record.aliases.push(alias);
+    // **רישום יחיד (single entry point):** הפרנסר נרשם גם במרישמות של measure-api
+    // (ליתור forFamily/resolveMeasureImpl) — בלי פירוח חורג (מנוע מחזור טעינה: require עצם בזמן הקריאה).
+    try {
+      const ma = require('./measure-api');
+      // **תיקון ביקורת PR #22:** מועברים גם הבתים — כדי שזהות התוכן של הרישום
+      // תישמר במדווק גם בצד measure-api (חית סביבה ומפתח מטמון).
+      ma.restoreFontRegistration(alias, parsed.font, bytes);
+    } catch (_) { /* measure-api טעון לא נטען (מחזור) — הרישום יושלם בטעינתו */ }
+  }
+  return { ok: true, fontId, record, isNew };
+}
+
+/** פתרון לפי כינוי משפחה — עם שרשרת fallback מפורשת ואבחון לכל דילוג. */
+function resolveFont(alias, opts = {}) {
+  const chain = [];
+  const diagnostics = [];
+  const tryAlias = (a, reason) => {
+    const fontId = _aliases.get(String(a));
+    if (fontId != null && _fonts.has(fontId)) {
+      chain.push({ alias: String(a), fontId, chosen: true, reason: reason || 'direct' });
+      return { ok: true, fontId, record: _fonts.get(fontId), fallbackUsed: reason != null && reason !== 'direct', fallbackChain: chain, diagnostics };
+    }
+    chain.push({ alias: String(a), fontId: null, chosen: false, reason: reason || 'not-registered' });
+    diagnostics.push({ code: 'font-not-registered', alias: String(a), message: `הגופן '${a}' אינו רשום; נסיון fallback` });
+    return null;
+  };
+  // 1) המשפחה המבוקשת עצמה
+  let hit = alias != null ? tryAlias(alias) : null;
+  // 2) fallback מפורש מהקריאה (למשל מחסנית fontStack)
+  if (!hit && opts.fallbacks) {
+    for (const fb of opts.fallbacks) {
+      hit = tryAlias(fb, 'stack-fallback');
+      if (hit) break;
+    }
+  }
+  // 3) ברירת המחדל מההגדרות (body-font) — אם שונה מהמבוקש
+  if (!hit && opts.defaultFamily && String(opts.defaultFamily) !== String(alias)) {
+    hit = tryAlias(opts.defaultFamily, 'settings-default');
+  }
+  if (!hit) {
+    return {
+      ok: false, code: 'font-unavailable', alias: String(alias),
+      message: `הגופן '${alias}' אינו זמין ואין fallback רשום — מדידה קנונית לא תתבצע ללא אבחון`,
+      fallbackChain: chain, diagnostics
+    };
+  }
+  return hit;
+}
+
+/** פתרון לפי זהות (מהמודל הקנוני — styleRef/fontId). */
+function resolveFontById(fontId) {
+  const rec = _fonts.get(String(fontId));
+  if (!rec) return { ok: false, code: 'unknown-font-id', fontId: String(fontId), message: `מזהה גופן לא רשום: ${fontId}` };
+  return { ok: true, fontId: String(fontId), record: rec, fallbackUsed: false, fallbackChain: [{ alias: rec.face, fontId: String(fontId), chosen: true, reason: 'by-id' }], diagnostics: [] };
+}
+
+/** הפרנסר החי לפי מזהה — הגישה הקנונית של MeasureAPI למטריקות אמת. */
+function fontOf(fontId) {
+  const rec = _fonts.get(String(fontId));
+  return rec ? rec.font : null;
+}
+
+/** כינוי→מזהה (לחיבור styleRef לזהות). */
+function fontIdOfAlias(alias) {
+  return _aliases.get(String(alias)) || null;
+}
+
+/** **תיקון ביקורת PR #22 (סנכרון ניקוי):** ניקוי ה-resolver מסונכרן גם למרשמות
+ * measure-api — אין מצב שבו ה-resolver נקי אך המדידה עדיין מודדת דרך רישום ישן, ולהפך
+ * (clearRegisteredFonts מסונכרן בחזרה). המנעול מונע נצנוץ אינסופי. */
+function clearFontResolver() {
+  _fonts.clear();
+  _aliases.clear();
+  if (_clearSync) return;
+  _clearSync = true;
+  try {
+    const ma = require('./measure-api');
+    ma.clearRegisteredFonts();
+  } catch (_) { /* measure-api לא נטען — אין מה לסנכרן */ }
+  finally { _clearSync = false; }
+}
+
+/** **תיקון ביקורת PR #22:** הסרת כינוי בודד — מסונכרנת גם למרשמות measure-api
+ * (unregisterFont שם). רשומת הגופן נשארת כל עוד יש לה כינויים אחרים (אותה זהות
+ * תוכן תחת כמה כינויים היא מצב חוקי). */
+function unregisterAlias(alias) {
+  const a = String(alias);
+  const fontId = _aliases.get(a);
+  if (fontId == null) return { ok: false, code: 'unknown-alias', alias: a };
+  _aliases.delete(a);
+  const rec = _fonts.get(fontId);
+  if (rec) {
+    rec.aliases = rec.aliases.filter((x) => x !== a);
+    if (!rec.aliases.length) _fonts.delete(fontId); // אין עוד כינוי — הרשומה מתפנה
+  }
+  if (_clearSync) return { ok: true, removed: a, fontId };
+  _clearSync = true;
+  try {
+    const ma = require('./measure-api');
+    ma.unregisterFont(a);
+  } catch (_) { /* measure-api לא נטען */ }
+  finally { _clearSync = false; }
+  return { ok: true, removed: a, fontId };
+}
+function fontCount() { return _fonts.size; }
+function aliasCount() { return _aliases.size; }
+
+module.exports = {
+  registerFont, resolveFont, resolveFontById, fontOf, fontIdOfAlias,
+  clearFontResolver, unregisterAlias, fontCount, aliasCount
+};
 
 };
 __modules["src/engine/layout/legacy-imud-flow.js"] = function (require, module, exports) {
@@ -12895,9 +15346,29 @@ class LineBreaker {
         // הגוף/הסוגריים).
         if (dispW && dispW[i] != null) {
           wordWs[i] = dispW[i];
-          wordParen[i] = false;
-          startsInParen[i] = false;
-          endsInParen[i] = false;
+          if (out[i].startsWith(cfg.fnOpen) && out[i].endsWith(cfg.fnClose)) {
+            // הערה עצמאית (כל המילה היא הערה) — אין בה סוגריים של הגוף: דגלים כבעבר.
+            wordParen[i] = false;
+            startsInParen[i] = false;
+            endsInParen[i] = false;
+            continue;
+          }
+          // **R-03 (יובא מ-Red PR #48 — תיקון שורש):** מילה עם סמן מודבק ('רשות)[הערה]'
+          // / 'הלכה[הערה]') נושאת גם תווי סוגריים של הגוף. בעבר 'continue' כאן דילג על מונה
+          // העומק: ')' שלפני הסמן לא הוריד אותו (הדלפה שסימנה את כל שאר הפסקה כ"בתוך
+          // סוגריים" — מדידה מוקטנת שגויה ושבירה מוטה), ומילה בתוך הטווח קיבלה דגלים כבויים.
+          // הרוחב המדויק (dispW — S6.0/F4) נשמר במלואו; רק הדגלים והעומק מתוקנים.
+          let anyParen = false;
+          for (let c = 0; c < wd.length; c++) {
+            const ch = wd[c];
+            if (ch === '(') depth++;
+            const inParen = depth > 0;
+            if (inParen) anyParen = true;
+            if (c === 0) startsInParen[i] = inParen;
+            endsInParen[i] = inParen;
+            if (ch === ')' && depth > 0) depth--;
+          }
+          wordParen[i] = anyParen;
           continue;
         }
         let w = 0, seg = '', segParen = false;
@@ -13042,6 +15513,14 @@ const H2_SPAN_EXEMPT = (
 // **S4.14:** span 34px + רווח 4px = 38 — נמדד בכל 13 מופעי block-h3-span
 // של הייחוס (מרחק תווית-span → תווית-block תמיד 38.0). היה 40 (+2px לכל span).
 const H3_SPAN_H = 38;
+// **D-S2H3 (ממצא משתמש מאומת):** גובה שורת ה-span לבדה (34) מופרד מהרווח התחתון (4).
+// עד לתיקון: כל שורת כותרת נדחפה פס 38 מלא — והרווח המבני פעל בין שורות הכותרת
+// ולא בינה לתוכן שאחריה. התיקון: pitch בין-שורות = 34 (גובה השורה); הרווח (4px) פעם
+// אחת בלבד, בתוך הפס האחרון (38=34+4). כותרת חד-שורתית נותרת זהה לחלוטין
+// ((n-1)*34+38 = 38 — פס יחיד ובלוק נפתח בסופו) — הכיוול S4.14 שמור.
+// חוזה סמנטי זה הוא גם החוזה של מנוע השורות המאוחד (שלב 4): הכותרת = פריט אחד
+// עם מקטעי שורה; הרווח התחתון שלה אחרי השורה האחרונה בלבד.
+const H3_SPAN_LINE_H = 34;
 const H0_AREA_H = 249.2;   // **S4.19:** זרימת ההקדמה מתחילה ב-356.4px — המדידה מהייחוס
 // (עמ' 10, שורות ההקדמה 2-3): הייחוס יושב 9.7-10.2px מתחת ל-348 הקודם; גם לדף
 // ה-h0 יש spacer (הכותרת ב-309 = 107.2+201.3+0.5) + כותרת (27.2) + שוליים (20)
@@ -14382,7 +16861,7 @@ function legacyTypeset(rawText, settings, env) {
           // ולכן מאוזן לפני השבירה (PT-06: "הטורים שלפניו מאוזנים" — גם כשה-H3
           // עצמו נופל לעמוד הבא). finalizeBlock עם nextTok=tok (h3=span)
           // מאזן דרך מסלול nextIsSpan.
-          if (colBottom() - curY < 60 + (spanLines.length - 1) * H3_SPAN_H) {
+          if (colBottom() - curY < 60 + (spanLines.length - 1) * H3_SPAN_LINE_H) {
             // **S74 (בעיה 6 — אלמנת כותרת בסוף טור):** כותרות inline שנצברו
             // בסוף הטור חוזרות עם ה-span לעמוד הבא — אחרת הן נותרות אלמנות
             // בתחתית הטור (המקור מגלגל כותרות-זנב בכל נקודת יציאה מהמילוי).
@@ -14390,10 +16869,14 @@ function legacyTypeset(rawText, settings, env) {
             finalizeBlock(block, tok, false);
             break fillPage;
           }
+          // **D-S2H3:** שורות ביניים בגובה השורה בלבד (34) — אין רווח מבני בין שורות הכותרת;
+          // הפס האחרון נושא 38 (34+4) — הרווח התחתון פעם אחת, אחרי השורה האחרונה, לפני התוכן שאחריו.
+          // כותרת חד-שורתית: (n-1)*34+38 = 38 — זהה לגיאומטריה הקודמת (נעילת הכיוול S4.14).
           for (let li = 0; li < spanLines.length; li++) {
-            stack.push({ type: 'span', text: spanLines[li], y: curY + li * H3_SPAN_H, h: H3_SPAN_H, tokenId: li === 0 ? tok.id : null });
+            const isLastLine = li === spanLines.length - 1;
+            stack.push({ type: 'span', text: spanLines[li], y: curY + li * H3_SPAN_LINE_H, h: isLastLine ? H3_SPAN_H : H3_SPAN_LINE_H, tokenId: li === 0 ? tok.id : null });
           }
-          openBlock(curY + spanLines.length * H3_SPAN_H);
+          openBlock(curY + (spanLines.length - 1) * H3_SPAN_LINE_H + H3_SPAN_H);
           ti++;
           continue;
         }
@@ -15687,6 +18170,39 @@ function legacyTypeset(rawText, settings, env) {
     p.folioDisplay = shows && p.pageNumber ? toGematria(p.pageNumber) : '';
   }
   final.forEach((p, i) => { p.index = i; });
+  // **שלב 6 פרוסה 2 (§8 בהוראה — שורש SIDE_NOTE_OVERLAP בעמ' 107):** עד כאן
+  // עגנה כל הערת-צד של נתיב המורשת לפסקתה בלבד — בלי הקצאה אנכית משותפת;
+  // שתי הערות שנפלו לאותו אזור באותו צד חפפו זו את זו (נצפה בעמ' 107:
+  // הערה חד-שורתית "בית" נכנסה בין שורות הערה ארוכה של הפסקה הקודמת). כאן
+  // מופעל על נתיב המורשת אותו עקרון המקצה של ה-DP (side-notes.placeSideNotes):
+  // מפל-דחיפה לכל צד בנפרד, בסדר המסמך, עם מרווח מינימלי, עד גבול מרזב
+  // ההערות — טהור (תזוזת מיקום בלבד, בלי מדידה חוזרת), דטרמיניסטי, ועם
+  // חותמת שינוי מפורשת על כל הערה שהוזזה (cascadeShiftPx — trace במודל).
+  {
+    const MN_GAP_PX = 2;                       // מרווח מינימלי בין הערות צד שונות (מעל סובלנות האודיט)
+    const MN_BOTTOM_LIMIT = GEO.FN_AREA_TOP - 2; // השוליים נגמרים במרזב ההערות
+    for (const p of final) {
+      if (!p.marginNotes || !p.marginNotes.length) continue;
+      for (const side of ['right', 'left']) {
+        let lastBottom = -1;
+        for (const mn of p.marginNotes) {
+          if (mn.side !== side) continue;
+          const h = (mn.lines || []).length * GEO.MN_PITCH;
+          if (lastBottom >= 0 && mn.anchorY < lastBottom + MN_GAP_PX) {
+            let target = lastBottom + MN_GAP_PX;
+            if (target + h > MN_BOTTOM_LIMIT) target = Math.max(mn.anchorY, MN_BOTTOM_LIMIT - h); // בלי לחדור למרזב; לא מעל העוגן המקורי
+            const shift = target - mn.anchorY;
+            if (shift > 0) {
+              mn.anchorY += shift;
+              for (const l of (mn.lines || [])) l.y += shift;
+              mn.cascadeShiftPx = shift; // trace: כמה ובגלל מה (מפל הערות-הצד)
+            }
+          }
+          lastBottom = Math.max(lastBottom, mn.anchorY + h);
+        }
+      }
+    }
+  }
   // **S6.2:** התאמת מספרי העמודים ברשומות אי-האיזון לסדר הסופי —
   // עמודי ה-TOC והריקים (EXT-15) מוכנסים אחרי הזרימה, ורשומות שנוצרו
   // בזמן ההצבה מתייחסות לאינדקס הזמני של מערך הזרימה. ההתאמה לפי זהות
@@ -16044,926 +18560,6 @@ module.exports = {
 };
 
 };
-__modules["src/engine/typography/measure-api.js"] = function (require, module, exports) {
-// src/engine/typography/measure-api.js — Measurement single entry (REQ-LB-01) + Hebrew glyph-width metrics
-'use strict';
-
-/**
- * MeasureAPI — הכניסה היחידה למדידת רוחב/גובה. אסור לקרוא offsetHeight מפוזר (lint ב‑CI).
- * מימוש A = 'table' (טבלאות מכוילות — ברירת המחדל, המשך רציפות S1–S11);
- * מימוש B = 'font-metrics' (S12: טבלאות אמת מקובץ גופן שנטען — hmtx/cmap/kern/GPOS)
- * חתימה זהה; הפרופיל נרשם דרך registerFont ומופעל דרך ההגדרה measure-impl.
- */
-
-const { charWidthEm, FONT_PROFILES } = require('./measure-table');
-const fm = require('./font-metrics');
-
-// **S5.2 (תיקון 5 — tracking שאין לאף מרנדר):** ברירת המחדל הייתה 0.02em —
-// המדידה "הרחיבה" כל שורה ב~2% יחסית לדיו: אף מרנדר (DOM/PDF) אינו מצייר
-// letter-spacing, והפרויקטור הגיאומטרי ערבב באותה שורה מדידות עם tracking=0
-// (מפורש) וברירת המחדל. כעת 0 — המודל = הדיו. נתיב המורשת אינו מושפע:
-// כל קריאותיו מעבירות tracking=0 במפורש (אומת בסקירה).
-const DEFAULT_TRACKING = 0; // em
-
-/** גופנים רשומים (פרופיל → פרנסר). ההרשמה מפורשת — אין טעינת רשת (offline). */
-const registeredFonts = new Map();
-
-/**
- * רישום גופן למדידת אמת (S12.1-5). קלט: בתים בלבד (Uint8Array/Buffer).
- * @returns {{ok:boolean, error?:string, profile?:object, glyphCount?:number, mappedChars?:number}}
- */
-function registerFont(profileName, bytes) {
-  const res = fm.parseFont(bytes);
-  if (!res.ok) return { ok: false, error: res.error };
-  registeredFonts.set(String(profileName), res.font);
-  // **S6.0 (R7-L2):** גם רישום מנקה את מטמון ה-API-פר-משפחה — בעבר רק
-  // ההסרה ניקתה ⇒ רישום מחדש של אותה משפחה החזיר מופע ישן מהמטמון
-  // (קשור לגופן הקודם) והמדידה המשיכה במטריקות הישנות.
-  _familyApiCache.clear();
-  // **S4.26 (גליפים חסרים):** 'Frank Ruhl Libre' הוא fallback הפיסוק
-  // של מחסנית הרינדור (fontStack מוסיף אותו שני) — גם המדידה תשתמש
-  // בו לתווים שחסרים בגופן הראשי (בדיוק כמו הדפדפן).
-  if (String(profileName) === 'Frank Ruhl Libre') {
-    fm.setMissingGlyphFallbackFont(res.font);
-  }
-  return { ok: true, profile: res.font, glyphCount: res.font.numGlyphs, mappedChars: res.font.charToGlyph.size };
-}
-
-/** **S6.0 (R2-C1):** שחזור רישום קודם אחרי שימוש זמני (exportPdf) —
- * font=null ⇒ הסרה רגילה. מונע מצב שבו ייצוא מוחק ל-worker את רישום
- * הגופן של התצוגה החיה (המדידה היתה נופלת בשקט ל'table'). */
-function restoreFontRegistration(profileName, font) {
-  if (!font) { unregisterFont(profileName); return; }
-  registeredFonts.set(String(profileName), font);
-  if (String(profileName) === 'Frank Ruhl Libre') fm.setMissingGlyphFallbackFont(font);
-  _familyApiCache.clear();
-}
-
-/** הסרת גופן רשום (בדיקות). */
-function unregisterFont(profileName) {
-  registeredFonts.delete(String(profileName));
-  if (String(profileName) === 'Frank Ruhl Libre') fm.setMissingGlyphFallbackFont(null);
-  _familyApiCache.clear(); // **S5.2:** מטמון ה-API-פר-משפחה נגרר אחרי ההרשמה
-}
-function clearRegisteredFonts() { registeredFonts.clear(); fm.setMissingGlyphFallbackFont(null); _familyApiCache.clear(); }
-
-class MeasureAPI {
-  constructor(settings, impl = 'table') {
-    this.settings = settings;
-    this.impl = impl === 'font-metrics' ? 'font-metrics' : 'table'; // 'table' | 'font-metrics'
-    this.fontProfileName = null;
-    this.fontProfile = null;
-    this.fontFactor = 1;
-    this.cache = new Map();
-    this.stats = { calls: 0, hits: 0, fontFallbacks: 0 };
-    if (this.impl === 'font-metrics') this._bindProfile();
-  }
-
-  /** קשירת פרופיל הגופן לפי שם הגופן בהגדרות; fallback שקוף לטבלה אם לא נרשם. */
-  _bindProfile() {
-    const name = this.settings['body-font'];
-    if (name && registeredFonts.has(name)) {
-      this.fontProfileName = name;
-      this.fontProfile = registeredFonts.get(name);
-      this.fontFactor = FONT_PROFILES[name] || 1;
-    } else {
-      // לא נרשם גופן — מימוש B נופל בשקיפות לטבלה (מדידה עקבית, לא כשל שקט)
-      this.impl = 'table';
-      this.stats.fontFallbacks++;
-    }
-  }
-
-  _fontSpec(sizePt) {
-    return sizePt || this.settings['body-font-size-pt'];
-  }
-
-  /**
-   * **S4.16 (תיקון שורש — מדידת ניקוד):** סימן משולב הממופה בגופן עם advance=0
-   * (ניקוד עברי: דגש/תנועות/טעמים) הוא **שכבת-אפס אמיתית** — כך מודד אותו
-   * הדפדפן (hmtx=0, שכבת-גליף על הבסיס). בעבר נפל לסל העברי של הטבלה (0.5em
-   * = 6pt בגוף 12) ⇒ מילה מנוקדת כמו המצוּוֶה נמדדה רחבה ב~12pt, שבירת השורות
-   * נגררה מילה-מילה והדריפט הצטבר לכל העימוד (P7 0.919). מבחינים עתה בין
-   * "לא ממופה כלל" (fallback מכויל — מונה fontFallbacks) לבין "ממופה
-   * עם advance=0" (אפס אמיתי).
-   */
-  _charEm(ch) {
-    if (this.impl === 'font-metrics' && this.fontProfile) {
-      const gid = fm.glyphIdOf(this.fontProfile, ch);
-      if (gid !== 0 && gid < this.fontProfile.numGlyphs) {
-        // ממופה בגופן — רוחב hmtx אמיתי (כולל 0 לניקוד)
-        return (fm.advanceUnitsOf(this.fontProfile, ch) / this.fontProfile.unitsPerEm) * this.fontFactor;
-      }
-      // **S4.26 (גליף חסר — fallback כמו הדפדפן):** פיסוק שחסר בגופנים
-      // תורניים מצויר בדפדפן במשפחת ה-fallback שבמחסנית ('Frank Ruhl
-      // Libre') — המדידה באותם מטריקות בדיוק. בלי גופן כזה רשום — הקירוב
-      // המכויל (התנהגות קודמת).
-      this.stats.fontFallbacks++;
-      const fbEm = fm.missingGlyphFallbackEm(ch);
-      if (fbEm > 0) return fbEm;
-      return charWidthEm(ch);
-    }
-    return charWidthEm(ch);
-  }
-
-  /** סימן משולב ממופה עם advance=0 (ניקוד): שכבת-אפס — לא חלק מאשכול מדידה. */
-  _isMappedMark(ch) {
-    if (this.impl !== 'font-metrics' || !this.fontProfile) return false;
-    const gid = fm.glyphIdOf(this.fontProfile, ch);
-    return gid !== 0 && gid < this.fontProfile.numGlyphs
-      && fm.advanceUnitsOf(this.fontProfile, ch) === 0;
-  }
-
-  /** קרנינג בין תווים סמוכים ב־em (מימוש A: 0 תמיד — כמו S1–S11). */
-  _kernEm(a, b) {
-    if (this.impl === 'font-metrics' && this.fontProfile) {
-      const k = fm.kernUnitsOf(this.fontProfile, a, b);
-      if (k !== 0) return (k / this.fontProfile.unitsPerEm) * this.fontFactor;
-    }
-    return 0;
-  }
-
-  /**
-   * רוחב טקסט ב‑px. מימוש B כולל קרנינג בר־מילה (hmtx + kern/GPOS) —
-   * ההבדל היחיד מ־A בנוסף לרוחבי הגליפים עצמם.
-   */
-  measureTextWidth(text, sizePt = null, trackingEm = DEFAULT_TRACKING) {
-    const size = this._fontSpec(sizePt);
-    const key = `${this.impl}|${this.fontProfileName || ''}|${size}|${trackingEm}|${text}`;
-    this.stats.calls++;
-    if (this.cache.has(key)) { this.stats.hits++; return this.cache.get(key); }
-    const str = String(text);
-    let w = 0;
-    let prev = null;
-    for (const ch of str) {
-      // **S4.16:** ניקוד ממופה (advance=0) — אין רוחב, אין tracking ואין קרנינג
-      // (הסימן נצמד לבסיס שלו; letter-spacing אינו חל על סימנים משולבים במדידת
-      // הדפדפן). prev נשאר הבסיס האחרון — קרנינג בין בסיסים דרך הניקוד נשמר.
-      if (this._isMappedMark(ch)) continue;
-      if (prev !== null) w += this._kernEm(prev, ch);
-      w += this._charEm(ch) + trackingEm;
-      prev = ch;
-    }
-    const px = Math.max(0, w * size * (96 / 72)); // pt→px
-    this.cache.set(key, px);
-    return px;
-  }
-
-  /**
-   * **S12.1-6 — cap-height מטבלאות אמת** (OS/2 sCapHeight; נפילה: ascender×0.7).
-   * משמש את יישור המילה הראשונה (dropword) במקום הקירוב הקבוע.
-   */
-  capHeightEm() {
-    if (this.impl === 'font-metrics' && this.fontProfile) {
-      return fm.capHeightEmOf(this.fontProfile) * this.fontFactor;
-    }
-    return 0.7; // הקירוב ההיסטורי (תיעוד dropword CSS)
-  }
-
-  /** **S12 (parity גיאומטרי):** ascent/descent ב־em — מפרופיל הגופן (hhea)
-   * כשנטען, אחרת הפרופיל המכויל (0.80/0.20 — תואם קו הבסיס ההיסטורי). */
-  ascentEm() {
-    if (this.impl === 'font-metrics' && this.fontProfile) {
-      return (this.fontProfile.ascender / this.fontProfile.unitsPerEm) * this.fontFactor;
-    }
-    return 0.80;
-  }
-  descentEm() {
-    if (this.impl === 'font-metrics' && this.fontProfile) {
-      return Math.abs(this.fontProfile.descender / this.fontProfile.unitsPerEm) * this.fontFactor;
-    }
-    return 0.20;
-  }
-
-  /** שורת "גובה" אחידה (baseline grid): fontSize × lineHeight (BRZ-2). */
-  lineHeightPx(sizePt = null) {
-    const size = this._fontSpec(sizePt);
-    // **S5.1:** בלי Math.round — 12pt×1.34=21.44px אורגל ל-21 ⇒ +2 שורות לעמוד
-    // (סוג המוקש שתוקן במנוע המורשת ב-S4.13, לא הופץ לנתיב ה-DP).
-    // **S5.1:** בלי Math.round — 12pt×1.34=21.44px אורגל ל-21 ⇒ +2 שורות לעמוד
-    // (סוג המוקש שתוקן במנוע המורשת ב-S4.13, לא הופץ לנתיב ה-DP).
-    return size * (96 / 72) * this.settings['body-line-height'];
-  }
-
-  /**
-   * מיקום שורות אופטימלי (KP) → מערך שורות עם רוחבים.
-   * @param {Function} [measureOverride] - הזרקת פונקציית מדידה (למשל פרופיל רוחב־גופן מהpipeline) — L1: entry יחיד דרך ההזרקה.
-   * @returns {Array<{words:string[], widthPx:number, badness:number}>}
-   */
-  layoutLines(words, maxWidthPx, sizePt = null, opts = {}, measureOverride = null) {
-    const knuth = require('./kp-linebreak');
-    const measure = measureOverride || ((t) => this.measureTextWidth(t, sizePt));
-    return knuth.breakLines(words, maxWidthPx, measure, this.lineHeightPx(sizePt), opts);
-  }
-
-  cacheStats() { return { ...this.stats, hitRate: this.stats.calls ? this.stats.hits / this.stats.calls : 0 }; }
-}
-
-/** **S5.2 (תיקון 6 — מדידת כותרות בגופן רשום):** API כבול למשפחה שנרשמה ב‑registerFont
- * (מטריקות אמת hmtx/kern בגודל הכותרת), או null כשהמשפחה אינה רשומה —
- * דפוס apiFor(family) של legacy-projector, מיוצא כאן כסטטי על המחלקה כדי
- * שה-pipeline (widthFor) ישתמש בו בלי לרדוף אחרי מפת הגופנים בעצמו.
- * מטומן לפי משפחה; המטמון מתרוקן בהסרת/איפוס גופנים (unregister/clear). */
-const _familyApiCache = new Map();
-MeasureAPI.forFamily = function forFamily(family, settings) {
-  if (!family || !registeredFonts.has(String(family))) return null;
-  const fam = String(family);
-  const sizeKey = settings && settings['body-font-size-pt'] != null ? String(settings['body-font-size-pt']) : '';
-  const key = `${fam}|${sizeKey}`;
-  if (!_familyApiCache.has(key)) {
-    _familyApiCache.set(key, new MeasureAPI({ ...(settings || {}), 'body-font': fam }, 'font-metrics'));
-  }
-  return _familyApiCache.get(key);
-};
-
-/** **EXT-13 (איחוד מקור המדידה live↔ייצוא):** כשגוף הגוף רשום בפועל
- * (registerFont) — מדידת האמת (font-metrics) מועדפת גם כשההגדרה היא
- * 'table' (ברירת המחדל). בלי זה ה-live מדד בטבלאות המקורבות בזמן שהייצוא
- * מדד במטריקות האמיתיות — סחף עמודים של 2% בספר אמת (1,021 מול 1,000;
- * real-book-matrix.json) ועד 17% בקורפוס הגדול (794 מול 678). ההעדפה
- * בטוחה: MeasureAPI נופל בשקיפות לטבלה כשאין גופן (_bindProfile). */
-function resolveMeasureImpl(settings) {
-  if (settings && settings['measure-impl'] === 'font-metrics') return 'font-metrics';
-  const name = settings && settings['body-font'];
-  if (name && registeredFonts.has(name)) return 'font-metrics';
-  return 'table';
-}
-
-module.exports = {
-  MeasureAPI, registerFont, unregisterFont, clearRegisteredFonts, restoreFontRegistration,
-  charWidthEm, registeredFonts, resolveMeasureImpl
-};
-
-};
-__modules["src/engine/typography/measure-table.js"] = function (require, module, exports) {
-// src/engine/typography/measure-table.js — טבלאות רוחב מכוילות (מקור יחיד; S12 הפרדה מ־measure-api)
-'use strict';
-
-/**
- * טבלת רוחות אותיות עברית (יחסיים ל‑em, קירוב Frank-Ruhl/David) — הפרופיל
- * המכויל של מימוש A (ברירת המחדל). הפרופילים הללו משמשים גם כ־fallback
- * למימוש B (font-metrics) לתווים לא־ממופים בגופן שנטען.
- */
-
-const HEBREW_WIDTHS = {
-  'א': 0.66, 'ב': 0.58, 'ג': 0.56, 'ד': 0.62, 'ה': 0.60, 'ו': 0.42, 'ז': 0.44, 'ח': 0.70, 'ט': 0.60,
-  'י': 0.32, 'כ': 0.58, 'ך': 0.58, 'ל': 0.52, 'מ': 0.70, 'ם': 0.72, 'נ': 0.60, 'ן': 0.60, 'ס': 0.62,
-  'ע': 0.62, 'פ': 0.60, 'ף': 0.62, 'צ': 0.62, 'ץ': 0.64, 'ק': 0.64, 'ר': 0.52, 'ש': 0.66, 'ת': 0.60
-};
-// **S5.2 (T7):** NBSP (U+00A0) = רוחב הרווח (0.26) — בעבר נפל לסל 0.4em
-// (+2.24px @12pt לכל NBSP) במימוש A כשנמדד גולמי (יחידות מודבקות לפני
-// רישום הגופנים / טסטים). impl B בטוח כבר היום (הפיצול מבוצע לפני המדידה).
-// **S6.0 (R7-M1):** המקש היה כתוב '\\u00A0' (מחרוזת 6-תווים מילולית) ולא
-// התו עצמו ⇒ התיקון המתועד מעולם לא פעל (charWidthEm('\u00A0') החזיר 0.4).
-// תוקם למקש התו האמיתי.
-const WIDE_MARKS = { ' ': 0.26, '\u00A0': 0.26, '\uE000': 0.26, '.': 0.24, ',': 0.24, ';': 0.24, ':': 0.24, '-': 0.34, '–': 0.5, '"': 0.28, "'": 0.16, '“': 0.4, '”': 0.4, '״': 0.36, '׳': 0.18, '[': 0.3, ']': 0.3, '(': 0.3, ')': 0.3 };
-
-/** פרופילי רוחב לפי שם גופן (fontFactor מתוקן ב־endnote-pages; כאן — רוחב בסיס). */
-const FONT_PROFILES = {
-  'David HB': 1.00, 'David': 1.00, 'Frank Ruhl Libre': 1.00,
-  'Narkisim': 1.05, 'Nachlieli': 0.96, 'Alef': 1.00, 'Rubin': 1.03,
-  'DejaVu Sans': 1.00, 'DejaVu Serif': 1.00
-};
-
-function charWidthEm(ch) {
-  if (HEBREW_WIDTHS[ch] !== undefined) return HEBREW_WIDTHS[ch];
-  // **תיקון שורש (ביקורת 03.11): בדיקת WIDE_MARKS לפני סל העברי — בעבר הסל
-  // 0x0590–0x05FF (=0.5em) לכד את ׳(U+05F3) ו״(U+05F4) לפני שנבדקו ב-WIDE_MARKS
-  // (0.18em/0.36em) ⇒ הגדרות מתות וגרשיים נמדדו 0.5em; impl B (פיקסטשור, שנבנה
-  // מ-WIDE_MARKS) מדד אותם נכון — והפער בין המימושים הוסט את שבירות ה-DP.
-  if (WIDE_MARKS[ch] !== undefined) return WIDE_MARKS[ch];
-  const c = ch.codePointAt(0);
-  if (c >= 0x0590 && c <= 0x05FF) return 0.5;   // ניקוד/תווים עבריים נוספים
-  if (/[A-Za-z0-9]/.test(ch)) return 0.52;
-  return 0.4;
-}
-
-module.exports = { HEBREW_WIDTHS, WIDE_MARKS, FONT_PROFILES, charWidthEm };
-
-};
-__modules["src/engine/typography/font-metrics.js"] = function (require, module, exports) {
-// src/engine/typography/font-metrics.js — TrueType/OpenType metrics parser (S12.1-5, REQ-LB-01 impl B)
-'use strict';
-
-/**
- * **שכבת המדידה המתמטית (מימוש B):** קריאת טבלאות אמת מקובץ גופן אמיתי —
- * רוחבי גליפים (hmtx/hhea/cmap), קרנינג (kern fmt0 + GPOS PairPos fmt1),
- * unitsPerEm (head), cap-height (OS/2 v≥2; נפילה ל־hhea.ascender×0.7), וזיהוי
- * סימנים מאפסי־רוחב (ניקוד — advance=0) לפי המפה עצמה.
- *
- * עצמאי לחלוטין: אין תלות חיצונית (HarfBuzz-WASM/fontkit אינם נדרשים —
- * אותה מטרה, טבלאות אמת, אפס תלות זרה; דוקטרינת הריפו). הפרנסר נבדק
- * מול אורקל צולב (fontTools) על גופן אמיתי (DejaVu) — ערכי האמת נעולים בבדיקות.
- *
- * דטרמיניזם: קריאה בלבד; אין Date/Math.random; סדר קבוע.
- */
-
-const MAX_TABLES = 64;
-const MAX_SEGMENTS = 8192; // cmap fmt4 הגנת שפיות
-const MAX_GPOS_PAIRSETS = 4096;
-
-function u8(b, o) { return b[o]; }
-function u16(b, o) { return (b[o] << 8) | b[o + 1]; }
-function s16(b, o) { const v = u16(b, o); return v >= 0x8000 ? v - 0x10000 : v; }
-function u32(b, o) { return ((b[o] << 24) | (b[o + 1] << 16) | (b[o + 2] << 8) | b[o + 3]) >>> 0; }
-function tag(b, o) { return String.fromCharCode(b[o], b[o + 1], b[o + 2], b[o + 3]); }
-
-/**
- * @param {Uint8Array|Buffer} bytes — בתי הגופן (TTF/OTF sfnt)
- * @returns {{ok:boolean, error?:string, font?:object}}
- */
-function parseFont(bytes) {
-  if (!bytes || bytes.length < 12) return { ok: false, error: 'too-small' };
-  const b = bytes;
-  const sfntVersion = u32(b, 0);
-  if (sfntVersion !== 0x00010000 && sfntVersion !== 0x4F54544F /* 'OTTO' */ && sfntVersion !== 0x74746366 /* 'ttcf' */) {
-    return { ok: false, error: `bad-sfnt-version:0x${sfntVersion.toString(16)}` };
-  }
-  if (sfntVersion === 0x74746366) return { ok: false, error: 'ttcf-collections-unsupported' };
-  const numTables = u16(b, 4);
-  if (numTables === 0 || numTables > MAX_TABLES) return { ok: false, error: `bad-table-count:${numTables}` };
-
-  // תוכן העניינים של sfnt
-  const tables = new Map(); // tag → {offset, length}
-  for (let i = 0; i < numTables; i++) {
-    const rec = 12 + i * 16;
-    if (rec + 16 > b.length) return { ok: false, error: 'table-dir-truncated' };
-    const t = tag(b, rec);
-    const off = u32(b, rec + 8);
-    const len = u32(b, rec + 12);
-    if (off + len > b.length) return { ok: false, error: `table-out-of-range:${t}` };
-    tables.set(t, { offset: off, length: len });
-  }
-  const need = ['head', 'maxp', 'hhea', 'hmtx', 'cmap'];
-  for (const t of need) if (!tables.has(t)) return { ok: false, error: `missing-table:${t}` };
-
-  // head: unitsPerEm + indexToLocFormat
-  const hO = tables.get('head').offset;
-  const unitsPerEm = u16(b, hO + 18);
-  if (!(unitsPerEm >= 16 && unitsPerEm <= 16384)) return { ok: false, error: `bad-units-per-em:${unitsPerEm}` };
-  const indexToLocFormat = s16(b, hO + 50);
-
-  // maxp: numGlyphs
-  const numGlyphs = u16(b, tables.get('maxp').offset + 4);
-  if (numGlyphs === 0) return { ok: false, error: 'bad-num-glyphs:0' };
-
-  // hhea: numberOfHMetrics + ascender/descender/lineGap
-  const hhO = tables.get('hhea').offset;
-  const numberOfHMetrics = u16(b, hhO + 34);
-  const ascender = s16(b, hhO + 4);
-  const descender = s16(b, hhO + 6);
-  const lineGap = s16(b, hhO + 8);
-  if (numberOfHMetrics === 0 || numberOfHMetrics > numGlyphs) return { ok: false, error: `bad-hmtx-count:${numberOfHMetrics}` };
-
-  // hmtx: advance widths (+lsb)
-  const hmO = tables.get('hmtx').offset;
-  const advanceUnits = new Uint16Array(numGlyphs);
-  for (let g = 0; g < numGlyphs; g++) {
-    if (g < numberOfHMetrics) advanceUnits[g] = u16(b, hmO + g * 4);
-    else advanceUnits[g] = advanceUnits[numberOfHMetrics - 1];
-  }
-
-  // cmap: Unicode → glyph (fmt 4 BMP + fmt 12 full)
-  const charToGlyph = new Map();
-  const cmErr = parseCmap(b, tables.get('cmap').offset, charToGlyph);
-  if (cmErr) return { ok: false, error: `cmap:${cmErr}` };
-
-  // OS/2 (אופציונלי): sCapHeight (v≥2, offset 88)
-  let capHeight = null;
-  if (tables.has('OS/2')) {
-    const osO = tables.get('OS/2').offset;
-    if (tables.get('OS/2').length >= 90) {
-      const osVer = u16(b, osO);
-      const cap = s16(b, osO + 88);
-      if (osVer >= 2 && cap > 0) capHeight = cap;
-    }
-  }
-
-  // kern fmt0 (אופציונלי) + GPOS PairPos fmt1 (אופציונלי) — מפות קרנינג בר־מילה (units)
-  const kernPairs = new Map(); // "gidA,gidB" → units
-  if (tables.has('kern')) parseKernFmt0(b, tables.get('kern').offset, tables.get('kern').length, kernPairs);
-  if (tables.has('GPOS')) parseGposPairPos(b, tables.get('GPOS').offset, tables.get('GPOS').length, kernPairs);
-
-  const font = {
-    sfntVersion, unitsPerEm, numGlyphs, indexToLocFormat,
-    numberOfHMetrics, ascender, descender, lineGap, capHeight,
-    advanceUnits, charToGlyph, kernPairs,
-    tables: Object.fromEntries([...tables.entries()].map(([t, v]) => [t, { ...v }])),
-    bytes: b
-  };
-  return { ok: true, font };
-}
-
-/** cmap subtable parsing — fmt 4 (BMP) ו־fmt 12 (full); מדגים גם fmt 6 (מינימלי). */
-function parseCmap(b, base, charToGlyph) {
-  const numSub = u16(b, base + 2);
-  if (numSub > 64) return `too-many-subtables:${numSub}`;
-  let best4 = -1, best12 = -1;
-  for (let i = 0; i < numSub; i++) {
-    const rec = base + 4 + i * 8;
-    const platform = u16(b, rec);
-    const encoding = u16(b, rec + 2);
-    const off = u32(b, rec + 4);
-    const fmt = u16(b, base + off);
-    const unicodeish = (platform === 3 && (encoding === 1 || encoding === 10)) || platform === 0;
-    if (!unicodeish) continue;
-    if (fmt === 4 && best4 < 0) best4 = base + off;
-    if (fmt === 12 && best12 < 0) best12 = base + off;
-  }
-  if (best12 >= 0) {
-    const e = parseCmap12(b, best12, charToGlyph);
-    if (e) return e;
-  }
-  if (best4 >= 0) {
-    const e = parseCmap4(b, best4, charToGlyph);
-    if (e) return e;
-  }
-  if (charToGlyph.size === 0) return 'no-unicode-subtable';
-  return null;
-}
-
-function parseCmap4(b, off, charToGlyph) {
-  if (off + 14 > b.length) return 'fmt4-truncated';
-  const segCountX2 = u16(b, off + 6);
-  const segCount = segCountX2 / 2;
-  if (segCount === 0 || segCount > MAX_SEGMENTS) return `fmt4-bad-segcount:${segCount}`;
-  const endBase = off + 14;
-  const startBase = endBase + segCountX2 + 2;
-  const deltaBase = startBase + segCountX2;
-  const rangeBase = deltaBase + segCountX2;
-  if (rangeBase + segCountX2 > b.length) return 'fmt4-truncated-tables';
-  for (let i = 0; i < segCount; i++) {
-    const end = u16(b, endBase + i * 2);
-    const start = u16(b, startBase + i * 2);
-    const delta = s16(b, deltaBase + i * 2);
-    const rangeOff = u16(b, rangeBase + i * 2);
-    if (start > end) continue;
-    if (end - start > 0xFFFF) continue; // הגנה
-    for (let c = start; c <= end; c++) {
-      let gid;
-      if (rangeOff === 0) {
-        gid = (c + delta) & 0xFFFF;
-      } else {
-        const gidPos = rangeBase + i * 2 + rangeOff + (c - start) * 2;
-        if (gidPos + 2 > b.length) return 'fmt4-gid-out-of-range';
-        gid = u16(b, gidPos);
-        if (gid !== 0) gid = (gid + delta) & 0xFFFF;
-      }
-      if (gid !== 0 && !charToGlyph.has(c)) charToGlyph.set(c, gid);
-    }
-  }
-  return null;
-}
-
-function parseCmap12(b, off, charToGlyph) {
-  if (off + 16 > b.length) return 'fmt12-truncated';
-  const nGroups = u32(b, off + 12);
-  if (nGroups > 65536) return `fmt12-bad-groups:${nGroups}`;
-  for (let i = 0; i < nGroups; i++) {
-    const rec = off + 16 + i * 12;
-    if (rec + 12 > b.length) return 'fmt12-truncated-groups';
-    const start = u32(b, rec), end = u32(b, rec + 4), gid = u32(b, rec + 8);
-    if (end < start || end - start > 0x10FFFF) continue;
-    for (let c = start; c <= end; c++) {
-      const g = gid + (c - start);
-      if (g !== 0 && !charToGlyph.has(c)) charToGlyph.set(c, g);
-    }
-  }
-  return null;
-}
-
-/** kern table — מטפל רק בפורמט 0 (subtable version 0); שאר הפורמטים נדלגים בשקיפות. */
-function parseKernFmt0(b, off, len, kernPairs) {
-  if (off + 4 > b.length) return;
-  const nTables = u16(b, off + 2);
-  let p = off + 4;
-  for (let i = 0; i < nTables && p + 6 <= b.length; i++) {
-    const version = u16(b, p);
-    const length = u16(b, p + 2);
-    const coverage = u16(b, p + 4);
-    const format = coverage >> 8;
-    if (format === 0 && version === 0 && p + 14 <= b.length) {
-      const nPairs = u16(b, p + 6);
-      if (nPairs <= MAX_GPOS_PAIRSETS) {
-        for (let k = 0; k < nPairs; k++) {
-          const rec = p + 14 + k * 6;
-          if (rec + 6 > b.length || rec >= off + len) break;
-          const left = u16(b, rec), right = u16(b, rec + 2), value = s16(b, rec + 4);
-          if (value !== 0) kernPairs.set(`${left},${right}`, value);
-        }
-      }
-    }
-    if (length === 0) break;
-    p += length;
-  }
-}
-
-/**
- * GPOS (v1.0) — נתיב מינימלי אמין: LookupList → Lookup type 2 (PairPos) format 1,
- * ValueFormat1=XAdvance בלבד (0x0004), Coverage fmt 1/2. שאר הסוגים נדלגים בשקיפות
- * (רשומים בדגל). זה מכסה את משפחת הקרנינג הסטנדרטית (GSUB לא נדרש למדידת רוחב).
- */
-function parseGposPairPos(b, off, len, kernPairs) {
-  if (off + 10 > b.length) return;
-  const ver = u32(b, off);
-  if (ver !== 0x00010000) return;
-  const lookupListOff = u16(b, off + 8);
-  const ll = off + lookupListOff;
-  if (ll + 2 > b.length) return;
-  const lookups = u16(b, ll);
-  if (lookups > 256) return;
-  for (let i = 0; i < lookups; i++) {
-    const lOff = ll + u16(b, ll + 2 + i * 2);
-    if (lOff + 8 > b.length) continue;
-    const type = u16(b, lOff);
-    if (type !== 2) continue; // PairPos בלבד
-    const subCount = u16(b, lOff + 4);
-    if (subCount > 64) continue;
-    for (let s = 0; s < subCount; s++) {
-      const sOff = lOff + u16(b, lOff + 6 + s * 2);
-      parsePairPosSubtable(b, sOff, kernPairs);
-    }
-  }
-}
-
-function parsePairPosSubtable(b, off, kernPairs) {
-  if (off + 10 > b.length) return;
-  const fmt = u16(b, off);
-  if (fmt !== 1) return; // format 2 (matrix) — נדלג (נדיר בקרנינג לטיני/עברי)
-  const covOff = u16(b, off + 2);
-  const vf1 = u16(b, off + 4);
-  const vf2 = u16(b, off + 6);
-  const setCount = u16(b, off + 8);
-  if (setCount > MAX_GPOS_PAIRSETS) return;
-  if (vf1 !== 0x0004 || vf2 !== 0) return; // XAdvance בלבד — חוזה הקרנינג שלנו
-  const covGids = coverageGlyphs(b, off + covOff);
-  if (!covGids) return;
-  for (let i = 0; i < setCount && i < covGids.length; i++) {
-    const left = covGids[i];
-    const psOff = off + u16(b, off + 10 + i * 2);
-    if (psOff + 2 > b.length) continue;
-    const pvCount = u16(b, psOff);
-    if (pvCount > MAX_GPOS_PAIRSETS) continue;
-    for (let k = 0; k < pvCount; k++) {
-      // **S5.2 (תיקון צעד רשומה — T1):** בחוזה vf1===0x0004 && vf2===0 אין
-      // כלל value2 — PairValueRecord = gid2(2) + XAdvance(2) = **4 בתים**,
-      // לא 6. הצעד 6 קרא כל רשומה אחרי הראשונה מוסטת (מפת קרנינג משובשת:
-      // 171 זוגות זבל מ-Hadassah). היום הקרנינג אינו נצרך במדידה (מדיניות
-      // ללא-קרנינג — תצוגה=ייצוא; ראה font-kerning:none ב-BASE_CSS), אך
-      // הפרסר חייב להיות נכון לכל שימוש עתידי.
-      const rec = psOff + 2 + k * 4; // gid2(2) + value1 XAdvance(2) — vf2=0 ⇒ אין value2
-      if (rec + 4 > b.length) break;
-      const right = u16(b, rec);
-      const xAdv = s16(b, rec + 2);
-      if (xAdv !== 0) kernPairs.set(`${left},${right}`, xAdv);
-    }
-  }
-}
-
-/** Coverage table fmt 1/2 → מערך gid-ים לפי אינדקס. */
-function coverageGlyphs(b, off) {
-  if (off + 4 > b.length) return null;
-  const fmt = u16(b, off);
-  const out = [];
-  if (fmt === 1) {
-    const count = u16(b, off + 2);
-    if (count > MAX_GPOS_PAIRSETS) return null;
-    for (let i = 0; i < count; i++) {
-      if (off + 4 + i * 2 + 2 > b.length) return null;
-      out.push(u16(b, off + 4 + i * 2));
-    }
-    return out;
-  }
-  if (fmt === 2) {
-    const ranges = u16(b, off + 2);
-    if (ranges > 4096) return null;
-    for (let i = 0; i < ranges; i++) {
-      const rec = off + 4 + i * 6;
-      if (rec + 6 > b.length) return null;
-      const start = u16(b, rec), end = u16(b, rec + 2), startCov = u16(b, rec + 4);
-      if (end < start || end - start > 0xFFFF) continue;
-      for (let g = start; g <= end; g++) out[g - start + startCov] = g;
-    }
-    // מלא חורים (undefined) ב־-1 — סימון לא־קיים
-    for (let i = 0; i < out.length; i++) if (out[i] === undefined) out[i] = -1;
-    return out;
-  }
-  return null;
-}
-
-// ============ שכבת שאילתות (המידע שמעניין את המדידה) ============
-
-/** **S4.26:** גופן ה-fallback לגליפים חסרים — כמו מחסנית ה-CSS בדפדפן. */
-let missingGlyphFallbackFont = null;
-function setMissingGlyphFallbackFont(font) { missingGlyphFallbackFont = font || null; }
-
-/** **S4.26:** רוחב-גליף-חסר בגופן ה-fallback (em) — 0 אם אין fallback/גם בו חסר. */
-function missingGlyphFallbackEm(ch) {
-  if (!missingGlyphFallbackFont) return 0;
-  return advanceEmOf(missingGlyphFallbackFont, ch);
-}
-
-/** מזהה גליף של תו (או 0 = .notdef). */
-function glyphIdOf(font, ch) {
-  const cp = typeof ch === 'number' ? ch : ch.codePointAt(0);
-  const g = font.charToGlyph.get(cp);
-  return g === undefined ? 0 : g;
-}
-
-/** רוחב advance ביחידות גופן (0 ללא מיפוי). */
-function advanceUnitsOf(font, ch) {
-  const g = glyphIdOf(font, ch);
-  if (g === 0 || g >= font.numGlyphs) {
-    // **S4.26 (גליפים חסרים — fallback כמו הדפדפן):** לגופנים תורניים
-    // (למשל גוטמן רש"י) אין גליפים לפיסוק בסיסי (' . ׳) — הדפדפן מצייר
-    // אותם במשפחת ה-fallback שבמחסנית ('Frank Ruhl Libre'); המדידה
-    // בלי זה החזירה 0 ושורות ממורכזות נבדקו צרות מהרינדור (נצפה:
-    // INK_OUTSIDE 3px בשורת "הרי בהכרח שהם גדרים... וכו'."). המרה
-    // ליחידות הגופן הראשי משמרת את היחס הנכון בשרשרת.
-    if (missingGlyphFallbackFont && missingGlyphFallbackFont !== font) {
-      const em = advanceEmOf(missingGlyphFallbackFont, ch);
-      if (em > 0) return em * font.unitsPerEm;
-    }
-    return 0;
-  }
-  return font.advanceUnits[g];
-}
-
-/** רוחב advance ב־em (יחסי ל־unitsPerEm). */
-function advanceEmOf(font, ch) {
-  return advanceUnitsOf(font, ch) / font.unitsPerEm;
-}
-
-/** קרנינג בין שני תווים ביחידות גופן (0 כשאין ערך/מיפוי). */
-function kernUnitsOf(font, a, b) {
-  const ga = glyphIdOf(font, a), gb = glyphIdOf(font, b);
-  if (ga === 0 || gb === 0) return 0;
-  const v = font.kernPairs.get(`${ga},${gb}`);
-  return v === undefined ? 0 : v;
-}
-
-/** cap-height ב־em (מטבלת OS/2 אמיתית; נפילה: ascender×0.7 — קירוב ספרות מוכר). */
-function capHeightEmOf(font) {
-  if (font.capHeight != null) return font.capHeight / font.unitsPerEm;
-  return (font.ascender / font.unitsPerEm) * 0.7;
-}
-
-/** האם תו הוא סימן מאפס־רוחב (ניקוד/טעמים): ממופה עם advance=0. */
-function isZeroAdvanceMark(font, ch) {
-  const g = glyphIdOf(font, ch);
-  return g !== 0 && font.advanceUnits[g] === 0;
-}
-
-module.exports = {
-  parseFont, glyphIdOf, advanceUnitsOf, advanceEmOf, kernUnitsOf,
-  capHeightEmOf, isZeroAdvanceMark, setMissingGlyphFallbackFont, missingGlyphFallbackEm
-};
-
-};
-__modules["src/engine/typography/kp-linebreak.js"] = function (require, module, exports) {
-// src/engine/typography/kp-linebreak.js — Knuth-Plass optimal line breaking (REQ-LB-02/03/07)
-'use strict';
-
-/**
- * מימוש KP: boxes/glues/penalties, badness³, עונשי runt/widow/orphan, active-list DP.
- * - אין מקף סוף־שורה (no hyphenation — אסור בספרות תורנית).
- * - \u00A0 = צמידת NBSP (protectors); \uE000 = רווח אטומי בתוך הערה — ההערה אינה נקרעת (REQ-LB-04).
- * - RTL מדידה: rect.right − colRect.left (לקח Z.ai #5) — מתמטי כאן; DOM oracle יזהה.
- */
-
-const INF = Number.POSITIVE_INFINITY;
-const STRETCH_RATIO = 0.6;   // מתיחות רווח יחסית
-const SHRINK_RATIO = 0.5;    // כיווץ רווח יחסית
-const LINE_DEMERIT = 100;    // עלות בסיס לכל שורה: ברירת מחדל במודל ragged — ה־DP
-                            // ממזער מספר שורות (הרינדור מצייר מרווחים טבעיים).
-// השלמת ביקורת 03.11 (D-79): הרינדור של המנוע ragged (יישור לימין; מרווחים
-// טבעיים ב-DOM וב-PDF). לכן במודל השבירה כל שורה מקבלת "מתיחת סוף-שורה"
-// כמו \raggedright של TeX — אחרת שורה במילה בודדת (stretch=0 ⇒ ratio=0)
-// היא "חינם" וה־DP מתפוצץ לשורות מילה-בודדת. כשהשורות מיושרות בפועל
-// (align=stretch) ניתן לכבות: opts.raggedEnd=false.
-const RAGGED_END_STRETCH_FACTOR = 10; // × maxWidthPx — מתיחה גדולה סופית-מעשית
-
-function buildItems(words, measure) {
-  const items = [];
-  const sp = measure(' ');
-  for (let i = 0; i < words.length; i++) {
-    const w = words[i];
-    // יחידת NBSP פוצלת לתת־קופסאות עם **אי־שבירה אסורה** (INF penalty) ביניהן:
-    // כך DP רואה את הרוחב האמיתי (כולל רווחים פנימיים) אך לעולם לא קורע את הצמד.
-    // (לקח V23: רוחב חסר של unit צמוד → מדידת שורה שגויה → badness מוטה.)
-    // U+E000 (רווח אטומי בתוך הערה) אינו מקום שבירה כלל — נשמר בתוך תת־הקופסה
-    // ומוחלף ל‑NBSP רק בפליטה; כך unit שלם לעולם לא נקרע (REQ-LB-04).
-    const parts = w.split('\u00A0');
-    for (let k = 0; k < parts.length; k++) {
-      if (k > 0) items.push({ kind: 'penalty', forbidden: true, cost: INF });
-      // **S5.2 (תיקון 4 — תיבת פנטום 1px):** חלק ריק (NBSP כפול, פתיחה/סיום
-      // ב-NBSP) נמדד עכשיו ברוחב 0 — בעבר Math.max(1,…) יצר תיבת 1px שאינה
-      // קיימת בדיו והעלתה את רוחב השורה. אין חשש מכניסה לרווח: מנגנוני ה-badness
-      // מוגנים (effStretch>0 / shrink>0 — ראה breakLines) וההתקדמות מובטחת
-      // (תיבה ריקה אינה מקום שבירה; הטוקן שלה משוחזר עם ה-NBSP שלו).
-      items.push({ kind: 'box', text: parts[k].replace(/\uE000/g, '\u00A0'), width: Math.max(0, measure(parts[k])) });
-      if (k < parts.length - 1) items.push({ kind: 'glue', width: sp, stretch: sp * STRETCH_RATIO, shrink: sp * SHRINK_RATIO, internal: true });
-    }
-    if (i < words.length - 1) {
-      items.push({ kind: 'glue', width: sp, stretch: sp * STRETCH_RATIO, shrink: sp * SHRINK_RATIO });
-    }
-  }
-  items.push({ kind: 'penalty', final: true }); // סיום פסקה — שבירה חובה
-  return items;
-}
-
-function badness(ratio) {
-  if (!isFinite(ratio)) return 0;
-  if (ratio < -1) return INF;               // אי־אפשר לכווץ מעל הגבול
-  const r = Math.abs(ratio);
-  if (r <= 1) return Math.round(Math.pow(r * 100, 3) / 10000); // 0..100
-  return 100 + Math.round(Math.pow((r - 1) * 100, 2) / 100);   // דחיסה/מתיחת יתר
-}
-
-/**
- * @param {string[]} words - מילות הפסקה (NBSP כבר הוצמד ע"י protectors)
- * @param {number} maxWidthPx
- * @param {(t:string)=>number} measure
- * @param {number} lineHeightPx
- * @param {{runtMinPct?:number}} opts
- * @returns {Array<{words:string[], widthPx:number, heightPx:number, isLast:boolean}>}
- */
-function breakLines(words, maxWidthPx, measure, lineHeightPx, opts = {}) {
-  // **03.11 (ביקורת):** חיבור ההגדרה — runt-min-width-pct מגיע כ-runts מה-pipeline
-  // וכ-runtMinPct מקריאות ישירות; שניהם נקראים (בעבר רק runtMinPct נקרא וההגדרה לא השפיעה).
-  const runts = opts.runtMinPct != null ? opts.runtMinPct : (opts.runts != null ? opts.runts : 50);
-  const items = buildItems(words, measure);
-  const n = items.length;
-  const cost = new Array(n + 1).fill(INF);
-  const parent = new Array(n + 1).fill(-1);
-  cost[0] = 0;
-
-  for (let i = 0; i < n; i++) {
-    if (cost[i] === INF) continue;
-    if (items[i].kind === 'glue' && !items[i].internal) { // דלג על glue רגיל בהתחלת שורה;
-      // glue פנימי (בתוך יחידת NBSP) אסור לדלג — הרוחב שלו חלק בלתי נפרד מהצמד.
-      if (cost[i + 1] > cost[i]) { cost[i + 1] = cost[i]; parent[i + 1] = i; }
-      continue;
-    }
-    let w = 0, stretch = 0, shrink = 0;
-    for (let j = i; j < n; j++) {
-      const it = items[j];
-      if (it.kind === 'box') w += it.width;
-      // **תיקון שורש (ביקורת 03.11): רוחב glue נכלל ברוחב הטבעי של השורה —
-      // כמו ב-TeX (Σ תיבות + Σ רווחים). בעבר נצברו רק stretch/shrink ⇒ ה־DP
-      // "חשב" ששורה נכנסת בעוד רוחבה הטבעי (כולל רווחים) חורג מהטור.
-      else if (it.kind === 'glue') { w += it.width; stretch += it.stretch; shrink += it.shrink; }
-      else if (it.kind === 'penalty') {
-        if (it.forbidden) continue; // תוך-יחידה: אין כאן מקום שבירה (legalCut כבר מבטל); ההצברה נמשכת
-        // סיום שורה (penalty סופי של הפסקה) — good break.
-        // **תיקון שורש (ביקורת 03.11): השבירה הסופית היא צומת סוף-הפסקה n —
-        // בעבר נכתבה ל-cost[j] (אינדקס הפריט עצמו, n−1) ⇒ cost[n] נותר INF לעולם
-        // ⇒ ה־DP מעולם לא סיפק פתרון וכל שבירות השורות במנוע מאז S1 יצאו מהגיבוי
-        // הגרידי (עם באג ה-NBSP). התיקון מחיה את Knuth-Plass בפועל.
-        const slack = maxWidthPx - w;
-        // raggedEnd: מתיחת סוף-שורה (D-79) — שורות ragged אינן נמדדות במתיחת
-        // בין-מילים אלא בכניסה טבעית; היתרה עד לקצה הטור "נבלעת" במתיחת הסוף.
-        const raggedEnd = opts.raggedEnd !== false;
-        const effStretch = stretch + (raggedEnd ? maxWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
-        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
-        let b = badness(ratio);
-        if (b < INF && w < maxWidthPx * (runts / 100)) b += 60; // עונש runt בשורת הסיום
-        if (b < INF) {
-          const cand = cost[i] + b + LINE_DEMERIT;
-          if (cand < cost[n]) { cost[n] = cand; parent[n] = i; }
-        }
-        break;
-      }
-      // **S5.1 (D-92-DP):** הדפדפן מרנדר רוחב טבעי (white-space:normal) —
-      // שורה שרוחבה הטבעי חורג מהטור נעטפת בתצוגה (טקסט-על-טקסט) גם אם
-      // היישוב יכול לכווץ רווחים ב-PDF. לכן המבחן ברוחב הטבעי, בלי shrink.
-      // **S5.2 (תיקון 3 — המבחן היה מרחיב, לא שמרני):** בעבר `w > maxWidth+0.75`
-      // אִפשר קווים ברוחב טבעי עד maxWidth+0.75px (ובכך גם קבלת חיתוכים עם
-      // slack שלילי דרך כיווץ) — בזמן ש-FIT_EPS של המורשת שמרן (limit−eps).
-      // כעת החיתוך נעצר מוקדם: שורה שאינה נכנסת ב-maxWidth−0.75 אינה מוארכת
-      // עוד, וכל קו מקובל הוא ברוחב טבעי ≤ maxWidth−0.75 (גם בסוף פסקה —
-      // הפנלטי הסופי נמדר רק אחרי שכל הפריטים עברו את אותו מבחן). מילה רחבה
-      // מהטור עדיין יוצאת כשורה בפני עצמה דרך הגיבוי הגרידי (greedyFallback —
-      // התקדמות מובטחת, טוקן בודד אינו נחסם: pushTok עם toks ריק אינו מוסף).
-      if (w > maxWidthPx - 0.75) break; // חריגה שאינה ניתנת לתיקון — שמרני כמו FIT_EPS
-
-      if (it.kind === 'box') {
-        // מקומות שבירה חוקיים נקבעים **מבנית מראש** (static legal-cuts): cut בצומת c חוקי
-        // רק אם items[c-1] הוא glue לא־פנימי ו‑items[c] תיבה שפותחת יחידה חדשה.
-        // זה מבטל את באג V23: lock תלוי-נקודת-התחלה על צמתים משותפים ל‑DP.
-        // (תיקון S3: הבדיקה הייתה בתוך הלולאה עם אינדקס שגוי j+2 — כל השברים נחסמו.)
-        const cut = j + 1; // נקודת שבירה חוקית: אחרי תיבה, לפני ה‑glue העוקב
-        if (!(items[cut].kind === 'glue' && !items[cut].internal && items[cut + 1] && items[cut + 1].kind === 'box')) continue;
-        const slack = maxWidthPx - w;
-        // **S5.2 (תיקון 3 — שמרנות בקבלת חיתוך):** קו שאינו נכנס ברוחב הטבעי
-        // (slack < −FIT_EPS) הוא בלתי-אפשרי — badness INF, לא "כיווץ". המבחן
-        // השמרני למעלה אמור למנוע הגעה לכאן; השמירה הכפולה מתעדת את הכוונה.
-        if (slack < -0.75) continue;
-        const raggedEnd = opts.raggedEnd !== false;
-        const effStretch = stretch + (raggedEnd ? maxWidthPx * RAGGED_END_STRETCH_FACTOR : 0);
-        const ratio = slack >= 0 ? (effStretch > 0 ? slack / effStretch : 0) : (shrink > 0 ? slack / shrink : -2);
-        const b = badness(ratio);
-        if (b >= INF) continue;
-        const cand = cost[i] + b + LINE_DEMERIT;
-        if (cand < cost[cut]) { cost[cut] = cand; parent[cut] = i; }
-      }
-    }
-  }
-
-  if (cost[n] === INF) return greedyFallback(items, maxWidthPx, measure, lineHeightPx);
-
-  const cuts = [];
-  let p = n;
-  while (p > 0 && parent[p] >= 0) { cuts.push([parent[p], p]); p = parent[p]; }
-  cuts.reverse();
-
-  const lines = [];
-  for (let k = 0; k < cuts.length; k++) {
-    const [a, b] = cuts[k];
-    // תת־קופסאות של אותה יחידת NBSP מאוחדות חזרה עם \u00A0 (הצמד שומר על זהותו)
-    const rawBoxes = items.slice(a, b).filter(x => x.kind === 'box');
-    const toks = [];
-    let cur = null, prevPenaltyForbidden = false;
-    for (let idx = a; idx < b; idx++) {
-      const it = items[idx];
-      if (it.kind === 'penalty' && it.forbidden) { prevPenaltyForbidden = true; continue; }
-      if (it.kind !== 'box') continue;
-      if (cur !== null && prevPenaltyForbidden) { cur += '\u00A0' + it.text; prevPenaltyForbidden = false; }
-      else { if (cur !== null) toks.push(cur); cur = it.text; prevPenaltyForbidden = false; }
-    }
-    if (cur !== null) toks.push(cur);
-    void rawBoxes;
-    if (!toks.length) continue;
-    // רוחב אמיתי: סכום תת־הקופסאות + רווחי ה‑glue שביניהן (כולל internal)
-    let widthPx = 0;
-    for (let idx = a; idx < b; idx++) {
-      const it = items[idx];
-      if (it.kind === 'box') widthPx += it.width;
-      else if (it.kind === 'glue') widthPx += it.width;
-    }
-    lines.push({ words: toks, widthPx, heightPx: lineHeightPx, isLast: k === cuts.length - 1 });
-  }
-  return lines;
-}
-
-/**
- * מסלול גיבוי (כשה־DP לא מצא פתרון אפשרי, למשל מילה רחבה מהעמודה — אין מקף).
- * תיקון שורש (ביקורת 03.11, S13): בגיבוי חלים **אותם איסורי שבירה** כמו במסלול
- * הראשי — בעבר כל penalty חתם שורה, כולל `forbidden` (בין תתי־קופסות של יחידת
- * NBSP) ⇒ היחידה נקרעה בין שורות **ואיבדה את \u00A0 שלה** (אובדן תוכן, BRZ-15;
- * ורוחב פנימי נמדד כרווח רגיל). כעת:
- * 1. penalty אסור לעולם אינו מסיים שורה — היחידה משוחזרת כטוקן אחד עם \u00A0
- *    (זהה לשחזור המסלור הראשי).
- * 2. רוחב טוקן נצבר מהפריטים (תיבות + glue פנימי 0.26em) — זהה למסלור הראשי,
- *    לא מדידה מחודשת של מחרוזת NBSP (הייתה מודדת 0.4em פנימי — עיוות רוחב).
- * 3. התקדמות מובטחת: טוקן שגולש פותח שורה חדשה; טוקן רחב מהעמודה נשאר לבד
- *    בשורה משלו — אין לולאה ואין דילוג תוכן. מעבר אחד על הפריטים.
- */
-function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
-  const space = measure(' ');
-  const lines = [];
-  let toks = [];            // טוקנים של השורה הנוכחית
-  let w = 0;                // רוחב השורה (כולל רווחים בין טוקנים)
-  let cur = null, curW = 0, joinNext = false;  // טוקן בבנייה + רוחבו מהפריטים
-
-  const flush = () => {
-    if (!toks.length) return;
-    lines.push({ words: toks, widthPx: w, heightPx: lineHeightPx, isLast: false });
-    toks = []; w = 0;
-  };
-  const pushTok = () => {
-    if (cur === null) return;
-    // **S6.0 (R7-M2 — רווח רפאים בגיבוי הגרידי):** sp חושב לפי מצב השורה
-    // **לפני** ה-flush ונוסף גם אחריו ⇒ כל שורה שנפתחה ב-flush נשאה רווח
-    // אחד עודף ב-widthPx (מדידה שקרית לצרכי ריצת-שורה/איזון). תוקם:
-    // הבדיקה וההוספה לפי המצב **אחרי** ההחלטה על flush.
-    if (toks.length && w + space + curW > maxWidthPx - 0.75) flush(); // הטוקן הבא ייפתח שורה חדשה
-    const sp = toks.length ? space : 0;
-    toks.push(cur); w += sp + curW;
-    cur = null; curW = 0; joinNext = false;
-  };
-
-  for (const it of items) {
-    if (it.kind === 'penalty') {
-      if (it.final) continue;            // סוף פסקה — הטיפול שלאחר הלולאה סוגר את האחרון
-      if (it.forbidden) { joinNext = true; continue; } // אין חיתוך בתוך יחידה — לעולם
-      continue;
-    }
-    if (it.kind === 'glue') {
-      if (it.internal && cur !== null) { curW += it.width; } // רווח פנימי בתוך היחידה
-      continue; // glue רגיל בין טוקנים: רוחבו נכנס כ־sp בעת pushTok
-    }
-    if (it.kind !== 'box') continue;
-    if (cur !== null && joinNext) { cur += '\u00A0' + it.text; curW += it.width; joinNext = false; } // המשך הצמד — ואיפוס: המילה הרגילה הבאה לא תיבלע
-    else { pushTok(); cur = it.text; curW = it.width; }
-  }
-  pushTok(); flush();
-  if (lines.length) lines[lines.length - 1].isLast = true;
-  return lines;
-}
-
-module.exports = { breakLines, badness, STRETCH_RATIO, SHRINK_RATIO };
-
-};
 __modules["src/engine/core/events.js"] = function (require, module, exports) {
 // src/engine/core/events.js — Event log / Trace collector (REQ-GOV-01)
 'use strict';
@@ -16986,7 +18582,7 @@ class EventLog {
     this.stageOrder = [
       'parse', 'scope-map', 'style-prepass', 'fonts-ready', 'measure', 'line-plan',
       'page-plan', 'protections', 'balance', 'justify', 'notes-budget', 'refit',
-      'decorations', 'headers', 'folio', 'toc', 'ledger-finalize', 'render'
+      'decorations', 'headers', 'folio', 'toc', 'page-model', 'ledger-finalize', 'render'
     ];
   }
 
@@ -17888,12 +19484,15 @@ const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
 const { runRetreatLoop } = require('./retreat-loop');
 const { generateCandidates } = require('./candidate-generator');
-const { blockGapPx, colCapacityOf } = require('./column-flow');
+const { blockGapPx, colCapacityOf, planningUsedHeight, normalizeColumnGaps } = require('./column-flow'); // **שלב 5:** planningUsedHeight — מקור יחיד לגובה התפוס בזמן תכנון (חילוץ מ-#16); **פרוסה 2:** normalizeColumnGaps — נרמול פערים אחרי פיצול מחדש
 const { fixDropWordInColumns } = require('../typography/protectors');
-const { MARK_TAG } = require('../notes/markers');
+const { MARK_TAG } = require('../notes/markers'); // markerFragmentOf אינו נדרש כאן — הזיהוי לפי MARK_TAG ישירות (תבנית D-53)
 const { moveLineForward } = require('./ordering');
 const { optimalSplit } = require('./balancing'); // **EXT-8:** חלוקה גלובלית אופטימלית
-const { getFootnotesReservedHeight, noteHeight } = require('./footnote-budget');
+const { getFootnotesReservedHeight, noteHeight, noteMetrics, stampNoteMetrics } = require('./footnote-budget'); // **שלב 5:** noteMetrics — מקור יחיד למדדי ההערה (חילוץ מ-#16); **פרוסה 2:** stampNoteMetrics — מדידה אחת ביצירה
+const { stampNote, makeNoteRecord, NOTE_KINDS } = require('./notes-model'); // **שלב 6 פרוסה 2:** מודל ההערות המאוחד — זהות/עוגן + חותמת הערות-צד ביצירה
+const CM = require('./constraint-matrix'); // **שלב 5:** מטריצת האילוצים המאוחדת (חילוץ שורש מ-#16/#17)
+const { createTraceRecorder } = require('./decision-trace'); // **פרוסה 2 (§2.7):** תיעוד החלטות דטרמיניסטי קומפקטי
 
 /** חתימת פריסה דטרמיניסטית — ללא Date/random (REQ-GOV determinism).
  * תיקון S7-E2E: tokenId נמצא ב‑meta של pushLines (לא על השורה עצמה) — יש לחלץ משם,
@@ -17972,6 +19571,11 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   if (!measureFn) {
     throw new Error('dp-planner: env.measure is required (single measurement entry — REQ-LB-01). Silent fallback to global is forbidden.');
   }
+  // **פרוסה 2 (§2.7):** רשם ה-trace — opt-in (env.trace חיצוני או settings.
+  // _plannerTrace); כבוי בברירת המחדל (קומפקטיות זיכרון). הספירות נשמרות
+  // תמיד. המתכנן עצמו כבר אינו מודד — measureFn משמש רק להטבעה חד-פעמית
+  // של הערות שלא נמדדו במקורן (CP2 אמור לחתום את כולן; בדיקת הטוהר מוכיחה 0).
+  const trace = (env && env.trace) || createTraceRecorder({ enabled: settings['_plannerTrace'] === true });
   // **S10 (REQ-UI-03):** מזליף התקדמות מה‑DP — מכשור בלבד (no-op proof בבדיקה).
   // הערכת מספר העמודים: סכום גבהים נמדדים / קיבולת עמוד רגיל — מעודכנת בזמן אמת.
   const onProgress = env && typeof env.onProgress === 'function' ? env.onProgress : null;
@@ -17988,10 +19592,30 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   const lineH = Math.round(settings['body-font-size-pt'] * (96 / 72) * settings['body-line-height']);
   const imbMax = settings['imbalance-max-delta-px'];
 
+  // **FX-1 (דוח 06, שלב 5 — חילוץ שורש מ-#17):** נעילת ליווי — הטור שאומת
+  // למחסנית כותרת+ליווי הוא startCol של ההצבה עד השלמת שורות הליווי;
+  // נאפס בכל עמוד חדש.
+  let escortLockCol = 0;
+  let escortLinesNeeded = 0;
+  // **שלב 5 (אילוץ קשה — סדר קריאה מבני):** מונוטוניות טורים לאורך הזרימה —
+  // אחרי ששורה כלשהי הוצבה בטור c, שורות המשך באותו עמוד אינן רשאיות לחזור
+  // לטור מוקדם ממנו (הקריאה עוברת col0 מלמעלה למטה ואז col1). בלי זה, המילוי
+  // החמדני של pushLines יכול להכניס שורה מאוחרת לסוף col0 אחרי שהזרימה כבר
+  // עברה ל-col1 (נמדד: 49 הפרות reading-order ב-very_long לאחר FX-5 — האריזה
+  // הצפופה חשפה את הפגם שהיה קיים אך נדיר). תיקון השורש: האילוץ חי בהצבה
+  // עצמה, לא בגילוי לאחר המעשה (protections).
+  let flowCol = 0;
+
   function newPage(type = PAGE_TYPES.REGULAR) {
+    escortLockCol = 0;
+    escortLinesNeeded = 0;
+    flowCol = 0;
     const isRecto = pages.length % 2 === 0; // עמוד 1 = recto
     const tpl = buildPageTemplate(type, settings, isRecto);
-    return { index: pageIdx++, type, template: tpl, columns: Array.from({ length: tpl.columns.length }, () => []), footnotes: [], sideNotes: [], headingsOnPage: [], balanceInfo: null, fnReservedHeightPx: 0, chapterOpening: false };
+    // **פרוסה 2 (§2.5):** dpPlanned — סימון עמוד הזרימה לחוזה ה-PagePlan
+    // (finalizePagePlans ב-pipeline); openedBy — מעברי עמוד/סוג; reservations —
+    // שמורות אחידות של שלב 6 (מנגנון ההרחבה של מודל הקיבולת).
+    return { index: pageIdx++, type, template: tpl, columns: Array.from({ length: tpl.columns.length }, () => []), footnotes: [], sideNotes: [], headingsOnPage: [], balanceInfo: null, fnReservedHeightPx: 0, chapterOpening: false, dpPlanned: true, openedBy: null, reservations: [] };
   }
 
   let cur = newPage(PAGE_TYPES.REGULAR);
@@ -18011,13 +19635,10 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
    * זהים (F-17). התקציב נרשם פעם אחת בסוף הטור האחרון.
    * תיקון P1-8: חתימה (col, page) — page חובה; אין עוד עמוד ברירת־מחדל שגוי.
    */
-  function usedHeight(col, page = cur) {
-    let h = col.reduce((s, ln) => s + (ln.heightPx || 0), 0);
-    if (page && page.fnReservedHeightPx > 0 && page.columns[page.columns.length - 1] === col) {
-      h += page.fnReservedHeightPx; // נשמר פעם אחת — בסוף הטור האחרון
-    }
-    return h;
-  }
+  // **שלב 5 (חילוץ שורש מ-#16):** גובה תפוס בזמן תכנון — מקור יחיד
+  // (column-flow.planningUsedHeight); סמנטיקת הרינדור (עם aqStretch) חיה
+  // ב-balancing.usedHeight — שני דגלים, שני מקורות מתועדים.
+  const usedHeight = (col, page = cur) => planningUsedHeight(col, page);
 
   /**
    * **איחוד P1-1 (מנגנום תאום):** recomputeFnBudget ממשיך כעת דרך
@@ -18031,11 +19652,17 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     return reserved;
   }
 
-  function ensureRoom(neededLines, opts = {}) {
-    void opts;
+  /**
+   * **FX-5 (דוח 06, שלב 5 — חילוץ שורש מ-#17):** בדיקת קיבולת ב-yPx אמיתיים.
+   * הגרסה ההיסטורית (`ensureRoom(neededLines)`) מדדה `neededLines × lineH`
+   * בעוד ההצבה צורכת heightPx — פער היחידות יצר עמודים ריקים פנטום (בלוק
+   * שנכנס פיזית "נכשל" בבדיקה — FX-5) ובדיקות ליווי שקרסו על כותרות גבוהות
+   * מ-lineH (FX-1). המחסנית כוללת את פער הכניסה של הבלוק (CM.stackHeightPx).
+   */
+  function ensureRoomFor(stackPx, fromCol = 0) {
     const cap = colCapacity(cur.template, cur);
-    for (let c = 0; c < cur.columns.length; c++) {
-      if (cap - usedHeight(cur.columns[c], cur) >= neededLines * lineH - 0.5) return c;
+    for (let c = fromCol; c < cur.columns.length; c++) {
+      if (cap - usedHeight(cur.columns[c], cur) >= stackPx - CM.CAPACITY_EPS) return c;
     }
     return -1;
   }
@@ -18053,13 +19680,20 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
           const seq = [...cur.columns[0], ...cur.columns[1]];
           cur.columns[0] = seq.slice(0, best.k);
           cur.columns[1] = seq.slice(best.k);
+          // **FX-6 (פרוסה 2):** נרמול פערים אחרי הפיצול מחדש — ראש כל טור אינו
+          // נושא פער-כניסה (אותו כלל GAP_HEAD_POLICY שבהצבה המקורית).
+          normalizeColumnGaps(cur.columns[0]);
+          normalizeColumnGaps(cur.columns[1]);
+          trace.emit(cur.index, 'balance-resplit', { k: best.k, delta: Math.round(best.delta), clean: best.clean });
         }
       }
       // מילה נופלת בין טורים (פורטר מ‑Gold) — גם שומר סדר (המילה חוצה את הגבול קדימה)
-      // **S5.2 (תיקון 2):** המיזוג מותר רק אם השורה המקבלת נכנסת ברוחב הטור
-      // (מדידה מחדש + FIT_EPS שמרני) — אותה מדידה של המתכנן; מילה שאינה
-      // נכנסת נשארת בטור המקורי (בלי גלישה אופקית שקטה — מחלקת D-92).
-      if (fixDropWordInColumns(cur.columns, 3, { measure: (t) => measureFn(t), colW: cur.template.columns[0].w })) {
+      // **S5.2 (תיקון 2) + פרוסה 2 (מדידה חוזרת — §2.3):** המיזוג מותר רק אם
+      // השורה המקבלת נכנסת ברוחב הטור — **מרוחבי ה-LineModel שכבר נמדדו**
+      // (naturalWidthPx של שורת המילה הבודדת + רווח טבעי מה-glue של השורה
+      // המקבלת): אפס מדידה חוזרת בתכנון; מילה שאינה נכנסת נשארת בטור המקורי
+      // (בלי גלישה אופקית שקטה — מחלקת D-92).
+      if (fixDropWordInColumns(cur.columns, 3, { colW: cur.template.columns[0].w })) {
         eventLog.emit('balance', 'fix-drop-word', { page: cur.index }, cur.index);
       }
       const a = usedHeight(cur.columns[0], cur), b = usedHeight(cur.columns[1], cur);
@@ -18071,31 +19705,55 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       if (usedHeight(col, cur) > colCapacity(cur.template, cur) + 0.5) {
         const rec = ledger.create('containment', `page#${cur.index}`, cur.index, { used: usedHeight(col, cur), cap: colCapacity(cur.template, cur) }, 'page-plan');
         ledger.transition(rec.issue_id, cur.type === PAGE_TYPES.FILLER ? 'not-comparable' : 'persists', 'page-plan', 'overflow after placement');
+        trace.emit(cur.index, 'overflow-after-placement', { used: usedHeight(col, cur), cap: colCapacity(cur.template, cur) });
       }
     }
+    trace.emit(cur.index, 'page-flush', { used: cur.columns.map(c => usedHeight(c, cur)), fn: cur.footnotes.length });
     pages.push(cur);
   }
 
-  function pushLines(lines, meta = {}) {
-    // grid-block-gap-pct: מרווח בין־בלוקי נצרך כאן — שורה ראשונה של בלוק חדש
-    // סופגת את ה‑gap (פרופורציונלי לגובה שורה), כך שתקציב הטור כולל אותו.
+  function pushLines(lines, meta = {}, opts = {}) {
+    // **FX-6 (פרוסה 2 — הפער כגיאומטריה מתוכננת):** פתיחת בלוק מתחת לתוכן
+    // קיים בטור נושאת חותמת `gapBeforePx` על שורת הפתיחה — מקור יחיד שממנו
+    // נגזרים גם שער הכניסה (needPx), גם usedHeight (planningUsedHeight)
+    // וגם ההקרנה (DOM margin-top / PDF התקדמות-y). ראש טור/עמוד — הפער
+    // מדוכא (GAP_HEAD_POLICY); בלוקים רצופים — פער בכל פתיחה. בעבר הפער
+    // היה תנאי כניסה בלבד (pendingGap) ולא נצבר בשום מקום במורד הזרם.
+    // **FX-1 (דוח 06, שלב 5):** startCol — הצבה מכוונת-ליווי: הטור שאומת
+    // למחסנית כותרת+ליווי הוא נקודת הפתיחה. סדר הקריאה נשמר מבנית — אין
+    // הצבה לטור מוקדם יותר מנקודת הפתיחה.
+    const startCol = Math.max(0, Math.min(opts.startCol != null ? opts.startCol : escortLockCol, cur.columns.length - 1));
     const gap = meta.firstOfBlock ? blockGapPx(settings, lineH) : 0;
-    let pendingGap = gap;
+    let firstOfCall = true; // הפער שייך לשורה הראשונה של הקריאה בלבד
     for (const ln of lines) {
       let placed = false;
-      for (let c = 0; c < cur.columns.length && !placed; c++) {
-        const needPx = ln.heightPx + pendingGap - 0.5;
+      // **שלב 5 (סדר קריאה מבני):** החיפוש מתחיל בטור הזרימה הנוכחי — שום
+      // שורה אינה חוזרת לטור מוקדם מהזרימה (ראה flowCol לעיל).
+      for (let c = Math.max(startCol, flowCol); c < cur.columns.length && !placed; c++) {
+        // FX-6: החותמת — רק מתחת לתוכן קיים (דיכוי בראש טור/עמוד/אחרי פס).
+        const gapHere = firstOfCall && gap > 0 && cur.columns[c].length > 0 ? gap : 0;
+        const needPx = ln.heightPx + gapHere - CM.CAPACITY_EPS;
         if (colCapacity(cur.template, cur) - usedHeight(cur.columns[c], cur) >= needPx) {
-          cur.columns[c].push({ ...ln, meta, seq: seqCounter++ });
-          pendingGap = 0;
+          cur.columns[c].push({ ...ln, meta, seq: seqCounter++, ...(gapHere > 0 ? { gapBeforePx: gapHere } : {}) });
+          firstOfCall = false;
           placed = true;
+          flowCol = Math.max(flowCol, c); // מונוטוניות הזרימה
+          trace.emit(cur.index, 'block-place', { token: meta.tokenId, col: c, lineH: ln.heightPx, gapPx: gapHere });
+          // **FX-1:** נעילת ליווי — שורות גוף ראשונות אחרי הכותרת מקריעות את
+          // המונה; בהשלמת שורות הליווי — שחרור הנעילה (ההצבה חוזרת לזרימה חופשית).
+          if (escortLinesNeeded > 0 && ln.kind !== 'heading') {
+            escortLinesNeeded--;
+            if (escortLinesNeeded === 0) escortLockCol = 0;
+          }
         }
       }
       if (!placed) {
+        trace.emit(cur.index, 'block-overflow-newpage', { token: meta.tokenId, lineH: ln.heightPx });
         flushPage();
         cur = newPage(meta.forceType || PAGE_TYPES.REGULAR);
-        cur.columns[0].push({ ...ln, meta, seq: seqCounter++ }); // טור חדש/עמוד חדש → ללא gap
-        pendingGap = 0;
+        cur.openedBy = meta.tokenId != null ? meta.tokenId : null; // מעבר עמוד — מי פתח
+        cur.columns[0].push({ ...ln, meta, seq: seqCounter++ }); // טור חדש/עמוד חדש → ללא gap (ראש טור)
+        firstOfCall = false;
       }
     }
   }
@@ -18113,7 +19771,12 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   const pendingBarNotes = [];
   function reserveNotes(blk) {
     const notes = (blk.notes || []);
-    if (!notes.length) return;
+    if (!notes.length) return null;
+    // **FX-3 (דוח 06, שלב 5):** תמונת-מצב לשחזור דטרמיניסטי — ההתחייבות
+    // חייבת להיות הפיכה כל עוד הפסקה עודנה בהכרעת מיקום. snap.clean=false
+    // אחרי פעולות בעלות תופעות לוואי (פיצול/העברה/החזרה לגוף) — אין שחזור
+    // אחריהן (המשכים שנוצרו, מצב הבלוק וה-ledger אינם הפיכים בבטחה).
+    const snap = { clean: true, footLenBefore: cur.footnotes.length, fnBefore: cur.fnReservedHeightPx || 0, pendingBefore: pendingBarNotes.slice() };
     // המשכים מהעמוד הקודם קודם כל (שמירת סדר ההערות)
     const queue = [...pendingBarNotes.splice(0), ...notes];
     const barMax = settings['fn-layout-mode'] === 'continuous'
@@ -18129,44 +19792,127 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       // החץ שהייתה כאן איבדה את סימון ה-impl (measureWithImpl.impl), וב-impl B
       // (ייצוא PDF) הופעל פקטור הגופן שנועד לטבלת impl A בלבד ⇒ תקציב מרזב
       // מנופח והחלטות split/move-whole מוטות בגבול התקרה. כמו recomputeFnBudget.
-      const h = noteHeight(n, settings, measureFn);
+      // **פרוסה 2 (מדידה אחת — §2.3 בביקורת):** הערה שכבר נמדדה (חותמת CP2
+      // או הטבעה קודמת) אינה נמדדת שוב — noteHeight צורך את החותמת; הטבעה
+      // חד-פעמית מתבצעת רק להערה שלא נמדדה מעולם (ונחתמת על המקור — כך
+      // שגם העתקים עתידיים שלה לא יימדדו שוב).
+      if (n.heightPx == null) stampNoteMetrics(n, settings, measureFn);
+      const h = n.heightPx;
       const isCont = n.isContinuation === true;
       // הערה ארוכה מתקרת המרזב ⇒ מדיניות (block mode בלבד; continuous אין תקרה — D-34)
       if (Number.isFinite(barMax) && h > barMax && settings['long-footnote-policy'] !== 'allow') {
         if (settings['long-footnote-policy'] === 'split') {
-          // **פיצול אמיתי של הטקסט**: החלק הראשון נכנס למרזב הזה, השאר לעמוד הבא
-          const fnSize = settings['body-font-size-pt'] * 0.8;
-          const fnLH = Math.round(fnSize * (96 / 72) * 1.25);
-          const laneW = settings._fnColWidthPx || 200;
-          const words = String(n.text).replace(/\uE000/g, ' ').split(/\s+/).filter(Boolean);
+          // **פיצול אמיתי של הטקסט (פרוסה 2 — מגבולות שורה מוחלטים):** החיתוך
+          // נעשה בגבול שורה מהמבנה שכבר נמדד (noteRows) — לא בספירת מילים
+          // עם מדידה חוזרת. החלק הראשון נכנס למרזב הזה; השאר נכנס לתור
+          // pendingBarNotes עם סימון המשך (isContinuation) — טקסט חדש שמוטבע
+          // פעם אחת בלבד (מדידתו הראשונה והאחרונה).
+          // **שלב 6 פרוסה 2 (§7 — זהות וטווחים):** המקור וההמשך שומרים קישור
+          // מפורש — continuationOf (noteId) + wordRange (טווח מילים במקור):
+          // מילה לא נעלמת, לא מוכפלת ולא נסדרת מחדש; ההמשך נמדד כטקסט חדש
+          // (חותמת משלו, כולל רוחב '(המשך)' בתקציב שורה 0 — §9).
+          const fnLH = n.lineH || noteMetrics(settings).lineHeightPx;
+          const rows = n.noteRows || [];
           const linesFit = Math.max(1, Math.floor(barMax / fnLH));
-          let w = 0, linesUsed = 1, cutIdx = words.length;
-          for (let i = 0; i < words.length; i++) {
-            const ww = measureFn(words[i], fnSize);
-            if (w + ww > laneW && w > 0) { linesUsed++; w = ww; if (linesUsed > linesFit) { cutIdx = i; break; } } else w += ww;
-          }
-          if (cutIdx >= words.length) {
+          if (!rows.length || n.linesCount == null || n.linesCount <= linesFit) {
             // כל ההערה נכנסת בגבול התקרה — אין צורך בפיצול
             cur.footnotes.push({ ...n, heightPx: h, mode: isCont ? 'split-rest' : 'normal', isContinuation: isCont });
             continue;
           }
-          const firstText = words.slice(0, cutIdx).join(' ');
-          const restText = words.slice(cutIdx).join(' ');
-          cur.footnotes.push({ ...n, text: firstText, heightPx: linesFit * fnLH, lineH: fnLH, mode: 'split-first', linesShown: linesFit });
-          pendingBarNotes.push({ ...n, text: restText, isContinuation: true, continuationOf: n.tokenId, mode: 'split-rest' });
-          eventLog.emit('notes-budget', 'fn-split', { token: n.tokenId, marker: n.marker, barMax, firstWords: cutIdx }, cur.index);
+          const cutRow = Math.min(linesFit, rows.length);
+          const cutIdx = rows[cutRow - 1].wTo;
+          const wordsArr = n.noteWords || String(n.text).replace(/\uE000/g, ' ').split(/\s+/).filter(Boolean);
+          if (cutIdx >= wordsArr.length) {
+            cur.footnotes.push({ ...n, heightPx: h, mode: isCont ? 'split-rest' : 'normal', isContinuation: isCont });
+            continue;
+          }
+          const firstText = wordsArr.slice(0, cutIdx).join(' ');
+          const restText = wordsArr.slice(cutIdx).join(' ');
+          const srcNoteId = n.noteId || makeNoteRecord(n, { kind: NOTE_KINDS.FOOTNOTE, numberingScope: settings['footnote-reset-policy'], splitPolicy: 'split' }).noteId;
+          cur.footnotes.push({
+            ...n, text: firstText, heightPx: cutRow * fnLH, lineH: fnLH, linesCount: cutRow,
+            noteRows: rows.slice(0, cutRow), noteWords: wordsArr.slice(0, cutIdx),
+            mode: 'split-first', linesShown: cutRow,
+            wordRange: { from: n.wordRange ? n.wordRange.from : 0, to: (n.wordRange ? n.wordRange.from : 0) + cutIdx }
+          });
+          // ההמשך נולד כרשומת חוזה מלאה (makeNoteRecord — זהות+עוגן+מדיניות,
+          // עם fragmentIndex ל-noteId) — לא כשק חלקי של המקור.
+          const frag = makeNoteRecord(
+            { text: restText, marker: n.marker, tokenId: n.tokenId, noteIndex: n.noteIndex, part: n.part },
+            {
+              kind: NOTE_KINDS.FOOTNOTE,
+              numberingScope: settings['footnote-reset-policy'],
+              splitPolicy: 'split', continuationPolicy: 'split',
+              continuationOf: srcNoteId,
+              fragmentIndex: (n.fragmentSeq != null ? n.fragmentSeq : 0) + 1,
+              wordRange: { from: (n.wordRange ? n.wordRange.from : 0) + cutIdx, to: (n.wordRange ? n.wordRange.from : 0) + wordsArr.length }
+            }
+          );
+          frag.isContinuation = true;
+          frag.mode = 'split-rest';
+          frag.fragmentSeq = (n.fragmentSeq != null ? n.fragmentSeq : 0) + 1;
+          pendingBarNotes.push(stampNoteMetrics(frag, settings, measureFn));
+          snap.clean = false; // נוצר המשך חדש — אין שחזור בטוח
+          eventLog.emit('notes-budget', 'fn-split', { token: n.tokenId, marker: n.marker, barMax, firstWords: cutIdx, firstRows: cutRow }, cur.index);
+          trace.emit(cur.index, 'note-split', { token: n.tokenId, marker: n.marker, firstRows: cutRow, restRows: n.linesCount - cutRow });
           continue;
         }
         if (settings['long-footnote-policy'] === 'move-whole') {
           pendingBarNotes.push({ ...n, mode: 'moved-whole', deferredToNextPage: true });
+          snap.clean = false; // הועברה לעמוד הבא — אין שחזור בטוח
           eventLog.emit('notes-budget', 'fn-moved-whole', { token: n.tokenId, marker: n.marker }, cur.index);
+          trace.emit(cur.index, 'note-moved-whole', { token: n.tokenId, marker: n.marker });
           continue;
         }
-        if (settings['long-footnote-policy'] === 'reject-to-body' && rejectToBody(n, `bar overflow ${h}>${barMax}`)) continue;
+        if (settings['long-footnote-policy'] === 'reject-to-body' && rejectToBody(n, `bar overflow ${h}>${barMax}`)) {
+          snap.clean = false; // מוטציית בלוק+lines — אין שחזור בטוח
+          trace.emit(cur.index, 'note-rejected-to-body', { token: n.tokenId, marker: n.marker });
+          continue;
+        }
       }
-      cur.footnotes.push({ ...n, heightPx: h, lineH: Math.round((settings['body-font-size-pt'] * 0.8) * (96 / 72) * 1.25), isContinuation: isCont, mode: isCont ? 'split-rest' : 'normal' });
+      cur.footnotes.push({ ...n, heightPx: h, lineH: n.lineH || noteMetrics(settings).lineHeightPx, isContinuation: isCont, mode: isCont ? 'split-rest' : 'normal' });
     }
     recomputeFnBudget(cur); // probe==reserved — פונקציה אחת (unified) לשני הצרכים
+    return snap;
+  }
+
+  /**
+   * **FX-3 (דוח 06, שלב 5):** שחזור דטרמיניסטי של התחייבות הערות — רק מנתיב
+   * snap.clean (המשכים קודמים מוחזרים לתור; פעולות עם תופעות לוואי אינן הפיכות).
+   */
+  function uncommitNotes(page, snap) {
+    page.footnotes.length = snap.footLenBefore;
+    page.fnReservedHeightPx = snap.fnBefore;
+    pendingBarNotes.length = 0;
+    for (const p of snap.pendingBefore) pendingBarNotes.push(p);
+  }
+
+  /** **FX-3:** אינדקס שורת הסמן הראשונה של הבלוק (-1 אם אין). */
+  function firstMarkerLineOf(blk) {
+    return (blk.lines || []).findIndex(ln => (ln.words || []).some(w => String(w).includes(MARK_TAG)));
+  }
+
+  /**
+   * **FX-3 (דוח 06, שלב 5):** התחייבות הערות בעמוד שבו שורת הסמן עומדת להיות
+   * מוצבת, עם נסיגה דטרמיניסטית חד-פעמית אם התקציב חסם את שורת הסמן. F-17
+   * נשמר לעמוד ההערה: התקציב נסגר בטרם שורת הסמן ושארית שורות הבלוק.
+   * @param {object} blk — הפסקה
+   * @param {object|null} markerLine — שורת הסמן (null ⇒ שורה ראשונה של הבלוק)
+   */
+  function reserveAtMarker(blk, markerLine) {
+    const snap = reserveNotes(blk);
+    if (!snap) return;
+    const isFirst = !markerLine;
+    const stack = CM.stackHeightPx([markerLine || blk.lines[0]], isFirst ? blockGapPx(settings, lineH) : 0);
+    if (snap.clean && ensureRoomFor(stack) === -1) {
+      uncommitNotes(cur, snap);
+      flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
+      reserveNotes(blk);
+      if (ensureRoomFor(stack) === -1) {
+        // מצב פתולוגי (הערה בגודל עמוד): מתועד, לא שקט
+        ledger.create('fn-degenerate', blk.tokenId, cur.index, { reservedPx: cur.fnReservedHeightPx }, 'notes-budget');
+      }
+    }
   }
 
   /**
@@ -18190,7 +19936,8 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       });
     } else {
       const textE = String(n.text).replace(/\uE000/g, ' ').replace(/ /g, '\uE000');
-      blk.lines.push({ words: [`${n.marker}\uE000${textE}`], heightPx: lineH, isLast: false, tokenId: blk.tokenId, kind: 'paragraph', part: 'rest' });
+      // **פרוסה 2:** סימון synthetic מפורש — שורה שנוצרה בזמן ההצבה (לא ממנוע השורות) — פוטרת מתועד באימות החוזה במקום לדווח שקרי על חוסר LineModel.
+      blk.lines.push({ words: [`${n.marker}\uE000${textE}`], heightPx: lineH, isLast: false, tokenId: blk.tokenId, kind: 'paragraph', part: 'rest', synthetic: 'reject-to-body' });
     }
     const ni = (blk.notes || []).findIndex(x => x.noteIndex === n.noteIndex);
     if (ni >= 0) blk.notes.splice(ni, 1); // מקור־אמת יחיד: לא לספור פעמיים
@@ -18201,6 +19948,38 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     return true;
   }
 
+
+  // **שלב 6 פרוסה 2 (§§7/10):** יצירת פריט עוגן בשוליים (הערת-צד / תיבת
+  // מידע) — רשומת מודל-ההערות המאוחד (זהות+עוגן+מדיניות) שמוטבעת בחותמת
+  // מדידה **ביצירתה** (מדידה אחת): מכאן ההקצאה האנכית, ה-DOM וה-PDF קוראים
+  // את אותה חותמת ואינם מודדים עוד. תיבת המידע נמדדת ברוחב הפנימי שלה
+  // (רוחב-מוגדר פחות מסגרת/ריפוד) וגובה התיבה כולה נכנס לחותמת — התקציב
+  // וההקצאה מקבלים את התיבה השלמה (אין הזמנה נסתרת בזמן ההצבה).
+  function pushAnchoredMarginItem(rec) {
+    const isBox = rec.itemKind === 'info-box';
+    const kind = isBox ? NOTE_KINDS.INFO_BOX : NOTE_KINDS.SIDE_NOTE;
+    const chrome = isBox && rec.boxSpec
+      ? { pad: rec.boxSpec.padPx || 0, border: rec.boxSpec.borderPx || 0 }
+      : { pad: 0, border: 0 };
+    const outerW = (isBox && rec.boxSpec && Number(rec.boxSpec.widthPx) > 0) ? rec.boxSpec.widthPx : null;
+    const record = makeNoteRecord({ ...rec, tokenId: rec.ownToken || rec.tokenId }, {
+      kind,
+      anchorId: rec.anchorToken,
+      numberingScope: isBox ? 'style' : 'document',
+      continuationPolicy: 'anchor-cascade',
+      ...(isBox ? { splitPolicy: 'atomic' } : {})
+    });
+    stampNote(record, settings, measureFn, kind, {
+      ...(outerW != null ? { widthPx: Math.max(12, outerW - 2 * (chrome.pad + chrome.border)) } : {}),
+      ...(isBox && rec.boxSpec && Number(rec.boxSpec.sizePt) > 0 ? { sizePt: Number(rec.boxSpec.sizePt) } : {})
+    });
+    if (isBox) {
+      record.boxChrome = chrome;
+      record.heightPx = Math.round((record.heightPx + 2 * (chrome.pad + chrome.border)) * 1000) / 1000; // התיבה כולה — תקציב=הצבה=הקרנה
+    }
+    cur.sideNotes.push(record);
+    return record;
+  }
 
   for (let bi = 0; bi < blocks.length; bi++) {
     const blk = blocks[bi];
@@ -18242,10 +20021,10 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       // S7.1.2: הערת צד נצמדת לפסקה שהיא מבארת — הבלוק הבא (host) הוא העוגן החזותי;
       // ההצבה מחפשת את שורת ה‑host וממקמת את ההערה בראשה (לא ראש עמוד עיוור).
       const host = blocks.slice(bi + 1).find(b => b.kind === 'paragraph');
-      cur.sideNotes.push({
+      pushAnchoredMarginItem({
         text: blk.lines.map(l => l.words.join(' ')).join(' ').trim(),
         anchorToken: host ? host.tokenId : blk.tokenId,
-        ownToken: blk.tokenId, isHeading: true, level: blk.level
+        ownToken: blk.tokenId, isHeading: true, level: blk.level, itemKind: 'side-note'
       });
       eventLog.emit('page-plan', 'heading-side-note', { token: blk.tokenId }, cur.index);
       continue;
@@ -18259,16 +20038,23 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
         eventLog.emit('page-plan', 'custom-style-new-location', { style: cs.id, token: blk.tokenId }, cur.index);
       }
-      if (cs.layoutMode === 'side-note' && blk.asSideNote) {
-        // הפסקה הופכת הערת צד מעוגנת לפסקה הבאה שאחריה (המארחת) — דפוס H7
-        const host = blocks.slice(bi + 1).find(b => b.kind === 'paragraph' && !(b.customStyle && b.customStyle.layoutMode === 'side-note'));
-        cur.sideNotes.push({
+      if ((cs.layoutMode === 'side-note' && blk.asSideNote) || (cs.layoutMode === 'info-box' && blk.asInfoBox)) {
+        // הפסקה הופכת פריט עוגן בשוליים מעוגן לפסקה הבאה שאחריה (המארחת) — דפוס H7;
+        // תיבת מידע (info-box) רוכבת על אותו מנגנון עוגן — דרך החוזה וה-registry (§11).
+        // **FX-3:** הערות פנימיות של פסקת צד מחויבות כאן — הענף continue
+        // מדלג על ההצבה הרגילה (התנהגות קודמת נשמרת).
+        if ((blk.notes || []).length) reserveNotes(blk);
+        const host = blocks.slice(bi + 1).find(b => b.kind === 'paragraph' && !(b.customStyle && (b.customStyle.layoutMode === 'side-note' || b.customStyle.layoutMode === 'info-box')));
+        pushAnchoredMarginItem({
           text: blk.lines.map(l => (l.words || []).join(' ')).join(' ').trim(),
           anchorToken: host ? host.tokenId : blk.tokenId,
           ownToken: blk.tokenId, isCustomStyle: cs.id,
-          counterMark: cs.counterMark || null
+          counterMark: cs.counterMark || null,
+          itemKind: blk.asInfoBox ? 'info-box' : 'side-note',
+          styleSpec: cs.styleSpec || null,
+          boxSpec: blk.infoBoxSpec || null
         });
-        eventLog.emit('page-plan', 'custom-style-side-note', { style: cs.id, token: blk.tokenId }, cur.index);
+        eventLog.emit('page-plan', blk.asInfoBox ? 'custom-style-info-box' : 'custom-style-side-note', { style: cs.id, token: blk.tokenId }, cur.index);
         continue;
       }
       if (cs.layoutMode === 'full-width' && blk.fullWidth) {
@@ -18286,8 +20072,11 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       }
     }
 
-    // תקציב הערות לפני מיקום (F-17 probe==reserved, כולל מדיניות הערה ארוכה)
-    if (blk.kind === 'paragraph') reserveNotes(blk);
+    // **FX-3 (דוח 06, שלב 5 — תיקון שורש):** התחייבות ההערות הועברה להכרעת
+    // המיקום (להלן, אחרי ensureRoomFor/findSplit) — בעבר רצה כאן, לפני שהיה
+    // ידוע היכן הפסקה תוצב: פסקה שנדחקה כולה לעמוד הבא הותירה את הערותיה
+    // מאחור (סמן בעמוד N+1, טקסט ההערה במרזב עמוד N — הוכח בדוח 06, FX-3;
+    // אף בדיקת הגנה לא זיהתה זאת: המילים כולן קיימות, רק הקולוקציה הופרה).
 
     // **03.11(ד) — span_1col של המקור ל-H3–H6 (mode=full-width):** עד כאן כותרת
     // שנמדדה ברוחב מלא (674px) הוצבה בטור של 270px — שורה ברוחב 471px בטור
@@ -18347,39 +20136,76 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     if (blk.kind === 'heading' && blk.level <= 6) {
       const following = (next && next.lines) ? next.lines.length : 0;
       if (following >= 1) {
-        const needLines = 1 + Math.min(2, following); // כותרת + 2 שורות ליווי (או כמה שיש)
-        let room = ensureRoom(needLines);
+        // **FX-1/FX-5 (דוח 06, שלב 5):** הבדיקה מודדת את המחסנית הפיזית האמיתית
+        // (CM.escortStackHeightPx — גבהי הכותרת + פערי כניסה + שורות הליווי)
+        // ותוצאתה מנוצלת להצבה מכוונת (escortLockCol/startCol) — בדיקה שאינה
+        // קשורה להצבה יוצרת כותרות יתומות שאין להן תיקון (הוכח: FX-1 בדוח 06).
+        const escortN = Math.min(CM.ESCORT_MIN_LINES, following);
+        const escortStack = CM.escortStackHeightPx(blk, next, () => blockGapPx(settings, lineH));
+        let pushed = false;
+        let room = ensureRoomFor(escortStack);
         if (room === -1) {
           flushPage(); cur = newPage(blk.level === 2 ? PAGE_TYPES.SIGN_OPEN : PAGE_TYPES.REGULAR);
-          room = ensureRoom(needLines);
-          if (room !== -1) {
-            eventLog.emit('page-plan', 'heading-escort-push', { token: blk.tokenId, page: cur.index }, cur.index);
-          } else {
-            const rec = ledger.create('heading-escort', blk.tokenId, cur.index, { linesNeeded: needLines, capacityPx: colCapacity(cur.template, cur), lineHPx: lineH }, 'protections');
-            ledger.transition(rec.issue_id, 'correction-blocked', 'protections', 'no column fits heading+escort even on fresh page (oversized block)');
-          }
+          room = ensureRoomFor(escortStack);
+          pushed = true;
+        }
+        if (room !== -1) {
+          eventLog.emit('page-plan', pushed ? 'heading-escort-push' : 'heading-escort-directed', { token: blk.tokenId, page: cur.index, col: room, stackPx: Math.round(escortStack) }, cur.index);
+          escortLockCol = room;      // הצבה מכוונת: הכותרת ושורות הליווי — בטור שאומת
+          escortLinesNeeded = escortN;
+          trace.emit(cur.index, 'escort-directed', { token: blk.tokenId, col: room, stackPx: escortStack, pushed });
+        } else {
+          const rec = ledger.create('heading-escort', blk.tokenId, cur.index, { stackPx: Math.round(escortStack), capacityPx: colCapacity(cur.template, cur) }, 'protections');
+          ledger.transition(rec.issue_id, 'correction-blocked', 'protections', 'no column fits heading+escort even on fresh page (oversized block)');
         }
       }
     }
 
     // REQ-BAL-01: candidate search עם capacityBefore/capacityAfter + הקשר הבלוק הבא
-    const need = blk.lines.length;
-    let chosenCol = ensureRoom(need);
+    // **FX-5 (דוח 06, שלב 5):** הקיבולת נמדדת ב-yPx אמיתיים (גבהים + פער כניסה)
+    // — לא בהמרת lineH; בלוק שנכנס פיזית לא יידחק עוד לעמוד חדש (עמוד ריק פנטום).
+    const needStack = CM.stackHeightPx(blk.lines, blockGapPx(settings, lineH));
+    let chosenCol = ensureRoomFor(needStack);
     if (chosenCol === -1) {
-      const splitAt = findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, settings, generateCandidates);
+      const splitAt = findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, settings, generateCandidates, trace);
       if (splitAt > 0) {
-        pushLines(blk.lines.slice(0, splitAt - 1), { tokenId: blk.tokenId, part: 'first' });
+        // **FX-3:** ההערות מחויבות לעמוד של החלק שבו שורת הסמן:
+        // הסמן בחלק הראשון ⇒ כאן; הסמן בהמשך ⇒ בעמוד החדש (לאחר ה-flush).
+        const splitMIdx = (blk.kind === 'paragraph' && (blk.notes || []).length && settings['footnotes-enabled'])
+          ? firstMarkerLineOf(blk) : -1;
+        if (blk.kind === 'paragraph' && splitMIdx < splitAt) reserveNotes(blk);
+        // **FX-6 (פרוסה 2):** החלק הראשון של הפיצול הוא פתיחת בלוק בפועל
+        // בטור שמתחתיו תוכן קיים — חותמת פער כמו כל פתיחת בלוק (בעבר חלק
+        // הפיצול לא סומן כלל כ-firstOfBlock ⇒ הפער לא נגבה גם כשער כניסה).
+        pushLines(blk.lines.slice(0, splitAt - 1), { tokenId: blk.tokenId, part: 'first', firstOfBlock: true, docPart: blk.part });
         pushLines([blk.lines[splitAt - 1]], { tokenId: blk.tokenId, part: 'first', isLast: true });
         flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
-        pushLines(blk.lines.slice(splitAt), { tokenId: blk.tokenId, part: 'rest' });
+        cur.openedBy = blk.tokenId; // מעבר עמוד בפיצול — הבלוק פתח את העמוד החדש
+        if (blk.kind === 'paragraph' && splitMIdx >= splitAt) reserveNotes(blk);
+        pushLines(blk.lines.slice(splitAt), { tokenId: blk.tokenId, part: 'rest', docPart: blk.part });
         continue;
       }
-      flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
+      // **FX-5/#16 — שמירת עמוד ריק:** אם העמוד ריק משורות גוף — אין טעם לאטום
+      // אותו; הבלוק נכנס לכאן (בעבר נאטם עמוד ריק עם הערות יתומות).
+      if (cur.columns.some(c => c.length)) {
+        flushPage();
+        cur = newPage(PAGE_TYPES.REGULAR);
+      }
       chosenCol = 0;
     }
-    pushLines(blk.lines, { tokenId: blk.tokenId, firstOfBlock: true, docPart: blk.part });
+    // **FX-3 (דוח 06, שלב 5):** התחייבות ההערות בעמוד שבו שורת הסמן נוחתת
+    // בפועל. שורות שלפני הסמן ממלאות את העמודים הקודמים בלי תקציב (ההערה
+    // לא תשהה שם); התקציב נסגר בטרם שורת הסמן ושארית השורות — F-17 נשמר
+    // לעמוד ההערה.
+    const hasNotes = blk.kind === 'paragraph' && (blk.notes || []).length && settings['footnotes-enabled'];
+    const mIdx = hasNotes ? Math.max(0, firstMarkerLineOf(blk)) : 0;
+    if (hasNotes && mIdx > 0) {
+      pushLines(blk.lines.slice(0, mIdx), { tokenId: blk.tokenId, firstOfBlock: true, docPart: blk.part }, { startCol: escortLockCol });
+    }
+    if (hasNotes) reserveAtMarker(blk, mIdx > 0 ? blk.lines[mIdx] : null);
+    pushLines(blk.lines.slice(mIdx), { tokenId: blk.tokenId, docPart: blk.part, ...(mIdx > 0 ? {} : { firstOfBlock: true }) }, { startCol: escortLockCol });
 
-    if (blk.sideNoteText) cur.sideNotes.push({ text: blk.sideNoteText, anchorToken: blk.tokenId });
+    if (blk.sideNoteText) pushAnchoredMarginItem({ text: blk.sideNoteText, anchorToken: blk.tokenId, ownToken: blk.tokenId, itemKind: 'side-note' });
   }
 
   // **S6.0 (R3-C1 — אובדן תוכן בזנב):** פס חוצה-טורים (H3–H6) או הערת-צד
@@ -18392,10 +20218,32 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   // המשכים שנותרו בתור בסוף המסמך — לא ראוי לגנוז (BRZ-15): נדחפים לעמוד האחרון
   if (pendingBarNotes.length) {
     const last = pages[pages.length - 1];
+    const { lineHeightPx: tailLineH } = noteMetrics(settings); // **שלב 5 (#16):** מקור יחיד למדדי ההערה
     for (const n of pendingBarNotes) {
-      last.footnotes.push({ ...n }); // mode/isContinuation preserved (moved-whole stays whole)
+      // **שלב 5 (חילוץ שורש מ-#16 — חותמי מדדים בניקוז הזנב):** התקציב
+      // (recomputeFnBudget) מחשב את הגובה מ-noteHeight ממילא, אך ההקרנה
+      // צורכת את n.heightPx/n.lineH — בלי החותמים, המשך שנדחף לסוף המסמך
+      // מתקדם שורה אחת בלבד ושורותיו חופפות את ההערה שאחריו (תקציב≠הקרנה —
+      // בדיוק מחלקת הכשל ש-S70/S71.1 רדפו אחריה).
+      last.footnotes.push({
+        ...n, // mode/isContinuation preserved (moved-whole stays whole)
+        ...(n.heightPx != null ? {} : { heightPx: noteHeight(n, settings, measureFn) }),
+        ...(n.lineH != null ? {} : { lineH: tailLineH })
+      });
     }
     recomputeFnBudget(last);
+    // **שלב 5 (אין fallback שקט):** ההמשכים חייבים להישמר (BRZ-15 — אין אובדן
+    // תוכן), אך אם תקציבם חורג מקיבולת העמוד האחרון — נרשם אבחון מפורש
+    // (fn-tail-overflow) במקום גלישה שקטה. זהו מצב פתולוגי מבני (המשכים
+    // שנצברו בסוף המסמך); לתקנת השורש המלאה נדרש מנגנון עמודי-גלישה להערות
+    // — שלב B של התוכנית (דוח 06).
+    const tailCap = colCapacityOf(last, { fnBudget: false });
+    const tailUsed = planningUsedHeight(last.columns[last.columns.length - 1], last);
+    if (tailUsed > tailCap + CM.CAPACITY_EPS) {
+      const rec = ledger.create('fn-tail-overflow', `tail@p${last.index}`, last.index,
+        { usedPx: Math.round(tailUsed), capPx: Math.round(tailCap), notes: pendingBarNotes.length }, 'notes-budget');
+      ledger.transition(rec.issue_id, 'persists', 'notes-budget', 'tail continuations exceed last-page capacity (structural; documented — stage B)');
+    }
     eventLog.emit('notes-budget', 'fn-tail-continuation', { count: pendingBarNotes.length, page: last.index }, last.index);
     pendingBarNotes.length = 0;
   }
@@ -18408,40 +20256,150 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     }
   }
 
+  // **§3.2 (ביקורת PR #16 — העברת פתרון השורש למודל ההערות המאוחד):**
+  // reconcileNotesAfterPlacement — אחרי ההצבה המלאה. שורש הפגם: reserveNotes
+  // מחייב את **כל** הערות הבלוק בעמוד הסמן **הראשון** (FX-3); כשסמנים
+  // מאוחרים של אותו בלוק נוחתים בעמוד הבא (פיצול פסקה / זרימה), ההערות
+  // שלהם נשארות עמוד קודם לסמן — "הערה לפני העוגן" (הוכח בפועל:
+  // very_long, 6 הפרות — ראה tools/audit-note-anchors.js). התיקון: העברה
+  // קדימה של הערה לעמוד הסמן שלה **בקיבולת אמיתית מצטברת** — הטור האחרון
+  // של עמוד היעד + התקציב הקיים + ההערות שכבר הועברו אליו. המשכים
+  // (isContinuation/split-rest) אינם מוזזים כהערות מקוריות — הם קשורים
+  // לזרימת הפיצול של המקור. אין מקום חוקי ⇒ לא מעבירים בכוח — נרשם
+  // diagnostic אמיתי (fn-anchor-compromise). זהות נשמרת במלואה: noteId,
+  // anchorId, continuationOf, wordRange, סמן ומספור — מוקזים בלבד.
+  const reconcileNotesAfterPlacement = () => {
+    if (!settings['footnotes-enabled']) return { moved: 0, blocked: 0, movedList: [] };
+    // מיפוי טוקן-עוגן → שורות הסמן בפועל (עמוד/טור/שורה + טקסט הסמן)
+    const markerLines = new Map();
+    for (const pg of pages) {
+      pg.columns.forEach((col, ci) => {
+        col.forEach((ln, li) => {
+          const tok = ln.tokenId != null ? String(ln.tokenId) : (ln.meta && ln.meta.tokenId != null ? String(ln.meta.tokenId) : null);
+          if (!tok) return;
+          for (const w of (ln.words || [])) {
+            const s = String(w);
+            const at = s.indexOf(MARK_TAG);
+            if (at < 0) continue;
+            if (!markerLines.has(tok)) markerLines.set(tok, []);
+            markerLines.get(tok).push({ page: pg, col: ci, li, marker: s.slice(at + MARK_TAG.length) });
+          }
+        });
+      });
+    }
+    const markerRecOf = (n) => {
+      const tok = n.tokenId != null ? String(n.tokenId) : (n.anchorId != null ? String(n.anchorId) : null);
+      if (!tok) return null;
+      const cands = markerLines.get(tok) || [];
+      if (!cands.length) return null;
+      const mk = String(n.marker != null ? n.marker : '');
+      if (mk) {
+        const hit = cands.find(m => m.marker === mk);
+        if (hit) return hit;
+        // טקסט הסמן לא זוהה — נפילה לסמן היחיד של הטוקן בלבד (חד-משמעי);
+        // ריבוי סמנים בלי התאמה ⇒ אין זיהוי בטוח — לא מזיזים (כיוון שמרני)
+        return cands.length === 1 ? cands[0] : null;
+      }
+      return cands.length === 1 ? cands[0] : null;
+    };
+    let movedCount = 0;
+    const movedList = [], blocked = [];
+    for (const pg of pages) {
+      if (!(pg.footnotes || []).length) continue;
+      const keep = [];
+      let changed = false;
+      for (const n of pg.footnotes) {
+        const isCont = n.isContinuation === true || n.mode === 'split-rest' || n.continuationOf != null;
+        const rec = isCont ? null : markerRecOf(n);
+        // חוקי: אין רשומת סמן / אותו עמוד / הסמן בעמוד מוקדם — אין מה לתקן
+        if (!rec || rec.page === pg || rec.page.index < pg.index) { keep.push(n); continue; }
+        const target = rec.page;
+        // הכנסה לפי מיקום הסמן בסדר הקריאה של עמוד היעד — הסדר החזותי במרזב
+        // עוקב אחר סדר הסמנים בגוף (מדויק ודטרמיניסטי; נפילה לסוף כשאין רשומות)
+        const tRec = markerRecOf(n);
+        let insertAt = target.footnotes.length;
+        for (let i = target.footnotes.length - 1; i >= 0; i--) {
+          const other = markerRecOf(target.footnotes[i]);
+          if (other && other.page === target && (other.col < tRec.col || (other.col === tRec.col && other.li <= tRec.li))) {
+            insertAt = i + 1;
+            break;
+          }
+          if (!other) { insertAt = i + 1; break; }
+        }
+        target.footnotes.splice(insertAt, 0, n);
+        recomputeFnBudget(target);
+        // **קיבולת מצטברת אמיתית:** הטור האחרון של היעד (כולל התקציב המעודכן —
+        // כולל הערות שהועברו קודם לאותו עמוד באותה סריקה) אינו עובר את הקיבולת.
+        const capNoFn = colCapacityOf(target, { fnBudget: false });
+        const usedLast = planningUsedHeight(target.columns[target.columns.length - 1], target);
+        if (usedLast <= capNoFn + CM.CAPACITY_EPS) {
+          changed = true;
+          movedCount++;
+          movedList.push({ noteId: n.noteId || null, marker: n.marker, from: pg.index, to: target.index });
+          eventLog.emit('notes-budget', 'fn-anchor-reconciled', { token: n.tokenId, marker: n.marker, from: pg.index, to: target.index }, target.index);
+          trace.emit(target.index, 'note-anchor-reconciled', { token: n.tokenId, marker: n.marker, from: pg.index });
+        } else {
+          // אין מקום חוקי — לא מעבירים בכוח: נסיגה דטרמיניסטית + פשרה מדווחת
+          target.footnotes.splice(insertAt, 1);
+          recomputeFnBudget(target);
+          keep.push(n);
+          blocked.push({ noteId: n.noteId || null, marker: n.marker, notePage: pg.index, markerPage: target.index });
+          const rec2 = ledger.create('fn-anchor-compromise', `${n.noteId || n.tokenId}@p${pg.index}`, pg.index,
+            { marker: n.marker, notePage: pg.index, markerPage: target.index, reason: 'no-capacity-at-marker-page' }, 'notes-budget');
+          ledger.transition(rec2.issue_id, 'persists', 'notes-budget',
+            `note cannot move to marker page (capacity): marker p${target.index} > note p${pg.index}`);
+        }
+      }
+      if (changed) {
+        pg.footnotes = keep; // הוסרו רק המועברות; הסדר של הנשארות נשמר
+        recomputeFnBudget(pg);
+      }
+    }
+    if (movedCount || blocked.length) {
+      eventLog.emit('notes-budget', 'fn-anchor-reconciliation', { moved: movedCount, blocked: blocked.length });
+    }
+    return { moved: movedCount, blocked: blocked.length, movedList };
+  };
+  const noteAnchorReconciliation = reconcileNotesAfterPlacement();
+
   // S5.1.4 + S5.1.5: הגנות AFTER every mutation, ואז לולאת נסיגה מאוחדת עם גלאי תנודה
   const assess = (page, s, lg) => runProtections(page, s, lg).violations;
   const retreat = runRetreatLoop({
     pages, settings, ledger, eventLog,
-    repairFns: {
-      'column-imbalance': (violations, c) => {
+    repairFns: (() => {
+      // **FX-2 (דוח 06, שלב 5):** תיקוני רישום-בלבד מסומנים mutates:false —
+      // לולאת הנסיגה לא תתייג עוד הפרה סטטית (שאין לה תיקון פעיל) כ"תנודה
+      // בין תיקונים מתחרים". התווית ההיסטורית היתה אבחון שקרי: שום תיקון לא רץ.
+      const markNoLegalSplit = (violations, c) => {
         for (const v of violations) {
-          const pg = pages.find(p => `page#${p.index}` === v.target);
-          if (pg) balancePageSafe(pg, c.settings, c.ledger);
+          const rec = c.ledger.issues.get(v.ledgerRef);
+          if (rec) c.ledger.transition(rec.issue_id, 'correction-blocked', 'protections', 'no legal split exists (documented compromise)');
         }
-      },
-      'reading-order-break': (violations, c) => {
+      };
+      markNoLegalSplit.mutates = false;
+      const markReadingOrderBlocked = (violations, c) => {
         for (const v of violations) {
           const rec = c.ledger.issues.get(v.ledgerRef);
           if (rec) c.ledger.transition(rec.issue_id, 'correction-blocked', 'protections', 'line moved backward in reading order (bug-guard P0-3; not auto-repaired)');
         }
-      },
-      'widow-bottom': (violations, c) => {
-        for (const v of violations) {
-          const rec = c.ledger.issues.get(v.ledgerRef);
-          if (rec) c.ledger.transition(rec.issue_id, 'correction-blocked', 'protections', 'no legal split exists (documented compromise)');
-        }
-      },
-      'orphan-top': (violations, c) => {
-        for (const v of violations) {
-          const rec = c.ledger.issues.get(v.ledgerRef);
-          if (rec) c.ledger.transition(rec.issue_id, 'correction-blocked', 'protections', 'no legal split exists (documented compromise)');
-        }
-      }
-    },
+      };
+      markReadingOrderBlocked.mutates = false;
+      return {
+        'column-imbalance': (violations, c) => {
+          for (const v of violations) {
+            const pg = pages.find(p => `page#${p.index}` === v.target);
+            if (pg) balancePageSafe(pg, c.settings, c.ledger);
+          }
+        },
+        'reading-order-break': markReadingOrderBlocked,
+        'widow-bottom': markNoLegalSplit,
+        'orphan-top': markNoLegalSplit
+      };
+    })(),
     assess
   });
 
-  return { pages, ledger, retreat, hash: layoutHash(pages), bodyHash: bodyGeometryHash(pages) };
+  return { pages, ledger, retreat, hash: layoutHash(pages), bodyHash: bodyGeometryHash(pages), trace, noteAnchorReconciliation };
 }
 
 /** איזון בטוח עם rollback (REQ-BAL-09): snapshot כולל footnotes/sideNotes.
@@ -18479,10 +20437,16 @@ function balancePageSafe(page, settings, ledger) {
   const seq = [...page.columns[0], ...page.columns[1]];
   page.columns[0] = seq.slice(0, best.k);
   page.columns[1] = seq.slice(best.k);
+  // **FX-6 (פרוסה 2):** נרמול פערים אחרי הפיצול מחדש — ראש כל טור אינו
+  // נושא פער-כניסה (GAP_HEAD_POLICY). נעשה לפני בדיקת החריגה כדי שההשוואת
+  // קיבולת תראה את הגיאומטריה האמיתית שתוקרן (כולל הפערים שנותרו בגוף הטור).
+  normalizeColumnGaps(page.columns[0]);
+  normalizeColumnGaps(page.columns[1]);
   // hard reject: חריגת קיבולת אחרי ההחלפה (הגנה כפולה — optimalSplit כבר מסנן) → rollback מלא
-  // **S5.2 (P-2):** קיבולת אפקטיבית פר-טור (פס + תקציב על הטור האחרון) — מקור יחיד.
+  // **S5.2 (P-2) + FX-6:** קיבולת אפקטיבית פר-טור (פס + תקציב על הטור האחרון + פערי
+  // בלוקים) — מקור יחיד; הפערים קבועים ואינם מתמתחים עם aqStretch.
   const overflows = (c, ci) => {
-    const hh = c.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1), 0);
+    const hh = c.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1) + (ln.gapBeforePx || 0), 0);
     return hh > colCapacityOf(page, { colIndex: ci }) + 0.5;
   };
   if (page.columns.some(overflows)) {
@@ -18495,20 +20459,45 @@ function balancePageSafe(page, settings, ledger) {
 }
 
 /** בחירת נקודת פיצול עם הגנות widow/orphan (≥2 שורות לכל צד). */
-function findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, settings = {}, candidatesFn = null) {
+function findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, settings = {}, candidatesFn = null, trace = null) {
   const cap = colCapacity(cur.template, cur);
   const free = cap - usedHeight(cur.columns[cur.columns.length - 1], cur);
-  const maxFit = Math.floor(free / lineH);
-  if (maxFit < 2 || blk.lines.length - maxFit < 2) return 0; // אין פיצול חוקי → הזזה מלאה
+  // **FX-5 (פרוסה 2 — השלמת תיקון השורש):** maxFit נספר מהגבהים האמיתיים
+  // (heightPx מצטבר + פער הכניסה של הבלוק) מול המקום הפנוי — לא מהמרת
+  // lineH. ההמרה ההיסטורית (floor(free/lineH)) פסלה פיצולים חוקיים בכל בלוק
+  // שאינו אחיד-גבהים (כותרות/פסקאות-גוף גבוהות): maxFit נמוך מהאמת ⇒ החלון
+  // התכווץ ⇒ הזזה מלאה על פיצול שהיה נכנס.
+  const gap0 = blockGapPx(settings, lineH);
+  let maxFit = 0, acc = 0;
+  for (let i = 0; i < blk.lines.length; i++) {
+    const add = (i === 0 ? gap0 : 0) + (blk.lines[i].heightPx || 0);
+    if (acc + add > free + CM.CAPACITY_EPS) break;
+    acc += add; maxFit = i + 1;
+  }
+  // **שלב 5 (#16) + פרוסה 2 (מקור יחיד):** חלון הפיצול החוקי —
+  // constraint-matrix.legalSplitWindow: ≥2 שורות לכל צד **והחלק הראשון
+  // נכנס פיזית** (maxFit). null ⇒ אין פיצול חוקי → הזזה מלאה.
+  const win = CM.legalSplitWindow(blk.lines.length, maxFit);
+  if (!win) {
+    if (trace) trace.emit(cur.index, 'split-none', { token: blk.tokenId, lines: blk.lines.length, maxFit, free: Math.round(free) });
+    return 0; // אין פיצול חוקי → הזזה מלאה
+  }
 
   if (candidatesFn) {
     const cands = candidatesFn(blk, maxFit, cap, settings, ledger);
     if (cands.length) {
       eventLog.emit('protections', 'candidate-split', { token: blk.tokenId, at: cands[0].cut, score: cands[0].score });
+      if (trace) trace.emit(cur.index, 'split-candidate', {
+        token: blk.tokenId, cut: cands[0].cut, score: cands[0].score,
+        window: [win.lo, win.hi], candidates: cands.length,
+        rejected: (cands.rejections || []).length
+      });
       return cands[0].cut;
     }
+    if (trace) trace.emit(cur.index, 'split-candidates-exhausted', { token: blk.tokenId, window: [win.lo, win.hi], rejected: (cands.rejections || []).length });
   }
   eventLog.emit('protections', 'legal-split', { token: blk.tokenId, at: maxFit });
+  if (trace) trace.emit(cur.index, 'split-legal-maxfit', { token: blk.tokenId, at: maxFit, window: [win.lo, win.hi] });
   return maxFit;
 }
 
@@ -18536,6 +20525,11 @@ __modules["src/engine/layout/protections-matrix.js"] = function (require, module
 const { usedHeight, pageImbalance } = require('./balancing');
 const { colCapacityOf } = require('./column-flow'); // **S5.2 (P-2):** קיבולת טור — מקור יחיד
 const { MARK_TAG } = require('../notes/markers');
+// **ביקורת ממוקדת PR #17 (שארית שהועברה):** ספי ה-widow/orphan/ליווי כאן
+// נצרכים ממטריצת האילוצים (constraint-matrix) — אותו מקור סמכות שממנו
+// dp-planner ו-candidate-generator קוראים. בעבר נותרו מילולים `2` מקומיים
+// (ערך זהה, אך שני מקורות לאותה עובדה — בדיוק הכפילות שהתוכנית אוסרת).
+const { WIDOW_ORPHAN_MIN, ESCORT_MIN_LINES } = require('./constraint-matrix');
 
 /** עמודים מבניים שאינם זרימת-תוכן — כותרת בודדת בהם היא מכוונת-עיצוב,
  * לא הפרת ליווי (S4.21/EXT-11: פותחי-החלקים H1 על עמוד פתיחה ייעודי — D-36/PT-04). */
@@ -18583,7 +20577,7 @@ const CHECKS = {
       if (first.meta && first.meta.part === 'rest') {
         let run = 0;
         for (const l of col) { if (l.meta && l.meta.tokenId === first.meta.tokenId) run++; else break; }
-        if (run < 2) {
+        if (run < WIDOW_ORPHAN_MIN) {
           if (settings['prevent-widows-top'] && first.isLast) {
             violations.push({ kind: 'widow-top', target: `page#${page.index}c${c}`, page: page.index, evidence: { run }, ledgerRef: ledger.create('widow-top', `p${page.index}c${c}`, page.index, { run }, 'protections').issue_id });
           } else if (settings['prevent-orphans-top'] && settings['widow-strictness'] !== 'relaxed') {
@@ -18623,7 +20617,7 @@ const CHECKS = {
         const ln = col[i];
         if (ln.kind === 'heading' && ln.level <= 6) {
           const after = col.slice(i + 1).filter(x => x.kind !== 'heading').length;
-          if (after < 2) {
+          if (after < ESCORT_MIN_LINES) {
             violations.push({ kind: 'heading-escort', target: `${ln.tokenId || lineToken(ln)}@p${page.index}c${c}`, page: page.index, evidence: { linesAfter: after }, ledgerRef: ledger.create('heading-escort', ln.tokenId || lineToken(ln), page.index, { linesAfter: after }, 'protections').issue_id });
           }
         }
@@ -18810,11 +20804,26 @@ __modules["src/engine/layout/balancing.js"] = function (require, module, exports
 
 // (moveLineForward אינו נדרש עוד באיזון: optimalSplit מכסה את מרחב המצבים כולו — EXT-8)
 
-const { colCapacityOf } = require('./column-flow'); // **S5.2 (P-2):** קיבולת הטור — מקור יחיד
+const { colCapacityOf, normalizeColumnGaps } = require('./column-flow'); // **S5.2 (P-2):** קיבולת הטור — מקור יחיד; **פרוסה 2:** נרמול פערים אחרי פיצול מחדש
+const { seamIsClean, escortCleanBoundary } = require('./constraint-matrix'); // **שלב 5:** תפר נקי + תפר מודע-ליווי — מקור יחיד (חילוץ שורש מ-#16/#17)
 
 function usedHeight(col) {
   // **EXT-20:** גובה בפועל — כולל מקדם ה-AQ האנכי (לפני ה-AQ כל המקדמים 1).
-  return col.reduce((s, ln) => s + ln.heightPx * (ln.aqStretch || 1), 0);
+  // **FX-6 (פרוסה 2):** פער הבלוקים (gapBeforePx) נכלל — הפער הוא גאומטריה
+  // מתוכננת; הוא קבוע ואינו מתמתח עם aqStretch (המתיחה חלה על גובה השורה).
+  return col.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1) + (ln.gapBeforePx || 0), 0);
+}
+
+/** **FX-6 (פרוסה 2):** מרכיבי הגובה של טור — שורות מתיחות ופערים קבועים.
+ * שימוש: חישוב מקדם מתיחה מדויק (target/cur) שבו הפערים אינם מתמתחים:
+ * factor = (target − Σgap) / Σ(heightPx×stretch). */
+function columnStretchParts(col) {
+  let lines = 0, gaps = 0;
+  for (const ln of col) {
+    lines += (ln.heightPx || 0) * (ln.aqStretch || 1);
+    gaps += ln.gapBeforePx || 0;
+  }
+  return { lines, gaps };
 }
 
 /** הערכת "איזון" עמוד: הפרש גובה טורים. */
@@ -18843,31 +20852,21 @@ function optimalSplit(cols, opts = {}) {
   const seq = [...c0, ...c1];
   const n = seq.length;
   if (!n) return null;
-  const h = (ln) => (ln.heightPx || 0) * (ln.aqStretch || 1);
+  // **FX-6 (פרוסה 2):** פערי בלוקים נכללים בגובה השורה במרחב המצבים —
+  // הפיצול ממזער את ה-|Δ| האמיתי (כולל הפערים המתוכננים).
+  const h = (ln) => (ln.heightPx || 0) * (ln.aqStretch || 1) + (ln.gapBeforePx || 0);
   const pre = new Float64Array(n + 1);
   for (let i = 0; i < n; i++) pre[i + 1] = pre[i] + h(seq[i]);
   const total = pre[n];
   const k0 = c0.length;
 
-  // גבול-תפר נקי (ווידוא/יתום קלאסיים, מבוסס ריצות tokenId):
-  //  - widow-bottom: לבלוק שחוצה את הגבול יש **שורה אחת בדיוק** בתחתית col0
-  //    (השורה שלפני הגבול היא ראשונת הריצה שלו ב-seq).
-  //  - widow-top: לבלוק שחוצה את הגבול יש **שורה אחת בדיוק** בראש col1 והיא
-  //    גם אחרונת הבלוק (הריצה מסתיימת מיד אחריה).
-  // לא נעזר בדגלי part ('first'/'rest') — הם מוטבעים לכל שורות הצ'אנק
-  // ב-pushLinks ואינם מעידים על מיקום בבלוק (נלכד בניפוי EXT-8: כל 39
-  // שורות הפיצול נשאו part='first' וסימנו כל גבול פנימי כ-widow).
-  const cleanBoundary = (k) => {
-    if (k > 0 && k < n) {
-      const lt = seq[k - 1].meta && seq[k - 1].meta.tokenId;
-      const rt = seq[k].meta && seq[k].meta.tokenId;
-      if (lt != null && lt === rt) { // הבלוק ממשיך מעבר לגבול
-        if (k - 2 < 0 || (seq[k - 2].meta && seq[k - 2].meta.tokenId) !== lt) return false; // widow-bottom
-        if (k + 1 >= n || (seq[k + 1].meta && seq[k + 1].meta.tokenId) !== rt) return false; // widow-top
-      }
-    }
-    return true;
-  };
+  // גבול-תפר נקי — **שלב 5:** constraint-matrix.seamIsClean (מקור יחיד; חילוץ
+  // שורש מ-#16) + escortCleanBoundary (חילוץ שורש מ-#17, דוח 06 פרק 4 —
+  // סתירת ליווי×איזון): גבול "נקי" הוא גם נקי מווידוא/יתום (לפי ריצות tokenId
+  // ב-meta — לא דגלי part, שאינם מעידים על מיקום בבלוק; נלכד בניפוי EXT-8)
+  // וגם אינו מותיר כותרת בתחתית הטור עם <ESCORT_MIN_LINES שורות אחריה —
+  // אחרת האיזון עצמו יוצר הפרת heading-escort שאין לה תיקון.
+  const cleanBoundary = (k) => seamIsClean(seq, k) && escortCleanBoundary(seq, k);
 
   let best = null;
   for (let k = 0; k <= n; k++) {
@@ -18912,6 +20911,10 @@ function balancePage(page, maxDelta) {
   const k0 = page.columns[0].length;
   page.columns[0] = seq.slice(0, best.k);
   page.columns[1] = seq.slice(best.k);
+  // **FX-6 (פרוסה 2):** נרמול פערים אחרי הפיצול מחדש — ראש כל טור אינו
+  // נושא פער-כניסה (GAP_HEAD_POLICY; אותו כלל שחל בהצבה המקורית).
+  normalizeColumnGaps(page.columns[0]);
+  normalizeColumnGaps(page.columns[1]);
   const after = pageImbalance(page);
   return { changed: true, moves: Math.abs(best.k - k0), before, after, optimal: true, cleanBoundary: best.clean };
 }
@@ -18940,7 +20943,9 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     if (cols.length !== 2) continue;
     const c0 = cols[0], c1 = cols[1];
     if (!c0.length || !c1.length) { skipped++; continue; } // טור ריק — אין מה למתוח
-    const hh = (c) => c.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1), 0);
+    // **FX-6 (פרוסה 2):** גבהים כוללים פערי בלוקים — אותה סמנטיקה כמו usedHeight
+    // (הפער קבוע; המתיחה חלה על השורות בלבד — ראה columnStretchParts).
+    const hh = (c) => c.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1) + (ln.gapBeforePx || 0), 0);
     const h0 = hh(c0), h1 = hh(c1);
     const delta = Math.abs(h0 - h1);
     if (delta <= maxDelta) continue; // כבר מאוזן — אין התערבות
@@ -18957,7 +20962,12 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     const shortI = h0 < h1 ? 0 : 1;
     const shortCol = cols[shortI];
     const usedS = Math.min(h0, h1);
-    const raw = usedS > 0.5 ? target / usedS : 1; // **S72 (שיפור 4):** מקדם מדויק — יעד/נוכחי
+    // **FX-6 (פרוסה 2):** מקדם מדויק עם פערים קבועים — הפערים אינם מתמתחים:
+    // factor = (target − Σgap) / Σ(heightPx×stretch). בלי זה, מתיחה שחושבה
+    // מ-used כולל-פערים לא הגיעה ליעדה בפועל (הפערים נשארו בגובהם המקורי).
+    const partsS = columnStretchParts(shortCol);
+    const stretchTo = (target) => partsS.lines > 0.5 ? (target - partsS.gaps) / partsS.lines : 1;
+    const raw = stretchTo(Math.max(h0, h1));
     if (!(raw > 1 + 1e-4)) continue;
     const lo = settings['aq-word-spacing-min'];
     const tallCol = cols[1 - shortI];
@@ -18967,8 +20977,9 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     // (פער גדול על טורים קצרים) — מתיחה חד-צדדית עד התקרה ושארית
     // מדווחת באירוע (clamped=true).
     const mid = (Math.max(h0, h1) + usedS) / 2;
-    const fShort = usedS > 0.5 ? mid / usedS : 1;
-    const fTall = Math.max(h0, h1) > 0.5 ? mid / Math.max(h0, h1) : 1;
+    const partsT = columnStretchParts(tallCol);
+    const fShort = stretchTo(mid);
+    const fTall = partsT.lines > 0.5 ? (mid - partsT.gaps) / partsT.lines : 1;
     let factor, shared = false;
     if (raw > hi + 1e-9 && fShort <= hi + 1e-9 && fTall >= lo - 1e-9) {
       factor = fShort; shared = true;
@@ -18979,8 +20990,9 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     for (const ln of shortCol) ln.aqStretch = factor;
     if (shared) for (const ln of tallCol) ln.aqStretch = fTall;
     aligned++;
-    const afterShort = usedS * factor;
-    const afterTall = shared ? Math.max(h0, h1) * fTall : Math.max(h0, h1);
+    // **FX-6:** דיווח מדויק — הגובה בפועל אחרי מתיחה = Σgap + Σ(heightPx×factor)
+    const afterShort = partsS.gaps + partsS.lines * factor;
+    const afterTall = shared ? (partsT.gaps + partsT.lines * fTall) : Math.max(h0, h1);
     eventLog.emit('balance', 'bottom-align', {
       page: page.index, col: shortI, factor: Number(factor.toFixed(4)),
       factorTall: shared ? Number(fTall.toFixed(4)) : null,
@@ -19047,11 +21059,12 @@ function autoQualityPass(pages, settings, eventLog) {
       const cap = colCapacityOf(page, { colIndex: c });
       const deficit = cap - used;
       if (deficit > 4 && mayStretch) {
-        // **S72 (שיפור 4 — מקדם מדויק):** rawFactor = cap/used — מגיע
-        // ליעד בדיוק גם בטורים מעורבי-גבהים (כותרות+גוף). בעבר חושב
-        // 1+(deficit/n)/h(שורה-ראשונה) — קירוב שהחטיא את היעד בכל טור
-        // שאינו אחיד (נמדד: פספוס של עד ~10px בטור עם 2 כותרות).
-        const rawFactor = used > 0.5 ? cap / used : 1;
+        // **S72 (שיפור 4) + FX-6 (פרוסה 2):** מקדם מדויק עם פערים קבועים —
+        // (cap − Σgap)/Σ(heightPx×stretch) — מגיע ליעד בדיוק גם בטורים
+        // מעורבי-גבהים וגם כשפערי בלוקים בטור (הפערים אינם משתתפים במתיחה).
+        // בעבר חושב 1+(deficit/n)/h(שורה-ראשונה) — קירוב שהחטיא את היעד.
+        const parts = columnStretchParts(lines);
+        const rawFactor = parts.lines > 0.5 ? (cap - parts.gaps) / parts.lines : 1;
         for (const stage of AQ_STAGES) {
           const [lo, hi] = stageBounds(settings, stage);
           const factor = Math.min(hi, Math.max(lo, rawFactor));
@@ -19068,9 +21081,9 @@ function autoQualityPass(pages, settings, eventLog) {
         }
       } else if (deficit < -4 && compressFirst) {
         // עודף מעל התקרה ⇒ כיווץ עד min (כיווץ לפני מתיחה — compress-first)
-        // **S72 (שיפור 4):** מקדם מדויק גם בכיווץ — cap/used (היה קירוב
-        // first-line שהחטיא את היעד בטורים מעורבי-גבהים).
-        const rawFactor = used > 0.5 ? cap / used : 1;
+        // **S72 (שיפור 4) + FX-6:** מקדם מדויק גם בכיווץ — (cap − Σgap)/Σh.
+        const parts = columnStretchParts(lines);
+        const rawFactor = parts.lines > 0.5 ? (cap - parts.gaps) / parts.lines : 1;
         for (const stage of AQ_STAGES) {
           const [lo, hi] = stageBounds(settings, stage);
           const factor = Math.max(lo, Math.min(hi, rawFactor));
@@ -19086,7 +21099,7 @@ function autoQualityPass(pages, settings, eventLog) {
   return { applied };
 }
 
-module.exports = { balancePage, optimalSplit, pageImbalance, applyChapterEndMode, autoQualityPass, alignColumnBottoms, usedHeight };
+module.exports = { balancePage, optimalSplit, pageImbalance, applyChapterEndMode, autoQualityPass, alignColumnBottoms, usedHeight, columnStretchParts };
 
 };
 __modules["src/engine/layout/column-flow.js"] = function (require, module, exports) {
@@ -19128,18 +21141,37 @@ function isFullWidthBlock(block, settings) {
 }
 
 /**
+ * **FX-6 (שלב 5 פרוסה 2) — נרמול פערים אחרי שינוי מבני של טור:**
+ * שורה שהפכה לראש הטור (איזון/הזזה/פיצול) אינה נושאת עוד פער-כניסה —
+ * GAP_HEAD_POLICY (constraint-matrix): דיכוי בראש טור. החלפת הייחוס בעותק
+ * שומרת על אובייקטי השורה המשותפים (rollback/צילומי-מצב) ללא מוטציה.
+ * @param {Array} col - טור (מערך שורות ממוקמות)
+ */
+function normalizeColumnGaps(col) {
+  if (col.length && col[0].gapBeforePx) col[0] = { ...col[0], gapBeforePx: 0 };
+}
+
+/**
  * **S5.2 (P-2 — איחוד חישוב קיבולת טור):** המקור היחיד לקיבולת האפקטיבית
  * של טור בעמוד DP: גובה תיבת התוכן מהתבנית, בהפחתת:
  *  - הפס החוצה־טורים (spanning band, FWD-1) — הטורים מתחילים מתחתיו;
- *  - תקציב ההערות של העמוד (fnReservedHeightPx, F-17) — נרשם על הטור האחרון.
- * בעבר חושבו 4 העתקים מקבילים (balancing.balancePage/autoQualityPass,
- * dp-planner.balancePageSafe, protections-matrix.containment) שהתעלמו מהפס
- * ו/או מהתקציב ⇒ גלישת טור שקטה בעמודים עם הערות או פס כותרת.
+ *  - תקציב ההערות של העמוד (fnReservedHeightPx, F-17) — חוצה־רוחב (R3-C2);
+ *  - **(פרוסה 2)** שמורות אחידות (`page.reservations`) — מנגנון ההרחבה
+ *    של שלב 6: כל אזור שמקטין את שטח הגוף (ריהוט, עיטור שמזמין מקום,
+ *    אזור שמור לפריט בלתי-ניתן לפיצול) נרשם כאן פעם אחת ומופחת מכל
+ *    הטורים (scope:'all-columns') או מהטור האחרון בלבד (scope:'last-column')
+ *    — ללא שינוי ליבת המתכנן.
  *
- * @param {object} page - עמוד DP: template.contentBox, spanning?, fnReservedHeightPx?, columns
+ * **מודל הקיבולת המיוצג (§2.6 בביקורת):** `capacityReservationsOf(page)`
+ * מפרט במפורש כל גורם שמקטין את שטח הגוף — margins/headers/folio כבר
+ * מיוצגים בתיבת התוכן של התבנית (page-templates), הפס החוצה־טורים ותקציב
+ * ההערות כאן, עיטורי H2/סגנונות בתוך גבהי השורות עצמן (F-08) והשאר —
+ * דרך ה-reservations. מקור אחד, ייצוג אחד, ללא חישובים מקביליים.
+ *
+ * @param {object} page - עמוד DP: template.contentBox, spanning?, fnReservedHeightPx?, reservations?, columns
  * @param {{colIndex?:number, fnBudget?:boolean}} [opts]
  *  - colIndex: הטור שאליו שייכת הקיבולת (ברירת מחדל: האחרון — המחמיר);
- *    תקציב ההערות מופחת רק מהטור האחרון (שם הוא נרשם).
+ *    שמורות last-column מופחתות ממנו בלבד.
  *  - fnBudget:false — ביטול הפחתת תקציב ההערות (למי שמודד usage כולל
  *    התקציב בעצמו — כמו usedHeight של dp-planner או extraLast של optimalSplit).
  */
@@ -19154,10 +21186,323 @@ function colCapacityOf(page, opts = {}) {
   // לתוך אזור ההערות בכל עמוד רווי-הערות, והגנת containment הייתה עיוורת
   // לזה (אותה נוסחה).
   if (fn) cap -= fn;
+  // **פרוסה 2 — reservations אחידים (§2.6):** הפחתה חד-פעמית לפי scope.
+  const res = page.reservations;
+  if (res && res.length) {
+    const lastCol = page.columns ? page.columns.length - 1 : 0;
+    const ci = opts.colIndex != null ? opts.colIndex : lastCol;
+    for (const r of res) {
+      if (!r || !(r.px > 0)) continue;
+      if (r.scope === 'last-column') { if (ci === lastCol) cap -= r.px; }
+      else cap -= r.px; // 'all-columns' (ברירת המחדל)
+    }
+  }
   return cap;
 }
 
-module.exports = { columnWidths, blockGapPx, isFullWidthBlock, colCapacityOf, buildPageTemplate };
+/**
+ * **פרוסה 2 (§2.6 — מודל הקיבולת המיוצג):** רשימה תיאורית של כל הגורמים
+ * שמקטינים את שטח הגוף בעמוד — לחוזה ה-PagePlan, לאבחון ולבדיקות.
+ * טהור: קריאה בלבד; אותם מספרים ש-colCapacityOf מפחית בפועל.
+ */
+function capacityReservationsOf(page, opts = {}) {
+  if (!page || !page.template || !page.template.contentBox) return [];
+  const out = [
+    { kind: 'content-box', scope: 'all-columns', px: page.template.contentBox.height, detail: 'margins/header/folio excluded by template' },
+    { kind: 'spanning-band', scope: 'all-columns', px: (page.spanning && page.spanning.heightPx) || 0, detail: 'cross-column band (FWD-1)' },
+    { kind: 'notes-budget', scope: 'all-columns', px: (opts.fnBudget !== false && page.fnReservedHeightPx > 0) ? page.fnReservedHeightPx : 0, detail: 'footnote gutter budget (F-17, R3-C2)' }
+  ];
+  for (const r of (page.reservations || [])) {
+    if (r && r.px > 0) out.push({ kind: r.kind || 'reservation', scope: r.scope || 'all-columns', px: r.px, detail: r.reason || '' });
+  }
+  return out;
+}
+
+/**
+ * **שלב 5 (חילוץ שורש מ-PR #16, S78/D-107 — גובה תפוס בזמן תכנון, מקור יחיד):**
+ * Σ גבהי שורות + פערי בלוקים (FX-6: `gapBeforePx` — הפער נצבר כאן בפועל,
+ * לא רק בשער הכניסה) + יתרת תקציב ההערות של העמוד — נרשם על הטור האחרון (F-17).
+ * זו סמנטיקת ה-**תכנון** (לפני AQ — בלי מקדם מתיחה); סמנטיקת ה-**רינדור**
+ * (עם aqStretch) חיה ב-balancing.usedHeight. עד כאן היו שני מימושים מקבילים
+ * באותו שם בשני מודולים (dp-planner מקומי מול זה) — כעת צרכן יחיד.
+ */
+function planningUsedHeight(col, page) {
+  let h = 0;
+  for (const ln of col) h += (ln.heightPx || 0) + (ln.gapBeforePx || 0);
+  if (page && page.fnReservedHeightPx > 0 && page.columns[page.columns.length - 1] === col) {
+    h += page.fnReservedHeightPx; // נשמר פעם אחת — בסוף הטור האחרון
+  }
+  return h;
+}
+
+module.exports = {
+  columnWidths, blockGapPx, isFullWidthBlock, colCapacityOf, capacityReservationsOf,
+  planningUsedHeight, normalizeColumnGaps, buildPageTemplate
+};
+
+};
+__modules["src/engine/layout/constraint-matrix.js"] = function (require, module, exports) {
+// src/engine/layout/constraint-matrix.js — מטריצת האילוצים הטיפוגרפיים המאוחדת (שלב 5 — Planner יחיד)
+'use strict';
+
+/**
+ * **מקור-האמת היחיד למדיניות שלמות-הפריסה** (חילוץ שורש מ-PR #16 [S78/D-107]
+ * ו-PR #17 [דוח פורנזי 06, שלב A] לתוך המימוש המאוחד של שלב 5 — הוראה §20:
+ * לא שתי גרסאות של אותה אחריות).
+ *
+ * האילוצים שהיו עד כאן פזורים כ-literals בחמישה מודולים (dp-planner:
+ * ensureRoom/findSplit/לולאת הליווי, balancing: cleanBoundary, protections-matrix:
+ * headingEscort/widowOrphan, candidate-generator: עונש strict מת — FX-4)
+ * מתנסחים כאן פעם אחת, והצרכנים קוראים מכאן בלבד:
+ *
+ *  1. **חלון פיצול חוקי** — `MIN_LINES_PER_SIDE`/`WIDOW_ORPHAN_MIN` (≥2 שורות
+ *     לכל צד של נקודת החיתוך; SRS §5.1 — מניעת יתום/אלמנה בגבול התפר).
+ *     עד כאן הכלל חי בשני העתקים: `findSplit` (dp-planner: `maxFit < 2 ||
+ *     lines−maxFit < 2`) ולולאת `cut = 2` ב-candidate-generator.
+ *
+ *  2. **תפר נקי** — `seamIsClean(seq, k)`: הפרדת גבול-טורים בין שתי שורות
+ *     של אותה פסקה חוקית רק אם לפחות 2 שורות מכל צד. עד כאן חי בתוך
+ *     `optimalSplit` (balancing) בלבד.
+ *
+ *  3. **תפר נקי מליווי** — `escortCleanBoundary(seq, k)`: גבול "נקי" גם אינו
+ *     מותיר כותרת בתחתית הטור עם <ESCORT_MIN_LINES שורות אחריה (אחרת
+ *     האיזון עצמו יוצר הפרת heading-escort שאין לה תיקון — דוח 06, פרק 4).
+ *
+ *  4. **יחידות yPx אמיתיות** — `stackHeightPx`/`escortStackHeightPx`: כל
+ *     בדיקת קיבולת מודדת את המחסנית הפיזית (heightPx + פער כניסה) — לא
+ *     המרות lineH. שורש FX-1/FX-5: עמוד ריק פנטום וכותרת יתומה מפער
+ *     היחידות בין ensureRoom ל-pushLines.
+ *
+ *  5. **דגלי ווידוא/יתום** — `widowOrphanPolicy(settings)`: קריאה מרוכזת
+ *     אחת של מפתחות המדיניות.
+ *
+ *  6. **ליווי כותרת** — `escortNeedLines`/`escortStackHeightPx` (REQ-BAL-10):
+ *     כותרת + min(2, שורות-העוקבות) שורות ליווי באותו טור; הצורך נוסחא
+ *     כאן, לא בלולאת הבלוקים של dp-planner.
+ *
+ *  7. **יתום ביעד** — `orphanAtDestination`: העונש ה-strict שהיה מת (FX-4)
+ *     — התנאי ההיסטורי `cut < 2` היה בלתי-ספיק לעולם בטווח הלולאה.
+ *
+ * החוזה: פונקציות טהורות, אפס מצב, אפס תלות — מודול עלים שכל מודולי
+ * הפריסה רשאים לדרוש (אין תלות מעוגלית). **אין שינוי ערכים** — ערכי
+ * ברירת המחדל זהים ל-literals שהוחלפו (מוכח בהשוואת הקורפוס).
+ */
+
+/** מספר שורות מינימלי לכל צד של חיתוך פסקה (SRS §5.1; איסור יתום/אלמנה בגבול). */
+const MIN_LINES_PER_SIDE = 2;
+
+/** מינימום שורות ליווי אחרי כותרת H1-H6 באותו טור (REQ-BAL-10). */
+const ESCORT_MIN_LINES = 2;
+
+/** מינימום שורות מכל צד של גבול פיצול פסקה (widow/orphan קלאסי) — זהה ל-MIN_LINES_PER_SIDE (מקור יחיד, שני שמות תיעודיים). */
+const WIDOW_ORPHAN_MIN = MIN_LINES_PER_SIDE;
+
+/** סבילות השוואת קיבולת (px) — כמו ב-dp-planner.flushPage/pushLines. */
+const CAPACITY_EPS = 0.5;
+
+/**
+ * חלון הפיצול החוקי של בלוק בן `linesCount` שורות כשמתאימות `maxFit`
+ * שורות במקום הפנוי: חיתוך חוקי רק ב-[lo..hi] כאשר lo = 2 (שתי שורות
+ * לפחות יישארו) ו-hi = min(linesCount − 2, maxFit) (שתיים לפחות יעברו
+ * **והחלק הראשון נכנס פיזית למקום הפנוי).
+ *
+ * **שלב 5 פרוסה 2 (תיקון שורש — יישוב הפער חוזה↔התנהגות):** עד כאן `hi`
+ * התעלם מ-`maxFit` — החוזה הכריז על [2..lines−2] בעוד generateCandidates
+ * ניהל בעצמו גם טווח [2..lines−1) וגם דחיית `cut > maxFit` נפרדת: שני
+ * מקורות לאותה מדיניות, עם נקודת חיכוך אחת אמיתית — חיתוך lines−1 (משאיר
+ * שורה בודדת ביעד) היה חוקי בפועל אף שהחוזה אסר אותו. מעתה החלון כאן
+ * הוא **מקור האמת היחיד** לטווח החוקי (הן את הכלל ≥2-לכל-צד והן את
+ * גבול הקיבולת), והצרכנים (findSplit, generateCandidates) קוראים ממנו
+ * בלבד — אין עוד תנאי טווח משוכפל.
+ *
+ * @returns {{lo:number, hi:number}|null} — null אם אין חלון חוקי כלל
+ *   (הבלוק קצר מדי או שהמקום הפנוי קטן מדי ⇒ ההזזה מלאה, לא פיצול).
+ */
+function legalSplitWindow(linesCount, maxFit) {
+  if (maxFit < MIN_LINES_PER_SIDE) return null;
+  if (linesCount - maxFit < MIN_LINES_PER_SIDE) return null;
+  const lo = MIN_LINES_PER_SIDE;
+  const hi = Math.min(linesCount - MIN_LINES_PER_SIDE, maxFit);
+  return hi >= lo ? { lo, hi } : null;
+}
+
+/**
+ * תפר נקי בין טורים: הגבול k (col0 = seq[0..k), col1 = seq[k..n)) כאשר
+ * הפסקה ממשיכה מעבר לו — חוקי רק אם מכל צד יש לפחות 2 שורות של אותה
+ * פסקה (ווידוא-תחתית: השורה שלפני הגבול אינה ראשונת הריצה; ווידוא-ראש:
+ * השורה שאחרי הגבול אינה אחרונת הריצה). זהות פסקה לפי ריצות tokenId
+ * ב-meta — לא לפי דגלי part (שאינם מעידים על מיקום בבלוק; נלכד בניפוי EXT-8).
+ * @param {Array} seq - רצף הקריאה המלא של העמוד ([...col0, ...col1])
+ * @param {number} k - נקודת הגבול הנבדקת
+ * @returns {boolean}
+ */
+function seamIsClean(seq, k) {
+  const n = seq.length;
+  if (k > 0 && k < n) {
+    const lt = seq[k - 1].meta && seq[k - 1].meta.tokenId;
+    const rt = seq[k].meta && seq[k].meta.tokenId;
+    if (lt != null && lt === rt) { // הבלוק ממשיך מעבר לגבול
+      if (k - 2 < 0 || (seq[k - 2].meta && seq[k - 2].meta.tokenId) !== lt) return false; // widow-bottom
+      if (k + 1 >= n || (seq[k + 1].meta && seq[k + 1].meta.tokenId) !== rt) return false; // widow-top
+    }
+  }
+  return true;
+}
+
+/**
+ * האם גבול פיצול (מקום k ברצף הקריאה) משאיר כותרת ללא ליווי מספק בטור
+ * המקור (col0 = seq[0..k))? optimalSplit סימן גבול "נקי" גם כשהוא מותיר
+ * כותרת בתחתית הטור עם <2 שורות אחריה — heading-escort שאין לו תיקון.
+ * מעתה גבול כזה איננו "clean" (עדיפות לקסיקוגרפית: clean קודם ל-|Δ|).
+ */
+function escortCleanBoundary(seq, k) {
+  // סריקה אחורה מסוף col0: כותרת בטווח ESCORT_MIN_LINES+1 השורות האחרונות
+  for (let i = Math.max(0, k - (ESCORT_MIN_LINES + 1)); i < k; i++) {
+    const ln = seq[i];
+    if (!ln || ln.kind !== 'heading') continue;
+    let nonHeadingAfter = 0;
+    for (let j = i + 1; j < k; j++) {
+      if (seq[j] && seq[j].kind !== 'heading') nonHeadingAfter++;
+    }
+    if (nonHeadingAfter < ESCORT_MIN_LINES) return false;
+  }
+  return true;
+}
+
+/**
+ * דגלי מדיניות ווידוא/יתום — קריאה מרוכזת אחת (מקור: settings-registry).
+ * **פרוסה 2:** ה-fallback מיושב ל-'normal' — זהה לברירת המחדל ברגיסטרי
+ * (עד כאן 'standard' — מחרוזת שאינה ב-enum ולעולם לא הופיעה בפועל).
+ * @returns {{preventWidowsTop, preventWidowsBottom, preventOrphansTop, preventOrphansBottom, strictness}}
+ */
+function widowOrphanPolicy(settings) {
+  return {
+    preventWidowsTop: settings['prevent-widows-top'] === true,
+    preventWidowsBottom: settings['prevent-widows-bottom'] === true,
+    preventOrphansTop: settings['prevent-orphans-top'] === true,
+    preventOrphansBottom: settings['prevent-orphans-bottom'] === true,
+    strictness: settings['widow-strictness'] || 'normal'
+  };
+}
+
+/**
+ * **טבלת מדיניות האילוצים (שלב 5 פרוסה 2 — §2.4 בביקורת):** הכרזה חד-משמעית
+ * מה קשיח (פוסל מועמד/מצב) ומה רך (עדיפות/עונש בלבד). כלל ההכרעה:
+ * hard = הפרתו יוצרת מצב בלתי-חוקי (חריגת קיבולת, פחות מ-2 שורות
+ * לצד חיתוך, כותרת ללא ליווי); soft = העדפה בין מצבים חוקיים.
+ * מדיניות strict (widow-strictness=strict): מועמד חיתוך שמשאיר בדיוק את
+ * המינימום החוקי ביעד (שתי שורות) נענש — strict מעדיף שלא להסתפק במינימום
+ * החוקי בראש הטור הבא; normal = שקילות; relaxed = דילוג על בדיקת
+ * orphan-top בהגנות (קיים). שלוש הרמות מוגדרות, מתועדות ונבדקות חיוב/שלילה.
+ */
+const CONSTRAINT_POLICY = Object.freeze({
+  minLinesPerSide: { type: 'hard', scope: 'split-window', description: '≥2 שורות לכל צד של חיתוך פסקה (SRS §5.1)' },
+  maxFitBound: { type: 'hard', scope: 'split-window', description: 'החלק הראשון חייב להיכנס למקום הפנוי בפועל (yPx)' },
+  seamClean: { type: 'hard', scope: 'balance', description: 'גבול איזון אינו מותיר ריצת-פסקה בת שורה אחת מכל צד' },
+  escortCleanBoundary: { type: 'hard', scope: 'balance', description: 'גבול איזון אינו מותיר כותרת עם <2 שורות ליווי' },
+  headingEscort: { type: 'hard', scope: 'placement', description: 'כותרת H1–H6 + min(2, עוקבות) שורות באותו טור (REQ-BAL-10)' },
+  columnCapacity: { type: 'hard', scope: 'placement', description: 'usedHeight (כולל gaps + תקציב הערות) ≤ קיבולת אפקטיבית' },
+  readingOrder: { type: 'hard', scope: 'placement', description: 'מונוטוניות flowCol + seq עולה בסדר הקריאה' },
+  strictDestMinimum: {
+    type: 'soft', scope: 'candidate-scoring',
+    description: 'strict: עונש על מועמד שמשאיר בדיוק את המינימום החוקי (2 שורות) בראש היעד',
+    penalty: 1e9
+  },
+  balanceDelta: {
+    type: 'soft', scope: 'balance',
+    description: 'איזון טורים ממזער |Δ| בכפוף לאילוצים הקשיחים; פשרה מתועדת כשאין פיצול חוקי',
+    threshold: 'settings[imbalance-max-delta-px]'
+  }
+});
+
+/**
+ * **FX-6 (שלב 5 פרוסה 2 — סמנטיקת פער הבלוקים בחוזה הגאומטרי):** הפער
+ * בין בלוקים הוא גאומטריה מתוכננת, לא רק תנאי כניסה. הכללים הקנוניים:
+ *  - הפער נחתם פעם אחת על השורה הראשונה של הבלוק (`gapBeforePx`) במקום
+ *    ההצבה — מקור יחיד; המקרינים קוראים ואינם מוסיפים בעצמם.
+ *  - דיכוי בראש טור: שורה ראשונה בטור (גם מתחת לפס חוצה-טורים) — בלי
+ *    פער; ראש עמוד — בלי פער; בלוקים רצופים — פער בכל פתיחת בלוק.
+ *  - הפער נכלל ב-usedHeight (תכנון ורינדור) ובבדיקות הקיבולת; המתיחה
+ *    האנכית (aqStretch) חלה על גובה השורה בלבד — הפער קבוע.
+ */
+const GAP_HEAD_POLICY = 'suppress-at-column-head';
+
+/**
+ * מספר השורות שחייבות להיכנס יחד עם כותרת לטור (REQ-BAL-10):
+ * הכותרת + עד ESCORT_MIN_LINES שורות ליווי (או כמה שיש אם העוקב קצר).
+ * @param {number} headingLines - שורות הכותרת עצמה (בדרך כלל 1)
+ * @param {number} followingLines - שורות הבלוק העוקב (0 אם אין)
+ */
+function escortNeedLines(headingLines, followingLines) {
+  return headingLines + Math.min(MIN_LINES_PER_SIDE, Math.max(0, followingLines));
+}
+
+/**
+ * גובה מחסנית אמיתי (yPx) של קבוצת שורות, כולל פער הכניסה של הבלוק.
+ * זהו ניפוץ הכפילות "יחידות lineH מול heightPx" (FX-1/FX-5): הבדיקה
+ * וההצבה מודדות באותה יחידה — הגובה הפיזי שייצרך בפועל.
+ *
+ * **FX-6 (פרוסה 2):** פער הכניסה הוא חלק מהמחסנית לצורך בדיקת קיבולת
+ * שמרנית (הבלוק עשוי להיפתח באמצע טור). בפועל, אם הבלוק נפתח בראש טור —
+ * הפער מדוכא בחותמת (GAP_HEAD_POLICY) והשימוש בפועל קטן מהמחסנית
+ * בסכום הפער בלבד (שמרנות מתועדת, לא אי-דיוק).
+ *
+ * @param {Array<{heightPx:number}>} lines
+ * @param {number} [admissionGapPx=0] — blockGapPx של הבלוק
+ */
+function stackHeightPx(lines, admissionGapPx = 0) {
+  let h = admissionGapPx;
+  for (const ln of lines) h += (ln && ln.heightPx) || 0;
+  return h;
+}
+
+/**
+ * גובה המחסנית שחייבת להיכנס **בטור אחד** כדי לקיים ליווי כותרת:
+ * כל שורות הכותרת + פער הכניסה שלה + min(escort, following) שורות ליווי
+ * + פער הכניסה של בלוק הליווי. (הבדיקה ההיסטורית מדדה 1+2 ביחידות lineH —
+ * והתעלמה מגובה הכותרת האמיתי ומפער הליווי.)
+ *
+ * @param {object} headBlock — בלוק הכותרת {lines}
+ * @param {object|null} nextBlock — הבלוק העוקב {lines}
+ * @param {(block)=>number} gapOf — פער כניסה פר-בלוק (blockGapPx(settings,lineH))
+ */
+function escortStackHeightPx(headBlock, nextBlock, gapOf) {
+  const following = nextBlock && nextBlock.lines ? nextBlock.lines.length : 0;
+  if (following < 1) return stackHeightPx(headBlock.lines, gapOf(headBlock));
+  const escortN = Math.min(ESCORT_MIN_LINES, following);
+  return stackHeightPx(headBlock.lines, gapOf(headBlock))
+    + stackHeightPx(nextBlock.lines.slice(0, escortN), gapOf(nextBlock));
+}
+
+/**
+ * האם חיתוך במקום `cut` משאיר **בדיוק את המינימום החוקי** בראש היעד
+ * (שתי שורות — פחות מזה אינו חוקי כלל ונחסם מראש ע"י legalSplitWindow).
+ * **פרוסה 2:** לאחר שהחלון הפך לסמכות היחידה, תפקיד הפונקציה השתנה —
+ * היא כבר אינה מזהה מצב בלתי-חוקי (אין כזה בתוך החלון), אלא מסמנת את
+ * **מדיניות strict** (עונש רך על הסתפקות במינימום; CONSTRAINT_POLICY.
+ * strictDestMinimum). משמרת את כוונת FX-4 (מדיניות שקרית כלפי המשתמש —
+ * אסור שתחזור) בנוסח שאינו מתנגש לחוזה החלון.
+ */
+function orphanAtDestination(lineCount, cut) {
+  return lineCount - cut <= WIDOW_ORPHAN_MIN;
+}
+
+module.exports = {
+  MIN_LINES_PER_SIDE,
+  ESCORT_MIN_LINES,
+  WIDOW_ORPHAN_MIN,
+  CAPACITY_EPS,
+  GAP_HEAD_POLICY,
+  CONSTRAINT_POLICY,
+  legalSplitWindow,
+  seamIsClean,
+  escortCleanBoundary,
+  widowOrphanPolicy,
+  escortNeedLines,
+  stackHeightPx,
+  escortStackHeightPx,
+  orphanAtDestination
+};
 
 };
 __modules["src/engine/layout/retreat-loop.js"] = function (require, module, exports) {
@@ -19187,6 +21532,12 @@ const OSCILLATION_WINDOW = 4;
 function runRetreatLoop(ctx) {
   const { pages, settings, ledger, eventLog, repairFns, assess } = ctx;
   const history = []; // [{signature}]
+  // **FX-2 (דוח 06, שלב 5 — חילוץ שורש מ-#17):** האם רץ תיקון משנה-פריסה
+  // (mutates !== false) באיטרציה שהקליטה כל חתימה. חתימה חוזרת בלי מוטציה
+  // מאז שנראתה = הפרה סטטית (אין תיקון פעיל) — לא "תנודה בין תיקונים
+  // מתחרים" (התווית ההיסטורית שקרה אבחונית: שום תיקון לא רץ ושום דבר לא
+  // השתנה). גלאי התנודה יורה מעתה רק על תנודה אמיתית.
+  const historyMutated = []; // [bool] מקביל ל-history
   let iteration = 0;
   let lastSignature = null;
   /** מפת רישומים מהרצה זו: kind@target → record (למניעת כפילויות בין resolved↔persists). */
@@ -19235,8 +21586,19 @@ function runRetreatLoop(ctx) {
 
     // זיהוי תנודה: החתימה חוזרת על עצמה בתוך חלון
     const recent = history.slice(-OSCILLATION_WINDOW);
-    if (recent.some(h => h === signature)) {
-      // ping-pong → הקפאת הפשרה הטובה ביותר שנצפתה.
+    const repeatIdx = recent.findIndex(h => h === signature);
+    if (repeatIdx !== -1) {
+      const histIdx = history.length - recent.length + repeatIdx;
+      if (!historyMutated[histIdx]) {
+        // **FX-2:** הפרה סטטית — החתימה חוזרת בלי שאף תיקון משנה-פריסה רץ
+        // מאז שנראתה. הקפאה מתועדת עם סיבה מדויקת (לא תיוג של תחרות שלא היתה).
+        const persisted = recordRemaining(ledger, allViolations, 'protections', `static violation @iter${iteration} (no mutating repair)`, seen);
+        const rec = ledger.create('rollback-compromise', `loop@iter${iteration}`, null, { signature, reason: 'static violation' }, 'protections');
+        ledger.transition(rec.issue_id, 'correction-blocked', 'protections', 'violation persists unchanged — no mutating repair available (documented compromise)');
+        eventLog.emit('protections', 'retreat-static', { iteration, signature });
+        return { converged: false, iterations: iteration, compromise: rec.issue_id, persisted, frozenSignatures: history };
+      }
+      // ping-pong אמיתי (מוטציה רצה והחתימה חזרה) → הקפאת הפשרה הטובה ביותר שנצפתה.
       // **רישום הנשאר:** כל ההפרות בחתימה זו נמשכות — נרשמות עכשיו ל‑ledger האמיתי.
       const persisted = recordRemaining(ledger, allViolations, 'protections', `oscillation freeze @iter${iteration}`, seen);
       const rec = ledger.create('rollback-compromise', `loop@iter${iteration}`, null, { signature }, 'protections');
@@ -19246,6 +21608,7 @@ function runRetreatLoop(ctx) {
     }
 
     history.push(signature);
+    historyMutated.push(false);
     lastSignature = signature;
 
     // הפעלת תיקונים לפי סדר עדיפות קבוע (דטרמיניסטי): parens → reading-order → widows → headings → balance
@@ -19255,7 +21618,10 @@ function runRetreatLoop(ctx) {
     for (const kind of order) {
       if (!kinds.has(kind) || !repairFns[kind]) continue;
       const ofKind = allViolations.filter(v => v.kind === kind);
-      repairFns[kind](ofKind, ctx);
+      const fn = repairFns[kind];
+      fn(ofKind, ctx);
+      // **FX-2:** תיקון שמסומן mutates:false אינו משנה פריסה — אינו ראיה לתחרות
+      if (fn.mutates !== false) historyMutated[historyMutated.length - 1] = true;
       repairedAny = true;
       // הפרות מסוג זה טופלו — נרשמות ל‑ledger האמיתי כ‑resolved שקוף
       // (הן היו אמיתיות; רישום התיקון הוא חלק מהשקיפות, לא הסתרה).
@@ -19322,6 +21688,9 @@ __modules["src/engine/layout/candidate-generator.js"] = function (require, modul
 'use strict';
 
 const { blockGapPx } = require('./column-flow');
+const {
+  MIN_LINES_PER_SIDE, legalSplitWindow, orphanAtDestination, CONSTRAINT_POLICY
+} = require('./constraint-matrix'); // **שלב 5 פרוסה 2:** החלון — מקור יחיד לטווח החוקי (הן ≥2/צד, הן maxFit)
 
 /**
  * מחזיר מועמדי פיצול לבלוק בתוך טור:
@@ -19329,28 +21698,59 @@ const { blockGapPx } = require('./column-flow');
  *  - scoring = f(Δ height, capacityBefore/capacityAfter justify, next-block context)
  *  - ladder עונשין: whole-paragraph moves > line moves > leading > para-spacing
  *
+ * **שלב 5 — תיקוני שורש מאוחדים (חילוץ מ-#16/#17):**
+ *  - **מועמד מוגבל למקום הפנוי (#16):** פרמטר `cur` (maxFit — השורות שנכנסות
+ *    במקום הפנוי) היה **מת**: המועמד המנצח נבחר לפי איזון בלבד ויכול היה
+ *    לחרוג מהמקום הפנוי ⇒ pushLines פלט את העודף בפליטה מרומזת ⇒ עמוד
+ *    כמעט-ריק באמצע הספר. כעת מועמד שחורג נדחה HARD עם רישום סיבה.
+ *  - **FX-4 (#17, דוח 06):** עונש strict — כעת מוגדר כמדיניות רכה מוגדרת
+ *    (CONSTRAINT_POLICY.strictDestMinimum): עונש על מועמד שמשאיר בדיוק את
+ *    המינימום החוקי (2 שורות) בראש היעד; חיתוך שמשאיר פחות — בלתי-חוקי
+ *    מיסודו ואינו מיוצר כלל (החלון חוסם אותו).
+ *
+ * **פרוסה 2 — יישוב הפער חוזה↔התנהגות (§2.4 בביקורת):** הטווח נגזר כולו
+ * מ-`legalSplitWindow` — מקור האמת היחיד. אין עוד לולאת `cut < lines` עצמאית,
+ * אין עוד בדיקת `cut > maxFit` משוכפלת (החלון כולל את הגבול), ואין עוד
+ * מועמד lines−1 שמפר את החוזה. כל דחייה חוזרת גם in-band (`out.rejections`)
+ * לצורך decision-trace — לא רק ל-ledger.
+ *
  * @param {object} blk        בלוק עם .lines (נמדדו)
- * @param {number} cur        שורות שנכנסות כרגע לטור
+ * @param {number} cur        maxFit — שורות שנכנסות במקום הפנוי (גבול עליון חוקי למועמדים)
  * @param {number} colCapacityPx
  * @param {object} settings
  * @param {object} ledger     Ledger (core/ledger) — כתיבת סיבה לכל דחייה (S5.1.10)
+ * @returns {Array<{cut, before, after, capacityBefore, capacityAfter, score}>} —
+ *   ממוין לפי score עולה; `out.rejections` — דחיות קומפקטיות ל-trace.
  */
 function generateCandidates(blk, cur, colCapacityPx, settings, ledger) {
+  const maxFit = Number(cur) || 0;
   const out = [];
+  out.rejections = [];
   const lineH = blk.lineHeightPx || 20;
   const gap = blockGapPx(settings, lineH);
-  for (let cut = 2; cut < blk.lines.length; cut++) {
+  // **פרוסה 2:** החלון החוקי — מקור יחיד. null ⇒ אין פיצול חוקי כלל.
+  const win = legalSplitWindow(blk.lines.length, maxFit);
+  if (!win) {
+    if (ledger) ledger.create('candidate-rejected', `${blk.tokenId}@window`, null, { why: 'no-legal-window', lines: blk.lines.length, maxFit }, 'candidate-gen');
+    out.rejections.push({ why: 'no-legal-window', lines: blk.lines.length, maxFit });
+    return out;
+  }
+  const strict = settings['widow-strictness'] === 'strict';
+  const strictPenalty = CONSTRAINT_POLICY.strictDestMinimum.penalty;
+  for (let cut = win.lo; cut <= win.hi; cut++) {
     const before = blk.lines.slice(0, cut).reduce((s, l) => s + (l.heightPx || lineH), 0) + gap;
     const after = blk.lines.slice(cut).reduce((s, l) => s + (l.heightPx || lineH), 0);
     // HARD reject: overflow אינו נענש במשקל אלא נפסל לחלוטין (D-11)
     if (before > colCapacityPx) {
-      if (ledger) ledger.create('candidate-rejected', `${blk.tokenId}@${cut}`, null, { why: 'overflow-before', before, cap: colCapacityPx }, 'candidate-gen');
+      if (ledger) ledger.create('candidate-rejected', `${blk.tokenId}@${cut}`, null, { why: 'overflow-before', cut, before, cap: colCapacityPx }, 'candidate-gen');
+      out.rejections.push({ cut, why: 'overflow-before', before: Math.round(before), cap: Math.round(colCapacityPx) });
       continue;
     }
     // justify capability: האם הטור שלפני יכול להצדיק (להגיע לקצה) — p376-class reasoning
     const capacityBefore = colCapacityPx - before;
+    // **strict (מדיניות רכה, מוכרזת):** עונש על הסתפקות במינימום החוקי ביעד.
     const score = Math.abs(capacityBefore - (colCapacityPx - after))
-      + (settings['widow-strictness'] === 'strict' && cut < 2 ? 1e9 : 0);
+      + (strict && orphanAtDestination(blk.lines.length, cut) ? strictPenalty : 0);
     out.push({ cut, before, after, capacityBefore, capacityAfter: colCapacityPx - after, score });
   }
   out.sort((a, b) => a.score - b.score);
@@ -19371,6 +21771,9 @@ __modules["src/engine/typography/protectors.js"] = function (require, module, ex
 // סמן הערה = אות עברית **עם גרש** (א׳) או זוג־אותיות עם גרשיים (אב״) — נדרש סימן מפורש.
 // לקח false-positive: לולא דרישת הגרש כל מילה בת אות הייתה נצמדת לשכנתה (הרס טוקניזציה).
 const NOTE_MARKER_RE = /([\u05D0-\u05EA]\u05F3|[\u05D0-\u05EA]{1,2}\u05F4)[ \u00A0]+/g;
+// **שלב 4 (§4.1-4 — מקור אחד):** רשימת הקיצורים גררה ל-breaks.js של מנוע השורות המאוחד;
+// הנתיב המורשת קורא משם — לא עוד העתקים. ערכים זהות ביט.
+const { ABBREVIATIONS } = require('../line/breaks');
 
 function glueNoteMarkers(text) {
   // BRZ-11: סמן הערה אינו נשבר מסוף שורה — סמן + המילה שאחריו הופכים יחידת NBSP.
@@ -19383,7 +21786,7 @@ function glueGershayim(text) {
   return text;
 }
 
-const ABBREV = ['ר"ת', 'רשב"א', 'תוס\'', 'מרדכי', 'שב"ע', 'רמב"ם', 'רש"י', 'תוספות'];
+const ABBREV = ABBREVIATIONS; // מקור יחיד (breaks.js) — ערכים זהות ביט
 function glueAbbreviations(text) {
   let out = text;
   for (const a of ABBREV) out = out.split(a + ' ').join(a + '\u00A0');
@@ -19432,10 +21835,17 @@ function protectWords(words, measure, colWidthPx) {
  * **S5.2 (תיקון 2 — מיזוג ללא בדיקת רוחב):** בעבר המילה נדחפה לשורה הראשונה
  * של הטור הבא (`unshift` + `pop`) ללא מדידה מחדש — השורה המקבלת יכלה לגלוש
  * מהטור (נמדד +1.95..25px בביקורת) ⇒ הדפדפן עוטף מחדש ⇒ טקסט-על-טקסט
- * (מחלקת D-92). כעת: המיזוג נשמר רק אם הרוחב הטבעי הממוזג נכנס ב‑colW−FIT_EPS
- * (אותה מדידה של המתכנן: widthPx הקיים של השורה המקבלת + רווח + מדידת המילה);
- * לא ממזגים לתוך שורת כותרת/שורה אחרונה (isLast), לא מוציאים מילה מכותרת;
- * וללא מדידה (opts.measure) — אין מיזוג בכלל (שמרנות: מי שלא מודד לא מוכיח התאמה).
+ * (מחלקת D-92). כעת: המיזוג נשמר רק אם הרוחב הטבעי הממוזג נכנס ב‑colW−FIT_EPS.
+ *
+ * **פרוסה 2 (ביטול מדידה חוזרת — §2.3 בביקורת):** הרוחב הממוזג נגזר מה
+ * **מדדים שכבר נקבעו** במנוע השורות — שום קריאת מדידה חדשה בשלב התכנון:
+ *  - רוחב המילה הנופלת = `last.lineModel.naturalWidthPx` (שורת מילה בודדת —
+ *    הרוחב הטבעי שלה הוא רוחב המילה כולל תג הסמן שבה, בדיוק כפי שתוצג);
+ *  - רוחב הרווח המפריד = ה-glue הטבעי הראשון של השורה המקבלת
+ *    (`nextFirst.lineModel.glue[0].naturalPx` — אותו רווח שהמנוע מדד);
+ *  - רוחב השורה המקבלת = `nextFirst.widthPx` (נמדד בשבירה).
+ * נתיב המורשת (ללא lineModel) — נפילה חזרה ל-`opts.measure` אם סופק;
+ * בלי שניהם אין מיזוג (שמרנות: מי שלא מודד/לא קיבל מדדים לא מוכיח התאמה).
  * @param {Array<Array<object>>} columnLines
  * @param {number} minLen - אורך מינימלי של מילה "נופלת"
  * @param {{measure?:(t:string)=>number, colW?:number, fitEps?:number}} [opts]
@@ -19456,11 +21866,14 @@ function fixDropWordInColumns(columnLines, minLen = 3, opts = {}) {
     if (nextFirst.kind === 'heading' || nextFirst.isLast === true) continue;
     if (last.kind === 'heading') continue;
     if (last.words.length === 1 && last.words[0].length < minLen && nextFirst.words.length > 1) {
-      // רוחב טבעי ממוזג = widthPx שנמדד לשורה המקבלת + רווח + המילה הנמשכת.
-      // התג (MARK_TAG, D-53) מוסר מהמדידה — כמו ב-measureWithParen של ה-pipeline;
-      // NBSP נמדד כרווח (כמו internal-glue ב-kp).
+      // רוחב טבעי ממוזג מהמדדים הקיימים (LineModel) — ורק בהיעדרם, מדידה
+      // (נתיב מורשת). התג (MARK_TAG, D-53) כלול ברוחב הטבעי כפי שיוצג.
       let mergedW = null;
-      if (measure && colW > 0) {
+      const srcLM = last.lineModel;
+      const dstLM = nextFirst.lineModel;
+      if (srcLM && dstLM && dstLM.glue && dstLM.glue.length) {
+        mergedW = (nextFirst.widthPx || 0) + dstLM.glue[0].naturalPx + (srcLM.naturalWidthPx || 0);
+      } else if (measure && colW > 0) {
         const word = String(last.words[0]).replace(/\uE102/g, '').replace(/\u00A0/g, ' ');
         mergedW = (nextFirst.widthPx || 0) + measure(' ') + measure(word);
       }
@@ -19482,6 +21895,8 @@ __modules["src/engine/layout/ordering.js"] = function (require, module, exports)
 // src/engine/layout/ordering.js — Reading-order-preserving column moves (P0-3; D-49)
 'use strict';
 
+const { normalizeColumnGaps } = require('./column-flow'); // **FX-6 (פרוסה 2):** נרמול פערים אחרי הזזה מבנית
+
 /**
  * הזזת שורה בין טורים תוך **שמירת סדר הקריאה בלבד** (תיקון P0-3):
  * סדר קריאה: col0 (ימני, נקרא ראשון) מלמעלה למטה, ואז col1.
@@ -19491,17 +21906,23 @@ __modules["src/engine/layout/ordering.js"] = function (require, module, exports)
  * שתי ההזזות שומרות את סדר המילים בדיוק; בעבר האיזון העביר שורה **אחורה**
  * בסדר הקריאה (הצגת סוף פסקה לפני תחילתה) — רגרסיה שלא הייתה באף גרסה קודמת.
  * מודול עצמאי ללא תלויות — נצרך ע"י dp-planner וגם balancing (מניעת תלות מעגלית).
+ * **FX-6 (פרוסה 2):** כל הזזה מבנית מנרמלת את פערי הכניסה של ראשי הטורים
+ * (GAP_HEAD_POLICY — ראש טור אינו נושא פער; הכלל חי בסמכות המוטציה עצמה).
  */
 function moveLineForward(cols, hi, lo) {
   if (hi === lo || cols.length < 2) return false;
   if (hi === 0 && lo === 1) {           // col0 גבוה: סוף col0 → ראש col1
     if (!cols[0] || !cols[0].length) return false;
     cols[1].unshift(cols[0].pop());
+    normalizeColumnGaps(cols[0]);
+    normalizeColumnGaps(cols[1]);
     return true;
   }
   if (hi === 1 && lo === 0) {           // col1 גבוה: ראש col1 → סוף col0
     if (!cols[1] || !cols[1].length) return false;
     cols[0].push(cols[1].shift());
+    normalizeColumnGaps(cols[0]);
+    normalizeColumnGaps(cols[1]);
     return true;
   }
   return false;
@@ -19514,6 +21935,9 @@ __modules["src/engine/layout/footnote-budget.js"] = function (require, module, e
 // src/engine/layout/footnote-budget.js — Footnote reservation (REQ-FN-01/02/07)
 'use strict';
 
+const { assignFootnoteLanes } = require('./footnote-lanes'); // **שלב 5 (חילוץ שורש מ-PR #16):** מקור-אמת יחיד לחלוקת נתיבי המרזב
+const NM = require('./notes-model'); // **שלב 6 פרוסה 2:** ליבת השבירה/החותמת האחידה + SSOT פקטורי הגופן
+
 /**
  * **מקור־הסמכות היחיד לתקציב המרזב** (תיקון P1-1): הן probe הן reservation
  * עוברים כאן — getFootnotesReservedHeight — וה‑dp-planner קורא לזה בלבד
@@ -19524,42 +21948,83 @@ __modules["src/engine/layout/footnote-budget.js"] = function (require, module, e
  * **בזמן ההצבה** — המודול הזה אינו מחזיק עוד מימוש תאום מת (באג S6).
  */
 
-/** פרופילי רוחב גופן לגוף ההערה (f-note-body-font). */
-const NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
+/** פרופילי רוחב גופן לגוף ההערה (f-note-body-font) — **SSOT ב-notes-model (פרוסה 2)**; מיוצא הלאה לצרכנים הקיימים. */
+const NOTE_FONT_FACTORS = NM.NOTE_FONT_FACTORS;
+
+/** **שלב 5 (חילוץ שורש מ-PR #16 — מדדי ההערה, מקור יחיד):** גודל גוף-ההערה
+ * (0.8× הגוף — כמו .footnotes{font-size:.8em} ב-DOM) ופיץ' השורה שלו (1.25 —
+ * כמו המרזב בשני הרנדרים). עד כאן הנוסחה שוכפלה בשלושה אתרים (כאן, פיצול
+ * ההערה-הארוכה ב-dp-planner, הקרנת המרזב ב-geometry-projector) — כל
+ * נגזרת שהתרחקה מחברותיה הזיזה את התקציב מול ההקרנה. */
+function noteMetrics(settings) {
+  const sizePt = settings['body-font-size-pt'] * 0.8;
+  const lineHeightPx = Math.round(sizePt * (96 / 72) * 1.25);
+  return { sizePt, lineHeightPx };
+}
 
 function noteHeight(note, settings, measure) {
-  const size = settings['body-font-size-pt'] * 0.8; // גופן הערה קטן
-  const lh = Math.round(size * (96 / 72) * 1.25);
-  const words = String(note.text).replace(/\uE000/g, ' ').split(/\s+/).filter(Boolean);
-  const colW = laneWidth(settings);
-  // **S70 (R7-M4):** הפקטור מתקן את טבלת impl A בלבד; ב-impl B
-  // (font-metrics) המטריקות מדויקות והכפלה הייתה מנפיחת את תקציב ההערות.
-  const factor = (measure && measure.impl === 'font-metrics')
-    ? 1 : (NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1);
-  // **S6.0 (R3-C3 — אומדן ללא רווחים):** ההקרנה (wrapNoteTokens) שוברת
-  // את ההערה **עם** רוחבי רווח בין מילים — האומדן כאן סכם מילים בלבד
-  // ⇒ כל הערה הגובלת בשבירת-שורה נמדדה שורה אחת פחות (19–21px) וההערה
-  // שאחריה חפפה אותה (32% מ-230 הערות בדגימה). נכללים גם הסמן ורווח
-  // ההמשך בשורה הראשונה — כמו שמצויר בפועל.
-  const spaceW = measure(' ', size) * factor;
-  const mkTxt = note && note.marker != null ? String(note.marker) : '';
-  const mkW = mkTxt ? measure(mkTxt, size) * factor + spaceW : 0;
-  let lines = 1, w = Math.min(mkW, colW);
-  for (const word of words) {
-    const ww = measure(word, size) * factor;
-    const addW = (w > 0 ? spaceW : 0) + ww;
-    if (w + addW > colW && w > 0) { lines++; w = ww; } else w += addW;
-  }
-  return lines * lh;
+  // **פרוסה 2 (מדידה אחת — §2.3 בביקורת):** צריכת החותמת קודמת לחישוב —
+  // הערה שנמדדה פעם אחת (ביצירתה, CP2) אינה נמדדת שוב לאף החלטת הצבה.
+  if (note && note.heightPx != null) return note.heightPx;
+  return noteRowsOf(note, settings, measure).heightPx;
 }
 
 /**
- * רוחב נתיב אחד במרזב לפי footnote-columns.
- * **S5.2 (P-4):** _fnColWidthPx מכוין כעת ב-pipeline מהגיאומטריה —
- * 1 ⇒ רוחב תיבת התוכן המלא (674.90px בברירת המחדל; כמו שמוקרן בגיאומטריה:
- * x=colLeftOf, w=colWidthOf); 2 ⇒ (רוחב מלא − מרזב התבנית)/2. הפונקציה
- * נשארת פשוטה — ההכוונה נעשתה במקור היחיד (pipeline) ולא כאן.
+ * **פרוסה 2 — שבירת שורות ההערה + מדדיה (מקור יחיד, חד-פעמי):**
+ * אותו אלגוריתם גרידי ברוחב הנתיב (כמו שהיה ב-noteHeight) — אך מוחזר
+ * כמבנה שורות מלא: `{ rows, heightPx, linesCount, lineH, words }`, כאשר כל
+ * שורה היא `{ wFrom, wTo, widthPx }` (טווח מילים + רוחב). השורות כוללות את
+ * הסמן ורווח ההמשך בשורה הראשונה — כמו שמצויר בפועל (R3-C3).
+ * הצרכנים: התקציב (noteHeight), הפיצול של הערה ארוכה (dp-planner —
+ * חיתוך בגבול שורה מוחלט, בלי מדידת מילים מחדש) והקרנת המרזב (עתיד
+ * שלב 6/7 — אותן שורות בדיוק). ההטבעה עצמה — stampNoteMetrics להלן.
  */
+// **פרוסה 2 (טוהר מדידה — חשבונאות בדיקה, דפוס api.cacheStats):** מונה פנימי
+// להפעלות שבירת השורות של ההערה. הבדיקות מוכיחות באמצעותו שכל הערה נמדדת
+// בדיוק פעם אחת (החותמת) — ושההמשכים מטיצול הם הטקסטים החדשים היחידים.
+const _rowsStats = { calls: [] };
+function __resetRowsStats() { _rowsStats.calls.length = 0; }
+function __rowsStats() {
+  const perKey = Object.create(null);
+  for (const k of _rowsStats.calls) perKey[k] = (perKey[k] || 0) + 1;
+  return { total: _rowsStats.calls.length, keys: _rowsStats.calls.slice(), perKey };
+}
+
+function noteRowsOf(note, settings, measure) {
+  if (note && note.text != null) {
+    _rowsStats.calls.push(`${note.tokenId || ''}#${note.noteIndex != null ? note.noteIndex : ''}#${String(note.text).slice(0, 24)}`);
+  }
+  // **שלב 6 פרוסה 2:** השבירה עצמה עברה לליבה היחידה (notes-model.wrapNoteWords)
+  // — אותה אריתמטיקה בדיוק; כאן נשארת התצפית הלא-משנה (legacy view, בלי מוטציה).
+  const probe = { text: note.text, marker: note.marker, isContinuation: note.isContinuation, mode: note.mode };
+  NM.stampNote(probe, settings, measure, NM.NOTE_KINDS.FOOTNOTE);
+  return {
+    rows: probe.noteRows, heightPx: probe.heightPx, linesCount: probe.linesCount,
+    lineH: probe.lineH, words: probe.noteWords, markerW: probe.markerW, spaceW: probe.spaceW
+  };
+}
+
+/**
+ * **פרוסה 2 (§2.3 — מדידה אחת לכל פריט):** הטבעת מדדי ההערה על אובייקט
+ * ההערה עצמו, ברגע יצירתה (CP2 ב-pipeline). מרגע זה כל הצרכנים — תקציב,
+ * הצבה, פיצול, ניקוז זנב — קוראים את החותמת ואינם מודדים שוב. הערה שנוצרה
+ * בפיצול (המשך) היא טקסט חדש — מוטבעת אף היא פעם אחת בלבד.
+ * @param {object} note - { text, marker, ... } — מוטציה באתר (המקור בידי ה-pipeline)
+ * @returns {object} ה-note עצמו (שרשרת)
+ */
+function stampNoteMetrics(note, settings, measure) {
+  if (note && note.text != null) {
+    _rowsStats.calls.push(`${note.tokenId || ''}#${note.noteIndex != null ? note.noteIndex : ''}#${String(note.text).slice(0, 24)}`);
+  }
+  // **שלב 6 פרוסה 2:** ההטבעה עוברת דרך ה-SSOT של מודל ההערות (notes-model)
+  // — אותן שורות/מדדים בדיוק, ובנוסף: רוחב סימון-ההמשך בתקציב שורה 0 (§9 —
+  // בעבר ההמשכים נמדדו בלי '(המשך)' בזמן שהרנדרים ציירו אותו ⇒ תקציב<הקרנה),
+  // markerGlyphW להקרנה, ו-stampCtx לזיהוי הקשר המדידה. מי שכבר חתום בהקשר
+  // המרזב אינה נמדד שוב.
+  NM.stampNote(note, settings, measure, NM.NOTE_KINDS.FOOTNOTE);
+  return note;
+}
+
 function laneWidth(settings) {
   const base = settings._fnColWidthPx || 200;
   return settings['footnote-columns'] === 2 ? base : base;
@@ -19576,13 +22041,376 @@ function getFootnotesReservedHeight(pageNotes, settings, measure) {
   const cols = settings['footnote-columns'];
   const heights = pageNotes.map(n => n.heightPx != null ? n.heightPx : noteHeight(n, settings, measure));
   if (cols === 1) return heights.reduce((a, b) => a + b, 0);
-  // 2 טורים: חלוקה שווה־גובה (greedy LPT דטרמיניסטית)
-  const t = [0, 0];
-  for (const h of [...heights].sort((a, b) => b - a)) { const i = t[0] <= t[1] ? 0 : 1; t[i] += h; }
-  return Math.max(t[0], t[1]);
+  // 2 טורים: חלוקה שווה־גובה — **שלב 5 (חילוץ שורש מ-PR #16):** מקור יחיד
+  // (footnote-lanes). שקול מתמטית למימוש הקודם (סדר גובה-יורד/אינדקס-עולה,
+  // חמדני לנמוך) — נעול בבדיקת שקילות; מעתה תקציב/הקרנה/תצוגה משתפים את
+  // אותה חלוקה ממקור אחד.
+  const { totals } = assignFootnoteLanes(pageNotes, (n, i) => heights[i]);
+  return Math.max(totals[0], totals[1]);
 }
 
-module.exports = { getFootnotesReservedHeight, noteHeight, laneWidth, NOTE_FONT_FACTORS };
+module.exports = { getFootnotesReservedHeight, noteHeight, noteRowsOf, stampNoteMetrics, noteMetrics, laneWidth, NOTE_FONT_FACTORS, __resetRowsStats, __rowsStats };
+
+};
+__modules["src/engine/layout/notes-model.js"] = function (require, module, exports) {
+// src/engine/layout/notes-model.js — שלב 6 פרוסה 2: מודל הערות מאוחד (חוזה מקור/עוגן + מדידה קנונית)
+'use strict';
+
+/**
+ * **חוזה ההערות האחיד (הוראת שלב 6 §§7-10):** כל סוגי ההערות — שוליים (מרזב),
+ * צד (שוליים חיצוניים), סיום (עמודי הערות), המשכים מפיצול והערות מועברות — חולקים
+ * אותו מודל מקור/עוגן ואותה חותמת מדידה. העיקרון:
+ *
+ *   מקור תוכן אחד → עוגן אחד → מדידה אחת (לפי הקשר יעד) → תקציב/הצבה/הקרנה
+ *   מאותה חותמת → PagePlan → מקרינים טהורים.
+ *
+ * **זהות ושרשור (§7):** לכל הערה יש `noteId` יציב (kind|sourceId|noteIndex),
+ * `sourceId` (הטוקן שבבעלותו טקסט ההערה), `anchorId` (עוגן הגוף), ומדיניות
+ * מספור/פיצול/המשך. המשך מפיצול הוא רשומה משלו עם `continuationOf` = noteId
+ * המקור ו-`wordRange` — טווח המילים המדויק שלו במקור: מילה לא נעלמת, לא מוכפלת
+ * ולא נסדרת מחדש.
+ *
+ * **מדידה קנונית (§§9-10):** החותמת (`noteRows/noteWords/markerW/markerGlyphW/
+ * contMarkW/spaceW/lineH/heightPx/linesCount/stampCtx`) נוצרת פעם אחת לכל
+ * (הערה, הקשר יעד) — ההקשר קובא את הרוחב, הגודל, הפיץ' והפקטור. מרגע ההטבעה
+ * התקציב, ההצבה ושני המקרינים קוראים את החותמת ואינם מודדים שוב. המקרינים
+ * שאוחזים הערה בלי חותמת מפיקים diagnostic מפורש — ולא מדידה חלופית שקטה.
+ *
+ * דטרמיניזם: פונקציות טהורות של (טקסט, הגדרות, מדידה); אין תאריך/אקראיות.
+ */
+
+/**
+ * **פרופילי רוחב הגופן (SSOT של מודל ההערות):** עד כאן הועתקה הטבלה בשלושה
+ * אתרים (footnote-budget, endnote-pages, side-notes). כעת היא חיה כאן —
+ * והמודולים ההם מייצאים אותה הלאה לצרכנים הקיימים (בלי שבירת חוזה).
+ * הפקטור מתקן את טבלת impl A בלבד; ב-impl B (font-metrics — ייצוא PDF)
+ * המטריקות מדויקות והכפלה מנפחת (S70/R7-M4) — measureContextFor מכבה אותו שם.
+ */
+const NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
+const SIDE_NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
+
+/** סוגי ההערות במודל המאוחד. */
+const NOTE_KINDS = Object.freeze({
+  FOOTNOTE: 'footnote',   // מרזב תחתון (עמוד)
+  SIDE_NOTE: 'side-note', // שוליים חיצוניים, עוגן פסקה מארחת
+  ENDNOTE: 'endnote',     // עמודי הערות-סיום
+  INFO_BOX: 'info-box'    // פריט עוגן מורחב (תיבת מידע) — שלב 6 פרוסה 2, דרך registry
+});
+
+/** סימון ההמשך של פיצול — טקסט קבוע (מקור יחיד למחרוזת). */
+const CONTINUATION_MARK = '(המשך)';
+
+/** ניקוי תווי ה-PUA הפנימיים מטקסט הערה — **אותו טקסט שהמקרינים מציירים**
+ * (E000 רווח אטומי ⇒ רווח אמת; E101/E102 ⇒ מוסרים). החותמת מודדת את מה
+ * שמצויר — אחרת תקציב≠הקרנה (§9). */
+function scrubNoteText(s) {
+  return String(s == null ? '' : s)
+    .replace(/\uE000/g, ' ')
+    .replace(/[\uE101\uE102]/g, '');
+}
+
+// ─── הקשרי מדידה — מקור יחיד לגודל/פיץ'/רוחב/פקטור לכל סוג הערה (§10) ───
+
+/**
+ * הקשר המדידה של סוג הערה: { sizePt, lineH, widthPx, fontName, factor }.
+ * @param {string} kind — אחד מ-NOTE_KINDS
+ * @param {object} settings
+ * @param {object} [opts] — { widthPx } (עקיפת רוחב לפריט עוגן מורחב), { sizePt }
+ * @param {Function} [measure] — פונקציית המדידה (לזיהוי impl לצורך הפקטור)
+ */
+function measureContextFor(kind, settings, opts = {}, measure = null) {
+  const bodyPt = Number(settings['body-font-size-pt']) || 14;
+  const implB = measure && measure.impl === 'font-metrics';
+  if (kind === NOTE_KINDS.FOOTNOTE) {
+    // היסטורי (noteMetrics, שלב 5): 0.8× הגוף, פיץ' 1.25 — כמו המרזב בשני הרנדרים.
+    const sizePt = bodyPt * 0.8;
+    return {
+      kind, sizePt,
+      lineH: Math.round(sizePt * (96 / 72) * 1.25),
+      widthPx: settings._fnColWidthPx || 200,
+      fontName: settings['f-note-body-font'],
+      factor: implB ? 1 : (NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1)
+    };
+  }
+  if (kind === NOTE_KINDS.SIDE_NOTE || kind === NOTE_KINDS.INFO_BOX) {
+    // היסטורי (estimateSideNoteHeight): 0.75× הגוף, פיץ' 1.15 — כמו .side-note.
+    const sizePt = Number(opts.sizePt) > 0 ? Number(opts.sizePt) : bodyPt * 0.75;
+    const fontName = opts.fontName || settings['s-note-body-font'];
+    const fallbackW = Math.max(60, Math.round(settings._outerMarginPx || 120) - 12);
+    return {
+      kind, sizePt,
+      lineH: Math.round(sizePt * (96 / 72) * 1.15),
+      widthPx: Number(opts.widthPx) > 0 ? Math.round(Number(opts.widthPx)) : (settings._sideNoteColWidthPx || fallbackW),
+      fontName,
+      factor: implB ? 1 : (SIDE_NOTE_FONT_FACTORS[fontName] || (fontName && fontName !== settings['body-font'] ? 1.08 : 1))
+    };
+  }
+  if (kind === NOTE_KINDS.ENDNOTE) {
+    // היסטורי (endnote-pages/estimateNoteHeight): 0.8× הגוף, פיץ' לפי body-line-height
+    // (בדיוק api.lineHeightPx) — ללא עיגול, כמו שהיה בתקציב עמודי ההערות.
+    const sizePt = bodyPt * 0.8;
+    return {
+      kind, sizePt,
+      lineH: sizePt * (96 / 72) * (Number(settings['body-line-height']) || 1.4),
+      widthPx: Number(opts.widthPx) > 0 ? Math.round(Number(opts.widthPx)) : (settings._endnoteColWidthPx || 300),
+      fontName: settings['f-note-body-font'],
+      factor: implB ? 1 : (NOTE_FONT_FACTORS[settings['f-note-body-font']] || 1)
+    };
+  }
+  throw new TypeError('notes-model: unknown note kind: ' + kind);
+}
+
+// ─── ליבת השבירה — מימוש אחד לכל ההקשרים (§9: אין wrap עצמאי במקרינים) ───
+
+/**
+ * עטיפה חמדנית של מילי הערה ברוחב ההקשר, עם קידומת (סמן +/(המשך)) בשורה
+ * הראשונה — **אותה אריתמטיקה שקבעה את תקציב המרזב מאז שלב 5** (R3-C3):
+ * row0 נפתח ברוחב הקידומת; כל מילה מוסיפה רווח+רוחב; מעבר לרוחב ⇒ שורה.
+ * @param {string[]} words — המילים (לאחר ניקוי PUA)
+ * @param {object} ctx — הקשר ({ sizePt, widthPx, factor } מ-measureContextFor)
+ * @param {Function} measure — פונקציית מדידה (טקסט, גודל) ⇒ רוחב
+ * @param {number} prefixW — רוחב הקידומות של שורה 0 (סמן/המשך, כולל רווח)
+ * @param {number} spaceW — רוחב הרווח בהקשר (כבר מחושב — מודדים פעם אחת)
+ * @returns {{rows:Array}} שורות {wFrom,wTo,widthPx,wordW[]}
+ */
+function wrapNoteWords(words, ctx, measure, prefixW, spaceW) {
+  const r3 = (v) => Math.round(v * 1000) / 1000;
+  const rows = [];
+  let rowW = Math.min(prefixW, ctx.widthPx); // קידומת בפינת השורה הראשונה
+  let wFrom = 0;
+  let rowWordW = [];
+  for (let i = 0; i < words.length; i++) {
+    const ww = measure(words[i], ctx.sizePt) * ctx.factor;
+    const addW = (rowW > 0 ? spaceW : 0) + ww;
+    if (rowW + addW > ctx.widthPx && rowW > 0) {
+      rows.push({ wFrom, wTo: i, widthPx: r3(rowW), wordW: rowWordW });
+      wFrom = i; rowW = ww; rowWordW = [r3(ww)];
+    } else {
+      rowW += addW;
+      rowWordW.push(r3(ww));
+    }
+  }
+  rows.push({ wFrom, wTo: words.length, widthPx: r3(rowW), wordW: rowWordW });
+  return { rows };
+}
+
+// ─── חשבונאות מדידה (דפוס api.cacheStats / _rowsStats): הוכחת "פעם אחת" ───
+const _stampStats = { calls: [] };
+function __resetStampStats() { _stampStats.calls.length = 0; }
+function __stampStats() {
+  const perKey = Object.create(null);
+  for (const k of _stampStats.calls) perKey[k] = (perKey[k] || 0) + 1;
+  return { total: _stampStats.calls.length, keys: _stampStats.calls.slice(), perKey };
+}
+
+/**
+ * **הטבעת חותמת המדידה (§§9-10):** המדידה הראשונה והאחרונה של ההערה בהקשר
+ * היעד שלה. מוטציה באתר על אובייקט ההערה (המקור בידי ה-pipeline/המתכנן).
+ * הערה שכבר חתומה **באותו הקשר** אינה נמדדת שוב (מחזיר כפי שהיא).
+ * @param {object} note — { text, marker?, isContinuation?/mode?, counterMark? }
+ * @param {object} settings
+ * @param {Function} measure
+ * @param {string} kind — NOTE_KINDS.*
+ * @param {object} [opts] — עקיפות הקשר ({ widthPx, sizePt, fontName }) לפריטים מורחבים
+ * @returns {object} ה-note עצמו (שרשרת)
+ */
+function stampNote(note, settings, measure, kind, opts = {}) {
+  const ctx = measureContextFor(kind, settings, opts, measure);
+  if (note.stampCtx && note.stampCtx.kind === ctx.kind
+    && note.stampCtx.widthPx === ctx.widthPx && note.stampCtx.sizePt === ctx.sizePt) {
+    return note; // כבר נמדדה בדיוק בהקשר הזה — לא מודדים שוב
+  }
+  _stampStats.calls.push(`${ctx.kind}:${note.noteId || note.tokenId || ''}#${note.noteIndex != null ? note.noteIndex : ''}`);
+  const text = scrubNoteText(note.text);
+  const words = text.split(/\s+/).filter(Boolean);
+  const spaceW = measure(' ', ctx.sizePt) * ctx.factor;
+  const mkTxt = note.marker != null && String(note.marker) !== '' ? String(note.marker) : '';
+  const mkGlyphW = mkTxt ? measure(mkTxt, ctx.sizePt) * ctx.factor : 0;
+  const markerW = mkTxt ? mkGlyphW + spaceW : 0;
+  const isCont = note.isContinuation === true || note.mode === 'split-rest';
+  const contMarkW = isCont ? measure(CONTINUATION_MARK, ctx.sizePt) * ctx.factor + spaceW : 0;
+  // **תיקון פרוסה 2 (§9):** הקידומות של שורה 0 — הסמן **וגם סימון ההמשך** —
+  // נכנסות לתקציב השורה. בעבר ההמשכים נמדדו בלי '(המשך)' בזמן ששני הרנדרים
+  // ציירו אותו ⇒ השורה הראשונה של כל המשך הייתה צרה בכ~30px מהמצויר.
+  // הערות-צד עם counterMark — אותו תיקון (הסמן מוצג ולא תוקצב).
+  const cmTxt = (!isCont && note.counterMark != null && String(note.counterMark) !== '') ? String(note.counterMark) : '';
+  const cmGlyphW = cmTxt ? measure(cmTxt, ctx.sizePt) * ctx.factor : 0;
+  const counterMarkW = cmTxt ? cmGlyphW + spaceW : 0;
+  const prefixW = contMarkW + markerW + counterMarkW;
+  const { rows } = wrapNoteWords(words, ctx, measure, prefixW, spaceW);
+  note.noteRows = rows;
+  note.noteWords = words;
+  note.heightPx = Math.round(rows.length * ctx.lineH * 1000) / 1000;
+  note.linesCount = rows.length;
+  note.lineH = ctx.lineH;
+  note.markerW = markerW ? Math.round(markerW * 1000) / 1000 : 0;
+  note.markerGlyphW = mkGlyphW ? Math.round(mkGlyphW * 1000) / 1000 : 0;
+  note.contMarkW = contMarkW ? Math.round(contMarkW * 1000) / 1000 : 0;
+  note.counterMarkW = counterMarkW ? Math.round(counterMarkW * 1000) / 1000 : 0;
+  note.spaceW = Math.round(spaceW * 1000) / 1000;
+  note.stampCtx = { kind: ctx.kind, sizePt: ctx.sizePt, widthPx: ctx.widthPx, lineH: ctx.lineH, factor: ctx.factor };
+  return note;
+}
+
+/** בדיקת תקינות חותמת (למקרינים ולאימות): שורות+מילים+פיץ' עקביים. */
+function stampIsValid(note) {
+  if (!note || !Array.isArray(note.noteRows) || note.noteRows.length === 0) return false;
+  if (!Array.isArray(note.noteWords)) return false;
+  if (!(Number(note.lineH) > 0) || !(Number(note.heightPx) > 0)) return false;
+  if (note.noteRows.length !== Number(note.linesCount)) return false;
+  for (const row of note.noteRows) {
+    if (!(row.wTo >= row.wFrom) || !Array.isArray(row.wordW)) return false;
+    if (row.wordW.length !== row.wTo - row.wFrom) return false;
+  }
+  return true;
+}
+
+// ─── חוזה הרשומה: זהות, עוגן, מדיניות (§7) ───
+
+/**
+ * יצירת רשומת הערה מנורמלת — זהות אחת לכל סוגי ההערות. לא מודדת (המדידה
+ * ב-stampNote, פעם אחת בהקשר היעד).
+ * @param {object} raw — { text, marker?, tokenId, noteIndex?, part? }
+ * @param {object} ctxArgs — { kind, sourceId?, anchorId?, numberingScope?, splitPolicy?,
+ *   continuationPolicy?, continuationOf?, wordRange? }
+ */
+function makeNoteRecord(raw, ctxArgs) {
+  const kind = ctxArgs.kind;
+  if (!Object.values(NOTE_KINDS).includes(kind)) {
+    throw new TypeError('notes-model: makeNoteRecord kind must be one of ' + Object.values(NOTE_KINDS).join('|'));
+  }
+  const sourceId = raw.tokenId != null ? String(raw.tokenId) : (ctxArgs.sourceId != null ? String(ctxArgs.sourceId) : '');
+  const noteIndex = raw.noteIndex != null ? raw.noteIndex : 0;
+  const rec = {
+    ...raw,
+    kind,
+    noteId: `${kind}|${sourceId}|${noteIndex}${ctxArgs.fragmentIndex != null ? '|f' + ctxArgs.fragmentIndex : ''}`,
+    sourceId,
+    anchorId: ctxArgs.anchorId != null ? String(ctxArgs.anchorId) : sourceId,
+    numberingScope: ctxArgs.numberingScope || null,
+    splitPolicy: ctxArgs.splitPolicy || null,
+    continuationPolicy: ctxArgs.continuationPolicy || null,
+    ...(ctxArgs.continuationOf != null ? { continuationOf: ctxArgs.continuationOf } : {}),
+    ...(ctxArgs.wordRange ? { wordRange: { from: ctxArgs.wordRange.from, to: ctxArgs.wordRange.to } } : {})
+  };
+  return rec;
+}
+
+/** אימות חוזה רשומת הערה (צרכן: page-items + בדיקות). מחזיר רשימת הפרות. */
+function validateNoteRecord(rec) {
+  const errs = [];
+  if (!rec || typeof rec !== 'object') return [{ code: 'note-not-object' }];
+  if (!rec.noteId || typeof rec.noteId !== 'string') errs.push({ code: 'note-id-missing' });
+  if (!rec.kind || !Object.values(NOTE_KINDS).includes(rec.kind)) errs.push({ code: 'note-kind-invalid', kind: rec.kind });
+  if (rec.sourceId == null || rec.sourceId === '') errs.push({ code: 'note-source-missing' });
+  if (rec.anchorId == null || rec.anchorId === '') errs.push({ code: 'note-anchor-missing' });
+  if (rec.text == null || String(rec.text).trim() === '') errs.push({ code: 'note-text-empty' });
+  // **§7:** כל המשך — פיצול או העברה — חייב קישור למקור וטווח מילים מדויק:
+  // מילה לא נעלמת, לא מוכפלת ולא נסדרת מחדש.
+  const isCont = rec.isContinuation === true || rec.mode === 'split-rest' || rec.continuationOf != null;
+  if (isCont) {
+    if (rec.continuationOf == null) errs.push({ code: 'note-continuation-without-source' });
+    if (rec.wordRange == null) errs.push({ code: 'note-continuation-without-range' });
+  }
+  if (rec.wordRange != null) {
+    const wr = rec.wordRange;
+    if (!(wr.from >= 0) || !(wr.to >= wr.from)) errs.push({ code: 'note-word-range-invalid' });
+  }
+  return errs;
+}
+
+/** קישור עוגן-להערה: מפה anchorId ⇒ רשימת noteId (לאימות שאין עוגן יתום). */
+function anchorLinksOf(records) {
+  const byAnchor = new Map();
+  for (const r of records || []) {
+    if (!r || !r.noteId) continue;
+    if (!byAnchor.has(r.anchorId)) byAnchor.set(r.anchorId, []);
+    byAnchor.get(r.anchorId).push(r.noteId);
+  }
+  return byAnchor;
+}
+
+module.exports = {
+  NOTE_KINDS,
+  CONTINUATION_MARK,
+  NOTE_FONT_FACTORS,
+  SIDE_NOTE_FONT_FACTORS,
+  scrubNoteText,
+  measureContextFor,
+  wrapNoteWords,
+  stampNote,
+  stampIsValid,
+  makeNoteRecord,
+  validateNoteRecord,
+  anchorLinksOf,
+  __resetStampStats,
+  __stampStats
+};
+
+};
+__modules["src/engine/layout/decision-trace.js"] = function (require, module, exports) {
+// src/engine/layout/decision-trace.js — תיעוד החלטות תכנון דטרמיניסטי קומפקטי (שלב 5 פרוסה 2)
+'use strict';
+
+/**
+ * **רשם החלטות התכנון (§2.7 בביקורת שלב 5):** trace שמסביר אילו מועמדים
+ * נבחנו, אילו אילוצים הופעלו, מדוע מועמד נדחה, מה ניקודו, מדוע נבחר,
+ * מדוע בוצעה נסיגה ומה תוצאתה — לכל החלטה מהותית של ה-Planner.
+ *
+ * עקרונות החוזה:
+ *  - **דטרמיניזם מוחלט:** אסורים תאריך/שעה/אקראיות/מזהי ריצה; הסדר הוא
+ *    סדר ההחלטות עצמן. שתי ריצות זהות מניבות trace זהה ביט-לביט.
+ *  - **קומפקטיות מוגבלת:** תקרת רשומות (ברירת מחדל 20,000) + דגל
+ *    truncated — לא מנפח זיכרון ללא גבול. ההפעלה opt-in (env.plannerTrace
+ *    או settings._plannerTrace) — כבוי בברירת המחדל; הספירות (counts)
+ *    נשמרות תמיד כך שגם trace כבוי מדווח כמות החלטות לפי סוג.
+ *  - **שימושי לאבחון:** כל רשומה היא { p: עמוד, k: סוג, d: נתונים } —
+ *    מפתח קצר, נתונים עגולים (round2) — קריא בפלט JSON ובבדיקות.
+ */
+
+const DEFAULT_MAX_ENTRIES = 20000;
+
+function createTraceRecorder(opts = {}) {
+  const enabled = opts.enabled === true;
+  const maxEntries = Number.isFinite(opts.maxEntries) && opts.maxEntries > 0 ? opts.maxEntries : DEFAULT_MAX_ENTRIES;
+  const entries = [];
+  const counts = Object.create(null);
+  let truncated = false;
+
+  /** עיגול ערכים מספריים בנתונים — דטרמיניזם בפלט (בלי שאריות נקודה צפה). */
+  function freezeData(d) {
+    if (d == null || typeof d !== 'object') return d;
+    const out = {};
+    for (const k of Object.keys(d).sort()) {
+      const v = d[k];
+      if (typeof v === 'number' && !Number.isInteger(v)) out[k] = Math.round(v * 100) / 100;
+      else if (Array.isArray(v)) out[k] = v.slice(0, 8); // רשימות נחתכות — קומפקטיות
+      else out[k] = v;
+    }
+    return out;
+  }
+
+  return {
+    enabled,
+    /** רשומת החלטה. page — אינדקס העמוד (או null להחלטה גלובלית). */
+    emit(page, kind, data) {
+      counts[kind] = (counts[kind] || 0) + 1;
+      if (!enabled) return;
+      if (entries.length >= maxEntries) { truncated = true; return; }
+      entries.push({ p: page == null ? null : page, k: kind, d: freezeData(data) });
+    },
+    /** ספירות בלבד (ללא רשומות) — תמיד זמין, גם כשה-trace כבוי. */
+    stats() {
+      return { enabled, entries: entries.length, truncated, counts: { ...counts } };
+    },
+    /** פלט JSON — הרשומות עצמן (כשמופעל). */
+    toJSON() {
+      return { entries, truncated };
+    }
+  };
+}
+
+module.exports = { createTraceRecorder, DEFAULT_MAX_ENTRIES };
 
 };
 __modules["src/ui/worker-client.js"] = function (require, module, exports) {
@@ -19761,17 +22589,39 @@ class WorkerEngineClient {
 
   /**
    * בקשת עימוד. בקשה חדשה בזמן עבודה פעילה מבטלת את הקודמת (single-flight).
-   * @returns {{promise:Promise<object>, jobId:string, cancel:()=>void}}
+   * **שלב 3 (§3.1-2 — תיקון ביקורת PR #22, חיבור אמיתי לזרימה):** נכסי המסמך
+   * עוברים כאן ל-transport מוגדר (serializeForTransport — מזהים כתובות-תוכן
+   * + בתים בלבד, בלי נתיבים מקומיים). מקובל AssetResolver חי, או אובייקט
+   * transport מוכן ({schema:'asset-transport-v1', assets}). חריגת תקרת העברה
+   * (ברירת מחדל 64MB ב-resolver) או transport פגום — דחייה מפורשת לפני המשלוח.
+   * @param {{text:string, settings:object, onProgress?:Function, assets?:(object|AssetResolver|null)}} req
+   * @returns {{promise:Promise<object>, jobId:string|null, cancel:()=>void}}
    */
-  requestTypeset({ text, settings, onProgress }) {
+  requestTypeset({ text, settings, onProgress, assets }) {
     if (this.activeJob) this.cancel();
     this._maybeReplayRegistrations(); // **S70 (R8-M2):** רישום חוזר לפני העימוד אחרי respawn
+    let assetsTransport = null;
+    if (assets) {
+      if (typeof assets.serializeForTransport === 'function') {
+        const ser = assets.serializeForTransport();
+        if (!ser || ser.ok !== true) {
+          const err = new Error(`typeset: asset transport rejected: ${(ser && (ser.code || ser.message)) || 'serialization-failed'}`);
+          return { promise: Promise.reject(err), jobId: null, cancel: () => {} };
+        }
+        assetsTransport = ser;
+      } else if (assets.schema === 'asset-transport-v1' && Array.isArray(assets.assets)) {
+        assetsTransport = assets; // transport מוכן — ה-Worker יאמת אינטגרציה בקבלה
+      } else {
+        const err = new Error('typeset: assets must be an AssetResolver or an asset-transport-v1 object');
+        return { promise: Promise.reject(err), jobId: null, cancel: () => {} };
+      }
+    }
     const jobId = `job-${Date.now().toString(36)}-${++jobSeq}`;
     let resolve, reject;
     const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
     const job = { jobId, resolve, reject, onProgress: onProgress || null, cancelled: false };
     this.activeJob = job;
-    this.transport.post({ type: 'typeset-request', jobId, text, settings });
+    this.transport.post({ type: 'typeset-request', jobId, text, settings, assets: assetsTransport });
     return { promise, jobId, cancel: () => this.cancel() };
   }
 
@@ -20100,28 +22950,41 @@ function lexDocument(rawText, opts = {}) {
   const state = { phase: 'PREAMBLE' };
   const metadata = {};
   const body = [];
+  // **שלב 2 (חוזה פריט אחיד — עוגני מקור):** רישום אדיטיבי בלבד; התנהגות
+  // הפענוח זהה לחלוטין. bodyLineStart = אינדקס שורת הגוף הראשונה במערך
+  // השורות המאוחד (אחרי CRLF→LF); metadataLines = שורות הפתיח עם מיקומן
+  // והמפתח שזוהה — לשחזור מדויק של המקור ב-round-trip של המודל הקנוני.
+  let bodyLineStart = -1;
+  const metadataLines = [];
+  const preludeBlanks = []; // **שלב 2:** שורות ריקות שנבלעו במעבר PREAMBLE→BODY
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     const trimmed = line.trim();
 
     if (state.phase === 'PREAMBLE') {
-      if (trimmed === '') { state.phase = 'BODY'; continue; }
+      if (trimmed === '') { state.phase = 'BODY'; preludeBlanks.push({ lineIndex: i, raw: line }); continue; }
       if (HEADING_RE.test(trimmed) || (endnoteRe && endnoteRe.test(trimmed)) || ENDNOTE_CLASS_RE.test(trimmed)) {
-        state.phase = 'BODY'; body.push(line); continue;
+        state.phase = 'BODY';
+        if (bodyLineStart < 0) bodyLineStart = i;
+        body.push(line); continue;
       }
       const m = trimmed.split(/\s+[-–—]\s+/);
       if (m.length >= 2 && METADATA_KEYS.includes(m[0].toLowerCase())) {
         metadata[m[0]] = m.slice(1).join(' - ');
+        metadataLines.push({ lineIndex: i, key: m[0], value: m.slice(1).join(' - '), raw: line });
         continue;
       }
       // שורה שאינה metadata → גם היא סוגרת את הפתיח
       state.phase = 'BODY';
+      if (bodyLineStart < 0) bodyLineStart = i;
       body.push(line);
       continue;
     }
+    if (bodyLineStart < 0) bodyLineStart = i;
     body.push(line);
   }
-  return { metadata, bodyLines: body };
+  return { metadata, bodyLines: body, bodyLineStart: bodyLineStart < 0 ? lines.length : bodyLineStart, metadataLines, preludeBlanks, totalLines: lines.length };
 }
 
 module.exports = {
