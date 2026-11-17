@@ -1,6 +1,6 @@
 // ui/engine-worker.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת ה־Worker (המנוע המלא — אין לטעון בחוט ה־UI)
-// מודולים: 88 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 90 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -339,6 +339,7 @@ var __paths = {
   "src/engine/core/pipeline.js|../decoration/headers-builder": "src/engine/decoration/headers-builder.js",
   "src/engine/core/pipeline.js|../decoration/toc-builder": "src/engine/decoration/toc-builder.js",
   "src/engine/core/pipeline.js|../layout/page-items": "src/engine/layout/page-items.js",
+  "src/engine/core/pipeline.js|../layout/structural-stamps": "src/engine/layout/structural-stamps.js",
   "src/engine/core/pipeline.js|./page-model": "src/engine/core/page-model.js",
   "src/engine/parser/block-tokenizer.js|./dfa-lexer": "src/engine/parser/dfa-lexer.js",
   "src/engine/parser/block-tokenizer.js|./bracket-scanner": "src/engine/parser/bracket-scanner.js",
@@ -431,21 +432,26 @@ var __paths = {
   "src/engine/layout/endnote-pages.js|../notes/markers": "src/engine/notes/markers.js",
   "src/engine/layout/endnote-pages.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/layout/page-items.js|./notes-model": "src/engine/layout/notes-model.js",
-  "src/engine/core/page-model.js|../output/geometry-projector": "src/engine/output/geometry-projector.js",
+  "src/engine/layout/structural-stamps.js|../output/shaar-content": "src/engine/output/shaar-content.js",
+  "src/engine/layout/structural-stamps.js|../layout/furniture-geometry": "src/engine/layout/furniture-geometry.js",
+  "src/engine/layout/structural-stamps.js|../layout/footnote-lanes": "src/engine/layout/footnote-lanes.js",
+  "src/engine/layout/structural-stamps.js|../typography/measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/layout/structural-stamps.js|../typography/measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/core/page-model.js|./materialize": "src/engine/core/materialize.js",
   "src/engine/core/page-model.js|../layout/notes-model": "src/engine/layout/notes-model.js",
-  "src/engine/output/geometry-projector.js|./dom-renderer": "src/engine/output/dom-renderer.js",
-  "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
-  "src/engine/output/geometry-projector.js|../layout/furniture-geometry": "src/engine/layout/furniture-geometry.js",
-  "src/engine/output/geometry-projector.js|../layout/notes-model": "src/engine/layout/notes-model.js",
-  "src/engine/output/geometry-projector.js|../notes/markers": "src/engine/notes/markers.js",
-  "src/engine/output/geometry-projector.js|./line-font": "src/engine/output/line-font.js",
-  "src/engine/output/geometry-projector.js|./shaar-content": "src/engine/output/shaar-content.js",
-  "src/engine/output/geometry-projector.js|../decoration/ornament-ink": "src/engine/decoration/ornament-ink.js",
-  "src/engine/output/geometry-projector.js|../layout/footnote-lanes": "src/engine/layout/footnote-lanes.js",
-  "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
-  "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
-  "src/engine/output/geometry-projector.js|../extensions/style-schema": "src/engine/extensions/style-schema.js",
-  "src/engine/output/geometry-projector.js|../extensions/apply-styles": "src/engine/extensions/apply-styles.js",
+  "src/engine/core/materialize.js|../output/dom-renderer": "src/engine/output/dom-renderer.js",
+  "src/engine/core/materialize.js|../typography/measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/core/materialize.js|../layout/furniture-geometry": "src/engine/layout/furniture-geometry.js",
+  "src/engine/core/materialize.js|../layout/notes-model": "src/engine/layout/notes-model.js",
+  "src/engine/core/materialize.js|../notes/markers": "src/engine/notes/markers.js",
+  "src/engine/core/materialize.js|../output/line-font": "src/engine/output/line-font.js",
+  "src/engine/core/materialize.js|../output/shaar-content": "src/engine/output/shaar-content.js",
+  "src/engine/core/materialize.js|../decoration/ornament-ink": "src/engine/decoration/ornament-ink.js",
+  "src/engine/core/materialize.js|../layout/footnote-lanes": "src/engine/layout/footnote-lanes.js",
+  "src/engine/core/materialize.js|../typography/measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/core/materialize.js|../typography/measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/core/materialize.js|../extensions/style-schema": "src/engine/extensions/style-schema.js",
+  "src/engine/core/materialize.js|../extensions/apply-styles": "src/engine/extensions/apply-styles.js",
   "src/engine/output/dom-renderer.js|../notes/markers": "src/engine/notes/markers.js",
   "src/engine/output/dom-renderer.js|../decoration/page-decorations": "src/engine/decoration/page-decorations.js",
   "src/engine/output/dom-renderer.js|../decoration/shaar-boxes": "src/engine/decoration/shaar-boxes.js",
@@ -487,6 +493,10 @@ var __paths = {
   "src/engine/output/export-api.js|./project-io": "src/engine/output/project-io.js",
   "src/engine/output/export-api.js|../extensions/extensions-io": "src/engine/extensions/extensions-io.js",
   "src/engine/typography/font-subset.js|./font-metrics": "src/engine/typography/font-metrics.js",
+  "src/engine/output/geometry-projector.js|../layout/structural-stamps": "src/engine/layout/structural-stamps.js",
+  "src/engine/output/geometry-projector.js|../core/materialize": "src/engine/core/materialize.js",
+  "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/output/legacy-projector.js|../layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
   "src/engine/output/legacy-projector.js|./line-font": "src/engine/output/line-font.js",
   "src/engine/output/legacy-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
@@ -1879,6 +1889,14 @@ function typeset(rawText, settingsIn, env = {}) {
     checked: pageItemValidation.checked,
     violations: pageItemValidation.violations.length
   });
+
+  // ---- **שלב 8 (§4.1): הטבעת גיאומטריית התוכן המבני — לפני המודל** ----
+  // מדידה אחת לשורות TOC/שערים/סלוטי כותרת/גיליון/נתיבי מרזב, אחרי כל
+  // ההחלטות (הצבות, איזונים, פיוס הערות, עיטורים ומספור) ולפני בניית
+  // ה-PageModel: ה-materialization צורך חותמות ואינו מודד (מונה הנפילות 0).
+  const { stampStructuralGeometry } = require('../layout/structural-stamps');
+  const structuralStamps = stampStructuralGeometry(pages, settings, api);
+  eventLog.emit('page-model', 'structural-stamps', { ...structuralStamps.stamped, pages: structuralStamps.pagesStamped });
 
   // ---- **שלב 7 (§§18–22): PageModel יחיד, סופי ו-immutable** ----
   // הבונה היחיד: מאמת את התוכנית, מוכיח כיסוי מלא (אין יתומים/כפילויות),
@@ -20430,6 +20448,426 @@ module.exports = {
 };
 
 };
+__modules["src/engine/layout/structural-stamps.js"] = function (require, module, exports) {
+// src/engine/layout/structural-stamps.js — הטבעת גיאומטריית התוכן המבני בזמן התכנון (שלב 8, §4.1)
+'use strict';
+
+/**
+ * **מדידה אחת לתוכן המבני — לפני ההחלטות הסופיות ולא בהקרנה.**
+ *
+ * עד שלב 8, projectDocument מדד בעצמו את התוכן המבני בזמן ההקרנה: שורות
+ * תוכן-העניינים (fakeLine), כריכת שורות עמודי השער (buildShaarBlocks + wrap),
+ * רוחבי סלוטי הכותרת העליונה, גיאומטריית הגיליון וחלוקת נתיבי מרזב ההערות
+ * (assignFootnoteLanes). זו הייתה החלטת גיאומטריה שנייה במקרין — בדיוק מה
+ * שהוראת שלב 8 אוסרת: "אם חסר נתון במודל, תקן את שלב יצירת הנתון ולא את
+ * המקרין".
+ *
+ * כאן מוטבעים הנתונים האלה על העמודים **בסוף התכנון** (ה-pipeline קורא מיד
+ * לפני בניית ה-PageModel; אחרי הצבת ההערות והאיזונים — כך שההטבעה רואה את
+ * המצב הסופי): page.tocLayout / page.shaarLayout / page.headerSlotGeo /
+ * page.folioGeo / page.footnoteLanes. ההחלטות נקבעות פעם אחת; ההקרנה (שלב 8)
+ * והמקרינים צורכים בלבד.
+ *
+ * טוהר: פונקציות טהורות על (pages, settings, measure) — מוטציה מבוקרת בשדות
+ * ההטבעה בלבד; דטרמיניסטיות מלאה (אותו קלט ⇒ אותן חותמות).
+ */
+
+const { buildShaarBlocks, shaarFontOf } = require('../output/shaar-content');
+const { folioGeometry, headerGeometry } = require('../layout/furniture-geometry');
+const { assignFootnoteLanes } = require('../layout/footnote-lanes');
+const { registeredFonts } = require('../typography/measure-api');
+
+/** **S73:** מפתח משפחת גופן רשומה ⇒ תת-גופן ייעודי בייצוא (אותו מיפוי כמו המקרינים). */
+function familyFontKeyOf(fam) {
+  if (!fam || !registeredFonts.has(fam)) return null;
+  if (fam === 'Frank Ruhl Libre') return 'fnbody';
+  if (fam === 'Hadassah Friedlaender') return 'margin';
+  if (fam === 'FrankReal-Bold' || fam === 'FrankReal') return 'window';
+  if (fam === 'David Libre' || fam === 'DavidLibre-Bold') return 'heading';
+  return fam;
+}
+
+/** מדידה בגופן משפחה רשומה (אחרת המדידה הרגילה) — להטבעת שערים/גיליון/כותרות. */
+function measureOfFamily(baseMeasure, fam, settings) {
+  if (fam && familyFontKeyOf(fam)) {
+    const { MeasureAPI } = require('../typography/measure-api');
+    return new MeasureAPI({ ...settings, 'body-font': fam }, 'font-metrics');
+  }
+  return baseMeasure;
+}
+
+/** צבע הגדרה '#RRGGBB' → [r,g,b] או null. */
+function colorOfSetting(hex) {
+  if (!hex) return null;
+  const m = String(hex).match(/^#([0-9a-f]{6})$/i);
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/**
+ * הטבעת שורות תוכן-העניינים — אותה פריסה שהייתה בהקרנה (top 70, שורה 24px,
+ * כותרת מימין ותווית משמאל; קבוצה — פריטים במרווחי 80px) — עם רוחבי מילים
+ * ורוחב רווח **נמדדים פעם אחת** (ההקרנה מקבלת מילים ממוקמות, לא טקסט למדידה).
+ * נשמר ב-page.tocLayout.
+ */
+function stampTocLayout(page, settings, measure) {
+  if (page.type !== 'toc-general' && page.type !== 'toc-detail') return false;
+  const rows = (page.toc && page.toc.rows) || [];
+  if (!rows.length) return false;
+  const tpl = page.template;
+  const PT = 12; // גודל שורת TOC — כמו fakeLine של ההקרנה לפני ההטבעה
+  const spaceW = measure.measureTextWidth(' ', PT, 0);
+  const wordsOf = (text) => String(text || '').split(/\s+/).filter(Boolean).map(w => ({
+    text: w, w: measure.measureTextWidth(w, PT, 0)
+  }));
+  const layout = [];
+  let yi = 0;
+  for (const row of rows) {
+    const y = 70 + yi * 24;
+    if (row.kind === 'group') {
+      let xi = 0;
+      const items = [];
+      for (const it of row.items || []) {
+        const text = [it.text, it.label || ''].filter(Boolean).join(' ');
+        items.push({
+          x: 18 + xi, y, w: 60, h: 22, words: wordsOf(text), spaceW,
+          targetPage: it.targetPage != null ? it.targetPage : null
+        });
+        xi += 80;
+      }
+      layout.push({ kind: 'group', y, items });
+    } else {
+      const text = [row.text, row.label || ''].filter(Boolean).join(' ');
+      layout.push({
+        kind: 'row', x: 18, y, w: tpl.width - 36, h: 22, words: wordsOf(text), spaceW,
+        targetPage: row.targetPage != null ? row.targetPage : null
+      });
+    }
+    yi++;
+  }
+  page.tocLayout = { schema: 'toc-layout-v1', rows: layout, pageWidth: tpl.width, sizePt: PT };
+  return true;
+}
+
+/**
+ * הטבעת תוכן עמודי השער — בלוקים, שבירת שורות ברוחב התיבה, פריסה אנכית
+ * ('between' — פיזור שווה; 'center' — מחסנית ממורכזת), גופן וצבע פר-בלוק.
+ * אותה גיאומטריה שהייתה נבנית בהקרנה — כעת פעם אחת בהטבעה. נשמר ב-page.shaarLayout.
+ */
+function stampShaarLayout(page, settings, measure) {
+  if (!/^shaar-/.test(page.type)) return false;
+  const model = buildShaarBlocks(page, settings, page._metadata);
+  if (!model || !model.blocks.length) return false;
+  const b = model.box;
+  const tpl = page.template;
+  const boxX = b.left, boxW = Math.max(40, tpl.width - b.left - b.right);
+  const boxY = b.top, boxH = Math.max(60, tpl.height - b.top - b.bottom);
+  const shaarColorOf = (cls) => {
+    if (cls.includes('bsd-header') || cls.includes('publication-footer')) return colorOfSetting(settings['shaar-year-color']);
+    if (cls.includes('book-title-main')) return colorOfSetting(settings['shaar-title-color']);
+    if (cls.includes('book-subtitle')) return colorOfSetting(settings['shaar-subtitle-color']);
+    if (cls.includes('book-description')) return colorOfSetting(settings['shaar-desc-color']);
+    if (cls.includes('book-sections-summary')) return colorOfSetting(settings['shaar-sections-color']);
+    if (cls.includes('author-block')) return colorOfSetting(settings['shaar-author-color']);
+    if (cls.includes('back-shaar-text-line')) return colorOfSetting(settings['shaar-back-text-color']);
+    return null;
+  };
+  // גובה כל בלוק: שבירת שורות לרוחב התיבה במדידת הגופן שלו + גובה שורה לפי הגודל.
+  // **רוחבי המילים נצברים בהטבעה** — ההקרנה מקבלת מילים ממוקמות, לא טקסט למדידה.
+  const blocks = model.blocks.map(bl => {
+    if (bl.graphic) return { ...bl, lines: [], h: 24, fontKey: null, color: null, sizePt: bl.sizePt };
+    const blFam = shaarFontOf(bl.cls, settings) || null;
+    const blMeasure = measureOfFamily(measure, blFam, settings);
+    const words = String(bl.text || '').split(/\s+/).filter(Boolean);
+    const spaceW = blMeasure.measureTextWidth(' ', bl.sizePt, 0);
+    const lines = [];
+    let cur = [], curW = 0;
+    for (const w of words) {
+      const ww = blMeasure.measureTextWidth(w, bl.sizePt, 0);
+      const add = cur.length ? spaceW + ww : ww;
+      if (cur.length && curW + add > boxW) { lines.push(cur); cur = [{ text: w, w: ww }]; curW = ww; }
+      else { cur.push({ text: w, w: ww }); curW += add; }
+    }
+    if (cur.length) lines.push(cur);
+    const lh = Math.max(12, Math.round((bl.sizePt * (96 / 72)) * 1.25));
+    return { ...bl, lines, spaceW, h: lines.length * lh, fontKey: familyFontKeyOf(blFam), color: shaarColorOf(bl.cls), sizePt: bl.sizePt };
+  });
+  const placed = [];
+  let y;
+  if (model.mode === 'between') {
+    const total = blocks.reduce((a2, b2) => a2 + b2.h, 0);
+    const gaps = Math.max(0, blocks.length - 1);
+    const gap = gaps ? Math.max(0, (boxH - total) / gaps) : 0;
+    y = boxY;
+    for (const bl of blocks) { placed.push({ ...bl, yTop: y }); y += bl.h + gap; }
+  } else {
+    const total = blocks.reduce((a2, b2) => a2 + b2.h, 0);
+    y = boxY + Math.max(0, (boxH - total) / 2);
+    for (const bl of blocks) { placed.push({ ...bl, yTop: y }); y += bl.h; }
+  }
+  page.shaarLayout = { schema: 'shaar-layout-v1', box: { x: boxX, y: boxY, w: boxW, h: boxH }, blocks: placed };
+  return true;
+}
+
+/**
+ * הטבעת רוחבי סלוטי הכותרת העליונה — מדידה אחת ב-9pt בגופן הסלוט; ה-x נגזר
+ * מה-pos (טהור). נשמר ב-page.headerSlotGeo.
+ */
+function stampHeaderSlots(page, settings, measure) {
+  if (!page.header || !page.header.slots) return false;
+  const slots = ['right', 'center', 'left']
+    .map(pos => ({ pos, ...page.header.slots[pos] }))
+    .filter(s => s && s.text);
+  if (!slots.length) return false;
+  const geo = headerGeometry(page);
+  const stamped = slots.map(s => {
+    const t = String(s.text || '').split('\uE000').join(' ').split('\uE101').join('').split('\uE102').join('');
+    const sKey = familyFontKeyOf(s.font);
+    const sMeasure = (sKey && sKey !== 'heading' && sKey !== 'fnbody' && sKey !== 'margin' && sKey !== 'window')
+      ? measureOfFamily(measure, s.font, settings) : measure;
+    const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, 9)));
+    return { pos: s.pos, align: s.align, text: t, w, sizePt: 9, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
+  });
+  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y, slots: stamped };
+  return true;
+}
+
+/**
+ * הטבעת גיאומטריית הגיליון — folioGeometry (מקור יחיד) נקרא פעם אחת בגופן
+ * הגיליון מההגדרות. נשמר ב-page.folioGeo.
+ */
+function stampFolioGeometry(page, settings, measure) {
+  if (!page.folioDisplay) return false;
+  const fam = settings['page-num-font'] || '';
+  const folioMeasure = (fam && familyFontKeyOf(fam)) ? measureOfFamily(measure, fam, settings) : measure;
+  const geo = folioGeometry(page, settings, folioMeasure);
+  if (!geo) return false;
+  const key = (fam && familyFontKeyOf(fam)) || null;
+  const color = colorOfSetting(settings['page-num-color']);
+  page.folioGeo = { ...geo, ...(key ? { fontKey: key } : {}), ...(color ? { color } : {}) };
+  return true;
+}
+
+/**
+ * הטבעת חלוקת נתיבי מרזב ההערות — אותה חלוקה שהתקציב קבע (assignFootnoteLanes —
+ * מקור-אמת אחד) מוטבעת פעם אחת; ההקרנה וה-DOM צורכים ואינם מחלקים שוב.
+ * נשמר ב-page.footnoteLanes.
+ */
+function stampFootnoteLanes(page) {
+  if (!(page.footnotes && page.footnotes.length)) return false;
+  const { lanes } = assignFootnoteLanes(page.footnotes);
+  page.footnoteLanes = { schema: 'fn-lanes-v1', lanes: lanes.map(lane => lane.slice()) };
+  return true;
+}
+
+/**
+ * ההטבעה המלאה — נקראת מה-pipeline אחרי סיום ההצבות ולפני בניית ה-PageModel.
+ * @param {Array} pages — עמודי התוצר הסופיים
+ * @param {object} settings — הגדרות ממוזגות
+ * @param {object} measure — MeasureAPI פעיל
+ * @returns {{stamped: Object<string, number>, pagesStamped: number}}
+ */
+function stampStructuralGeometry(pages, settings, measure) {
+  const stamped = { toc: 0, shaar: 0, header: 0, folio: 0, lanes: 0 };
+  for (const page of pages) {
+    if (stampTocLayout(page, settings, measure)) stamped.toc++;
+    if (stampShaarLayout(page, settings, measure)) stamped.shaar++;
+    if (stampHeaderSlots(page, settings, measure)) stamped.header++;
+    if (stampFolioGeometry(page, settings, measure)) stamped.folio++;
+    if (stampFootnoteLanes(page)) stamped.lanes++;
+  }
+  return { stamped, pagesStamped: pages.length };
+}
+
+module.exports = {
+  stampStructuralGeometry,
+  stampTocLayout, stampShaarLayout, stampHeaderSlots, stampFolioGeometry, stampFootnoteLanes
+};
+
+};
+__modules["src/engine/output/shaar-content.js"] = function (require, module, exports) {
+// src/engine/output/shaar-content.js — מודל תוכן עמודי השער (03.11(ד))
+'use strict';
+
+/**
+ * **מקור יחיד (F-09) לתוכן המובנה של עמודי השער** — פורט renderMainShaar/
+ * renderSubShaar/renderBackShaar של הפרויקט המקורי. נצרך על ידי שני הנתיבים:
+ * dom-renderer (תצוגה חיה + ייצוא HTML) ו-geometry-projector (ייצוא PDF) —
+ * כך שהשער נראה אותו דבר בכל הפלטים (עד כאן ההיטל לא כלל את תוכן השער
+ * וה־PDF הראה עמודים ריקים).
+ *
+ * המודל: תיבה (מ"מ של המקור) + רשימת בלוקים (טקסט/גודל/משקל) + אופן פריסה:
+ * 'between' = flex space-between (שער ראשי: בס״ד למעלה, שנה למטה), 'center'
+ * = flex ממורכז (שער־משנה/אחורי). העיטור (כתר) הוא בלוק גרפי ללא טקסט —
+ * ה-DOM מצייר אותו; ההיטל מדלג (במקור לא היה ייצוא PDF כלל).
+ */
+
+const MM_TO_PX = 96 / 25.4;
+
+/** תיבת השער לפי הסוג — מיקומי המקור (מ"מ → פיקסלים). */
+function shaarBoxOf(type) {
+  const mm = (v) => Math.round(v * MM_TO_PX);
+  if (type === 'shaar-main') {
+    return { top: mm(20), bottom: mm(16), right: mm(15), left: mm(15), mode: 'between' };
+  }
+  if (type === 'shaar-sub') {
+    return { top: mm(20), bottom: mm(20), right: mm(95), left: mm(15), mode: 'center' };
+  }
+  // shaar-back
+  return { top: mm(22), bottom: mm(18), right: mm(15), left: mm(95), mode: 'center' };
+}
+
+/** פיצול מקף של כותרת חלק (renderSubShaar המקורי): main=לפני, sub=אחרי. */
+function splitPartTitle(text) {
+  let titleMain = String(text || '');
+  let titleSub = '';
+  if (/[-–—]/.test(titleMain)) {
+    const parts = titleMain.split(/[-–—]/);
+    titleMain = parts[0].trim();
+    titleSub = parts.slice(1).join(' - ').trim();
+  }
+  return { titleMain, titleSub };
+}
+
+/**
+ * בניית בלוקי תוכן השער. גישה מילולית להגדרות (דרישת סורק ה-phantom-key).
+ * @param {object} page - עמוד CP5 (shaarInfo.title לשער־משנה, _metadata למטא)
+ * @param {object} settings
+ * @param {object} [metadata] - מטא המסמך (גובר _metadata)
+ * @returns {{mode:string, box:object, blocks:Array<{cls,text,sizePt,bold,graphic}>}|null}
+ */
+function buildShaarBlocks(page, settings, metadata) {
+  if (!page || !page.type || !/^shaar-/.test(page.type)) return null;
+  const meta = metadata || page._metadata || {};
+  const bookTitle = settings['imud-book-title'] || meta['שם הספר'] || meta['ספר'] || meta['title'] || 'שם הספר';
+  const subtitle = settings['imud-book-subtitle'] || meta['נושא'] || '';
+  const desc = settings['imud-book-desc'] || meta['נושא מפורט'] || '';
+  const sections = settings['imud-book-sections'] || meta['פרטי מהדורא'] || '';
+  const author = settings['imud-book-author'] || meta['שם המחבר'] || '';
+  const year = settings['imud-book-year'] || meta['מקום ושנת הוצאה'] || '';
+  const backRaw = settings['shaar-back-text'] || meta['שמירת זכויות'] || 'כל הזכויות שמורות למחבר.';
+
+  const num = (v) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : 12; };
+  const box = shaarBoxOf(page.type);
+  const B = [];
+
+  if (page.type === 'shaar-main') {
+    B.push({ cls: 'bsd-header', text: 'בס״ד', sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 5 });
+    B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']) });
+    B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true });
+    B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-main' });
+    B.push({ cls: 'book-description', text: desc, sizePt: num(settings['shaar-desc-size-pt']) });
+    B.push({ cls: 'book-sections-summary', text: sections, sizePt: num(settings['shaar-sections-size-pt']), bold: true });
+    B.push({ cls: 'author-block', text: author, sizePt: num(settings['shaar-author-size-pt']) });
+    B.push({ cls: 'publication-footer', text: year, sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 1 });
+  } else if (page.type === 'shaar-sub') {
+    const { titleMain, titleSub } = splitPartTitle(page.shaarInfo && page.shaarInfo.title);
+    B.push({ cls: 'book-title-main', text: titleMain, sizePt: 36 });
+    if (titleSub) {
+      B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-sub' });
+      B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true });
+    }
+  } else {
+    B.push({ cls: 'book-title-main book-title-main--back', text: bookTitle, sizePt: 36 });
+    const lines = String(backRaw).split('\n').map(l => l.trim()).filter(Boolean);
+    lines.forEach((l, i) => B.push({
+      cls: 'back-shaar-text-line', text: l,
+      sizePt: i === 0 ? 13 : num(settings['shaar-back-text-size-pt']), bold: i === 0
+    }));
+    if (author) B.push({ cls: 'author-block', text: author, sizePt: num(settings['shaar-author-size-pt']) });
+    if (year) B.push({ cls: 'publication-footer', text: year, sizePt: num(settings['shaar-year-size-pt']), bold: true });
+  }
+  return { mode: box.mode, box, blocks: B.filter(b => b.graphic || String(b.text || '').length) };
+}
+
+/** משפחות הגופן של הבלוקים — לפי ההגדרות (גישה מילולית לסורק). */
+function shaarFontOf(cls, settings) {
+  switch (true) {
+    case cls.includes('bsd-header'):
+    case cls.includes('publication-footer'): return settings['shaar-year-font'];
+    case cls.includes('book-title-main'): return settings['shaar-title-font'];
+    case cls.includes('book-subtitle'): return settings['shaar-subtitle-font'];
+    case cls.includes('book-description'): return settings['shaar-desc-font'];
+    case cls.includes('book-sections-summary'): return settings['shaar-sections-font'];
+    case cls.includes('author-block'): return settings['shaar-author-font'];
+    case cls.includes('back-shaar-text-line'): return settings['shaar-back-text-font'];
+    default: return '';
+  }
+}
+
+module.exports = { buildShaarBlocks, shaarBoxOf, shaarFontOf, splitPartTitle, MM_TO_PX };
+
+};
+__modules["src/engine/layout/furniture-geometry.js"] = function (require, module, exports) {
+// src/engine/layout/furniture-geometry.js — גיאומטריית ריהוט עמוד ממקור יחיד (שלב 6 פרוסה 1)
+'use strict';
+
+/**
+ * **מעמד (הוראת שלב 6 §8):** "כותרות עליונות, תחתונות ומספרי עמוד יהיו Page
+ * Items בעלי placement model אחיד; **אין לחשב את מיקומם בנפרד ב-DOM וב-PDF**."
+ *
+ * עד כאן המקרן ל-PDF חישב את תיבת הגיליון והבסיס במתמטיקה מפורשת
+ * (FOLIO_BOTTOM_PX=25, half-leading, ascent) בעוד ה-DOM הסתמך על CSS חי
+ * (.folio{bottom:25px} וכו') שכויל להתאים בעבר (S69/S5.1) — שני מקורות
+ * של אותה גיאומטריה שכל אחד מהם יכול לסטות בשקט. מעתה שני המקרינים
+ * קוראים מכאן: המקרן מציב את המספרים כמות שהם; ה-DOM מציב אותם כסגנון
+ * מפורש (top/lineHeight) לצד ה-class הקיים שנשאר אחראי לעור (מסגרת/צבע).
+ */
+
+/** תחתית תיבת הגיליון מה-CSS החי (styles.css: .folio{bottom:25px}) — קבוע המקור. */
+const FOLIO_BOTTOM_PX = 25;
+/** ראש תיבת גיליון במצב top (styles.css: .folio--top{top:4px}). */
+const FOLIO_TOP_PX = 4;
+/** ראש תיבת גיליון בתוך הכותרת העליונה (styles.css: .folio--in-header{top:6px}). */
+const FOLIO_IN_HEADER_PX = 6;
+
+/**
+ * גיאומטריית הגיליון — מחושבת פעם אחת מאותם קלטים ששני המקרינים צורכים.
+ * @param {object} page — עמוד (index, folioDisplay, template)
+ * @param {object} settings
+ * @param {{measureTextWidth:(t:string,pt:number)=>number, ascentEm:()=>number, descentEm:()=>number}} folioMeasure
+ *   מדידת הגיליון (גופן הגיליון כשרשום — אותו מופע שהמקרן בונה)
+ * @returns {null|{y, baselineY, x, w, sizePt, text, lineHeightPx, position}}
+ */
+function folioGeometry(page, settings, folioMeasure) {
+  const pos = String((settings && settings['page-num-position']) || 'bottom-center');
+  if (pos === 'none' || !page || !page.folioDisplay) return null;
+  const tpl = page.template;
+  const text = String(page.folioDisplay);
+  const folioSz = Number(settings['page-num-size-pt']) > 0 ? Number(settings['page-num-size-pt']) : 10;
+  const fw = Math.max(1, Math.round(folioMeasure.measureTextWidth(text, folioSz)));
+  const folioPx = folioSz * (96 / 72);
+  // line-height: normal ≈ 1.2 (חסר הגדרה מפורשת ב-CSS לגיליון) — הנוסחה ההיסטורית
+  const folioLineH = Math.round(folioPx * 1.2);
+  const ascEm = folioMeasure.ascentEm(), descEm = folioMeasure.descentEm();
+  const halfLead = Math.max(0, (folioLineH - (ascEm + descEm) * folioPx) / 2);
+  const recto = (page.index % 2 === 0);
+  let fx = Math.round((tpl.width - fw) / 2);
+  let boxTop = tpl.height - FOLIO_BOTTOM_PX - folioLineH;
+  let baselineY = boxTop + halfLead + ascEm * folioPx;
+  if (pos === 'outer-left' || (pos === 'outer' && recto)) fx = 8;
+  else if (pos === 'outer-right' || (pos === 'outer' && !recto)) fx = Math.max(8, Math.round(tpl.width - fw - 8));
+  else if (pos === 'top') { boxTop = FOLIO_TOP_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
+  else if (pos === 'in-header') { boxTop = FOLIO_IN_HEADER_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
+  return {
+    y: boxTop, baselineY, x: fx, w: fw, sizePt: folioSz, text,
+    lineHeightPx: folioLineH, position: pos
+  };
+}
+
+/** ראש אזור הכותרת העליונה במרחב העמוד (מקור: המקרן ההיסטורי — contentBox.top − 18). */
+function headerGeometry(page) {
+  const tpl = page.template;
+  return { y: Math.max(0, tpl.contentBox.top - 18) };
+}
+
+module.exports = {
+  FOLIO_BOTTOM_PX, FOLIO_TOP_PX, FOLIO_IN_HEADER_PX,
+  folioGeometry, headerGeometry
+};
+
+};
 __modules["src/engine/core/page-model.js"] = function (require, module, exports) {
 // src/engine/core/page-model.js — שלב 7: PageModel יחיד, סופי ו-immutable (תכנית §§7.1–7.3)
 'use strict';
@@ -20460,7 +20898,9 @@ __modules["src/engine/core/page-model.js"] = function (require, module, exports)
  */
 
 const crypto = require('crypto');
-const { projectDocument } = require('../output/geometry-projector');
+// **שלב 8 (§4.1):** materialization חד-פעמי — המנגנון הפנימי הטהור (לא
+// מקרין, לא מודד, לא מחליט; צורך LineModel + חותמות structural-stamps).
+const { materializeDocument } = require('./materialize');
 const { stampIsValid } = require('../layout/notes-model');
 
 /** גרסת הסכמה — עולה רק בשינוי חוזה שובר-צרכן (תכנית §7.1-10). */
@@ -20514,7 +20954,7 @@ function buildPageModel(result, opts = {}) {
   // (1) הקרנת fragments חד-פעמית — מנוע ההקרנה הקיים (מקור אחד ל-PDF ולמודל;
   // שלב 8 יעביר את המקרינים לצריכת המודל). אין כאן החלטות עימוד חדשות:
   // המיקומים, הגבהים והפערים נצרכים מהתוכנית כמו שהם.
-  const projected = projectDocument(result, settings, measure);
+  const projected = materializeDocument(result, settings, measure);
 
   // (2) מיפוי זהות: כל שורת תוכנית → נציגותה במודל (token/part) — בסיס
   // הוכחת הכיסוי המלא ואפס-הכפילויות (§21-1).
@@ -20965,8 +21405,8 @@ module.exports = {
 };
 
 };
-__modules["src/engine/output/geometry-projector.js"] = function (require, module, exports) {
-// src/engine/output/geometry-projector.js — CP5 model → explicit geometry (S12.1-1, REQ-EXP-01)
+__modules["src/engine/core/materialize.js"] = function (require, module, exports) {
+// src/engine/core/materialize.js — **שלב 8 (§4.1): materialization חד-פעמי של הגאומטריה**
 'use strict';
 
 /**
@@ -20981,16 +21421,19 @@ __modules["src/engine/output/geometry-projector.js"] = function (require, module
  * body-last-line-align; קריעה/AQ ברווחים). PUA נאסף לפני הפלט (BRZ-13).
  */
 
-const { scrubPUAText } = require('./dom-renderer');
+const { scrubPUAText } = require('../output/dom-renderer');
 const { MeasureAPI } = require('../typography/measure-api');
 const { folioGeometry: folioGeoOf, headerGeometry: headerGeoOf } = require('../layout/furniture-geometry'); // **שלב 6:** גיאומטריית ריהוט — מקור יחיד ל-DOM ול-PDF
 const NM = require('../layout/notes-model'); // **שלב 6 פרוסה 2 (§9):** חותמות ההערות — המקרינים צורכים ואינם מודדים
 const { markerFor } = require('../notes/markers');
-const { lineFontSizePt, hexColorToRgb } = require('./line-font'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
+const { lineFontSizePt, hexColorToRgb } = require('../output/line-font'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
 // **S73:** גופן השערים לפי מחלקת בלוק — מקור יחיד לשני הנתיבים (DOM+PDF)
-const { buildShaarBlocks, shaarFontOf } = require('./shaar-content');
+const { buildShaarBlocks, shaarFontOf } = require('../output/shaar-content');
 const { ornamentInk, parseSvgPaint, svgToPdfOps, svgInkBBox } = require('../decoration/ornament-ink'); // **EXT-4:** הדיו — מקור יחיד לכל הנתיבים // **03.11(ד):** תוכן השערים — אותו מודל כמו ה-DOM
 const { assignFootnoteLanes } = require('../layout/footnote-lanes'); // **שלב 5:** מקור-אמת יחיד לחלוקת נתיבי המרזב
+
+/** מונה נפילות materialization — מאופס בכל הרצה; לעולם לא שקט (diagnostics בפלט). */
+let materializeFallbacks = null;
 
 /** **S73 (צבע פר-גופן — גישה מילולית לסורק phantom-key):** '#RRGGBB' → [r,g,b]
  * או null (=שחור — ברירת המחדל של כל הגדרות הצבע; אפס אופרטורי rg ב-PDF). */
@@ -21049,44 +21492,61 @@ function projectPage(page, settings, api) {
     out.spanning = band;
   }
 
-  // **S12 (REQ-EXP-03):** עמודי תוכן־העניינים — שורות בפריסת הרנדרר
-  // (toc-rows: top 70, שורה ~24px) — כותרת השורה מימין, התווית משמאל.
-  // מצויר גם ב־PDF וגם נכלל בחילוץ הטקסט — עמוד TOC לא ריק.
+  // **S12 (REQ-EXP-03) + שלב 8 (§4.1):** עמודי תוכן־העניינים — השורות מהחותמת
+  // שהוטבעה בזמן התכנון (structural-stamps: מילים נמדדות פעם אחת); ההקרנה
+  // ממקמת את המילים החותמות ואינה מודדת. חותמה חסרה — נפילה מדווחת.
   if (page.type === 'toc-general' || page.type === 'toc-detail') {
-    const rows = (page.toc && page.toc.rows) || [];
-    let yi = 0;
-    const rowH = 24;
-    for (const row of rows) {
-      const y = 70 + yi * rowH;
-      if (row.kind === 'group') {
-        let xi = 0;
-        for (const it of row.items || []) {
-          const text = [it.text, it.label || ''].filter(Boolean).join(' ');
-          out.lines.push(fakeLine(text, 18 + xi, y, 60, rowH, settings, measure));
-          xi += 80;
+    if (page.tocLayout && page.tocLayout.rows) {
+      const pt = page.tocLayout.sizePt || 12;
+      for (const row of page.tocLayout.rows) {
+        if (row.kind === 'group') {
+          for (const it of row.items || []) out.lines.push(stampedRowLine(it, pt, 'toc-row'));
+        } else {
+          out.lines.push(stampedRowLine(row, pt, 'toc-row'));
         }
-      } else {
-        const text = [row.text, row.label || ''].filter(Boolean).join(' ');
-        out.lines.push(fakeLine(text, 18, y, tpl.width - 36, rowH, settings, measure));
       }
-      yi++;
+    } else {
+      materializeFallbacks.push({ kind: 'materialize-fallback-toc-stamp', page: page.index });
+      const rows = (page.toc && page.toc.rows) || [];
+      let yi = 0;
+      for (const row of rows) {
+        const y = 70 + yi * 24;
+        if (row.kind === 'group') {
+          let xi = 0;
+          for (const it of row.items || []) {
+            const text = [it.text, it.label || ''].filter(Boolean).join(' ');
+            out.lines.push(fakeLine(text, 18 + xi, y, 60, 24, settings, measure));
+            xi += 80;
+          }
+        } else {
+          const text = [row.text, row.label || ''].filter(Boolean).join(' ');
+          out.lines.push(fakeLine(text, 18, y, tpl.width - 36, 24, settings, measure));
+        }
+        yi++;
+      }
     }
   }
 
-  // **03.11(ד):** תוכן מובנה של עמודי השער — אותו מודל כמו ה-DOM (shaar-content).
-  // בלי זה ייצוא ה-PDF הציג עמודי שער ריקים. הפריסה משקפת את ה-flex של ה-DOM:
-  // 'between' — בלוק ראשון בראש התיבה, אחרון בתחתית, השאר מופצים ברווחים שווים
-  // (space-between); 'center' — מחסנית ממורכזת אנכית. עיטור הכתר גרפי — נדלג.
-  if (/^shaar-/.test(page.type)) {
+  // **03.11(ד) + שלב 8 (§4.1):** תוכן מובנה של עמודי השער — מהחותמת שהוטבעה
+  // בזמן התכנון (structural-stamps: בלוקים+שורות+רוחבי מילים+גופן+צבע+מיקום
+  // אנכי). ההקרנה ממקמת מילים חותמות — אין שבירה ואין מדידה כאן.
+  if (/^shaar-/.test(page.type) && page.shaarLayout && page.shaarLayout.blocks) {
+    for (const bl of page.shaarLayout.blocks) {
+      if (!bl.lines || !bl.lines.length) continue;
+      const lh = bl.h / bl.lines.length;
+      bl.lines.forEach((words, li) => {
+        const lineH = Math.max(12, Math.round((bl.sizePt * (96 / 72)) * 1.25));
+        void lh;
+        out.lines.push(centeredStampedLine(words, bl.spaceW, page.shaarLayout.box.x, bl.yTop + li * lineH, page.shaarLayout.box.w, lineH, bl.sizePt, bl.cls, bl.fontKey, bl.color));
+      });
+    }
+  } else if (/^shaar-/.test(page.type)) {
+    materializeFallbacks.push({ kind: 'materialize-fallback-shaar-stamp', page: page.index });
     const model = buildShaarBlocks(page, settings, page._metadata);
     if (model && model.blocks.length) {
       const b = model.box;
       const boxX = b.left, boxW = Math.max(40, tpl.width - b.left - b.right);
       const boxY = b.top, boxH = Math.max(60, tpl.height - b.top - b.bottom);
-      // **S73 (תצוגה=ייצוא בגופני השער — נתיב DP):** ה-DOM מציג כל בלוק במשפחת
-      // הגופן שלו (shaarFontOf) ובצבעו; עד כאן ההקרנה מדדה וציירה הכול בגוף
-      // הטקסט (/F1). כעת: מדידה בגופן הבלוק + fontKey פר-בלוק (משפחה רשומה
-      // ⇒ תת-גופן ייעודי) + צבע פר-בלוק מההגדרות (ברירת מחדל שחורה).
       const shaarColorOf = (cls) => {
         if (cls.includes('bsd-header') || cls.includes('publication-footer')) return colorOfSetting(settings['shaar-year-color']);
         if (cls.includes('book-title-main')) return colorOfSetting(settings['shaar-title-color']);
@@ -21097,14 +21557,12 @@ function projectPage(page, settings, api) {
         if (cls.includes('back-shaar-text-line')) return colorOfSetting(settings['shaar-back-text-color']);
         return null;
       };
-      // מדידה בגופן הבלוק — כמו ה-DOM (רגיסטרציה נבדקת בזמן ריצה)
       const shaarMeasureOf = (fam) => {
         const { registeredFonts: rf } = require('../typography/measure-api');
         return (fam && rf.has(fam))
           ? new MeasureAPI({ ...settings, 'body-font': fam }, 'font-metrics')
           : measure;
       };
-      // גובה כל בלוק: גלישת שורות לרוחב התיבה + גובה שורה לפי הגודל
       const blocks = model.blocks.map(bl => {
         if (bl.graphic) return { ...bl, lines: [], h: 24 };
         const blFam = shaarFontOf(bl.cls, settings) || null;
@@ -21142,7 +21600,6 @@ function projectPage(page, settings, api) {
       }
       function pushCentered(bl, yTop) {
         const lh = bl.h / bl.lines.length;
-        // **S73:** גופן+צבע פר-בלוק — כמו ה-DOM (renderShaarContent)
         const fk = familyFontKeyOf(bl._fam, settings);
         const color = shaarColorOf(bl.cls);
         bl.lines.forEach((words, li) => {
@@ -21191,48 +21648,58 @@ function projectPage(page, settings, api) {
   // "פיזר" את מילותיה בקידום קבוע 8.2px ⇒ הערות מרוסקות זו על זו.
   if (page.footnotes && page.footnotes.length) projectFootnoteGutter(page, settings, measure, out);
 
-  // גיליון
+  // גיליון — **שלב 8 (§4.1):** מהחותמת שהוטבעה בזמן התכנון (folioGeo מ-
+  // furniture-geometry, המקור היחיד, בגופן הגיליון מההגדרות). בלי חותמה —
+  // נפילה מדווחת ואז אותו חישוב חד-פעמי.
   if (page.folioDisplay) {
-    // **שלב 6 פרוסה 1 (§8 בהוראה):** גיאומטריית הגיליון — מקור יחיד
-    // (layout/furniture-geometry). ה-DOM קורא מאותו מקור (סגנון מפורש) —
-    // אין עוד שני חישובים מקביליים של אותו מיקום בין תצוגה לייצוא.
-    // **S73:** גופן/גודל/צבע מההגדרות — page-num-font ('' = גוף הטקסט).
-    const folioFam = settings['page-num-font'] || '';
-    const folioMeasure = (folioFam && familyFontKeyOf(folioFam, settings))
-      ? new MeasureAPI({ ...settings, 'body-font': folioFam }, 'font-metrics') : measure;
-    out.folio = folioGeoOf(page, settings, folioMeasure);
-    if (out.folio) {
-      const folioKey = (folioFam && familyFontKeyOf(folioFam, settings)) || null;
-      const folioColor = colorOfSetting(settings['page-num-color']);
-      if (folioKey) out.folio.fontKey = folioKey;
-      if (folioColor) out.folio.color = folioColor;
+    if (page.folioGeo) {
+      out.folio = { ...page.folioGeo };
+    } else {
+      materializeFallbacks.push({ kind: 'materialize-fallback-folio-stamp', page: page.index });
+      const folioFam = settings['page-num-font'] || '';
+      const folioMeasure = (folioFam && familyFontKeyOf(folioFam, settings))
+        ? new MeasureAPI({ ...settings, 'body-font': folioFam }, 'font-metrics') : measure;
+      out.folio = folioGeoOf(page, settings, folioMeasure);
+      if (out.folio) {
+        const folioKey = (folioFam && familyFontKeyOf(folioFam, settings)) || null;
+        const folioColor = colorOfSetting(settings['page-num-color']);
+        if (folioKey) out.folio.fontKey = folioKey;
+        if (folioColor) out.folio.color = folioColor;
+      }
     }
   }
 
-  // כותרת עליונה — סלוטים חיים (right/center/left) עם טקסט מפורש (D-61)
+  // כותרת עליונה — **שלב 8 (§4.1):** מהחותמת שהוטבעה בזמן התכנון
+  // (headerSlotGeo: רוחבי סלוטים נמדדו פעם אחת ב-9pt בגופן הסלוט; ה-x נגזר
+  // מה-pos — טהור). בלי חותמה — נפילה מדווחת ואותה מדידה חד-פעמית.
   if (page.header && page.header.slots) {
-    const slots = ['right', 'center', 'left']
-      .map(pos => ({ pos, ...page.header.slots[pos] }))
-      .filter(s => s && s.text);
-    if (slots.length) {
-      // **D-81:** סלוט כותרת עליונה — מיקום/רוחב מפורשים מהמקור היחיד (9pt):
-      // הכותב, הכותב החי ותיבת הדיו צורכים את אותם מספרים — לא עוד נוסחאות מקומיות.
-      // **S73:** גופן הסלוט מהמודל (s.font — headers-builder מצרף את המשפחה
-      // מההגדרות) ⇒ fontKey לכותב ה-PDF (משפחה רשומה ⇒ תת-גופן ייעודי);
-      // צבע — s.color מהמודל (ברירת מחדל שחורה). מדידה בגופן הסלוט כשרשום.
-      // **שלב 6:** ראש אזור הכותרת — מקור יחיד (furniture-geometry.headerGeometry).
+    if (page.headerSlotGeo && page.headerSlotGeo.slots) {
       out.header = {
-        y: headerGeoOf(page).y,
-        slots: slots.map(s => {
-          const t = scrubPUAText(String(s.text || ''));
-          const sKey = familyFontKeyOf(s.font, settings);
-          const sMeasure = sKey && sKey !== 'heading' && sKey !== 'fnbody' && sKey !== 'margin' && sKey !== 'window'
-            ? new MeasureAPI({ ...settings, 'body-font': s.font }, 'font-metrics') : measure;
-          const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, 9)));
-          const x = s.pos === 'right' ? tpl.width - 60 - w : s.pos === 'center' ? Math.round((tpl.width - w) / 2) : 60;
-          return { pos: s.pos, align: s.align, text: t, x, w, sizePt: 9, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
+        y: page.headerSlotGeo.y,
+        slots: page.headerSlotGeo.slots.map(s => {
+          const x = s.pos === 'right' ? tpl.width - 60 - s.w : s.pos === 'center' ? Math.round((tpl.width - s.w) / 2) : 60;
+          return { ...s, x };
         })
       };
+    } else {
+      const slots = ['right', 'center', 'left']
+        .map(pos => ({ pos, ...page.header.slots[pos] }))
+        .filter(s => s && s.text);
+      if (slots.length) {
+        materializeFallbacks.push({ kind: 'materialize-fallback-header-stamp', page: page.index });
+        out.header = {
+          y: headerGeoOf(page).y,
+          slots: slots.map(s => {
+            const t = scrubPUAText(String(s.text || ''));
+            const sKey = familyFontKeyOf(s.font, settings);
+            const sMeasure = sKey && sKey !== 'heading' && sKey !== 'fnbody' && sKey !== 'margin' && sKey !== 'window'
+              ? new MeasureAPI({ ...settings, 'body-font': s.font }, 'font-metrics') : measure;
+            const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, 9)));
+            const x = s.pos === 'right' ? tpl.width - 60 - w : s.pos === 'center' ? Math.round((tpl.width - w) / 2) : 60;
+            return { pos: s.pos, align: s.align, text: t, x, w, sizePt: 9, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
+          })
+        };
+      }
     }
   }
 
@@ -21409,10 +21876,13 @@ function projectFootnoteGutter(page, settings, measure, out) {
   const lanes = [[], []];
   if (!twoLanes) {
     lanes[0] = notes.slice();
+  } else if (page.footnoteLanes && page.footnoteLanes.lanes) {
+    // **שלב 8 (§4.1):** חלוקת הנתיבים מהחותמת שהוטבעה בזמן התכנון — אותה
+    // חלוקה שהתקציב קבע (footnote-lanes, מקור-אמת יחיד), מוטבעת פעם אחת;
+    // ההקרנה צורכת ואינה מחלקת שוב.
+    for (const li of [0, 1]) lanes[li] = page.footnoteLanes.lanes[li].map(i => notes[i]).filter(Boolean);
   } else {
-    // **שלב 5 (חילוץ שורש מ-#16):** חלוקת הנתיבים — מקור יחיד (footnote-lanes).
-    // שקול מתמטית ל-LPT המקומי הקודם — נעול בבדיקת שקילות; תקציב/הקרנה/תצוגה
-    // משתפים את אותה חלוקה ממקור אחד.
+    materializeFallbacks.push({ kind: 'materialize-fallback-fn-lanes', page: page.index });
     const { lanes: idxLanes } = assignFootnoteLanes(notes);
     for (const li of [0, 1]) lanes[li] = idxLanes[li].map(i => notes[i]);
   }
@@ -21681,6 +22151,40 @@ function customFactorMapOf(settings) {
   return m;
 }
 
+/**
+ * **שלב 8 (§4.1):** רוחבי מילות השורה מה-LineModel — מיפוי זהה ל-legacyViewOfLines
+ * (הליכה על ה-flow; צבירת measuredAdvance של הפרגמנטים לפי יחידות מילה), בתוספת
+ * רוחב הרווח מה-glue החיצוני הראשון (naturalPx — הרווח שנמדד בזמן השבירה).
+ * מחזיר null כשאין LineModel/flow (שורה סינתטית) — הנפילה מדווחת ב-projectLine.
+ */
+function lineWidthsFromModel(ln) {
+  const lm = ln && ln.lineModel;
+  if (!lm || !Array.isArray(lm.flow) || !Array.isArray(lm.fragments)) return null;
+  const fragById = new Map((lm.fragments || []).map(f => [f.itemId, f]));
+  const widths = [];
+  let curW = null;
+  let spaceW = null;
+  for (const step of lm.flow) {
+    if (step.type === 'glue') {
+      if (step.internal) continue; // יחידה צמודה — אין גבול מילה
+      if (step.breakGlue) continue; // דבק נקודת-החיתוך — מחוץ לרוחב השורה
+      if (curW !== null) { widths.push(curW); curW = null; }
+      continue;
+    }
+    const f = fragById.get(step.itemId);
+    if (!f) continue;
+    const adv = Number(f.measuredAdvance) || 0;
+    curW = curW === null ? adv : curW + adv;
+  }
+  if (curW !== null) widths.push(curW);
+  // רוחב הרווח — מה-glue החיצוני הראשון של השורה (naturalPx: הרווח שנמדד
+  // בזמן השבירה, לא כאן)
+  if (Array.isArray(lm.glue) && lm.glue.length && lm.glue[0].naturalPx != null) {
+    spaceW = lm.glue[0].naturalPx;
+  }
+  return { widths, spaceW };
+}
+
 function projectLine(ln, colX, y, colW, settings, measure, align) {
   const sizePt = lineFontSizePt(ln, settings);
   // **S73 (תצוגה=ייצוא בגופני כותרות — נתיב DP):** ה-DOM מציג כותרות inline
@@ -21709,8 +22213,26 @@ function projectLine(ln, colX, y, colW, settings, measure, align) {
     return s;
   };
   const words = (ln.words || []).map(w => scrubPUAText(String(w).replace(/\u00A0/g, ' '))).filter(Boolean);
-  const spaceW = measure.measureTextWidth(' ', sizePt, 0);
-  const widths = words.map((w, i) => measure.measureTextWidth(w, effSizeOf(i)));
+  // **שלב 8 (§4.6 — הסרת חישוב כפול):** רוחבי המילים נצרכים מה-LineModel
+  // (measuredAdvance של הפרגמנטים — מדידת השבירה היחידה, בגופן האמיתי של
+  // השורה). בעבר נמדדו כאן שוב בגוף הטקסט — כולל כותרות שנמדדו בגוף הגוף
+  // בזמן שהמודל נשבר בגופן הכותרת (תצוגה≠ייצוא ברמת המילה). שורה בלי
+  // LineModel (סינתטית בבדיקות) — מדידת נפילה מסומנת, לא שקטה.
+  const lm = lineWidthsFromModel(ln);
+  let spaceW = lm ? lm.spaceW : null;
+  let widths;
+  if (lm && lm.widths.length === words.length) {
+    widths = lm.widths;
+  } else {
+    widths = words.map((w, i) => measure.measureTextWidth(w, effSizeOf(i)));
+    if (lm) { /* מיפוי חלקי — נפילה מתועדת להלן */ }
+    spaceW = null;
+  }
+  if (spaceW == null) {
+    spaceW = measure.measureTextWidth(' ', sizePt, 0);
+    if (!materializeFallbacks) materializeFallbacks = [];
+    materializeFallbacks.push({ kind: 'materialize-fallback-line-widths', line: ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId) || null });
+  }
   const sumW = widths.reduce((s, w) => s + w, 0);
   const gaps = Math.max(0, words.length - 1);
 
@@ -21803,6 +22325,31 @@ function centeredLine(text, x, y, w, h, sizePt, measure, cls, fontKey, color) {
   return { x, y, w, h, words: wordPos, align: 'center', kind: 'shaar-content', level: null, isLast: false, sizePt, baselineY: null, tokenId: null, cls: cls || '' };
 }
 
+/** **שלב 8 (§4.1):** שורת שער מהחותמת — מילים {text,w} ממוקמות מהמרכז החוצה (RTL); אפס מדידה. */
+function centeredStampedLine(stampedWords, spaceW, x, y, w, h, sizePt, cls, fontKey, color) {
+  const totalW = stampedWords.reduce((a, b2) => a + b2.w, 0) + (spaceW || 0) * Math.max(0, stampedWords.length - 1);
+  let cursor = x + (w + totalW) / 2; // הקצה הימני של הטקסט הממורכז
+  const wordPos = [];
+  for (const wd of stampedWords) {
+    cursor -= wd.w;
+    wordPos.push({ text: wd.text, x: cursor, w: wd.w, ...(fontKey ? { fontKey } : {}), ...(color ? { color } : {}) });
+    cursor -= (spaceW || 0);
+  }
+  return { x, y, w, h, words: wordPos, align: 'center', kind: 'shaar-content', level: null, isLast: false, sizePt, baselineY: null, tokenId: null, cls: cls || '' };
+}
+
+/** **שלב 8 (§4.1):** שורת TOC מהחותמת — מילים {text,w} מימין לשמאל; אפס מדידה. */
+function stampedRowLine(row, pt, kind) {
+  let cursor = row.x + row.w;
+  const wordPos = [];
+  for (const wd of (row.words || [])) {
+    cursor -= wd.w;
+    wordPos.push({ text: wd.text, x: cursor, w: wd.w, sizePt: pt, fontKey: null });
+    cursor -= (row.spaceW || 0);
+  }
+  return { x: row.x, y: row.y, w: row.w, h: row.h, words: wordPos, align: 'right', kind: kind || 'toc-row', level: null, isLast: false, sizePt: pt, baselineY: null, tokenId: null };
+}
+
 function fakeLine(text, x, y, w, h, settings, measure, sizePt, fontKey, kind) {
   const pt = sizePt || 12;
   const words = String(text || '').split(/\s+/).filter(Boolean).map(w2 => scrubPUAText(w2));
@@ -21823,7 +22370,13 @@ function fakeLine(text, x, y, w, h, settings, measure, sizePt, fontKey, kind) {
  * לבדיקת ה־parity (raster מול מודל).
  */
 function projectDocument(result, settings, api) {
+  // **שלב 8 (§4.1):** הכניסה — materialization חד-פעמי. מונה הנפילות מאופס
+  // בכל הרצה ומוחזר בפלט (חשבונאות גלויה: 0 במסלול המוצר — ה-pipeline מטביע
+  // חותמות; >0 רק בקלטים סינתטיים/ישנים, תמיד עם diagnostic לכל נפילה).
+  materializeFallbacks = [];
   const pages = result.pages.map(p => projectPage(p, settings, api));
+  const fallbacks = materializeFallbacks;
+  materializeFallbacks = null;
   const ascent = (api || new MeasureAPI(settings, 'table')).ascentEm();
   const descent = (api || new MeasureAPI(settings, 'table')).descentEm();
   const inkBounds = pages.map(pg => {
@@ -21881,10 +22434,12 @@ function projectDocument(result, settings, api) {
     if (minX === Infinity) return null;
     return { minX, minY, maxX, maxY };
   });
-  return { pages, inkBounds, layoutHash: result.layoutHash };
+  return { pages, inkBounds, layoutHash: result.layoutHash, materializeFallbacks: fallbacks };
 }
 
-module.exports = { projectPage, projectLine, projectDocument, lineFontSizePt, attachBaselines };
+const materializeDocument = projectDocument; // **שלב 8 (§4.1):** השם הקנוני — materialization, לא הקרנה
+
+module.exports = { projectPage, projectLine, projectDocument, materializeDocument, lineFontSizePt, attachBaselines, lineWidthsFromModel };
 
 };
 __modules["src/engine/output/dom-renderer.js"] = function (require, module, exports) {
@@ -23794,188 +24349,6 @@ module.exports = {
   resolveShaarBox, isValidBox, normalizeBox, clampShaarBox, moveShaarBox, resizeShaarBox,
   exportShaarItemsWithPositions, boxPositionsIdentical
 };
-
-};
-__modules["src/engine/layout/furniture-geometry.js"] = function (require, module, exports) {
-// src/engine/layout/furniture-geometry.js — גיאומטריית ריהוט עמוד ממקור יחיד (שלב 6 פרוסה 1)
-'use strict';
-
-/**
- * **מעמד (הוראת שלב 6 §8):** "כותרות עליונות, תחתונות ומספרי עמוד יהיו Page
- * Items בעלי placement model אחיד; **אין לחשב את מיקומם בנפרד ב-DOM וב-PDF**."
- *
- * עד כאן המקרן ל-PDF חישב את תיבת הגיליון והבסיס במתמטיקה מפורשת
- * (FOLIO_BOTTOM_PX=25, half-leading, ascent) בעוד ה-DOM הסתמך על CSS חי
- * (.folio{bottom:25px} וכו') שכויל להתאים בעבר (S69/S5.1) — שני מקורות
- * של אותה גיאומטריה שכל אחד מהם יכול לסטות בשקט. מעתה שני המקרינים
- * קוראים מכאן: המקרן מציב את המספרים כמות שהם; ה-DOM מציב אותם כסגנון
- * מפורש (top/lineHeight) לצד ה-class הקיים שנשאר אחראי לעור (מסגרת/צבע).
- */
-
-/** תחתית תיבת הגיליון מה-CSS החי (styles.css: .folio{bottom:25px}) — קבוע המקור. */
-const FOLIO_BOTTOM_PX = 25;
-/** ראש תיבת גיליון במצב top (styles.css: .folio--top{top:4px}). */
-const FOLIO_TOP_PX = 4;
-/** ראש תיבת גיליון בתוך הכותרת העליונה (styles.css: .folio--in-header{top:6px}). */
-const FOLIO_IN_HEADER_PX = 6;
-
-/**
- * גיאומטריית הגיליון — מחושבת פעם אחת מאותם קלטים ששני המקרינים צורכים.
- * @param {object} page — עמוד (index, folioDisplay, template)
- * @param {object} settings
- * @param {{measureTextWidth:(t:string,pt:number)=>number, ascentEm:()=>number, descentEm:()=>number}} folioMeasure
- *   מדידת הגיליון (גופן הגיליון כשרשום — אותו מופע שהמקרן בונה)
- * @returns {null|{y, baselineY, x, w, sizePt, text, lineHeightPx, position}}
- */
-function folioGeometry(page, settings, folioMeasure) {
-  const pos = String((settings && settings['page-num-position']) || 'bottom-center');
-  if (pos === 'none' || !page || !page.folioDisplay) return null;
-  const tpl = page.template;
-  const text = String(page.folioDisplay);
-  const folioSz = Number(settings['page-num-size-pt']) > 0 ? Number(settings['page-num-size-pt']) : 10;
-  const fw = Math.max(1, Math.round(folioMeasure.measureTextWidth(text, folioSz)));
-  const folioPx = folioSz * (96 / 72);
-  // line-height: normal ≈ 1.2 (חסר הגדרה מפורשת ב-CSS לגיליון) — הנוסחה ההיסטורית
-  const folioLineH = Math.round(folioPx * 1.2);
-  const ascEm = folioMeasure.ascentEm(), descEm = folioMeasure.descentEm();
-  const halfLead = Math.max(0, (folioLineH - (ascEm + descEm) * folioPx) / 2);
-  const recto = (page.index % 2 === 0);
-  let fx = Math.round((tpl.width - fw) / 2);
-  let boxTop = tpl.height - FOLIO_BOTTOM_PX - folioLineH;
-  let baselineY = boxTop + halfLead + ascEm * folioPx;
-  if (pos === 'outer-left' || (pos === 'outer' && recto)) fx = 8;
-  else if (pos === 'outer-right' || (pos === 'outer' && !recto)) fx = Math.max(8, Math.round(tpl.width - fw - 8));
-  else if (pos === 'top') { boxTop = FOLIO_TOP_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
-  else if (pos === 'in-header') { boxTop = FOLIO_IN_HEADER_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
-  return {
-    y: boxTop, baselineY, x: fx, w: fw, sizePt: folioSz, text,
-    lineHeightPx: folioLineH, position: pos
-  };
-}
-
-/** ראש אזור הכותרת העליונה במרחב העמוד (מקור: המקרן ההיסטורי — contentBox.top − 18). */
-function headerGeometry(page) {
-  const tpl = page.template;
-  return { y: Math.max(0, tpl.contentBox.top - 18) };
-}
-
-module.exports = {
-  FOLIO_BOTTOM_PX, FOLIO_TOP_PX, FOLIO_IN_HEADER_PX,
-  folioGeometry, headerGeometry
-};
-
-};
-__modules["src/engine/output/shaar-content.js"] = function (require, module, exports) {
-// src/engine/output/shaar-content.js — מודל תוכן עמודי השער (03.11(ד))
-'use strict';
-
-/**
- * **מקור יחיד (F-09) לתוכן המובנה של עמודי השער** — פורט renderMainShaar/
- * renderSubShaar/renderBackShaar של הפרויקט המקורי. נצרך על ידי שני הנתיבים:
- * dom-renderer (תצוגה חיה + ייצוא HTML) ו-geometry-projector (ייצוא PDF) —
- * כך שהשער נראה אותו דבר בכל הפלטים (עד כאן ההיטל לא כלל את תוכן השער
- * וה־PDF הראה עמודים ריקים).
- *
- * המודל: תיבה (מ"מ של המקור) + רשימת בלוקים (טקסט/גודל/משקל) + אופן פריסה:
- * 'between' = flex space-between (שער ראשי: בס״ד למעלה, שנה למטה), 'center'
- * = flex ממורכז (שער־משנה/אחורי). העיטור (כתר) הוא בלוק גרפי ללא טקסט —
- * ה-DOM מצייר אותו; ההיטל מדלג (במקור לא היה ייצוא PDF כלל).
- */
-
-const MM_TO_PX = 96 / 25.4;
-
-/** תיבת השער לפי הסוג — מיקומי המקור (מ"מ → פיקסלים). */
-function shaarBoxOf(type) {
-  const mm = (v) => Math.round(v * MM_TO_PX);
-  if (type === 'shaar-main') {
-    return { top: mm(20), bottom: mm(16), right: mm(15), left: mm(15), mode: 'between' };
-  }
-  if (type === 'shaar-sub') {
-    return { top: mm(20), bottom: mm(20), right: mm(95), left: mm(15), mode: 'center' };
-  }
-  // shaar-back
-  return { top: mm(22), bottom: mm(18), right: mm(15), left: mm(95), mode: 'center' };
-}
-
-/** פיצול מקף של כותרת חלק (renderSubShaar המקורי): main=לפני, sub=אחרי. */
-function splitPartTitle(text) {
-  let titleMain = String(text || '');
-  let titleSub = '';
-  if (/[-–—]/.test(titleMain)) {
-    const parts = titleMain.split(/[-–—]/);
-    titleMain = parts[0].trim();
-    titleSub = parts.slice(1).join(' - ').trim();
-  }
-  return { titleMain, titleSub };
-}
-
-/**
- * בניית בלוקי תוכן השער. גישה מילולית להגדרות (דרישת סורק ה-phantom-key).
- * @param {object} page - עמוד CP5 (shaarInfo.title לשער־משנה, _metadata למטא)
- * @param {object} settings
- * @param {object} [metadata] - מטא המסמך (גובר _metadata)
- * @returns {{mode:string, box:object, blocks:Array<{cls,text,sizePt,bold,graphic}>}|null}
- */
-function buildShaarBlocks(page, settings, metadata) {
-  if (!page || !page.type || !/^shaar-/.test(page.type)) return null;
-  const meta = metadata || page._metadata || {};
-  const bookTitle = settings['imud-book-title'] || meta['שם הספר'] || meta['ספר'] || meta['title'] || 'שם הספר';
-  const subtitle = settings['imud-book-subtitle'] || meta['נושא'] || '';
-  const desc = settings['imud-book-desc'] || meta['נושא מפורט'] || '';
-  const sections = settings['imud-book-sections'] || meta['פרטי מהדורא'] || '';
-  const author = settings['imud-book-author'] || meta['שם המחבר'] || '';
-  const year = settings['imud-book-year'] || meta['מקום ושנת הוצאה'] || '';
-  const backRaw = settings['shaar-back-text'] || meta['שמירת זכויות'] || 'כל הזכויות שמורות למחבר.';
-
-  const num = (v) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : 12; };
-  const box = shaarBoxOf(page.type);
-  const B = [];
-
-  if (page.type === 'shaar-main') {
-    B.push({ cls: 'bsd-header', text: 'בס״ד', sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 5 });
-    B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']) });
-    B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true });
-    B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-main' });
-    B.push({ cls: 'book-description', text: desc, sizePt: num(settings['shaar-desc-size-pt']) });
-    B.push({ cls: 'book-sections-summary', text: sections, sizePt: num(settings['shaar-sections-size-pt']), bold: true });
-    B.push({ cls: 'author-block', text: author, sizePt: num(settings['shaar-author-size-pt']) });
-    B.push({ cls: 'publication-footer', text: year, sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 1 });
-  } else if (page.type === 'shaar-sub') {
-    const { titleMain, titleSub } = splitPartTitle(page.shaarInfo && page.shaarInfo.title);
-    B.push({ cls: 'book-title-main', text: titleMain, sizePt: 36 });
-    if (titleSub) {
-      B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-sub' });
-      B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true });
-    }
-  } else {
-    B.push({ cls: 'book-title-main book-title-main--back', text: bookTitle, sizePt: 36 });
-    const lines = String(backRaw).split('\n').map(l => l.trim()).filter(Boolean);
-    lines.forEach((l, i) => B.push({
-      cls: 'back-shaar-text-line', text: l,
-      sizePt: i === 0 ? 13 : num(settings['shaar-back-text-size-pt']), bold: i === 0
-    }));
-    if (author) B.push({ cls: 'author-block', text: author, sizePt: num(settings['shaar-author-size-pt']) });
-    if (year) B.push({ cls: 'publication-footer', text: year, sizePt: num(settings['shaar-year-size-pt']), bold: true });
-  }
-  return { mode: box.mode, box, blocks: B.filter(b => b.graphic || String(b.text || '').length) };
-}
-
-/** משפחות הגופן של הבלוקים — לפי ההגדרות (גישה מילולית לסורק). */
-function shaarFontOf(cls, settings) {
-  switch (true) {
-    case cls.includes('bsd-header'):
-    case cls.includes('publication-footer'): return settings['shaar-year-font'];
-    case cls.includes('book-title-main'): return settings['shaar-title-font'];
-    case cls.includes('book-subtitle'): return settings['shaar-subtitle-font'];
-    case cls.includes('book-description'): return settings['shaar-desc-font'];
-    case cls.includes('book-sections-summary'): return settings['shaar-sections-font'];
-    case cls.includes('author-block'): return settings['shaar-author-font'];
-    case cls.includes('back-shaar-text-line'): return settings['shaar-back-text-font'];
-    default: return '';
-  }
-}
-
-module.exports = { buildShaarBlocks, shaarBoxOf, shaarFontOf, splitPartTitle, MM_TO_PX };
 
 };
 __modules["src/ui/worker-protocol.js"] = function (require, module, exports) {
@@ -26117,6 +26490,75 @@ function charInventory(text) {
 }
 
 module.exports = { buildSubset, charInventory };
+
+};
+__modules["src/engine/output/geometry-projector.js"] = function (require, module, exports) {
+// src/engine/output/geometry-projector.js — **שלב 8 (§4.1): facade מעבר** ל-materialization
+'use strict';
+
+/**
+ * **מצב ביניים מתועד (הוראת שלב 8 §4.1):** מנוע יצירת המיקומים הסופיים עבר
+ * למנגנון הפנימי הטהור — `core/materialize.js` — שמופעל פעם אחת בבניית
+ * ה-PageModel וצורך את חותמות התוכן המבני (`layout/structural-stamps.js`)
+ * שהוטבעו בזמן התכנון. הקובץ הזה נשאר כ-facade לשני צרכנים קיימים:
+ *  1. נתיב ה-PDF הוותיק (export-api) — עד שלב 8 פרוסה 5 (PDF מה-PageModel);
+ *  2. בדיקות שמייבאות projectPage/projectLine.
+ *
+ * ה-facade מבטיח שהחותמות קיימות לפני ההקרנה: אם הקלט הגיע מה-pipeline —
+ * הן כבר הוטבעו שם (מונה הנפילות יישאר 0); אם זה קלט סינתטי בלי חותמות —
+ * הן מוטבעות כאן חד-פעמית **ומסומנות ב-materializeFallbacks הגלוי של הפלט**
+ * (אין נפילה שקטה). בשלב 9, לאחר הוכחת parity מלאה, ה-facade ונתיב ה-PDF
+ * הוותיק יוסרו — materialize פועל רק מבניית ה-PageModel.
+ */
+
+const { stampStructuralGeometry } = require('../layout/structural-stamps');
+const materialize = require('../core/materialize');
+
+/**
+ * הקרנת מסמך שלם — מבטיח חותמות ואז מנגנון ה-materialization היחיד.
+ * @param {object} result — תוצר typeset (עמודי התוכנית)
+ * @param {object} settings — הגדרות ממוזגות
+ * @param {MeasureAPI} [api] — מדידה להטבעת-נפילה בלבד (קלט סינתטי בלי חותמות)
+ */
+function projectDocument(result, settings, api) {
+  const missing = (result.pages || []).some(p =>
+    (p.type === 'toc-general' || p.type === 'toc-detail') && (p.toc && p.toc.rows || []).length > 0 && !p.tocLayout)
+    || (result.pages || []).some(p => /^shaar-/.test(p.type) && !p.shaarLayout && p.type !== 'shaar-back' ? true : false)
+    || (result.pages || []).some(p => (p.header && p.header.slots && !p.headerSlotGeo))
+    || (result.pages || []).some(p => (p.folioDisplay && !p.folioGeo))
+    || (result.pages || []).some(p => (p.footnotes && p.footnotes.length && !p.footnoteLanes));
+  if (missing) {
+    // קלט ללא חותמות (בדיקות/נתיב ישן): הטבעה חד-פעמית כאן — והיא תסומן
+    // בפלט דרך materializeFallbacks של ההקרנה עצמה (אין השתקה).
+    const { MeasureAPI } = require('../typography/measure-api');
+    stampStructuralGeometry(result.pages || [], settings, api || new MeasureAPI(settings, 'table'));
+  }
+  return materialize.projectDocument(result, settings, api);
+}
+
+function projectPage(page, settings, api) {
+  // עמוד בודד: אותו אינווריאנט — חותמות קיימות או מוטבעות חד-פעמית.
+  const pages = [page];
+  const needs = ((page.type === 'toc-general' || page.type === 'toc-detail') && (page.toc && page.toc.rows || []).length > 0 && !page.tocLayout)
+    || (/^shaar-/.test(page.type) && !page.shaarLayout)
+    || (page.header && page.header.slots && !page.headerSlotGeo)
+    || (page.folioDisplay && !page.folioGeo)
+    || (page.footnotes && page.footnotes.length && !page.footnoteLanes);
+  if (needs) {
+    const { MeasureAPI } = require('../typography/measure-api');
+    stampStructuralGeometry(pages, settings, api || new MeasureAPI(settings, 'table'));
+  }
+  return materialize.projectPage(page, settings, api);
+}
+
+module.exports = {
+  projectDocument,
+  projectPage,
+  projectLine: materialize.projectLine,
+  lineFontSizePt: materialize.lineFontSizePt,
+  attachBaselines: materialize.attachBaselines,
+  materializeDocument: materialize.materializeDocument
+};
 
 };
 __modules["src/engine/output/pdf-writer.js"] = function (require, module, exports) {
