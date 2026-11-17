@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 72 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 73 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -365,12 +365,14 @@ var __paths = {
   "src/engine/layout/legacy-imud-flow.js|../core/ledger": "src/engine/core/ledger.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/headers-builder": "src/engine/decoration/headers-builder.js",
   "src/engine/layout/legacy-imud-flow.js|../output/line-font": "src/engine/output/line-font.js",
+  "src/engine/layout/legacy-imud-flow.js|../core/h3-contract": "src/engine/core/h3-contract.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/legacy-ornaments": "src/engine/decoration/legacy-ornaments.js",
   "src/engine/decoration/legacy-ornaments.js|./ornament-fit": "src/engine/decoration/ornament-fit.js",
   "src/ui/testing-tab.js|../audit/report-schema": "src/audit/report-schema.js",
   "src/ui/testing-tab.js|../engine/core/ledger": "src/engine/core/ledger.js",
   "src/audit/report-schema.js|../engine/layout/dp-planner": "src/engine/layout/dp-planner.js",
   "src/audit/report-schema.js|../engine/layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
+  "src/engine/layout/dp-planner.js|../core/h3-contract": "src/engine/core/h3-contract.js",
   "src/engine/layout/dp-planner.js|./page-templates": "src/engine/layout/page-templates.js",
   "src/engine/layout/dp-planner.js|../core/ledger": "src/engine/core/ledger.js",
   "src/engine/layout/dp-planner.js|./protections-matrix": "src/engine/layout/protections-matrix.js",
@@ -496,7 +498,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-17-s8c'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-17-h3fbl'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -9846,6 +9848,10 @@ function renderSpanningBand(page, settings, doc) {
   const spanTop = page.template.contentBox.top;
   band.style.top = `${spanTop}px`;
   band.style.height = `${page.spanning.heightPx}px`;
+  // **חוזה H3 + הזמנות עיטור (D-S2H3/F-08):** שורות הפס זורמות אחרי הריפוד
+  // העליון שהוזמן בתכנון (titleTopPadPx — 8px לפס H3 לפי ה-CSS המקורי,
+  // הזמנת עיטור לפס H2) — אותה גאומטריה כמו materialize/PageModel/PDF.
+  if (page.spanning.titleTopPadPx) band.style.paddingTop = `${page.spanning.titleTopPadPx}px`;
   const left = Math.min(...page.template.columns.map(c => c.x));
   const right = Math.max(...page.template.columns.map(c => c.x + c.w));
   band.style.left = `${Math.round(left)}px`;
@@ -10204,7 +10210,7 @@ function renderLegacyPage(pg, settings, doc) {
 
   // ---- פסים: סימן/h2/h0/h3 — ממורכזים ברוחב הפס ----
   for (const b of (pg.bands || [])) {
-    const el = mkLine(b.text, b.sizePt, 'center', b.h || pt2px(b.sizePt) * 1.1);
+    const el = mkLine(b.text, b.sizePt, 'center', b.lineHeightPx || b.h || pt2px(b.sizePt) * 1.1);
     el.className += ` band band--${b.kind || 'title'}`;
     // **S4.26 + S6.3:** גופן הפס — מהשורה עצמה (b.font — כותרת ההערות
     // ⇒ David Libre) או מההגדרות לפי הרמה + הדגשה (כמו הייחוס).
@@ -15554,17 +15560,19 @@ const H2_AREA_H = 284.25;
 const H2_SPAN_EXEMPT = (
   (typeof process !== 'undefined' && process.env && process.env.RED_H2_SPAN_EXEMPT) !== '0'
 );
-// **S4.14:** span 34px + רווח 4px = 38 — נמדד בכל 13 מופעי block-h3-span
-// של הייחוס (מרחק תווית-span → תווית-block תמיד 38.0). היה 40 (+2px לכל span).
-const H3_SPAN_H = 38;
-// **D-S2H3 (ממצא משתמש מאומת):** גובה שורת ה-span לבדה (34) מופרד מהרווח התחתון (4).
-// עד לתיקון: כל שורת כותרת נדחפה פס 38 מלא — והרווח המבני פעל בין שורות הכותרת
-// ולא בינה לתוכן שאחריה. התיקון: pitch בין-שורות = 34 (גובה השורה); הרווח (4px) פעם
-// אחת בלבד, בתוך הפס האחרון (38=34+4). כותרת חד-שורתית נותרת זהה לחלוטין
-// ((n-1)*34+38 = 38 — פס יחיד ובלוק נפתח בסופו) — הכיוול S4.14 שמור.
-// חוזה סמנטי זה הוא גם החוזה של מנוע השורות המאוחד (שלב 4): הכותרת = פריט אחד
-// עם מקטעי שורה; הרווח התחתון שלה אחרי השורה האחרונה בלבד.
-const H3_SPAN_LINE_H = 34;
+// **חוזה H3 ממקור יחיד (core/h3-contract.js):** ה-CSS המקורי (Orange/Yellow/Green)
+// קובע .h3-title-text { line-height:1.22 } ו-.block-h3-span { padding:8px 0 4px;
+// margin-bottom:4px } — ה-pitch הוא line-height הטקסט בלבד (13.5pt×96/72×1.22 =
+// 21.96px), לא 34px שכללו בטעות את הריפוד העליון בכל שורת המשך. הריפוד העליון
+// 8px פעם אחת לפני השורה הראשונה; הריפוד התחתון 4px וה-margin-bottom 4px פעם
+// אחת אחרי השורה האחרונה. כותרת חד-שורתית: 8+21.96+4+4 ≈ 38px (S4.14 נשמר).
+// **אותו חוזה משותף למנוע המאוחד** (pipeline/dp-planner) — אין העתקה מקומית.
+const { h3LineHeightPx, H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX } = require('../core/h3-contract');
+const H3_SPAN_LINE_H = h3LineHeightPx(SZ.h3);
+const H3_SPAN_TOP_PAD_PX = H3_TOP_PAD_PX;
+const H3_SPAN_BOTTOM_PAD_PX = H3_BOTTOM_PAD_PX;
+const H3_SPAN_MARGIN_BOTTOM_PX = H3_MARGIN_BOTTOM_PX;
+const H3_SPAN_H = H3_SPAN_LINE_H + H3_SPAN_BOTTOM_PAD_PX;
 const H0_AREA_H = 249.2;   // **S4.19:** זרימת ההקדמה מתחילה ב-356.4px — המדידה מהייחוס
 // (עמ' 10, שורות ההקדמה 2-3): הייחוס יושב 9.7-10.2px מתחת ל-348 הקודם; גם לדף
 // ה-h0 יש spacer (הכותרת ב-309 = 107.2+201.3+0.5) + כותרת (27.2) + שוליים (20)
@@ -16905,7 +16913,15 @@ function legacyTypeset(rawText, settings, env) {
           // ולכן מאוזן לפני השבירה (PT-06: "הטורים שלפניו מאוזנים" — גם כשה-H3
           // עצמו נופל לעמוד הבא). finalizeBlock עם nextTok=tok (h3=span)
           // מאזן דרך מסלול nextIsSpan.
-          if (colBottom() - curY < 60 + (spanLines.length - 1) * H3_SPAN_LINE_H) {
+          const spanBlockHeight = H3_SPAN_TOP_PAD_PX + spanLines.length * H3_SPAN_LINE_H + H3_SPAN_BOTTOM_PAD_PX + H3_SPAN_MARGIN_BOTTOM_PX;
+          // **שימור סמנטיקת הסף של S4.13/S4.24 (בלוק + ~שורת גוף עוקבת):**
+          // הנוסחה הישנה 60+(n-1)*34 פירושה בלוק הכותרת (38+(n-1)*34) + 22px
+          // תוכן מינימלי אחריו. הגאומטריה החדשה מקטינה את הבלוק, אך הכלל נשמר:
+          // דרוש מקום לבלוק כולו + 22px עוקבים; הרצפה 60 שומרת על החד-שורתי
+          // ביט-מדויק (60 = 38+22 הישן). סף "בלוק בלבד" החזיר אלמנות כותרת
+          // דו-שורתיות בסוף עמוד (S74 בעיה 6 — נמדד: 4 אלמנות חדשות בקורפוס).
+          const H3_FOLLOW_MIN_PX = 22; // 60−38 הישן — מקום מינימלי לתוכן עוקב
+          if (colBottom() - curY < Math.max(60, spanBlockHeight + H3_FOLLOW_MIN_PX)) {
             // **S74 (בעיה 6 — אלמנת כותרת בסוף טור):** כותרות inline שנצברו
             // בסוף הטור חוזרות עם ה-span לעמוד הבא — אחרת הן נותרות אלמנות
             // בתחתית הטור (המקור מגלגל כותרות-זנב בכל נקודת יציאה מהמילוי).
@@ -16913,14 +16929,22 @@ function legacyTypeset(rawText, settings, env) {
             finalizeBlock(block, tok, false);
             break fillPage;
           }
-          // **D-S2H3:** שורות ביניים בגובה השורה בלבד (34) — אין רווח מבני בין שורות הכותרת;
-          // הפס האחרון נושא 38 (34+4) — הרווח התחתון פעם אחת, אחרי השורה האחרונה, לפני התוכן שאחריו.
-          // כותרת חד-שורתית: (n-1)*34+38 = 38 — זהה לגיאומטריה הקודמת (נעילת הכיוול S4.14).
+          // **D-S2H3 — גאומטריית המקור, בלי שכפול הריפוד העליון:**
+          // שורות הביניים נעות ב-line-height המקורי (1.22); הריפוד העליון 8px
+          // נצרך פעם אחת, וה-padding-bottom + margin-bottom (4+4) פעם אחת בסוף.
           for (let li = 0; li < spanLines.length; li++) {
             const isLastLine = li === spanLines.length - 1;
-            stack.push({ type: 'span', text: spanLines[li], y: curY + li * H3_SPAN_LINE_H, h: isLastLine ? H3_SPAN_H : H3_SPAN_LINE_H, tokenId: li === 0 ? tok.id : null });
+            stack.push({
+              type: 'span', text: spanLines[li], y: curY + li * H3_SPAN_LINE_H,
+              h: isLastLine ? H3_SPAN_H : H3_SPAN_LINE_H,
+              lineHeightPx: H3_SPAN_LINE_H, tokenId: li === 0 ? tok.id : null
+            });
           }
-          openBlock(curY + (spanLines.length - 1) * H3_SPAN_LINE_H + H3_SPAN_H);
+          openBlock(
+            curY + H3_SPAN_TOP_PAD_PX
+              + (spanLines.length - 1) * H3_SPAN_LINE_H
+              + H3_SPAN_H + H3_SPAN_MARGIN_BOTTOM_PX
+          );
           ti++;
           continue;
         }
@@ -17443,7 +17467,15 @@ function legacyTypeset(rawText, settings, env) {
       }
       if (rest.length) {
         const started = new Set();
-        for (const tl of placed) for (const t of tl) started.add(t.noteIdx);
+        // **F-BL2 (17.11 — סמן-הערה שנבלע בחיתוך שורת המרזב):** "החלה" מוכח
+        // רק על-ידי טוקן שהוצג בפועל — סמן (mk) או מילת טקסט. טוקן הרווח-הכפל
+        // (gap, w=0) ו-'(המשך)' אינם מוכיחים דבר: חיתוך שנופל בדיוק בין הרווח
+        // לסמן סימן את ההערה כ"החלה" בשקט ⇒ ההמשך נפתח ב-'(המשך)' בלי שהסמן
+        // הוצג אי-פעם (נמדד בחי: יז. עמ' 571→572, כג. עמ' 667 — שני
+        // MARKER_NOTE_MATCH ב-full-math-audit). ההמשך כעת נושא את הסמן.
+        for (const tl of placed) for (const t of tl) {
+          if (t && !t.gap && t.t !== '(המשך)') started.add(t.noteIdx);
+        }
         let curIdx = null, curTxt = [];
         const flushRest = () => {
           if (curIdx == null || !curTxt.length) return;
@@ -17805,7 +17837,11 @@ function legacyTypeset(rawText, settings, env) {
     let y = top;
     for (const seg of stack) {
       if (seg.type === 'span') {
-        pg.bands.push({ kind: 'h3-title', text: seg.text, sizePt: SZ.h3, y: seg.y + 8, h: seg.h, tokenId: seg.tokenId });
+        pg.bands.push({
+          kind: 'h3-title', text: seg.text, sizePt: SZ.h3,
+          y: seg.y + H3_SPAN_TOP_PAD_PX, h: seg.h,
+          lineHeightPx: seg.lineHeightPx || seg.h, tokenId: seg.tokenId
+        });
         y = seg.y + seg.h;
         continue;
       }
@@ -18919,6 +18955,53 @@ module.exports = {
 };
 
 };
+__modules["src/engine/core/h3-contract.js"] = function (require, module, exports) {
+'use strict';
+
+/**
+ * **חוזה גאומטריית כותרת 3 — מקור יחיד (D-S2H3/CSS parity, 17.11):**
+ * ה-CSS המקורי של המוצר (ערכות Orange/Yellow/Green) קובע:
+ *
+ *   .h3-title-text { line-height: 1.22 }
+ *   .block-h3-span { padding: 8px 0 4px; margin-bottom: 4px }
+ *
+ * כלומר, לכותרת 3 המוצגת כפס (span):
+ *  - pitch בין שורות הכותרת = line-height הטקסט בלבד (גודל×96/72×1.22).
+ *  - ריפוד עליון 8px — פעם אחת, לפני השורה הראשונה.
+ *  - ריפוד תחתון 4px + שוליים תחתונים 4px — פעם אחת, אחרי השורה האחרונה.
+ *  - כותרת חד-שורתית: גובה כולל 8+21.96+4+4 ≈ 38px (כיוול S4.14 נשמר).
+ *
+ * הערכים חיים כאן — מקור אחד לשני המנועים: המורשת
+ * (layout/legacy-imud-flow.js) והמאוחד (core/pipeline.js במדידה +
+ * layout/dp-planner.js בבניית הפס). אסור להגדיר אותם מחדש במודולים אחרים;
+ * שינוי חוזה — רק כאן, עם עדכון בדיקות הקבלה (s2-heading3-spacing).
+ */
+
+const H3_LINE_HEIGHT = 1.22;      // line-height יחסי של שורת כותרת 3
+const H3_TOP_PAD_PX = 8;          // padding-top — פעם אחת לפני השורה הראשונה
+const H3_BOTTOM_PAD_PX = 4;       // padding-bottom — פעם אחת אחרי השורה האחרונה
+const H3_MARGIN_BOTTOM_PX = 4;    // margin-bottom — פעם אחת אחרי ריפוד התחתית
+
+/** גובה שורת כותרת 3 בפיקסלים (pitch בין-שורתי) לפי גודל הכותרת בנקודות. */
+function h3LineHeightPx(sizePt) {
+  return sizePt * (96 / 72) * H3_LINE_HEIGHT;
+}
+
+/** גובה תיבת הפס כולה: ריפוד עליון + שורות + ריפוד תחתון + שוליים תחתונים. */
+function h3BandHeightPx(linesHeightPx) {
+  return H3_TOP_PAD_PX + linesHeightPx + H3_BOTTOM_PAD_PX + H3_MARGIN_BOTTOM_PX;
+}
+
+module.exports = {
+  H3_LINE_HEIGHT,
+  H3_TOP_PAD_PX,
+  H3_BOTTOM_PAD_PX,
+  H3_MARGIN_BOTTOM_PX,
+  h3LineHeightPx,
+  h3BandHeightPx
+};
+
+};
 __modules["src/engine/decoration/legacy-ornaments.js"] = function (require, module, exports) {
 // src/engine/decoration/legacy-ornaments.js — **EXT-4 (שארית): חיבור ornament-plan לנתיב ה-legacy**
 'use strict';
@@ -19523,6 +19606,9 @@ __modules["src/engine/layout/dp-planner.js"] = function (require, module, export
 'use strict';
 
 const crypto = require('crypto');
+// **חוזה H3 (D-S2H3/CSS parity):** ריפודי פס כותרת 3 ממקור יחיד —
+// אותו חוזה כמו המנוע המורשת (legacy-imud-flow) ומדידת ה-pipeline.
+const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, h3BandHeightPx } = require('../core/h3-contract');
 const { PAGE_TYPES, buildPageTemplate } = require('./page-templates');
 const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
@@ -20134,13 +20220,17 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       }
       if (!cur.spanning && cur.template.columns.length >= 2) {
         const bandH3 = blk.lines.reduce((s, ln) => s + (ln.heightPx || 0), 0);
+        // **חוזה H3 (D-S2H3/CSS parity):** הפס נושא ריפוד עליון 8px פעם אחת,
+        // ריפוד תחתון 4px + שוליים 4px פעם אחת אחרי השורה האחרונה — כמו
+        // .block-h3-span ב-CSS המקורי. ה-line-height עצמו (1.22) נקבע במדידה
+        // (core/pipeline.js). מקור יחיד: core/h3-contract.js.
         cur.spanning = {
           lines: blk.lines.map((ln, i) => ({ ...ln, meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part }, seq: seqCounter++ })),
-          heightPx: bandH3,
-          titleTopPadPx: 0,
+          heightPx: h3BandHeightPx(bandH3),
+          titleTopPadPx: H3_TOP_PAD_PX,
           orn: null
         };
-        eventLog.emit('page-plan', 'h3-spanning', { token: blk.tokenId, level: blk.level, heightPx: bandH3 }, cur.index);
+        eventLog.emit('page-plan', 'h3-spanning', { token: blk.tokenId, level: blk.level, heightPx: cur.spanning.heightPx }, cur.index);
         continue; // הכותרת בפס; הבלוקים הבאים ימלאו את הטורים מתחת
       }
     }
@@ -23823,7 +23913,9 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
    ממוקמים ב-inline left/top/width/height ודורשים position:absolute גם בתצוגה
    החיה וגם בקובץ העצמאי. BASE_CSS הזה מוזרק גם לאפליקציה (browser-entry) —
    מקור שליטה יחיד לשני הנתיבים (F-09). */
-.spanning-band{position:absolute}
+/* **חוזה H3 (D-S2H3):** border-box — גובה הפס כולל את הריפוד העליון
+   (titleTopPadPx; 8px בפס H3) ומתאים בדיוק להזמנה מה-planner. */
+.spanning-band{position:absolute;box-sizing:border-box}
 .orn{position:absolute;background-repeat:no-repeat;background-position:center}
 .deco{position:absolute;background-repeat:no-repeat;background-position:center}/* EXT-4: עיטורי הדף (שערים/רקעים) — ממוקמים מה-rectים (F-09) */
 .shaar-main-box,.shaar-sub-box,.shaar-back-box{position:absolute;display:flex;align-items:center;justify-content:center;font-weight:700;text-align:center;padding:0 8px}
@@ -24115,7 +24207,8 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
   const bandLeft = GEO.COL_L_X;
   const bandW = 2 * GEO.COL_W + 13.48;
   for (const b of (pg.bands || [])) {
-    const baseY = baselineOf(b.y, b.h, b.sizePt, ascent, descent);
+    const lineHeightPx = b.lineHeightPx || b.h;
+    const baseY = baselineOf(b.y, lineHeightPx, b.sizePt, ascent, descent);
     // **S5.1 (תצוגה=ייצוא — גופן פר-רמה כמו ה-DOM):** הפסים מרונדרים ב-DOM
     // בגופן heading-N-font של הרמה; המקרן צייר הכול ב-DavidLibre קבוע.
     // נפילה ל-hApi (התנהגות קודמת) כשהמשפחה אינה רשומה.
@@ -24128,7 +24221,7 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
     const bColor = bandColorOf(b);
     for (const w of words) { w.fontKey = bKey; if (bColor) w.color = bColor; }
     out.lines.push({
-      x: bandLeft, y: b.y, w: bandW, h: b.h, words, align: 'center',
+      x: bandLeft, y: b.y, w: bandW, h: lineHeightPx, words, align: 'center',
       kind: b.kind, level: null, isLast: false, sizePt: b.sizePt,
       baselineY: baseY, tokenId: b.tokenId != null ? b.tokenId : null
     });
