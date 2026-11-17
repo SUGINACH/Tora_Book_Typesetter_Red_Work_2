@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 71 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 72 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -312,6 +312,7 @@ var __paths = {
   "src/ui/app-shell.js|./testing-tab": "src/ui/testing-tab.js",
   "src/ui/app-shell.js|./worker-client": "src/ui/worker-client.js",
   "src/ui/app-shell.js|./retypeset-policy": "src/ui/retypeset-policy.js",
+  "src/ui/app-shell.js|./page-model-transport": "src/ui/page-model-transport.js",
   "src/ui/app-shell.js|./caret-map": "src/ui/caret-map.js",
   "src/ui/app-shell.js|../engine/core/settings-registry": "src/engine/core/settings-registry.js",
   "src/ui/app-shell.js|./inline-transport": "src/ui/inline-transport.js",
@@ -495,7 +496,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-17-s8b'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-17-s8c'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -666,6 +667,7 @@ const { buildPreviewTab } = require('./preview-tab');
 const { buildTestingTab } = require('./testing-tab');
 const { WorkerEngineClient, RESTART_ERROR } = require('./worker-client');
 const { classifyChange, getDebounceMs, policyTable } = require('./retypeset-policy');
+const { receivePageModel } = require('./page-model-transport'); // **שלב 8 פרוסה 2 (§4.3):** קליטת PageModel מעבר לגבול ה-Worker
 const { buildCaretMap } = require('./caret-map');
 
 const TABS = [
@@ -700,6 +702,7 @@ function createApp(doc, opts = {}) {
   const settings = getDefaultSettings();
   let text = '';
   let result = null;            // תוצאה מסוריאליזת פרוטוקול (D-65)
+  let pageModelObj = null;      // **שלב 8 פרוסה 2 (§4.4):** PageModel שהתקבל מה-Worker — מאומת וקפוא מחדש
   let caretMapObj = null;
   let lightDirty = false, heavyDirty = false;
   let typesetGen = 0; // **S5.2 (5):** דור עימוד — מונה תוצאות שהושלמו; חוזה: st.gen (אודיט חי בוחן שינוי)
@@ -1061,6 +1064,19 @@ function createApp(doc, opts = {}) {
     req.promise.then((res) => {
       if (res && res.cancelled) return;
       result = res;
+      // **שלב 8 פרוסה 2 (§4.3-4.4 — חוזה ההעברה):** המודל עבר structured-clone —
+      // אימות סכמה/האשים והקפאה מחדש בצד הצרכן. כשל העברה אינו נבלע: הודעה
+      // מפורשת (המסלול הגולמי נשאר לתצוגה הקיימת עד פרוסה 3 — אין רינדור
+      // ממסמך-גולמי חדש, רק המשך התצוגה הקיימת).
+      try {
+        const received = receivePageModel(res && res.pageModel);
+        pageModelObj = received.ok ? received.model : null;
+        if (!received.ok && res && res.pageModel) {
+          status.setNotice('העברת מודל העמוד נכשלה: ' + received.error + ' (התצוגה ממשיכת מסלול קיים)');
+        }
+      } catch (e) {
+        pageModelObj = null;
+      }
       typesetGen++; // **S5.2 (5):** +1 על כל עימוד שהושלם (בדיוק במקום ההשמה ל-result) — ביטול/החלפה אינם נספרים
       applyResultToViews();
       status.setEngineState('idle');
@@ -1101,6 +1117,7 @@ function createApp(doc, opts = {}) {
       text = '';
       editor.setText('');
       result = null;
+      pageModelObj = null; // **פרוסה 2:** ניקוי המודל עם המסמך
       caretMapObj = null;
       preview.setResult({ pages: [], report: { findings: [], counts: {} }, trace: { events: [] }, tokens: [], droppedEvents: 0 }, settings);
       testing.setResult({ pages: [], report: { findings: [], counts: {} }, trace: { events: [] }, tokens: [], droppedEvents: 0 });
@@ -1465,6 +1482,9 @@ function createApp(doc, opts = {}) {
 
   return {
     root, switchTab, editor, settingsPanel, preview, testing, status, engine, extensions,
+    // **שלב 8 פרוסה 2 (§4.4 — המודל בצרכן ה-UI):** גישה ל-PageModel שהתקבל
+    // מה-Worker (מאומת + קפוא מחדש). פרוסה 3 תעביר את ה-DOM לצריכתו הבלעדית.
+    pageModel: () => pageModelObj,
     // **S75 (בקשה 3):** שליטה/בדיקה של חלוקת סביבת העבודה (המפריד)
     getSplitPct: () => splitPct,
     setSplitPct,
@@ -22793,6 +22813,83 @@ function policyTable() {
 }
 
 module.exports = { LIGHT_KEYS, classifyChange, getDebounceMs, policyTable };
+
+};
+__modules["src/ui/page-model-transport.js"] = function (require, module, exports) {
+// src/ui/page-model-transport.js — קבלת PageModel מעבר לגבול ה-Worker (שלב 8 פרוסה 2, §4.3)
+'use strict';
+
+/**
+ * **חוזה ההעברה (pagemodel-transport-v1):** ה-Worker בונה את המודל וסריאליזציית
+ * הפרוטוקול (ui-result-v1) עוטפת אותו עם גרסת transport + ההאשים שחושבו
+ * בצד הבונה. structured clone מפשיר הקפאות — לכן הצד המקבל:
+ *   1. מאמת סכמה וגרסאות (transport/schema/pages).
+ *   2. מאמת שההאשים שבמעטפת תואמים לאלה שעל המודל (שלמות ההעברה).
+ *   3. מקפיא מחדש עמוק (אותה סמנטיקה כמו הבונה).
+ *   4. מדווח מדדי העברה (גודל מוערך, עמודים, שורות).
+ *
+ * אין כאן ולידציה גאומטרית מחדש ואין חישוב מחדש — ההאשים הם הוכחת
+ * השלמות שחושבה פעם אחת בצד המנוע; ה-UI אינו מפעיל מנוע שני.
+ */
+
+const TRANSPORT_VERSION = 'pagemodel-transport-v1';
+const MODEL_SCHEMA = 'pagemodel-v1';
+
+/** הקפאה עמוקה — ראי ההתנהגות של deepFreeze בבונה (core/page-model.js);
+ * מוקדת כאן כי חבילת ה-UI אינה כוללת את מנוע הפייפליין. */
+function deepFreeze(value) {
+  if (value === null || typeof value !== 'object') return value;
+  if (Object.isFrozen(value)) return value;
+  if (Array.isArray(value)) {
+    for (const item of value) deepFreeze(item);
+    return Object.freeze(value);
+  }
+  for (const key of Object.keys(value)) deepFreeze(value[key]);
+  return Object.freeze(value);
+}
+
+/**
+ * קבלת המודל מההודעה העוברת את גבול ה-Worker.
+ * @param {object} envelope — {transport, schema, model, geometryHash, contentHash, bytesEstimate}
+ * @returns {{ok:boolean, error?:string, model?:object, metrics?:object}}
+ */
+function receivePageModel(envelope) {
+  if (envelope == null) return { ok: false, error: 'empty-envelope' };
+  if (envelope.transport !== TRANSPORT_VERSION) {
+    return { ok: false, error: `transport-version-mismatch:${envelope.transport}` };
+  }
+  const model = envelope.model;
+  if (!model || typeof model !== 'object') return { ok: false, error: 'no-model' };
+  if (model.schema !== MODEL_SCHEMA) {
+    return { ok: false, error: `schema-mismatch:${model.schema}` };
+  }
+  if (!Array.isArray(model.pages) || !model.pages.length) {
+    return { ok: false, error: 'no-pages' };
+  }
+  // שלמות: ההאשים שחושבו בצד הבונה חייבים להתאים לאלה שעל המודל שהגיע
+  if (envelope.geometryHash !== model.geometryHash || envelope.contentHash !== model.contentHash) {
+    return { ok: false, error: 'hash-mismatch' };
+  }
+  if (typeof model.geometryHash !== 'string' || model.geometryHash.length < 16 ||
+      typeof model.contentHash !== 'string' || model.contentHash.length < 16) {
+    return { ok: false, error: 'missing-hashes' };
+  }
+  // הקפאה מחדש — structured clone מפשיר; המודל שוב immutable בצד הצרכן
+  deepFreeze(model);
+  const lines = model.pages.reduce((a, p) => a + (p.lines ? p.lines.length : 0), 0);
+  return {
+    ok: true,
+    model,
+    metrics: {
+      pages: model.pages.length,
+      lines,
+      bytesEstimate: envelope.bytesEstimate != null ? envelope.bytesEstimate : null,
+      transport: TRANSPORT_VERSION
+    }
+  };
+}
+
+module.exports = { TRANSPORT_VERSION, receivePageModel, deepFreeze };
 
 };
 __modules["src/ui/caret-map.js"] = function (require, module, exports) {

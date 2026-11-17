@@ -954,7 +954,7 @@ function typeset(rawText, settingsIn, env = {}) {
       const hBuilt = layoutModelBlock(blockById.get(t.blockId), {
         settings, kind: 'heading', level: t.level, widthPx: wLimit,
         lineHeightPx: api.lineHeightPx(hSize),
-        measureCtx: { assetResolver: docAssets }
+        measureCtx: { assetResolver: docAssets, measure: api }
       });
       const lines = hBuilt.view;
       for (const d of (hBuilt.diagnostics || [])) {
@@ -1016,7 +1016,7 @@ function typeset(rawText, settingsIn, env = {}) {
         settings, kind: 'paragraph', widthPx: w,
         lineHeightPx: api.lineHeightPx(null),
         runts: settings['runt-min-width-pct'],
-        measureCtx: { assetResolver: docAssets }
+        measureCtx: { assetResolver: docAssets, measure: api }
       });
       const lines = enBuilt.view;
       for (const d of (enBuilt.diagnostics || [])) {
@@ -1092,7 +1092,7 @@ function typeset(rawText, settingsIn, env = {}) {
           payload: { markerText: fnMark, noteRef: `fnstyle:${t.id}` },
           constraints: { atomic: true, participates: 'inline', splittable: 'never', bindToNeighbor: true }
         }],
-        measureCtx: { assetResolver: docAssets }
+        measureCtx: { assetResolver: docAssets, measure: api }
       });
       const fnLines = fnBuilt.view;
       const fnBlk = {
@@ -1168,7 +1168,7 @@ function typeset(rawText, settingsIn, env = {}) {
       lineHeightPx: api.lineHeightPx(null),
       runts: settings['runt-min-width-pct'],
       notesByRef, customStyles,
-      measureCtx: { assetResolver: docAssets }
+      measureCtx: { assetResolver: docAssets, measure: api }
     });
     const lines = built.view;
     for (const d of (built.diagnostics || [])) {
@@ -6924,6 +6924,24 @@ function layoutModelBlock(blk, spec) {
     runts: spec.runts,
     lineHeightPx: spec.lineHeightPx
   });
+  // **שלב 8 פרוסה 2 (§4.2 — מדידה אחת לטקסט-המקור של צף):** תחביר המקור של
+  // תמונה צפה נספר ב-words לחשבונאות התוכן ומוצג כמילה (התנהגות המוצר עד
+  // שלב 8) — אך אינו בזרימת ה-LineModel. עד כאן ההקרנה מדדה אותו מחדש
+  // (נפילה); כאן הוא נמדד פעם אחת בזמן התכנון ומוטבע על ה-floatArea.
+  // legacyViewOfLines עצמו נשאר accessor טהור — ההטבעה לפני הקריאה אליו.
+  const mApi = spec.measureCtx && spec.measureCtx.measure;
+  if (mApi && res.lines) {
+    const szPt = spec.kind === 'heading' && spec.level != null
+      ? (settings[`heading-${spec.level}-size-pt`] || settings['body-font-size-pt'])
+      : settings['body-font-size-pt'];
+    for (const ln of res.lines) {
+      for (const fa of (ln.floatAreas || [])) {
+        if (fa.sourceText != null && fa.sourceTextWidthPx == null) {
+          fa.sourceTextWidthPx = mApi.measureTextWidth(fa.sourceText, szPt, 0);
+        }
+      }
+    }
+  }
   const diagnostics = [...(res.diagnostics || []), ...sequence.rejected];
   const view = legacyViewOfLines(res.lines, {
     kind: spec.viewKind || spec.kind, level: spec.level, blockId: blk.id
@@ -7466,12 +7484,34 @@ function boxItemFor(b, env) {
   }
   const sr = src.sourceRange || null;
   const itemNoteRef = (src.payload && src.payload.noteRef) || null;
+  // **שלב 8 פרוסה 2 (§4.2 — תמונות פריטים ממדרגה ראשונה):** זהות הנכס וההצהרה
+  // עולות מה-payload אל פריט השורה — כך שה-LineModel (וה-PageModel אחריו)
+  // נושאים assetId/מידות-טבעיות/fit/placement בלי שהמקרינים יחפשו אותם מחדש.
+  const imgPayload = src.kind === 'image' && src.payload ? {
+    // **פרוסה 2 (תיקון שורש — זהות קנונית):** כשה-resolver פתר את הנכס,
+    // הזהות היא ה-id מכתובת-התוכן (contentAssetId — מה ש-resolvedAssetIds
+    // מחזיר); ה-id על בסיס הנתיב נשמר כ-declaredAssetId לעקיבות.
+    assetId: src.payload.contentAssetId != null ? src.payload.contentAssetId
+      : (src.payload.assetId != null ? src.payload.assetId : null),
+    ...(src.payload.contentAssetId != null && src.payload.assetId != null
+      ? { declaredAssetId: src.payload.assetId } : {}),
+    resourcePath: src.payload.resourcePath != null ? src.payload.resourcePath : null,
+    align: src.payload.align != null ? src.payload.align : null,
+    widthPct: src.payload.widthPct != null ? src.payload.widthPct : null,
+    natural: (src.payload.naturalWidth != null && src.payload.naturalHeight != null)
+      ? { w: src.payload.naturalWidth, h: src.payload.naturalHeight,
+          ...(src.payload.aspectRatio != null ? { aspectRatio: src.payload.aspectRatio } : {}) }
+      : null,
+    fit: src.payload.fit != null ? { ...src.payload.fit } : null,
+    altText: src.payload.altText != null ? src.payload.altText : null
+  } : null;
   return lineItemOf({
     role: 'box', kind: src.kind, itemId: src.id, sourceItemId: src.id,
     fragments: (m.ok && m.segments ? m.segments.map((s) => ({ itemId: src.id, runIndex: 0, text: s.text, start: 0, end: String(s.text || '').length, docStart: sr ? sr.start : null, docEnd: sr ? sr.end : null, fontId: s.fontId, fontFamily: s.family || null, advancePx: s.advancePx })) : []),
     measured: m,
     overlay: b._overlay || null,
     sourceText: src.sourceText != null ? src.sourceText : null, // תמונות/אטומים — טקסט המקור לתצוגת המוצר
+    image: imgPayload, // **§4.2:** ההצהרה המלאה של התמונה — מהמודל, בלי חישוב במקרינים
     sourceRange: { blockId: env.blockId, itemId: src.id, runIndex: 0, start: sr ? sr.start : null, end: sr ? sr.end : null },
     sourceAnchor: itemNoteRef,
     noteRef: itemNoteRef,
@@ -7684,6 +7724,9 @@ function lineItemOf(base) {
     fragments: base.fragments || [],
     // טקסט מקור של פריט שלם (תמונה/אטום) — לתצוגת המוצר עד שלב 8
     sourceText: base.sourceText != null ? base.sourceText : null,
+    // **שלב 8 פרוסה 2 (§4.2):** הצהרת התמונה (assetId/מידות/fit/placement) —
+    // מועברת מהמודל לפריט השורה; ה-LineModel יאסוף אותה ל-assets של השורה.
+    image: base.image || null,
     // שכבת-על של סגנון המילה (§7: סוגריים/סגנון inline) — נשמרת על הפריט
     // ומועברת לפרגמנטים של ה-LineModel (לזיהוי span-ים בגזירת התצוגה)
     overlay: base.overlay || null,
@@ -7947,7 +7990,47 @@ function assembleLine(items, cut, maxWidthPx, wrap, opts, policy, sequence, line
       itemId: f.itemId, sourceItemId: f.sourceItemId, side: f.side,
       widthPx: round3(f.widthPx), heightPx: round3(f.heightPx),
       lines: wrap.linesSpanned, anchor: f.anchor,
-      sourceText: f.sourceText != null ? f.sourceText : null
+      sourceText: f.sourceText != null ? f.sourceText : null,
+      ...(f.image && f.image.assetId != null ? { assetId: f.image.assetId } : {}),
+      ...(f.image && f.image.resourcePath != null ? { resourcePath: f.image.resourcePath } : {}),
+      ...(f.image && f.image.natural ? { natural: { ...f.image.natural } } : {}),
+      ...(f.image && f.image.fit ? { fit: { ...f.image.fit } } : {})
+    });
+    // **פרוסה 2 (רוחב טקסט-המקור של צף):** ה-pipeline מטביע את המדידה החד-פעמית
+    // של תחביר המקור (sourceTextWidthPx) בזמן התכנון — ההקרנה צורכת ואינה מודדת.
+  }
+
+  // **שלב 8 פרוסה 2 (§4.2 — תמונות ממדרגה ראשונה):** מלאי הנכסים של השורה —
+  // לכל פריט תמונה בתיבות: זהות + הצהרה (assetId/מידות טבעיות/fit/placement
+  // מהמודל דרך line-items) + רוחב מוקרן. ה-PageModel ייצרך את זה כמו שהוא —
+  // אין למקרינים מה לחפש או לחשב מחדש. (עד כאן שדה .assets לא אויש כלל —
+  // בדיקת האינטגריטי ב-page-model הייתה מתה.)
+  const assets = [];
+  for (const it of seg) {
+    if (it.role !== 'box' || it.kind !== 'image') continue;
+    assets.push({
+      itemId: it.itemId,
+      ...(it.image && it.image.assetId != null ? { assetId: it.image.assetId } : {}),
+      ...(it.image && it.image.resourcePath != null ? { resourcePath: it.image.resourcePath } : {}),
+      placement: (it.constraints && it.constraints.placement) || 'inline',
+      align: (it.image && it.image.align) || null,
+      advancePx: round3(it.measuredAdvance || 0),
+      ...(it.image && it.image.natural ? { natural: { ...it.image.natural } } : {}),
+      ...(it.image && it.image.fit ? { fit: { ...it.image.fit } } : {}),
+      ...(it.image && it.image.altText != null ? { altText: it.image.altText } : {}),
+      ...(it.sourceText != null ? { sourceText: it.sourceText } : {})
+    });
+  }
+  for (const fa of floatAreas) {
+    assets.push({
+      itemId: fa.itemId, placement: 'float', side: fa.side,
+      widthPx: fa.widthPx, heightPx: fa.heightPx, lines: fa.lines,
+      ...(fa.assetId != null ? { assetId: fa.assetId } : {}),
+      ...(fa.resourcePath != null ? { resourcePath: fa.resourcePath } : {}),
+      ...(fa.natural ? { natural: { ...fa.natural } } : {}),
+      ...(fa.fit ? { fit: { ...fa.fit } } : {}),
+      ...(fa.anchor != null ? { anchor: fa.anchor } : {}),
+      ...(fa.sourceText != null ? { sourceText: fa.sourceText } : {})
     });
   }
 
@@ -7961,6 +8044,7 @@ function assembleLine(items, cut, maxWidthPx, wrap, opts, policy, sequence, line
     naturalWidthPx: round3(natural),
     effectiveMaxWidthPx: round3(effMax),
     floatAreas,
+    assets,
     glue,
     baseline: { ascentPx: round3(ascent), descentPx: round3(descent) },
     lineHeightPx: round3(height),
@@ -7999,6 +8083,20 @@ function centeredImageLine(item, maxWidthPx, sequence) {
     naturalWidthPx: round3(w),
     effectiveMaxWidthPx: round3(maxWidthPx),
     floatAreas: [],
+    // **שלב 8 פרוסה 2 (§4.2):** תמונת הבלוק/הממורכזת מוצהרת גם כאן — המלאי
+    // של השורה נושא זהות נכס, מידות טבעיות, fit ומדיניות פריסה מהמודל.
+    assets: [{
+      itemId: item.itemId,
+      ...(item.image && item.image.assetId != null ? { assetId: item.image.assetId } : {}),
+      ...(item.image && item.image.resourcePath != null ? { resourcePath: item.image.resourcePath } : {}),
+      placement: (item.constraints && item.constraints.placement) || 'centered',
+      align: (item.image && item.image.align) || null,
+      advancePx: round3(w),
+      ...(item.image && item.image.natural ? { natural: { ...item.image.natural } } : {}),
+      ...(item.image && item.image.fit ? { fit: { ...item.image.fit } } : {}),
+      ...(item.image && item.image.altText != null ? { altText: item.image.altText } : {}),
+      ...(item.sourceText != null ? { sourceText: item.sourceText } : {})
+    }],
     glue: [],
     baseline: { ascentPx: round3(h), descentPx: 0 },
     lineHeightPx: round3(h),
@@ -8037,6 +8135,9 @@ function extractFloats(items) {
         inkBounds: it.inkBounds, constraints: it.constraints,
         sourceRange: it.sourceRange || null,
         sourceText: it.sourceText != null ? it.sourceText : null, // §22: טקסט המקור — לתצוגה/חשבונאות עד שלב 8
+        // **שלב 8 פרוסה 2 (§4.2):** הצהרת התמונה עולה גם לצף — assetId/מידות
+        // טבעיות/fit מהפריט; ה-LineModel אוסף אותה ל-assets (רשומה אחת לצף).
+        image: it.image || null,
         anchor: {
           prevItemId: lastKeptBox ? lastKeptBox.itemId : null,
           nextItemId: nextBox ? nextBox.itemId : null
@@ -21049,6 +21150,7 @@ function buildPageModel(result, opts = {}) {
   // הוכחת הכיסוי המלא ואפס-הכפילויות (§21-1).
   const planLines = [];
   for (const page of pages) {
+    if (page.type === 'endnotes') continue; // **פרוסה 2 (S8-END1):** עמודי הערות-הסיום — ה"טורים" שלהם הם רשומות הערות, לא שורות תוכנית; הכיסוי שלהן נבדק במיפוי ההערות להלן
     (page.columns || []).forEach((col, ci) => {
       col.forEach((ln, li) => {
         const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
@@ -21077,6 +21179,7 @@ function buildPageModel(result, opts = {}) {
     // הימני ראשון). עמודי סוגים מיוחדים (endnotes/TOC/שערים) — שורותיהם
     // הייעודיות מההקרנה, עם זהות המקור שלהם.
     const lines = [];
+    const bodyLineOf = new Map(); // שורת-תוכנית → שורת-מודל (לכל סוגי העמודים; לעמודי endnotes יישאר ריק)
     if (pp && pp.spanning && pp.spanning.lines) {
       pp.spanning.lines.forEach((pl, li) => {
         const src = (page.spanning && page.spanning.lines[li]) || null;
@@ -21085,24 +21188,28 @@ function buildPageModel(result, opts = {}) {
     }
     if (page.type === 'endnotes') {
       // "הטורים" של עמוד הערות מכילים אובייקטי הערה — השורות המוקרנות הן
-      // endnote-title/endnote-note; הזהות — tokenId של הערה/העמוד.
+      // endnote-title/endnote-note. **פרוסה 2 (S8-END1 — תיקון שורש):** הזהות
+      // היא tokenId של ההערה כפי שההקרנה עצמה נושאת על השורה — לא ניחוש
+      // התאמת-טקסט (56 הפרות planned-line-missing נגרמו ממנו).
       let li = 0;
       for (const pl of ((pp && pp.lines) || [])) {
-        const model = pl.kind === 'endnote-note'
-          ? matchEndnoteLine(pl, page)
-          : { tokenId: null, part: null, seq: null };
-        lines.push(placeLine(pl, { tokenId: model.tokenId, part: model.part, seq: model.seq, gapBeforePx: 0, aqStretch: 1 }, { page: page.index, area: 'endnotes', col: 0, li }));
+        const tok = pl.tokenId != null ? pl.tokenId : null;
+        lines.push(placeLine(pl, { tokenId: tok, part: null, seq: null, gapBeforePx: 0, aqStretch: 1 }, { page: page.index, area: 'endnotes', col: 0, li }));
         li++;
       }
     } else {
       // שורות הגוף: out.lines נבנה בסדר "טור 0 ואז טור 1" ואז הקרנות פריטי-עמוד
       // (הערות-צד וכו') — מסננים את אלה שאינן שורות גוף וממפים בסדר.
       const bodyProjected = ((pp && pp.lines) || []).filter(pl => !NON_BODY_LINE_KINDS.has(pl.kind));
+      // **פרוסה 2 (§4.2):** מילוי המיפוי שורת-תוכנית → שורת-מודל לפי אובייקט
+      // (מדויק — טוקן אחד מתפרס על כמה שורות, וחיפוש לפי tokenId פגע במיקום התמונה).
       let cursor = 0;
       (page.columns || []).forEach((col, ci) => {
         col.forEach((ln) => {
           const pl = bodyProjected[cursor++];
-          lines.push(placeLine(pl, ln, { page: page.index, area: 'column', col: ci, li: lines.length }));
+          const placed = placeLine(pl, ln, { page: page.index, area: 'column', col: ci, li: lines.length });
+          lines.push(placed);
+          bodyLineOf.set(ln, placed);
         });
       });
       // שאריות מוקרנות בלי שורות-תוכנית — תוכן מבני של העמוד (שערים/מותאם/
@@ -21124,12 +21231,15 @@ function buildPageModel(result, opts = {}) {
         if (!linesByTok.has(l.sourceTokenId)) linesByTok.set(l.sourceTokenId, []);
         linesByTok.get(l.sourceTokenId).push(l);
       }
-      footnotes = (page.notes || []).map(n => {
+      footnotes = (page.notes || []).map((n, ni) => {
         const ls = linesByTok.get(String(n.tokenId)) || [];
         const proj = ls.length
           ? { x: ls[0].x, y: ls[0].y, w: ls[0].w, words: ls.flatMap(l => l.words || []) }
           : null;
-        return notePlacement(n, proj, { page: page.index, area: 'endnote-page' });
+        // **פרוסה 2 (S8-END1):** noteId דטרמיניסטי גם להערות שלא קיבלו אחד
+        // מהגוף (endnote-N מפורש) — זהות יציבה למקרינים ולאימות.
+        const withId = n.noteId || (n.tokenId != null ? `en:${n.tokenId}` : `en:p${page.index}:${ni}`);
+        return notePlacement(n.noteId ? n : { ...n, noteId: withId }, proj, { page: page.index, area: 'endnote-page' });
       });
     } else {
       const projFns = ((pp && pp.footnotes) || []).slice();
@@ -21149,6 +21259,88 @@ function buildPageModel(result, opts = {}) {
       if (d.inkMissing) diagnostics.push({ kind: 'page-model-ornament-ink-missing', page: page.index, ornId: d.ornId || null, slot: d.slot || null, kindStyle: d.kindStyle || null });
     }
 
+    // **פרוסה 2 (§4.1 — השלמת החוזה):** ריהוט מלא + פס חוצה-טורים + תמונות
+    // ממדרגה ראשונה. הכול מהחותמות/מה-LineModel — המקרינים יקראו ולא יחשבו.
+    const header = pp && pp.header
+      ? {
+          y: r2(pp.header.y),
+          baselineY: pp.header.baselineY != null ? r2(pp.header.baselineY) : null,
+          slots: (pp.header.slots || []).map(s2 => ({
+            pos: s2.pos, align: s2.align || null, text: s2.text,
+            x: r2(s2.x), w: r2(s2.w), sizePt: s2.sizePt != null ? s2.sizePt : null,
+            ...(s2.fontKey ? { fontKey: s2.fontKey } : {}),
+            ...(s2.color ? { color: s2.color } : {})
+          }))
+        }
+      : null;
+    const folio = pp && pp.folio
+      ? {
+          x: pp.folio.x != null ? r2(pp.folio.x) : null,
+          y: r2(pp.folio.y),
+          w: pp.folio.w != null ? r2(pp.folio.w) : null,
+          text: pp.folio.text || null,
+          baselineY: pp.folio.baselineY != null ? r2(pp.folio.baselineY) : null,
+          ...(pp.folio.fontKey ? { fontKey: pp.folio.fontKey } : {}),
+          ...(pp.folio.color ? { color: pp.folio.color } : {}),
+          ...(pp.folio.sizePt != null ? { sizePt: pp.folio.sizePt } : {})
+        }
+      : null;
+    const spanning = pp && pp.spanning
+      ? { x: r2(pp.spanning.x), y: r2(pp.spanning.y), w: r2(pp.spanning.w), h: r2(pp.spanning.h) }
+      : null;
+
+    // **§4.2 — תמונות פריטים ממדרגה ראשונה:** מלאי הנכסים של השורות שהוצבו,
+    // עם גיאומטריה סופית (תיבת המילה בשורה הממוקמת / אזור הצף) ואינטגריטי
+    // (resolved לפי ה-resolver של הפייפליין). ההחלטות (זרימה/גודל/מיקום) התקבלו
+    // בתכנון — כאן רק הקרנה שלהן למודל.
+    const images = [];
+    const seenImgItems = new Set();
+    (page.columns || []).forEach((col, ci) => {
+      col.forEach((ln, liIdx) => {
+        const lm = ln.lineModel;
+        if (!lm || !Array.isArray(lm.assets) || !lm.assets.length) return;
+        const ml = bodyLineOf.get(ln) || null;
+        for (const a of lm.assets) {
+          if (a.placement === 'float' && seenImgItems.has(a.itemId)) continue; // צף מופיע בכל שורות הפריסה שלו — רשומה אחת
+          seenImgItems.add(a.itemId);
+          if (a.placement === 'float') {
+            images.push({
+              itemId: a.itemId, placement: 'float', side: a.side || null,
+              assetId: a.assetId != null ? a.assetId : null,
+              resourcePath: a.resourcePath != null ? a.resourcePath : null,
+              x: null, y: null, // הצף מוקם ביחס לשורת העוגן — המקרין צורך את התיבה מהשורה
+              w: a.widthPx != null ? r2(a.widthPx) : null,
+              h: a.heightPx != null ? r2(a.heightPx) : null,
+              lineId: ml ? ml.id : null,
+              ...(a.natural ? { natural: { ...a.natural } } : {}),
+              ...(a.fit ? { fit: { ...a.fit } } : {}),
+              ...(a.sourceText != null ? { sourceText: a.sourceText } : {}),
+              resolved: a.assetId != null ? (assetIds ? assetIds.has(a.assetId) : false) : false
+            });
+          } else {
+            // inline/centered: תיבת המילה של התמונה בשורה הממוקמת (מה-x של המילה)
+            const w = ml && ml.words ? ml.words.find(x => x.text === (a.sourceText || '')) : null;
+            images.push({
+              itemId: a.itemId, placement: a.placement || 'inline',
+              align: a.align || null,
+              assetId: a.assetId != null ? a.assetId : null,
+              resourcePath: a.resourcePath != null ? a.resourcePath : null,
+              x: w ? r2(w.x) : null, y: ml ? r2(ml.y) : null,
+              w: w ? r2(w.w) : (a.advancePx != null ? r2(a.advancePx) : null),
+              h: ml ? r2(ml.h) : null,
+              baselineY: ml && ml.baselineY != null ? r2(ml.baselineY) : null,
+              lineId: ml ? ml.id : null,
+              ...(a.natural ? { natural: { ...a.natural } } : {}),
+              ...(a.fit ? { fit: { ...a.fit } } : {}),
+              ...(a.altText != null ? { altText: a.altText } : {}),
+              ...(a.sourceText != null ? { sourceText: a.sourceText } : {}),
+              resolved: a.assetId != null ? (assetIds ? assetIds.has(a.assetId) : false) : false
+            });
+          }
+        }
+      });
+    });
+
     return {
       index: page.index,
       type: page.type,
@@ -21156,9 +21348,11 @@ function buildPageModel(result, opts = {}) {
       pageNumber: page.pageNumber != null ? page.pageNumber : null,
       folioDisplay: page.folioDisplay || null,
       geometry: geo,
+      ...(spanning ? { spanning } : {}),
       lines,
       footnotes,
       sideNotes,
+      images,
       decorations: (pp && pp.decorations ? pp.decorations.map(d => ({
         x: r2(d.x), y: r2(d.y), w: r2(d.w), h: r2(d.h),
         kind: d.kind || null, slot: d.slot || null, inkType: d.inkType || null,
@@ -21180,26 +21374,64 @@ function buildPageModel(result, opts = {}) {
         ...(d.constraints ? { constraints: { ...d.constraints } } : {}),
         ...(d.cssClass ? { cssClass: d.cssClass } : {})
       })) : []),
-      header: pp && pp.header ? { y: r2(pp.header.y) } : null,
-      folio: pp && pp.folio ? { y: r2(pp.folio.y), text: pp.folio.text || null, baselineY: pp.folio.baselineY != null ? r2(pp.folio.baselineY) : null } : null,
+      header,
+      folio,
       reservations: (page.reservations || []).map(r => ({ kind: r.kind, scope: r.scope, px: r2(r.px), reason: r.reason }))
     };
   });
 
   // (4) אינטגריטי נכסים (§21-10): כל מזהה נכס שהוצהר — נפתר או מדווח מפורש
+  // **פרוסה 2 (S8-DL1 חלקי — תיקון שורש):** עד כאן הלולאה קראה ln.lineModel.assets
+  // שאיש לא אייש (בדיקת §21-10 הייתה מתה). כעת line-model.js מאסף assets אמיתיים
+  // לכל שורה (inline + צפים) עם assetId — והאינטגריטי נבדק בפועל: כל נכס שהוצהר
+  // נפתר או מדווח מפורש.
   const resourceRefs = [];
-  if (assetIds) {
-    for (const page of pages) {
-      for (const col of (page.columns || [])) {
-        for (const ln of col) {
-          const ast = ln.lineModel && ln.lineModel.assets;
-          if (!ast) continue;
-          for (const a of ast) {
-            const resolved = assetIds.has(a.assetId);
-            resourceRefs.push({ assetId: a.assetId, page: page.index, resolved });
-            if (!resolved) diagnostics.push({ kind: 'page-model-resource-unresolved', assetId: a.assetId, page: page.index });
+  for (const page of pages) {
+    for (const col of (page.columns || [])) {
+      for (const ln of col) {
+        const ast = ln.lineModel && ln.lineModel.assets;
+        if (!ast || !ast.length) continue;
+        for (const a of ast) {
+          if (a.assetId == null) {
+            diagnostics.push({ kind: 'page-model-resource-unidentified', itemId: a.itemId || null, page: page.index });
+            continue;
           }
+          const resolved = assetIds ? assetIds.has(a.assetId) : false;
+          resourceRefs.push({ assetId: a.assetId, page: page.index, resolved });
+          if (!resolved) diagnostics.push({ kind: 'page-model-resource-unresolved', assetId: a.assetId, page: page.index });
         }
+      }
+    }
+  }
+
+  // **פרוסה 2 (§4.1 — קישורים וסימניות):** עץ הכותרות (H1→רמה 1, H2→רמה 2)
+  // וקישורי TOC (targetPage + מלבן השורה מהחותמת) — מיפוי טהור שהיה מחושב
+  // בייצוא ה-PDF בנפרד; כעת המודל נושא אותם והמקרינים צורכים.
+  const firstPageByToken = new Map();
+  pages.forEach((pg) => {
+    for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...(pg.columns || []).flat()]) {
+      const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
+      if (tok != null && !firstPageByToken.has(tok)) firstPageByToken.set(tok, pg.index);
+    }
+  });
+  const outline = [];
+  for (const b of (result.tokens || [])) {
+    if (b.type !== 'heading' || (b.level !== 1 && b.level !== 2)) continue;
+    const pg = firstPageByToken.get(b.id);
+    if (pg == null) continue;
+    outline.push({ title: b.text, page: pg, level: b.level });
+  }
+  const tocLinks = [];
+  for (const tp of pages) {
+    if (tp.type !== 'toc-general' && tp.type !== 'toc-detail') continue;
+    const rows = (tp.tocLayout && tp.tocLayout.rows) || [];
+    for (const row of rows) {
+      if (row.kind === 'group') {
+        for (const it of (row.items || [])) {
+          if (it.targetPage != null) tocLinks.push({ page: tp.index, x: r2(it.x), y: r2(it.y), w: r2(it.w), h: r2(it.h), targetPage: it.targetPage });
+        }
+      } else if (row.targetPage != null) {
+        tocLinks.push({ page: tp.index, x: r2(row.x), y: r2(row.y), w: r2(row.w), h: r2(row.h), targetPage: row.targetPage });
       }
     }
   }
@@ -21209,7 +21441,9 @@ function buildPageModel(result, opts = {}) {
     document: {
       contentHashIn: result.contentHashIn || null,
       tokensCount: (result.tokens || []).length,
-      plannedPages: pages.length
+      plannedPages: pages.length,
+      outline,
+      tocLinks
     },
     pages: modelPages,
     // **ביקורת §3.1-6:** חשבונאות גלויה — כל diagnostic שנאסף בבנייה נושא במודל
@@ -22286,7 +22520,14 @@ function customFactorMapOf(settings) {
  */
 function lineWidthsFromModel(ln) {
   const lm = ln && ln.lineModel;
-  if (!lm || !Array.isArray(lm.flow) || !Array.isArray(lm.fragments)) return null;
+  if (!lm) return null;
+  // **פרוסה 2 (§4.2):** שורת תמונת בלוק/ממורכזת — אין לה flow; הרוחב הוא
+  // measuredAdvance של הפרגמנט (רוחב התצוגה של התמונה) — נתון מודל, לא מדידה.
+  if (!Array.isArray(lm.flow) && Array.isArray(lm.fragments) && lm.fragments.length) {
+    const widths = lm.fragments.map(f => Number(f.measuredAdvance) || 0);
+    return { widths, spaceW: 0 };
+  }
+  if (!Array.isArray(lm.flow) || !Array.isArray(lm.fragments)) return null;
   const fragById = new Map((lm.fragments || []).map(f => [f.itemId, f]));
   const widths = [];
   let curW = null;
@@ -22314,6 +22555,13 @@ function lineWidthsFromModel(ln) {
 
 function projectLine(ln, colX, y, colW, settings, measure, align, production) {
   const sizePt = lineFontSizePt(ln, settings);
+  // **פרוסה 2 (§4.2):** שורת תמונת בלוק/ממורכזת — יישור מרכז לפי האילוץ שבמודל
+  // (lm.constraints.align; breakReason 'image-block'). שורות רגילות אינן מושפעות.
+  if (ln && ln.lineModel && ln.lineModel.constraints
+    && (ln.lineModel.constraints.placement === 'block' || ln.lineModel.breakReason === 'image-block')
+    && ln.lineModel.constraints.align) {
+    align = String(ln.lineModel.constraints.align);
+  }
   // **S73 (תצוגה=ייצוא בגופני כותרות — נתיב DP):** ה-DOM מציג כותרות inline
   // בגופן הרמה מההגדרות (heading-N-font) ובצבען (heading-N-color); עד כאן
   // ההקרנה ציירה הכול בגוף הטקסט (/F1). כעת: fontKey משפחה + צבע — כמו ה-DOM.
@@ -22347,9 +22595,20 @@ function projectLine(ln, colX, y, colW, settings, measure, align, production) {
   // LineModel (סינתטית בבדיקות) — מדידת נפילה מסומנת, לא שקטה.
   const lm = lineWidthsFromModel(ln);
   let spaceW = lm ? lm.spaceW : null;
+  // **פרוסה 2 (§4.2):** טקסט-המקור של תמונה צפה — מחוץ לזרימה אך נספר ב-words;
+  // רוחבו הוטבע בזמן התכנון (sourceTextWidthPx) ונצרך כאן — בלי מדידה.
+  const floatTextW = new Map();
+  if (lm === null || lm === undefined) { /* no model */ }
+  if (ln.lineModel && Array.isArray(ln.lineModel.floatAreas)) {
+    for (const fa of ln.lineModel.floatAreas) {
+      if (fa.sourceText != null && fa.sourceTextWidthPx != null) floatTextW.set(fa.sourceText, fa.sourceTextWidthPx);
+    }
+  }
+  const nFloatWords = floatTextW.size ? words.reduce((a, w) => a + (floatTextW.has(w) ? 1 : 0), 0) : 0;
   let widths;
-  if (lm && lm.widths.length === words.length) {
-    widths = lm.widths;
+  if (lm && lm.widths.length + nFloatWords === words.length) {
+    let k = 0;
+    widths = words.map(w => (floatTextW.has(w) ? floatTextW.get(w) : lm.widths[k++]));
   } else if (production) {
     // **§3.1 (מסלול הייצור):** אין מדידה חלופית — הטקסט נשמר (חשבונאות מלאה)
     // ברוחב אפס מסומן, והנפילה מדווחת; תוקן במקור יצירת הנתון, לא כאן.
@@ -22366,7 +22625,7 @@ function projectLine(ln, colX, y, colW, settings, measure, align, production) {
   // 852 שורות כאלה ב-very_long ל"נפילת מדידה" כזובה. רק שורה רב-מילית בלי
   // רוחב רווח קנוני היא נתון חסר אמיתי: בייצור — diagnostic + אפס; ב-compat —
   // מדידת נפילה מתועדת.
-  if (spaceW == null && words.length > 1) {
+  if (spaceW == null && (words.length - nFloatWords) > 1) { // רווח נדרש רק בין מילות זרימה — טקסט-צף אינו מילת זרימה
     if (production) {
       spaceW = 0;
     } else {
@@ -22617,6 +22876,28 @@ __modules["src/ui/worker-protocol.js"] = function (require, module, exports) {
 
 const PROTOCOL_VERSION = 1;
 
+/** **שלב 8 פרוסה 2 (§4.3 — העברת PageModel ב-Worker):** עטיפת transport
+ * למודל העמוד: גרסה, ההאשים שחושבו בצד הבונה (הוכחת שלמות לצד המקבל)
+ * ואומדן גודל ההעברה. המודל עצמו נתונים טהורים (מערכים/אובייקטים/פרימיטיבים)
+ * — עובר structured-clone; ההקפאה מוחזרת בצד המקבל (page-model-transport). */
+function serializePageModelTransport(model) {
+  if (!model) return null;
+  if (model.schema !== 'pagemodel-v1') {
+    throw new Error(`protocol: unexpected page model schema ${model.schema}`);
+  }
+  if (typeof model.geometryHash !== 'string' || typeof model.contentHash !== 'string') {
+    throw new Error('protocol: page model missing hashes');
+  }
+  return {
+    transport: 'pagemodel-transport-v1',
+    schema: model.schema,
+    model,
+    geometryHash: model.geometryHash,
+    contentHash: model.contentHash,
+    bytesEstimate: JSON.stringify(model).length
+  };
+}
+
 /** סריאליזציית תוצאת מנוע → plain JSON עובר structured-clone (D-65). */
 function serializeTypesetResult(result) {
   const { buildReport } = require('../audit/report-schema');
@@ -22641,6 +22922,10 @@ function serializeTypesetResult(result) {
     numberingAudit: result.numberingAudit,
     tokens: result.tokens.map(t => ({ id: t.id, type: t.type, level: t.level || null, raw: t.raw || '' })),
     droppedEvents: result.events.droppedEvents,
+    // **שלב 8 פרוסה 2 (§4.3-4.4):** PageModel עובר בפועל לצרכן ה-UI — עטוף
+    // חוזה transport עם ההאשים; הצד המקבל מאמת ומקפיא מחדש. אין מסלול
+    // חלופי של מסמך-גולמי לצורך רינדור.
+    pageModel: serializePageModelTransport(result.pageModel || null),
     // **S1-ח (gap-Gold-V21):** אבחון צילומי-מצב — additive; null כשכובה
     // (ברירת מחדל). חוזה ui-result-v1 נשמר: שדה חדש עם ברירת-מחדל ריקה.
     stageSnapshots: result.stageSnapshots || null,
@@ -22714,7 +22999,7 @@ function progressMessage(jobId, info) {
   };
 }
 
-module.exports = { PROTOCOL_VERSION, serializeTypesetResult, validateRequest, progressMessage };
+module.exports = { PROTOCOL_VERSION, serializeTypesetResult, serializePageModelTransport, validateRequest, progressMessage };
 
 };
 __modules["src/audit/report-schema.js"] = function (require, module, exports) {
