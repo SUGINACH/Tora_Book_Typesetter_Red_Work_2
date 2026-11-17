@@ -232,3 +232,22 @@ html, body { margin: 0; height: 100%; background: var(--bg-2); color: var(--ink)
 
 /* נגישות: מיקוד נראה */
 :focus-visible { outline: 2px solid var(--accent-2); outline-offset: 1px; }
+
+
+/* ---- Imudify brand ---- */
+.app-title--brand {
+  display: block;
+  flex: 0 0 99px;
+  width: 99px;
+  height: 38px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  background-image: url("assets/brand/imudify-brand.svg");
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
