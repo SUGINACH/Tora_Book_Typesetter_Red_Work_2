@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 70 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 71 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -329,6 +329,7 @@ var __paths = {
   "src/engine/import/docx-import.js|./zip-reader": "src/engine/import/zip-reader.js",
   "src/engine/import/docx-import.js|./xml-lite": "src/engine/import/xml-lite.js",
   "src/ui/preview-tab.js|../engine/output/dom-renderer": "src/engine/output/dom-renderer.js",
+  "src/engine/output/dom-renderer.js|../core/pua-text": "src/engine/core/pua-text.js",
   "src/engine/output/dom-renderer.js|../notes/markers": "src/engine/notes/markers.js",
   "src/engine/output/dom-renderer.js|../decoration/page-decorations": "src/engine/decoration/page-decorations.js",
   "src/engine/output/dom-renderer.js|../decoration/shaar-boxes": "src/engine/decoration/shaar-boxes.js",
@@ -494,7 +495,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-12-s77'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-17-s8b'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -9346,14 +9347,10 @@ const LEGACY_PT_CLASS = {
   'sign-open': 'page page--sign-open'
 };
 
-const ATOMIC_SPACE = '\uE000';
-const PAREN_MARK = '\uE101';
-
-/** scrub חובה: אף תו PUA פנימי לא יוצא החוצה (BRZ-13 / S2.2). */
-function scrubPUAText(s) {
-  // BRZ-13: כל תווי ה‑PUA הפנימיים (E000 רווח אטומי, E101 סוגריים, E102 תג סמן) — נאספים לפני רנדר
-  return String(s).split(ATOMIC_SPACE).join(' ').split(PAREN_MARK).join('').split('\uE102').join('');
-}
+// **שלב 8 פרוסה 1-ביקורת (§3.1):** scrubPUAText עבר למודול הניטרלי core/pua-text —
+// הליבה (materialize) כבר אינה מייבאת מהרנדרר. כאן נצרך מהמקור היחיד ומיוצא
+// הלאה לצרכנים קיימים (חוזה המודול נשמר: scrubPUAText ב-export).
+const { scrubPUAText } = require('../core/pua-text');
 
 /** rgba() אמיתי מ‑background-color + background-opacity (תיקון P0-5). */
 function bgRgba(color, opacity) {
@@ -10937,6 +10934,33 @@ function renderPage(page, settings, doc, header) {
 }
 
 module.exports = { renderPage, renderLine, scrubPUAText, bgRgba, PT_CLASS, renderSpanningBand, renderDecorations, renderPageBackgroundAndShaar, renderShaarContent, renderCustomPageContent, applyCustomStyleSpec, fontStack };
+
+};
+__modules["src/engine/core/pua-text.js"] = function (require, module, exports) {
+// src/engine/core/pua-text.js — סימוני ה-PUA הפנימיים וה-scrub הקנוני (BRZ-13 / S2.2)
+'use strict';
+
+/**
+ * **מקור יחיד לתווי הבקרה הפנימיים** (מודל neutral — ללא תלות בשכבה כלשהי):
+ * הליבה (materialize), המקרינים (dom-renderer) וההטבעות (structural-stamps)
+ * צורכים את אותם קבועים ואת אותה פונקציית ניקוי — עד שלב 8 פרוסה 1 הפונקציה
+ * חיה ב-dom-renderer והליבה ייבאה אותה משם (תלות core→output הפוכה); כאן
+ * היא במודול טהור שכולם מייבאים ממנו.
+ *
+ * תווי ה-PUA אינם יוצאים לעולם ל-DOM/HTML/PDF: כל טקסט מוצג עובר scrub
+ * לפני הפלט. הקבועים משמשים את הפענוח/הסמנים לסימון פנימי בלבד.
+ */
+
+const ATOMIC_SPACE = '\uE000'; // רווח אטומי (מילה בלתי-ניתנת-לשבירה)
+const PAREN_MARK = '\uE101';   // סוגריים גרשיים פנימיים
+const MARK_TAG = '\uE102';     // תג סמן הערה (בסמנים/בפרגמנטים)
+
+/** scrub חובה: אף תו PUA פנימי לא יוצא החוצה (BRZ-13 / S2.2). */
+function scrubPUAText(s) {
+  return String(s).split(ATOMIC_SPACE).join(' ').split(PAREN_MARK).join('').split(MARK_TAG).join('');
+}
+
+module.exports = { ATOMIC_SPACE, PAREN_MARK, MARK_TAG, scrubPUAText };
 
 };
 __modules["src/engine/notes/markers.js"] = function (require, module, exports) {
