@@ -1,0 +1,972 @@
+{
+ "exactDuplicates": {
+  "eabc03c21ca9f46575a5486ce779f2a4b33aa04fd1228125d8eba50b5ef24256": [
+   "Assembly-Bold.woff2",
+   "Assembly-MonoSpace-Bold.woff2"
+  ],
+  "6114a6d829f17204e7d37abc8dc0f3141c6e545f73b25cdf9b7dbe246c82bd8a": [
+   "Noto-Serif-Hebrew-Black.ttf",
+   "Noto-Serif-Hebrew-Condensed-Black.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Black.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Black.ttf"
+  ],
+  "af3e074b77f195c19e95db635f59607cb61cf9d1fbd7cdabd24290124c399a10": [
+   "Noto-Serif-Hebrew-Bold.ttf",
+   "Noto-Serif-Hebrew-Condensed-Bold.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Bold.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Bold.ttf"
+  ],
+  "77e0c297810b75d59c721327c9983d4b2b5aa4befad89b00dc74bb5944aebca0": [
+   "Noto-Serif-Hebrew-Condensed-Extra-Bold.ttf",
+   "Noto-Serif-Hebrew-Extra-Bold.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Extra-Bold.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Extra-Bold.ttf"
+  ],
+  "1ac35d6ca92c777f3d0ff32ae5b021508e4185020e5bad35593d7118ac9df174": [
+   "Noto-Serif-Hebrew-Condensed-Extra-Light.ttf",
+   "Noto-Serif-Hebrew-Extra-Light.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Extra-Light.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Extra-Light.ttf"
+  ],
+  "f354fd463dd3e90e5a668d6e594699322adfcd4467ec1f24f7fc9203cf0e9451": [
+   "Noto-Serif-Hebrew-Condensed-Light.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Light.ttf",
+   "Noto-Serif-Hebrew-Light.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Light.ttf"
+  ],
+  "98c752c491090c9d0feca93dc161a6f5c3c5b5fd73560ab3b3cfd53d68f16bec": [
+   "Noto-Serif-Hebrew-Condensed-Medium.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Medium.ttf"
+  ],
+  "803de7b4592496ff3940a1afe94674d45964668220c378ae8f2bc8970cfda7fc": [
+   "Noto-Serif-Hebrew-Condensed-Semi-Bold.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Semi-Bold.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Semi-Bold.ttf"
+  ],
+  "5fc004eb0e0572ef5c9e783909376ce51ec42d80f0c2bc3562378bf33d2cef9b": [
+   "Noto-Serif-Hebrew-Condensed-Thin.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Thin.ttf"
+  ],
+  "8c2d5f8f5c358fcc52bbf8c20b6e82f646fb003e6a8313658db059deb7a4b0b8": [
+   "Noto-Serif-Hebrew-Condensed.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed.ttf",
+   "Noto-Serif-Hebrew-Regular.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed.ttf"
+  ],
+  "aed0ba2e8ebc705392503cc33255b35ec44fbd99951587128fc8ce4e9f17b1e3": [
+   "Noto-Serif-Hebrew-Medium.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Medium.ttf"
+  ],
+  "113bdd07ce51cfa1ee2498b059851a465d3b5686e7f1b2982e54c3c41c2c694b": [
+   "Noto-Serif-Hebrew-SemiCondensed-Thin.ttf",
+   "Noto-Serif-Hebrew-Thin.ttf"
+  ]
+ },
+ "sfntIdenticalDuplicates": {
+  "95db05baa988f1f0ec1c25110cf8ba3dbfffd56f941070d919ca0ee7fa06a1e1": [
+   "Assembly-Bold.woff2",
+   "Assembly-MonoSpace-Bold.woff2"
+  ],
+  "d8eead6fa4b9fa0c510a92c689bc54025176e85cc2968517374b1018d06c6c92": [
+   "Assembly-Light.woff2",
+   "Assembly-MonoSpace-Light.woff2"
+  ],
+  "7f6aed82feb01ece5c8c86cb3d4a0652649b89f06c3b5fe5181cf679ac52c070": [
+   "Assembly-MonoSpace-Regular.woff2",
+   "Assembly-Regular.woff2"
+  ],
+  "6114a6d829f17204e7d37abc8dc0f3141c6e545f73b25cdf9b7dbe246c82bd8a": [
+   "Noto-Serif-Hebrew-Black.ttf",
+   "Noto-Serif-Hebrew-Condensed-Black.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Black.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Black.ttf"
+  ],
+  "af3e074b77f195c19e95db635f59607cb61cf9d1fbd7cdabd24290124c399a10": [
+   "Noto-Serif-Hebrew-Bold.ttf",
+   "Noto-Serif-Hebrew-Condensed-Bold.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Bold.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Bold.ttf"
+  ],
+  "77e0c297810b75d59c721327c9983d4b2b5aa4befad89b00dc74bb5944aebca0": [
+   "Noto-Serif-Hebrew-Condensed-Extra-Bold.ttf",
+   "Noto-Serif-Hebrew-Extra-Bold.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Extra-Bold.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Extra-Bold.ttf"
+  ],
+  "1ac35d6ca92c777f3d0ff32ae5b021508e4185020e5bad35593d7118ac9df174": [
+   "Noto-Serif-Hebrew-Condensed-Extra-Light.ttf",
+   "Noto-Serif-Hebrew-Extra-Light.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Extra-Light.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Extra-Light.ttf"
+  ],
+  "f354fd463dd3e90e5a668d6e594699322adfcd4467ec1f24f7fc9203cf0e9451": [
+   "Noto-Serif-Hebrew-Condensed-Light.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Light.ttf",
+   "Noto-Serif-Hebrew-Light.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Light.ttf"
+  ],
+  "98c752c491090c9d0feca93dc161a6f5c3c5b5fd73560ab3b3cfd53d68f16bec": [
+   "Noto-Serif-Hebrew-Condensed-Medium.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Medium.ttf"
+  ],
+  "803de7b4592496ff3940a1afe94674d45964668220c378ae8f2bc8970cfda7fc": [
+   "Noto-Serif-Hebrew-Condensed-Semi-Bold.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Semi-Bold.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Semi-Bold.ttf"
+  ],
+  "5fc004eb0e0572ef5c9e783909376ce51ec42d80f0c2bc3562378bf33d2cef9b": [
+   "Noto-Serif-Hebrew-Condensed-Thin.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed-Thin.ttf"
+  ],
+  "8c2d5f8f5c358fcc52bbf8c20b6e82f646fb003e6a8313658db059deb7a4b0b8": [
+   "Noto-Serif-Hebrew-Condensed.ttf",
+   "Noto-Serif-Hebrew-ExtraCondensed.ttf",
+   "Noto-Serif-Hebrew-Regular.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed.ttf"
+  ],
+  "aed0ba2e8ebc705392503cc33255b35ec44fbd99951587128fc8ce4e9f17b1e3": [
+   "Noto-Serif-Hebrew-Medium.ttf",
+   "Noto-Serif-Hebrew-SemiCondensed-Medium.ttf"
+  ],
+  "113bdd07ce51cfa1ee2498b059851a465d3b5686e7f1b2982e54c3c41c2c694b": [
+   "Noto-Serif-Hebrew-SemiCondensed-Thin.ttf",
+   "Noto-Serif-Hebrew-Thin.ttf"
+  ],
+  "d95a1edc4727f32213709144f319e40362fd811d8c5bad400b28d205c8e0b56d": [
+   "Segoe Ui Variable-Bold-Small.woff2",
+   "Segoe Ui Variable-Bold-Text.woff2"
+  ],
+  "8e5cb3631ea155a18bd5ccb08f4072561953fa8132ab68d9bd34fac2bbcaa086": [
+   "Segoe Ui Variable-Light-Display.woff2",
+   "Segoe Ui Variable-Light-Small.woff2",
+   "Segoe Ui Variable-Light-Text.woff2"
+  ],
+  "d3b5f545ccf432e78e5a74f87c6ba1316fde478e1b61fb594e605d5d21d47100": [
+   "Segoe Ui Variable-Regular-Display.woff2",
+   "Segoe Ui Variable-Regular-Small.woff2",
+   "Segoe Ui Variable-Regular.woff2"
+  ],
+  "aed27e482e60f19af2028f65ad0eefb37cc617c21b8391305de46bb9eeca9bfd": [
+   "Segoe Ui Variable-Semibold-Small.woff2",
+   "Segoe Ui Variable-Semibold-Text.woff2"
+  ],
+  "a669e902852512de51ed653da1d8385eba77a8ce9b72ab6e8018c060d4936f21": [
+   "Segoe Ui Variable-Semilight-Display.woff2",
+   "Segoe Ui Variable-Semilight-Small.woff2"
+  ],
+  "fceaf6f217f42d89164d79d71ade513e71f2db80875c90c9f67b8b4163c56873": [
+   "Shmaltz-1-Con-Bold.woff2",
+   "Shmaltz-1-Wide-Bold.woff2"
+  ],
+  "799f2572e12d0512ebdd92c23a6415ad47f09ad5c241d6022df1160cb2f7220a": [
+   "Shmaltz-1-Con-light.woff2",
+   "Shmaltz-1-Wide-light.woff2"
+  ],
+  "a83736f6a68fd44c3abb68071112f1e58622db1b746de4bc30d1266b59be8dd6": [
+   "Shmaltz-1-Con-regular.woff2",
+   "Shmaltz-1-Wide-regular.woff2"
+  ],
+  "723d78648a2b930d2aae9fe6cf932b8fd1a52deb2a3a7d07f86c62ceda50c16b": [
+   "SitkaVF-Italic-Banner-Bold.woff2",
+   "SitkaVF-Italic-Display-Bold.woff2"
+  ],
+  "4d5420168374214309102f64f8c2db7cd771fee697fddf7e6e1be1263305928d": [
+   "SitkaVF-Italic-Display-Semibold.woff2",
+   "SitkaVF-Italic-Heading-Semibold.woff2",
+   "SitkaVF-Italic-Small-Semibold.woff2"
+  ],
+  "18457de9c0e8c20ee8140fd0c34f6b37cad36c3c85765b5752b6b3cab3b4d7cd": [
+   "SitkaVF-Italic-Display.woff2",
+   "SitkaVF-Italic-Heading.woff2",
+   "SitkaVF-Italic-Small.woff2"
+  ],
+  "d254495d8d5e5f3e7b6e7b574f89a66a4bd3b919ed5a9c0ef4e52778f3299adc": [
+   "SitkaVF-Italic-Heading-Bold.woff2",
+   "SitkaVF-Italic-Small-Bold.woff2",
+   "SitkaVF-Italic-Subheading-Bold.woff2"
+  ],
+  "09de6fc0a80e6c065959165d09b57a806a6f4f803a0d1387b813b3c580c3f728": [
+   "SitkaVF-Italic-Subheading-Semibold.woff2",
+   "SitkaVF-Italic-Text-Semibold.woff2"
+  ],
+  "416e33f44812c5ac0b66b650c40d11ed67a974221504e8dfe96ef3ee5f5a90f0": [
+   "SitkaVF-Italic-Subheading.woff2",
+   "SitkaVF-Italic-Text.woff2"
+  ]
+ },
+ "coreDigestSameDifferentNameTable": {},
+ "sameFileMultipleFamilyNames": {
+  "Alpha-Regular.ttf": [
+   "Alpha",
+   "אלפא רגיל"
+  ],
+  "Alpha-Black.ttf": [
+   "AlphaBlack",
+   "אלפא שחור"
+  ],
+  "Alpha-Light.ttf": [
+   "AlphaLight",
+   "אלפא קל"
+  ],
+  "DavidLibre-Regular.ttf": [
+   "David Libre",
+   "דוד ליברה רגיל"
+  ],
+  "FrankReal-Bold.ttf": [
+   "FrankReal",
+   "פרנק ריל מודגש"
+  ],
+  "Guttman-Rashi-Normal.ttf": [
+   "Guttman Rashi",
+   "גוטמן רש\"י רגיל"
+  ],
+  "Hadassah-Friedlaender-Regular.ttf": [
+   "Hadassah Friedlaender",
+   "הדסה פרידלנדר רגיל"
+  ],
+  "Livorna-Regular.ttf": [
+   "Livorna",
+   "ליבורנה רגיל"
+  ]
+ },
+ "sameFamilyMultipleFiles": {
+  "imud:אריאל נטוי": [
+   "Arial Italic.ttf",
+   "Arial-Italic.ttf"
+  ],
+  "imud:אריאל צר נטוי": [
+   "Arial Narrow Italic.ttf",
+   "Arial-Narrow-Italic.ttf"
+  ],
+  "imud:טיימס ניו רומן נטוי": [
+   "Times New Roman Italic.ttf",
+   "Times-New-Roman-Italic.ttf"
+  ],
+  "imud:יוסף רגיל": [
+   "Josef-Regular.ttf",
+   "Yosef-Regular.ttf"
+  ],
+  "imud:פרנק רוהל מ\"פ מודגש א": [
+   "FrankRuhlMF-Bold-A.ttf",
+   "FrankRuhlMF-BoldA.ttf"
+  ],
+  "imud:רמז גלעד מודגש": [
+   "Rmz-Galed-Bold.ttf",
+   "RmzGaled-Bold.ttf"
+  ],
+  "imud:רמז גלעד רגיל": [
+   "Rmz-Galed-Normal.ttf",
+   "RmzGaled-Normal.ttf"
+  ],
+  "imud:רמז דוד מודגש": [
+   "Rmz-David-Bold.ttf",
+   "RmzDavid-Bold.ttf"
+  ],
+  "imud:רמז דוד רגיל": [
+   "Rmz-David-Normal.ttf",
+   "RmzDavid-Normal.ttf"
+  ],
+  "imud:רמז הדס מודגש": [
+   "Rmz-Hadas-Bold.ttf",
+   "RmzHadas-Bold.ttf"
+  ],
+  "imud:רמז הדס רגיל": [
+   "Rmz-Hadas-Normal.ttf",
+   "RmzHadas-Normal.ttf"
+  ],
+  "imud:רמז מאירי מודגש": [
+   "Rmz-Meiri-Bold.ttf",
+   "RmzMeiri-Bold.ttf"
+  ],
+  "imud:רמז מאירי רגיל": [
+   "Rmz-Meiri-Normal.ttf",
+   "RmzMeiri-Normal.ttf"
+  ],
+  "imud:רמז סופר רגיל": [
+   "Rmz-Sofer-Normal.ttf",
+   "RmzSofer-Normal.ttf"
+  ],
+  "imud:רמז פרנק מודגש": [
+   "Rmz-Frank-Bold.ttf",
+   "RmzFrank-Bold.ttf"
+  ],
+  "imud:רמז פרנק רגיל": [
+   "Rmz-Frank-Normal.ttf",
+   "RmzFrank-Normal.ttf"
+  ],
+  "imud:רמז רש\"י מודגש": [
+   "Rmz-Rashi-Bold.ttf",
+   "RmzRashi-Bold.ttf"
+  ],
+  "imud:רמז רש\"י רגיל": [
+   "Rmz-Rashi-Normal.ttf",
+   "RmzRashi-Normal.ttf"
+  ],
+  "imud:תהילה בינוני": [
+   "Tehila-Medium.ttf",
+   "TehilaMedium.ttf"
+  ],
+  "ext:אוסקר רגיל": [
+   "Oscar-Regular.woff2",
+   "Oskar-Regular.woff2"
+  ],
+  "ext:אנימטור צר קל": [
+   "Animator-Con-Light.woff2",
+   "AnimatorCon-Light.woff2"
+  ],
+  "ext:בונה נובה נטוי": [
+   "Bona Nova Italic.woff2",
+   "Bona-Nova-Italic.woff2"
+  ],
+  "ext:בייגלה רגיל": [
+   "Begale-Regular.woff2",
+   "Beigale-Regular.woff2"
+  ],
+  "ext:הדס קל": [
+   "Hadasl Light.woff2",
+   "Hadasl-Light.woff2"
+  ],
+  "ext:טינוס נטוי": [
+   "Tinos Italic.woff2",
+   "Tinos-Italic.woff2"
+  ],
+  "ext:מ' הדסה מודגש": [
+   "Mhadasa Bold.woff2",
+   "Mhadasa-Bold.woff2"
+  ],
+  "ext:מ' הדסה רגיל": [
+   "Mhadasa Normal.woff2",
+   "Mhadasa-Normal-Regular.woff2"
+  ],
+  "ext:מחיר לא מומלץ קל": [
+   "MehirLoMumlats-Light.woff2",
+   "MehirLoMumlatsLight.woff2"
+  ],
+  "ext:מחיר לא מומלץ רגיל": [
+   "MehirLoMumlatsReg-Regular.woff2",
+   "MehirLoMumlatsReg.woff2"
+  ],
+  "ext:מחיר מומלץ רגיל": [
+   "MehirMumlatsReg-Regular.woff2",
+   "MehirMumlatsReg.woff2"
+  ],
+  "ext:מיה רגיל": [
+   "Maya-Regular.woff2",
+   "Mia-Regular.woff2"
+  ],
+  "ext:סברס רגיל": [
+   "Sabres-Regular.woff2",
+   "Sabress-Regular.woff2"
+  ],
+  "ext:סגואי חצי מודגש נטוי": [
+   "Segoe Ui Semibold Italic.woff2",
+   "Segoe-Ui-Semi-Bold-Italic.woff2"
+  ],
+  "ext:סגואי חצי קל נטוי": [
+   "Segoe Ui Semilight Italic.woff2",
+   "Segoe-Ui-Semi-Light-Italic.woff2"
+  ],
+  "ext:סגואי חצי קל": [
+   "Segoe Ui Semilight.woff2",
+   "Segoe-Ui-Semi-Light.woff2"
+  ],
+  "ext:סגואי נטוי": [
+   "Segoe Ui Italic.woff2",
+   "Segoe-Ui-Italic.woff2"
+  ],
+  "ext:סגואי קל נטוי": [
+   "Segoe Ui Light Italic.woff2",
+   "Segoe-Ui-Light-Italic.woff2"
+  ],
+  "ext:פלטינו לינוטייפ נטוי": [
+   "Palatino Linotype Italic.woff2",
+   "Palatino-Linotype-Italic.woff2"
+  ],
+  "ext:קומיק סנס נטוי": [
+   "Comic Sans Ms Italic.woff2",
+   "Comic-Sans-Ms-Italic.woff2"
+  ],
+  "ext:קורייר ניו נטוי": [
+   "Courier New Italic.woff2",
+   "Courier-New-Italic.woff2"
+  ],
+  "ext:קליברי נטוי": [
+   "Calibri Italic.woff2",
+   "Calibri-Italic.woff2"
+  ],
+  "ext:קליברי קל נטוי": [
+   "Calibri Light Italic.woff2",
+   "Calibri-Light-Italic.woff2"
+  ],
+  "ext:רמז וילנא מודגש": [
+   "Rmz-Vilna-Bold.woff2",
+   "RmzVilna-Bold.woff2"
+  ],
+  "ext:רמז וילנא רגיל": [
+   "Rmz-Vilna-Normal.woff2",
+   "RmzVilna-Normal.woff2"
+  ],
+  "ext:שונית 3 קלאסי נטוי": [
+   "Shuneet3 Classic Italic.woff2",
+   "Shuneet3-Classic-Italic.woff2"
+  ]
+ },
+ "crossFormatSameBasename": [
+  "Sgula-Regular"
+ ],
+ "similarMetricsDifferentDesign": {
+  "('AhavaBold', 4, 5, 0.0, 2048, 11.8086, 'glyf', False)": [
+   "Ahava-Bold.ttf",
+   "AhavaBold.ttf"
+  ],
+  "('Arial', 400, 5, -12.0, 2048, 20.1992, 'glyf', False)": [
+   "Arial Italic.ttf",
+   "Arial-Italic.ttf"
+  ],
+  "('Arial', 400, 3, -9.7, 2048, 7.4785, 'glyf', False)": [
+   "Arial Narrow Italic.ttf",
+   "Arial-Narrow-Italic.ttf"
+  ],
+  "('Baba v2 FM', 800, 5, 0.0, 1000, 21.602, 'glyf', False)": [
+   "Baba-Dots.woff2",
+   "Baba-Outline.woff2",
+   "Baba-Shadow.woff2"
+  ],
+  "('Lia Batkol', 400, 5, 0.0, 1000, 15.337, 'glyf', False)": [
+   "Batkol-Regular-5.woff2",
+   "Batkol-Regular-8.woff2"
+  ],
+  "('Bona Nova', 400, 5, -4.0, 1000, 17.448, 'glyf', False)": [
+   "Bona Nova Italic.woff2",
+   "Bona-Nova-Italic.woff2"
+  ],
+  "('Calibri', 400, 5, -11.0, 2048, 18.7935, 'glyf', False)": [
+   "Calibri Italic.woff2",
+   "Calibri-Italic.woff2"
+  ],
+  "('Calibri', 300, 5, -11.31, 2048, 18.5938, 'glyf', False)": [
+   "Calibri Light Italic.woff2",
+   "Calibri-Light-Italic.woff2"
+  ],
+  "('Lia Classic', 900, 5, 0.0, 1000, 20.616, 'glyf', False)": [
+   "Classic-Bold.woff2",
+   "Classic-Outline-Regular.woff2"
+  ],
+  "('Comic Sans MS', 400, 5, -10.0, 2048, 9.5337, 'glyf', False)": [
+   "Comic Sans Ms Italic.woff2",
+   "Comic-Sans-Ms-Italic.woff2"
+  ],
+  "('Courier New', 400, 5, -12.0, 2048, 24.0039, 'glyf', False)": [
+   "Courier New Italic.woff2",
+   "Courier-New-Italic.woff2"
+  ],
+  "('David Libre', 700, 5, 0.0, 2048, 20.1909, 'glyf', False)": [
+   "David-Libre-Bold.ttf",
+   "DavidLibre-Bold.ttf"
+  ],
+  "('FrankRuhlMF', 700, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "FrankRuhlMF-Bold-A.ttf",
+   "FrankRuhlMF-BoldA.ttf"
+  ],
+  "('Hadasl', 5, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Hadasl Light.woff2",
+   "Hadasl-Light.woff2"
+  ],
+  "('Kedem Serif ML AAA', 200, 5, 0.0, 1000, 29.224, 'cff', False)": [
+   "Kedem-Serif-Ultra-Light-Italic.ttf",
+   "Kedem-Serif-Ultralight-Italic.ttf"
+  ],
+  "('Krisper v2 FM', 400, 5, 0.0, 1000, 22.874, 'glyf', False)": [
+   "Krisper-Emboss.woff2",
+   "Krisper-Wireframe.woff2",
+   "Krisper-Wireframe2.woff2"
+  ],
+  "('MehirLoMumlatsLight', 4, 5, 0.0, 2048, 15.2764, 'glyf', False)": [
+   "MehirLoMumlats-Light.woff2",
+   "MehirLoMumlatsLight.woff2"
+  ],
+  "('MehirLoMumlatsExtraLight', 4, 5, 0.0, 2048, 15.4297, 'glyf', False)": [
+   "MehirLoMumlatsExtra-Light.woff2",
+   "MehirLoMumlatsExtraLight.woff2"
+  ],
+  "('MehirLoMumlatsReg', 4, 5, 0.0, 2048, 15.6353, 'glyf', False)": [
+   "MehirLoMumlatsReg-Regular.woff2",
+   "MehirLoMumlatsReg.woff2"
+  ],
+  "('MehirMumlatsReg', 4, 5, 0.0, 2048, 15.5068, 'glyf', False)": [
+   "MehirMumlatsReg-Regular.woff2",
+   "MehirMumlatsReg.woff2"
+  ],
+  "('MHadasa', 7, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Mhadasa Bold.woff2",
+   "Mhadasa-Bold.woff2"
+  ],
+  "('MHadasa', 5, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Mhadasa Normal.woff2",
+   "Mhadasa-Normal-Regular.woff2"
+  ],
+  "('LiaMia', 400, 5, 0.0, 1000, 29.889, 'glyf', False)": [
+   "Mia-Regular-6.woff2",
+   "Mia-Regular.woff2"
+  ],
+  "('Omes v3 FM', 600, 5, 0.0, 1000, 17.678, 'cff', False)": [
+   "Omes-Demi-Bold.woff2",
+   "Omes-Round.woff2"
+  ],
+  "('Palatino Linotype', 400, 5, -10.0, 2048, 8.2397, 'glyf', False)": [
+   "Palatino Linotype Italic.woff2",
+   "Palatino-Linotype-Italic.woff2"
+  ],
+  "('RmzDavid', 700, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-David-Bold.ttf",
+   "RmzDavid-Bold.ttf"
+  ],
+  "('RmzDavid', 400, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-David-Normal.ttf",
+   "RmzDavid-Normal.ttf"
+  ],
+  "('RmzFrank', 700, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Frank-Bold.ttf",
+   "RmzFrank-Bold.ttf"
+  ],
+  "('RmzFrank', 400, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Frank-Normal.ttf",
+   "RmzFrank-Normal.ttf"
+  ],
+  "('RmzGaled', 700, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Galed-Bold.ttf",
+   "RmzGaled-Bold.ttf"
+  ],
+  "('RmzGaled', 400, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Galed-Normal.ttf",
+   "RmzGaled-Normal.ttf"
+  ],
+  "('RmzHadas', 700, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Hadas-Bold.ttf",
+   "RmzHadas-Bold.ttf"
+  ],
+  "('RmzHadas', 400, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Hadas-Normal.ttf",
+   "RmzHadas-Normal.ttf"
+  ],
+  "('RmzMeiri', 700, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Meiri-Bold.ttf",
+   "RmzMeiri-Bold.ttf"
+  ],
+  "('RmzMeiri', 400, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Meiri-Normal.ttf",
+   "RmzMeiri-Normal.ttf"
+  ],
+  "('RmzRashi', 700, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Rashi-Bold.ttf",
+   "RmzRashi-Bold.ttf"
+  ],
+  "('RmzRashi', 400, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Rashi-Normal.ttf",
+   "RmzRashi-Normal.ttf"
+  ],
+  "('RmzSofer', 400, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Sofer-Normal.ttf",
+   "RmzSofer-Normal.ttf"
+  ],
+  "('RmzVilna', 700, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Vilna-Bold.woff2",
+   "RmzVilna-Bold.woff2"
+  ],
+  "('RmzVilna', 400, 5, 0.0, 1000, 0.0, 'glyf', False)": [
+   "Rmz-Vilna-Normal.woff2",
+   "RmzVilna-Normal.woff2"
+  ],
+  "('Segoe UI', 400, 5, -12.0, 2048, 8.5508, 'glyf', False)": [
+   "Segoe Ui Italic.woff2",
+   "Segoe-Ui-Italic.woff2"
+  ],
+  "('Segoe UI', 300, 5, -12.0, 2048, 7.9258, 'glyf', False)": [
+   "Segoe Ui Light Italic.woff2",
+   "Segoe-Ui-Light-Italic.woff2"
+  ],
+  "('Segoe UI', 600, 5, -12.0, 2048, 8.5762, 'glyf', False)": [
+   "Segoe Ui Semibold Italic.woff2",
+   "Segoe-Ui-Semi-Bold-Italic.woff2"
+  ],
+  "('Segoe UI', 350, 5, -12.0, 2048, 8.0127, 'glyf', False)": [
+   "Segoe Ui Semilight Italic.woff2",
+   "Segoe-Ui-Semi-Light-Italic.woff2"
+  ],
+  "('Segoe UI', 350, 5, 0.0, 2048, 20.6006, 'glyf', False)": [
+   "Segoe Ui Semilight.woff2",
+   "Segoe-Ui-Semi-Light.woff2"
+  ],
+  "('Lia Sgula', 400, 5, 0.0, 1000, 20.809, 'glyf', False)": [
+   "Sgula-Regular.ttf",
+   "Sgula-Regular.woff2"
+  ],
+  "('Shuneet3 Classic', 400, 5, -11.0, 2048, 14.9521, 'glyf', False)": [
+   "Shuneet3 Classic Italic.woff2",
+   "Shuneet3-Classic-Italic.woff2"
+  ],
+  "('Solomon FM', 700, 5, -22.0, 1000, 22.979, 'glyf', False)": [
+   "Solomon-Bold-Natui.woff2",
+   "Solomon-Bold.woff2"
+  ],
+  "('Spectrum 2.0 FM', 800, 5, 0.0, 1000, 20.157, 'glyf', False)": [
+   "Spectrum-Outline.woff2",
+   "Spectrum-Shadow.woff2"
+  ],
+  "('Tehila', 4, 5, 0.0, 2048, 16.7866, 'glyf', False)": [
+   "Tehila-Medium.ttf",
+   "TehilaMedium.ttf"
+  ],
+  "('Tehila', 4, 5, 0.0, 2048, 16.8003, 'glyf', False)": [
+   "Tehila-Regular.ttf",
+   "Tehila-Regular_2.ttf"
+  ],
+  "('Times New Roman', 400, 5, -16.33, 2048, 17.5781, 'glyf', False)": [
+   "Times New Roman Italic.ttf",
+   "Times-New-Roman-Italic.ttf"
+  ],
+  "('Tinos', 400, 5, -16.33, 2048, 19.2959, 'glyf', False)": [
+   "Tinos Italic.woff2",
+   "Tinos-Italic.woff2"
+  ],
+  "('Trabelsi FM', 400, 5, -12.0, 1000, 20.249, 'glyf', False)": [
+   "Trabelsi-Outline.woff2",
+   "Trabelsi-Regular.woff2"
+  ]
+ },
+ "fsTypeRestrictedNoEmbedding": [
+  "Adama-Bold.woff2",
+  "Adama-Light.woff2",
+  "Adama-Regular.woff2",
+  "AdamaMF-Bold.woff2",
+  "Ahava-Bold.ttf",
+  "AhavaBold.ttf",
+  "Alpha-Black.ttf",
+  "Alpha-Bold.ttf",
+  "Alpha-Light.ttf",
+  "Alpha-Regular.ttf",
+  "FrankReal-Bold.ttf",
+  "FrankReal-Medium.ttf",
+  "FrankRuhlMF-Bold-A.ttf",
+  "FrankRuhlMF-BoldA.ttf",
+  "HadasaNew-Black.ttf",
+  "HadasaNew-Bold.ttf",
+  "HadasaNew-Light.ttf",
+  "HadasaNew-Regular.ttf",
+  "Hadasa_0-Regular.ttf",
+  "Hadasab_0-Bold.ttf",
+  "Hadasl Light.woff2",
+  "Hadasl-Light.woff2",
+  "Livorna-Bold.ttf",
+  "Livorna-Regular.ttf",
+  "MehirLoMumlats-Light.woff2",
+  "MehirLoMumlatsExtra-Light.woff2",
+  "MehirLoMumlatsExtraLight.woff2",
+  "MehirLoMumlatsLight.woff2",
+  "MehirLoMumlatsReg-Regular.woff2",
+  "MehirLoMumlatsReg.woff2",
+  "MehirMumlatsReg-Regular.woff2",
+  "MehirMumlatsReg.woff2",
+  "Mhadasa Bold.woff2",
+  "Mhadasa Normal.woff2",
+  "Mhadasa-Bold.woff2",
+  "Mhadasa-Normal-Regular.woff2",
+  "S-Vilna-New-Regular.woff2",
+  "Tehila-Medium.ttf",
+  "Tehila-Regular.ttf",
+  "Tehila-Regular_2.ttf",
+  "TehilaMedium.ttf"
+ ],
+ "fsTypePreviewPrintOnly": [
+  "Aderet-Melucha-Black.woff2",
+  "Aderet-Pixel-Regular.woff2",
+  "Aderet-Regular.woff2",
+  "Adrenalin-Black.woff2",
+  "Afarsek-Regular.woff2",
+  "Agolhebeng-Black.woff2",
+  "Ale-Regular.woff2",
+  "Algebra-Regular.woff2",
+  "Artilerya-Regular.woff2",
+  "Artzisraelisns-Ot-Regular.woff2",
+  "Atara-Regular.woff2",
+  "Atzmai-Regular.woff2",
+  "Atzofen-Bold.woff2",
+  "Atzofenshavur-Bold.woff2",
+  "Avodaaravit-Regular.woff2",
+  "Azimut-Light.woff2",
+  "Badnews-Regular.woff2",
+  "Baladi-Regular.woff2",
+  "Balkani-Light.woff2",
+  "Bangynew-Bold.woff2",
+  "Basishebeng-Black.woff2",
+  "Basishebeng-Condensed-Thin.woff2",
+  "Bazelet-Regular.woff2",
+  "Baznat-Black.woff2",
+  "Baznat-Regular.woff2",
+  "Begale-Regular.woff2",
+  "Beigale-Regular.woff2",
+  "Betaamango-Free-Regular.woff2",
+  "Bloom-Regular.woff2",
+  "Boeimanali-Black.woff2",
+  "Cackau-Regular.woff2",
+  "Carbonhebeng-Bold.woff2",
+  "Caricature-Regular.woff2",
+  "Champagne-Regular.woff2",
+  "Charzuvot-Regular.woff2",
+  "Chasamba-Regular.woff2",
+  "Clinica-Regular.woff2",
+  "Comika-Regular.woff2",
+  "Composite-Ot-Regular.woff2",
+  "Constructor-Black.woff2",
+  "Cream-Ot-Regular.woff2",
+  "Crystal-Regular.woff2",
+  "Crystalex-Regular.woff2",
+  "Dafkesher-Ot-Regular.woff2",
+  "Dashen-Regular.woff2",
+  "Devash-Regular.woff2",
+  "Director-Regular.woff2",
+  "Dorian-Clm-Book.woff2",
+  "Egosansnarrow-Regular.woff2",
+  "Egoslabserif-Regular.woff2",
+  "Eiffel-Regular.woff2",
+  "Elitism-Regular.woff2",
+  "Entrecote-Regular.woff2",
+  "Exlibris-Regular.woff2",
+  "Expresivi-Regular.woff2",
+  "Extaza-Light.woff2",
+  "Ezmel-Regular.woff2",
+  "Fahrenheit-Black.woff2",
+  "Firmanew-Black.woff2",
+  "Florentina-Light.woff2",
+  "Frankiboy-Regular.woff2",
+  "Galbyan-Light.woff2",
+  "Gandalfhebeng-Black.woff2",
+  "Geometra-Regular.woff2",
+  "Gipsyhebeng-Extra-Light.woff2",
+  "Gladia-Clm-Bold.woff2",
+  "Gobus-Regular.woff2",
+  "Gofansanshebeng-Black.woff2",
+  "Golshimnew-Bold.woff2",
+  "Graphologya-Regular.woff2",
+  "Grotesk-Bold.woff2",
+  "Gushpanka-Black.woff2",
+  "Hahozvim-Regular.woff2",
+  "Hamakor-Ot-Regular.woff2",
+  "Happybirthday-Regular.woff2",
+  "Hashomer-Black.woff2",
+  "Hayesod-Regular.woff2",
+  "Hazorfim-Regular.woff2",
+  "Hebrew-Regular.woff2",
+  "Hummus,-Chips,-Salat-Regular.woff2",
+  "Icecoffie-Regular.woff2",
+  "Iguananew-Bold.woff2",
+  "Joker-Regular.woff2",
+  "Judaicaots-Regular.woff2",
+  "Juggling-Decor.woff2",
+  "Kalisher-Black.woff2",
+  "Karamel-Bold.woff2",
+  "Kitabet-Regular.woff2",
+  "Kiyosk-Heavy-Ot.woff2",
+  "Kroason-Regular.woff2",
+  "Kulmus-Regular.woff2",
+  "Kundalini-Rough.woff2",
+  "Lampner-Ot-Regular.woff2",
+  "Lavender-Regular.woff2",
+  "Legioner-Regular.woff2",
+  "Lemonade-Regular.woff2",
+  "Lituf-Regular.woff2",
+  "Lotusbook-Medium.woff2",
+  "Makiato3d-Fill.woff2",
+  "Maple-Regular.woff2",
+  "Marshmelo-Regular.woff2",
+  "Mashat-Regular.woff2",
+  "Matbeot-Regular.woff2",
+  "Matcon-Regular.woff2",
+  "Mazlathebeng-Light.woff2",
+  "Mechaahamonit-Regular.woff2",
+  "Metali-Bold.woff2",
+  "Metropolitana-Bold.woff2",
+  "Miri-Medium.woff2",
+  "Miryamnew-Bold.ttf",
+  "Moreshet-Regular.ttf",
+  "Neshika-Light.woff2",
+  "Newletter-Elegant-Regular.woff2",
+  "Nostalgiahebeng-Bold.woff2",
+  "Nuar-Regular.woff2",
+  "Nuba-Regular.woff2",
+  "Offset-Regular.woff2",
+  "Olehadash-Regular.woff2",
+  "Omer-Medium.woff2",
+  "Origami-Regular.woff2",
+  "Otarkya-Light.woff2",
+  "Paamonim-Ots-Regular.woff2",
+  "Parkinghebeng-Black.woff2",
+  "Pascal-Regular.woff2",
+  "Pashut-Inline-Regular.woff2",
+  "Patient-Regular.woff2",
+  "Pilpelharif-Regular.woff2",
+  "Pnina-Art-Scroll-Regular.woff2",
+  "Pnina-Art1-Regular.woff2",
+  "Practica-Black.woff2",
+  "Practicanarrow-Bold.woff2",
+  "Prehistoric-Regular.woff2",
+  "Raashan-Regular.woff2",
+  "Rashi-Art1-Regular.ttf",
+  "Rashi-Ot-Regular.ttf",
+  "Reforma-Light.woff2",
+  "Regga-Regular.woff2",
+  "Reissfeder-Bold.woff2",
+  "Resisim-Regular.woff2",
+  "Retros-Regular.woff2",
+  "Riflexhebeng-Bold.woff2",
+  "Rimonahebeng-Regular.woff2",
+  "Rotonda-Regular.woff2",
+  "Sabress-Regular.woff2",
+  "Sandlar-Bold.woff2",
+  "Semitrayler-Black.woff2",
+  "Sfaradi-Regular.woff2",
+  "Shaareyzedek-Ot-Regular.woff2",
+  "Shaashuim-Ot-Regular.woff2",
+  "Shoshanim-Bold.woff2",
+  "Sicumim-Regular.woff2",
+  "Sifrut-Open-Otp-Regular.woff2",
+  "Sifrut-Otp-Regular.woff2",
+  "Sinaimitki-Regular.woff2",
+  "Skets-Regular.woff2",
+  "Skup-Regular.woff2",
+  "Spacer-Black.woff2",
+  "Spoiler-Light.woff2",
+  "Stam-Sfaradi-Regular.woff2",
+  "Stamsf-Aradi-Notag-Regular.woff2",
+  "Stargate-Regular.woff2",
+  "Sufatalim-Regular.woff2",
+  "Talpiot-Class-Reg-Regular.woff2",
+  "Talpiot-Reg-Regular.woff2",
+  "Tamlil-Black.woff2",
+  "Tamlilcondensedhebeng-Light.woff2",
+  "Tarfon-Bold.woff2",
+  "Tehilot-Regular.woff2",
+  "Telescope-Regular.woff2",
+  "Termus-Ot-Regular.woff2",
+  "Textural-Regular.woff2",
+  "Tirosh-Ot-Regular.woff2",
+  "Tolaatsfarim-Medium.woff2",
+  "Toys-Regular.woff2",
+  "Trampolina-Light.woff2",
+  "Transformator-Bold.woff2",
+  "Trashim-Clm-Bold.woff2",
+  "Treeofknowledgehebeng-Regular.woff2",
+  "Tsafon-Regular.woff2",
+  "Tubic-Sansconhebeng-Black.ttf",
+  "Tubic-Slabhebeng-Extra-Light.ttf",
+  "Tulipahebeng-Light.woff2",
+  "Turbo-Ot-Regular.woff2",
+  "Typotext-Regular.woff2",
+  "Tzeva-Tari-Regular.woff2",
+  "Universalihebeng-Extra-Light.woff2",
+  "Vandalizem-Regular.woff2",
+  "Vayikradisplaydecor.woff2",
+  "Wicked-Regular.woff2",
+  "Yaguar-Regular.woff2",
+  "Yehuda-Clm-Bold.woff2",
+  "Yehuda-Clm-Light.woff2",
+  "Yogurt-Regular.woff2",
+  "Yosefbau-Bold.ttf",
+  "Zarbuvit-Regular.woff2",
+  "Zarka-Regular.woff2",
+  "Zrima-Regular.woff2",
+  "dvashvehalav-halul-1-regular.woff2",
+  "kdilak-sans-1-regular.woff2"
+ ],
+ "coverageAggregates": {
+  "files": 1759,
+  "hebrewLetters_full": 1557,
+  "nikud_full": 168,
+  "taamim_any_ge20": 382,
+  "taamim_full31": 16,
+  "corpus_full44": 0,
+  "corpus_zero": 0
+ },
+ "familiesWithMultipleFacesOnDisk": {
+  "": 114,
+  "noto serif hebrew": 37,
+  "noto sans hebrew": 36,
+  "sitka": 18,
+  "segoe ui": 17,
+  "segoe ui variable": 15,
+  "arial": 11,
+  "almoni ml v5 aaa": 10,
+  "noto rashi hebrew": 9,
+  "roboto": 9,
+  "afek dl v2 aaa": 8,
+  "ambivalenti wide ml v2 aaa": 8,
+  "asimon dl v3 aaa": 8,
+  "fb bloomfild pro": 8,
+  "calibri": 8,
+  "fb munchies": 8,
+  "ploni ml v2 aaa": 8,
+  "ploni tzar ml v2 aaa": 8,
+  "ploni yad v2 aaa": 8,
+  "primaries ml aaa": 8,
+  "fb absolutik": 7,
+  "almoni tzar ml v5 aaa": 7,
+  "ambivalenti ml v2 aaa": 7,
+  "ambivalenti tzar ml v2 aaa": 7,
+  "anomalia ml v2 aaa": 7,
+  "fb bagsu cake": 7,
+  "fb booster": 7,
+  "lia diplomat": 7,
+  "heebo": 7,
+  "kedem serif ml aaa": 7,
+  "levi dl v1 aaa": 7,
+  "fb practica pro": 7,
+  "rubik": 7,
+  "fb shmaltz": 7,
+  "fb singulari": 7,
+  "spectrum 2.0 fm": 7,
+  "fb typograph pro": 7,
+  "fb absoluticon vf": 6,
+  "fb alfi-pro": 6,
+  "ambivalenti compressed ml v2 aaa": 6,
+  "fb assembly": 6,
+  "assistant": 6,
+  "atlas dl 3.1 aaa": 6,
+  "baba v2 fm": 6,
+  "bamberger grunge fm": 6,
+  "bamberger sharp fm": 6,
+  "barlev dl v2 aaa": 6,
+  "google sans": 6,
+  "fb coherenti pro": 6,
+  "fb electroncon vf": 6,
+  "fb electronsans vf": 6,
+  "frankre dl v2 aaa": 6,
+  "frank ruhl libre": 6,
+  "fbjabutinskireg": 6,
+  "karma dl v1 aaa": 6,
+  "fb matritsa": 6,
+  "fb monopolitser vf": 6,
+  "fb monopoly vf": 6,
+  "omes v3 fm": 6,
+  "ploni round aaa": 6,
+  "fb shapinger vf": 6,
+  "fb spoilerpas": 6,
+  "stanga dl v2 aaa": 6,
+  "taamula ml v3 aaa": 6,
+  "fb tubic-sans": 6,
+  "fb tubic-slab": 6,
+  "fb unicasans": 6,
+  "fb versatily": 6,
+  "fb animator": 5,
+  "awanta dl aaa": 5,
+  "caravan dl 2.0 aaa": 5,
+  "comic sans ms": 5,
+  "courier new": 5,
+  "fb einstein con": 5,
+  "fb einstein hebeng": 5,
+  "fb frankbasic": 5,
+  "fb gipsy": 5,
+  "fb hasandaq vf": 5,
+  "index dl v1 aaa": 5,
+  "index mono dl v1 aaa": 5
+ }
+}
