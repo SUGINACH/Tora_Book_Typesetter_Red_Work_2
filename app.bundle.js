@@ -318,6 +318,7 @@ var __paths = {
   "src/ui/app-shell.js|./inline-transport": "src/ui/inline-transport.js",
   "src/ui/app-shell.js|../engine/output/export-api": "src/engine/output/export-api.js",
   "src/ui/app-shell.js|../engine/output/export-api": "src/engine/output/export-api.js",
+  "src/ui/app-shell.js|../engine/output/export-api": "src/engine/output/export-api.js",
   "src/ui/app-shell.js|../engine/core/settings-registry": "src/engine/core/settings-registry.js",
   "src/ui/app-shell.js|../engine/core/legacy-settings-map": "src/engine/core/legacy-settings-map.js",
   "src/ui/app-shell.js|../engine/layout/page-templates": "src/engine/layout/page-templates.js",
@@ -506,7 +507,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-18-s9b'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-18-s9c1'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -1358,6 +1359,24 @@ function createApp(doc, opts = {}) {
           status.setNotice('ייצוא PDF דורש גופן מוטמע — נא לטעון גופן (TTF) בהגדרות המסמך.');
           return { ok: false, reason: 'no-embedded-font' };
         }
+        // **9c.1 (אין עימוד שני):** הנתיב המקומי (Node/בדיקות) מייצא בפרופיל
+        // המאוחד מה-PageModel שכבר חושב — כמו הנתיב החי ב-Worker. חסר-מודל
+        // (או שאין תוצאת עימוד כלל — הפרופיל עודנו ברירת המחדל) = כשל מפורש;
+        // אין נפילה שקטה ל-exportPdf שמעמד מחדש. פרופיל המורשת ממשיך בנתיב
+        // הקיים עד 9c.4 (הסרת המנוע).
+        if (engineProfile === 'unified' || !result) {
+          if (!pageModelObj) {
+            status.setNotice('ייצוא PDF דורש PageModel — אין נתיב חלופי (הפעילו עימוד קודם).');
+            return { ok: false, kind, reason: 'no-page-model' };
+          }
+          const { exportPdfFromModel } = require('../engine/output/export-api');
+          const res = exportPdfFromModel(pageModelObj, settings, opts.embeddedFont);
+          if (!res.ok) { status.setNotice('ייצוא PDF נכשל: ' + res.error); return res; }
+          if (opts.onExportFile) opts.onExportFile('pdf', res.bytes, 'book.pdf');
+          status.setNotice(`יוצא PDF מה-PageModel — ${res.info.pages} עמודים, ${res.info.outline} סימניות, טקסט נבחר.`);
+          return { ok: true, kind, data: res.bytes, info: res.info };
+        }
+        // **9c.4-marker:** נתיב מורשת — יוסר עם הסרת המנוע ב-9c.4.
         const res = exportPdf(text, settings, opts.embeddedFont);
         if (!res.ok) { status.setNotice('ייצוא PDF נכשל: ' + res.error); return res; }
         if (opts.onExportFile) opts.onExportFile('pdf', res.bytes, 'book.pdf');
