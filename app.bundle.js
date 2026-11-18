@@ -507,7 +507,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-18-s9c1'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-18-s9c2'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -1107,12 +1107,15 @@ function createApp(doc, opts = {}) {
       typesetGen++; // **S5.2 (5):** +1 על כל עימוד שהושלם (בדיוק במקום ההשמה ל-result) — ביטול/החלפה אינם נספרים
       applyResultToViews();
       status.setEngineState('idle');
-      status.setPages(result.pages.length);
+      // **9c.3:** מספר העמודים בסטטוס מהמקור הקנוני — ה-PageModel במאוחד
+      // (applyResultToViews כבר קרא ל-setPages מאותו מקור); כאן לצורך סדר
+      // ההודעות בלבד.
+      status.setPages(canonicalPages().length);
       // **S1-ה/U-2 (תכנית אב §7.1):** כל תוצאת עימוד מציגה hash, שימור, עמודים
       // וזמן ריצה; הפרטים המלאים (מזהה ריצה, hash קלט, גרסה) ב-tooltip של הצ'יפ.
       status.setRunInfo({
         jobId, layoutHash: result.layoutHash, contentHashIn: result.contentHashIn || null,
-        pages: result.pages.length, ms: perf.now() - started,
+        pages: canonicalPages().length, ms: perf.now() - started,
         contentPreserved: result.contentPreserved, engineVersion
       });
     }).catch((e) => {
@@ -1336,6 +1339,9 @@ function createApp(doc, opts = {}) {
           status.setNotice('יוצא HTML עצמאי מה-PageModel (חד־קובץ, offline, אין עימוד שני).');
           return { ok: true, kind, data: html };
         }
+        // **9c.2/9c.4-marker:** נתיב מורשת — צריכת result.pages הגולמיים.
+        // יוסר עם הסרת המנוע ב-9c.4; עד אז האתחול בפרופיל המורשת זקוק לו.
+        // אין fallback בנתיב המאוחד — PageModel חסר = שגיאה מפורשת (לעיל).
         const html = exportHtml(result, settings, doc, { title: (result.metadata && result.metadata['ספר']) || 'ספר', fontCss });
         if (opts.onExportFile) opts.onExportFile('html', html, 'book.html');
         status.setNotice('יוצא HTML עצמאי (חד־קובץ, offline).');
@@ -1406,17 +1412,31 @@ function createApp(doc, opts = {}) {
   }
 
 
+  /** **9c.3:** מערך העמודים הקנוני של התוצאה הנוכחית — לפי הפרופיל:
+   * unified ⇒ עמודי ה-PageModel בלבד (מקור האמת לגיאומטריה ולתוכן);
+   * legacy ⇒ result.pages (ענף 9c.4-marker — עד הסרת המנוע). כל צרכן
+   * ה-UI (מחוונים, מפת שבירות, סמן↔עמוד) נגזר מכאן — אין תלות סמויה
+   * ב-result.pages כשהפרופיל המאוחד פעיל. */
+  function canonicalPages() {
+    if (engineProfile === 'unified' && pageModelObj && Array.isArray(pageModelObj.pages)) return pageModelObj.pages;
+    return result ? result.pages : [];
+  }
+
   function applyResultToViews() {
-    caretMapObj = buildCaretMap(text, result);
+    // **9c.3:** מפת הסמן נבנית מהמקור הקנוני לפי הפרופיל — העמודים מה-PageModel
+    // במאוחד (sourceTokenId בכל שורה), מעמודי התוצאה במורשת. הטוקנים הם מידע
+    // זהות מקור (DocumentModel) — לא גיאומטריה; אין עימוד ואין מדידה כאן.
+    const pages = canonicalPages();
+    caretMapObj = buildCaretMap(text, result.tokens, pages);
     // **פרוסה 3 (§2.1–§2.3):** התצוגה מחוברת ל-PageModel בפרופיל המאוחד —
     // profile=unified כשהתוצאה ממנוע ה-DP ומודל קיים; legacy ממשיך ברנדרר
     // הישן (מצב תעבור מפורש עד שלב 9). ברירת המחדל החיה אינה משתנה.
     preview.setResult(result, settings, { pageModel: pageModelObj, profile: engineProfile });
-    testing.setResult(result);
+    testing.setResult(result, { pageModel: pageModelObj, profile: engineProfile });
     testing.setRecommendations(result.recommendations || null); // **S11:** המלצות עם הוכחות
-    // מפת שבירות עמודים לעורך (⏎ — תצוגה בלבד, F-01)
+    // מפת שבירות עמודים לעורך (⏎ — תצוגה בלבד, F-01) — מהמקור הקנוני (9c.3)
     const breaks = [];
-    for (const pg of result.pages) {
+    for (const pg of pages) {
       if (pg.index === 0) continue;
       const toks = caretMapObj.tokensByPage.get(pg.index) || [];
       const tokId = toks[0];
@@ -1427,7 +1447,7 @@ function createApp(doc, opts = {}) {
       });
     }
     editor.setPageBreaks(breaks);
-    status.setPages(result.pages.length);
+    status.setPages(pages.length);
     status.setPending({ light: lightDirty, heavy: heavyDirty });
   }
 
@@ -1515,13 +1535,47 @@ function createApp(doc, opts = {}) {
 
   function buildDebugJson(pageIndex) {
     if (!result) return { error: 'אין תוצאה — עמדו את המסמך תחילה' };
-    const pg = result.pages.find(p => p.index === pageIndex);
-    if (!pg) return { error: `עמוד ${pageIndex} לא נמצא` };
     const ledgerSlice = (result.ledger.issues || []).filter(rec => rec.page === pageIndex || String(rec.target || '').includes(`p${pageIndex}`));
     const traceSlice = (result.trace.events || []).filter(ev => ev.pageIndex === pageIndex);
     const findingsSlice = (result.report.findings || []).filter(f => Number(f.page) === pageIndex);
+    // **9c.3:** בפרופיל המאוחד הגיאומטריה והתוכן של העמוד מה-PageModel — מקור
+    // האמת. עמודי התוצאה הגולמיים אינם נצרכים כאן עוד (המורשת ממשיך כמקודם).
+    if (engineProfile === 'unified' && pageModelObj && Array.isArray(pageModelObj.pages)) {
+      const mp = pageModelObj.pages.find(p => p.index === pageIndex);
+      if (!mp) return { error: `עמוד ${pageIndex} לא נמצא ב-PageModel` };
+      return {
+        schema: 'page-debug-v1',
+        profile: 'unified',
+        source: 'PageModel',
+        pageIndex,
+        type: mp.type,
+        geometry: mp.geometry,                      // מידות/שוליים/טורים מהמודל
+        ...(mp.spanning ? { spanning: mp.spanning } : {}),
+        ...(mp.shaar ? { shaar: mp.shaar } : {}),
+        ...(mp.custom ? { custom: { boxes: mp.custom.boxes.length, images: mp.custom.images.length } } : {}),
+        lines: (mp.lines || []).map(ln => ({
+          id: ln.id, sourceTokenId: ln.sourceTokenId != null ? ln.sourceTokenId : null,
+          kind: ln.kind || null, area: ln.area || null,
+          x: ln.x, y: ln.y, w: ln.w, h: ln.h,
+          words: (ln.words || []).length, projected: ln.projected !== false
+        })),
+        footnotes: (mp.footnotes || []).map(n => ({ noteId: n.noteId, anchorId: n.anchorId || null, marker: n.marker || null })),
+        sideNotes: (mp.sideNotes || []).map(n => ({ noteId: n.noteId, anchorId: n.anchorId || null })),
+        images: (mp.images || []).length,
+        decorations: (mp.decorations || []).length,
+        folioDisplay: mp.folioDisplay || '',
+        pageNumber: mp.pageNumber != null ? mp.pageNumber : null,
+        findings: findingsSlice,
+        ledger: ledgerSlice,                          // פרוסת ledger לעמוד זה
+        trace: traceSlice,                            // פרוסת מסלול לעמוד זה
+        layoutHash: result.layoutHash
+      };
+    }
+    const pg = result.pages.find(p => p.index === pageIndex);
+    if (!pg) return { error: `עמוד ${pageIndex} לא נמצא` };
     return {
       schema: 'page-debug-v1',
+      profile: 'legacy',
       pageIndex,
       type: pg.type,
       template: pg.template,                       // גיאומטריה מלאה: מידות/שוליים/טורים/תיבת תוכן
@@ -1560,7 +1614,7 @@ function createApp(doc, opts = {}) {
     refreshFontCatalog: (families) => settingsPanel.refreshFontCatalog && settingsPanel.refreshFontCatalog(families), // **03.11**
     imudLibrary: opts.imudLibrary || null, // **03.11:** ספריית IMUD לניפוי/הרחבות
     applyLegacyDefaults, // **03.11(ד):** נתיב יחיד להחלת ברירות המקור (פאנל + אתחול)
-    getState: () => ({ lightDirty, heavyDirty, lastLightRefreshMs, hasResult: !!result, pages: result ? result.pages.length : 0, layoutHash: result ? result.layoutHash : null, gen: typesetGen }),
+    getState: () => ({ lightDirty, heavyDirty, lastLightRefreshMs, hasResult: !!result, pages: canonicalPages().length, layoutHash: result ? result.layoutHash : null, gen: typesetGen }),
     setText: (t) => { text = String(t != null ? t : ''); editor.setText(text); },
     getText: () => editor.getText(),
     getSettings: () => settings,
@@ -9011,7 +9065,9 @@ function buildPreviewTab(doc, opts) {
 
   let zoom = 100;
   let pageEls = new Map(); // pageIndex → element (במצב וירטואלי: רק החלון החי)
-  let lastResult = null;
+  // **9c.3:** אין עוד lastResult — מקור העמודים הקנוני לשני הפרופילים הוא
+  // virtual.pages (unified = עמודי PageModel; legacy = result.pages). כל
+  // הניווט/המחוונים/מפת הגיליונות נגזרים ממנו — אין תלות סמויה ב-result.pages.
   let lastScrollTarget = null;
 
   // ---- D-84: רינדור מחלונות (virtualization) לספרים ארוכים ----
@@ -9051,7 +9107,7 @@ function buildPreviewTab(doc, opts) {
     // לחיצה על עמוד = גלילה אליו + סנכרון סמן (REQ-UI-05)
     el.addEventListener('click', () => {
       lastScrollTarget = page.index;
-      pageIndicator.textContent = `עמוד ${page.index + 1} מתוך ${virtual.pages.length || (lastResult && lastResult.pages.length) || 0}`;
+      pageIndicator.textContent = `עמוד ${page.index + 1} מתוך ${virtual.pages.length || 0}`;
       opts.onActivatePage && opts.onActivatePage(page.index);
     });
     return el;
@@ -9295,10 +9351,13 @@ function buildPreviewTab(doc, opts) {
   // **S5.2 (12):** מפת גיליון→אינדקס לקפיצה לפי מספר עברי — אל העמוד שמציג
   // את הגיליון המבוקש, לא אל האינדקס הפיזי (פער מלא כשעמודי שער/תוכן אינם
   // נספרים). עמוד ללא גיליון נכנס תחת אינדקס+1 (ההתנהגות הקודמת).
+  // **9c.3:** המקור הוא virtual.pages — עמודי ה-PageModel בפרופיל המאוחד
+  // (folioDisplay קיים בכל עמוד מודל) או result.pages במורשת. נבנית אחרי
+  // קביעת מקור העמודים ב-setResult.
   let folioIndex = new Map();
   function rebuildFolioIndex() {
     folioIndex = new Map();
-    const pages = (lastResult && lastResult.pages) || [];
+    const pages = virtual.pages || [];
     for (let i = 0; i < pages.length; i++) { // מעבר ראשון: גיליונות אמיתיים — עדיפות
       const n = folioNumberOf(pages[i] && pages[i].folioDisplay);
       if (n != null && !folioIndex.has(n)) folioIndex.set(n, i);
@@ -9324,8 +9383,6 @@ function buildPreviewTab(doc, opts) {
     const keepView = !!(options && options.keepView);
     const prevZoom = keepView ? zoom : null;
     const anchor = keepView ? currentScrollAnchor() : null;
-    lastResult = serializedResult;
-    rebuildFolioIndex(); // **S5.2 (12):** המפה נבנית מחדש עם כל תוצאה
     canvas.textContent = '';
     pageEls = new Map();
     // **פרוסה 3 (§2.3):** קביעת הפרופיל — מפורשת מהקריאה; ברירת המחדל
@@ -9343,14 +9400,18 @@ function buildPreviewTab(doc, opts) {
       errEl.textContent = profileError;
       canvas.appendChild(errEl);
       virtual.on = false; virtual.pages = []; virtual.rendered = new Set();
+      folioIndex = new Map(); // **9c.3:** אין עמודים — אין מפת גיליונות
       pageIndicator.textContent = 'שגיאת פרופיל — אין מודל עמוד';
       return;
     }
+    // **9c.3:** מקור העמודים הקנוני — unified: עמודי ה-PageModel בלבד;
+    // legacy: result.pages (ענף 9c.4-marker). מכאן ואילך הכל נגזר מ-virtual.pages.
     const pageSource = profile === 'unified' ? modelPages : (serializedResult.pages || []);
     virtual.on = Array.isArray(pageSource) && pageSource.length > VIRTUAL_THRESHOLD;
     virtual.settings = settings;
     virtual.pages = pageSource;
     virtual.rendered = new Set();
+    rebuildFolioIndex(); // **S5.2 (12) + 9c.3:** מהמקור הקנוני (virtual.pages)
     if (!virtual.on) {
       // מסמך קטן — רינדור מלא (ההתנהגות המקורית, ללא שינוי)
       for (const page of virtual.pages) {
@@ -9370,8 +9431,8 @@ function buildPreviewTab(doc, opts) {
       }
       renderWindow(0, Math.min(2 * VIRTUAL_WINDOW, virtual.pages.length - 1));
     }
-    pageIndicator.textContent = serializedResult.pages.length
-      ? `עמוד 1 מתוך ${serializedResult.pages.length}${virtual.on ? ' (תצוגת חלון)' : ''}` : 'אין עמודים';
+    pageIndicator.textContent = virtual.pages.length
+      ? `עמוד 1 מתוך ${virtual.pages.length}${virtual.on ? ' (תצוגת חלון)' : ''}` : 'אין עמודים';
     if (keepView) {
       // **S5.2 (7):** שחזור הזום והיעד שנשמרו לפני פינוי הקנבס (scrollToPage
       // מעדכן גם את מחוון העמוד); רק מסמך חדש באמת מאפס ל-100% ולראש.
@@ -9387,7 +9448,8 @@ function buildPreviewTab(doc, opts) {
     if (virtual.on) renderWindow(pageIndex - VIRTUAL_WINDOW, pageIndex + VIRTUAL_WINDOW); // D-84: רינדור לפני גלילה
     const el = pageEls.get(pageIndex);
     if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start' });
-    if (lastResult) pageIndicator.textContent = `עמוד ${pageIndex + 1} מתוך ${lastResult.pages.length}`;
+    // **9c.3:** המחוון מ-virtual.pages — מקור הקנוני (לא result.pages)
+    pageIndicator.textContent = `עמוד ${pageIndex + 1} מתוך ${virtual.pages.length}`;
   }
 
   // קפיצה לפי מספר עברי — שקוף לפורמט המספור שנבחר (hebrew/daf-hebrew)
@@ -9401,8 +9463,9 @@ function buildPreviewTab(doc, opts) {
     if (n == null) { pageIndicator.textContent = 'מספר עברי לא תקין'; return null; }
     // **S5.2 (12):** גיליון אמיתי (folioDisplay) גובר על האינדקס הפיזי; עמודים
     // ללא גיליון נכנסו למפה תחת אינדקס+1 — מספר שאינו במפה ⇒ "אין עמוד".
+    // **9c.3:** הבדיקה היא על virtual.pages (המקור הקנוני), לא על result.
     const idx = folioIndex.has(n) ? folioIndex.get(n) : null;
-    if (!lastResult || idx == null) {
+    if (idx == null || !virtual.pages.length) {
       pageIndicator.textContent = `אין עמוד ${n}`; return null;
     }
     scrollToPage(idx);
@@ -15311,6 +15374,11 @@ function readConfig(imud, settings) {
 }
 
 // ---------- טוקניזציה (כמו performTypeset של המקור) ----------
+/** **9c (§5.1):** דקדוק הכותרות של המורשת — מיוצא ממקום השימוש בפועל
+ * (tokenizeDoc) כדי שכלי האבחון tools/stage9/diff-h7-grammar.js ייבא אותו
+ * ולא יחזיק עותק עצמאי שמתיישן. קבוצות: 1=רמה, 2=מספר, 3=טקסט. */
+const LEGACY_HEADING_RE = /^כותרת\s*(\d+)(?:\s+מספר\s+(\d+))?.*?[-–—]\s*(.*)$/;
+
 function tokenizeDoc(rawText, cfg) {
   let text = stripEditorialNotes(rawText);
   const { meta, text: noMeta } = parseMetadata(text);
@@ -15359,7 +15427,7 @@ function tokenizeDoc(rawText, cfg) {
       pendingEndNote = line.slice(endPrefix.length).replace(/^[:\-–—]\s*/, '').trim();
       continue;
     }
-    const hMatch = line.match(/^כותרת\s*(\d+)(?:\s+מספר\s+(\d+))?.*?[-–—]\s*(.*)$/);
+    const hMatch = line.match(LEGACY_HEADING_RE); // **9c (§5.1):** מקור יחיד — הייצוא משמש גם את כלי האבחון
     if (hMatch) {
       const lvl = parseInt(hMatch[1], 10);
       const txt = (hMatch[3] || '').trim();
@@ -18822,7 +18890,7 @@ module.exports = {
   GEO, SZ, HEADING_MODES, toGematria, stripEditorialNotes, parseMetadata,
   tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset,
   FLOW_BOTTOM, SINGLE_W, wrapText, headingItemH, legacyLayoutHashDigest,
-  parenCenterRaisePx
+  parenCenterRaisePx, LEGACY_HEADING_RE
 };
 
 };
@@ -20067,7 +20135,7 @@ function buildTestingTab(doc, opts) {
   covSec.appendChild(covGrid);
   root.appendChild(covSec);
 
-  function setResult(serializedResult) {
+  function setResult(serializedResult, options) {
     lastResult = serializedResult;
     const report = serializedResult.report;
     findings = (report && report.findings) || [];
@@ -20090,7 +20158,11 @@ function buildTestingTab(doc, opts) {
     renderTrace();
 
     // ---- לוח הכיסוי: סיווג מפורש לכל עמוד (evaluated / excluded+reason) ----
-    const pages = serializedResult.pages || [];
+    // **9c.3:** המקור הקנוני לפי הפרופיל — עמודי ה-PageModel במאוחד
+    // (type/index בכל עמוד מודל), עמודי התוצאה במורשת. אין תלות ב-result.pages
+    // כשהפרופיל המאוחד פעיל.
+    const unifiedPages = (options && options.profile === 'unified' && options.pageModel && Array.isArray(options.pageModel.pages)) ? options.pageModel.pages : null;
+    const pages = unifiedPages || serializedResult.pages || [];
     const byType = {};
     let inScope = 0, structural = 0;
     const structuralReasons = [];
@@ -23836,22 +23908,42 @@ function lineStarts(text) {
   return starts;
 }
 
-function buildCaretMap(rawText, serializedResult) {
-  const { bodyLines } = lexDocument(rawText);
-  const tokens = serializedResult.tokens; // [{id, type, level, raw}] — סדר הפקוד
-  const pages = serializedResult.pages;
+/** **9c.3:** מזהה הטוקן של שורה — לשני המקורות: עמודי PageModel (sourceTokenId)
+ * או עמודי תוצאה מורשת (tokenId/meta.tokenId). המקרין אינו קובע מקור —
+ * הקריאה מעבירה את מערך העמודים הקנוני לפי הפרופיל. */
+function lineTokenId(ln) {
+  if (ln == null) return null;
+  if (ln.sourceTokenId != null) return ln.sourceTokenId;
+  if (ln.tokenId != null) return ln.tokenId;
+  return ln.meta && ln.meta.tokenId != null ? ln.meta.tokenId : null;
+}
 
-  // tokenId → אינדקס עמוד ראשון שמכיל אותו (כולל פס חוצה־טורים — FWD-1)
+/** **9c.3:** שורות העמוד הנושאות טוקנים — מודל: lines[] (כולל שורות spanning
+ * שנכנסו ל-lines); מורשת: spanning.lines + columns[].flat(). */
+function tokenLinesOfPage(pg) {
+  if (!pg) return [];
+  if (Array.isArray(pg.lines)) return pg.lines; // PageModel
+  return [...((pg.spanning && pg.spanning.lines) || []), ...(pg.columns || []).flat()]; // מורשת
+}
+
+function buildCaretMap(rawText, tokensOrResult, pagesArg) {
+  const { bodyLines } = lexDocument(rawText);
+  // **9c.3:** שני אופני קריאה: (a) buildCaretMap(text, tokens, pages) —
+  // העמודים הם המערך הקנוני שהועבר (מודל או מורשת); (b) buildCaretMap(text,
+  // result) — תאימות לאחור (עמודי תוצאה). הטוקנים הם מידע זהות מקור
+  // (DocumentModel) — לא גיאומטריה.
+  const tokens = Array.isArray(tokensOrResult) ? tokensOrResult : tokensOrResult.tokens;
+  const pages = Array.isArray(tokensOrResult) ? (pagesArg || []) : tokensOrResult.pages;
+
+  // tokenId → אינדקס עמוד ראשון שמכיל אותו (כולל פס חוצה־טורים — FWD-1).
+  // **9c.3:** המקור לפי הפרופיל — עמודי המודל (sourceTokenId) או עמודי התוצאה.
   const pageByToken = new Map();
   const tokensByPage = new Map();
   for (const pg of pages) {
-    const lines = [
-      ...((pg.spanning && pg.spanning.lines) || []),
-      ...(pg.columns || []).flat()
-    ];
+    const lines = tokenLinesOfPage(pg);
     const set = new Set();
     for (const ln of lines) {
-      const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
+      const tok = lineTokenId(ln);
       if (tok == null) continue;
       set.add(tok);
       if (!pageByToken.has(tok)) pageByToken.set(tok, pg.index);

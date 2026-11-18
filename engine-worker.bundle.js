@@ -2568,8 +2568,15 @@ function hasUnclosedNote(text, open, close) {
 }
 
 /** **9b.4:** שורה מבנית שנבלעת לתוך הדבקת הערה — חייבת ממצא מפורש (לא היעלמות
- * שקטה): כותרת / קידומת הערת-סיום / הוראת כותרת עמודי ההערות. */
-const GLUE_STRUCTURAL_RE = /^(כותרת\s*[0-7]\b|הער(?:ת|ות)\s*סיום(?=$|[\s\-–—])|חלק\s+[א-ת]+(?=$|[\s\-–—])|הקדמה(?=$|[\s\-–—]))/;
+ * שקטה): כותרת / קידומת הערת-סיום / הוראת כותרת עמודי ההערות.
+ * **9c (§5.2 — הדקדוק האמיתי הוא המפרס):** הצורות כאן חייבות לשקף את הדקדוק
+ * בפועל, לא חזות דומה — כותרת/חלק/הקדמה/הערות-סיום (מחלקה) דורשות מקף
+ * מפריד כמו HEADING_RE/ENDNOTE_CLASS_RE; הערת-סיום יחידה מופיעה גם כמספרית
+ * (`הערת סיום-1 - …` / `הערת סיום 1 - …` — ENDNOTE_NUMBERED), ולכן אחרי
+ * "סיום" מותר רק מקף או ספרה (מרחב/סוף לבדם אינם הוראה). צורות דומות בלי
+ * מקף (`הקדמה לספר`, `חלק בגדול`, `כותרת 3 משהו`) אינן הוראות מבניות ואינן
+ * מסומנות — מנע אבחוני שווא (בדיקות שלילה ב-s9c-tooling-parity). */
+const GLUE_STRUCTURAL_RE = /^(?:כותרת\s*[0-7](?:\s+מספר\s+\d+)?(?:\s*\([^)]*\))*\s*[-–—]|הער(?:ת|ות)\s*סיום(?=\s*(?:[-–—]|\d))|חלק\s+[א-ת]+\s*[-–—]|הקדמה\s*[-–—])/;
 
 const ATOMIC_SPACE = '\uE000'; // V3/V4 breakthrough: רווח אטומי בתוך הערה — למדידה בלבד
 
@@ -13384,6 +13391,11 @@ function readConfig(imud, settings) {
 }
 
 // ---------- טוקניזציה (כמו performTypeset של המקור) ----------
+/** **9c (§5.1):** דקדוק הכותרות של המורשת — מיוצא ממקום השימוש בפועל
+ * (tokenizeDoc) כדי שכלי האבחון tools/stage9/diff-h7-grammar.js ייבא אותו
+ * ולא יחזיק עותק עצמאי שמתיישן. קבוצות: 1=רמה, 2=מספר, 3=טקסט. */
+const LEGACY_HEADING_RE = /^כותרת\s*(\d+)(?:\s+מספר\s+(\d+))?.*?[-–—]\s*(.*)$/;
+
 function tokenizeDoc(rawText, cfg) {
   let text = stripEditorialNotes(rawText);
   const { meta, text: noMeta } = parseMetadata(text);
@@ -13432,7 +13444,7 @@ function tokenizeDoc(rawText, cfg) {
       pendingEndNote = line.slice(endPrefix.length).replace(/^[:\-–—]\s*/, '').trim();
       continue;
     }
-    const hMatch = line.match(/^כותרת\s*(\d+)(?:\s+מספר\s+(\d+))?.*?[-–—]\s*(.*)$/);
+    const hMatch = line.match(LEGACY_HEADING_RE); // **9c (§5.1):** מקור יחיד — הייצוא משמש גם את כלי האבחון
     if (hMatch) {
       const lvl = parseInt(hMatch[1], 10);
       const txt = (hMatch[3] || '').trim();
@@ -16895,7 +16907,7 @@ module.exports = {
   GEO, SZ, HEADING_MODES, toGematria, stripEditorialNotes, parseMetadata,
   tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset,
   FLOW_BOTTOM, SINGLE_W, wrapText, headingItemH, legacyLayoutHashDigest,
-  parenCenterRaisePx
+  parenCenterRaisePx, LEGACY_HEADING_RE
 };
 
 };
