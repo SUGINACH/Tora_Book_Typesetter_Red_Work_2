@@ -507,7 +507,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-18-s9c2'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-18-s9c3'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -9077,7 +9077,7 @@ function buildPreviewTab(doc, opts) {
   // placeholders בגובה האמיתי ורינדור עצל של חלון סביב הגלילה/היעד.
   const VIRTUAL_THRESHOLD = 60;
   const VIRTUAL_WINDOW = 4; // ריפוד משני צידי הטווח הנראה
-  const virtual = { on: false, pages: [], settings: null, rendered: new Set(), phW: 794, phH: 1123 };
+  const virtual = { on: false, pages: [], settings: null, rendered: new Set(), phW: 794, phH: 1123, tocLinks: [] };
   // **פרוסה 3 (§2.3 — הפרדת פרופילים מפורשת):** legacy = הרנדרר הישן (עד
   // שלב 9); unified = המקרין הטהור מה-PageModel בלבד. בפרופיל unified היעדר
   // מודל הוא **שגיאה מפורשת** — לא נפילה שקטה לרנדרר הישן (§2.3).
@@ -9086,10 +9086,16 @@ function buildPreviewTab(doc, opts) {
   let scrollRaf = null;
 
   /** בניית אלמנט עמוד אחד (מקור יחיד לרינדור מלא ולווירטואלי) — כולל ⏬ ולחיצה.
-   * פרופיל unified: העמוד הוא עמוד PageModel והרינדור טהור מהמודל (§2.2). */
+   * פרופיל unified: העמוד הוא עמוד PageModel והרינדור טהור מהמודל (§2.2).
+   * **9c.3:** מלבני קישורי ה-TOC מועברים למקרין (§4.3 — TOC click). */
   function buildPageEl(page) {
+    // **9c.3:** הנתיב המאוחד — המקרין הטהור מה-PageModel בלבד (חסר-מודל =
+    // שגיאת פרופיל מפורשת ב-setResult, לעיל). נתיב ה-renderPage הישן הוא
+    // **9c.4-marker** — צריכת result.pages הגולמיים של פרופיל המורשת בלבד;
+    // יוסר עם הסרת המנוע ב-9c.4 (אחרי הוכחת DOM parity — s8d).
     const el = profile === 'unified'
       ? renderModelPage(page, virtual.settings, doc, {
+          tocLinks: virtual.tocLinks,
           onDiagnostic: (d) => { if (opts.onModelDiagnostic) opts.onModelDiagnostic(page.index, d); }
         })
       : renderPage(page, virtual.settings, doc);
@@ -9407,6 +9413,9 @@ function buildPreviewTab(doc, opts) {
     // **9c.3:** מקור העמודים הקנוני — unified: עמודי ה-PageModel בלבד;
     // legacy: result.pages (ענף 9c.4-marker). מכאן ואילך הכל נגזר מ-virtual.pages.
     const pageSource = profile === 'unified' ? modelPages : (serializedResult.pages || []);
+    // **9c.3 (§4.3):** מלבני קישורי ה-TOC מהמודל — מועברים למקרין (קליק מסונכרן).
+    virtual.tocLinks = (profile === 'unified' && options.pageModel && options.pageModel.document && Array.isArray(options.pageModel.document.tocLinks))
+      ? options.pageModel.document.tocLinks : [];
     virtual.on = Array.isArray(pageSource) && pageSource.length > VIRTUAL_THRESHOLD;
     virtual.settings = settings;
     virtual.pages = pageSource;
@@ -19887,6 +19896,28 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     root.appendChild(renderModelDecoration(d, doc, diags));
   }
 
+  // **9c.3 (§4.3 — TOC click בתצוגה החיה):** מלבני הקישור מהמודל
+  // (document.tocLinks) מוקרנים כשכבת-על לחיצה — אותה הקרנה כמו בייצוא
+  // ה-HTML העצמאי. הקריאה מעבירה את הרשימה דרך opts.tocLinks; היעדים
+  // הם ה-id של אלמנטי העמוד (#page-N) — קליק מסונכרן ב-preview-tab.
+  if (Array.isArray(opts.tocLinks)) {
+    for (const l of opts.tocLinks) {
+      if (l.page !== mp.index) continue;
+      const a = doc.createElement('a');
+      a.className = 'toc-link';
+      a.setAttribute('href', `#page-${l.targetPage}`);
+      a.setAttribute('dir', 'rtl');
+      if (a.style) {
+        a.style.position = 'absolute';
+        a.style.left = `${Math.round(l.x * 100) / 100}px`;
+        a.style.top = `${Math.round(l.y * 100) / 100}px`;
+        a.style.width = `${Math.round(l.w * 100) / 100}px`;
+        a.style.height = `${Math.round(l.h * 100) / 100}px`;
+      }
+      root.appendChild(a);
+    }
+  }
+
   // חשבונאות גלויה (§2.4): פריט שלא מוקרן — diagnostic בר-צפייה, לא היעלמות
   const projectedLineIds = new Set([...(mp.lines || [])].map(l => l.id));
   for (const ln of (mp.lines || [])) {
@@ -24237,29 +24268,12 @@ function exportHtmlFromModel(model, settings, doc, meta = {}) {
     throw new Error('exportHtmlFromModel: נדרש PageModel תקין (pagemodel-v1) — ייצוא מהמודל בלבד, אין נתיב חלופי');
   }
   const pagesHtml = [];
-  const linkGetter = typeof doc.createElement === 'function' ? doc : null;
+  // **9c.3 (§4.3 — מקור יחיד לקישורי TOC):** המקרין מהמודל מקרין את מלבני
+  // הקישור (document.tocLinks) כשכבת-על לחיצה — אותו קוד כמו התצוגה החיה;
+  // אין עוד הוספת קישורים ידנית כאן (מנע סטייה בין התצוגה לייצוא).
+  const tocLinks = (model.document && Array.isArray(model.document.tocLinks)) ? model.document.tocLinks : [];
   for (const mp of model.pages) {
-    const el = renderModelPage(mp, settings, doc);
-    // **קישורי TOC (§3 — bookmarks/קישורים):** מלבני הקישור מהמודל — הקרנה
-    // טהורה לעוגן <a href="#page-N">; היעדים הם ה-id של אלמנטי העמוד.
-    const links = (model.document && model.document.tocLinks || []).filter(l => l.page === mp.index);
-    if (links.length && linkGetter) {
-      for (const l of links) {
-        const a = doc.createElement('a');
-        a.className = 'toc-link';
-        a.setAttribute('href', `#page-${l.targetPage}`);
-        a.setAttribute('dir', 'rtl');
-        if (a.style) {
-          a.style.position = 'absolute';
-          a.style.left = `${Math.round(l.x * 100) / 100}px`;
-          a.style.top = `${Math.round(l.y * 100) / 100}px`;
-          a.style.width = `${Math.round(l.w * 100) / 100}px`;
-          a.style.height = `${Math.round(l.h * 100) / 100}px`;
-        }
-        el.appendChild(a);
-      }
-    }
-    pagesHtml.push(elementOuterHtml(el));
+    pagesHtml.push(elementOuterHtml(renderModelPage(mp, settings, doc, { tocLinks })));
   }
   const sizeMm = pageMmOf(settings);
   const pageRules = settings['export-html-page-rules'] !== false
