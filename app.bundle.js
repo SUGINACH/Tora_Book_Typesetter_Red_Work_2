@@ -506,7 +506,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-18-s8e'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-18-s9b'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -1766,14 +1766,16 @@ const registry = [
   // **S9 (D-62):** מיומנות מספור TOC מלאה (Orange eb21383 — 4 מפתחות; הרביעי כבר קיים):
   // count = מספור שורות תוכן־העניינים עצמן; show = האם עמודי התוכן מציגים גיליון משלהם (כשנספרים).
   K('toc-general-enabled', 'bool', true, P.TOC, 'chk-toc-general', ['decoration/toc-builder'], 'fx:toc-gen'),
-  K('toc-detail-enabled', 'bool', false, P.TOC, 'chk-toc-detail', ['decoration/toc-builder'], 'fx:toc-det'),
+  // **D-107 (9b.2):** תוכן כללי ומפורט פעילים בברירת המחדל; כללי = רמות 1–6,
+  // מפורט = 2–6, רמה 7 מוסתרת בשניהם; inline grouping כבוי בכל הרמות.
+  K('toc-detail-enabled', 'bool', true, P.TOC, 'chk-toc-detail', ['decoration/toc-builder'], 'fx:toc-det'),
   K('general-toc-count-numbering', 'bool', true, P.TOC, 'chk-toc-count', ['decoration/toc-builder'], 'fx:toc-count', { note: 'שוחזר מ‑V1/V2 (REQ-HDR-03/HDR-05)' }),
   K('detailed-toc-count-numbering', 'bool', true, P.TOC, 'chk-dtoc-count', ['decoration/toc-builder'], 'fx:dtoc-count', { note: 'S9: מספור שורות בתוכן־עניינים המפורט (Orange eb21383 — הושלם)' }),
   K('general-toc-show-numbering', 'bool', true, P.TOC, 'chk-gtoc-show', ['decoration/toc-builder'], 'fx:gtoc-show', { note: 'S9: עמודי תוכן־עניינים כלליים מציגים גיליון כשהם נספרים (count-toc-pages=true)' }),
   K('detailed-toc-show-numbering', 'bool', true, P.TOC, 'chk-dtoc-show', ['decoration/toc-builder'], 'fx:dtoc-show', { note: 'S9: עמודי תוכן־עניינים מפורטים מציגים גיליון כשהם נספרים' }),
   ...[1, 2, 3, 4, 5, 6, 7].flatMap(lvl => [
-    K(`toc-level-${lvl}-show`, 'bool', lvl <= 2, P.TOC, `chk-toc-l${lvl}`, ['decoration/toc-builder'], `fx:toc-l${lvl}`),
-    K(`toc-level-${lvl}-inline`, 'bool', lvl >= 4, P.TOC, `chk-toc-l${lvl}-inline`, ['decoration/toc-builder'], `fx:toc-l${lvl}-inline`),
+    K(`toc-level-${lvl}-show`, 'bool', lvl <= 6, P.TOC, `chk-toc-l${lvl}`, ['decoration/toc-builder'], `fx:toc-l${lvl}`),
+    K(`toc-level-${lvl}-inline`, 'bool', false, P.TOC, `chk-toc-l${lvl}-inline`, ['decoration/toc-builder'], `fx:toc-l${lvl}-inline`),
   ]),
 
   // ---- שערים/נושאים (THEMES) ---- **S8 (D-54): ערכות נושא חיות — הפעלה מלאה (F-10 נעול)**
@@ -1804,6 +1806,13 @@ const registry = [
   K('imud-divider', 'string', '', P.ORNAMENTS, 'inp-imud-divider', ['decoration/ornament-plan'], 'fx:imud-divider', { note: 'מפריד סעיפים מעוצב (323 עיצובים) — משמש מפרידי שער/כותרות במצב תמונה' }),
   K('imud-book-title', 'string', '', P.THEMES, 'inp-imud-book-title', ['output/dom-renderer'], 'fx:imud-book-title', { note: 'כותרת הספר בשער (עקיפת מטא-נתוני המסמך אם הוגדר)' }),
   K('imud-book-subtitle', 'string', '', P.THEMES, 'inp-imud-book-subtitle', ['output/dom-renderer'], 'fx:imud-book-subtitle', { note: 'כותרת־משנה בשער' }),
+  // **9b.5 (D-107 + F-9a-8):** ארבעת מקטעי השער האחורי — שדות בעלי משמעות עם
+  // שמות הניתנים להתאמה. מקור: שדה הפאנל (ייבוא inp-book-back-*) גובר; נפילה
+  // למטא המסמך. בלי ערך — אין מקטע (אין המצאת ערכים; כמו במקור שהופורט).
+  K('imud-book-back-copyright', 'string', '', P.THEMES, 'inp-book-back-copyright', ['output/shaar-content'], 'fx:imud-book-back-copyright', { note: 'זכויות יוצרים בשער האחורי (D-107; עקיפת מטא-נתוני המסמך אם הוגדר)' }),
+  K('imud-book-back-publishing', 'string', '', P.THEMES, 'inp-book-back-publishing', ['output/shaar-content'], 'fx:imud-book-back-publishing', { note: 'פרטי הוצאה לאור בשער האחורי (D-107)' }),
+  K('imud-book-back-contact', 'string', '', P.THEMES, 'inp-book-back-contact', ['output/shaar-content'], 'fx:imud-book-back-contact', { note: 'פרטי קשר בשער האחורי (D-107)' }),
+  K('imud-book-back-extra', 'string', '', P.THEMES, 'inp-book-back-extra', ['output/shaar-content'], 'fx:imud-book-back-extra', { note: 'פרטים נוספים בשער האחורי (D-107)' }),
   // **03.11(ד) — דיווח משתמש 3 ("אין עמודי שער, אין כותרות עליונות, שום דבר מהגדרות
   // ברירת המחדל אינו קיים"): המקור (IMUD_TORANI default_settings.json) מחזיק
   // show-main-shaar=true / show-sub-shaar=true / show-back-shaar=true כברירת מחדל —
@@ -1834,7 +1843,6 @@ const registry = [
   K('shaar-year-size-pt', 'number', 12, P.THEMES, 'rng-shaar-year-size', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-year-size', { min: 8, max: 20, note: 'מקור: s-sh-year=12' }),
   K('shaar-back-text-font', 'font', 'אסיסטנט קל מאוד', P.THEMES, 'sel-shaar-back-text-font', ['output/shaar-content', 'output/dom-renderer', 'layout/legacy-imud-flow'], 'fx:shaar-back-text-font', { note: 'S74 (בעיה 5): כל שורות השער האחורי ב-Assistant ExtraLight — ברירת המחדל של הגרסה הישנה בפועל (נמדד בייחוס עמ׳ 2: חמש השורות Assistant-ExtraLight 13.5/10/11/10/9.5pt). עד S74 ירשו את גוף המסמך' }),
   K('shaar-back-text-color', 'color', '#000000', P.THEMES, 'inp-shaar-back-text-color', ['layout/legacy-imud-flow', 'output/geometry-projector', 'output/dom-renderer'], 'fx:shaar-back-text-color', { note: 'S73: צבע טקסט השער האחורי — שחור כברירת מחדל' }),
-  K('shaar-back-text-size-pt', 'number', 10.5, P.THEMES, 'rng-shaar-back-text-size', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-back-text-size', { min: 8, max: 16, note: 'מקור: שורות ההמשך 10.5pt (השורה הראשונה 13pt מודגשת)' }),
   // נתוני הספר לשערים — ממופים מ-inp-book-* של המקור; בלי ערך — נופלים למטא-נתוני המסמך
   K('imud-book-desc', 'string', '', P.THEMES, 'inp-imud-book-desc', ['output/dom-renderer'], 'fx:imud-book-desc', { note: 'תיאור בשער הראשי (מקור: inp-book-desc ← «נושא מפורט»)' }),
   K('imud-book-sections', 'string', '', P.THEMES, 'inp-imud-book-sections', ['output/dom-renderer'], 'fx:imud-book-sections', { note: 'פרטי מהדורא בשער הראשי (מקור: inp-book-sections ← «פרטי מהדורא»)' }),
@@ -6094,7 +6102,7 @@ const BINDINGS = [
     "panelKey": "TOC",
     "labelHe": "תוכן־עניינים מפורט מופעל",
     "type": "bool",
-    "def": false,
+    "def": true,
     "enum": null,
     "min": null,
     "max": null,
@@ -6220,7 +6228,7 @@ const BINDINGS = [
     "panelKey": "TOC",
     "labelHe": "רמת תוכן 3 — הצגה",
     "type": "bool",
-    "def": false,
+    "def": true,
     "enum": null,
     "min": null,
     "max": null,
@@ -6248,7 +6256,7 @@ const BINDINGS = [
     "panelKey": "TOC",
     "labelHe": "רמת תוכן 4 — הצגה",
     "type": "bool",
-    "def": false,
+    "def": true,
     "enum": null,
     "min": null,
     "max": null,
@@ -6262,7 +6270,7 @@ const BINDINGS = [
     "panelKey": "TOC",
     "labelHe": "רמת תוכן 4 — שורה משורטטת (inline)",
     "type": "bool",
-    "def": true,
+    "def": false,
     "enum": null,
     "min": null,
     "max": null,
@@ -6276,7 +6284,7 @@ const BINDINGS = [
     "panelKey": "TOC",
     "labelHe": "רמת תוכן 5 — הצגה",
     "type": "bool",
-    "def": false,
+    "def": true,
     "enum": null,
     "min": null,
     "max": null,
@@ -6290,7 +6298,7 @@ const BINDINGS = [
     "panelKey": "TOC",
     "labelHe": "רמת תוכן 5 — שורה משורטטת (inline)",
     "type": "bool",
-    "def": true,
+    "def": false,
     "enum": null,
     "min": null,
     "max": null,
@@ -6304,7 +6312,7 @@ const BINDINGS = [
     "panelKey": "TOC",
     "labelHe": "רמת תוכן 6 — הצגה",
     "type": "bool",
-    "def": false,
+    "def": true,
     "enum": null,
     "min": null,
     "max": null,
@@ -6318,7 +6326,7 @@ const BINDINGS = [
     "panelKey": "TOC",
     "labelHe": "רמת תוכן 6 — שורה משורטטת (inline)",
     "type": "bool",
-    "def": true,
+    "def": false,
     "enum": null,
     "min": null,
     "max": null,
@@ -6346,7 +6354,7 @@ const BINDINGS = [
     "panelKey": "TOC",
     "labelHe": "רמת תוכן 7 — שורה משורטטת (inline)",
     "type": "bool",
-    "def": true,
+    "def": false,
     "enum": null,
     "min": null,
     "max": null,
@@ -6650,6 +6658,62 @@ const BINDINGS = [
     "max": null,
     "step": null,
     "note": "כותרת־משנה בשער"
+  },
+  {
+    "id": "imud-book-back-copyright",
+    "control": "inp-book-back-copyright",
+    "panel": "ערכות נושא, שערים ורקעים",
+    "panelKey": "THEMES",
+    "labelHe": "imud-book-back-copyright",
+    "type": "string",
+    "def": "",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "זכויות יוצרים בשער האחורי (D-107; עקיפת מטא-נתוני המסמך אם הוגדר)"
+  },
+  {
+    "id": "imud-book-back-publishing",
+    "control": "inp-book-back-publishing",
+    "panel": "ערכות נושא, שערים ורקעים",
+    "panelKey": "THEMES",
+    "labelHe": "imud-book-back-publishing",
+    "type": "string",
+    "def": "",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "פרטי הוצאה לאור בשער האחורי (D-107)"
+  },
+  {
+    "id": "imud-book-back-contact",
+    "control": "inp-book-back-contact",
+    "panel": "ערכות נושא, שערים ורקעים",
+    "panelKey": "THEMES",
+    "labelHe": "imud-book-back-contact",
+    "type": "string",
+    "def": "",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "פרטי קשר בשער האחורי (D-107)"
+  },
+  {
+    "id": "imud-book-back-extra",
+    "control": "inp-book-back-extra",
+    "panel": "ערכות נושא, שערים ורקעים",
+    "panelKey": "THEMES",
+    "labelHe": "imud-book-back-extra",
+    "type": "string",
+    "def": "",
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "פרטים נוספים בשער האחורי (D-107)"
   },
   {
     "id": "shaar-main-enabled",
@@ -6958,20 +7022,6 @@ const BINDINGS = [
     "max": null,
     "step": null,
     "note": "S73: צבע טקסט השער האחורי — שחור כברירת מחדל"
-  },
-  {
-    "id": "shaar-back-text-size-pt",
-    "control": "rng-shaar-back-text-size",
-    "panel": "ערכות נושא, שערים ורקעים",
-    "panelKey": "THEMES",
-    "labelHe": "שער אחורי — גודל הטקסט (pt)",
-    "type": "number",
-    "def": 10.5,
-    "enum": null,
-    "min": 8,
-    "max": 16,
-    "step": null,
-    "note": "מקור: שורות ההמשך 10.5pt (השורה הראשונה 13pt מודגשת)"
   },
   {
     "id": "imud-book-desc",
@@ -10139,7 +10189,7 @@ function shaarColorOfCls(cls, settings) {
   if (cls.includes('book-description')) return nonBlack(settings['shaar-desc-color']);
   if (cls.includes('book-sections-summary')) return nonBlack(settings['shaar-sections-color']);
   if (cls.includes('author-block')) return nonBlack(settings['shaar-author-color']);
-  if (cls.includes('back-shaar-text-line')) return nonBlack(settings['shaar-back-text-color']);
+  if (cls.includes('back-shaar-text-line') || cls.includes('back-shaar-copyright-header')) return nonBlack(settings['shaar-back-text-color']);
   return null;
 }
 
@@ -12706,7 +12756,6 @@ function buildShaarBlocks(page, settings, metadata) {
   const sections = settings['imud-book-sections'] || meta['פרטי מהדורא'] || '';
   const author = settings['imud-book-author'] || meta['שם המחבר'] || '';
   const year = settings['imud-book-year'] || meta['מקום ושנת הוצאה'] || '';
-  const backRaw = settings['shaar-back-text'] || meta['שמירת זכויות'] || 'כל הזכויות שמורות למחבר.';
 
   const num = (v) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : 12; };
   const box = shaarBoxOf(page.type);
@@ -12729,14 +12778,26 @@ function buildShaarBlocks(page, settings, metadata) {
       B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true });
     }
   } else {
-    B.push({ cls: 'book-title-main book-title-main--back', text: bookTitle, sizePt: 36 });
-    const lines = String(backRaw).split('\n').map(l => l.trim()).filter(Boolean);
-    lines.forEach((l, i) => B.push({
-      cls: 'back-shaar-text-line', text: l,
-      sizePt: i === 0 ? 13 : num(settings['shaar-back-text-size-pt']), bold: i === 0
-    }));
-    if (author) B.push({ cls: 'author-block', text: author, sizePt: num(settings['shaar-author-size-pt']) });
-    if (year) B.push({ cls: 'publication-footer', text: year, sizePt: num(settings['shaar-year-size-pt']), bold: true });
+    // **9b.5 (D-107 + F-9a-8):** ארבעת מקטעי השער האחורי — פורט renderBackShaar
+    // של המקור: כותרת «כל הזכויות שמורות» (13.5pt) + זכויות יוצרים (10pt) +
+    // הוצאה/פרסום (11pt) + קשר (10pt) + פרטים נוספים (9.5pt). מקור הערך:
+    // שדה ההגדרה גובר (ייבוא inp-book-back-*; shaar-back-text ההיסטורי לזכויות);
+    // נפילה למטא המסמך. **אין כותרת-ספר/מחבר/שנה בשער האחורי** (כמו במקור
+    // שהופורט — עד כאן הוצגו שם בטעות), ו**אין ערכים מומצאים** — בלי ערך
+    // אין מקטע (§6.2 בהוראת 9b).
+    const copyright = settings['imud-book-back-copyright'] || settings['shaar-back-text'] || meta['שמירת זכויות'] || '';
+    const publisher = settings['imud-book-back-publishing'] || meta['פרטי הוצאה לאור'] || '';
+    const contact = settings['imud-book-back-contact'] || meta['פרטי קשר'] || '';
+    const extra = settings['imud-book-back-extra'] || meta['פרטים נוספים'] || '';
+    const pushSection = (value, sizePt) => {
+      String(value).split('\n').map(l => l.trim()).filter(Boolean)
+        .forEach(l => B.push({ cls: 'back-shaar-text-line', text: l, sizePt }));
+    };
+    if (copyright) B.push({ cls: 'back-shaar-copyright-header', text: 'כל הזכויות שמורות', sizePt: 13.5, bold: true });
+    pushSection(copyright, 10);
+    pushSection(publisher, 11);
+    pushSection(contact, 10);
+    pushSection(extra, 9.5);
   }
   return { mode: box.mode, box, blocks: B.filter(b => b.graphic || String(b.text || '').length) };
 }
@@ -12751,6 +12812,7 @@ function shaarFontOf(cls, settings) {
     case cls.includes('book-description'): return settings['shaar-desc-font'];
     case cls.includes('book-sections-summary'): return settings['shaar-sections-font'];
     case cls.includes('author-block'): return settings['shaar-author-font'];
+    case cls.includes('back-shaar-copyright-header'):
     case cls.includes('back-shaar-text-line'): return settings['shaar-back-text-font'];
     default: return '';
   }
@@ -20522,6 +20584,12 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     pages.push(cur);
   }
 
+  // **9b.3 (F-9b-1):** תור פריטי-שוליים הממתינים להצבת שורת העוגן הראשונה של
+  // הפסקה המארחת שלהם — הפריט נכנס ל-sideNotes של העמוד שבו העוגן באמת מוצב
+  // (לא העמוד שבו נפגש ה-H7). מנוקז ב-pushLines בהצבה הראשונה של המארחת;
+  // שארית בסוף התכנון = ממצא מפורש.
+  const pendingSideByHost = new Map(); // hostTokenId(String) → [rec, …]
+  const hostByH7 = new Map(); // 9b.3: ownToken(H7) → hostTokenId הצפוי — לאימות העוגן
   function pushLines(lines, meta = {}, opts = {}) {
     // **FX-6 (פרוסה 2 — הפער כגיאומטריה מתוכננת):** פתיחת בלוק מתחת לתוכן
     // קיים בטור נושאת חותמת `gapBeforePx` על שורת הפתיחה — מקור יחיד שממנו
@@ -20535,6 +20603,18 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     const startCol = Math.max(0, Math.min(opts.startCol != null ? opts.startCol : escortLockCol, cur.columns.length - 1));
     const gap = meta.firstOfBlock ? blockGapPx(settings, lineH) : 0;
     let firstOfCall = true; // הפער שייך לשורה הראשונה של הקריאה בלבד
+    let pendingFlushed = false; // 9b.3: ניקוז פריטי-שוליים ממתינים בהצבת השורה הראשונה בלבד
+    const flushPendingSideFor = () => {
+      if (pendingFlushed || meta.tokenId == null) return;
+      const pend = pendingSideByHost.get(String(meta.tokenId));
+      if (!pend) return;
+      pendingSideByHost.delete(String(meta.tokenId));
+      pendingFlushed = true;
+      for (const rec of pend) {
+        pushAnchoredMarginItem(rec); // cur = העמוד שבו שורת העוגן הראשונה הוצבה זה עתה
+        trace.emit(cur.index, 'side-note-attached-to-host-page', { note: rec.ownToken, host: rec.anchorToken });
+      }
+    };
     for (const ln of lines) {
       let placed = false;
       // **שלב 5 (סדר קריאה מבני):** החיפוש מתחיל בטור הזרימה הנוכחי — שום
@@ -20548,6 +20628,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
           firstOfCall = false;
           placed = true;
           flowCol = Math.max(flowCol, c); // מונוטוניות הזרימה
+          flushPendingSideFor(); // 9b.3: העוגן החזותי הוצב — הפריט נכנס לעמוד זה
           trace.emit(cur.index, 'block-place', { token: meta.tokenId, col: c, lineH: ln.heightPx, gapPx: gapHere });
           // **FX-1:** נעילת ליווי — שורות גוף ראשונות אחרי הכותרת מקריעות את
           // המונה; בהשלמת שורות הליווי — שחרור הנעילה (ההצבה חוזרת לזרימה חופשית).
@@ -20564,6 +20645,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         cur.openedBy = meta.tokenId != null ? meta.tokenId : null; // מעבר עמוד — מי פתח
         cur.columns[0].push({ ...ln, meta, seq: seqCounter++ }); // טור חדש/עמוד חדש → ללא gap (ראש טור)
         firstOfCall = false;
+        flushPendingSideFor(); // 9b.3: גם בפתיחת עמוד חדש — העוגן כאן
       }
     }
   }
@@ -20828,14 +20910,31 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
 
     // REQ-FN-05/06: heading mode=side-note → הערת שוליים בטור מקביל (H7 doctrine)
     if (blk.kind === 'heading' && blk.asSideNote) {
-      // S7.1.2: הערת צד נצמדת לפסקה שהיא מבארת — הבלוק הבא (host) הוא העוגן החזותי;
-      // ההצבה מחפשת את שורת ה‑host וממקמת את ההערה בראשה (לא ראש עמוד עיוור).
+      // S7.1.2: הערת צד נצמדת לפסקה שהיא מבארת — הבלוק הבא (host) הוא העוגן החזותי.
+      // **9b.3 (F-9b-1 — תיקון תזמון במנגנון התכנון):** הרשומה אינה נדחפת לעמוד
+      // שבו נפגש ה-H7, אלא ממתינה בתור עד ששורת העוגן הראשונה של המארחת
+      // מוצבת בפועל — ואז נכנסת ל-sideNotes של **אותו** עמוד. בעבר, כשה-H7
+      // בסוף עמוד N והמארחת נפתחת ב-N+1, הפריט נותר ב-N והמקצה הציב אותו
+      // בראש תיבת התוכן (עוגן חזותי בעמוד אחר) — נמדד: 16 פריטים ב-very_long.
       const host = blocks.slice(bi + 1).find(b => b.kind === 'paragraph');
-      pushAnchoredMarginItem({
+      if (host) hostByH7.set(String(blk.tokenId), String(host.tokenId)); // 9b.3: לאימות העוגן הצפוי
+      const rec = {
         text: blk.lines.map(l => l.words.join(' ')).join(' ').trim(),
         anchorToken: host ? host.tokenId : blk.tokenId,
         ownToken: blk.tokenId, isHeading: true, level: blk.level, itemKind: 'side-note'
-      });
+      };
+      if (host) {
+        const k = String(host.tokenId);
+        if (!pendingSideByHost.has(k)) pendingSideByHost.set(k, []);
+        pendingSideByHost.get(k).push(rec);
+      } else {
+        // H7 ללא פסקה מארחת — ממצא מפורש (אינו נעלם בשקט); מוצמד לעצמו כבעבר
+        const r7 = ledger.create('h7-without-host', `h7@${blk.tokenId}`, null,
+          { token: blk.tokenId, text: rec.text.slice(0, 40) }, 'page-plan');
+        ledger.transition(r7.issue_id, 'persists', 'page-plan',
+          'H7 side note without a following host paragraph — anchored to itself (documented finding)');
+        pushAnchoredMarginItem(rec);
+      }
       eventLog.emit('page-plan', 'heading-side-note', { token: blk.tokenId }, cur.index);
       continue;
     }
@@ -20853,9 +20952,10 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         // תיבת מידע (info-box) רוכבת על אותו מנגנון עוגן — דרך החוזה וה-registry (§11).
         // **FX-3:** הערות פנימיות של פסקת צד מחויבות כאן — הענף continue
         // מדלג על ההצבה הרגילה (התנהגות קודמת נשמרת).
+        // **9b.3:** אותו תיקון תזמון כמו H7 — הפריט נכנס לעמוד שורת העוגן של המארחת.
         if ((blk.notes || []).length) reserveNotes(blk);
         const host = blocks.slice(bi + 1).find(b => b.kind === 'paragraph' && !(b.customStyle && (b.customStyle.layoutMode === 'side-note' || b.customStyle.layoutMode === 'info-box')));
-        pushAnchoredMarginItem({
+        const recCS = {
           text: blk.lines.map(l => (l.words || []).join(' ')).join(' ').trim(),
           anchorToken: host ? host.tokenId : blk.tokenId,
           ownToken: blk.tokenId, isCustomStyle: cs.id,
@@ -20863,7 +20963,18 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
           itemKind: blk.asInfoBox ? 'info-box' : 'side-note',
           styleSpec: cs.styleSpec || null,
           boxSpec: blk.infoBoxSpec || null
-        });
+        };
+        if (host) {
+          const k = String(host.tokenId);
+          if (!pendingSideByHost.has(k)) pendingSideByHost.set(k, []);
+          pendingSideByHost.get(k).push(recCS);
+        } else {
+          const rCS = ledger.create('margin-item-without-host', `mi@${blk.tokenId}`, null,
+            { style: cs.id, token: blk.tokenId }, 'page-plan');
+          ledger.transition(rCS.issue_id, 'persists', 'page-plan',
+            'margin item without a following host paragraph — anchored to itself (documented finding)');
+          pushAnchoredMarginItem(recCS);
+        }
         eventLog.emit('page-plan', blk.asInfoBox ? 'custom-style-info-box' : 'custom-style-side-note', { style: cs.id, token: blk.tokenId }, cur.index);
         continue;
       }
@@ -21022,6 +21133,20 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     if (blk.sideNoteText) pushAnchoredMarginItem({ text: blk.sideNoteText, anchorToken: blk.tokenId, ownToken: blk.tokenId, itemKind: 'side-note' });
   }
 
+  // **9b.3 (F-9b-1):** שארית פריטי-השוליים שהמתינו למארחת שלא הוצבה מעולם —
+  // ממצא מפורש (לא גניזה): מוכנסים לעמוד הפתוח הנוכחי, והמארחה תתועד.
+  if (pendingSideByHost.size) {
+    for (const [hostTok, recs] of [...pendingSideByHost.entries()]) {
+      const rP = ledger.create('h7-host-not-placed', `host@${hostTok}`, null,
+        { host: hostTok, items: recs.length }, 'page-plan');
+      ledger.transition(rP.issue_id, 'persists', 'page-plan',
+        `host paragraph ${hostTok} never placed — ${recs.length} side item(s) flushed to current page (documented)`);
+      for (const rec of recs) pushAnchoredMarginItem(rec);
+      pendingSideByHost.delete(hostTok);
+    }
+    eventLog.emit('page-plan', 'side-notes-host-flush', { remaining: 0 });
+  }
+
   // **S6.0 (R3-C1 — אובדן תוכן בזנב):** פס חוצה-טורים (H3–H6) או הערת-צד
   // שנותרו לבד בעמוד האחרון (בלי שורות טור ובלי הערות) לא הופיעו בפלט
   // — הם נפלטו ב-flushPage אך התנאי לא כלל אותם ⇒ העמוד לא נסגר מעולם.
@@ -21129,16 +21254,23 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         if (!rec || rec.page === pg || rec.page.index < pg.index) { keep.push(n); continue; }
         const target = rec.page;
         // הכנסה לפי מיקום הסמן בסדר הקריאה של עמוד היעד — הסדר החזותי במרזב
-        // עוקב אחר סדר הסמנים בגוף (מדויק ודטרמיניסטי; נפילה לסוף כשאין רשומות)
+        // עוקב אחר סדר הסמנים בגוף (מדויק ודטרמיניסטי).
+        // **9b.4 (תיקון שורש — סדר המרזב אחרי יישור עוגן):** נמצא ב-very_long
+        // (עמ' 834): פסקה חוצת-עמודים שסמן ההערה השני שלה נחת בעמוד הבא, בעוד
+        // הערה של פסקה מאוחרת כבר ישבה שם. הסריקה הישנה (מהסוף, עם ברירת
+        // מחדל "בסוף") השאירה את ההערה המועברת אחרי הערה שסמנה מאוחר יותר
+        // בגוף — אינברסיית סדר מרזב. הכלל הנכון: ההערה נכנסת **לפני** הרשומה
+        // הראשונה שסמנה אחרי סמנה שלנו בסדר הקריאה (עמודה/שורה); רשומות
+        // שאין להן זיהוי סמן או שסמנן בעמוד אחר נשארות לפנינו (התנהגות
+        // שמרנית, כפי שהייתה). אין רשומה כזו ⇒ בסוף הרשימה.
         const tRec = markerRecOf(n);
         let insertAt = target.footnotes.length;
-        for (let i = target.footnotes.length - 1; i >= 0; i--) {
+        for (let i = 0; i < target.footnotes.length; i++) {
           const other = markerRecOf(target.footnotes[i]);
-          if (other && other.page === target && (other.col < tRec.col || (other.col === tRec.col && other.li <= tRec.li))) {
-            insertAt = i + 1;
+          if (other && other.page === target && (other.col > tRec.col || (other.col === tRec.col && other.li > tRec.li))) {
+            insertAt = i;
             break;
           }
-          if (!other) { insertAt = i + 1; break; }
         }
         target.footnotes.splice(insertAt, 0, n);
         recomputeFnBudget(target);
@@ -21213,7 +21345,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     assess
   });
 
-  return { pages, ledger, retreat, hash: layoutHash(pages), bodyHash: bodyGeometryHash(pages), trace, noteAnchorReconciliation };
+  return { pages, ledger, retreat, hash: layoutHash(pages), bodyHash: bodyGeometryHash(pages), trace, noteAnchorReconciliation, hostByH7 };
 }
 
 /** איזון בטוח עם rollback (REQ-BAL-09): snapshot כולל footnotes/sideNotes.
@@ -23797,7 +23929,14 @@ const METADATA_KEYS = [
   'ספר', 'מחבר', 'מהדורא', 'מקום', 'שנה', 'מהדורה', 'editors', 'title'
 ];
 
-const HEADING_RE = /^(כותרת\s*([0-7])|חלק\s+([א-ת]+)|הקדמה)\s*[-–—]\s*(.+)$/;
+/** **9b.3 (D-91 — התנהגות הייחוס היא המפרט):** דקדוק הכותרות המלא של המקור —
+ * `כותרת N`, `מספר M` אופציונלי, וציטוט-מקור בסוגריים לפני המקף המפריד
+ * (למשל `כותרת 7 (מקור: הוצאה, 7, 367) - טקסט`). הציטוט נשמר כשדה סמנטי
+ * בטוקן (אינו נרנדר — כמו הייחוס; §6.3 בהוראת 9b). הרמה מוגבלת ל-[0-7]
+ * (הדקדוק האמיתי; הייחוס מקבל \d+ אך רמות 8+ אינן קיימות במערכת).
+ * קבוצות: 1=ביטוי הפתיחה, 2=רמה, 3=מספר (חדש), 4=ציטוט (חדש),
+ * 5=אותיות חלק, 6=טקסט הכותרת. */
+const HEADING_RE = /^(כותרת\s*([0-7])(?:\s+מספר\s+(\d+))?((?:\s*\([^)]*\))*)|חלק\s+([א-ת]+)|הקדמה)\s*[-–—]\s*(.+)$/;
 
 /** ברירת המחדל ההיסטורית של קידומת הערת הסיום (en-line-prefix, default_settings.json). */
 const DEFAULT_ENDNOTE_PREFIX = 'הערת סיום -';
@@ -25948,10 +26087,13 @@ const DISPOSITIONS = {
   'aq-line-height': { kind: 'ui-state', reason: 'S6.3: מתיחת גובה-שורה במקור — מנגנון EXT-20 של RED (aqStretch) פועל מההפרש הנמדד; נשמר כנתון', issue: 'S6.3-AQ' },
   'aq-line-height-max': { kind: 'ui-state', reason: 'S6.3: תקרת מתיחת שורה (3% במקור) — ב-RED נקלטת דרך aq-letter-spacing-max המרכזי; נשמר כנתון', issue: 'S6.3-AQ' },
   'aq-shared-load': { kind: 'mapped', to: 'aq-shared-load', transform: (v) => v !== false && v !== 'false', reason: 'S6.3: עומס משותף בין השכבות (true במקור וברישום)' },
-  'inp-book-back-copyright': { kind: 'ui-state', reason: 'S6.3: טקסט זכויות השער האחורי — נקרא בפועל מה-raw בפרופיל המורשת (readConfig ⇒ gateLinesFor, גובר על המטא של המסמך)' },
-  'inp-book-back-publishing': { kind: 'ui-state', reason: 'S6.3: פרטי הוצאה — נקרא מה-raw (כמו קודם)' },
-  'inp-book-back-contact': { kind: 'ui-state', reason: 'S6.3: פרטי קשר — נקרא מה-raw' },
-  'inp-book-back-extra': { kind: 'ui-state', reason: 'S6.3: פרטים נוספים — נקרא מה-raw' },
+  // **9b.5 (D-107 + F-9a-8):** ארבעת מקטעי השער האחורי — חיבור לנתיב המאוחד
+  // (עד כאן סווגו ui-state ולא מופו; buildShaarBlocks לא ראה אותם כלל).
+  // המקור גובר על המטא של המסמך (כמו inp-book-title בשער הראשי).
+  'inp-book-back-copyright': { kind: 'mapped', to: 'imud-book-back-copyright', reason: '9b.5: זכויות יוצרים בשער האחורי — נצרכת ב-buildShaarBlocks (D-107: ארבעת המקטעים)' },
+  'inp-book-back-publishing': { kind: 'mapped', to: 'imud-book-back-publishing', reason: '9b.5: פרטי הוצאה לאור בשער האחורי (D-107)' },
+  'inp-book-back-contact': { kind: 'mapped', to: 'imud-book-back-contact', reason: '9b.5: פרטי קשר בשער האחורי (D-107)' },
+  'inp-book-back-extra': { kind: 'mapped', to: 'imud-book-back-extra', reason: '9b.5: פרטים נוספים בשער האחורי (D-107)' },
   's-note-body': { kind: 'ui-state', reason: 'S6.3: גודל גוף ההערה — נקרא מה-raw (readConfig ⇒ SZ.fnBody; ברירת המחדל של המקור 9)' },
   's-h0': { kind: 'mapped', to: 'heading-0-size-pt', transform: parseFloat, reason: 'S6.3: גודל H0 — גם נקרא מה-raw בפרופיל המורשת (SZ.h0Title; במקור 26pt)' },
   's-h1': { kind: 'mapped', to: 'heading-1-size-pt', transform: parseFloat, reason: 'S6.3: גודל H1 — נקרא מה-raw לשער-המשנה (cfg.h1Size; במקור 50pt)' },
