@@ -1,0 +1,179 @@
+{
+ "tool": "tools/parity/benchmark.js",
+ "command": "node /home/z/my-project/repo/tools/parity/benchmark.js canonical no_long mid_long long very_long --runs 7 --warmups 2 --out /tmp/benchmark-after.json",
+ "node": "v24.22.3",
+ "commit": "0614c3e90aa32af283be464dbd68d885dd5bad02",
+ "settingsSha256": "d6a75a9a8873f15124efeecbfb1c15f1a68f819e66476a5b039a9c90cba1f589",
+ "fontsSha256": "6791fd13355481cca02fd6a40ec9f8a6c9b707317b425f407db0040e8b6a4641",
+ "acceptance": "median unified ≤ median legacy בכל קורפוס (הוראת 19.11 סעיף ו.5)",
+ "note": "typeset בלבד (מנוע); PageModel בתוך ה-typeset של המאוחד; אין דפדפן/PDF/נכסים במדידה. סדר מתחלף legacy→unified בwarmups ובמדידות.",
+ "results": [
+  {
+   "corpus": "canonical",
+   "inputFile": "red-build/tests/fixtures/canonical_corpus.txt",
+   "inputBytes": 26957,
+   "inputSha256": "f58610be0a66d5cd2f5e23a9e2bb8d154570b6b2427c9265bbbd0d282566df1e",
+   "runs": 7,
+   "warmups": 2,
+   "legacy": {
+    "p50": 7.834925,
+    "p95": 23.70669,
+    "mean": 10.669071857142857,
+    "min": 6.603852,
+    "max": 23.70669,
+    "n": 7,
+    "pages": 38
+   },
+   "unified": {
+    "p50": 97.158522,
+    "p95": 113.375408,
+    "mean": 97.29254757142857,
+    "min": 76.653971,
+    "max": 113.375408,
+    "n": 7,
+    "pages": 37
+   },
+   "ratioP50": 12.401,
+   "pageDeltaUnifiedMinusLegacy": -1,
+   "memoryMb": {
+    "heapUsedAfter": 102,
+    "maxRssMb": 289
+   },
+   "pass": false
+  },
+  {
+   "corpus": "no_long",
+   "inputFile": "audits/no_long_test_text.txt",
+   "inputBytes": 233739,
+   "inputSha256": "962d34a1ea30f306c3f52dbe79f879b349a9ec4bd3a9edc89fe1db68854b5be4",
+   "runs": 7,
+   "warmups": 2,
+   "legacy": {
+    "p50": 60.271559,
+    "p95": 64.136989,
+    "mean": 60.29698571428571,
+    "min": 56.539374,
+    "max": 64.136989,
+    "n": 7,
+    "pages": 54
+   },
+   "unified": {
+    "p50": 560.533465,
+    "p95": 681.434266,
+    "mean": 584.3231591428572,
+    "min": 534.076175,
+    "max": 681.434266,
+    "n": 7,
+    "pages": 57
+   },
+   "ratioP50": 9.3,
+   "pageDeltaUnifiedMinusLegacy": 3,
+   "memoryMb": {
+    "heapUsedAfter": 448,
+    "maxRssMb": 675
+   },
+   "pass": false
+  },
+  {
+   "corpus": "mid_long",
+   "inputFile": "audits/mid_long_test_text.txt",
+   "inputBytes": 667220,
+   "inputSha256": "8bbfb0ab9dc6648b3395c3da6f9cf2f42a2a2e79446b78856a4599a110fe1981",
+   "runs": 7,
+   "warmups": 2,
+   "legacy": {
+    "p50": 246.716146,
+    "p95": 259.003689,
+    "mean": 242.16651785714288,
+    "min": 225.450931,
+    "max": 259.003689,
+    "n": 7,
+    "pages": 139
+   },
+   "unified": {
+    "p50": 1884.892858,
+    "p95": 2047.995136,
+    "mean": 1876.5376728571425,
+    "min": 1681.275612,
+    "max": 2047.995136,
+    "n": 7,
+    "pages": 165
+   },
+   "ratioP50": 7.64,
+   "pageDeltaUnifiedMinusLegacy": 26,
+   "memoryMb": {
+    "heapUsedAfter": 226,
+    "maxRssMb": 913
+   },
+   "pass": false
+  },
+  {
+   "corpus": "long",
+   "inputFile": "audits/long_test_text.txt",
+   "inputBytes": 2718900,
+   "inputSha256": "d039b599cfc1971acc236c9bec6e4588c651a8a3429074df72214b0e6c397f7c",
+   "runs": 7,
+   "warmups": 2,
+   "legacy": {
+    "p50": 686.346395,
+    "p95": 841.223078,
+    "mean": 697.2859511428571,
+    "min": 637.375408,
+    "max": 841.223078,
+    "n": 7,
+    "pages": 552
+   },
+   "unified": {
+    "p50": 8775.578139,
+    "p95": 9488.243784,
+    "mean": 8958.511956285713,
+    "min": 8550.952001,
+    "max": 9488.243784,
+    "n": 7,
+    "pages": 687
+   },
+   "ratioP50": 12.786,
+   "pageDeltaUnifiedMinusLegacy": 135,
+   "memoryMb": {
+    "heapUsedAfter": 1942,
+    "maxRssMb": 2690
+   },
+   "pass": false
+  },
+  {
+   "corpus": "very_long",
+   "inputFile": "audits/very_long_test_text.txt",
+   "inputBytes": 3403990,
+   "inputSha256": "f6c6b3aa0422fc621fb5827533770fc6fe7b170234382670690483e89cc6a1fc",
+   "runs": 7,
+   "warmups": 2,
+   "legacy": {
+    "p50": 987.576969,
+    "p95": 1200.873239,
+    "mean": 984.8772387142856,
+    "min": 883.533156,
+    "max": 1200.873239,
+    "n": 7,
+    "pages": 699
+   },
+   "unified": {
+    "p50": 10679.023648,
+    "p95": 11959.053165,
+    "mean": 10890.127488571428,
+    "min": 10157.570112,
+    "max": 11959.053165,
+    "n": 7,
+    "pages": 851
+   },
+   "ratioP50": 10.813,
+   "pageDeltaUnifiedMinusLegacy": 152,
+   "memoryMb": {
+    "heapUsedAfter": 1100,
+    "maxRssMb": 2844
+   },
+   "pass": false
+  }
+ ],
+ "allPass": false,
+ "generatedAt": "2026-11-19T14:49:19.799Z"
+}

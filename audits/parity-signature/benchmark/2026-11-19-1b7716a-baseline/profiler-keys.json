@@ -1,0 +1,253 @@
+{
+ "tool": "tools/parity/perf-profiler.js",
+ "scenario": "keys",
+ "command": "node /home/z/my-project/repo/tools/parity/perf-profiler.js keys canonical no_long --out audits/parity-signature/benchmark/2026-11-19-1b7716a-baseline/profiler-keys.json",
+ "node": "v24.22.3",
+ "commit": "1b7716a9e0d6513ad63a4c0cb7569527e1f941c7",
+ "generatedAt": "2026-11-19T14:08:37.534Z",
+ "note": "עטיפות חיצוניות בלבד (measureItem + MeasureAPI.prototype.measureTextWidth) — אפס שינוי קוד מנוע. hit במטמון הפריטים מזוהה לפי זהות אובייקט (cache-hit מחזיר את אותה מופע קפואה).",
+ "passes": [
+  {
+   "label": "K1-cold+keys",
+   "corpus": "canonical",
+   "wallMs": 354.6,
+   "pages": 37,
+   "layoutHash": "48849885516292b9",
+   "itemCache": {
+    "calls": 5956,
+    "hits": 0,
+    "misses": 5956,
+    "hitRate": 0,
+    "hitsIntraPass": 0,
+    "hitsInterPass": 0,
+    "freshOk": 5956,
+    "rejections": 0,
+    "insertions": 5956,
+    "evictions": 0,
+    "entriesBefore": 0,
+    "entriesAfter": 5956,
+    "capacity": 65536,
+    "measureItemWallMs": 92.5,
+    "measureItemWallPctOfTypeset": 26.1,
+    "imageKindCalls": 0
+   },
+   "stringCache": {
+    "calls": 7001,
+    "hits": 747,
+    "misses": 6254,
+    "hitRate": 0.1067,
+    "freshInstancesThisPass": 6034,
+    "note": "freshInstances = מופעי MeasureAPI שנוצרו בפאס זה (חד-פעמיים מעצם המבנה לפריטים שאינם טקסט); המטמון שלהם אינו שורד את הקריאה."
+   },
+   "stringMeasureWallMs": 14.1,
+   "gc": {
+    "count": 20,
+    "totalMs": 53.2,
+    "pctOfTypeset": 15
+   },
+   "memoryMb": {
+    "heapUsedAfter": 40,
+    "maxRss": 129
+   },
+   "keys": {
+    "computed": 5956,
+    "computeMs": 75.6,
+    "uniqueKeys": 5956,
+    "collisions": 0
+   }
+  },
+  {
+   "label": "K2-warm+keys",
+   "corpus": "canonical",
+   "wallMs": 195.1,
+   "pages": 37,
+   "layoutHash": "48849885516292b9",
+   "itemCache": {
+    "calls": 5956,
+    "hits": 5956,
+    "misses": 0,
+    "hitRate": 1,
+    "hitsIntraPass": 0,
+    "hitsInterPass": 5956,
+    "freshOk": 0,
+    "rejections": 0,
+    "insertions": 0,
+    "evictions": 0,
+    "entriesBefore": 5956,
+    "entriesAfter": 5956,
+    "capacity": 65536,
+    "measureItemWallMs": 54.1,
+    "measureItemWallPctOfTypeset": 27.7,
+    "imageKindCalls": 0
+   },
+   "stringCache": {
+    "calls": 1045,
+    "hits": 747,
+    "misses": 298,
+    "hitRate": 0.7148,
+    "freshInstancesThisPass": 78,
+    "note": "freshInstances = מופעי MeasureAPI שנוצרו בפאס זה (חד-פעמיים מעצם המבנה לפריטים שאינם טקסט); המטמון שלהם אינו שורד את הקריאה."
+   },
+   "stringMeasureWallMs": 1.7,
+   "gc": {
+    "count": 5,
+    "totalMs": 23,
+    "pctOfTypeset": 11.8
+   },
+   "memoryMb": {
+    "heapUsedAfter": 58,
+    "maxRss": 172
+   },
+   "keys": {
+    "computed": 5956,
+    "computeMs": 36.2,
+    "uniqueKeys": 5956,
+    "collisions": 0
+   }
+  },
+  {
+   "label": "K1-cold+keys",
+   "corpus": "no_long",
+   "wallMs": 1427.5,
+   "pages": 66,
+   "layoutHash": "614b6bfad8d18f0c",
+   "itemCache": {
+    "calls": 45849,
+    "hits": 0,
+    "misses": 45849,
+    "hitRate": 0,
+    "hitsIntraPass": 0,
+    "hitsInterPass": 0,
+    "freshOk": 45849,
+    "rejections": 0,
+    "insertions": 45849,
+    "evictions": 0,
+    "entriesBefore": 0,
+    "entriesAfter": 45849,
+    "capacity": 65536,
+    "measureItemWallMs": 547.2,
+    "measureItemWallPctOfTypeset": 38.3,
+    "imageKindCalls": 0
+   },
+   "stringCache": {
+    "calls": 49596,
+    "hits": 2032,
+    "misses": 47564,
+    "hitRate": 0.041,
+    "freshInstancesThisPass": 45988,
+    "note": "freshInstances = מופעי MeasureAPI שנוצרו בפאס זה (חד-פעמיים מעצם המבנה לפריטים שאינם טקסט); המטמון שלהם אינו שורד את הקריאה."
+   },
+   "stringMeasureWallMs": 36.9,
+   "gc": {
+    "count": 20,
+    "totalMs": 222.7,
+    "pctOfTypeset": 15.6
+   },
+   "memoryMb": {
+    "heapUsedAfter": 175,
+    "maxRss": 355
+   },
+   "keys": {
+    "computed": 45849,
+    "computeMs": 341.9,
+    "uniqueKeys": 45849,
+    "collisions": 0
+   }
+  },
+  {
+   "label": "K2-warm+keys",
+   "corpus": "no_long",
+   "wallMs": 1198.3,
+   "pages": 66,
+   "layoutHash": "614b6bfad8d18f0c",
+   "itemCache": {
+    "calls": 45849,
+    "hits": 45849,
+    "misses": 0,
+    "hitRate": 1,
+    "hitsIntraPass": 0,
+    "hitsInterPass": 45849,
+    "freshOk": 0,
+    "rejections": 0,
+    "insertions": 0,
+    "evictions": 0,
+    "entriesBefore": 45849,
+    "entriesAfter": 45849,
+    "capacity": 65536,
+    "measureItemWallMs": 367.9,
+    "measureItemWallPctOfTypeset": 30.7,
+    "imageKindCalls": 0
+   },
+   "stringCache": {
+    "calls": 3747,
+    "hits": 2032,
+    "misses": 1715,
+    "hitRate": 0.5423,
+    "freshInstancesThisPass": 139,
+    "note": "freshInstances = מופעי MeasureAPI שנוצרו בפאס זה (חד-פעמיים מעצם המבנה לפריטים שאינם טקסט); המטמון שלהם אינו שורד את הקריאה."
+   },
+   "stringMeasureWallMs": 7.4,
+   "gc": {
+    "count": 15,
+    "totalMs": 177.6,
+    "pctOfTypeset": 14.8
+   },
+   "memoryMb": {
+    "heapUsedAfter": 215,
+    "maxRss": 402
+   },
+   "keys": {
+    "computed": 45849,
+    "computeMs": 315.1,
+    "uniqueKeys": 45849,
+    "collisions": 0
+   }
+  }
+ ],
+ "keysAnalysis": {
+  "canonical": {
+   "pass1UniqueKeys": 5956,
+   "pass2UniqueKeys": 5956,
+   "sameKeySameId": 5956,
+   "sameKeyDiffId": 0,
+   "onlyInPass1": 0,
+   "onlyInPass2": 0,
+   "sampledComponents": 2000,
+   "componentDiffsBetweenPasses": {
+    "payload": 0,
+    "constraints": 0,
+    "style": 0,
+    "ctxConstraints": 0,
+    "ctxKey": 0,
+    "dir": 0,
+    "lang": 0,
+    "id": 0,
+    "kind": 0,
+    "missing": 0
+   },
+   "pass2HitRate": 1
+  },
+  "no_long": {
+   "pass1UniqueKeys": 45849,
+   "pass2UniqueKeys": 45849,
+   "sameKeySameId": 45849,
+   "sameKeyDiffId": 0,
+   "onlyInPass1": 0,
+   "onlyInPass2": 0,
+   "sampledComponents": 2000,
+   "componentDiffsBetweenPasses": {
+    "payload": 0,
+    "constraints": 0,
+    "style": 0,
+    "ctxConstraints": 0,
+    "ctxKey": 0,
+    "dir": 0,
+    "lang": 0,
+    "id": 0,
+    "kind": 0,
+    "missing": 0
+   },
+   "pass2HitRate": 1
+  }
+ }
+}

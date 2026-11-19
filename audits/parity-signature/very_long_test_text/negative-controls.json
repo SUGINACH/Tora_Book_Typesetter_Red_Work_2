@@ -2,46 +2,46 @@
  {
   "control": "word-change (טקסט מילה אחת)",
   "tripped": true,
-  "diffCount": 192315
+  "diffCount": 187533
  },
  {
   "control": "font-family change (בשכבת המורשת)",
   "tripped": true,
-  "diffCount": 192315
+  "diffCount": 187533
  },
  {
   "control": "size change (sizePt)",
   "tripped": true,
-  "diffCount": 192315
+  "diffCount": 187533
  },
  {
   "control": "x-position change",
   "tripped": true,
-  "diffCount": 192315
+  "diffCount": 187533
  },
  {
   "control": "y-position change",
   "tripped": true,
-  "diffCount": 192315
+  "diffCount": 187533
  },
  {
   "control": "color change (word)",
   "tripped": true,
-  "diffCount": 192315
+  "diffCount": 187533
  },
  {
   "control": "folio change (פוליו)",
   "tripped": true,
-  "diffCount": 192315
+  "diffCount": 187533
  },
  {
   "control": "note addition",
   "tripped": true,
-  "diffCount": 192316
+  "diffCount": 187534
  },
  {
   "control": "page-count change",
   "tripped": true,
-  "diffCount": 192315
+  "diffCount": 187533
  }
 ]

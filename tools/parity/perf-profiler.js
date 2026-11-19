@@ -42,6 +42,27 @@ const AUD = path.join(ROOT, 'audits');
 const ma = require(path.join(RB, 'src/engine/typography/measure-api'));
 const { MeasureAPI } = ma;
 const { sha256Hex } = require(path.join(RB, 'src/engine/assets/hash256'));
+
+// שחזור עצמאי של _fastKeyHash של המנוע (measure-api) — לניתוח יציבות מפתחות.
+function _fmix32p(h) {
+  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
+  return h | 0;
+}
+function fastKeyHash(s) {
+  let h1 = 0x811c9dc5, h2 = 0x9e3779b9, h3 = 5381;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193);
+    h2 = Math.imul(h2 ^ Math.imul(i + 1, c), 0x85ebca6b);
+    h3 = (Math.imul(h3, 0x21) ^ c) | 0;
+  }
+  const len = s.length;
+  h1 = _fmix32p(h1 ^ len); h2 = _fmix32p(h2 ^ Math.imul(len, 0x9e3779b9)); h3 = _fmix32p(h3 ^ h1);
+  return (h1 >>> 0).toString(16).padStart(8, '0')
+    + (h2 >>> 0).toString(16).padStart(8, '0')
+    + (h3 >>> 0).toString(16).padStart(8, '0')
+    + len.toString(16).padStart(8, '0');
+}
 // **תיקון הארנס (19.11, סשן הביצועים §3.1):** רישום דרך fontResolver (כמו ה־Worker
 // החי) — אחרת ה-resolver ריק, המאוחד מודד בקירוב-טבלה עם מופע חדש לכל קריאה,
 // והמדידה אינה מייצגת את נתיב הייצור.
@@ -68,10 +89,12 @@ const _origMeasureItem = ma.measureItem;
 
 function myItemKey(item, style, ctx) {
   // שחזור נאמן של _itemCacheKey (אותה נוסחה, אותן פונקציות מיוצאות).
-  // _assetIdentityFp: '' לכל פריט שאינו תמונה (קורפוסי הטקסט; תמונות נספרות בנפרד).
+  // מעודכן לנוסחת ik3 (perf(measure-api), 19.11): _fastKeyHash במקום sha256Hex
+  // + מֵימוֹ קנוני ל-ctx.constraints. _assetIdentityFp: '' לכל פריט שאינו תמונה.
+  // החשיש המהיר משוחזר כאן בנפרד (לא מיוצא מהמנוע) — אותם ערוצים ואותו סדר.
   const it = item || {};
-  return 'ik2:' + sha256Hex([
-    'item-key-v2',
+  return 'ik3:' + fastKeyHash([
+    'item-key-v3',
     ma.MEASURE_ENGINE_VERSION,
     ma.environmentFingerprint(),
     (ctx && ctx.environmentFingerprint) || '',

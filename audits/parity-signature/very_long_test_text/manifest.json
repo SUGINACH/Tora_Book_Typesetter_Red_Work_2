@@ -18,7 +18,7 @@
  ],
  "fontsDirSha256": "6d59128356b37188ef0cefb9cb0828ebee35295f9731ca5a358a9d22350976c6",
  "node": "v24.22.3",
- "commit": "b86ed2c5ceaccbdb25f21c45d6f4bff03d200559",
+ "commit": "9f654acc00912b755fbfd4875f50460f79d0f2c9",
  "quantization": {
   "COORD_Q": 0.01,
   "rule": "round(v/COORD_Q)*COORD_Q — סימטרי לשני הצדדים"
@@ -27,18 +27,17 @@
   "legacy": {
    "layoutHash": "legacy-da0a0ee5487f68bd",
    "pages": 699,
-   "ms": 1164
+   "ms": 1107
   },
   "unified": {
-   "layoutHash": "33f30f2c8a463c9708a28c3245bd0fa4c79d2aad76e822a36f75141d66a5e8ff",
-   "pages": 992,
-   "ms": 13522
+   "layoutHash": "383fb795d17bffecae41fb95af94a25253e7022dda179cad266dbb1d7a3c448d",
+   "pages": 851,
+   "ms": 11543
   }
  },
  "determinism": {
   "legacy": true,
-  "unified": true,
-  "method": "הרצה כפולה לכל מנוע בנפרד (scripts/very_long_determinism_folio.js): hash ורשימת פוליו זהים ביט-לביט; legacy 695/695 עמ', מאוחד 992/992 עמ'. הרצת --determinism בתוך הכלי עצמו חורגת מזיכרון ה-sandbox (OOM) — לכן ההוכחה בסקריפט ממוקד שמחזיק תוצאה אחת בכל רגע."
+  "unified": true
  },
- "generatedAt": "2026-11-19T11:49:29.120Z"
+ "generatedAt": "2026-11-19T15:14:52.243Z"
 }

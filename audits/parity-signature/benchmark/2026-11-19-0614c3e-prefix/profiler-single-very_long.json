@@ -1,0 +1,55 @@
+{
+ "tool": "tools/parity/perf-profiler.js",
+ "scenario": "single",
+ "command": "node /home/z/my-project/repo/tools/parity/perf-profiler.js single very_long --out audits/parity-signature/benchmark/2026-11-19-0614c3e-prefix/profiler-single-very_long.json",
+ "node": "v24.22.3",
+ "commit": "0614c3e90aa32af283be464dbd68d885dd5bad02",
+ "generatedAt": "2026-11-19T14:37:03.786Z",
+ "note": "עטיפות חיצוניות בלבד (measureItem + MeasureAPI.prototype.measureTextWidth) — אפס שינוי קוד מנוע. hit במטמון הפריטים מזוהה לפי זהות אובייקט (cache-hit מחזיר את אותה מופע קפואה).",
+ "passes": [
+  {
+   "label": "S-single-cold",
+   "corpus": "very_long",
+   "wallMs": 14967.3,
+   "pages": 851,
+   "layoutHash": "383fb795d17bffec",
+   "itemCache": {
+    "calls": 668736,
+    "hits": 0,
+    "misses": 668736,
+    "hitRate": 0,
+    "hitsIntraPass": 0,
+    "hitsInterPass": 0,
+    "freshOk": 668736,
+    "rejections": 0,
+    "insertions": 668736,
+    "evictions": 606208,
+    "entriesBefore": 0,
+    "entriesAfter": 62528,
+    "capacity": 65536,
+    "measureItemWallMs": 7899.1,
+    "measureItemWallPctOfTypeset": 52.8,
+    "imageKindCalls": 0
+   },
+   "stringCache": {
+    "calls": 737438,
+    "hits": 346502,
+    "misses": 390936,
+    "hitRate": 0.4699,
+    "freshInstancesThisPass": 333456,
+    "note": "freshInstances = מופעי MeasureAPI שנוצרו בפאס זה (חד-פעמיים מעצם המבנה לפריטים שאינם טקסט); המטמון שלהם אינו שורד את הקריאה."
+   },
+   "stringMeasureWallMs": 664.7,
+   "gc": {
+    "count": 204,
+    "totalMs": 2469.1,
+    "pctOfTypeset": 16.5
+   },
+   "memoryMb": {
+    "heapUsedAfter": 1263,
+    "maxRss": 1521
+   },
+   "keys": null
+  }
+ ]
+}

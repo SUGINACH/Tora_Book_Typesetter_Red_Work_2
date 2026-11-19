@@ -1,0 +1,43 @@
+{
+ "tool": "tools/parity/parity-signature.js",
+ "corpus": "audits/no_long_test_text.txt",
+ "corpusSha256": "962d34a1ea30f306c3f52dbe79f879b349a9ec4bd3a9edc89fe1db68854b5be4",
+ "settingsSha256": "d6a75a9a8873f15124efeecbfb1c15f1a68f819e66476a5b039a9c90cba1f589",
+ "fontsRegistered": [
+  "Guttman Rashi",
+  "AlphaBlack",
+  "Alpha",
+  "AlphaLight",
+  "Lia Sgula",
+  "Livorna",
+  "FrankReal",
+  "Frank Ruhl Libre",
+  "David Libre",
+  "DavidLibre",
+  "Hadassah Friedlaender"
+ ],
+ "fontsDirSha256": "6d59128356b37188ef0cefb9cb0828ebee35295f9731ca5a358a9d22350976c6",
+ "node": "v24.22.3",
+ "commit": "9f654acc00912b755fbfd4875f50460f79d0f2c9",
+ "quantization": {
+  "COORD_Q": 0.01,
+  "rule": "round(v/COORD_Q)*COORD_Q — סימטרי לשני הצדדים"
+ },
+ "engine": {
+  "legacy": {
+   "layoutHash": "legacy-86621c795795d2ce",
+   "pages": 54,
+   "ms": 134
+  },
+  "unified": {
+   "layoutHash": "8509b0774f2e0a7e249ee9eaae63e4f04699be3bc413b5afab052798e69f4035",
+   "pages": 57,
+   "ms": 1108
+  }
+ },
+ "determinism": {
+  "legacy": true,
+  "unified": true
+ },
+ "generatedAt": "2026-11-19T15:13:32.878Z"
+}

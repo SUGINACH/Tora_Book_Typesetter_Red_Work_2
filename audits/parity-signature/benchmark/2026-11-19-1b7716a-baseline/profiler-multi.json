@@ -1,0 +1,231 @@
+{
+ "tool": "tools/parity/perf-profiler.js",
+ "scenario": "multi",
+ "command": "node /home/z/my-project/repo/tools/parity/perf-profiler.js multi --out audits/parity-signature/benchmark/2026-11-19-1b7716a-baseline/profiler-multi.json",
+ "node": "v24.22.3",
+ "commit": "1b7716a9e0d6513ad63a4c0cb7569527e1f941c7",
+ "generatedAt": "2026-11-19T14:08:04.078Z",
+ "note": "עטיפות חיצוניות בלבד (measureItem + MeasureAPI.prototype.measureTextWidth) — אפס שינוי קוד מנוע. hit במטמון הפריטים מזוהה לפי זהות אובייקט (cache-hit מחזיר את אותה מופע קפואה).",
+ "passes": [
+  {
+   "label": "M1-first",
+   "corpus": "canonical",
+   "wallMs": 272.8,
+   "pages": 37,
+   "layoutHash": "48849885516292b9",
+   "itemCache": {
+    "calls": 5956,
+    "hits": 0,
+    "misses": 5956,
+    "hitRate": 0,
+    "hitsIntraPass": 0,
+    "hitsInterPass": 0,
+    "freshOk": 5956,
+    "rejections": 0,
+    "insertions": 5956,
+    "evictions": 0,
+    "entriesBefore": 0,
+    "entriesAfter": 5956,
+    "capacity": 65536,
+    "measureItemWallMs": 108.2,
+    "measureItemWallPctOfTypeset": 39.7,
+    "imageKindCalls": 0
+   },
+   "stringCache": {
+    "calls": 7001,
+    "hits": 747,
+    "misses": 6254,
+    "hitRate": 0.1067,
+    "freshInstancesThisPass": 6034,
+    "note": "freshInstances = מופעי MeasureAPI שנוצרו בפאס זה (חד-פעמיים מעצם המבנה לפריטים שאינם טקסט); המטמון שלהם אינו שורד את הקריאה."
+   },
+   "stringMeasureWallMs": 10.4,
+   "gc": {
+    "count": 13,
+    "totalMs": 46.1,
+    "pctOfTypeset": 16.9
+   },
+   "memoryMb": {
+    "heapUsedAfter": 36,
+    "maxRss": 136
+   },
+   "keys": null
+  },
+  {
+   "label": "M1-first",
+   "corpus": "no_long",
+   "wallMs": 1343.2,
+   "pages": 66,
+   "layoutHash": "614b6bfad8d18f0c",
+   "itemCache": {
+    "calls": 45849,
+    "hits": 0,
+    "misses": 45849,
+    "hitRate": 0,
+    "hitsIntraPass": 0,
+    "hitsInterPass": 0,
+    "freshOk": 45849,
+    "rejections": 0,
+    "insertions": 45849,
+    "evictions": 0,
+    "entriesBefore": 5956,
+    "entriesAfter": 51805,
+    "capacity": 65536,
+    "measureItemWallMs": 585.1,
+    "measureItemWallPctOfTypeset": 43.6,
+    "imageKindCalls": 0
+   },
+   "stringCache": {
+    "calls": 49596,
+    "hits": 2032,
+    "misses": 47564,
+    "hitRate": 0.041,
+    "freshInstancesThisPass": 45988,
+    "note": "freshInstances = מופעי MeasureAPI שנוצרו בפאס זה (חד-פעמיים מעצם המבנה לפריטים שאינם טקסט); המטמון שלהם אינו שורד את הקריאה."
+   },
+   "stringMeasureWallMs": 55.2,
+   "gc": {
+    "count": 18,
+    "totalMs": 248.9,
+    "pctOfTypeset": 18.5
+   },
+   "memoryMb": {
+    "heapUsedAfter": 147,
+    "maxRss": 357
+   },
+   "keys": null
+  },
+  {
+   "label": "M1-first",
+   "corpus": "very_long",
+   "wallMs": 15927,
+   "pages": 992,
+   "layoutHash": "33f30f2c8a463c97",
+   "itemCache": {
+    "calls": 668736,
+    "hits": 0,
+    "misses": 668736,
+    "hitRate": 0,
+    "hitsIntraPass": 0,
+    "hitsInterPass": 0,
+    "freshOk": 668736,
+    "rejections": 0,
+    "insertions": 668736,
+    "evictions": 655360,
+    "entriesBefore": 51805,
+    "entriesAfter": 65181,
+    "capacity": 65536,
+    "measureItemWallMs": 7686.9,
+    "measureItemWallPctOfTypeset": 48.3,
+    "imageKindCalls": 0
+   },
+   "stringCache": {
+    "calls": 738007,
+    "hits": 49931,
+    "misses": 688076,
+    "hitRate": 0.0677,
+    "freshInstancesThisPass": 670807,
+    "note": "freshInstances = מופעי MeasureAPI שנוצרו בפאס זה (חד-פעמיים מעצם המבנה לפריטים שאינם טקסט); המטמון שלהם אינו שורד את הקריאה."
+   },
+   "stringMeasureWallMs": 507.6,
+   "gc": {
+    "count": 183,
+    "totalMs": 3657.8,
+    "pctOfTypeset": 23
+   },
+   "memoryMb": {
+    "heapUsedAfter": 949,
+    "maxRss": 1594
+   },
+   "keys": null
+  },
+  {
+   "label": "M2-after-big",
+   "corpus": "canonical",
+   "wallMs": 445.7,
+   "pages": 37,
+   "layoutHash": "48849885516292b9",
+   "itemCache": {
+    "calls": 5956,
+    "hits": 0,
+    "misses": 5956,
+    "hitRate": 0,
+    "hitsIntraPass": 0,
+    "hitsInterPass": 0,
+    "freshOk": 5956,
+    "rejections": 0,
+    "insertions": 5956,
+    "evictions": 8192,
+    "entriesBefore": 65181,
+    "entriesAfter": 62945,
+    "capacity": 65536,
+    "measureItemWallMs": 82.8,
+    "measureItemWallPctOfTypeset": 18.6,
+    "imageKindCalls": 0
+   },
+   "stringCache": {
+    "calls": 7001,
+    "hits": 747,
+    "misses": 6254,
+    "hitRate": 0.1067,
+    "freshInstancesThisPass": 6034,
+    "note": "freshInstances = מופעי MeasureAPI שנוצרו בפאס זה (חד-פעמיים מעצם המבנה לפריטים שאינם טקסט); המטמון שלהם אינו שורד את הקריאה."
+   },
+   "stringMeasureWallMs": 5.3,
+   "gc": {
+    "count": 1,
+    "totalMs": 14.4,
+    "pctOfTypeset": 3.2
+   },
+   "memoryMb": {
+    "heapUsedAfter": 840,
+    "maxRss": 1594
+   },
+   "keys": null
+  },
+  {
+   "label": "M3-again",
+   "corpus": "very_long",
+   "wallMs": 14007.2,
+   "pages": 992,
+   "layoutHash": "33f30f2c8a463c97",
+   "itemCache": {
+    "calls": 668736,
+    "hits": 0,
+    "misses": 668736,
+    "hitRate": 0,
+    "hitsIntraPass": 0,
+    "hitsInterPass": 0,
+    "freshOk": 668736,
+    "rejections": 0,
+    "insertions": 668736,
+    "evictions": 671744,
+    "entriesBefore": 62945,
+    "entriesAfter": 59937,
+    "capacity": 65536,
+    "measureItemWallMs": 7818.4,
+    "measureItemWallPctOfTypeset": 55.8,
+    "imageKindCalls": 0
+   },
+   "stringCache": {
+    "calls": 738007,
+    "hits": 49931,
+    "misses": 688076,
+    "hitRate": 0.0677,
+    "freshInstancesThisPass": 670807,
+    "note": "freshInstances = מופעי MeasureAPI שנוצרו בפאס זה (חד-פעמיים מעצם המבנה לפריטים שאינם טקסט); המטמון שלהם אינו שורד את הקריאה."
+   },
+   "stringMeasureWallMs": 491.2,
+   "gc": {
+    "count": 179,
+    "totalMs": 2717.3,
+    "pctOfTypeset": 19.4
+   },
+   "memoryMb": {
+    "heapUsedAfter": 1378,
+    "maxRss": 1680
+   },
+   "keys": null
+  }
+ ]
+}

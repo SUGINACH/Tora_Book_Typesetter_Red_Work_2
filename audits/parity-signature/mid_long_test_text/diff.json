@@ -1,11 +1,11 @@
 {
- "totalDiffs": 31693,
+ "totalDiffs": 29814,
  "diffs": [
   {
    "category": "page-count",
    "where": "document",
    "expected": 139,
-   "actual": 191
+   "actual": 165
   },
   {
    "category": "page-columns-geometry",
