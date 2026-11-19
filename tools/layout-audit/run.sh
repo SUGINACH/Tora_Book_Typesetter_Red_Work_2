@@ -32,6 +32,14 @@ READY_TIMEOUT_MS="${LAYOUT_AUDIT_READY_TIMEOUT_MS:-240000}"
 command -v agent-browser >/dev/null 2>&1 || { echo "חסר agent-browser — התקן: npm i -g agent-browser && agent-browser install"; exit 2; }
 [ -f "$FIXTURE" ] || { echo "חסר fixture: $FIXTURE"; exit 2; }
 
+# הבדיקה חייבת לשרת את ה-bundles שנבנו מהמקור הנוכחי, ולא קבצים ישנים
+# שנשמרו ב-red-build/ui. אותו build script משמש גם את פריסת ה-Preview.
+echo "Building browser bundles from current source before layout audit..."
+node "$ROOT/tools/build-worker-bundle.js" || { echo "✗ בניית bundles נכשלה — האודיט לא ירוץ על build ישן"; exit 2; }
+for f in "$UI/app.bundle.js" "$UI/engine-worker.bundle.js"; do
+  [ -s "$f" ] || { echo "✗ bundle חסר או ריק אחרי build: $f"; exit 2; }
+done
+
 rm -f "$OUT"
 
 cd "$UI"

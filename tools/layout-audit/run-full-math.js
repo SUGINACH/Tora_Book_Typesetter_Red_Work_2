@@ -192,7 +192,32 @@ const gotoView = async () => {
 };
 
 // ═════════ main ═════════
-(async function main() {
+(async function buildLocalBrowserBundles() {
+  const script = path.join(ROOT, 'tools', 'build-worker-bundle.js');
+  log('Building browser bundles from current source before local full-math audit...');
+  await new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [script], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => { stdout += chunk; });
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    child.on('error', (error) => reject(new Error(`bundle build could not start: ${error.message}`)));
+    child.on('close', (code) => {
+      if (stdout.trim()) log(stdout.trim());
+      if (stderr.trim()) log(stderr.trim());
+      if (code !== 0) reject(new Error(`bundle build failed (exit ${code}) — refusing to audit stale UI bundles`));
+      else resolve();
+    });
+  });
+  for (const file of ['app.bundle.js', 'engine-worker.bundle.js']) {
+    const fullPath = path.join(UI, file);
+    if (!fs.existsSync(fullPath) || fs.statSync(fullPath).size === 0) {
+      throw new Error(`bundle build did not produce a non-empty ${fullPath}`);
+    }
+  }
+}
+
+async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   if (!fs.existsSync(FIXTURE)) throw new Error(`חסר fixture: ${FIXTURE}`);
   // **F-BL1 (17.11 — שורש הפער ההיסטורי 353,687<355,967):** רצפת הנפח השוותה
@@ -265,7 +290,12 @@ const gotoView = async () => {
   const targetUrl = URL
     ? URL + (URL.includes('?') ? '&' : '?') + 't=' + runId
     : `http://127.0.0.1:${PORT}/index.html`;
-  if (!URL) await startServer();
+  // בדיקת local חייבת לבנות את אותם app/worker bundles מהמקור הנוכחי
+  // לפני שהשרת מתחיל להגיש קבצים. במצב --url נבדק אתר מרוחק ולכן לא בונים כאן.
+  if (!URL) {
+    await buildLocalBrowserBundles();
+    await startServer();
+  }
 
   try { await ab(['close']); } catch (e) {}
   // הדמון של agent-browser עשוי להיות עסוק עוד רגע בסגירת הדפדפן הקודם
