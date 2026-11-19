@@ -96,6 +96,17 @@ function buildModel() {
   return { r, S, model: r.pageModel };
 }
 
+// סופרים את class token "w" על span, ולא רק class="w" מדויק.
+// סמני הערות נושאים "w w--fnmarker" ועדיין הם עוגני מילים מלאים.
+function countWordAnchors(html) {
+  const spans = String(html).matchAll(/<span\\b[^>]*class="([^"]*)"[^>]*>/g);
+  let count = 0;
+  for (const match of spans) {
+    if (match[1].split(/\\s+/).includes('w')) count++;
+  }
+  return count;
+}
+
 // =====================================================================
 describe('S8E-1 פרוסה 4 — ה-HTML נבנה מה-PageModel בלבד (אין עימוד שני)', () => {
   const { S, model } = buildModel();
@@ -134,6 +145,12 @@ describe('S8E-1 פרוסה 4 — ה-HTML נבנה מה-PageModel בלבד (אי�
 
 // =====================================================================
 describe('S8E-2 פרוסה 4 — זהות תוכן וגיאומטריה עם ה-DOM ועם המודל', () => {
+  it('ספירת עוגני מילים סופרת class token ולא רק class="w"', () => {
+  const sample = '<span class="w"></span><span class="w w--fnmarker"></span><span class="w--fnmarker"></span><span class="line"></span>';
+  assertEq(countWordAnchors(sample), 2, 'w רגיל ו-w עם סמנטיקת סמן נספרים; w--fnmarker לבדו אינו עוגן מילה');
+});
+
+
   const { S, model } = buildModel();
   const doc = makeDoc();
 
@@ -153,7 +170,7 @@ describe('S8E-2 פרוסה 4 — זהות תוכן וגיאומטריה עם ה-
 
   it('אותן מילים: טקסט כל מילה מופיע; מספר עוגני המילים זהה למודל', () => {
     const html = exportHtmlFromModel(model, S, doc, {});
-    const wCount = (html.match(/class="w"/g) || []).length;
+    const wCount = countWordAnchors(html);
     // מקורות עוגני המילים במקרין: שורות (כל האזורים) + מילות מרזב ההערות
     let modelWords = 0;
     for (const mp of model.pages) {
@@ -241,7 +258,7 @@ describe('S8E-3 פרוסה 4 — כיסוי, עצמאות וקישורים', () 
       for (const ln of mp.lines) modelWords += (ln.words || []).length;
       for (const n of (mp.footnotes || [])) modelWords += (n.words || []).length;
     }
-    const wCount = (html.match(/class="w"/g) || []).length;
+    const wCount = countWordAnchors(html);
     assertEq(wCount, modelWords, `כל ${modelWords.toLocaleString()} מילי המודל בקובץ`);
     // רצפת נפח בסטרינג: מילים בטקסט הגולמי של השורות
     let textWords = 0;
