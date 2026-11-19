@@ -429,6 +429,7 @@ var __paths = {
   "src/engine/decoration/shaar-pages.js|./theme-sets": "src/engine/decoration/theme-sets.js",
   "src/engine/decoration/custom-pages.js|../layout/page-templates": "src/engine/layout/page-templates.js",
   "src/engine/decoration/toc-builder.js|../layout/page-templates": "src/engine/layout/page-templates.js",
+  "src/engine/decoration/toc-builder.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/layout/side-notes.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/layout/side-notes.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/decoration/ornament-plan.js|./ornament-fit": "src/engine/decoration/ornament-fit.js",
@@ -442,6 +443,7 @@ var __paths = {
   "src/engine/layout/endnote-pages.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/layout/page-items.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/layout/structural-stamps.js|../output/shaar-content": "src/engine/output/shaar-content.js",
+  "src/engine/layout/structural-stamps.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/layout/structural-stamps.js|../layout/furniture-geometry": "src/engine/layout/furniture-geometry.js",
   "src/engine/layout/structural-stamps.js|../layout/footnote-lanes": "src/engine/layout/footnote-lanes.js",
   "src/engine/layout/structural-stamps.js|../typography/font-keys": "src/engine/typography/font-keys.js",
@@ -18657,6 +18659,7 @@ __modules["src/engine/decoration/toc-builder.js"] = function (require, module, e
  */
 
 const { PAGE_TYPES, buildPageTemplate } = require('../layout/page-templates');
+const { GEO, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM, SZ_CORE } = require('../core/imud-geometry');
 
 const TOC_MAX_ROWS = 20000;     // תקציב שורות כולל (general+detail)
 const TOC_MAX_PAGES = 500;      // תקציב עמודי TOC כולל
@@ -18759,6 +18762,33 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
   let rowsConsumed = 0;
   let budgetExceeded = false;
 
+  // תוכן כללי/מפורט ללא רשומות אינו עמוד. יצירת עמוד ריק גורמת בהמשך
+  // ל-materialization fallback כי אין מה להטביע ב-tocLayout, ופוגעת בחוזה
+  // PageModel (עמוד TOC חייב לשאת תוכן אמיתי). שני התכנים נשארים פעילים;
+  // פשוט לא נוצרת יחידת עימוד שאין לה רשומות.
+  if (!model || !Array.isArray(model.rows)) {
+    throw new TypeError('buildTocPages: model.rows must be an array');
+  }
+  if (model.rows.length === 0) {
+    if (eventLog) eventLog.emit('toc', 'toc-pages-built', {
+      type: pageType, pages: 0, rows: 0, overflow: 0, budgetExceeded: false, empty: true
+    });
+    return { pages, overflow: overflowFindings, budgetExceeded: false };
+  }
+
+  const prefix = pageType === 'toc-detail' ? 'dtoc' : 'gtoc';
+  const raw = settings && settings._imudRaw ? settings._imudRaw : {};
+  const sizeOf = (level, imud) => {
+    const rawSize = Number(raw[`s-${prefix}-${level}`]);
+    if (imud && Number.isFinite(rawSize) && rawSize > 0) return rawSize;
+    const coreSize = SZ_CORE.tocLevel[level];
+    return imud && Number.isFinite(coreSize) ? coreSize : levelSizePt(level);
+  };
+  const familyOf = (level, imud) => {
+    if (!imud) return null;
+    const stack = String(raw[`f-${prefix}-${level}`] || '').split(',')[0].trim();
+    return stack.replace(/^['"]|['"]$/g, '') || null;
+  };
   const mkPage = (isFirst) => {
     const tpl = buildPageTemplate(pageType, settings, (pages.length % 2) === 0);
     const pg = {
@@ -18766,50 +18796,65 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
       columns: Array.from({ length: tpl.columns.length }, () => []),
       footnotes: [], sideNotes: [], headingsOnPage: [], balanceInfo: null,
       fnReservedHeightPx: 0, chapterOpening: false,
-      toc: { title: isFirst ? title : '', rows: [], isFirst },
+      toc: { title: isFirst ? title : '', rows: [], isFirst, isLast: false },
     };
     pages.push(pg);
     return pg;
   };
 
+  let cur = mkPage(true);
+  const imudToc = !!(cur.template && cur.template.imud);
+  // רוחב התוכן מהעמודות (לא מרוחב A4). ב-IMUD נשמר גם אזור המספר/התווית
+  // שמשמאל לטקסט לפי GEO.TOC_NUM_X ו-GEO.TOC_TITLE_X1.
+  const colsTpl = (cur.template && cur.template.columns) || [];
+  const tplW = colsTpl.length
+    ? Math.max.apply(null, colsTpl.map(c => c.x + c.w)) - Math.min.apply(null, colsTpl.map(c => c.x))
+    : ((cur.template.contentBox && cur.template.contentBox.right != null
+      ? (cur.template.contentBox.right - cur.template.contentBox.left) || cur.template.width
+      : cur.template.width));
+  const capacityOf = (isFirst, tpl) => tpl.imud
+    ? TOC_STRETCH_BOTTOM - (isFirst ? TOC_FIRST_TOP : TOC_CONT_TOP)
+    : tpl.contentBox.height - (isFirst ? (TITLE_SIZE_PT * (96 / 72) + TITLE_MARGIN_PX) : 0);
+
   const rowHeightOf = (r) => {
-    if (r.kind === 'group') {
-      // קבוצה: שורה אחת רציפה — גובה לפי הגודל המקסימלי בקבוצה + הפרש
-      const size = Math.max(...r.items.map(it => levelSizePt(it.level)));
-      const text = r.items.map(it => it.text).join(' | ');
-      const avail = Math.max(60, tplWidth() - levelIndentPx(r.items[0].level) - LABEL_RESERVE_PX - DOTS_MIN_PX);
-      const { lines } = wrapTitle(text, avail, size, measure);
-      r.wrapped = lines;
-      return { h: lines.length * lineHeight(size) + ROW_GAP_PX, lines: 1, size };
+    const level = r.kind === 'group'
+      ? Math.max(...r.items.map(it => it.level))
+      : r.level;
+    const size = sizeOf(level, imudToc);
+    const family = familyOf(level, imudToc);
+    const rightEdge = imudToc ? GEO.TOC_TITLE_X1 - (level - 1) * GEO.TOC_STAIR : null;
+    const imudAvail = imudToc
+      ? Math.max(60, Math.min(tplW - levelIndentPx(level) - LABEL_RESERVE_PX - DOTS_MIN_PX,
+          (rightEdge - GEO.TOC_NUM_X - 64) * 0.92))
+      : null;
+    const avail = imudToc
+      ? imudAvail
+      : Math.max(60, tplW - levelIndentPx(level) - LABEL_RESERVE_PX - DOTS_MIN_PX);
+    const text = r.kind === 'group'
+      ? r.items.map(it => it.text).join(' | ')
+      : r.text;
+    const wrapped = wrapTitle(text, avail, size, measure);
+    r.wrapped = wrapped.lines;
+    r.sizePt = size;
+    if (family) r.fontFamily = family;
+    if (wrapped.truncated) {
+      overflowFindings.push({ why: 'title-truncated', text: String(text).slice(0, 40), level });
     }
-    const size = levelSizePt(r.level);
-    const avail = Math.max(60, tplWidth() - levelIndentPx(r.level) - LABEL_RESERVE_PX - DOTS_MIN_PX);
-    const { lines, truncated } = wrapTitle(r.text, avail, size, measure);
-    r.wrapped = lines;
-    if (truncated) {
-      overflowFindings.push({ why: 'title-truncated', text: r.text.slice(0, 40), level: r.level });
+    if (imudToc) {
+      // התאמה לחוזה המורשת: גובה השורה תלוי בגודל האות; שורות עטיפה נוספות
+      // מקבלות pitch של 26px. אין להשתמש ב-lineHeight של גוף הספר.
+      const firstLineH = size * (96 / 72) * 1.3 + 8;
+      r.lineHeightPx = 26;
+      r.heightPx = firstLineH + Math.max(0, wrapped.lines.length - 1) * 26;
+      return { h: r.heightPx, lines: wrapped.lines.length, size, family };
     }
-    return { h: lines.length * lineHeight(size) + ROW_GAP_PX, lines: lines.length, size };
+    const h = wrapped.lines.length * lineHeight(size) + ROW_GAP_PX;
+    r.lineHeightPx = lineHeight(size);
+    r.heightPx = h;
+    return { h, lines: wrapped.lines.length, size, family };
   };
 
-  let tplW = 0;
-  const tplWidth = () => tplW;
-
-  if (!model.rows.length) return { pages: [], overflow: overflowFindings, budgetExceeded };
-
-  let cur = mkPage(true);
-  // **S5.1:** רוחב התוכן מהעמודות (min/max) — contentBox מגדיר רק top/bottom,
-  // אז (right-left)||width היה NaN||width=רוחב העמודה המלא (794) — שורות ה-TOC
-  // נמדדו ב-~119px יותר מדי ונעטפו מתחתית תיבת התוכן בפועל.
-  {
-    const colsTpl = (cur.template && cur.template.columns) || [];
-    tplW = colsTpl.length
-      ? Math.max.apply(null, colsTpl.map(c => c.x + c.w)) - Math.min.apply(null, colsTpl.map(c => c.x))
-      : ((cur.template.contentBox && cur.template.contentBox.right != null
-        ? (cur.template.contentBox.right - cur.template.contentBox.left) || cur.template.width
-        : cur.template.width));
-  }
-  let availH = cur.template.contentBox.height - (TITLE_SIZE_PT * (96 / 72) + TITLE_MARGIN_PX);
+  let availH = capacityOf(true, cur.template);
   let usedH = 0;
 
   for (const r of model.rows) {
@@ -18823,16 +18868,18 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
     if (usedH + h > availH && cur.toc.rows.length) {
       if (pages.length >= TOC_MAX_PAGES) { budgetExceeded = true; break; }
       cur = mkPage(false);
-      availH = cur.template.contentBox.height;
+      availH = capacityOf(false, cur.template);
       usedH = 0;
     }
-    // שורה בודדת גבוהה מעמוד שלם ⇒ אל תיתלה: הנח אותה ותעד (אין לולאה — usedH מתקדם תמיד)
+    // שורה בודדת גבוהה מעמוד שלם ⇒ אל תיתלה: הנח אותה ותעד.
     if (h > availH) {
       overflowFindings.push({ why: 'row-taller-than-page', level: r.level || (r.items && r.items[0].level) });
     }
     cur.toc.rows.push(r);
     usedH += Math.min(h, availH);
   }
+
+  pages.forEach((p, i) => { p.toc.isLast = i === pages.length - 1; });
 
   if (budgetExceeded && ledger) {
     const rec = ledger.create('toc-budget-exceeded', pageType, null,
@@ -18846,7 +18893,7 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
     }
   }
   if (eventLog) {
-    eventLog.emit('toc', 'toc-pages-built', { type: pageType, pages: pages.length, rows: rowsConsumed, overflow: overflowFindings.length, budgetExceeded });
+    eventLog.emit('toc', 'toc-pages-built', { type: pageType, pages: pages.length, rows: rowsConsumed, overflow: overflowFindings.length, budgetExceeded, imudGeometry: imudToc });
   }
   return { pages, overflow: overflowFindings, budgetExceeded };
 }
@@ -21378,6 +21425,7 @@ __modules["src/engine/layout/structural-stamps.js"] = function (require, module,
  */
 
 const { buildShaarBlocks, shaarFontOf } = require('../output/shaar-content');
+const { GEO, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM, SZ_CORE } = require('../core/imud-geometry');
 const { folioGeometry, headerGeometry } = require('../layout/furniture-geometry');
 const { assignFootnoteLanes } = require('../layout/footnote-lanes');
 // **שלב 8 ביקורת §3.1:** המיפוי משפחה→מפתח גופן — מקור יחיד משותף (היה כפול
@@ -21414,12 +21462,126 @@ function stampTocLayout(page, settings, measure) {
   const rows = (page.toc && page.toc.rows) || [];
   if (!rows.length) return false;
   const tpl = page.template;
-  const PT = 12; // גודל שורת TOC — כמו fakeLine של ההקרנה לפני ההטבעה
+  const imud = !!(tpl && tpl.imud);
+  const layout = [];
+
+  if (imud) {
+    const first = page.toc.isFirst === true;
+    const isLast = page.toc.isLast === true;
+    const top = first ? TOC_FIRST_TOP : TOC_CONT_TOP;
+    const bottom = TOC_STRETCH_BOTTOM;
+    const prefix = page.type === 'toc-detail' ? 'dtoc' : 'gtoc';
+    const raw = settings && settings._imudRaw ? settings._imudRaw : {};
+    const levelOf = row => row.kind === 'group' ? Math.max(...row.items.map(it => it.level)) : row.level;
+    const sizeOf = row => {
+      const level = levelOf(row);
+      const rawSize = Number(raw[`s-${prefix}-${level}`]);
+      if (Number.isFinite(rawSize) && rawSize > 0) return rawSize;
+      return Number(SZ_CORE.tocLevel[level]) || 10.5;
+    };
+    const familyOf = row => {
+      const stack = String(raw[`f-${prefix}-${levelOf(row)}`] || row.fontFamily || '').split(',')[0].trim();
+      return stack.replace(/^['"]|['"]$/g, '') || null;
+    };
+    const rowHeightOf = row => {
+      if (Number(row.heightPx) > 0) return Number(row.heightPx);
+      const size = sizeOf(row);
+      const n = Array.isArray(row.wrapped) && row.wrapped.length ? row.wrapped.length : 1;
+      return size * (96 / 72) * 1.3 + 8 + Math.max(0, n - 1) * 26;
+    };
+    const rowHeights = rows.map(rowHeightOf);
+    const rowYs = [];
+    if (!isLast && rows.length > 1) {
+      const maxH = Math.max(...rowHeights);
+      const hLast = rowHeights[rowHeights.length - 1];
+      const naturalPitch = (bottom - top - hLast) / (rows.length - 1);
+      const pitch = Math.max(naturalPitch, maxH);
+      const lastTop = top + (rows.length - 1) * pitch;
+      if (lastTop <= bottom - hLast + 0.5) {
+        rows.forEach((row, i) => rowYs.push(top + i * pitch));
+      } else {
+        let y = top;
+        rowHeights.forEach(h => { rowYs.push(y); y += h; });
+      }
+    } else {
+      let y = top;
+      rowHeights.forEach(h => { rowYs.push(y); y += h; });
+    }
+
+    const makeWords = (text, sizePt, family) => {
+      const m = family ? measureOfFamily(measure, family, settings) : measure;
+      const fontKey = family ? familyFontKeyOf(family) : null;
+      const words = String(text || '').split(/\s+/).filter(Boolean).map(word => ({
+        text: scrubPUAText(word),
+        w: m.measureTextWidth(scrubPUAText(word), sizePt, 0),
+        ...(fontKey ? { fontKey } : {})
+      }));
+      return { words, spaceW: m.measureTextWidth(' ', sizePt, 0), fontKey };
+    };
+
+    rows.forEach((row, ri) => {
+      const level = levelOf(row);
+      const sizePt = sizeOf(row);
+      const family = familyOf(row);
+      const rightEdge = GEO.TOC_TITLE_X1 - (level - 1) * GEO.TOC_STAIR;
+      const labelW = 64;
+      const x = GEO.TOC_NUM_X + labelW;
+      const w = Math.max(40, rightEdge - x);
+      const rowY = rowYs[ri];
+      let lineTexts = Array.isArray(row.wrapped) && row.wrapped.length ? row.wrapped.slice() : [
+        row.kind === 'group' ? row.items.map(it => it.text).join(' | ') : row.text
+      ];
+      const labelText = row.kind === 'group'
+        ? (row.items || []).map(it => [it.rowNum, it.label].filter(v => v != null && String(v) !== '').join(' ')).filter(Boolean).join(' | ')
+        : [row.rowNum, row.label].filter(v => v != null && String(v) !== '').join(' ');
+      // שמורת LABEL_RESERVE_PX הוקצתה כבר בשלב wrapping; התווית מוצגת בשדה נפרד.
+      const firstLineH = rowHeights[ri] - Math.max(0, lineTexts.length - 1) * 26;
+      let y = rowY;
+      lineTexts.forEach((lineText, li) => {
+        const h = li === 0 ? firstLineH : 26;
+        const measured = makeWords(lineText, sizePt, family);
+        layout.push({
+          x, y, w, h, words: measured.words, spaceW: measured.spaceW,
+          align: 'right', kind: 'toc-row', sizePt, fontKey: measured.fontKey,
+          targetPage: row.targetPage != null ? row.targetPage : null
+        });
+        y += h;
+      });
+      if (labelText) {
+        const labelSize = Number(SZ_CORE.tocNum) || 10.5;
+        const measured = makeWords(labelText, labelSize, family);
+        layout.push({
+          x: GEO.TOC_NUM_X, y: rowY, w: labelW - 8, h: firstLineH,
+          words: measured.words, spaceW: measured.spaceW,
+          align: 'center', kind: 'toc-label', sizePt: labelSize, fontKey: measured.fontKey
+        });
+      }
+    });
+
+    let title = null;
+    if (first && String(page.toc.title || '').trim()) {
+      const titleSize = Number(SZ_CORE.tocTitle) || 17;
+      const family = familyOf({ level: 1, kind: 'entry' });
+      const measured = makeWords(page.toc.title, titleSize, family);
+      title = {
+        x: GEO.COL_L_X, y: GEO.FLOW_TOP + 136, w: 552.3, h: 30,
+        words: measured.words, spaceW: measured.spaceW, align: 'center',
+        sizePt: titleSize, fontKey: measured.fontKey, bold: true, kind: 'toc-title'
+      };
+    }
+    page.tocLayout = {
+      schema: 'toc-layout-v2', rows: layout, title,
+      firstTop: top, stretchBottom: bottom, pageWidth: tpl.width
+    };
+    return true;
+  }
+
+  // פרופיל DP הגנרי נשאר ללא שינוי; גאומטריית IMUD אינה מושלכת עליו.
+  const PT = 12;
   const spaceW = measure.measureTextWidth(' ', PT, 0);
-  const wordsOf = (text) => String(text || '').split(/\s+/).filter(Boolean).map(w => ({
+  const wordsOf = text => String(text || '').split(/\s+/).filter(Boolean).map(w => ({
     text: w, w: measure.measureTextWidth(w, PT, 0)
   }));
-  const layout = [];
   let yi = 0;
   for (const row of rows) {
     const y = 70 + yi * 24;
@@ -21428,19 +21590,15 @@ function stampTocLayout(page, settings, measure) {
       const items = [];
       for (const it of row.items || []) {
         const text = [it.text, it.label || ''].filter(Boolean).join(' ');
-        items.push({
-          x: 18 + xi, y, w: 60, h: 22, words: wordsOf(text), spaceW,
-          targetPage: it.targetPage != null ? it.targetPage : null
-        });
+        items.push({ x: 18 + xi, y, w: 60, h: 22, words: wordsOf(text), spaceW,
+          targetPage: it.targetPage != null ? it.targetPage : null });
         xi += 80;
       }
       layout.push({ kind: 'group', y, items });
     } else {
       const text = [row.text, row.label || ''].filter(Boolean).join(' ');
-      layout.push({
-        kind: 'row', x: 18, y, w: tpl.width - 36, h: 22, words: wordsOf(text), spaceW,
-        targetPage: row.targetPage != null ? row.targetPage : null
-      });
+      layout.push({ kind: 'row', x: 18, y, w: tpl.width - 36, h: 22, words: wordsOf(text), spaceW,
+        targetPage: row.targetPage != null ? row.targetPage : null });
     }
     yi++;
   }
@@ -22668,13 +22826,12 @@ function projectPage(page, settings, apiOrOpts) {
   // ממקמת את המילים החותמות ואינה מודדת. חותמה חסרה — נפילה מדווחת.
   if (page.type === 'toc-general' || page.type === 'toc-detail') {
     if (page.tocLayout && page.tocLayout.rows) {
-      const pt = page.tocLayout.sizePt || 12;
+      if (page.tocLayout.title) {
+        const t = page.tocLayout.title;
+        out.lines.push(stampedRowLine(t, t.sizePt || page.tocLayout.sizePt || 12, 'toc-title', t.fontKey));
+      }
       for (const row of page.tocLayout.rows) {
-        if (row.kind === 'group') {
-          for (const it of row.items || []) out.lines.push(stampedRowLine(it, pt, 'toc-row'));
-        } else {
-          out.lines.push(stampedRowLine(row, pt, 'toc-row'));
-        }
+        out.lines.push(stampedRowLine(row, row.sizePt || page.tocLayout.sizePt || 12, row.kind || 'toc-row', row.fontKey));
       }
     } else {
       materializeFallbacks.push({ kind: 'materialize-fallback-toc-stamp', page: page.index });
@@ -23644,14 +23801,17 @@ function centeredStampedLine(stampedWords, spaceW, x, y, w, h, sizePt, cls, font
  * **ביקורת §3.2:** fontKey אופציונלי — כותרת עמוד ההערות נושאת את מפתח הגופן
  * שלה מהחותמת ('heading' ⇒ ‏/F3), כמו בנתיב ה-fakeLine הישן (תצוגה=ייצוא). */
 function stampedRowLine(row, pt, kind, fontKey) {
-  let cursor = row.x + row.w;
+  const align = row.align || 'right';
   const wordPos = [];
-  for (const wd of (row.words || [])) {
+  const words = row.words || [];
+  const totalWordsWidth = words.reduce((sum, wd) => sum + wd.w, 0) + Math.max(0, words.length - 1) * (row.spaceW || 0);
+  let cursor = align === 'center' ? row.x + (row.w + totalWordsWidth) / 2 : row.x + row.w;
+  for (const wd of words) {
     cursor -= wd.w;
     wordPos.push({ text: wd.text, x: cursor, w: wd.w, sizePt: pt, ...(fontKey ? { fontKey } : {}) });
     cursor -= (row.spaceW || 0);
   }
-  return { x: row.x, y: row.y, w: row.w, h: row.h, words: wordPos, align: 'right', kind: kind || 'toc-row', level: null, isLast: false, sizePt: pt, baselineY: null, tokenId: null };
+  return { x: row.x, y: row.y, w: row.w, h: row.h, words: wordPos, align, kind: kind || 'toc-row', level: null, isLast: false, sizePt: pt, bold: row.bold === true, baselineY: null, tokenId: null };
 }
 
 function fakeLine(text, x, y, w, h, settings, measure, sizePt, fontKey, kind) {
@@ -27739,7 +27899,7 @@ function familyOf(key) {
  */
 function renderModelLine(ml, doc, relX, relY) {
   const el = doc.createElement('div');
-  el.className = 'line' + (ml.isLast ? ' line--last' : '');
+  el.className = 'line' + (ml.isLast ? ' line--last' : '') + (ml.kind === 'toc-title' ? ' toc-title' : '');
   el.setAttribute('dir', 'rtl');
   el.style.position = 'absolute';
   el.style.left = `${px2(ml.x - relX)}px`;
