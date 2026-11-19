@@ -393,6 +393,7 @@ var __paths = {
   "src/engine/layout/dp-planner.js|./constraint-matrix": "src/engine/layout/constraint-matrix.js",
   "src/engine/layout/dp-planner.js|./decision-trace": "src/engine/layout/decision-trace.js",
   "src/engine/layout/page-templates.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
+  "src/engine/layout/page-templates.js|./furniture-geometry": "src/engine/layout/furniture-geometry.js",
   "src/engine/layout/protections-matrix.js|./balancing": "src/engine/layout/balancing.js",
   "src/engine/layout/protections-matrix.js|./column-flow": "src/engine/layout/column-flow.js",
   "src/engine/layout/protections-matrix.js|../notes/markers": "src/engine/notes/markers.js",
@@ -418,6 +419,7 @@ var __paths = {
   "src/engine/layout/legacy-imud-flow.js|../decoration/headers-builder": "src/engine/decoration/headers-builder.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/folio": "src/engine/decoration/folio.js",
   "src/engine/layout/legacy-imud-flow.js|../output/line-font": "src/engine/output/line-font.js",
+  "src/engine/layout/legacy-imud-flow.js|./furniture-geometry": "src/engine/layout/furniture-geometry.js",
   "src/engine/layout/legacy-imud-flow.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/layout/legacy-imud-flow.js|../core/h3-contract": "src/engine/core/h3-contract.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/legacy-ornaments": "src/engine/decoration/legacy-ornaments.js",
@@ -10106,8 +10108,6 @@ const PAGE_TYPES = {
 };
 
 const MM_TO_PX = 96 / 25.4;
-// מרחק ראש תיבת הכותרת מתחילת אזור הזרימה — אינו תלוי בהיסט תוכן של sign-open.
-const RUNNING_HEAD_TOP_INSET_PX = 18;
 const PAGE_SIZES = {
   // **S5.2 (O14 — A4 מדויק):** 210×297מ״מ @96dpi = 793.70×1122.52px — הערכים
   // המעוגלים (794×1123) הזיזו את גוף ה-DP ב-0.3px ויצרו MediaBox שאינו זהה
@@ -10136,6 +10136,7 @@ const PAGE_SIZES = {
 const {
   GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
 } = require('../core/imud-geometry');
+const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
 
 function isImudProfile(settings) {
   return !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
@@ -10318,6 +10319,83 @@ module.exports = {
   TOC_TITLE_BLOCK_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM,
   PAGE_STRETCH_MAX, JUSTIFY_MAX_GAP, JUSTIFY_MAX_LH_EXTRA, ORPHAN_RECLAIM_BUFFER, RECLAIM_BELOW_BASE,
   SZ_CORE
+};
+
+};
+__modules["src/engine/layout/furniture-geometry.js"] = function (require, module, exports) {
+// src/engine/layout/furniture-geometry.js — גיאומטריית ריהוט עמוד ממקור יחיד (שלב 6 פרוסה 1)
+'use strict';
+
+/**
+ * **מעמד (הוראת שלב 6 §8):** "כותרות עליונות, תחתונות ומספרי עמוד יהיו Page
+ * Items בעלי placement model אחיד; **אין לחשב את מיקומם בנפרד ב-DOM וב-PDF**."
+ *
+ * עד כאן המקרן ל-PDF חישב את תיבת הגיליון והבסיס במתמטיקה מפורשת
+ * (FOLIO_BOTTOM_PX=25, half-leading, ascent) בעוד ה-DOM הסתמך על CSS חי
+ * (.folio{bottom:25px} וכו') שכויל להתאים בעבר (S69/S5.1) — שני מקורות
+ * של אותה גיאומטריה שכל אחד מהם יכול לסטות בשקט. מעתה שני המקרינים
+ * קוראים מכאן: המקרן מציב את המספרים כמות שהם; ה-DOM מציב אותם כסגנון
+ * מפורש (top/lineHeight) לצד ה-class הקיים שנשאר אחראי לעור (מסגרת/צבע).
+ */
+
+/** תחתית תיבת הגיליון מה-CSS החי (styles.css: .folio{bottom:25px}) — קבוע המקור. */
+const FOLIO_BOTTOM_PX = 25;
+/** ראש תיבת גיליון במצב top (styles.css: .folio--top{top:4px}). */
+const FOLIO_TOP_PX = 4;
+/** ראש תיבת גיליון בתוך הכותרת העליונה (styles.css: .folio--in-header{top:6px}). */
+const FOLIO_IN_HEADER_PX = 6;
+/** מרחק תיבת הכותרת העליונה מעל ראשית זרימת התוכן — קבוע משותף לתבניות. */
+const RUNNING_HEAD_TOP_INSET_PX = 18;
+
+/**
+ * גיאומטריית הגיליון — מחושבת פעם אחת מאותם קלטים ששני המקרינים צורכים.
+ * @param {object} page — עמוד (index, folioDisplay, template)
+ * @param {object} settings
+ * @param {{measureTextWidth:(t:string,pt:number)=>number, ascentEm:()=>number, descentEm:()=>number}} folioMeasure
+ *   מדידת הגיליון (גופן הגיליון כשרשום — אותו מופע שהמקרן בונה)
+ * @returns {null|{y, baselineY, x, w, sizePt, text, lineHeightPx, position}}
+ */
+function folioGeometry(page, settings, folioMeasure) {
+  const pos = String((settings && settings['page-num-position']) || 'bottom-center');
+  if (pos === 'none' || !page || !page.folioDisplay) return null;
+  const tpl = page.template;
+  const text = String(page.folioDisplay);
+  const folioSz = Number(settings['page-num-size-pt']) > 0 ? Number(settings['page-num-size-pt']) : 10;
+  const fw = Math.max(1, Math.round(folioMeasure.measureTextWidth(text, folioSz)));
+  const folioPx = folioSz * (96 / 72);
+  // line-height: normal ≈ 1.2 (חסר הגדרה מפורשת ב-CSS לגיליון) — הנוסחה ההיסטורית
+  const folioLineH = Math.round(folioPx * 1.2);
+  const ascEm = folioMeasure.ascentEm(), descEm = folioMeasure.descentEm();
+  const halfLead = Math.max(0, (folioLineH - (ascEm + descEm) * folioPx) / 2);
+  const recto = (page.index % 2 === 0);
+  let fx = Math.round((tpl.width - fw) / 2);
+  let boxTop = tpl.height - FOLIO_BOTTOM_PX - folioLineH;
+  let baselineY = boxTop + halfLead + ascEm * folioPx;
+  if (pos === 'outer-left' || (pos === 'outer' && recto)) fx = 8;
+  else if (pos === 'outer-right' || (pos === 'outer' && !recto)) fx = Math.max(8, Math.round(tpl.width - fw - 8));
+  else if (pos === 'top') { boxTop = FOLIO_TOP_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
+  else if (pos === 'in-header') { boxTop = FOLIO_IN_HEADER_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
+  return {
+    y: boxTop, baselineY, x: fx, w: fw, sizePt: folioSz, text,
+    lineHeightPx: folioLineH, position: pos
+  };
+}
+
+/**
+ * מיקום תיבת הכותרת העליונה — נקבע ב-PageTemplate בנפרד מ-contentBox.
+ * היסטים של גוף התוכן (למשל h2-top-offset בעמוד sign-open) אינם מזיזים ריהוט.
+ */
+function headerGeometry(page) {
+  const tpl = page && page.template;
+  if (!tpl || !Number.isFinite(tpl.headerTop)) {
+    throw new TypeError('PageTemplate.headerTop must be a finite page-space coordinate');
+  }
+  return { y: Math.max(0, tpl.headerTop) };
+}
+
+module.exports = {
+  FOLIO_BOTTOM_PX, FOLIO_TOP_PX, FOLIO_IN_HEADER_PX, RUNNING_HEAD_TOP_INSET_PX,
+  folioGeometry, headerGeometry
 };
 
 };
@@ -13407,6 +13485,7 @@ const { toBareGematria } = require('../decoration/folio');
 // **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
+const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
 
 // ---------- גיאומטריה (px @96dpi; PDF = px×0.75) — מכויל מהייחוס ----------
 // **שלב ההעברה למנוע המאוחד — מקטע 1:** הקבועים הגאומטריים עברו למודול
@@ -14485,6 +14564,7 @@ function legacyTypeset(rawText, settings, env) {
         width: GEO.PAGE_W, height: GEO.PAGE_H,
         columns: [{ x: GEO.COL_R_X, w: GEO.COL_W }, { x: GEO.COL_L_X, w: GEO.COL_W }],
         gutter: 13.48,
+        headerTop: GEO.FLOW_TOP - RUNNING_HEAD_TOP_INSET_PX,
         contentBox: { top: GEO.FLOW_TOP, bottom: FLOW_BOTTOM, height: GEO.FLOW_H }
       }
     };
@@ -21666,81 +21746,6 @@ function crownSvgOf(graphic) {
 }
 
 module.exports = { buildShaarBlocks, shaarBoxOf, shaarFontOf, crownSvgOf, splitPartTitle, MM_TO_PX };
-
-};
-__modules["src/engine/layout/furniture-geometry.js"] = function (require, module, exports) {
-// src/engine/layout/furniture-geometry.js — גיאומטריית ריהוט עמוד ממקור יחיד (שלב 6 פרוסה 1)
-'use strict';
-
-/**
- * **מעמד (הוראת שלב 6 §8):** "כותרות עליונות, תחתונות ומספרי עמוד יהיו Page
- * Items בעלי placement model אחיד; **אין לחשב את מיקומם בנפרד ב-DOM וב-PDF**."
- *
- * עד כאן המקרן ל-PDF חישב את תיבת הגיליון והבסיס במתמטיקה מפורשת
- * (FOLIO_BOTTOM_PX=25, half-leading, ascent) בעוד ה-DOM הסתמך על CSS חי
- * (.folio{bottom:25px} וכו') שכויל להתאים בעבר (S69/S5.1) — שני מקורות
- * של אותה גיאומטריה שכל אחד מהם יכול לסטות בשקט. מעתה שני המקרינים
- * קוראים מכאן: המקרן מציב את המספרים כמות שהם; ה-DOM מציב אותם כסגנון
- * מפורש (top/lineHeight) לצד ה-class הקיים שנשאר אחראי לעור (מסגרת/צבע).
- */
-
-/** תחתית תיבת הגיליון מה-CSS החי (styles.css: .folio{bottom:25px}) — קבוע המקור. */
-const FOLIO_BOTTOM_PX = 25;
-/** ראש תיבת גיליון במצב top (styles.css: .folio--top{top:4px}). */
-const FOLIO_TOP_PX = 4;
-/** ראש תיבת גיליון בתוך הכותרת העליונה (styles.css: .folio--in-header{top:6px}). */
-const FOLIO_IN_HEADER_PX = 6;
-
-/**
- * גיאומטריית הגיליון — מחושבת פעם אחת מאותם קלטים ששני המקרינים צורכים.
- * @param {object} page — עמוד (index, folioDisplay, template)
- * @param {object} settings
- * @param {{measureTextWidth:(t:string,pt:number)=>number, ascentEm:()=>number, descentEm:()=>number}} folioMeasure
- *   מדידת הגיליון (גופן הגיליון כשרשום — אותו מופע שהמקרן בונה)
- * @returns {null|{y, baselineY, x, w, sizePt, text, lineHeightPx, position}}
- */
-function folioGeometry(page, settings, folioMeasure) {
-  const pos = String((settings && settings['page-num-position']) || 'bottom-center');
-  if (pos === 'none' || !page || !page.folioDisplay) return null;
-  const tpl = page.template;
-  const text = String(page.folioDisplay);
-  const folioSz = Number(settings['page-num-size-pt']) > 0 ? Number(settings['page-num-size-pt']) : 10;
-  const fw = Math.max(1, Math.round(folioMeasure.measureTextWidth(text, folioSz)));
-  const folioPx = folioSz * (96 / 72);
-  // line-height: normal ≈ 1.2 (חסר הגדרה מפורשת ב-CSS לגיליון) — הנוסחה ההיסטורית
-  const folioLineH = Math.round(folioPx * 1.2);
-  const ascEm = folioMeasure.ascentEm(), descEm = folioMeasure.descentEm();
-  const halfLead = Math.max(0, (folioLineH - (ascEm + descEm) * folioPx) / 2);
-  const recto = (page.index % 2 === 0);
-  let fx = Math.round((tpl.width - fw) / 2);
-  let boxTop = tpl.height - FOLIO_BOTTOM_PX - folioLineH;
-  let baselineY = boxTop + halfLead + ascEm * folioPx;
-  if (pos === 'outer-left' || (pos === 'outer' && recto)) fx = 8;
-  else if (pos === 'outer-right' || (pos === 'outer' && !recto)) fx = Math.max(8, Math.round(tpl.width - fw - 8));
-  else if (pos === 'top') { boxTop = FOLIO_TOP_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
-  else if (pos === 'in-header') { boxTop = FOLIO_IN_HEADER_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
-  return {
-    y: boxTop, baselineY, x: fx, w: fw, sizePt: folioSz, text,
-    lineHeightPx: folioLineH, position: pos
-  };
-}
-
-/**
- * מיקום תיבת הכותרת העליונה — נקבע ב-PageTemplate בנפרד מ-contentBox.
- * היסטים של גוף התוכן (למשל h2-top-offset בעמוד sign-open) אינם מזיזים ריהוט.
- */
-function headerGeometry(page) {
-  const tpl = page && page.template;
-  if (!tpl || !Number.isFinite(tpl.headerTop)) {
-    throw new TypeError('PageTemplate.headerTop must be a finite page-space coordinate');
-  }
-  return { y: Math.max(0, tpl.headerTop) };
-}
-
-module.exports = {
-  FOLIO_BOTTOM_PX, FOLIO_TOP_PX, FOLIO_IN_HEADER_PX,
-  folioGeometry, headerGeometry
-};
 
 };
 __modules["src/engine/typography/font-keys.js"] = function (require, module, exports) {
