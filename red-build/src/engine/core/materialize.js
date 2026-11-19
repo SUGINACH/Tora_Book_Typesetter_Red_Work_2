@@ -105,13 +105,12 @@ function projectPage(page, settings, apiOrOpts) {
   // ממקמת את המילים החותמות ואינה מודדת. חותמה חסרה — נפילה מדווחת.
   if (page.type === 'toc-general' || page.type === 'toc-detail') {
     if (page.tocLayout && page.tocLayout.rows) {
-      const pt = page.tocLayout.sizePt || 12;
+      if (page.tocLayout.title) {
+        const t = page.tocLayout.title;
+        out.lines.push(stampedRowLine(t, t.sizePt || page.tocLayout.sizePt || 12, 'toc-title', t.fontKey));
+      }
       for (const row of page.tocLayout.rows) {
-        if (row.kind === 'group') {
-          for (const it of row.items || []) out.lines.push(stampedRowLine(it, pt, 'toc-row'));
-        } else {
-          out.lines.push(stampedRowLine(row, pt, 'toc-row'));
-        }
+        out.lines.push(stampedRowLine(row, row.sizePt || page.tocLayout.sizePt || 12, row.kind || 'toc-row', row.fontKey));
       }
     } else {
       materializeFallbacks.push({ kind: 'materialize-fallback-toc-stamp', page: page.index });
@@ -1081,14 +1080,17 @@ function centeredStampedLine(stampedWords, spaceW, x, y, w, h, sizePt, cls, font
  * **ביקורת §3.2:** fontKey אופציונלי — כותרת עמוד ההערות נושאת את מפתח הגופן
  * שלה מהחותמת ('heading' ⇒ ‏/F3), כמו בנתיב ה-fakeLine הישן (תצוגה=ייצוא). */
 function stampedRowLine(row, pt, kind, fontKey) {
-  let cursor = row.x + row.w;
+  const align = row.align || 'right';
   const wordPos = [];
-  for (const wd of (row.words || [])) {
+  const words = row.words || [];
+  const totalWordsWidth = words.reduce((sum, wd) => sum + wd.w, 0) + Math.max(0, words.length - 1) * (row.spaceW || 0);
+  let cursor = align === 'center' ? row.x + (row.w + totalWordsWidth) / 2 : row.x + row.w;
+  for (const wd of words) {
     cursor -= wd.w;
     wordPos.push({ text: wd.text, x: cursor, w: wd.w, sizePt: pt, ...(fontKey ? { fontKey } : {}) });
     cursor -= (row.spaceW || 0);
   }
-  return { x: row.x, y: row.y, w: row.w, h: row.h, words: wordPos, align: 'right', kind: kind || 'toc-row', level: null, isLast: false, sizePt: pt, baselineY: null, tokenId: null };
+  return { x: row.x, y: row.y, w: row.w, h: row.h, words: wordPos, align, kind: kind || 'toc-row', level: null, isLast: false, sizePt: pt, bold: row.bold === true, baselineY: null, tokenId: null };
 }
 
 function fakeLine(text, x, y, w, h, settings, measure, sizePt, fontKey, kind) {

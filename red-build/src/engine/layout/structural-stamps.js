@@ -22,6 +22,7 @@
  */
 
 const { buildShaarBlocks, shaarFontOf } = require('../output/shaar-content');
+const { GEO, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM, SZ_CORE } = require('../core/imud-geometry');
 const { folioGeometry, headerGeometry } = require('../layout/furniture-geometry');
 const { assignFootnoteLanes } = require('../layout/footnote-lanes');
 // **שלב 8 ביקורת §3.1:** המיפוי משפחה→מפתח גופן — מקור יחיד משותף (היה כפול
@@ -58,12 +59,126 @@ function stampTocLayout(page, settings, measure) {
   const rows = (page.toc && page.toc.rows) || [];
   if (!rows.length) return false;
   const tpl = page.template;
-  const PT = 12; // גודל שורת TOC — כמו fakeLine של ההקרנה לפני ההטבעה
+  const imud = !!(tpl && tpl.imud);
+  const layout = [];
+
+  if (imud) {
+    const first = page.toc.isFirst === true;
+    const isLast = page.toc.isLast === true;
+    const top = first ? TOC_FIRST_TOP : TOC_CONT_TOP;
+    const bottom = TOC_STRETCH_BOTTOM;
+    const prefix = page.type === 'toc-detail' ? 'dtoc' : 'gtoc';
+    const raw = settings && settings._imudRaw ? settings._imudRaw : {};
+    const levelOf = row => row.kind === 'group' ? Math.max(...row.items.map(it => it.level)) : row.level;
+    const sizeOf = row => {
+      const level = levelOf(row);
+      const rawSize = Number(raw[`s-${prefix}-${level}`]);
+      if (Number.isFinite(rawSize) && rawSize > 0) return rawSize;
+      return Number(SZ_CORE.tocLevel[level]) || 10.5;
+    };
+    const familyOf = row => {
+      const stack = String(raw[`f-${prefix}-${levelOf(row)}`] || row.fontFamily || '').split(',')[0].trim();
+      return stack.replace(/^['"]|['"]$/g, '') || null;
+    };
+    const rowHeightOf = row => {
+      if (Number(row.heightPx) > 0) return Number(row.heightPx);
+      const size = sizeOf(row);
+      const n = Array.isArray(row.wrapped) && row.wrapped.length ? row.wrapped.length : 1;
+      return size * (96 / 72) * 1.3 + 8 + Math.max(0, n - 1) * 26;
+    };
+    const rowHeights = rows.map(rowHeightOf);
+    const rowYs = [];
+    if (!isLast && rows.length > 1) {
+      const maxH = Math.max(...rowHeights);
+      const hLast = rowHeights[rowHeights.length - 1];
+      const naturalPitch = (bottom - top - hLast) / (rows.length - 1);
+      const pitch = Math.max(naturalPitch, maxH);
+      const lastTop = top + (rows.length - 1) * pitch;
+      if (lastTop <= bottom - hLast + 0.5) {
+        rows.forEach((row, i) => rowYs.push(top + i * pitch));
+      } else {
+        let y = top;
+        rowHeights.forEach(h => { rowYs.push(y); y += h; });
+      }
+    } else {
+      let y = top;
+      rowHeights.forEach(h => { rowYs.push(y); y += h; });
+    }
+
+    const makeWords = (text, sizePt, family) => {
+      const m = family ? measureOfFamily(measure, family, settings) : measure;
+      const fontKey = family ? familyFontKeyOf(family) : null;
+      const words = String(text || '').split(/\s+/).filter(Boolean).map(word => ({
+        text: scrubPUAText(word),
+        w: m.measureTextWidth(scrubPUAText(word), sizePt, 0),
+        ...(fontKey ? { fontKey } : {})
+      }));
+      return { words, spaceW: m.measureTextWidth(' ', sizePt, 0), fontKey };
+    };
+
+    rows.forEach((row, ri) => {
+      const level = levelOf(row);
+      const sizePt = sizeOf(row);
+      const family = familyOf(row);
+      const rightEdge = GEO.TOC_TITLE_X1 - (level - 1) * GEO.TOC_STAIR;
+      const labelW = 64;
+      const x = GEO.TOC_NUM_X + labelW;
+      const w = Math.max(40, rightEdge - x);
+      const rowY = rowYs[ri];
+      let lineTexts = Array.isArray(row.wrapped) && row.wrapped.length ? row.wrapped.slice() : [
+        row.kind === 'group' ? row.items.map(it => it.text).join(' | ') : row.text
+      ];
+      const labelText = row.kind === 'group'
+        ? (row.items || []).map(it => [it.rowNum, it.label].filter(v => v != null && String(v) !== '').join(' ')).filter(Boolean).join(' | ')
+        : [row.rowNum, row.label].filter(v => v != null && String(v) !== '').join(' ');
+      // שמורת LABEL_RESERVE_PX הוקצתה כבר בשלב wrapping; התווית מוצגת בשדה נפרד.
+      const firstLineH = rowHeights[ri] - Math.max(0, lineTexts.length - 1) * 26;
+      let y = rowY;
+      lineTexts.forEach((lineText, li) => {
+        const h = li === 0 ? firstLineH : 26;
+        const measured = makeWords(lineText, sizePt, family);
+        layout.push({
+          x, y, w, h, words: measured.words, spaceW: measured.spaceW,
+          align: 'right', kind: 'toc-row', sizePt, fontKey: measured.fontKey,
+          targetPage: row.targetPage != null ? row.targetPage : null
+        });
+        y += h;
+      });
+      if (labelText) {
+        const labelSize = Number(SZ_CORE.tocNum) || 10.5;
+        const measured = makeWords(labelText, labelSize, family);
+        layout.push({
+          x: GEO.TOC_NUM_X, y: rowY, w: labelW - 8, h: firstLineH,
+          words: measured.words, spaceW: measured.spaceW,
+          align: 'center', kind: 'toc-label', sizePt: labelSize, fontKey: measured.fontKey
+        });
+      }
+    });
+
+    let title = null;
+    if (first && String(page.toc.title || '').trim()) {
+      const titleSize = Number(SZ_CORE.tocTitle) || 17;
+      const family = familyOf({ level: 1, kind: 'entry' });
+      const measured = makeWords(page.toc.title, titleSize, family);
+      title = {
+        x: GEO.COL_L_X, y: GEO.FLOW_TOP + 136, w: 552.3, h: 30,
+        words: measured.words, spaceW: measured.spaceW, align: 'center',
+        sizePt: titleSize, fontKey: measured.fontKey, bold: true, kind: 'toc-title'
+      };
+    }
+    page.tocLayout = {
+      schema: 'toc-layout-v2', rows: layout, title,
+      firstTop: top, stretchBottom: bottom, pageWidth: tpl.width
+    };
+    return true;
+  }
+
+  // פרופיל DP הגנרי נשאר ללא שינוי; גאומטריית IMUD אינה מושלכת עליו.
+  const PT = 12;
   const spaceW = measure.measureTextWidth(' ', PT, 0);
-  const wordsOf = (text) => String(text || '').split(/\s+/).filter(Boolean).map(w => ({
+  const wordsOf = text => String(text || '').split(/\s+/).filter(Boolean).map(w => ({
     text: w, w: measure.measureTextWidth(w, PT, 0)
   }));
-  const layout = [];
   let yi = 0;
   for (const row of rows) {
     const y = 70 + yi * 24;
@@ -72,19 +187,15 @@ function stampTocLayout(page, settings, measure) {
       const items = [];
       for (const it of row.items || []) {
         const text = [it.text, it.label || ''].filter(Boolean).join(' ');
-        items.push({
-          x: 18 + xi, y, w: 60, h: 22, words: wordsOf(text), spaceW,
-          targetPage: it.targetPage != null ? it.targetPage : null
-        });
+        items.push({ x: 18 + xi, y, w: 60, h: 22, words: wordsOf(text), spaceW,
+          targetPage: it.targetPage != null ? it.targetPage : null });
         xi += 80;
       }
       layout.push({ kind: 'group', y, items });
     } else {
       const text = [row.text, row.label || ''].filter(Boolean).join(' ');
-      layout.push({
-        kind: 'row', x: 18, y, w: tpl.width - 36, h: 22, words: wordsOf(text), spaceW,
-        targetPage: row.targetPage != null ? row.targetPage : null
-      });
+      layout.push({ kind: 'row', x: 18, y, w: tpl.width - 36, h: 22, words: wordsOf(text), spaceW,
+        targetPage: row.targetPage != null ? row.targetPage : null });
     }
     yi++;
   }

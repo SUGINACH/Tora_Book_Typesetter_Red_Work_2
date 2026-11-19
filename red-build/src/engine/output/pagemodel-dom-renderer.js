@@ -49,7 +49,7 @@ function familyOf(key) {
  */
 function renderModelLine(ml, doc, relX, relY) {
   const el = doc.createElement('div');
-  el.className = 'line' + (ml.isLast ? ' line--last' : '');
+  el.className = 'line' + (ml.isLast ? ' line--last' : '') + (ml.kind === 'toc-title' ? ' toc-title' : '');
   el.setAttribute('dir', 'rtl');
   el.style.position = 'absolute';
   el.style.left = `${px2(ml.x - relX)}px`;

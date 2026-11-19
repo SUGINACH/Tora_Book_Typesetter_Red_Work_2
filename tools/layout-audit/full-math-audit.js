@@ -799,10 +799,18 @@ if (typeof document !== 'undefined') {
     // PageModel: שורות TOC הן .line מבניות ישירות תחת .pmr-page, לא .toc-row.
     // פריטי inline בעלי אותו baseline מאוחדים לשורה לוגית אחת לבדיקת pitch.
     if (info.pagemodel && (info.t === 'toc-general' || info.t === 'toc-detail') && !info.tocRows.length) {
-      const modelRows = Array.from(pg.children || []).filter(el => el.classList && el.classList.contains('line'));
+      const structuralRows = Array.from(pg.children || []).filter(el => el.classList && el.classList.contains('line'));
+      const modelRows = structuralRows.filter(el => !(el.classList && el.classList.contains('toc-title')));
       info.tocInContainer = true; // גיאומטריית PageModel מוחלטת; תחום המתיחה של legacy אינו חל
-      info.structuralLines += modelRows.length;
+      info.structuralLines += structuralRows.length;
+      info.structuralTitleLines = structuralRows.length - modelRows.length;
       const groups = new Map();
+      for (const titleEl of structuralRows.filter(el => el.classList && el.classList.contains('toc-title'))) {
+        const nWords = wc(titleEl.textContent);
+        info.words += nWords;
+        info.tocWords = (info.tocWords || 0) + nWords;
+        info.structuralWords += nWords;
+      }
       for (const rowEl of modelRows) {
         const rr = rel(R(rowEl), origin);
         const nWords = wc(rowEl.textContent);

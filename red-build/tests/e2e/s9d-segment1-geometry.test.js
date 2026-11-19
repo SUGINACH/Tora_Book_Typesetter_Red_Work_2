@@ -22,8 +22,11 @@ const { describe, it, assertEq, assertClose, report } = require('../harness');
 
 const RB = path.join(__dirname, '..', '..');
 const { GEO, FLOW_BOTTOM, SINGLE_W, H2_AREA_H, H0_AREA_H,
-  TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM } = require('../../src/engine/core/imud-geometry');
+  TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM, SZ_CORE } = require('../../src/engine/core/imud-geometry');
 const { buildPageTemplate, isImudProfile, PAGE_TYPES } = require('../../src/engine/layout/page-templates');
+const { buildTocPages } = require('../../src/engine/decoration/toc-builder');
+const { stampTocLayout } = require('../../src/engine/layout/structural-stamps');
+const { MeasureAPI } = require('../../src/engine/typography/measure-api');
 const { getDefaultSettings } = require('../../src/engine/core/settings-registry');
 const legacyFlow = require('../../src/engine/layout/legacy-imud-flow');
 
@@ -69,6 +72,40 @@ describe('s9d-segment1 — מקור אמת יחיד לגאומטריה', () => {
     assertEq(TOC_FIRST_TOP, 370.7, 'TOC_FIRST_TOP');
     assertEq(TOC_CONT_TOP, 113.7, 'TOC_CONT_TOP');
     assertEq(TOC_STRETCH_BOTTOM, 1005.7, 'TOC_STRETCH_BOTTOM');
+  });
+});
+
+describe('s9d-segment1 — גאומטריית TOC במנוע המאוחד', () => {
+  it('עמוד TOC ראשון/המשך משתמשים בקבועי הגיאומטריה המשותפים, כולל כותרת ושורות עטיפה', () => {
+    const settings = liveImudSettings();
+    const measureApi = new MeasureAPI(settings, 'font-metrics');
+    const headings = { rows: Array.from({ length: 90 }, (_, i) => ({
+      kind: 'entry', level: (i % 6) + 1, text: `כותרת בדיקה ${i + 1} עם מילים נוספות לבדיקת רוחב`,
+      tokenId: `toc-${i + 1}`, pageRef: { index: i + 2 }, label: '', rowNum: i + 1
+    })) };
+    const built = buildTocPages(headings, PAGE_TYPES.TOC_GENERAL, 'תוכן העניינים', settings,
+      (text, pt) => measureApi.measureTextWidth(text, pt),
+      (pt) => measureApi.lineHeightPx(pt), { ledger: null, eventLog: null });
+    assert(built.pages.length > 1, 'המסמך מייצר עמוד ראשון ועמוד המשך');
+    for (let i = 0; i < built.pages.length; i++) {
+      const pg = built.pages[i];
+      assertEq(pg.toc.isFirst, i === 0, 'isFirst לפי סדר העמודים');
+      assertEq(pg.toc.isLast, i === built.pages.length - 1, 'isLast לפי סדר העמודים');
+      assert(stampTocLayout(pg, settings, measureApi), 'חותמת TOC נוצרת');
+      const expectedTop = i === 0 ? TOC_FIRST_TOP : TOC_CONT_TOP;
+      assertClose(pg.tocLayout.rows[0].y, expectedTop, 0.01, `עמוד ${i}: ראשית שורות TOC`);
+      for (const row of pg.tocLayout.rows) {
+        assert(row.y >= expectedTop - 0.01, `עמוד ${i}: שורה אינה מעל אזור TOC`);
+        assert(row.y + row.h <= TOC_STRETCH_BOTTOM + 0.51, `עמוד ${i}: שורה בתוך תחתית TOC`);
+      }
+      if (i === 0) {
+        assert(pg.tocLayout.title, 'עמוד ראשון נושא כותרת TOC');
+        assertClose(pg.tocLayout.title.y, GEO.FLOW_TOP + 136, 0.01, 'כותרת TOC במקום המכויל');
+        assertClose(pg.tocLayout.title.sizePt, SZ_CORE.tocTitle, 0.01, 'גודל כותרת מהחוזה');
+      } else {
+        assertEq(pg.tocLayout.title, null, 'אין כותרת עמוד ראשון בעמודי המשך');
+      }
+    }
   });
 });
 

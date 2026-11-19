@@ -193,9 +193,11 @@
     // PageModel TOC שורות הן .line מבניות ישירות תחת .pmr-page; פריטי inline
     // בעלי אותו baseline מקובצים לשורה אחת. תחום המתיחה של legacy לא חל כאן.
     if (info.pagemodel && (info.type === 'toc-general' || info.type === 'toc-detail') && !info.tocRows.length) {
-      const modelRows = Array.from(pg.children || []).filter(el => el.classList && el.classList.contains('line'));
+      const structuralRows = Array.from(pg.children || []).filter(el => el.classList && el.classList.contains('line'));
+      const modelRows = structuralRows.filter(el => !(el.classList && el.classList.contains('toc-title')));
       info.tocInContainer = true;
-      info.structuralLines = modelRows.length;
+      info.structuralLines = structuralRows.length;
+      info.structuralTitleLines = structuralRows.length - modelRows.length;
       const groups = new Map();
       for (const rowEl of modelRows) {
         const rr = R(rowEl);

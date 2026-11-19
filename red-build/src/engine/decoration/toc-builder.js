@@ -19,6 +19,7 @@
  */
 
 const { PAGE_TYPES, buildPageTemplate } = require('../layout/page-templates');
+const { GEO, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM, SZ_CORE } = require('../core/imud-geometry');
 
 const TOC_MAX_ROWS = 20000;     // תקציב שורות כולל (general+detail)
 const TOC_MAX_PAGES = 500;      // תקציב עמודי TOC כולל
@@ -121,6 +122,19 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
   let rowsConsumed = 0;
   let budgetExceeded = false;
 
+  const prefix = pageType === 'toc-detail' ? 'dtoc' : 'gtoc';
+  const raw = settings && settings._imudRaw ? settings._imudRaw : {};
+  const sizeOf = (level, imud) => {
+    const rawSize = Number(raw[`s-${prefix}-${level}`]);
+    if (imud && Number.isFinite(rawSize) && rawSize > 0) return rawSize;
+    const coreSize = SZ_CORE.tocLevel[level];
+    return imud && Number.isFinite(coreSize) ? coreSize : levelSizePt(level);
+  };
+  const familyOf = (level, imud) => {
+    if (!imud) return null;
+    const stack = String(raw[`f-${prefix}-${level}`] || '').split(',')[0].trim();
+    return stack.replace(/^['"]|['"]$/g, '') || null;
+  };
   const mkPage = (isFirst) => {
     const tpl = buildPageTemplate(pageType, settings, (pages.length % 2) === 0);
     const pg = {
@@ -128,50 +142,65 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
       columns: Array.from({ length: tpl.columns.length }, () => []),
       footnotes: [], sideNotes: [], headingsOnPage: [], balanceInfo: null,
       fnReservedHeightPx: 0, chapterOpening: false,
-      toc: { title: isFirst ? title : '', rows: [], isFirst },
+      toc: { title: isFirst ? title : '', rows: [], isFirst, isLast: false },
     };
     pages.push(pg);
     return pg;
   };
 
+  let cur = mkPage(true);
+  const imudToc = !!(cur.template && cur.template.imud);
+  // רוחב התוכן מהעמודות (לא מרוחב A4). ב-IMUD נשמר גם אזור המספר/התווית
+  // שמשמאל לטקסט לפי GEO.TOC_NUM_X ו-GEO.TOC_TITLE_X1.
+  const colsTpl = (cur.template && cur.template.columns) || [];
+  const tplW = colsTpl.length
+    ? Math.max.apply(null, colsTpl.map(c => c.x + c.w)) - Math.min.apply(null, colsTpl.map(c => c.x))
+    : ((cur.template.contentBox && cur.template.contentBox.right != null
+      ? (cur.template.contentBox.right - cur.template.contentBox.left) || cur.template.width
+      : cur.template.width));
+  const capacityOf = (isFirst, tpl) => tpl.imud
+    ? TOC_STRETCH_BOTTOM - (isFirst ? TOC_FIRST_TOP : TOC_CONT_TOP)
+    : tpl.contentBox.height - (isFirst ? (TITLE_SIZE_PT * (96 / 72) + TITLE_MARGIN_PX) : 0);
+
   const rowHeightOf = (r) => {
-    if (r.kind === 'group') {
-      // קבוצה: שורה אחת רציפה — גובה לפי הגודל המקסימלי בקבוצה + הפרש
-      const size = Math.max(...r.items.map(it => levelSizePt(it.level)));
-      const text = r.items.map(it => it.text).join(' | ');
-      const avail = Math.max(60, tplWidth() - levelIndentPx(r.items[0].level) - LABEL_RESERVE_PX - DOTS_MIN_PX);
-      const { lines } = wrapTitle(text, avail, size, measure);
-      r.wrapped = lines;
-      return { h: lines.length * lineHeight(size) + ROW_GAP_PX, lines: 1, size };
+    const level = r.kind === 'group'
+      ? Math.max(...r.items.map(it => it.level))
+      : r.level;
+    const size = sizeOf(level, imudToc);
+    const family = familyOf(level, imudToc);
+    const rightEdge = imudToc ? GEO.TOC_TITLE_X1 - (level - 1) * GEO.TOC_STAIR : null;
+    const imudAvail = imudToc
+      ? Math.max(60, Math.min(tplW - levelIndentPx(level) - LABEL_RESERVE_PX - DOTS_MIN_PX,
+          (rightEdge - GEO.TOC_NUM_X - 64) * 0.92))
+      : null;
+    const avail = imudToc
+      ? imudAvail
+      : Math.max(60, tplW - levelIndentPx(level) - LABEL_RESERVE_PX - DOTS_MIN_PX);
+    const text = r.kind === 'group'
+      ? r.items.map(it => it.text).join(' | ')
+      : r.text;
+    const wrapped = wrapTitle(text, avail, size, measure);
+    r.wrapped = wrapped.lines;
+    r.sizePt = size;
+    if (family) r.fontFamily = family;
+    if (wrapped.truncated) {
+      overflowFindings.push({ why: 'title-truncated', text: String(text).slice(0, 40), level });
     }
-    const size = levelSizePt(r.level);
-    const avail = Math.max(60, tplWidth() - levelIndentPx(r.level) - LABEL_RESERVE_PX - DOTS_MIN_PX);
-    const { lines, truncated } = wrapTitle(r.text, avail, size, measure);
-    r.wrapped = lines;
-    if (truncated) {
-      overflowFindings.push({ why: 'title-truncated', text: r.text.slice(0, 40), level: r.level });
+    if (imudToc) {
+      // התאמה לחוזה המורשת: גובה השורה תלוי בגודל האות; שורות עטיפה נוספות
+      // מקבלות pitch של 26px. אין להשתמש ב-lineHeight של גוף הספר.
+      const firstLineH = size * (96 / 72) * 1.3 + 8;
+      r.lineHeightPx = 26;
+      r.heightPx = firstLineH + Math.max(0, wrapped.lines.length - 1) * 26;
+      return { h: r.heightPx, lines: wrapped.lines.length, size, family };
     }
-    return { h: lines.length * lineHeight(size) + ROW_GAP_PX, lines: lines.length, size };
+    const h = wrapped.lines.length * lineHeight(size) + ROW_GAP_PX;
+    r.lineHeightPx = lineHeight(size);
+    r.heightPx = h;
+    return { h, lines: wrapped.lines.length, size, family };
   };
 
-  let tplW = 0;
-  const tplWidth = () => tplW;
-
-  if (!model.rows.length) return { pages: [], overflow: overflowFindings, budgetExceeded };
-
-  let cur = mkPage(true);
-  // **S5.1:** רוחב התוכן מהעמודות (min/max) — contentBox מגדיר רק top/bottom,
-  // אז (right-left)||width היה NaN||width=רוחב העמודה המלא (794) — שורות ה-TOC
-  // נמדדו ב-~119px יותר מדי ונעטפו מתחתית תיבת התוכן בפועל.
-  {
-    const colsTpl = (cur.template && cur.template.columns) || [];
-    tplW = colsTpl.length
-      ? Math.max.apply(null, colsTpl.map(c => c.x + c.w)) - Math.min.apply(null, colsTpl.map(c => c.x))
-      : ((cur.template.contentBox && cur.template.contentBox.right != null
-        ? (cur.template.contentBox.right - cur.template.contentBox.left) || cur.template.width
-        : cur.template.width));
-  }
-  let availH = cur.template.contentBox.height - (TITLE_SIZE_PT * (96 / 72) + TITLE_MARGIN_PX);
+  let availH = capacityOf(true, cur.template);
   let usedH = 0;
 
   for (const r of model.rows) {
@@ -185,16 +214,18 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
     if (usedH + h > availH && cur.toc.rows.length) {
       if (pages.length >= TOC_MAX_PAGES) { budgetExceeded = true; break; }
       cur = mkPage(false);
-      availH = cur.template.contentBox.height;
+      availH = capacityOf(false, cur.template);
       usedH = 0;
     }
-    // שורה בודדת גבוהה מעמוד שלם ⇒ אל תיתלה: הנח אותה ותעד (אין לולאה — usedH מתקדם תמיד)
+    // שורה בודדת גבוהה מעמוד שלם ⇒ אל תיתלה: הנח אותה ותעד.
     if (h > availH) {
       overflowFindings.push({ why: 'row-taller-than-page', level: r.level || (r.items && r.items[0].level) });
     }
     cur.toc.rows.push(r);
     usedH += Math.min(h, availH);
   }
+
+  pages.forEach((p, i) => { p.toc.isLast = i === pages.length - 1; });
 
   if (budgetExceeded && ledger) {
     const rec = ledger.create('toc-budget-exceeded', pageType, null,
@@ -208,7 +239,7 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
     }
   }
   if (eventLog) {
-    eventLog.emit('toc', 'toc-pages-built', { type: pageType, pages: pages.length, rows: rowsConsumed, overflow: overflowFindings.length, budgetExceeded });
+    eventLog.emit('toc', 'toc-pages-built', { type: pageType, pages: pages.length, rows: rowsConsumed, overflow: overflowFindings.length, budgetExceeded, imudGeometry: imudToc });
   }
   return { pages, overflow: overflowFindings, budgetExceeded };
 }
