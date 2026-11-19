@@ -234,7 +234,15 @@ describe('S72.2 DP — יישור תחתיות ככלל עימוד (שיפורי
     // **9b.3 (דקדוק הכותרות המלא — D-91):** ננעל מחדש 4a1773cc→0e657636 —
     // 27 שורות נוסח "מספר N"/"(מקור: …)" במסמך הבדיקה סווגו מפסקאות-גוף
     // לכותרות/ביאורי-צד; הוראות הדקדוק אינן נרנדרות כתוכן; contentPreserved=true.
-    assert(result.layoutHash.startsWith('0e657636'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
+    // **U-8 (ביקרת שלמות 19.11 — תקציב הערות לכל טור):** ננעל מחדש
+    // 0e657636→b2af309c — המרזב פרוש על רוחב תיבת-התוכן כולה, ותקציב ההערות
+    // כעת מופחת מקיבולת **כל** הטורים (בעבר נוסף רק ל-usedHeight של הטור
+    // האחרון ⇒ הטור הימני חדר למרזב; נמדד לפני התיקון: no_long ‏2, mid_long ‏27,
+    // very_long ‏39 חדירות-טור). הסיווג בשיטת s5-corpus-comparison: חלוקת
+    // השורות של כל הבלוקים זהה ביט-לביט לבסיס (very_long: 3636/3636 identical,
+    // 0 redivision/0 marker/0 order-restore) — אריכת עמודים בלבד (1216→1242, +26 עמ') —
+    // הערות+סמנים שלא נכנסו עוברים לעמוד הבא; contentPreserved=true.
+    assert(result.layoutHash.startsWith('b2af309c'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
     const r2 = typeset(corpus, getDefaultSettings(), {});
     assertEq(result.layoutHash, r2.layoutHash, 'דטרמיניזם');
     // הקנוני — נעילת fdff19d8 ממקטע ב׳ (מאומת ב-s13-acceptance)

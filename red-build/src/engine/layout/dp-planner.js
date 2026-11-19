@@ -154,7 +154,10 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   // (column-flow — מקור יחיד). כאן usedHeight כבר כולל את תקציב ההערות על
   // הטור האחרון (F-17) — ולכן הקיבולת נלקחת בלי התקציב (fnBudget:false;
   // שקול מתמטית: used+fn ≤ cap ⟺ used ≤ cap−fn). הפס החוצה־טורים נכלל תמיד.
-  const colCapacity = (tpl, page) => colCapacityOf(page, { fnBudget: false }) || (tpl && tpl.contentBox ? tpl.contentBox.height - spanH(page) : 0);
+  // **U-8 (19.11):** קיבולת מודעת-תקציב-הערות ל**כל** הטורים — כמו המרזב
+  // המוקרן (רוחב תיבת-התוכן כולה). בעבר fnBudget:false + הכפל ב-usedHeight
+  // של הטור האחרון בלבד ⇒ הטור הימני חדר למרזב.
+  const colCapacity = (tpl, page) => colCapacityOf(page) || (tpl && tpl.contentBox ? tpl.contentBox.height - spanH(page) : 0);
 
   /**
    * גובה תפוס = שורות + **יתרת תקציב ההערות של העמוד** — כך ה‑probe וה‑reservation
@@ -193,6 +196,21 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     return -1;
   }
 
+  /** **U-8 (ביקורת שלמות 19.11) — הכלה ברמת העמוד:** המרזב פרוש על רוחב
+   *  תיבת-התוכן כולה; כשהערה מתחייבת בעמוד, **כל** טורי העמוד חייבים לעמוד
+   *  מעל המרזב (used ≤ cap−תקציב). בדיקת המחסנית של שורת הסמן לבדה אינה
+   *  מספיקה: הסמן עשוי להיכנס לטור פנוי בעוד טור אחר כבר מלא מעבר למרזב
+   *  (נמדד: no_long ‏עמ' 47 — חדירה 93.5px). אם תנאי זה נכשל — העמוד נסגר
+   *  בלי ההערה (הקווים שהוצבו בלעדיה עומדים בקיבולת המלאה) וההערה עוברת
+   *  עם שורת הסמן לעמוד הבא — F-17 נשמר. */
+  function pageFitsNoteBudget() {
+    const cap = colCapacity(cur.template, cur);
+    for (let c = 0; c < cur.columns.length; c++) {
+      if (usedHeight(cur.columns[c], cur) > cap + CM.CAPACITY_EPS) return false;
+    }
+    return true;
+  }
+
   function flushPage() {
     // איזון טורים: Δ≤5px (BRZ-3) — **EXT-8: החלוקה הגלובלית האופטימלית**
     // (פיצול רציף ממזער |lH−rH| בכפוף לקיבולת; סדר קריאה נשמר מבנית — תיקון P0-3
@@ -201,7 +219,8 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       const a0 = usedHeight(cur.columns[0], cur), b0 = usedHeight(cur.columns[1], cur);
       if (Math.abs(a0 - b0) > imbMax) {
         const cap = colCapacity(cur.template, cur);
-        const best = optimalSplit(cur.columns, { cap, extraLast: cur.fnReservedHeightPx || 0 });
+        // **U-8:** התקציב כבר בתוך cap (לכל טור) — extraLast היה מכפיל אותו
+        const best = optimalSplit(cur.columns, { cap });
         if (best && best.k !== cur.columns[0].length) {
           const seq = [...cur.columns[0], ...cur.columns[1]];
           cur.columns[0] = seq.slice(0, best.k);
@@ -450,11 +469,13 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     if (!snap) return;
     const isFirst = !markerLine;
     const stack = CM.stackHeightPx([markerLine || blk.lines[0]], isFirst ? blockGapPx(settings, lineH) : 0);
-    if (snap.clean && ensureRoomFor(stack) === -1) {
+    // **U-8:** גם התאמת שורת הסמן וגם הכלת כל טורי העמוד מעל המרזב —
+    // אחרת העמוד נסגר בלי ההערה והיא עוברת עם הסמן לעמוד הבא (F-17).
+    if (snap.clean && (ensureRoomFor(stack) === -1 || !pageFitsNoteBudget())) {
       uncommitNotes(cur, snap);
       flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
       reserveNotes(blk);
-      if (ensureRoomFor(stack) === -1) {
+      if (ensureRoomFor(stack) === -1 || !pageFitsNoteBudget()) {
         // מצב פתולוגי (הערה בגודל עמוד): מתועד, לא שקט
         ledger.create('fn-degenerate', blk.tokenId, cur.index, { reservedPx: cur.fnReservedHeightPx }, 'notes-budget');
       }
@@ -886,7 +907,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     // (fn-tail-overflow) במקום גלישה שקטה. זהו מצב פתולוגי מבני (המשכים
     // שנצברו בסוף המסמך); לתקנת השורש המלאה נדרש מנגנון עמודי-גלישה להערות
     // — שלב B של התוכנית (דוח 06).
-    const tailCap = colCapacityOf(last, { fnBudget: false });
+    const tailCap = colCapacityOf(last); // **U-8:** מודע-תקציב, כמו ההצבה
     const tailUsed = planningUsedHeight(last.columns[last.columns.length - 1], last);
     if (tailUsed > tailCap + CM.CAPACITY_EPS) {
       const rec = ledger.create('fn-tail-overflow', `tail@p${last.index}`, last.index,
@@ -984,11 +1005,12 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         }
         target.footnotes.splice(insertAt, 0, n);
         recomputeFnBudget(target);
-        // **קיבולת מצטברת אמיתית:** הטור האחרון של היעד (כולל התקציב המעודכן —
-        // כולל הערות שהועברו קודם לאותו עמוד באותה סריקה) אינו עובר את הקיבולת.
-        const capNoFn = colCapacityOf(target, { fnBudget: false });
+        // **קיבולת מצטברת אמיתית (U-8 — אמנה אחת):** cap מודע-תקציב לכל טור,
+        // used = שורות בלבד — אותה אי-שוויון בדיוק (שורות ≤ cap−תקציב), כולל
+        // הערות שהועברו קודם לאותו עמוד באותה סריקה.
+        const capWithFn = colCapacityOf(target);
         const usedLast = planningUsedHeight(target.columns[target.columns.length - 1], target);
-        if (usedLast <= capNoFn + CM.CAPACITY_EPS) {
+        if (usedLast <= capWithFn + CM.CAPACITY_EPS) {
           changed = true;
           movedCount++;
           movedList.push({ noteId: n.noteId || null, marker: n.marker, from: pg.index, to: target.index });
@@ -1065,18 +1087,20 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
  * תיקון P1-8: גובה כולל את תקציב ההערות של **העמוד המאוזן עצמו** (על הטור האחרון). */
 function balancePageSafe(page, settings, ledger) {
   const deltaOf = () => {
-    const hh = (c) => c.reduce((s, ln) => s + (ln.heightPx || 0), 0)
-      + (page.columns[page.columns.length - 1] === c ? (page.fnReservedHeightPx || 0) : 0);
+    // **U-8:** התקציב משותף לשני הטורים (המרזב פרוש על כולם) — הוא אינו
+    // משפיע על הפרש האיזון ואינו נכנס לחישוב ה-|Δ|.
+    const hh = (c) => c.reduce((s, ln) => s + (ln.heightPx || 0), 0);
     return Math.abs(hh(page.columns[0]) - hh(page.columns[1]));
   };
   const maxDelta = settings['imbalance-max-delta-px'];
   if (deltaOf() <= maxDelta) return true; // כבר מאוזן — אין התערבות (יציבות פריסה)
   if (!page.columns || page.columns.length < 2) return false;
   // **S5.2 (P-2 — קיבולת מאוחדת):** colCapacityOf — כולל הפס החוצה־טורים
-  // (בעבר חושב מ-contentBox.height גולמי ⇒ איזון שגלש מתחת לפס בעמודי H2);
-  // תקציב ההערות עובר כ-extraLast (P1-8) — בלי כפילה.
-  const cap = colCapacityOf(page, { fnBudget: false });
-  const best = optimalSplit(page.columns, { cap, extraLast: page.fnReservedHeightPx || 0 });
+  // (בעבר חושב מ-contentBox.height גולמי ⇒ איזון שגלש מתחת לפס בעמודי H2).
+  // **U-8 (19.11):** תקציב ההערות בתוך cap לכל טור — extraLast הוסר (היה
+  // מכפיל את התקציב על הטור האחרון).
+  const cap = colCapacityOf(page);
+  const best = optimalSplit(page.columns, { cap });
   if (!best || best.k === page.columns[0].length) {
     // **EXT-8:** אין פיצול חוקי, או שהנוכחי כבר האופטימלי הגלובלי — הפרש שנותר
     // מעל הסף הוא **פשרה מתועדת**: שלמות פסקה (הימנעות מיתום/ווידוא בגבול

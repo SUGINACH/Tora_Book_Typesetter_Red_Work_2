@@ -359,7 +359,12 @@ describe('S70 (R3-M2/M3) — כיול orphan/widow: רק הפרות אמיתיו
     // 1,066 מילים עברו מהגוף לאזורי ההערות (D-30). הוכחות שימור:
     // contentPreserved=true; round-trip תו-לתו של very_long המלא; הקנוני
     // ללא שינוי (fdff19d8). הקודם: 008bbb68 (RLM/9b.3).
-    assert(r.layoutHash.startsWith('fa1f06e2'), `layout unchanged (got ${r.layoutHash.slice(0, 8)})`);
+    // **U-8 (ביקורת שלמות 19.11 — תקציב הערות לכל טור):** נעילה מחודשת
+    // fa1f06e2→b7b2a593 (1216→1242 עמ'). המרזב פרוש על רוחב תיבת-התוכן כולה —
+    // התקציב מופחת מקיבולת כל הטורים (בעבר רק הטור האחרון הוגן ⇒ הטור הימני
+    // חדר למרזב). סיווג s5: 3636/3636 בלוקים זהים ביט-לביט, 0 redivision —
+    // אריזת עמודים בלבד; contentPreserved=true; הקנוני נשמר (fdff19d8).
+    assert(r.layoutHash.startsWith('b7b2a593'), `layout unchanged (got ${r.layoutHash.slice(0, 8)})`);
     const count = (kind) => [...r.ledger.issues.values()].filter(x => x.kind === kind && x.status === 'persists').length;
     assertEq(count('widow-bottom'), 0, 'false widow-bottom flood eliminated (was 1176)');
     assertEq(count('orphan-top'), 0, 'false orphan-top flood eliminated (was 791)');

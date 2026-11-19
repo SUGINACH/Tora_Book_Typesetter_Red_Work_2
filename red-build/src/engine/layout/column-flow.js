@@ -122,11 +122,16 @@ function capacityReservationsOf(page, opts = {}) {
  * באותו שם בשני מודולים (dp-planner מקומי מול זה) — כעת צרכן יחיד.
  */
 function planningUsedHeight(col, page) {
+  // **U-8 (19.11, ביקורת שלמות):** מדידת שורות בלבד. תקציב ההערות אינו
+  // נכנס לכאן עוד — הוא נכנס לקיבולת (colCapacityOf) עבור **כל** הטורים,
+  // כמו המרזב המוקרן שפרוש על רוחב תיבת-התוכן כולה (S6.0/R3-C2). בעבר
+  // נוסף רק לטור האחרון ⇒ הטור הימני (RTL) חדר למרזב ההערות
+  // (FN_OVERLAPS_BODY; נמדד: no_long ‏2, mid_long ‏27, very_long ‏39 טורים
+  // חודרים — כולם לא-אחרונים). הצרכנים שהסתמכו על הכפיל הישן הותאמו
+  // באותו תיקון (dp-planner: extraLast הוסר; plan-model: capPx מודע-תקציב).
+  void page;
   let h = 0;
   for (const ln of col) h += (ln.heightPx || 0) + (ln.gapBeforePx || 0);
-  if (page && page.fnReservedHeightPx > 0 && page.columns[page.columns.length - 1] === col) {
-    h += page.fnReservedHeightPx; // נשמר פעם אחת — בסוף הטור האחרון
-  }
   return h;
 }
 

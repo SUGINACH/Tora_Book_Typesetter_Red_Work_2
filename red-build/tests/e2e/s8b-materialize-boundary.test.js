@@ -113,7 +113,14 @@ describe('שלב 8 ביקורת (§3.1) — גבולות materialization', () =>
     // מלאה; 1,066 מילים עברו מהגוף לאזורי ההערות (D-30). הוכחות שימור:
     // contentPreserved=true; round-trip תו-לתו של very_long המלא; הקנוני
     // ללא שינוי (fdff19d8). הקודם: 008bbb68 (RLM/9b.3).
-    assert(r.layoutHash.startsWith('fa1f06e2'), `layoutHash very_long נשמר (${r.layoutHash.slice(0, 8)})`);
+    // **U-8 (ביקורת שלמות 19.11 — תקציב הערות לכל טור):** נעילה מחודשת
+    // fa1f06e2→b7b2a593 (1216→1242 עמ'). המרזב פרוש על רוחב תיבת-התוכן כולה —
+    // התקציב מופחת כעת מקיבולת כל הטורים (בעבר נוסף רק ל-usedHeight של הטור
+    // האחרון ⇒ הטור הימני חדר למרזב; נמדד לפני: no_long 2, mid_long 27,
+    // very_long 39 חדירות — אפס אחרי). סיווג: 3636/3636 בלוקים זהים ביט-לביט
+    // (s5-corpus-comparison; 0 redivision/marker/order-restore) — אריזת עמודים
+    // בלבד; contentPreserved=true; הקנוני fdff19d8 נשמר. הקודם: fa1f06e2 (9b.4).
+    assert(r.layoutHash.startsWith('b7b2a593'), `layoutHash very_long נשמר (${r.layoutHash.slice(0, 8)})`);
     assertEq(r.pageModel.meta.materializeFallbacks, 0, 'אפס נפילות (בעבר: 852 שווא-נפילות רוחב-רווח)');
     const mfViol = r.pageModelValidation.violations.filter(v => v.code === 'materialize-fallback');
     assertEq(mfViol.length, 0, 'אפס violations');
