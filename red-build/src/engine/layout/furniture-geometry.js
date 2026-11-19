@@ -19,6 +19,8 @@ const FOLIO_BOTTOM_PX = 25;
 const FOLIO_TOP_PX = 4;
 /** ראש תיבת גיליון בתוך הכותרת העליונה (styles.css: .folio--in-header{top:6px}). */
 const FOLIO_IN_HEADER_PX = 6;
+/** מרחק תיבת הכותרת העליונה מעל ראשית זרימת התוכן — קבוע משותף לתבניות. */
+const RUNNING_HEAD_TOP_INSET_PX = 18;
 
 /**
  * גיאומטריית הגיליון — מחושבת פעם אחת מאותם קלטים ששני המקרינים צורכים.
@@ -67,6 +69,6 @@ function headerGeometry(page) {
 }
 
 module.exports = {
-  FOLIO_BOTTOM_PX, FOLIO_TOP_PX, FOLIO_IN_HEADER_PX,
+  FOLIO_BOTTOM_PX, FOLIO_TOP_PX, FOLIO_IN_HEADER_PX, RUNNING_HEAD_TOP_INSET_PX,
   folioGeometry, headerGeometry
 };

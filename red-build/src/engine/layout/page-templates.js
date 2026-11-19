@@ -20,8 +20,6 @@ const PAGE_TYPES = {
 };
 
 const MM_TO_PX = 96 / 25.4;
-// מרחק ראש תיבת הכותרת מתחילת אזור הזרימה — אינו תלוי בהיסט תוכן של sign-open.
-const RUNNING_HEAD_TOP_INSET_PX = 18;
 const PAGE_SIZES = {
   // **S5.2 (O14 — A4 מדויק):** 210×297מ״מ @96dpi = 793.70×1122.52px — הערכים
   // המעוגלים (794×1123) הזיזו את גוף ה-DP ב-0.3px ויצרו MediaBox שאינו זהה
@@ -50,6 +48,7 @@ const PAGE_SIZES = {
 const {
   GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
 } = require('../core/imud-geometry');
+const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
 
 function isImudProfile(settings) {
   return !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));

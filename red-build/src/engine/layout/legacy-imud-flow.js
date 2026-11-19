@@ -36,6 +36,7 @@ const { toBareGematria } = require('../decoration/folio');
 // **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
+const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
 
 // ---------- גיאומטריה (px @96dpi; PDF = px×0.75) — מכויל מהייחוס ----------
 // **שלב ההעברה למנוע המאוחד — מקטע 1:** הקבועים הגאומטריים עברו למודול
@@ -1114,6 +1115,7 @@ function legacyTypeset(rawText, settings, env) {
         width: GEO.PAGE_W, height: GEO.PAGE_H,
         columns: [{ x: GEO.COL_R_X, w: GEO.COL_W }, { x: GEO.COL_L_X, w: GEO.COL_W }],
         gutter: 13.48,
+        headerTop: GEO.FLOW_TOP - RUNNING_HEAD_TOP_INSET_PX,
         contentBox: { top: GEO.FLOW_TOP, bottom: FLOW_BOTTOM, height: GEO.FLOW_H }
       }
     };
