@@ -119,7 +119,7 @@ jobs:
           cd gh-pages-checkout
           git config user.name "github-actions[preview-engine-parity]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A -- . ':!_export_test.html' ':!_fx.txt' ':!_vl.txt'
+          git add -A
           if git diff --cached --quiet; then
             echo "no changes to stage — preview identical"
           else
