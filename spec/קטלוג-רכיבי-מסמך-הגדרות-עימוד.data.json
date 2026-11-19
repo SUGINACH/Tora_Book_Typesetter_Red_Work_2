@@ -32,7 +32,7 @@
     "pageItems": 12,
     "hardcoded": 42,
     "dispositionUnique": 161,
-    "familyRules": 14,
+    "familyRules": 15,
     "legacyOldState": 126
   },
   "settings": [
@@ -9082,6 +9082,12 @@
       "kind": "ui-state",
       "target": "",
       "reason": "תיקיית נכסים חיצונית באפליקציה הישנה — ב-RED: הספרייה המוטמעת"
+    },
+    {
+      "pattern": "^heading-divider-h[3-9]$",
+      "kind": "mapped",
+      "target": "heading-dividers-h3-h6",
+      "reason": "מפרידי כותרות H3–H6 אוחדו למתג RED אחד."
     }
   ],
   "legacyDefaults": [
@@ -11066,31 +11072,31 @@
       "value": "none",
       "kind": "mapped",
       "target": "heading-dividers-h3-h6",
-      "reason": "",
+      "reason": "מפרידי כותרות ישנים אוחדו להגדרה אחת heading-dividers-h3-h6.",
       "issue": ""
     },
     {
       "key": "heading-divider-h4",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition מפורש או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "heading-dividers-h3-h6",
+      "reason": "מפרידי כותרות ישנים אוחדו להגדרה אחת heading-dividers-h3-h6.",
       "issue": ""
     },
     {
       "key": "heading-divider-h5",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition מפורש או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "heading-dividers-h3-h6",
+      "reason": "מפרידי כותרות ישנים אוחדו להגדרה אחת heading-dividers-h3-h6.",
       "issue": ""
     },
     {
       "key": "heading-divider-h6",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition מפורש או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "heading-dividers-h3-h6",
+      "reason": "מפרידי כותרות ישנים אוחדו להגדרה אחת heading-dividers-h3-h6.",
       "issue": ""
     },
     {
