@@ -47,6 +47,15 @@ function makeDoc() {
   return { createElement: (t) => new El(t), createTextNode: (t) => { const e = new El('#text'); e._text = String(t); return e; } };
 }
 
+function countWordAnchors(html) {
+  const spans = String(html).matchAll(/<span\\b[^>]*class="([^"]*)"[^>]*>/g);
+  let count = 0;
+  for (const match of spans) {
+    if (match[1].split(/\\s+/).includes('w')) count++;
+  }
+  return count;
+}
+
 const DOC = [
   'כותרת 1 - חלק',
   'פסקה ראשונה עם הערה [הערת parity ראשונה] בתוכה.',
@@ -127,6 +136,11 @@ describe('S8G-2 parity תלת-יעדי — אותו מודל, אותן עובד�
   const { S, model, fontBytes } = buildAll();
   const doc = makeDoc();
 
+  it('ספירת עוגני מילים מכירה בסמן סמנטי בלי לספור class חלקי', () => {
+    const sample = '<span class="w"></span><span class="w w--fnmarker"></span><span class="w--fnmarker"></span>';
+    assertEq(countWordAnchors(sample), 2, 'w רגיל ו-w עם סמן נספרים; סמן לבדו אינו עוגן מילה');
+  });
+
   it('DOM/HTML/PDF מאותו מודל: עמודים, שורות, מילים — זהים', () => {
     // DOM — אותה סמנטיקה בדיוק כמו ה-HTML: class=" שמתחיל ב-line (כולל line--last)
     const domPages = model.pages.map(mp => renderModelPage(mp, S, doc));
@@ -141,7 +155,7 @@ describe('S8G-2 parity תלת-יעדי — אותו מודל, אותן עובד�
     const htmlBody = String(html).replace(/<style>[\s\S]*?<\/style>/g, '');
     const htmlPages = (htmlBody.match(/class="[^"]*pmr-page/g) || []).length;
     const htmlLines = (htmlBody.match(/class="line[ "]/g) || []).length;
-    const htmlWords = (htmlBody.match(/class="w"/g) || []).length;
+    const htmlWords = countWordAnchors(htmlBody);
     // PDF
     const pdf = exportPdfFromModel(model, S, fontBytes, 'Frank Ruhl Libre');
     assert(pdf.ok, 'PDF ok');
