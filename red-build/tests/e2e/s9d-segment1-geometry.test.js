@@ -9,7 +9,9 @@
 //      — לא הגריד הגנרי שיצר חור מרכזי של 134.9px (דוח חקירת האתר החי, ג.10).
 //   3. שלילי: הנתיב הלא-IMUD (קורפוס ה-DP הכללי) אינו משתנה — אותם אחוזים
 //      גנריים כמו קודם (אין רגרסיה לבדיקות הקיימות).
-//   4. המורשת אינה נפגעת: digest הקורפוס הקטן זהה לנעילת 9C.3.
+//   4. הקורפוס הקנוני בפרופיל DP הכללי: digest זהה לנעילת cross-check המתועדת
+//      (fdff19d8; reconciliation 19.11 — תיקון: בעבר נטען "נעילת 9C.3 legacy" אך
+//      הבדיקה הריצה getDefaultSettings בפרופיל DP ולא השוותה hash כלל).
 //   5. דגל הבדיקה הדו-מנועי (RED_UNIFIED_IMUD) מריץ את המנוע המאוחד על
 //      הגדרות IMUD — והפלט שלו נושא את התבנית המכוילת בפועל.
 'use strict';
@@ -105,17 +107,28 @@ describe('s9d-segment1 — תבנית עמוד IMUD במנוע המאוחד', ()
     assertClose(tpl.columns[0].w, SINGLE_W, 0.01, 'w');
   });
 
-  it('binding-offset מוחל על שפות הטורים (recto/verso)', () => {
+  it('binding-offset מוחל על שפות שני הטורים (recto/verso)', () => {
     const withBinding = { ...settings, 'binding-offset-px': 10 };
     const recto = buildPageTemplate(PAGE_TYPES.REGULAR, withBinding, true);
     const verso = buildPageTemplate(PAGE_TYPES.REGULAR, withBinding, false);
+    // recto: שני הטורים מוסטים +10; verso: מוסטים -10
     assertClose(recto.columns[0].x, GEO.COL_R_X + 10, 0.01, 'recto right x');
+    assertClose(recto.columns[1].x, GEO.COL_L_X + 10, 0.01, 'recto left x');
     assertClose(verso.columns[0].x, GEO.COL_R_X - 10, 0.01, 'verso right x');
+    assertClose(verso.columns[1].x, GEO.COL_L_X - 10, 0.01, 'verso left x');
+    // רוחבי הטורים והמרזב אינם משתנים מה-binding
+    for (const tpl of [recto, verso]) {
+      assertClose(tpl.columns[0].w, GEO.COL_W, 0.01, 'col w unchanged');
+      assertClose(tpl.columns[0].x - (tpl.columns[1].x + tpl.columns[1].w), 13.48, 0.01, 'gutter unchanged');
+    }
   });
 
-  it('פס כותרת עליונה: גובה הפס מהחוזה (71.9 — לא 28/2px)', () => {
+  it('פס כותרת עליונה: headerHeight נושא את נקודת-הייחוס 71.9 מהחוזה (HEADER_BASELINE)', () => {
+    // הערת חוזה (reconciliation 19.11): השדה `headerHeight` בתבנית מאוכלס מ-
+    // GEO.HEADER_BASELINE — נקודת ייחוס/גאומטריית הפס, לא "גובה" במובן המילולי.
+    // הסמנטיקה תיקבע בהבהרת חוזה נפרדת (ראה STAGE1_OPEN_DECISIONS_RECONCILIATION §3).
     const tpl = buildPageTemplate(PAGE_TYPES.REGULAR, settings, true);
-    assertClose(tpl.headerHeight, GEO.HEADER_BASELINE, 0.01, 'headerHeight');
+    assertClose(tpl.headerHeight, GEO.HEADER_BASELINE, 0.01, 'headerHeight=HEADER_BASELINE');
   });
 });
 
@@ -164,10 +177,12 @@ describe('s9d-segment1 — שלילי: הנתיב הלא-IMUD אינו משתנ�
   });
 });
 
-describe('s9d-segment1 — המורשת אינה נפגעת (נעילת digest)', () => {
-  it('digest הקורפוס הקטן זהה לנעילת 9C.3 (legacy-3ce387962aa20101…)', () => {
-    // הנעילה ההיסטורית של S74 על הקורפוס הקטן; ריצה על אותו טקסט
-    // חייבת להחזיר את אותו hash — הוכחה שחילוץ הקבועים לא שינה כלום.
+describe('s9d-segment1 — הקורפוס הקנוני בפרופיל DP הכללי: נעילת cross-check', () => {
+  it('digest של הקורפוס הקנוני (DP כללי) זהה לנעילה המתועדת fdff19d8 (cross-check-locks, חודשה ב-9b.2/D-107)', () => {
+    // מקור הנעילה: tools/cross-check-locks.json — "canonical (DP)" lockHash=fdff19d8,
+    // חודשה ב-18.11 (9b.2, D-107: 36→37 עמ\', עמוד toc-detail חדש) עם תיעוד מלא
+    // בקובץ הנעילות. בדיקה זו מריצה את אותו קלט/הגדרות בדיוק כמו cross-check
+    // (typeset + getDefaultSettings) ומשווה את layoutHash לנעילה — ללא golden מומצא.
     const { typeset } = require('../../src/engine/core/pipeline');
     const { registerFont, unregisterFont } = require('../../src/engine/typography/measure-api');
     const fixture = path.join(__dirname, '..', 'fixtures', 'canonical_corpus.txt');
@@ -177,9 +192,17 @@ describe('s9d-segment1 — המורשת אינה נפגעת (נעילת digest)'
     try {
       const text = fs.readFileSync(fixture, 'utf8');
       const res = typeset(text, getDefaultSettings(), { noRecommendations: true });
-      // הנעילה של הקורפוס הקנוני בפרופיל DP הכללי (מ-S5): hash קצוב
-      assertEq(typeof res.layoutHash, 'string', 'hash type');
+      // פרופיל: DP כללי (לא IMUD, לא מורשת) — כמו cross-check
+      assertEq(res.legacyProfile === true, false, 'not legacy profile');
+      // הנעילה המתועדת
+      assertEq(String(res.layoutHash).startsWith('fdff19d8'), true,
+        `layoutHash ${String(res.layoutHash).slice(0, 16)} ≠ lock fdff19d8`);
       assertEq(res.pages.length > 0, true, 'pages exist');
+      // שלילה: קלט מוטמע קלות חייב לשנות את ה-digest (הבדיקה מזהה שינוי אמיתי)
+      const mutated = text + '\nשורת תוכן נוספת לשינוי ה-digest לצורך בדיקת השלילה';
+      const res2 = typeset(mutated, getDefaultSettings(), { noRecommendations: true });
+      assertEq(String(res2.layoutHash).startsWith('fdff19d8'), false,
+        'negative control failed: mutated input must change the digest');
     } finally {
       unregisterFont('Guttman Rashi');
     }

@@ -1,0 +1,4 @@
+typeset: 66 pages in 3849ms (hash 614b6bfad8d1) [profile: dp]
+determinism: run2 66 pages in 4531ms (hash 614b6bfad8d1) — OK (identical)
+model: /tmp/uni-no_long/ours-model.json — 0 paragraphs, 66 pages
+pdf: /tmp/uni-no_long/ours.pdf — 1455 KB

@@ -1,0 +1,260 @@
+
+> tora-book-typesetter-red@0.1.0 test
+> node tests/unit/parser.test.js && node tests/unit/s2-model.test.js && node tests/unit/s3-assets.test.js && node tests/unit/s3-measure.test.js && node tests/unit/s4-line-items.test.js && node tests/unit/s3-cache-collision.test.js && node tests/unit/s3-immutability.test.js && node tests/unit/s3-font-sync.test.js && node tests/unit/s3-transport-integrity.test.js && node tests/unit/typography.test.js && node tests/integration/registry.test.js && node tests/integration/imud-migration.test.js && node tests/integration/setting-sets.test.js && node tests/integration/source-variants.test.js && node tests/integration/legacy-result-contract.test.js && node tests/layout/s5-s6.test.js && node tests/layout/ext8-optimal-balance.test.js && node tests/layout/s4-line-engine.test.js && node tests/layout/s4-line-comparison.test.js && node tests/layout/s5-corpus-comparison.test.js && node tests/layout/s5-unified-planner.test.js && node tests/layout/s5b-plan-contracts.test.js && node tests/layout/s6-page-items.test.js && node tests/e2e/s6b-notes-unification.test.js && node tests/e2e/s6c-ornament-contract-anchors.test.js && node tests/e2e/s7-page-model.test.js && node tests/e2e/s8a-materialization.test.js && node tests/e2e/s8b-materialize-boundary.test.js && node tests/e2e/s8c-pagemodel-contract.test.js && node tests/e2e/s8d-pagemodel-dom.test.js && node tests/e2e/s8e-pagemodel-html.test.js && node tests/e2e/s8f-pagemodel-pdf.test.js && node tests/e2e/s8g-parity-simplify.test.js && node tests/e2e/pipeline.test.js && node tests/e2e/s4b-production-path.test.js && node tests/e2e/s5b-measurement-purity.test.js && node tests/e2e/s7-notes.test.js && node tests/e2e/s8-decoration.test.js && node tests/e2e/s9-headers.test.js && node tests/e2e/s10-ui.test.js && node tests/e2e/s11-extensions.test.js && node tests/e2e/s12-export.test.js && node tests/e2e/real-fonts.test.js && node tests/e2e/d89-visual-fixes.test.js && node tests/e2e/s15-view-justify.test.js && node tests/e2e/s24-fullmath-fixes.test.js && node tests/e2e/pdf-targets.test.js && node tests/e2e/s13-acceptance.test.js && node tests/e2e/s14-layout-audit.test.js && node tests/e2e/canonical.test.js && node tests/e2e/s2-heading3-spacing.test.js && node tests/e2e/long-real-text.test.js && node tests/audit/negative-controls.test.js && node tests/audit/s13-security-a11y.test.js && node tests/audit/stage-snapshots.test.js && node tests/e2e/s52-dp-fixes.test.js && node tests/e2e/s52-ui-fixes.test.js && node tests/e2e/audit-sensitivity.test.js && node tests/e2e/s53-dp-notes-export.test.js && node tests/e2e/s60-monster-fixes.test.js && node tests/e2e/s61-gap-fixes.test.js && node tests/e2e/s62-user-questions.test.js && node tests/e2e/s63-ui-operational-audit.test.js && node tests/e2e/s64-ornament-index.test.js && node tests/e2e/s65-split-book-title.test.js && node tests/e2e/s67-fn-reset-page.test.js && node tests/e2e/s68-pdf-word-scales.test.js && node tests/e2e/s69-engine-residuals.test.js && node tests/e2e/s72-column-bottoms.test.js && node tests/e2e/s73-pdf-font-parity.test.js && node tests/e2e/s75-notes-flow.test.js && node tests/e2e/s76-notes-flow.test.js && node tests/e2e/s77-user-issues.test.js && node tests/e2e/s3-worker-e2e.test.js && node tests/regress/r03-paren-note-flags.test.js && node ../tools/scan-control-triggers.js && node tests/e2e/s9b-h7-grammar-anchor.test.js && node tests/e2e/s9b-toc-d107.test.js && node tests/e2e/s9b-notes-glue.test.js && node tests/e2e/s9b-shaar-back.test.js && node tests/e2e/s9b-shadow-compare.test.js && node tests/e2e/s9c-pdf-export.test.js && node tests/e2e/s9c-tooling-parity.test.js && node tests/e2e/s9c-html-export.test.js && node tests/e2e/s9c-dom-preview.test.js && node tests/e2e/s9d-segment1-geometry.test.js
+
+
+== parser: 25/25 passed, 0 failed, 0 skipped ==
+
+== s2-model: 58/58 passed, 0 failed, 0 skipped ==
+
+== s3-assets: 17/17 passed, 0 failed, 0 skipped ==
+
+== s3-measure: 22/22 passed, 0 failed, 0 skipped ==
+
+== s4-line-items: 8/8 passed, 0 failed, 0 skipped ==
+
+== s3-cache-collision: 13/13 passed, 0 failed, 0 skipped ==
+
+== s3-immutability: 9/9 passed, 0 failed, 0 skipped ==
+
+== s3-font-sync: 10/10 passed, 0 failed, 0 skipped ==
+
+== s3-transport-integrity: 10/10 passed, 0 failed, 0 skipped ==
+
+== typography: 16/16 passed, 0 failed, 0 skipped ==
+
+== registry-integration: 8/8 passed, 0 failed, 0 skipped ==
+  dispositions: mapped=123 merged=16 ui-state=123 removed=2 (מתוך 264)
+
+== imud-migration: 11/11 passed, 0 failed, 0 skipped ==
+  [set:תלמוד] mapped=111 merged=16 ui-state=120 removed=2
+  [set:פרשנות] mapped=111 merged=16 ui-state=120 removed=2
+  [set:קונטרס] mapped=111 merged=16 ui-state=120 removed=2
+  [set:תלמוד] legacy: pages=7 hash=legacy-285e3 back-shaar=0
+  [set:פרשנות] legacy: pages=7 hash=legacy-1d339 back-shaar=0
+  [set:קונטרס] legacy: pages=7 hash=legacy-1d339 back-shaar=0
+  [set:תלמוד] DP: pages=8 hash=537a2a515439 h0=22pt
+  [set:פרשנות] DP: pages=8 hash=ed8901730572 h0=24pt
+  [set:קונטרס] DP: pages=8 hash=6dbbfe5426b6 h0=30pt
+
+== setting-sets: 5/5 passed, 0 failed, 0 skipped ==
+  [variant:v19-baseline] keys=250 mapped=112 merged=16 ui-state=120 removed=2
+  [variant:v20.4-tip] keys=242 mapped=112 merged=16 ui-state=112 removed=2
+  [variant:v21-glm] keys=264 mapped=123 merged=16 ui-state=123 removed=2
+  [variant:makom-bina-v20.5] keys=249 mapped=111 merged=16 ui-state=120 removed=2
+  [variant:v19-baseline] typeset: pages=7 hash=legacy-e6654
+  [variant:v20.4-tip] typeset: pages=10 hash=legacy-21a78
+  [variant:v21-glm] typeset: pages=10 hash=legacy-21a78
+  [variant:makom-bina-v20.5] typeset: pages=7 hash=legacy-1d339
+
+== source-variants: 6/6 passed, 0 failed, 0 skipped ==
+
+== legacy-result-contract: 6/6 passed, 0 failed, 0 skipped ==
+
+== layout-s5-s6: 17/17 passed, 0 failed, 0 skipped ==
+
+== ext8-optimal-balance: 5/5 passed, 0 failed, 0 skipped ==
+
+== s4-line-engine: 26/26 passed, 0 failed, 0 skipped ==
+
+== s4-line-comparison: 2/2 passed, 0 failed, 0 skipped ==
+  [very_long] identical=3636/3636 redivision=0 marker=0 order-restore=0 pages 1216->1216
+
+== s5-corpus-comparison: 2/2 passed, 0 failed, 0 skipped ==
+
+== s5-unified-planner: 10/10 passed, 0 failed, 0 skipped ==
+
+== s5b-plan-contracts: 19/19 passed, 0 failed, 0 skipped ==
+
+== s6-page-items: 8/8 passed, 0 failed, 0 skipped ==
+
+== s6b-notes-unification: 23/23 passed, 0 failed, 0 skipped ==
+
+== s6c-ornament-contract-anchors: 12/12 passed, 0 failed, 0 skipped ==
+
+== s7-page-model: 16/16 passed, 0 failed, 0 skipped ==
+
+== s8a-materialization: 6/6 passed, 0 failed, 0 skipped ==
+
+== s8b-materialize-boundary: 8/8 passed, 0 failed, 0 skipped ==
+
+== s8c-pagemodel-contract: 10/10 passed, 0 failed, 0 skipped ==
+
+== s8d-pagemodel-dom: 19/19 passed, 0 failed, 0 skipped ==
+
+== s8e-pagemodel-html: 12/12 passed, 0 failed, 0 skipped ==
+
+== s8f-pagemodel-pdf: 10/10 passed, 0 failed, 0 skipped ==
+
+== s8g-parity-simplify: 8/8 passed, 0 failed, 0 skipped ==
+
+== e2e-pipeline: 14/14 passed, 0 failed, 0 skipped ==
+
+== s4b-production-path: 16/16 passed, 0 failed, 0 skipped ==
+
+== s5b-measurement-purity: 7/7 passed, 0 failed, 0 skipped ==
+
+== s7-gate: 16/16 passed, 0 failed, 0 skipped ==
+
+== s8-decoration: 48/48 passed, 0 failed, 0 skipped ==
+
+== s9-headers: 25/25 passed, 0 failed, 0 skipped ==
+
+== s10-ui: 44/44 passed, 0 failed, 0 skipped ==
+
+== s11-extensions: 50/50 passed, 0 failed, 0 skipped ==
+
+== s12-export: 26/26 passed, 0 failed, 0 skipped ==
+  [real-fonts] catalog: 451 entries, 443 unique files, 432 unique families (19 משפחות-כפולות מקור + כפל-שמות אחד מתועד)
+  [real-fonts] parsed 450/451 in 69ms (חריג מתועד: Guttman-Logo1-Regular.ttf)
+  [real-fonts] extended catalog: 1315 families (catalog-only, woff2) + 432 embedded — סיווג אמת ללא כפילויות
+  [real-fonts] ספר-אמת בגופן Frank Ruhl Libre: pages=55 hash=legacy-161ba
+  [real-fonts] real=55 עמודים, table=63 עמודים — המדידה האמיתית פעילה
+  [real-fonts] PDF: pages=37 pdf=229KB (מקור גופן 174KB, תת-גופן מצומצם בתוך הקובץ)
+
+== real-fonts: 14/14 passed, 0 failed, 0 skipped ==
+
+== d89-visual-fixes: 80/80 passed, 0 failed ==
+
+== s15-view-justify: 3/3 passed, 0 failed, 0 skipped ==
+
+== s24-fullmath-fixes: 16/16 passed, 0 failed, 0 skipped ==
+
+== pdf-targets: 4/4 passed, 0 failed, 0 skipped ==
+
+== s13-acceptance: 11/11 passed, 0 failed, 0 skipped ==
+• A. שערים כברירת מחדל בסדר המקור: ראשי → אחורי → תוכן־עניינים → גוף (עם שער־משנה לפני החלק)
+• A2. תוכן השער המובנה מגיע ל-DOM (נתיב התצוגה) ולהקרנת ה-PDF
+• B. כותרות עליונות בכל עמודי התוכן — בנתיב החי (renderPage בלי header מפורש) ובייצוא HTML
+• C. יישור שורות הגוף — justify/inter-word ב-BASE_CSS (מקור ה-CSS של התצוגה והייצוא)
+• D. גיאומטריה מהקוד: אין חפיפות שורות בהקרנה ואף מילה לא חורגת מתיבת הטור
+• E. גופני ברירת המחדל של המקור מוטמעים: David Libre / Frank Ruhl Libre / Bellefair / Noto Serif Hebrew
+• F. ייבוא ברירות המקור: מתגי השערים ופתרון מחסניות הגופן מול הקטלוג
+• G. רגישות הגדרות→פלט: שינוי גוף/כותרת/שער משנה את הרינדור בפועל
+• H. fontStack: מחסנית מרובת־משפחות מהמקור נשמרת עם fallback עברי
+
+== s14-layout-audit: 53 passed, 0 failed ==
+
+== canonical: 6/6 passed, 0 failed, 0 skipped ==
+
+== s2-heading3-spacing: 6/6 passed, 0 failed, 0 skipped ==
+  [real] no_long_test_text.txt: words=24401 pages=84 hash=713e8f109831
+  [real] mid_long_test_text.txt: words=70716 pages=231 hash=1db742a8b1c9
+  [real] long_test_text.txt: words=291719 pages=987 hash=0e65763651b6
+  [real] very_long: words=363232 pages=1216 hash=fa1f06e2fbe3 15418ms
+  [real] orange-historical: words=361243 DP=1215pages/8578e98b87 legacy=822pages/legacy-435 15835ms
+
+== long-real-text: 6/6 passed, 0 failed, 0 skipped ==
+
+== negative-controls: 19/19 passed, 0 failed, 0 skipped ==
+
+== s13-security-a11y: 12/12 passed, 0 failed, 0 skipped ==
+
+== stage-snapshots: 18/18 passed, 0 failed, 0 skipped ==
+
+== s52-dp-fixes: 23/23 passed, 0 failed, 0 skipped ==
+
+== s52-ui-fixes: 18/18 passed, 0 failed, 0 skipped ==
+
+== audit-sensitivity: 30/30 passed, 0 failed, 0 skipped ==
+
+== s53-dp-notes-export: 18/18 passed, 0 failed, 0 skipped ==
+
+== s60-monster-fixes: 17/17 passed, 0 failed, 0 skipped ==
+
+== s61-gap-fixes: 27/27 passed, 0 failed, 0 skipped ==
+
+== s62-user-questions: 13/13 passed, 0 failed, 0 skipped ==
+
+== s63-ui-operational-audit: 7/7 passed, 0 failed, 0 skipped ==
+  [p1-startup] indexes=6 bytes=68.0K items=1013
+
+== s64-ornament-index: 7/7 passed, 0 failed, 0 skipped ==
+
+== s65-split-book-title: 20/20 passed, 0 failed, 0 skipped ==
+
+== s67-fn-reset-page: 11/11 passed, 0 failed, 0 skipped ==
+
+== s68-pdf-word-scales: 11/11 passed, 0 failed, 0 skipped ==
+
+== s69-engine-residuals: 24/24 passed, 0 failed, 0 skipped ==
+
+== s72-column-bottoms: 15/15 passed, 0 failed, 0 skipped ==
+
+== s73-pdf-font-parity: 9/9 passed, 0 failed, 0 skipped ==
+
+== s75-notes-flow: 13/13 passed, 0 failed, 0 skipped ==
+
+== s76-notes-flow: 9/9 passed, 0 failed, 0 skipped ==
+
+== s77-user-issues: 16/16 passed, 0 failed, 0 skipped ==
+
+== s3-worker-e2e: 6/6 passed, 0 failed, 0 skipped ==
+
+== r03-paren-note-flags: 9/9 passed, 0 failed, 0 skipped ==
+scan-control-triggers: 20 files · 3 engine-call edges · 3 allowed (נתיבים מפורשים) · 0 violations
+artifact → tests/artifacts/s10-callgraph.json
+
+== undefined: 6/6 passed, 0 failed, 0 skipped ==
+
+== undefined: 10/10 passed, 0 failed, 0 skipped ==
+
+== undefined: 14/14 passed, 0 failed, 0 skipped ==
+
+== undefined: 8/8 passed, 0 failed, 0 skipped ==
+s9b-shadow-compare: בדיקות שליליות לליבת ההשוואה (§2.2)
+  ✓ טקסט זהה ×2: שתי זהויות נפרדות — התאמה 2
+  ✓ טקסט זהה ×2: אפס הפרש מילים
+  ✓ החלפת טקסט בין שתי הערות: מזוהה (textMoved)
+  ✓ החלפת טקסט: multiset לבד לא היה תופס (הפרש מילים 0)
+  ✓ החלפת עוגן בין שתי הערות: מזוהה (anchorChanged=2)
+  ✓ מחיקת הערה: חסרה ב-B מזוהה
+  ✓ מחיקת הערה: המילים החסרות מדווחות בכיוון A→B
+  ✓ כפילות הערה: העותק העודף מדווח כחסר-מקור ב-A
+  ✓ כפילות הערה: המילים העודפות מדווחות בכיוון B→A
+  ✓ שינוי סמן בלבד: מזוהה (markerChanged)
+  ✓ שינוי סמן: הטקסט עצמו שווה (אפס הפרש מילים)
+  ✓ שינוי סדר: אינברסיה מזוהה
+  ✓ שינוי סדר: multiset לבד לא היה תופס
+  ✓ פיצול להמשך: המילים שלמות בסך הכול
+  ✓ פיצול להמשך: נוצר פריט continuation עם continuationOf
+  ✓ פיצול להמשך: ההערה המקורית מותאמת, ההמשך מדווח כעודף זהות
+  ✓ wordRange שונה מזוהה כשינוי
+  ✓ המשך בלי wordRange מדווח (חוזה notes-model: continuation חייב טווח)
+  ✓ כיוון A→B: רק מילות A החסרות
+  ✓ כיוון B→A: רק מילות B החסרות
+  ✓ שחזור: 3 הערות מ-2 אזורים (continuous)
+  ✓ שחזור: הערה ראשונה שלמה
+  ✓ שחזור: המשך מתחבר להערה השנייה (בלי "(המשך)")
+  ✓ שחזור: מונה המשכים
+  ✓ שחזור: סמנים נשמרים
+  ✓ שחזור: מילה לפני כל סמן = ממצא יתום (לא נזרקת בשקט)
+  ✓ TOC כללי: רמות 1–6, בלי H7 ובלי H0
+  ✓ TOC מפורט: רמות 2–6, בלי H1
+  ✓ TOC: התאמה מלאה עוברת
+  ✓ TOC: חסרות מדווחות לפי רמה
+  ✓ TOC: כפילות (עודף על הציפייה) מדווחת
+  ✓ TOC: כותרות שונות בעלות אותו טקסט (בשני הצדדים) אינן כפילות
+  ✓ TOC: עודפת מדווחת
+  ✓ סיכום: 3/3
+  ✓ סיכום: 1/3 עם B לא מוגדר
+  ✓ סיכום: אפס תוצאות ⇒ הכול נכשלו (לא "10/12" ידני)
+  ✓ סיווג: מילה זרה נשארת unexplained במלואה
+  ✓ סיווג: חריגה חלקית מעל תקציב מדווחת בשאריתה בלבד
+  ✓ normWords: מסיר תווי כיוון/תוחמים/PUA
+  ✓ classifyByBudget: דליפה מלאה מסווגת
+  ✓ classifyByBudget שלילה: מילת תוכן חסרה נשארת unexplained
+  ✓ classifyByBudget שלילה: חריגה מעל תקציב מדווחת בשארית
+  ✓ classifyByBudget שלילה: תקציב חד-פעמי אינו מכסה כפילות
+
+s9b-shadow-compare: 43 עברו, 0 נכשלו
+
+== undefined: 5/5 passed, 0 failed, 0 skipped ==
+
+== undefined: 7/7 passed, 0 failed, 0 skipped ==
+
+== undefined: 9/9 passed, 0 failed, 0 skipped ==
+
+== undefined: 7/7 passed, 0 failed, 0 skipped ==
+
+== s9d-segment1-geometry: 11/11 passed, 0 failed, 0 skipped ==
