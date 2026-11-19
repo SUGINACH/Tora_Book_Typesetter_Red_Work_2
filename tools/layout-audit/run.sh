@@ -117,10 +117,22 @@ esac
 # הזרקת האודיט (הסקריפט מוגש עם ה-UI ונטען ב-fetch — ללא בעיות escaping).
 # האודיט אסינכרוני (סריקת גלילה של ספר וירטואלי) — agent-browser ממתין ל-Promise.
 cp "$ROOT/tools/layout-audit/audit-in-page.js" "$UI/_layout-audit.js"
-agent-browser eval "(async()=>{ const t = await (await fetch('/_layout-audit.js')).text(); return eval(t); })()" > "$OUT" 2>/dev/null
+AUDIT_ERR="${OUT}.stderr"
+rm -f "$AUDIT_ERR"
+agent-browser eval "(async()=>{ const t = await (await fetch('/_layout-audit.js')).text(); return eval(t); })()" > "$OUT" 2> "$AUDIT_ERR"
+AUDIT_RC=$?
 rm -f "$UI/_layout-audit.js"
 
-if [ ! -s "$OUT" ]; then echo "✗ האודיט לא הפיק דוח"; exit 2; fi
+if [ ! -s "$OUT" ]; then
+  echo "✗ האודיט לא הפיק דוח (agent-browser exit=$AUDIT_RC)"
+  if [ -s "$AUDIT_ERR" ]; then
+    echo "--- agent-browser stderr ---"
+    cat "$AUDIT_ERR"
+    echo "--- end stderr ---"
+  fi
+  exit 2
+fi
+rm -f "$AUDIT_ERR"
 
 echo "──────────────────────────────────────────────"
 echo "דוח אודיט עימוד (דפדפן אמיתי):"
