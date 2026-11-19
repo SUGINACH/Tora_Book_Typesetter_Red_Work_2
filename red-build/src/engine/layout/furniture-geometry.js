@@ -54,9 +54,30 @@ function folioGeometry(page, settings, folioMeasure) {
   };
 }
 
-/** ראש אזור הכותרת העליונה במרחב העמוד (מקור: המקרן ההיסטורי — contentBox.top − 18). */
+/**
+ * ראש אזור הכותרת העליונה במרחב העמוד.
+ *
+ * **תיקון שור (חקירת 19.11, HEADER_POSITION ×88 ב-full-math):** עד כאן המיקום
+ * נגזר מ-`contentBox.top − 18`. בפרופיל IMUD, עמוד פתיחת-סימן (sign-open) מרים את
+ * `contentBox.top` בהיסט h2TopOffset (180px) — והכותרת העליונה, שהיא **ריהוט עמוד**
+ * (Page Item participation=FURNITURE), נגררה יחד עם היסט התוכן ל-269.2px במקום
+ * 89.2px (נמדד ב-CI: עמ' 7 מסוג sign-open — headerBox 269.19–283.19 מול 89.19–103.19
+ * בעמודים רגילים; הפרש של בדיוק ההיסט).
+ *
+ * מקור גאומטרי עצמאי: בתבנית IMUD `margins.top` הוא קבוע החוזה (GEO.FLOW_TOP)
+ * ל**כל** סוגי העמודים — הוא אינו מושפע מהיסט פתיחת הסימן. הכותרת נעוצה אליו:
+ * ערך זהה (89.2) בכל עמודי הפרופיל, כולל sign-open — בדיוק כמו פס הכותרת של
+ * המורשת, שמיקומו קבוע בכל עמוד עם כותרת (חוזה 9C3 §ה: baseline 71.9px,
+ * כלל תחתון (43,62)–(553,63)pt בכל עמודי התוכן כולל פתיחות-סימן).
+ *
+ * הנתיב הלא-IMUD (קורפוס ה-DP הכללי) אינו משתנה: שם נשמר החישוב ההיסטורי
+ * `contentBox.top − 18` מילה במילה — נעילת fdff19d8 של s9d נשמרת.
+ */
 function headerGeometry(page) {
   const tpl = page.template;
+  if (tpl && tpl.imud === true && tpl.margins && Number.isFinite(tpl.margins.top)) {
+    return { y: Math.max(0, tpl.margins.top - 18) };
+  }
   return { y: Math.max(0, tpl.contentBox.top - 18) };
 }
 
