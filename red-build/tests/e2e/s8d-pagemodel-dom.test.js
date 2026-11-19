@@ -542,7 +542,7 @@ describe('S8D-6 פרוסה 3 — זהות גופן/עוגן/קריאה מהמו�
         const expectedHeight = Math.max(0, mp.geometry.contentBox.height - (mp.geometry.spanOffset || 0));
         assertEq(Number(col.dataset.modelTop), expectedTop, `column model top p${mp.index}/c${ci}`);
         assertEq(Number(col.dataset.modelHeight), expectedHeight, `column model height p${mp.index}/c${ci}`);
-        for (const lineEl of (col.children || []).filter(x => has(x, 'line'))) {
+        for (const lineEl of (col.children || []).filter(x => String(x.className || '').split(/\s+/).includes('line'))) {
           const line = mp.lines.find(x => x.id === lineEl.dataset.id);
           assert(line, `model line exists for ${lineEl.dataset.id}`);
           assertEq(Number(lineEl.dataset.modelY), line.y, `model line y ${line.id}`);
