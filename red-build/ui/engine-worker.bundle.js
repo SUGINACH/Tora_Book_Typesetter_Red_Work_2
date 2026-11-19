@@ -4794,6 +4794,11 @@ const { sha256Hex } = require('../assets/hash256');
 // כל קריאותיו מעבירות tracking=0 במפורש (אומת בסקירה).
 const DEFAULT_TRACKING = 0; // em
 
+/** **ביקורת בטיחות 19.11 (U-14):** תקרת מטמון המחרוזות לכל מופע MeasureAPI —
+ * אותן קבועים כמו מטמון הפריטים (מדיניות חסימה אחת לכל מטמוני המדידה). */
+const STRING_CACHE_MAX_ENTRIES = 65536;
+const STRING_CACHE_EVICT_BATCH = 8192;
+
 /** גופנים רשומים (פרופיל → פרנסר). ההרשמה מפורשת — אין טעינת רשת (offline). */
 const registeredFonts = new Map();
 /** **תיקון ביקורת PR #22 (מפתח מטמון):** זהות תוכן לכל רישום — `fnt-<sha256[:14]>`
@@ -4857,6 +4862,10 @@ function restoreFontRegistration(profileName, font, bytes) {
   }
   if (String(profileName) === 'Frank Ruhl Libre') fm.setMissingGlyphFallbackFont(font);
   _familyApiCache.clear();
+  // **ביקורת בטיחות 19.11 (U-13):** גם מופעי ה-fallback המשותפים חייבים להימחק —
+  // מופע font-metrics נקשר לפרופיל הגופן בבנאי; מופע שנוצר בזמן הרישום הזמני
+  // (מסלול exportPdf) היה ממשיך למדוד בגופן הזמני גם אחרי השחזור.
+  _sharedFallbackApis.clear();
   _invalidateEnvFp();
 }
 
@@ -4869,6 +4878,7 @@ function unregisterFont(profileName) {
   _fontContentIds.delete(name);
   if (name === 'Frank Ruhl Libre') fm.setMissingGlyphFallbackFont(null);
   _familyApiCache.clear(); // **S5.2:** מטמון ה-API-פר-משפחה נגרר אחרי ההרשמה
+  _sharedFallbackApis.clear(); // **U-13 (19.11):** אין מופע-fallback הקשור לגופן שהוסר
   _invalidateEnvFp();
   if (!_fontClearSync) {
     _fontClearSync = true;
@@ -4898,8 +4908,28 @@ class MeasureAPI {
     this.fontProfile = null;
     this.fontFactor = 1;
     this.cache = new Map();
-    this.stats = { calls: 0, hits: 0, fontFallbacks: 0 };
+    this.stats = { calls: 0, hits: 0, fontFallbacks: 0, evictions: 0 };
     if (this.impl === 'font-metrics') this._bindProfile();
+  }
+
+  /** **ביקורת בטיחות 19.11 (U-14) — חסימת מטמון המחרות:** מופעי ה-family/fallback
+   * חיים לכל אורך חיי ה-Worker, ומטמון המחרות היה בלתי-חסום — נמדד: מסמך שני
+   * ושונה הוסיף ‎+11,882‎ רשומות למופע הגוף (no_long ‎6,270→‎ mid_long ‎18,152‎),
+ * וכל מסמך חדש מוסיף את שלו לנצח. אותה מדיניות החסימה של מטמון הפריטים —
+ * תקרה ‎65,536‎ + ניפוי-באצווה ‎8,192‎‏ (FIFO לפי סדר הכנסה; המדידה היא מֵימוּז של
+ * פונקציה טהורה — חסימה אטומה לפלט, מוכח בדטרמיניזם ובנעילות ה-cross-check).
+ * הזיכרון לכל המופעים גם יחד נשאר בסדר גודל של מטמון הפריטים (~עשרות MB). */
+  _cacheSet(key, px) {
+    if (this.cache.size >= STRING_CACHE_MAX_ENTRIES) {
+      const it = this.cache.keys();
+      for (let i = 0; i < STRING_CACHE_EVICT_BATCH; i++) {
+        const k = it.next().value;
+        if (k === undefined) break;
+        this.cache.delete(k);
+        this.stats.evictions++;
+      }
+    }
+    this.cache.set(key, px);
   }
 
   /** קשירת פרופיל הגופן לפי שם הגופן בהגדרות; fallback שקוף לטבלה אם לא נרשם. */
@@ -5003,7 +5033,7 @@ class MeasureAPI {
       prev = ch;
     }
     const px = Math.max(0, w * size * (96 / 72)); // pt→px
-    this.cache.set(key, px);
+    this._cacheSet(key, px);
     return px;
   }
 
@@ -5169,23 +5199,55 @@ function _canonicalStringify(value, depth = 0) {
 }
 
 /** **אופטימיזציית מפתח (19.11, הוראת ביצועים §5):** מֵימוֹ של המחרוזת הקנונית
- *  לאובייקטים יציבים בלבד (ctx/ctx.constraints — אותה הפניה לכל אורך ה-typeset).
+ *  לאובייקטים — **מודע-מוטציה** (ביקורת בטיחות 19.11, U-12): חוזה הקלט מתיר
+ * שינוי אובייקטי קלט בין מדידות (s3-immutability — מדידה חוזרת משקפת קלט חדש);
+ * מֵימוֹ נאיבי לפי זהות היה מחזיר ייצוג ישן. כאן: תצלום-ערכים שטוח נשמר עם
+ * הייצוג; אי-התאמה ⇒ קנוניזציה מחדש ועדכון. אובייקט עם ערך-עצם אינו ממומוֹ כלל.
  *  התוצאה זהה בדיוק (אותה פונקציה על אותו אובייק�) — הפונקציה טהורה והאובייקט
  *  אינו משתנה (חוזה הטוהר של שלב 3); WeakMap — אין החזקה. */
 const _canonicalMemo = new WeakMap();
+function _flatSnapshot(value) {
+  if (value === null || typeof value !== 'object') return null;
+  const snap = new Map();
+  for (const k of Object.keys(value)) {
+    const v = value[k];
+    const t = typeof v;
+    if (v === null || t === 'string' || t === 'number' || t === 'boolean' || t === 'undefined') snap.set(k, v);
+    else return null; // ערך-עצם/מערך — בלי מֵימוֹ (שינוי פנימי בלתי-נראה לתצלום השטוח)
+  }
+  return snap;
+}
+function _snapshotMatches(snap, value) {
+  const keys = Object.keys(value);
+  if (keys.length !== snap.size) return false;
+  for (const k of keys) {
+    if (!snap.has(k) || snap.get(k) !== value[k]) return false;
+  }
+  return true;
+}
 function _canonicalStringifyStable(value) {
   if (value === null || typeof value !== 'object') return _canonicalStringify(value);
+  const snap = _flatSnapshot(value);
+  if (snap === null) return _canonicalStringify(value); // מבנה מקונן — קנוניזציה טרייה בכל קריאה (נכונות מלאה)
   let m = _canonicalMemo.get(value);
-  if (m === undefined) { m = _canonicalStringify(value); _canonicalMemo.set(value, m); }
-  return m;
+  if (m === undefined || !_snapshotMatches(m.snap, value)) {
+    m = { canon: _canonicalStringify(value), snap };
+    _canonicalMemo.set(value, m);
+  }
+  return m.canon;
 }
 
 /** **אופטימיזציית מפתח (19.11, הוראת ביצועים §5):** חשיש מפתח מהיר לא-קריפטוגרפי
  *  עבור מטמון הפריטים בתוך התהליך בלבד. מחליף את sha256Hex (Node crypto — יקר
  *  לקריאה: ~3.4µs, נמדד) בשלושה ערוצי 32-bit (FNV-1a, ערוץ מעורבב-מיקום, sdbm)
- *  + אורך, עם finalization של murmur3 — 96 ביטים יעילים: סף birthday ל-10⁷
- *  מחרוזות ≈ 2⁻⁵⁸ — הגנת ההתנגשות של PR #22 נשמרת (אותם רכיבי תוכן בדיוק,
- *  אותה שלמות מפתח; רק פונקציית החשיש שהתה). sha256Hex נשאר לזהויות
+ *  + אורך, עם finalization של murmur3 — 96 ביטים יעילים.
+ *
+ *  **ביקורת בטיחות 19.11 (U-11):** ההסתברות אינה עוד מנגנון ההגנה. סף ה-birthday
+ *  ל-10⁷ מחרוזות על 96 ביטים הוא ‎≈6.3×10⁻¹⁶‎ ≈ ‎2⁻⁵⁰·⁵‎ (הערת הקוד הקודמת, ‎2⁻⁵⁸‎,
+ *  הייתה שגויה מספרית) — נמוך, אך הסתברות אינה הוכחת נכונות: התנגשות אמיתית הייתה
+ *  מחזירה MeasuredItem של פריט אחר. כעת המטמון מאמת **מקור מדויק** בכל קריאה
+ *  (רשומה = {src, val}; אי-התאמה ⇒ miss) — התנגשות פוגעת בביצועים בלבד, לעולם
+ *  לא בנכונות. sha256Hex נשאר לזהויות
  *  content-addressed (גופנים/נכסים) — שם הוא חלק מהחוזה. המפתח אינו נשמר
  *  בין תהליכים ואינו חוצה את גבול ה-Worker — אין השלכות שחזור. */
 function _fmix32(h) {
@@ -5246,9 +5308,13 @@ function _itemCacheKey(item, style, ctx) {
   // **אופטימיזציה (19.11, הוראת ביצועים §5):** (א) _fastKeyHash במקום sha256Hex —
   // המפתח משרת מטמון בתהליך בלבד (לא זהות content-addressed); (ב) ctx.constraints
   // דרך מֵימוֹ קנוני לפי זהות — אותה הפניה לכל אורך ה-typeset, אותה תוצאה בדיוק.
-  // אותם רכיבי תוכן ובאותו סדר — הגנת ההתנגשות של PR #22 נשמרת במלואה.
+  // **ביקורת בטיחות 19.11 (U-11):** מוחזרים המקור הקנוני המלא (s) והחשיש (k) יחד —
+  // המטמון מאמת מקור מדויק בכל קריאה; התנגשות hash אמיתית היא miss (חישוב מחדש),
+  // לא החזרת מדידה זרה — הגנת PR #22 מובטחת דטרמיניסטית, לא הסתברותית.
+  // פרדת רכיבים ב-NUL (\u0000): הקנוניזציה מבריחה תווי בקרה (JSON.stringify) —
+  // המפריד חד-משמעי; אין היווצרות מקור זהה מרכיבים שונים.
   const it = item || {};
-  return 'ik3:' + _fastKeyHash([
+  const s = [
     'item-key-v3',
     MEASURE_ENGINE_VERSION,
     environmentFingerprint(),
@@ -5264,7 +5330,8 @@ function _itemCacheKey(item, style, ctx) {
     (ctx && ctx.constraintsKey) || '',
     (ctx && ctx.assetId) != null ? String(ctx.assetId) : '',
     _assetIdentityFp(item, ctx)
-  ].join('~'));
+  ].join('\u0000');
+  return { k: 'ik3:' + _fastKeyHash(s), s };
 }
 
 /** **תיקון ביקורת PR #22 (immutability אמיתי):** הקפאה עמוקה — כל המבנים
@@ -5323,8 +5390,8 @@ function measureItem(item, style, ctx) {
   const lineHeight = (style && Number.isFinite(style.lineHeight)) ? style.lineHeight : 1.34;
   const dir = (ctx && ctx.direction) || 'rtl';
   const lang = (ctx && ctx.language) || 'he';
-  const key = _itemCacheKey(item, style, ctx);
-  const hit = _itemCacheGet(key);
+  const ck = _itemCacheKey(item, style, ctx);
+  const hit = _itemCacheGet(ck);
   if (hit !== undefined) return hit;
 
   let out;
@@ -5493,7 +5560,7 @@ function measureItem(item, style, ctx) {
     out.environmentFingerprint = environmentFingerprint();
     out.measureEngineVersion = MEASURE_ENGINE_VERSION;
     _deepFreeze(out);
-    _itemCacheSet(key, out);
+    _itemCacheSet(ck, out);
   } else if (out) {
     _deepFreeze(out); // דחייה — גם היא בלתי-ניתנת לשינוי (אותו חוזה)
   }
@@ -5544,15 +5611,19 @@ function _textBreaks(runs) {
 const ITEM_MEASURE_CACHE_MAX_ENTRIES = 65536;
 const ITEM_CACHE_EVICT_BATCH = 8192;
 const _itemMeasureCache = new Map();
-function _itemCacheGet(key) {
-  if (!_itemMeasureCache.has(key)) return undefined;
-  const v = _itemMeasureCache.get(key);
+function _itemCacheGet(ck) {
+  const e = _itemMeasureCache.get(ck.k);
+  if (e === undefined) return undefined;
+  // **ביקורת בטיחות 19.11 (U-11) — אימות מקור מדויק:** החשיש המהיר אינו הוכחת
+  // זהות. הרשומה שומרת את המקור הקנוני המלא; מקור שונה תחת אותו חשיש (התנגשות
+  // אמיתית — כולל כזו שהוזרקה בבדיקה) היא **miss**, לא החזרת מדידה זרה.
+  if (e.src !== ck.s) return undefined;
   // LRU: חידוש עדכניות — מחיקה והחזרה לסוף (סדר ה-Map = סדר הכנסה)
-  _itemMeasureCache.delete(key);
-  _itemMeasureCache.set(key, v);
-  return v;
+  _itemMeasureCache.delete(ck.k);
+  _itemMeasureCache.set(ck.k, e);
+  return e.val;
 }
-function _itemCacheSet(key, value) {
+function _itemCacheSet(ck, value) {
   if (_itemMeasureCache.size >= ITEM_MEASURE_CACHE_MAX_ENTRIES) {
     // ניפוי הערכים העתיקים ביותר באצווה אחת (הראשונים שהוכנסו ולא נגעו בהם מאז)
     const it = _itemMeasureCache.keys();
@@ -5561,10 +5632,26 @@ function _itemCacheSet(key, value) {
       _itemMeasureCache.delete(k);
     }
   }
-  _itemMeasureCache.set(key, value);
+  // התנגשות hash (מקור אחר תחת אותו חשיש): הרשומה האחרונה גוברת — ההגנה
+  // היא ב-get (אימות מקור); שני המקורות פשוט יחושבו מחדש לסירוגין.
+  _itemMeasureCache.set(ck.k, { src: ck.s, val: value });
 }
 function itemCacheStats() {
   return { entries: _itemMeasureCache.size, capacity: ITEM_MEASURE_CACHE_MAX_ENTRIES };
+}
+/** **ביקורת בטיחות 19.11 (U-14) — אבחון בלבד (אינו מנגנון מדידה שני):** סטטיסטיקת
+ * מטמוני המחרוזות של מופעי MeasureAPI החיים (family + fallback משותפים). משמש
+ * את בדיקות מחזור החיים ואת מדידת הצטברות הזיכרון לאורך מסמכים ב-Worker ארוך-חיים. */
+function stringCacheStats() {
+  const instances = [];
+  for (const [k, api] of _familyApiCache) instances.push({ cache: 'family', key: String(k), entries: api.cache.size, impl: api.impl });
+  for (const [k, api] of _sharedFallbackApis) instances.push({ cache: 'fallback', key: k, entries: api.cache.size, impl: api.impl });
+  return {
+    instances,
+    familyInstances: _familyApiCache.size,
+    fallbackInstances: _sharedFallbackApis.size,
+    totalEntries: instances.reduce((s, x) => s + x.entries, 0)
+  };
 }
 function clearItemMeasureCache() { _itemMeasureCache.clear(); }
 
@@ -5590,7 +5677,7 @@ function fontResolverAliasOf(fontId) {
 module.exports = {
   MeasureAPI, registerFont, unregisterFont, clearRegisteredFonts, restoreFontRegistration,
   charWidthEm, registeredFonts, resolveMeasureImpl,
-  measureItem, environmentFingerprint, MEASURE_ENGINE_VERSION, itemCacheStats, clearItemMeasureCache,
+  measureItem, environmentFingerprint, MEASURE_ENGINE_VERSION, itemCacheStats, clearItemMeasureCache, stringCacheStats,
   FONT_WIDTH_PROFILES, familyWidthProfileOf,
   deepFreeze: _deepFreeze, canonicalStringify: _canonicalStringify
 };
