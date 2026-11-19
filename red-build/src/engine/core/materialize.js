@@ -441,7 +441,7 @@ function projectStampedRows(n, x, w, yTop, opts) {
   const prefix = [];
   if (isCont && Number(n.contMarkW) > 0) prefix.push({ text: NM.CONTINUATION_MARK, w: glyph(n.contMarkW) });
   const mkTxt = noteMarkerOf(n, { 'footnote-marker-style': null });
-  if (mkTxt && Number(n.markerW) > 0) prefix.push({ text: scrubPUAText(mkTxt), w: glyph(n.markerW) });
+  if (mkTxt && Number(n.markerW) > 0) prefix.push({ text: scrubPUAText(mkTxt), w: glyph(n.markerW), mk: true });
   if (!isCont && n.counterMark != null && String(n.counterMark) !== '' && Number(n.counterMarkW) > 0) {
     prefix.push({ text: scrubPUAText(String(n.counterMark)), w: glyph(n.counterMarkW) });
   }
@@ -467,7 +467,8 @@ function projectStampedRows(n, x, w, yTop, opts) {
     let cursor = gx + gw; // RTL — מימין לשמאל
     for (const t of live) {
       cursor -= t.w;
-      const wd = { text: t.text, x: cursor, w: t.w, sizePt, baselineY, fontKey: opts.fontKey, ...(opts.color ? { color: opts.color } : {}) };
+      const wd = { text: t.text, x: cursor, w: t.w, sizePt, baselineY, fontKey: opts.fontKey,
+        ...(t.mk ? { mk: true } : {}), ...(opts.color ? { color: opts.color } : {}) };
       wds.push(wd);
       flat.push(wd);
       cursor -= gapW;

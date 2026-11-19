@@ -479,6 +479,39 @@ describe('S8D-6 פרוסה 3 — זהות גופן/עוגן/קריאה מהמו�
     assert(checked > 0, `נבדקו ${checked} מילות כותרת עם fontKey`);
   });
 
+  it('מחלקות סמנטיות: כותרת נשארת line--heading וסמן נשאר w--fnmarker', () => {
+    let headings = 0, bodyMarkers = 0, noteMarkers = 0;
+    const has = (node, cls) => String(node.className || '').split(/\\s+/).includes(cls);
+    for (const mp of r.pageModel.pages) {
+      const el = renderModelPage(mp, S, doc);
+      const lineEls = collectByClass(el, 'line');
+      for (const ln of mp.lines || []) {
+        const lineEl = lineEls.find(x => x.dataset.id === ln.id);
+        if (!lineEl) continue;
+        if (ln.kind === 'heading') {
+          assert(has(lineEl, 'line--heading'), `heading line ${ln.id} lost line--heading`);
+          headings++;
+        }
+        for (const wd of (ln.words || []).filter(w => w.mk)) {
+          const span = (lineEl.children || []).find(x => has(x, 'w--fnmarker') && x.textContent === wd.text);
+          assert(span, `body marker ${wd.text} lost w--fnmarker on ${ln.id}`);
+          bodyMarkers++;
+        }
+      }
+      for (const fn of (mp.footnotes || [])) {
+        if (!fn.marker) continue;
+        const fnEl = collectByClass(el, 'footnote').find(x => String(x.dataset.noteId) === String(fn.noteId));
+        assert(fnEl, `footnote ${fn.noteId} has a DOM element`);
+        const marker = collectByClass(fnEl, 'w--fnmarker').find(x => x.textContent === fn.marker);
+        assert(marker, `footnote marker ${fn.marker} lost w--fnmarker`);
+        noteMarkers++;
+      }
+    }
+    assert(headings > 0, 'the fixture exercises heading lines');
+    assert(bodyMarkers > 0, 'the fixture exercises body note markers');
+    assert(noteMarkers > 0, 'the fixture exercises footnote marker words');
+  });
+
   it('עוגני הערות-צד: data-anchor מהמודל; שורות הטקסט בתוך ה-aside (עוגן האודיט)', () => {
     let saw = 0;
     for (const mp of r.pageModel.pages) {
