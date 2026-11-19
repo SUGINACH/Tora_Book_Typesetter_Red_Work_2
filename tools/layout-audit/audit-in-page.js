@@ -286,9 +286,9 @@
           const scaleY = modelPageH > 0 ? pgR.h / modelPageH : null;
           const modelLineY = numData(lr.el, 'modelY');
           const modelLineH = numData(lr.el, 'modelH');
-          const modelColTop = numData(col, 'modelTop');
-          const modelColHeight = numData(col, 'modelHeight');
-          const modelColBottom = numData(col, 'modelBottom');
+          const modelColTop = numData(c, 'modelTop');
+          const modelColHeight = numData(c, 'modelHeight');
+          const modelColBottom = numData(c, 'modelBottom');
           problems.push({
             page: idx, col: ci, type: 'LINE_BELOW_COLUMN', severity: 'high',
             text: lr.el.textContent.slice(0, 80),
@@ -305,9 +305,9 @@
             modelColumn: { top: modelColTop, height: modelColHeight, bottom: modelColBottom },
             pageScaleY: scaleY,
             domVsModel: scaleY != null && modelLineY != null && modelLineH != null ? {
-              topDeltaPx: px1((lr.r.y - pr.y) - modelLineY * scaleY),
+              topDeltaPx: px1((lr.r.y - pgR.y) - modelLineY * scaleY),
               heightDeltaPx: px1(lr.r.h - modelLineH * scaleY),
-              columnBottomDeltaPx: modelColBottom != null ? px1((cr.b - pr.y) - modelColBottom * scaleY) : null
+              columnBottomDeltaPx: modelColBottom != null ? px1((cr.b - pgR.y) - modelColBottom * scaleY) : null
             } : null,
             overflowPx: px1(lr.r.b - cr.b),
             computed: { fontSize: getComputedStyle(lr.el).fontSize, lineHeight: getComputedStyle(lr.el).lineHeight, position: getComputedStyle(lr.el).position }

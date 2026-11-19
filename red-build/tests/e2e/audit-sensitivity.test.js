@@ -373,6 +373,9 @@ describe('audit-sensitivity — הוכחת רגישות הגלאים (S5.2)', ()
       assert(region.includes(field), `LINE_BELOW_COLUMN evidence missing ${field}`);
     }
     assert(source.includes('lr.r.b > cr.b + 2'), 'the existing 2px failure threshold is unchanged');
+    assert(source.includes("numData(c, 'modelTop')"), 'column source uses the loop-scoped c element');
+    assert(source.includes('(lr.r.y - pgR.y)'), 'DOM/model comparison uses page rect pgR');
+    assert(!source.includes("numData(col, 'modelTop')") && !source.includes('(lr.r.y - pr.y)'), 'no undefined DOM variables in the diagnostic path');
   });
 
   it('מבנה הדוח: bySeverity מחושב מהרשימה המלאה גם מעל תקרת 2000 (תיקון S5.2)', () => {
