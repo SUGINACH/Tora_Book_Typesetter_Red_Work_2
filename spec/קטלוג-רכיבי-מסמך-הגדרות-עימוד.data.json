@@ -2,11 +2,11 @@
   "meta": {
     "title": "קטלוג רכיבי המסמך והגדרות העימוד",
     "branch": "engine/legacy-parity-preview-20261119",
-    "head": "2a412860e757613f274262e7655a56849a5daaf3",
+    "head": "d841f9282d274ab33a88796b6212eb655cc37a55",
     "date": "2026-11-19",
     "sourceBlobShas": {
       "bindings": "169301b330e429102ad47c0e1110c8b8ccd443dd",
-      "audit": "52e90eb4a25ae7db6d45a49103ddb028c502bca2",
+      "audit": "27053864d059e447a08828b75ac668fe374e41e3",
       "legacyMap": "f2c1be34fc1cacda852cdfa4f3756e705ed7c06c",
       "defaults": "23a42123998f1f4058168e3fbcaa7da6f9301415",
       "kinds": "4958cddd734038bb2a3e5c7163499955811a4754",
@@ -30,7 +30,191 @@
       "dividers": "35c47ea06534f8552ace82a3a86599b5b423f1ad",
       "customPages": "2036ca806975e718ebb01d020a3940bf4620d725"
     },
-    "auditCommit": "95e829d44e88f436c9397d82473cd9e2f4a698aa"
+    "auditCommit": "95e829d44e88f436c9397d82473cd9e2f4a698aa",
+    "implementationAudit": {
+      "snapshotCommit": "d841f9282d274ab33a88796b6212eb655cc37a55",
+      "treeSha": "d841f9282d274ab33a88796b6212eb655cc37a55",
+      "branch": "engine/legacy-parity-preview-20261119",
+      "scannedAt": "2026-11-19",
+      "inventory": {
+        "engineFiles": 98,
+        "engineBytes": 1804387,
+        "uiFiles": 20,
+        "uiBytes": 383428,
+        "engineBlobShas": {
+          "red-build/src/engine/assets/asset-resolver.js": "683b3deeecaf8e255e85a582322d0084295e8956",
+          "red-build/src/engine/assets/hash256.js": "2aa82a32fe3d52ac7ade3cad14c250916c9fe21a",
+          "red-build/src/engine/assets/image-meta.js": "b3f3f5a749dbdf807939edabd9054cebf1c1f616",
+          "red-build/src/engine/audit/editing-recommendations.js": "4a9e441b68dc2d20c32193f6cde6593964838cdb",
+          "red-build/src/engine/audit/text-edits.js": "93467996cb8db3a24eda60159f1480f44783322b",
+          "red-build/src/engine/core/events.js": "44ab2010007220345895cc5762cddce5ef75a0bd",
+          "red-build/src/engine/core/h3-contract.js": "f7244b39dca8b14f39b74e13ea937349e37e6796",
+          "red-build/src/engine/core/imud-geometry.js": "b90a0dd7b5d4767efa9acdb5837c61bcaccdb2a7",
+          "red-build/src/engine/core/ledger.js": "28a1fba0dac38e619d870ff0a67e44a8fd3af749",
+          "red-build/src/engine/core/legacy-settings-map.js": "f2c1be34fc1cacda852cdfa4f3756e705ed7c06c",
+          "red-build/src/engine/core/materialize.js": "2f980e9698849d4d7b124de548e94350893f3e28",
+          "red-build/src/engine/core/page-model.js": "575d9860ff3b3ef56e33fdcc56ce0e637e150332",
+          "red-build/src/engine/core/pipeline.js": "34f01a44751d632029e5d3662b483004bccd28d2",
+          "red-build/src/engine/core/pua-text.js": "ec142abce3c7f10972203c464e53e320071540b6",
+          "red-build/src/engine/core/settings-registry.js": "2032ca239297d685a44d0e6e3c53e9ed3cc86ff7",
+          "red-build/src/engine/decoration/asset-registry.js": "1153db40d614cfce36f6a6785886813590ab73cf",
+          "red-build/src/engine/decoration/assets-import.js": "fce1c34802c7ca5e16ded8b12a040c0649f7f045",
+          "red-build/src/engine/decoration/custom-pages.js": "2036ca806975e718ebb01d020a3940bf4620d725",
+          "red-build/src/engine/decoration/dividers.js": "35c47ea06534f8552ace82a3a86599b5b423f1ad",
+          "red-build/src/engine/decoration/folio.js": "a56cd594eee5fad1451031a445808f20b0f32b7d",
+          "red-build/src/engine/decoration/headers-builder.js": "df7cc3314d80f266446ce880ab5e3f05e8fb3f7c",
+          "red-build/src/engine/decoration/legacy-ornaments.js": "7393918b8d767a2a63934d247d487846a658c65b",
+          "red-build/src/engine/decoration/numbering-audit.js": "802cea3025da208b4fc3558c5fdde87e94310d15",
+          "red-build/src/engine/decoration/ornament-fit.js": "ce9f8bb33a4e8fd3b5905256d6dd33dd604e042e",
+          "red-build/src/engine/decoration/ornament-ink.js": "fb0a3925e1c4ac4013ccd32d02c40663545eac23",
+          "red-build/src/engine/decoration/ornament-plan.js": "92889d830727eb2d38d9e3e6b4cc25d42978ebe8",
+          "red-build/src/engine/decoration/page-decorations.js": "0282b0380fa2450f07d66c6355c4b0cc78994ca4",
+          "red-build/src/engine/decoration/shaar-boxes.js": "d848f8d7fe107a82b99ea0a2e4c6b245d84072e5",
+          "red-build/src/engine/decoration/shaar-pages.js": "91d1acf3f33db10d8748ba45f1310de28212bab0",
+          "red-build/src/engine/decoration/svg-sanitize.js": "72a8a90077d3ddf9d6ef0eabab73f3a0e1f6791b",
+          "red-build/src/engine/decoration/theme-sets.js": "704299e87ea5d4e21c6fef9d3cbabef8b0288771",
+          "red-build/src/engine/decoration/toc-builder.js": "d3ad64060a4f4c303245c97a6457efda5a65292a",
+          "red-build/src/engine/extensions/apply-styles.js": "c0d989c59cff8c6de82d9bffb9dbf160abbe17d1",
+          "red-build/src/engine/extensions/extensions-io.js": "a1671f7d31be6848b003ac9f48e6579a575fa0c3",
+          "red-build/src/engine/extensions/style-schema.js": "47b7f410651e0cff1e53158b2e56afc52305bc0c",
+          "red-build/src/engine/import/docx-import.js": "9635f5cf2328e409ac930e366591c3f2440f354d",
+          "red-build/src/engine/import/xml-lite.js": "9ddd0de947c19ddf7bd03933845bc92312e2e2f9",
+          "red-build/src/engine/import/zip-reader.js": "3c64d6a6f9362112d53c287de0e1a4197e201b10",
+          "red-build/src/engine/layout/balancing.js": "b91a5c1c4022f4117353affaa0aa295b56b7b0fb",
+          "red-build/src/engine/layout/candidate-generator.js": "a0c71340f436b4a0438c15ae2e746d2aa019260a",
+          "red-build/src/engine/layout/column-flow.js": "13d938eae70137e5d0bffbb30994fe96d6acc053",
+          "red-build/src/engine/layout/constraint-matrix.js": "a6f32761273aa703804baf0e45e63dd7eaff7db7",
+          "red-build/src/engine/layout/decision-trace.js": "91439c7246c1569645d8d7b59bc5a91ca1eddb47",
+          "red-build/src/engine/layout/dp-planner.js": "4c00d2878ef3df9003989fc3f9f0ede566317bff",
+          "red-build/src/engine/layout/endnote-pages.js": "73377db04683beab24ff0399bf7363854c3bf23d",
+          "red-build/src/engine/layout/footnote-budget.js": "540aefd49095625575e8bcf0b8f3dc487d1ea2d8",
+          "red-build/src/engine/layout/footnote-lanes.js": "e6231ca1250b295eec847a182e36c3bd842f327e",
+          "red-build/src/engine/layout/furniture-geometry.js": "20ed3dc3dfe13671f4fc8260be27e55639c7ffdd",
+          "red-build/src/engine/layout/headings-escort.js": "36ddc0c3514d9e5adc45ad435b8fdcb64ef15d35",
+          "red-build/src/engine/layout/legacy-imud-flow.js": "e9033c5d3d1f17fb38c7d344cebc54570f6a1486",
+          "red-build/src/engine/layout/notes-model.js": "a4e64857f47d247e601eddf66776e72dbbbe6321",
+          "red-build/src/engine/layout/ordering.js": "ec226cae825b7a02ec8f45429a5b9824b8236a40",
+          "red-build/src/engine/layout/page-items.js": "eb14838500279e8886136791b97f1634e2768380",
+          "red-build/src/engine/layout/page-templates.js": "9d4feaa54cb378456b36cf88e3ff4dad3ac87035",
+          "red-build/src/engine/layout/plan-model.js": "e769a048509b77c865470accfa61267d69ea17ef",
+          "red-build/src/engine/layout/protections-matrix.js": "5bbac98f966726294fe7485c0e21f9038d10fa5d",
+          "red-build/src/engine/layout/retreat-loop.js": "b3cdace3e4af902bec9f1168083a6b24b6a8f13a",
+          "red-build/src/engine/layout/side-notes.js": "13bdf0eb870f5258840c0116b0b32e79ce34fd0f",
+          "red-build/src/engine/layout/structural-stamps.js": "fa3870fe2ef749274fd7ee8dcc4e6782b25aaa6b",
+          "red-build/src/engine/line/breaks.js": "46653cb1c2d2cc11630de3c798ea105174efb53e",
+          "red-build/src/engine/line/line-items.js": "811e20a767f21e50cb303684ad292b212a3247b5",
+          "red-build/src/engine/line/line-model.js": "ac2eff5a3dbbdf445a0814b529c3cd04bd99d884",
+          "red-build/src/engine/line/pipeline-bridge.js": "d3d0598ced34f8f2f3b61b1e81b5e5f45f9f16b4",
+          "red-build/src/engine/measure/measure-model.js": "2f65e753872b7fcbbee8aef1d8cdb5963110de8f",
+          "red-build/src/engine/model/adapter.js": "36b6f597cc75e28a4c19131b1e15831fb4a3db00",
+          "red-build/src/engine/model/document-model.js": "33652c750aabcaa9aede2d8bda220336f06461ce",
+          "red-build/src/engine/model/identity.js": "23c7a14d8a56e571bb9fc3c04841190aa96f1dbf",
+          "red-build/src/engine/model/kinds.js": "4958cddd734038bb2a3e5c7163499955811a4754",
+          "red-build/src/engine/model/registry.js": "6b00f092e7745dac210142c7ad10b7692fca39af",
+          "red-build/src/engine/model/roundtrip.js": "dbfb202d56092be480a463b010074173f1eed36d",
+          "red-build/src/engine/model/source-range.js": "ab29c823c58b1c2288b7ad713c485eb525d39f37",
+          "red-build/src/engine/model/validate.js": "d93026650c943ed2e1d03074d83ba2462df0e9ab",
+          "red-build/src/engine/notes/markers.js": "045a4f72c64836ff6ef92a0533448db1fcb2f54f",
+          "red-build/src/engine/output/dom-renderer.js": "8e65fc6d6a5f2303f167722799fd5d7e137d3ec7",
+          "red-build/src/engine/output/export-api.js": "6405acbbe3965e02d733ee7fa233dfe9506ee93c",
+          "red-build/src/engine/output/geometry-projector.js": "2ab90c048b7f89a328c130b0505bce0949d1afa7",
+          "red-build/src/engine/output/html-export.js": "a515eefaf4b466999941b7c7403f02efa9949003",
+          "red-build/src/engine/output/legacy-projector.js": "f45c7851a97ed4605036eee3b738b203c03ed887",
+          "red-build/src/engine/output/line-font.js": "e0c292bd72d118c477c7eccc27a3f02d10755f9f",
+          "red-build/src/engine/output/pagemodel-dom-renderer.js": "ffb9525a13d20b625e49f2600fa9770aaaf560ab",
+          "red-build/src/engine/output/pdf-writer.js": "efc003fd763923d6fc1c8606f21fb5709bba47ed",
+          "red-build/src/engine/output/project-io.js": "78942315e41c6ab981f9448cfeb62a6a47e767d1",
+          "red-build/src/engine/output/shaar-content.js": "7784d2e6183907ceba95297e725a04e4a486c158",
+          "red-build/src/engine/output/zip-writer.js": "f27de90315002da8dc5cd377d39ac63cb1590c7c",
+          "red-build/src/engine/parser/block-tokenizer.js": "a10165a251068fc2f111c3b07983f6a2a72699e3",
+          "red-build/src/engine/parser/bracket-scanner.js": "dd26ebb681d4e286c9b09ff93b643362f9835728",
+          "red-build/src/engine/parser/dfa-lexer.js": "77175ea716a1dae71321bc402b85350ca854cb0c",
+          "red-build/src/engine/parser/inline-content.js": "15f911ec2524fc5ac4191d3addec1aaae26eaa29",
+          "red-build/src/engine/typography/dropword.js": "bd72af29407bc42b99420473ed3053b83075c79b",
+          "red-build/src/engine/typography/font-keys.js": "e8490f7ad81aa989c85e790f3f1404b40e3d65f2",
+          "red-build/src/engine/typography/font-metrics.js": "f42fda6efbca4fc6fd99fbde065b76cf8d3e40ea",
+          "red-build/src/engine/typography/font-resolver.js": "029429b7b0b43c53b420fe0fa96bc1759bf40323",
+          "red-build/src/engine/typography/font-subset.js": "ec37954134e2fcf19bf07abf9497e9748d43eb5c",
+          "red-build/src/engine/typography/kp-linebreak.js": "33342102770cca6297ef66c858cc42dfad4bf033",
+          "red-build/src/engine/typography/measure-api.js": "33c657e3102b8104296b1574de7b960010b8d73d",
+          "red-build/src/engine/typography/measure-table.js": "70fa94bace0fdf04ed0f1365a59477242bde8cba",
+          "red-build/src/engine/typography/protectors.js": "bf822b087a4b6f08c38fe193cc06a9171773921b",
+          "red-build/src/engine/typography/units.js": "f51610a50d2b38de5c9042738087e0fff2569037"
+        },
+        "uiBlobShas": {
+          "red-build/src/ui/app-shell.js": "006fe1411ba5b8f2773a0292cad9a04dc945bc7d",
+          "red-build/src/ui/bindings.generated.js": "169301b330e429102ad47c0e1110c8b8ccd443dd",
+          "red-build/src/ui/browser-entry.js": "502b203800af69d044a8b9c67e574063d154aa39",
+          "red-build/src/ui/callgraph-scan.js": "8bd4e0551d3df0f680d464101d4bf9c92f74f84a",
+          "red-build/src/ui/caret-map.js": "f1c2dcbf59dec84f1fe86fa58c1b323f8218428d",
+          "red-build/src/ui/editor-tab.js": "1c44aa15404489cc37463bed0eaa1351b1b2fd3a",
+          "red-build/src/ui/engine-worker-main.js": "4f3916a9fd89d88307132efa5cb14a134aa1237c",
+          "red-build/src/ui/extensions-panel.js": "8bd218be5957aeaaa5e5bcc42029b374e93ed60b",
+          "red-build/src/ui/imud-library.js": "54f65f68e3a44fb11ed39a1119695dad00141ac1",
+          "red-build/src/ui/inline-transport.js": "f546b865c6e008c10b7d6787b21cccfa0a72cdc2",
+          "red-build/src/ui/page-model-transport.js": "7406e89426d1ee1c812fb17dc29746104e586001",
+          "red-build/src/ui/preview-tab.js": "304957ce1da769c3c0b160df48be5cb4c0afce61",
+          "red-build/src/ui/retypeset-policy.js": "bc42b9078533ce64d41150dd13b35a4f60e202fe",
+          "red-build/src/ui/settings-panel.js": "fb081d28570df1eb355f8aae55da34be6227f500",
+          "red-build/src/ui/settings-persistence.js": "9fc4e170e3a9156952d4e0b1ba5f33ed6efed052",
+          "red-build/src/ui/status-strip.js": "592053236becf71016a0f9fd76892742ed3dc80b",
+          "red-build/src/ui/test-doc-generator.js": "84dcd5ee30f5dd87a4dca5de51783aea175b0512",
+          "red-build/src/ui/testing-tab.js": "e1e42a21f29f208c8102f027b769b2be8c1eeb2d",
+          "red-build/src/ui/worker-client.js": "ac5dea24729fd316b3b576bf2d0b92c86c972515",
+          "red-build/src/ui/worker-protocol.js": "bde80d03d0f4dc639ee85df1e642990ce6b18aed"
+        },
+        "legacyDefaults": {
+          "path": "red-build/ui/assets/imud/default_settings.json",
+          "blobSha": "23a42123998f1f4058168e3fbcaa7da6f9301415",
+          "keys": 265
+        }
+      },
+      "settingsBindingParity": {
+        "registryDefinitions": 256,
+        "generatedBindings": 256,
+        "catalogSettings": 256,
+        "missingBindingIds": 0,
+        "missingCatalogIds": 0,
+        "duplicateIds": 0,
+        "comparedFields": [
+          "id",
+          "type",
+          "default",
+          "enum/options",
+          "min",
+          "max",
+          "step",
+          "label",
+          "control",
+          "panel"
+        ],
+        "mismatches": 0
+      },
+      "review": {
+        "coverage": "כל 98 מודולי red-build/src/engine ו־20 מודולי red-build/src/ui נסרקו סטטית; נבדקו קובצי סמכות, dispatch, materialize, layout, notes, decorations, parser, measurement, worker, persistence ו־renderers.",
+        "patterns": [
+          "||",
+          "??",
+          "process.env",
+          "RED_*",
+          "const/enum/set/map",
+          "settings[...]",
+          "fallback literals",
+          "model/page-item contracts",
+          "UI/worker boundaries"
+        ],
+        "classification": "ערכי fallback בעלי משמעות לפלט הופרדו מ־shape guards כמו || [] ו־|| null; מגבלות קלט/ביצועים סומנו בנפרד מהגדרות עימוד.",
+        "runtimeTests": "לא בוצעו בדיקות מנוע, דפדפן או יצוא בפועל; הממצאים סטטיים."
+      },
+      "knownDiscrepancies": [
+        "style-schema.js מתיר infoBox.padEm=0, אך pipeline.js משתמש ב־Number(ib.padEm)||0.3 ולכן אפס מוחלף ב־0.3em.",
+        "legacy-settings-map.js מגדיר fn-reset-mode fallback=page, בעוד legacy-imud-flow.js fallback מקומי siman; יש לבדוק precedence ונתיב import לפני הכרעה.",
+        "H2_ORN_W_EM/H2_ORN_H_EM מוגדרים בשני מודולים; קיימת כפילות מקור.",
+        "legacy-ornaments.js מחזיק BAND_W/BAND_X נפרדים ממקרן DOM; אין להסיק שקילות בלי בדיקת מערכות צירים ותנאי הפעלה.",
+        "פורמטי תמונה שונים בין inline parser, asset resolver ומייבא עיטורים.",
+        "RED_UNIFIED_IMUD ו־_engine-force-unified הם מתגי dispatch פנימיים; endnotes-enabled ו־footnotes-enabled נגזרים מ־note-placement-mode."
+      ]
+    }
   },
   "counts": {
     "settings": 256,
@@ -39,13 +223,17 @@
     "dispositionEntries": 169,
     "nonDefaultAudit": 67,
     "pageItems": 12,
-    "hardcoded": 64,
+    "hardcoded": 127,
     "dispositionUnique": 161,
     "familyRules": 15,
     "legacyOldState": 126,
     "legacySettingSets": 3,
     "legacySettingSetKeys": 249,
-    "legacySettingSetDifferences": 18
+    "legacySettingSetDifferences": 18,
+    "fallbacks": 28,
+    "engineFilesAudited": 98,
+    "uiFilesAudited": 20,
+    "settingsBindingMismatches": 0
   },
   "settings": [
     {
@@ -12835,6 +13023,573 @@
       "description": "ערכי position חוקיים: before/after main shaar, before/after part, end.",
       "source": "red-build/src/engine/decoration/custom-pages.js",
       "note": "position חסר נופל ל־end; מיקום part דורש מספר חלק חיובי."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.FLOW_BOTTOM",
+      "name": "FLOW_BOTTOM",
+      "value": "1022.2",
+      "description": "גבול תחתון נגזר: FLOW_TOP + FLOW_H.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.H2_AREA_H",
+      "name": "H2_AREA_H",
+      "value": "284.25",
+      "description": "גובה אזור הכותרת/פרק H2.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.H0_AREA_H",
+      "name": "H0_AREA_H",
+      "value": "249.2",
+      "description": "גובה אזור H0.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.SINGLE_W",
+      "name": "SINGLE_W",
+      "value": "552.3",
+      "description": "רוחב אזור חד־טורי.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.TITLE_W_PCT",
+      "name": "TITLE_W_PCT",
+      "value": "0.6",
+      "description": "יחס רוחב כותרת ביחס לאזור החד־טורי.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.H23_TITLE_W",
+      "name": "H23_TITLE_W",
+      "value": "331.38",
+      "description": "רוחב כותרות H2/H3: SINGLE_W × TITLE_W_PCT.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.H0_LINE_H",
+      "name": "H0_LINE_H",
+      "value": "20.55",
+      "description": "גובה שורת כותרת H0.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.H0_TITLE_Y",
+      "name": "H0_TITLE_Y",
+      "value": "309.0",
+      "description": "קואורדינטת Y של כותרת H0.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.TOC_TITLE_BLOCK_H",
+      "name": "TOC_TITLE_BLOCK_H",
+      "value": "213",
+      "description": "גובה בלוק הפתיחה של תוכן העניינים.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.TOC_FIRST_TOP",
+      "name": "TOC_FIRST_TOP",
+      "value": "370.7",
+      "description": "נקודת התחלה של תוכן העניינים בעמוד הראשון.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.TOC_CONT_TOP",
+      "name": "TOC_CONT_TOP",
+      "value": "113.7",
+      "description": "נקודת התחלה של תוכן העניינים בעמוד המשך.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.TOC_STRETCH_BOTTOM",
+      "name": "TOC_STRETCH_BOTTOM",
+      "value": "1005.7",
+      "description": "גבול תחתון למתיחת עמודי תוכן העניינים.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.PAGE_STRETCH_MAX",
+      "name": "PAGE_STRETCH_MAX",
+      "value": "48",
+      "description": "תקרת מתיחה אנכית לעמוד.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.JUSTIFY_MAX_GAP",
+      "name": "JUSTIFY_MAX_GAP",
+      "value": "9",
+      "description": "תקרת הגדלת מרווחים לצורך יישור.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.JUSTIFY_MAX_LH_EXTRA",
+      "name": "JUSTIFY_MAX_LH_EXTRA",
+      "value": "3",
+      "description": "תוספת גובה שורה מרבית במנגנון היישור.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.ORPHAN_RECLAIM_BUFFER",
+      "name": "ORPHAN_RECLAIM_BUFFER",
+      "value": "12",
+      "description": "רזרבת גובה למנגנון reclaim למניעת יתומים.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "גאומטריית IMUD — נגזרות ומגבלות",
+      "code": "GEO.RECLAIM_BELOW_BASE",
+      "name": "RECLAIM_BELOW_BASE",
+      "value": "2",
+      "description": "גבול reclaim מתחת לבסיס.",
+      "source": "red-build/src/engine/core/imud-geometry.js",
+      "note": "ערך נגזר/קשיח; אינו ברירת־מחדל של משתמש."
+    },
+    {
+      "group": "חוזה PageModel",
+      "code": "BOUNDS_TOLERANCE_PX",
+      "name": "סבילות גבולות",
+      "value": "1.5 px",
+      "description": "חריגת דיו עד 1.5px מעבר לתיבה אינה נחשבת הפרת מיקום בבדיקת גבולות.",
+      "source": "red-build/src/engine/core/page-model.js",
+      "note": "סבילות אימות מודל."
+    },
+    {
+      "group": "צינור עימוד",
+      "code": "ORN_PAD_PX",
+      "name": "ריפוד עיטור מקושר",
+      "value": "18 px",
+      "description": "ריפוד נוסף המוזרק לצינור בעת חישוב גובה כותרת עם עיטור מקושר.",
+      "source": "red-build/src/engine/core/pipeline.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "מספור גיליון",
+      "code": "FOLIO_BUDGET_PCT",
+      "name": "תקציב רוחב פוליו",
+      "value": "0.30 (30%)",
+      "description": "תקציב רוחב למספור גיליון כאחוז מרוחב תיבת התוכן.",
+      "source": "red-build/src/engine/decoration/numbering-audit.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "גאומטריית פוליו",
+      "code": "FOLIO_BOTTOM_PX",
+      "name": "מיקום פוליו תחתון",
+      "value": "25 px",
+      "description": "קו הבסיס/תחילת אזור הפוליו התחתון.",
+      "source": "red-build/src/engine/layout/furniture-geometry.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "גאומטריית פוליו",
+      "code": "FOLIO_TOP_PX",
+      "name": "מיקום פוליו עליון",
+      "value": "4 px",
+      "description": "היסט עליון לפוליו במיקום top.",
+      "source": "red-build/src/engine/layout/furniture-geometry.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "גאומטריית פוליו",
+      "code": "FOLIO_IN_HEADER_PX",
+      "name": "פוליו בכותרת עליונה",
+      "value": "6 px",
+      "description": "היסט לפוליו במיקום in-header.",
+      "source": "red-build/src/engine/layout/furniture-geometry.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "אילוצי פריסה ובקרת פיצול",
+      "code": "MIN_LINES_PER_SIDE",
+      "name": "מינימום שורות לכל צד",
+      "value": "2",
+      "description": "פיצול פסקה חוקי משאיר לפחות שתי שורות בכל צד.",
+      "source": "red-build/src/engine/layout/constraint-matrix.js",
+      "note": "חוזה אלגוריתמי; WIDOW_ORPHAN_MIN הוא alias של MIN_LINES_PER_SIDE."
+    },
+    {
+      "group": "אילוצי פריסה ובקרת פיצול",
+      "code": "ESCORT_MIN_LINES",
+      "name": "מינימום ליווי אחרי כותרת",
+      "value": "2",
+      "description": "נדרשות לפחות שתי שורות תוכן עוקבות אחרי H1–H6 באותו טור.",
+      "source": "red-build/src/engine/layout/constraint-matrix.js",
+      "note": "חוזה אלגוריתמי; WIDOW_ORPHAN_MIN הוא alias של MIN_LINES_PER_SIDE."
+    },
+    {
+      "group": "אילוצי פריסה ובקרת פיצול",
+      "code": "CAPACITY_EPS",
+      "name": "סבילות קיבולת",
+      "value": "0.5 px",
+      "description": "סבילות השוואת גובה מול קיבולת; אינה מרווח עיצוב.",
+      "source": "red-build/src/engine/layout/constraint-matrix.js",
+      "note": "חוזה אלגוריתמי; WIDOW_ORPHAN_MIN הוא alias של MIN_LINES_PER_SIDE."
+    },
+    {
+      "group": "אילוצי פריסה ובקרת פיצול",
+      "code": "GAP_HEAD_POLICY",
+      "name": "מדיניות gap בראש טור",
+      "value": "suppress-at-column-head",
+      "description": "gap לפני בלוק מושמט כשהבלוק הוא הראשון בטור.",
+      "source": "red-build/src/engine/layout/constraint-matrix.js",
+      "note": "חוזה אלגוריתמי; WIDOW_ORPHAN_MIN הוא alias של MIN_LINES_PER_SIDE."
+    },
+    {
+      "group": "לולאת תיקון",
+      "code": "MAX_ITERATIONS",
+      "name": "מקסימום איטרציות תיקון",
+      "value": "24",
+      "description": "תקרת retreat/repair loop.",
+      "source": "red-build/src/engine/layout/retreat-loop.js",
+      "note": "מגבלת בקרה פנימית."
+    },
+    {
+      "group": "לולאת תיקון",
+      "code": "OSCILLATION_WINDOW",
+      "name": "חלון זיהוי תנודה",
+      "value": "4",
+      "description": "מספר צעדים לזיהוי מחזור/תנודה.",
+      "source": "red-build/src/engine/layout/retreat-loop.js",
+      "note": "מגבלת בקרה פנימית."
+    },
+    {
+      "group": "אבחון מנוע",
+      "code": "DEFAULT_MAX_ENTRIES",
+      "name": "תקרת אירועי Decision Trace",
+      "value": "20000",
+      "description": "מספר אירועי trace מרבי כברירת מחדל.",
+      "source": "red-build/src/engine/layout/decision-trace.js",
+      "note": "מגבלת אבחון/זיכרון."
+    },
+    {
+      "group": "מסלול legacy — הערות",
+      "code": "FN_BODY_LINE_PX",
+      "name": "גובה שורת גוף לתקציב הערות",
+      "value": "21.44 px",
+      "description": "מחושב מ־SZ.body × (96/72) × 1.34.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "מסלול legacy — הערות",
+      "code": "FN_FULL_CAP_PX",
+      "name": "תקרת מרזב מלאה",
+      "value": "max(GEO.FN_PITCH, floor((GEO.FLOW_H−38.5−FN_BODY_LINE_PX)/GEO.FN_PITCH)×GEO.FN_PITCH)",
+      "description": "נגזרת מגובה הזרימה, מרווח 38.5px ושורת גוף אחת.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "נוסחה פנימית."
+    },
+    {
+      "group": "מסלול legacy — הערות",
+      "code": "FN_BODY_FIRST_CAP_PX",
+      "name": "תקרת מרזב במצב body-first",
+      "value": "min(FN_FULL_CAP_PX, max(GEO.FN_PITCH, floor((GEO.FLOW_H×0.5)/GEO.FN_PITCH)×GEO.FN_PITCH))",
+      "description": "תקרה יחסית של כמחצית מגובה הזרימה.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "נוסחה פנימית."
+    },
+    {
+      "group": "מסלול legacy — ליווי כותרות",
+      "code": "H3_FOLLOW_MIN_PX",
+      "name": "תוכן עוקב מינימלי אחרי H3",
+      "value": "22 px",
+      "description": "רזרבה מינימלית לתוכן אחרי בלוק H3 למניעת אלמנת כותרת.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "מסלול legacy — הערות סיום",
+      "code": "EN_TITLE_H",
+      "name": "גובה כותרת הערות סיום",
+      "value": "44 px",
+      "description": "גובה קשיח ל־endnote-title בנתיב legacy.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "מסלול legacy — הערות צד",
+      "code": "MN_GAP_PX",
+      "name": "מרווח בין הערות צד",
+      "value": "2 px",
+      "description": "מרווח מינימלי בין הערות צד סמוכות.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "מסלול legacy — הערות צד",
+      "code": "MN_BOTTOM_LIMIT",
+      "name": "גבול תחתון להערת צד",
+      "value": "GEO.FN_AREA_TOP − 2",
+      "description": "גבול תחתון ביחס לתחילת אזור הערות השוליים.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "גאומטריית שער — legacy",
+      "code": "BAND_W",
+      "name": "רוחב band במקרן הישן",
+      "value": "552 px",
+      "description": "רוחב ברירת־מחדל של band במודול legacy-ornaments.",
+      "source": "red-build/src/engine/decoration/legacy-ornaments.js",
+      "note": "נפרד מערכי DOM; אין לאחד בלי בדיקת מערכות צירים."
+    },
+    {
+      "group": "גאומטריית שער — legacy",
+      "code": "BAND_X",
+      "name": "מיקום band במקרן הישן",
+      "value": "48.7 px",
+      "description": "מיקום X מוגדר במודול legacy-ornaments.",
+      "source": "red-build/src/engine/decoration/legacy-ornaments.js",
+      "note": "נפרד מערכי DOM; אין לאחד בלי בדיקת תנאי הפעלה."
+    },
+    {
+      "group": "בחירת מסלול מנוע",
+      "code": "RED_UNIFIED_IMUD / _engine-force-unified",
+      "name": "מעבר למנוע המאוחד",
+      "value": "env RED_UNIFIED_IMUD=1 או settings _engine-force-unified=true",
+      "description": "pipeline בוחר unified אם אחד הדגלים דולק; אחרת עשוי להפעיל legacy לפי _layout-profile ו־_imudRaw.",
+      "source": "red-build/src/engine/core/pipeline.js; red-build/src/ui/app-shell.js",
+      "note": "דגל פנימי/תפעולי של preview, לא פקד משתמש."
+    },
+    {
+      "group": "גאומטריית כותרת עליונה",
+      "code": "HEADER_TOP_OFFSET",
+      "name": "מרחק הכותרת העליונה מתיבת התוכן",
+      "value": "18 px",
+      "description": "headerGeometry מחזיר max(0, contentBox.top − 18).",
+      "source": "red-build/src/engine/layout/furniture-geometry.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "גאומטריית עיטורים",
+      "code": "ORN_NATURAL_W_EM / ORN_NATURAL_H_EM",
+      "name": "גודל טבעי של עיטור",
+      "value": "4 em × 1.2 em",
+      "description": "מידות טבעיות כאשר אין גודל ייעודי אחר.",
+      "source": "red-build/src/engine/decoration/ornament-plan.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "גאומטריית עיטורים",
+      "code": "DIVIDER_H_PX",
+      "name": "גובה מפריד מעוצב",
+      "value": "2 px",
+      "description": "גובה קבוע של מפריד.",
+      "source": "red-build/src/engine/decoration/ornament-plan.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "חוזה סגנונות מותאמים",
+      "code": "STYLE_SCHEMA_ENUMS / STYLE_PROPS",
+      "name": "שדות ורשימות מותרים בסגנון מותאם",
+      "value": "LAYOUT_MODES: regular, full-width, side-note, footnote, endnote, new-location, info-box; ORNAMENTS: pyramid, lance, shoshanta, scroll; COUNTER_FORMATS: hebrew-geresh, decimal; COUNTER_RESETS: part, page, never; ALIGNS: right, center, left, stretch; TRANSFORMS: none, small-caps; STYLE_PROPS: fontName, fontSizePt, bold, italic, color, background, border, indentEm, align, letterSpacingEm, textTransform",
+      "description": "red-build/src/engine/extensions/style-schema.js",
+      "source": "חוזה הרחבות ולא פקדי settings. infoBox width 3..8em, pad 0..1.5em.",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "כללי שבירת שורות",
+      "code": "NO_LINE_START / NO_LINE_END / ABBREVIATIONS",
+      "name": "איסורי קצה שורה וקיצורים מוגנים",
+      "value": "Sets and abbreviations defined in breaks.js",
+      "description": "קובעים אילו גבולות שורה חוקיים.",
+      "source": "red-build/src/engine/line/breaks.js",
+      "note": "חוזה אלגוריתמי, לא פקדי UI."
+    },
+    {
+      "group": "היקף תמיכה בתמונות — שכבות שונות",
+      "code": "IMAGE_EXTENSIONS / asset resolver / decoration importer",
+      "name": "פורמטי תמונה לפי נתיב",
+      "value": "inline: png,jpg,jpeg; asset resolver: png,jpg,jpeg,gif,bmp,webp,svg; decoration importer: svg,jpg,jpeg,png",
+      "description": "מטריצת תמיכה נפרדת בין inline parser, ספריית נכסים ומייבא עיטורים.",
+      "source": "red-build/src/engine/parser/inline-content.js; red-build/src/engine/assets/asset-resolver.js; red-build/src/engine/decoration/assets-import.js",
+      "note": "אין להסיק שתמיכת נכס מבטיחה תמיכה בתחביר inline."
+    },
+    {
+      "group": "מגבלות קלט/ייבוא",
+      "code": "MAX_DEPTH",
+      "name": "עומק XML מרבי",
+      "value": "64",
+      "description": "מגבלת עומק parser XML-lite.",
+      "source": "red-build/src/engine/import/xml-lite.js",
+      "note": "מגבלת בטיחות, לא כלל עימוד."
+    },
+    {
+      "group": "מגבלות קלט/ייבוא",
+      "code": "MAX_EVENTS",
+      "name": "אירועי XML מרביים",
+      "value": "200000",
+      "description": "תקרת אירועים במנתח XML-lite.",
+      "source": "red-build/src/engine/import/xml-lite.js",
+      "note": "מגבלת בטיחות, לא כלל עימוד."
+    },
+    {
+      "group": "מגבלות קובצי גופן",
+      "code": "MAX_TABLES / MAX_SEGMENTS / MAX_GPOS_PAIRSETS",
+      "name": "מגבלות ניתוח גופן",
+      "value": "64 tables; 8192 cmap segments; 4096 GPOS pairsets",
+      "description": "מגבלות בטיחות/יכולת עיבוד של קובצי גופן.",
+      "source": "red-build/src/engine/typography/font-metrics.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "מטמון מדידות",
+      "code": "ITEM_MEASURE_CACHE_MAX_ENTRIES / ITEM_CACHE_EVICT_BATCH",
+      "name": "קיבולת ומדיניות פינוי מטמון",
+      "value": "65536 entries; eviction batch 8192",
+      "description": "מגבלת ביצועים/זיכרון; אינה פרמטר עימוד.",
+      "source": "red-build/src/engine/typography/measure-api.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "גרסאות חוזה פנימיות",
+      "code": "PAGE_MODEL_SCHEMA / PAGE_PLAN_SCHEMA / LINE_MODEL_VERSION / LINE_ITEM_CONTRACT_VERSION / MEASURE_ENGINE_VERSION",
+      "name": "גרסאות מודל ומדידה",
+      "value": "pagemodel-v1; page-plan-v1; line-model-v2; line-item-v2.1; measure-v1",
+      "description": "חוזי תאימות בין שלבי המנוע.",
+      "source": "red-build/src/engine/core/page-model.js; red-build/src/engine/layout/plan-model.js; red-build/src/engine/line/line-model.js; red-build/src/engine/line/line-items.js; red-build/src/engine/typography/measure-api.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "כפילות מקור — עיטורי H2",
+      "code": "H2_ORN_W_EM / H2_ORN_H_EM",
+      "name": "מידות עיטור H2",
+      "value": "3 em × 0.6 em",
+      "description": "אותן מידות מוגדרות ב־ornament-fit וגם ב־ornament-plan — כפילות מקור.",
+      "source": "red-build/src/engine/decoration/ornament-fit.js; red-build/src/engine/decoration/ornament-plan.js",
+      "note": "כפילות מקור, לא הבדל ערכים מוכח."
+    },
+    {
+      "group": "גבולות בדיקות המלצה",
+      "code": "MAX_DRY_RUNS / MAX_RECOMMENDATIONS / MAX_PAGES_GUARD",
+      "name": "תקרות מנגנון המלצות",
+      "value": "8 dry-runs; 3 recommendations; 200 pages",
+      "description": "מגבלות כלי ביקורת/המלצות.",
+      "source": "red-build/src/engine/audit/editing-recommendations.js",
+      "note": "מגבלות אבחון, אינן חלק ממסלול הפריסה."
+    },
+    {
+      "group": "מדידת H3",
+      "code": "H3_DEFAULT_SIZE_PT / H3_LINE_PITCH_PX / H3_LAST_BAND_PX",
+      "name": "חוזה גודל וגובה שורת H3",
+      "value": "13.5pt; pitch מחושב; last band = pitch + bottom pad",
+      "description": "ערכי חוזה H3 ב־line-items; לקרוא יחד עם h3-contract.",
+      "source": "red-build/src/engine/line/line-items.js; red-build/src/engine/core/h3-contract.js",
+      "note": "חוזה פנימי."
+    },
+    {
+      "group": "המרת יחידות",
+      "code": "PX_PER_IN / PT_PER_IN / MM_PER_IN",
+      "name": "קבועי המרה",
+      "value": "96 px/in; 72 pt/in; 25.4 mm/in",
+      "description": "מקור יחיד להמרות יחידות; ללא עיגול קנוני עד גבול renderer.",
+      "source": "red-build/src/engine/typography/units.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "תבניות עמוד",
+      "code": "PAGE_SIZES / PAGE_TYPES",
+      "name": "רשימות גדלי עמוד וסוגי עמוד",
+      "value": "PAGE_SIZES: A4, A5, 16x16, custom; PAGE_TYPES includes regular, shaar, endnotes, toc variants",
+      "description": "ערכים קבועים המניעים יצירת templates וניתוב renderer.",
+      "source": "red-build/src/engine/layout/page-templates.js",
+      "note": "לא כל page type ניתן לבחירת משתמש."
+    },
+    {
+      "group": "מבנה פריטי עמוד",
+      "code": "PAGE_ITEM_PARTICIPATION / PAGE_ITEM_SLOTS",
+      "name": "חוזה השתתפות ומיקום של PageItems",
+      "value": "Descriptor registry: slots, participation, reservation and validation rules",
+      "description": "חוזה פריטי העמוד קובע השתתפות באיזון, שמירת מקום ובדיקות.",
+      "source": "red-build/src/engine/layout/page-items.js",
+      "note": "קיום descriptor אינו מוכיח renderer שלם."
+    },
+    {
+      "group": "כללי גימטריה",
+      "code": "HEBREW_FOLIO_TABLES",
+      "name": "טבלאות ספרות/עשרות/מאות לפוליו עברי",
+      "value": "units, tens, hundreds arrays",
+      "description": "מיפוי קשיח של ספרות עבריות לפוליו; נפרד מסימוני הערות.",
+      "source": "red-build/src/engine/decoration/folio.js",
+      "note": "אינו פקד UI; שינוי מחייב בדיקת צרכנים ותוצאות עימוד."
+    },
+    {
+      "group": "כללי הערות",
+      "code": "NOTE_FONT_FACTORS / SIDE_NOTE_FONT_FACTORS",
+      "name": "פקטורי גופן למדידת הערות",
+      "value": "factors by registered font family",
+      "description": "טבלת התאמה פנימית לגורמי רוחב הערות.",
+      "source": "red-build/src/engine/layout/notes-model.js",
+      "note": "קבועי מדידה; שינוי מחייב קורפוס בדיקה."
+    },
+    {
+      "group": "פורמט Worker",
+      "code": "PROTOCOL_VERSION",
+      "name": "גרסת פרוטוקול Worker/UI",
+      "value": "1",
+      "description": "גרסת חוזה הודעות typeset/export בין UI ל־worker.",
+      "source": "red-build/src/ui/worker-protocol.js",
+      "note": "חוזה תפעולי, לא כלל טיפוגרפי."
+    },
+    {
+      "group": "התמדה של הגדרות UI",
+      "code": "STORAGE_KEY / FORMAT / VERSION",
+      "name": "חוזה אחסון הגדרות משתמש",
+      "value": "tora-red-user-settings; version 1",
+      "description": "שומר diff מול baseline ב־localStorage; אינו מקור ברירת־מחדל למנוע.",
+      "source": "red-build/src/ui/settings-persistence.js",
+      "note": "חוזה UI, לא הגדרת עימוד."
+    },
+    {
+      "group": "תזמון התמדה",
+      "code": "PERSIST_DEBOUNCE_MS",
+      "name": "השהיית שמירת diff",
+      "value": "250 ms",
+      "description": "ה־app-shell שומר את diff לאחר debounce של 250ms.",
+      "source": "red-build/src/ui/app-shell.js",
+      "note": "פרט תפעולי UI."
+    },
+    {
+      "group": "זיהוי פורמט תמונה",
+      "code": "IMAGE_LIKE_EXTENSIONS",
+      "name": "סיומות המזוהות כתמונה אך לא כולן נתמכות inline",
+      "value": "png,jpg,jpeg,gif,svg,webp,bmp,tif,tiff",
+      "description": "המנתח מזהה יותר סיומות מהרשימה המתקבלת בתחביר inline.",
+      "source": "red-build/src/engine/parser/inline-content.js",
+      "note": "זיהוי סיומת אינו אישור תמיכה."
     }
   ],
   "fallbacks": [
@@ -12865,7 +13620,7 @@
     {
       "id": "customStyle.layoutMode",
       "name": "מצב פריסה לסגנון מותאם",
-      "behavior": "אם layoutMode חסר, style-schema.js בוחר regular. whitelist: regular, full-width, side-note, footnote, endnote, new-location, info-box",
+      "behavior": "אם layoutMode חסר, style-schema.js בוחר regular. whitelist: regular, full-width, side-note, footnote, endnote, new-location, info-box בנוסף: style חסר נהפך ל־{}; counter חסר format→decimal ו־reset→never. infoBox widthEm default 4.5 (טווח 3..8), padEm default 0.3 (טווח 0..1.5).",
       "source": "extensions/style-schema.js"
     },
     {
@@ -12889,13 +13644,13 @@
     {
       "id": "footnote placement",
       "name": "מדיניות הצבת הערות",
-      "behavior": "בהיעדר הגדרה או rawSet נבחר body-first; fn-bar-max-height-px=0 מחושב כתקרה יחסית.",
+      "behavior": "בהיעדר הגדרה ו־rawSet: fn-placement-mode→body-first; fn-layout-mode→continuous; long-footnote-policy→split; fn-reset-mode במסלול legacy→siman. fn-bar-max-height-px=0 מחושב כתקרה יחסית. ה־legacy import map מגדיר fn-reset-mode fallback=page — פער בין שכבות הדורש בדיקה.",
       "source": "layout/legacy-imud-flow.js"
     },
     {
       "id": "note measurement",
       "name": "רוחב/גודל הערה",
-      "behavior": "ברירות fallback: footnote רוחב 200px; side-note לפי outerMargin (מינימום 60px); endnote רוחב 300px; גודל side-note 0.75×body ושאר ההערות 0.8×body.",
+      "behavior": "footnote: _fnColWidthPx חסר→200px; side-note: _outerMarginPx חסר→120px, רוחב max(60, outerMargin−12), ואם stampCtx חסר אז _sideNoteColWidthPx חסר→60px; endnote: _endnoteColWidthPx חסר→300px. גודל side-note 0.75×body, שאר ההערות 0.8×body; body-line-height חסר→1.4.",
       "source": "layout/notes-model.js"
     },
     {
@@ -12912,15 +13667,99 @@
     },
     {
       "id": "image formats",
-      "name": "פורמטי תמונה",
-      "behavior": "סיומות image-like נבדקות; מתקבלות רק png, jpg, jpeg. האחרות נדחות. image-like: png, jpg, jpeg, gif, svg, webp, bmp, tif, tiff",
+      "name": "תחביר תמונה inline (לא כלל תמיכה גלובלי)",
+      "behavior": "סיומות image-like נבדקות; תחביר inline מקבל רק png,jpg,jpeg. image-like כולל גם gif,svg,webp,bmp,tif,tiff; asset resolver ומייבא עיטורים משתמשים ברשימות נפרדות.",
       "source": "parser/inline-content.js"
     },
     {
       "id": "note placement flags",
       "name": "דגלי סוגי הערות",
-      "behavior": "note-placement-mode=endnotes מחייב endnotes-enabled=true ו־footnotes-enabled=false; אחרת footnotes-enabled נשמר.",
+      "behavior": "note-placement-mode=endnotes גוזר endnotes-enabled=true ו־footnotes-enabled=false; אלה דגלי runtime נגזרים ולא פקדי registry עצמאיים.",
       "source": "engine/core/settings-registry.js"
+    },
+    {
+      "id": "candidate-line-height",
+      "name": "גובה שורה חסר בבלוק מועמד",
+      "behavior": "כאשר blk.lineHeightPx חסר או 0, candidate-generator משתמש ב־20px. גיבוי זה אינו ברירת־המחדל הרשמית של body-line-height.",
+      "source": "red-build/src/engine/layout/candidate-generator.js"
+    },
+    {
+      "id": "toc-synthetic-line-size",
+      "name": "גודל שורה סינתטית בתוכן העניינים",
+      "behavior": "כאשר אין tocLayout.sizePt, materialize/structural-stamps משתמשים ב־12pt לשורות TOC סינתטיות. זהו גודל עזר ל־projection, לא גודל TOC מההגדרות.",
+      "source": "red-build/src/engine/core/materialize.js; red-build/src/engine/layout/structural-stamps.js"
+    },
+    {
+      "id": "endnote-title-and-cap",
+      "name": "כותרת ותקרת עמודי הערות סיום",
+      "behavior": "אם endnote-title-text חסר, הכותרת היא «הערות». אם תבנית העמוד אינה מספקת גובה תוכן וגם _endnoteColCapPx חסר, הקיבולת נופלת ל־Infinity — fallback הגנתי.",
+      "source": "red-build/src/engine/layout/endnote-pages.js"
+    },
+    {
+      "id": "info-box-dimensions",
+      "name": "מידות תיבת מידע בסגנון מותאם",
+      "behavior": "widthEm חסר/0→4.5em; padEm חסר/0→0.3em; רוחב ריצה 24px לפחות ועד _sideNoteColWidthPx או 84px. סתירה: validator מתיר padEm=0, אך Number(ib.padEm)||0.3 מחליף אותו ב־0.3em.",
+      "source": "red-build/src/engine/extensions/style-schema.js; red-build/src/engine/core/pipeline.js"
+    },
+    {
+      "id": "shaar-box-insets",
+      "name": "שולי תיבות שער",
+      "behavior": "בהיעדר תיבה שמורה, ברירת־מחדל: top=40px, bottom=40px, right=30px, left=30px.",
+      "source": "red-build/src/engine/decoration/shaar-boxes.js; red-build/src/engine/output/dom-renderer.js"
+    },
+    {
+      "id": "side-note-measurement-fallback",
+      "name": "מדידת הערת צד ללא פונקציית מדידה",
+      "behavior": "כאשר לא נמסר measureFn, רוחב משוער מחושב לפי אורך הטקסט ×0.55×גודל הגופן×96/72. זהו אומדן, לא מדידת גופן מדויקת.",
+      "source": "red-build/src/engine/layout/side-notes.js"
+    },
+    {
+      "id": "incomplete-page-model-render",
+      "name": "ברירות גיבוי ברינדור מודל חלקי/ישן",
+      "behavior": "ב־renderer legacy: heightPx חסר→16px; sizePt חסר→SZ.body; x1 חסר בשורת TOC→560px; מרווח שורות TOC בהפרשי Y→26px. אלה guards לנתונים חסרים, לא defaults של מודל תקין.",
+      "source": "red-build/src/engine/output/dom-renderer.js"
+    },
+    {
+      "id": "pdf-furniture-default-sizes",
+      "name": "גדלי fallback בייצוא PDF",
+      "behavior": "כאשר projection חסר גודל מפורש: הערת שוליים 8.5pt, פוליו 10pt וכותרת/slot 9pt. fallback לנתוני projection חסרים.",
+      "source": "red-build/src/engine/output/pdf-writer.js"
+    },
+    {
+      "id": "legacy-projector-font-fallback",
+      "name": "גופן fallback במקרן legacy",
+      "behavior": "אם לא נמצא גופן מפורש לכותרת/כותרת עליונה, legacy-projector נופל בחלק מהנתיבים ל־DavidLibre-Bold. אין בכך הבטחה שקובץ הגופן זמין.",
+      "source": "red-build/src/engine/output/legacy-projector.js"
+    },
+    {
+      "id": "image-measurement-failure",
+      "name": "נכס תמונה שלא נמדד",
+      "behavior": "אם מדידת תמונה נכשלת, line-items מציג את טקסט המקור ומצרף diagnostic מפורש asset-measure-failed; הכשל אינו נבלע בשקט.",
+      "source": "red-build/src/engine/line/line-items.js"
+    },
+    {
+      "id": "legacy-import-map-defaults",
+      "name": "ברירות־מחדל במיפוי הגדרות legacy",
+      "behavior": "ב־importImudSettings: drop-word-mode→drop; note-numbering-style→hebrew-geresh; h2-title-orn-mode→both; col-divider-style→none; page-num-position→bottom-center. מצבי כותרת: H0/H2/H3 full-width, H1 new-page, H4–H6 regular, H7 side-note.",
+      "source": "red-build/src/engine/core/legacy-settings-map.js"
+    },
+    {
+      "id": "legacy-unknown-heading-mode",
+      "name": "מצב כותרת לא מוכר במסלול legacy",
+      "behavior": "כאשר heading mode חסר/לא מוכר, legacy-imud-flow נופל ל־inline_2col. זה fallback מקומי ולא הכרעה סמנטית לכל רמה.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js"
+    },
+    {
+      "id": "measurement-context-defaults",
+      "name": "הקשר מדידה חסר",
+      "behavior": "כאשר לא נמסר הקשר במפורש, measure/line-items מניח direction=rtl ו־language=he. אלה defaults להקשר מדידה, לא שדות נפרדים בלוח.",
+      "source": "red-build/src/engine/line/line-items.js; red-build/src/engine/typography/measure-api.js"
+    },
+    {
+      "id": "image-format-capability-layers",
+      "name": "פורמטי תמונה — יכולת לפי שכבת מימוש",
+      "behavior": "inline parser מקבל png/jpg/jpeg; asset resolver ומייבא עיטורים מחזיקים רשימות אחרות. אין fallback גלובלי שממיר פורמט לא נתמך; כל נתיב צריך לדווח על דחייה/כשל בנפרד.",
+      "source": "red-build/src/engine/parser/inline-content.js; red-build/src/engine/assets/asset-resolver.js; red-build/src/engine/decoration/assets-import.js"
     }
   ],
   "model": {
