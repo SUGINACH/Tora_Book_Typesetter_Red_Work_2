@@ -95,6 +95,23 @@ describe('audit-sensitivity — הוכחת רגישות הגלאים (S5.2)', ()
     assertEq(audit.gematriaToNumber('---'), null, 'זבל → null');
   });
 
+  it('PageModel TOC: structural rows are required and excluded from body-word floor', () => {
+    const book = cleanBook();
+    book[2].pagemodel = true;
+    book[2].tocInContainer = true;
+    book[2].tocWords = 8;
+    const complete = runBook(book);
+    assert(!complete.codes.includes('TOC_EMPTY'), 'PageModel TOC with rows is not empty');
+    assertEq(complete.summary.bodyWords, 64, 'TOC words are counted in total but excluded from body floor');
+    const empty = cleanBook();
+    empty[2].pagemodel = true;
+    empty[2].tocRows = [];
+    empty[2].words = 0;
+    empty[2].tocWords = 0;
+    const missing = runBook(empty);
+    assert(missing.codes.includes('TOC_EMPTY'), 'PageModel TOC without structural rows must fail visibly');
+  });
+
   it('מבחנה נקייה ⇒ 0 בעיות (הכל ירוק מהסיבות הנכונות)', () => {
     const { summary, codes } = runBook(cleanBook());
     assertEq(summary.problems, 0, 'clean fixture must be perfectly green, got: ' + codes.join(','));

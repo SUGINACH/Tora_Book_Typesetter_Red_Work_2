@@ -201,6 +201,26 @@ describe('S8D-1 פרוסה 3 — כיסוי מלא: כל העמודים, כל ס
     assert(sawFolio >= 1, 'גיליון');
     assert(sawHeader >= 1, 'כותרת עליונה');
     assert(sawToc >= 1, 'שורות TOC מובנות');
+    for (const mp of model.pages) {
+      const el = renderModelPage(mp, S, doc);
+      if (mp.type === 'toc-general' || mp.type === 'toc-detail') {
+        const expected = mp.lines.filter(l => l.area === 'structural').length;
+        const actual = (el.children || []).filter(c => c.classList && c.classList.contains('line')).length;
+        assertEq(actual, expected, `PageModel TOC structural rows are all present in DOM (page ${mp.index})`);
+      }
+      if (mp.spanning) {
+        const band = collectByClass(el, 'spanning-band')[0];
+        const expected = mp.lines.filter(l => l.area === 'spanning').length;
+        const actual = band ? (band.children || []).filter(c => c.classList && c.classList.contains('line')).length : 0;
+        assertEq(actual, expected, `PageModel spanning rows are all present in DOM (page ${mp.index})`);
+      }
+      if (mp.shaar) {
+        const wrap = collectByClass(el, 'shaar-content')[0];
+        const expected = mp.lines.filter(l => l.area === 'structural').length;
+        const actual = wrap ? (wrap.children || []).filter(c => c.classList && c.classList.contains('line')).length : 0;
+        assertEq(actual, expected, `PageModel shaar structural rows are all present in DOM (page ${mp.index})`);
+      }
+    }
   });
 
   it('הערות: כל רשומות המודל מרונדרות עם זהות מלאה (noteId/anchor/continuationOf)', () => {

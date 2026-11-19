@@ -101,7 +101,11 @@
       shaarPages: types.filter((t) => /shaar/.test(t)).length,
       shaarSubPages: types.filter((t) => t === 'shaar-sub').length,
       bodyPagesWithHeader: `${bodyPages.filter((p) => p.headerText).length}/${bodyPages.length}`,
-      totalLines: seq.reduce((s, p) => s + p.lines, 0),
+      totalLines: seq.reduce((s, p) => s + (p.renderedLines != null ? p.renderedLines : p.lines), 0),
+      columnLines: seq.reduce((s, p) => s + p.lines, 0),
+      structuralLines: seq.reduce((s, p) => s + (p.structuralLines || 0), 0),
+      spanningLines: seq.reduce((s, p) => s + (p.spanningLines || 0), 0),
+      shaarLines: seq.reduce((s, p) => s + (p.shaarLines || 0), 0),
       problems: problems.length,
       bySeverity,
       sweepMs: Date.now() - t0
@@ -146,7 +150,8 @@
       return;
     }
     if (audited.has(idx)) return;
-    const info = { idx, type: typeOf(pg), headerText: null, columns: 0, lines: 0, gates: [], ornaments: 0, fonts: [] };
+    const info = { idx, type: typeOf(pg), headerText: null, columns: 0, lines: 0, gates: [], ornaments: 0, fonts: [],
+      pagemodel: /(?:^|\s)pmr-page(?:\s|$)/.test(String(pg.className)), tocRows: [], tocInContainer: false, structuralLines: 0, spanningLines: 0, shaarLines: 0 };
     audited.set(idx, info);
     // **S5.2:** סוג לא מזוהה — בעבר עבר בשקט (false-green)
     if (info.type === 'unknown') {
@@ -185,6 +190,24 @@
       const rr = R(rowEl);
       return { y: rr.y - pgR.y, h: rr.height, text: (rowEl.textContent || '').trim().slice(0, 24) };
     });
+    // PageModel TOC שורות הן .line מבניות ישירות תחת .pmr-page; פריטי inline
+    // בעלי אותו baseline מקובצים לשורה אחת. תחום המתיחה של legacy לא חל כאן.
+    if (info.pagemodel && (info.type === 'toc-general' || info.type === 'toc-detail') && !info.tocRows.length) {
+      const modelRows = Array.from(pg.children || []).filter(el => el.classList && el.classList.contains('line'));
+      info.tocInContainer = true;
+      info.structuralLines = modelRows.length;
+      const groups = new Map();
+      for (const rowEl of modelRows) {
+        const rr = R(rowEl);
+        const y = rr.y - pgR.y;
+        const key = Math.round(y * 10) / 10;
+        let g = groups.get(key);
+        if (!g) { g = { y, h: rr.height, texts: [] }; groups.set(key, g); }
+        else g.h = Math.max(g.h, rr.height);
+        g.texts.push((rowEl.textContent || '').trim());
+      }
+      info.tocRows = [...groups.values()].map(g => ({ y: g.y, h: g.h, text: g.texts.join(' | ').slice(0, 48) }));
+    }
 
     // תוכן שער (מנוע מורשת): שורות השער הן .band--gate;
     // **פרוסה 3 (מקרין ה-PageModel):** בפרופיל המאוחד תוכן השער הוא שורות
@@ -389,6 +412,11 @@
       }
     }
     info.fonts = [...fonts];
+    if (info.pagemodel) {
+      info.spanningLines = pg.querySelectorAll('.spanning-band > .line').length;
+      info.shaarLines = pg.querySelectorAll('.shaar-content .line').length;
+    }
+    info.renderedLines = info.lines + info.structuralLines + info.spanningLines + info.shaarLines;
   }
 
   // ---------- שלב 2: סריקה — כל העמודים, גם בספר וירטואלי ----------

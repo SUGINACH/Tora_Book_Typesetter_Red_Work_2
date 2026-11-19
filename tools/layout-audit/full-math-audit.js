@@ -183,6 +183,9 @@
       const { cnt, S } = ctx;
       const idx = pg.i;
       if (pg.t === 'unknown') cnt('TYPE_UNKNOWN', { type: 'TYPE_UNKNOWN', severity: 'high', page: idx, detail: 'מסווג סוג העמוד לא זיהה אף מחלקת page--* (בעבר עבר בשקט)' });
+      if (pg.pagemodel && (pg.t === 'toc-general' || pg.t === 'toc-detail') && !(pg.tocRows || []).length) {
+        cnt('TOC_EMPTY', { type: 'TOC_EMPTY', severity: 'high', page: idx, detail: 'עמוד TOC של PageModel ללא שורות structural מוקרנות' });
+      }
       if (pg.header) {
         if (pg.header.bottom > FLOW_TOP + 0.5 || pg.header.top < -0.5) cnt('HEADER_POSITION', { type: 'HEADER_POSITION', severity: 'high', page: idx, top: Math.round(pg.header.top * 10) / 10, bottom: Math.round(pg.header.bottom * 10) / 10 });
       }
@@ -643,7 +646,11 @@
         pages: seq.length, slots: meta.slots || seq.length, virtualized: !!meta.virtualized,
         sweep: meta.sweep || null, shaarPages: types.filter((t) => /shaar/.test(t)).length,
         bodyPagesWithHeader: (function () { const bp = seq.filter((p) => /regular|sign-open|preface|h3-spread|toc/.test(p.t)); return bp.filter((p) => p.header && p.header.text).length + '/' + bp.length; })(),
-        totalLines: seq.reduce((s, p) => s + (p.lines || 0), 0),
+        totalLines: seq.reduce((s, p) => s + (p.renderedLines != null ? p.renderedLines : (p.lines || 0)), 0),
+        columnLines: seq.reduce((s, p) => s + (p.lines || 0), 0),
+        spanningLines: seq.reduce((s, p) => s + (p.spanningLines || 0), 0),
+        structuralLines: seq.reduce((s, p) => s + (p.structuralLines || 0), 0),
+        shaarLines: seq.reduce((s, p) => s + (p.shaarLines || 0), 0),
         totalWords: seq.reduce((s, p) => s + (p.words || 0), 0),
         // **S70 (R9):** מילות גוף בלבד (ללא שורות ה-TOC המכפילות כותרות) — לרצפת הנפח
         bodyWords: seq.reduce((s, p) => s + ((p.words || 0) - (p.tocWords || 0)), 0),
@@ -735,7 +742,9 @@ if (typeof document !== 'undefined') {
     if (audited.has(idx)) return;
     const pr = R(pg);
     const origin = { x: pr.x, y: pr.y };
-    const info = { i: idx, t: audit.typeOfCls(pg.className), pw: Math.round(pr.w * 10) / 10, ph: Math.round(pr.h * 10) / 10, gates: 0, cols: [], bands: [], tocRows: [], fns: [], fnAreaN: 0, fnRuleN: 0, words: 0, dirOk: 0, dirBad: 0 };
+    const info = { i: idx, t: audit.typeOfCls(pg.className), pw: Math.round(pr.w * 10) / 10, ph: Math.round(pr.h * 10) / 10, gates: 0, cols: [], bands: [], tocRows: [], fns: [], fnAreaN: 0, fnRuleN: 0, words: 0, dirOk: 0, dirBad: 0,
+      pagemodel: /(?:^|\s)pmr-page(?:\s|$)/.test(String(pg.className)),
+      structuralLines: 0, structuralWords: 0, spanningLines: 0, spanningWords: 0, shaarLines: 0, shaarWords: 0 };
     audited.set(idx, info);
 
     const hdr = pg.querySelector('.running-head');
@@ -752,6 +761,13 @@ if (typeof document !== 'undefined') {
     }
     info.gates = [...pg.querySelectorAll('.band--gate')].filter((b) => (b.textContent || '').trim()).length;
     info.g = info.gates;
+    // שערי PageModel מציגים תוכן כשורות .line בתוך .shaar-content;
+    // ב-legacy הטקסט כבר נספר דרך .band ולכן אין לספור אותו פעמיים.
+    if (info.pagemodel) {
+      const shaarLines = [...pg.querySelectorAll('.shaar-content .line')];
+      info.shaarLines = shaarLines.length;
+      for (const ln of shaarLines) { const nWords = wc(ln.textContent); info.words += nWords; info.shaarWords += nWords; }
+    }
 
     // פסים (כולל שערים) — תיבה + דיו + יישור
     for (const b of pg.querySelectorAll('.band')) {
@@ -773,6 +789,28 @@ if (typeof document !== 'undefined') {
       // **S70 (R9):** מילות ה-TOC נספרות בנפרד — הן כפילות של כותרות הגוף;
       // רצפת הנפח משתמשת ב-bodyWords כדש לא להיחלש את הבדיקה.
       info.tocWords = (info.tocWords || 0) + wc(rowEl.textContent);
+    }
+
+    // PageModel: שורות TOC הן .line מבניות ישירות תחת .pmr-page, לא .toc-row.
+    // פריטי inline בעלי אותו baseline מאוחדים לשורה לוגית אחת לבדיקת pitch.
+    if (info.pagemodel && (info.t === 'toc-general' || info.t === 'toc-detail') && !info.tocRows.length) {
+      const modelRows = Array.from(pg.children || []).filter(el => el.classList && el.classList.contains('line'));
+      info.tocInContainer = true; // גיאומטריית PageModel מוחלטת; תחום המתיחה של legacy אינו חל
+      info.structuralLines += modelRows.length;
+      const groups = new Map();
+      for (const rowEl of modelRows) {
+        const rr = rel(R(rowEl), origin);
+        const nWords = wc(rowEl.textContent);
+        info.words += nWords;
+        info.tocWords = (info.tocWords || 0) + nWords;
+        info.structuralWords += nWords;
+        const key = Math.round(rr.y * 10) / 10;
+        let g = groups.get(key);
+        if (!g) { g = { x: rr.x, right: rr.x + rr.w, y: rr.y, h: rr.h, texts: [] }; groups.set(key, g); }
+        else { g.x = Math.min(g.x, rr.x); g.right = Math.max(g.right, rr.x + rr.w); g.h = Math.max(g.h, rr.h); }
+        g.texts.push((rowEl.textContent || '').trim());
+      }
+      for (const g of groups.values()) info.tocRows.push({ x: g.x, y: g.y, w: g.right - g.x, h: g.h, text: g.texts.join(' | ').slice(0, 48) });
     }
 
     // אזור הערות מודרני (.footnotes) + קו מפריד (.fn-rule)
@@ -863,6 +901,14 @@ if (typeof document !== 'undefined') {
       for (const l of (colRec.lines || [])) for (const m of l.markers) { info.mk += m.t; info.mkList.push(m.t); info.mkn++; }
     }
     info.lines = totalLines;
+    // H2/H3 בפס החוצה-טורים הם תוכן גוף ב-PageModel, אך אינם ילדי .column.
+    // סופרים אותם לנפח ולדיווח שורות, לא לחישובי איזון/פיץ' של הטורים.
+    if (info.pagemodel) {
+      const spanningLines = [...pg.querySelectorAll('.spanning-band > .line')];
+      info.spanningLines = spanningLines.length;
+      for (const ln of spanningLines) { const nWords = wc(ln.textContent); info.words += nWords; info.spanningWords += nWords; }
+    }
+    info.renderedLines = info.lines + info.structuralLines + info.spanningLines + info.shaarLines;
 
     // הערות שוליים (מורשת: בנות של העמוד) — תיבה + כל סמני הפתיחה שבתוכן
     // **S5.2 (27):** בזרימה רציפה כל ההערות של העמוד באלמנט אחד — המילה-הראשונה
@@ -966,7 +1012,10 @@ if (typeof document !== 'undefined') {
     h: p.header ? p.header.text : null, fo: p.folio ? p.folio.text : null,
     g: p.gates, colsN: p.cols.length, cols: p.cols.map((c) => ({ n: c.n, x: c.x, w: c.w, tops: c.tops, f: c.f, at: c.at, p: c.p })),
     fn: p.fns.length, fnMk: p.fnMk || '', fnMkList: p.fnMkList || [], mk: p.mk || '', mkList: p.mkList || [], mkn: p.mkn || 0,
-    colContent: p.colContent, lines: p.lines, words: p.words,
+    colContent: p.colContent, lines: p.lines, renderedLines: p.renderedLines, words: p.words,
+    spanningLines: p.spanningLines || 0, spanningWords: p.spanningWords || 0,
+    structuralLines: p.structuralLines || 0, structuralWords: p.structuralWords || 0,
+    shaarLines: p.shaarLines || 0, shaarWords: p.shaarWords || 0,
     tocRows: p.tocRows.length, fnAreaN: p.fnAreaN, fnRuleN: p.fnRuleN, gutter: p.gutter,
     sideNotes: p.sideNotes || [], enNotes: p.enNotes || []
   }));
