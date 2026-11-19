@@ -54,7 +54,7 @@ jobs:
           test -s red-build/ui/app.bundle.js
           test -s red-build/ui/engine-worker.bundle.js
 
-      - name: Sanity: bundle contains the unified dispatch flag path
+      - name: 'Sanity: bundle contains the unified dispatch flag path'
         run: |
           grep -q '_engine-force-unified' red-build/ui/engine-worker.bundle.js \
             || { echo 'FATAL: worker bundle lacks unified dispatch flag'; exit 1; }

@@ -1,0 +1,245 @@
+{
+ "totalDiffs": 160360,
+ "diffs": [
+  {
+   "category": "page-count",
+   "where": "document",
+   "expected": 552,
+   "actual": 799
+  },
+  {
+   "category": "page-columns-geometry",
+   "where": "page 1",
+   "expected": "[{\"x\":403.61,\"w\":269.41},{\"x\":120.72,\"w\":269.41}]",
+   "actual": "[{\"x\":120.72,\"w\":552.3}]"
+  },
+  {
+   "category": "line-count",
+   "where": "page 1",
+   "expected": 5,
+   "actual": 7
+  },
+  {
+   "category": "line-text",
+   "where": "page 1, gate col, line 1",
+   "expected": "מקום בינה",
+   "actual": "בס״ד"
+  },
+  {
+   "category": "line-sizePt",
+   "where": "page 1, gate col, line 1",
+   "expected": 46,
+   "actual": 12
+  },
+  {
+   "category": "line-y",
+   "where": "page 1, gate col, line 1",
+   "expected": 170.8,
+   "actual": 76
+  },
+  {
+   "category": "line-height",
+   "where": "page 1, gate col, line 1",
+   "expected": null,
+   "actual": 20
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 1, gate col, line 1",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "word-count",
+   "where": "page 1, gate col, line 1",
+   "expected": 2,
+   "actual": 1
+  },
+  {
+   "category": "word-text",
+   "where": "page 1, gate col, line 1, word 1",
+   "expected": "מקום",
+   "actual": "בס״ד"
+  },
+  {
+   "category": "line-text",
+   "where": "page 1, gate col, line 2",
+   "expected": "הוצאה - רשויות - חצירות - תחומין",
+   "actual": "ספר מלכי המלוכה"
+  },
+  {
+   "category": "line-sizePt",
+   "where": "page 1, gate col, line 2",
+   "expected": 21,
+   "actual": 46
+  },
+  {
+   "category": "line-y",
+   "where": "page 1, gate col, line 2",
+   "expected": 300.27,
+   "actual": 202.64
+  },
+  {
+   "category": "line-height",
+   "where": "page 1, gate col, line 2",
+   "expected": null,
+   "actual": 77
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 1, gate col, line 2",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "word-count",
+   "where": "page 1, gate col, line 2",
+   "expected": 7,
+   "actual": 3
+  },
+  {
+   "category": "word-text",
+   "where": "page 1, gate col, line 2, word 1",
+   "expected": "הוצאה",
+   "actual": "ספר"
+  },
+  {
+   "category": "line-text",
+   "where": "page 1, gate col, line 3",
+   "expected": "הקדמות וביאורים במסכתות שבת ועירובין",
+   "actual": "ביאורים וחידושים עמוקים על מסכתות הש\"ס"
+  },
+  {
+   "category": "line-sizePt",
+   "where": "page 1, gate col, line 3",
+   "expected": 12,
+   "actual": 21
+  },
+  {
+   "category": "line-y",
+   "where": "page 1, gate col, line 3",
+   "expected": 547.07,
+   "actual": 386.29
+  },
+  {
+   "category": "line-height",
+   "where": "page 1, gate col, line 3",
+   "expected": null,
+   "actual": 35
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 1, gate col, line 3",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "word-count",
+   "where": "page 1, gate col, line 3",
+   "expected": 5,
+   "actual": 6
+  },
+  {
+   "category": "word-text",
+   "where": "page 1, gate col, line 3, word 1",
+   "expected": "הקדמות",
+   "actual": "ביאורים"
+  },
+  {
+   "category": "line-text",
+   "where": "page 1, gate col, line 4",
+   "expected": "מהדורת ניסיון | לא מוגה",
+   "actual": "בירור שיטות הראשונים והאחרונים ובירורי הלכות למעשה"
+  },
+  {
+   "category": "line-sizePt",
+   "where": "page 1, gate col, line 4",
+   "expected": 11.5,
+   "actual": 12
+  },
+  {
+   "category": "line-y",
+   "where": "page 1, gate col, line 4",
+   "expected": 744,
+   "actual": 658.57
+  },
+  {
+   "category": "line-height",
+   "where": "page 1, gate col, line 4",
+   "expected": null,
+   "actual": 20
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 1, gate col, line 4",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "word-count",
+   "where": "page 1, gate col, line 4",
+   "expected": 5,
+   "actual": 7
+  },
+  {
+   "category": "word-text",
+   "where": "page 1, gate col, line 4, word 1",
+   "expected": "מהדורת",
+   "actual": "בירור"
+  },
+  {
+   "category": "line-text",
+   "where": "page 1, gate col, line 5",
+   "expected": "נתנאל דיינובסקי",
+   "actual": "מהדורה שניה ומורחבת בסייעתא דשמיא"
+  },
+  {
+   "category": "line-sizePt",
+   "where": "page 1, gate col, line 5",
+   "expected": 15,
+   "actual": 11.5
+  },
+  {
+   "category": "line-y",
+   "where": "page 1, gate col, line 5",
+   "expected": 951.33,
+   "actual": 785.21
+  },
+  {
+   "category": "line-height",
+   "where": "page 1, gate col, line 5",
+   "expected": null,
+   "actual": 19
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 1, gate col, line 5",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "word-count",
+   "where": "page 1, gate col, line 5",
+   "expected": 2,
+   "actual": 5
+  },
+  {
+   "category": "word-text",
+   "where": "page 1, gate col, line 5, word 1",
+   "expected": "נתנאל",
+   "actual": "מהדורה"
+  },
+  {
+   "category": "decorations-count",
+   "where": "page 1",
+   "expected": 13,
+   "actual": 1
+  },
+  {
+   "category": "page-columns-geometry",
+   "where": "page 2",
+   "expected": "[{\"x\":403.61,\"w\":269.41},{\"x\":120.72,\"w\":269.41}]",
+   "actual": "[{\"x\":120.72,\"w\":552.3}]"
+  }
+ ]
+}

@@ -1,0 +1,245 @@
+{
+ "totalDiffs": 2583,
+ "diffs": [
+  {
+   "category": "page-count",
+   "where": "document",
+   "expected": 38,
+   "actual": 37
+  },
+  {
+   "category": "page-columns-geometry",
+   "where": "page 1",
+   "expected": "[{\"x\":403.61,\"w\":269.41},{\"x\":120.72,\"w\":269.41}]",
+   "actual": "[{\"x\":120.72,\"w\":552.3}]"
+  },
+  {
+   "category": "line-count",
+   "where": "page 1",
+   "expected": 1,
+   "actual": 7
+  },
+  {
+   "category": "line-text",
+   "where": "page 1, gate col, line 1",
+   "expected": "מסמך רגרסיה קנוני לבדיקות המנוע",
+   "actual": "בס״ד"
+  },
+  {
+   "category": "line-sizePt",
+   "where": "page 1, gate col, line 1",
+   "expected": 21,
+   "actual": 12
+  },
+  {
+   "category": "line-y",
+   "where": "page 1, gate col, line 1",
+   "expected": 300.27,
+   "actual": 76
+  },
+  {
+   "category": "line-height",
+   "where": "page 1, gate col, line 1",
+   "expected": null,
+   "actual": 20
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 1, gate col, line 1",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "word-count",
+   "where": "page 1, gate col, line 1",
+   "expected": 5,
+   "actual": 1
+  },
+  {
+   "category": "word-text",
+   "where": "page 1, gate col, line 1, word 1",
+   "expected": "מסמך",
+   "actual": "בס״ד"
+  },
+  {
+   "category": "decorations-count",
+   "where": "page 1",
+   "expected": 13,
+   "actual": 1
+  },
+  {
+   "category": "page-columns-geometry",
+   "where": "page 2",
+   "expected": "[{\"x\":403.61,\"w\":269.41},{\"x\":120.72,\"w\":269.41}]",
+   "actual": "[{\"x\":120.72,\"w\":552.3}]"
+  },
+  {
+   "category": "line-y",
+   "where": "page 2, gate col, line 1",
+   "expected": 255.73,
+   "actual": 523.25
+  },
+  {
+   "category": "line-height",
+   "where": "page 2, gate col, line 1",
+   "expected": null,
+   "actual": 23
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 2, gate col, line 1",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "line-y",
+   "where": "page 2, gate col, line 2",
+   "expected": 288.53,
+   "actual": 546.25
+  },
+  {
+   "category": "line-height",
+   "where": "page 2, gate col, line 2",
+   "expected": null,
+   "actual": 17
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 2, gate col, line 2",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "line-y",
+   "where": "page 2, gate col, line 3",
+   "expected": 476.4,
+   "actual": 563.25
+  },
+  {
+   "category": "line-height",
+   "where": "page 2, gate col, line 3",
+   "expected": null,
+   "actual": 18
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 2, gate col, line 3",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "line-y",
+   "where": "page 2, gate col, line 4",
+   "expected": 667.87,
+   "actual": 581.25
+  },
+  {
+   "category": "line-height",
+   "where": "page 2, gate col, line 4",
+   "expected": null,
+   "actual": 17
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 2, gate col, line 4",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "line-y",
+   "where": "page 2, gate col, line 5",
+   "expected": 859.07,
+   "actual": 598.25
+  },
+  {
+   "category": "line-height",
+   "where": "page 2, gate col, line 5",
+   "expected": null,
+   "actual": 16
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 2, gate col, line 5",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "decorations-count",
+   "where": "page 2",
+   "expected": 1,
+   "actual": 0
+  },
+  {
+   "category": "page-folio",
+   "where": "page 3",
+   "expected": "א",
+   "actual": null
+  },
+  {
+   "category": "page-number",
+   "where": "page 3",
+   "expected": 1,
+   "actual": null
+  },
+  {
+   "category": "page-columns-geometry",
+   "where": "page 3",
+   "expected": "[{\"x\":403.61,\"w\":269.41},{\"x\":120.72,\"w\":269.41}]",
+   "actual": "[{\"x\":120.72,\"w\":552.3}]"
+  },
+  {
+   "category": "line-count",
+   "where": "page 3",
+   "expected": 22,
+   "actual": 24
+  },
+  {
+   "category": "line-text",
+   "where": "page 3, toc col, line 1",
+   "expected": "חלק 1: ענייני החלק",
+   "actual": "חלק 1: ענייני החלק ב׳"
+  },
+  {
+   "category": "line-y",
+   "where": "page 3, toc col, line 1",
+   "expected": 370.7,
+   "actual": 70
+  },
+  {
+   "category": "line-height",
+   "where": "page 3, toc col, line 1",
+   "expected": null,
+   "actual": 22
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 3, toc col, line 1",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "word-count",
+   "where": "page 3, toc col, line 1",
+   "expected": 4,
+   "actual": 5
+  },
+  {
+   "category": "line-text",
+   "where": "page 3, toc col, line 2",
+   "expected": "סימן א של חלק 1",
+   "actual": "סימן א של חלק 1 ג׳"
+  },
+  {
+   "category": "line-sizePt",
+   "where": "page 3, toc col, line 2",
+   "expected": 11,
+   "actual": 12
+  },
+  {
+   "category": "line-y",
+   "where": "page 3, toc col, line 2",
+   "expected": 399.57,
+   "actual": 94
+  }
+ ]
+}

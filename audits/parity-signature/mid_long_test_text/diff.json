@@ -1,0 +1,245 @@
+{
+ "totalDiffs": 31693,
+ "diffs": [
+  {
+   "category": "page-count",
+   "where": "document",
+   "expected": 139,
+   "actual": 191
+  },
+  {
+   "category": "page-columns-geometry",
+   "where": "page 1",
+   "expected": "[{\"x\":403.61,\"w\":269.41},{\"x\":120.72,\"w\":269.41}]",
+   "actual": "[{\"x\":120.72,\"w\":552.3}]"
+  },
+  {
+   "category": "line-count",
+   "where": "page 1",
+   "expected": 0,
+   "actual": 7
+  },
+  {
+   "category": "decorations-count",
+   "where": "page 1",
+   "expected": 13,
+   "actual": 1
+  },
+  {
+   "category": "page-columns-geometry",
+   "where": "page 2",
+   "expected": "[{\"x\":403.61,\"w\":269.41},{\"x\":120.72,\"w\":269.41}]",
+   "actual": "[{\"x\":120.72,\"w\":552.3}]"
+  },
+  {
+   "category": "line-y",
+   "where": "page 2, gate col, line 1",
+   "expected": 255.73,
+   "actual": 523.25
+  },
+  {
+   "category": "line-height",
+   "where": "page 2, gate col, line 1",
+   "expected": null,
+   "actual": 23
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 2, gate col, line 1",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "line-y",
+   "where": "page 2, gate col, line 2",
+   "expected": 288.53,
+   "actual": 546.25
+  },
+  {
+   "category": "line-height",
+   "where": "page 2, gate col, line 2",
+   "expected": null,
+   "actual": 17
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 2, gate col, line 2",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "line-y",
+   "where": "page 2, gate col, line 3",
+   "expected": 476.4,
+   "actual": 563.25
+  },
+  {
+   "category": "line-height",
+   "where": "page 2, gate col, line 3",
+   "expected": null,
+   "actual": 18
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 2, gate col, line 3",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "line-y",
+   "where": "page 2, gate col, line 4",
+   "expected": 667.87,
+   "actual": 581.25
+  },
+  {
+   "category": "line-height",
+   "where": "page 2, gate col, line 4",
+   "expected": null,
+   "actual": 17
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 2, gate col, line 4",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "line-y",
+   "where": "page 2, gate col, line 5",
+   "expected": 859.07,
+   "actual": 598.25
+  },
+  {
+   "category": "line-height",
+   "where": "page 2, gate col, line 5",
+   "expected": null,
+   "actual": 16
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 2, gate col, line 5",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "decorations-count",
+   "where": "page 2",
+   "expected": 1,
+   "actual": 0
+  },
+  {
+   "category": "page-folio",
+   "where": "page 3",
+   "expected": "א",
+   "actual": null
+  },
+  {
+   "category": "page-number",
+   "where": "page 3",
+   "expected": 1,
+   "actual": null
+  },
+  {
+   "category": "page-columns-geometry",
+   "where": "page 3",
+   "expected": "[{\"x\":403.61,\"w\":269.41},{\"x\":120.72,\"w\":269.41}]",
+   "actual": "[{\"x\":120.72,\"w\":552.3}]"
+  },
+  {
+   "category": "line-count",
+   "where": "page 3",
+   "expected": 23,
+   "actual": 36
+  },
+  {
+   "category": "line-text",
+   "where": "page 3, toc col, line 1",
+   "expected": "יורה דעה",
+   "actual": "יורה דעה א׳"
+  },
+  {
+   "category": "line-y",
+   "where": "page 3, toc col, line 1",
+   "expected": 370.7,
+   "actual": 70
+  },
+  {
+   "category": "line-height",
+   "where": "page 3, toc col, line 1",
+   "expected": null,
+   "actual": 22
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 3, toc col, line 1",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "word-count",
+   "where": "page 3, toc col, line 1",
+   "expected": 2,
+   "actual": 3
+  },
+  {
+   "category": "line-text",
+   "where": "page 3, toc col, line 2",
+   "expected": "הערות בסוגיית הגרמה",
+   "actual": "הערות בסוגיית הגרמה ב׳"
+  },
+  {
+   "category": "line-sizePt",
+   "where": "page 3, toc col, line 2",
+   "expected": 11,
+   "actual": 12
+  },
+  {
+   "category": "line-y",
+   "where": "page 3, toc col, line 2",
+   "expected": 399.5,
+   "actual": 94
+  },
+  {
+   "category": "line-height",
+   "where": "page 3, toc col, line 2",
+   "expected": null,
+   "actual": 22
+  },
+  {
+   "category": "line-isLast(p-end)",
+   "where": "page 3, toc col, line 2",
+   "expected": null,
+   "actual": false
+  },
+  {
+   "category": "word-count",
+   "where": "page 3, toc col, line 2",
+   "expected": 3,
+   "actual": 4
+  },
+  {
+   "category": "line-text",
+   "where": "page 3, toc col, line 3",
+   "expected": "א. משנת השוחט מתוך הטבעת וגדרי פסול הגרמה בסימנים ובצוואר",
+   "actual": "א. משנת השוחט מתוך הטבעת וגדרי פסול הגרמה בסימנים ובצוואר ג׳"
+  },
+  {
+   "category": "line-sizePt",
+   "where": "page 3, toc col, line 3",
+   "expected": 10.5,
+   "actual": 12
+  },
+  {
+   "category": "line-y",
+   "where": "page 3, toc col, line 3",
+   "expected": 426.57,
+   "actual": 118
+  },
+  {
+   "category": "line-height",
+   "where": "page 3, toc col, line 3",
+   "expected": null,
+   "actual": 22
+  }
+ ]
+}

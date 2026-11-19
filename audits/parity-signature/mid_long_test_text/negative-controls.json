@@ -1,0 +1,47 @@
+[
+ {
+  "control": "word-change (טקסט מילה אחת)",
+  "tripped": true,
+  "diffCount": 31693
+ },
+ {
+  "control": "font-family change (בשכבת המורשת)",
+  "tripped": true,
+  "diffCount": 31693
+ },
+ {
+  "control": "size change (sizePt)",
+  "tripped": true,
+  "diffCount": 31693
+ },
+ {
+  "control": "x-position change",
+  "tripped": true,
+  "diffCount": 31693
+ },
+ {
+  "control": "y-position change",
+  "tripped": true,
+  "diffCount": 31693
+ },
+ {
+  "control": "color change (word)",
+  "tripped": true,
+  "diffCount": 31693
+ },
+ {
+  "control": "folio change (פוליו)",
+  "tripped": true,
+  "diffCount": 31693
+ },
+ {
+  "control": "note addition",
+  "tripped": true,
+  "diffCount": 31694
+ },
+ {
+  "control": "page-count change",
+  "tripped": true,
+  "diffCount": 31693
+ }
+]
