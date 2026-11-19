@@ -1876,7 +1876,11 @@ footer{border-top:1px solid var(--line);margin-top:36px;padding:18px 0 35px;colo
   root.querySelectorAll("select").forEach(x=>[...x.options].forEach(o=>{if(o.selected)o.setAttribute("selected","");else o.removeAttribute("selected");}));
  }
  document.getElementById("export").addEventListener("click",()=>{
-  const copy=document.documentElement.cloneNode(true);sync(copy);
+  const copy=document.documentElement.cloneNode(true);
+  // ייצוא הוא עותק מלא: אין לייצא בטעות רק תוצאות חיפוש מסוננות.
+  copy.querySelectorAll("[hidden]").forEach(node=>node.removeAttribute("hidden"));
+  const exportedSearch=copy.querySelector("#search");if(exportedSearch)exportedSearch.value="";
+  sync(copy);
   const blob=new Blob(["<!doctype html>\n"+copy.outerHTML],{type:"text/html;charset=utf-8"});
   const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="קטלוג-רכיבי-מסמך-הגדרות-עימוד-ערוך.html";
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);
