@@ -11,8 +11,8 @@
 #      אין merge ל-main, אין שינוי בקוד main, ואין מחיקת מנוע legacy מהמקור.
 #   2. root מתעד ב-build-info.json את source branch/commit ומסומן כסביבת ניסוי.
 #      תיקון נוסף ל-main אינו מתבצע כאן; זהו נתיב צפייה בגרסה המאוחדת בלבד.
-#   3. שומרים על CNAME, assets קיימים, קובצי gh-pages אחרים ועל previews/.
-#      rsync לשורש לעולם אינו משתמש ב---delete.
+#   3. שומרים על .nojekyll, assets קיימים, קובצי gh-pages אחרים ועל previews/.
+#      זהו GitHub Project Pages (אין CNAME). rsync לשורש לעולם אינו משתמש ב---delete.
 #   4. assets/fonts הקיימים נשארים במקומם; תוכן ui מעודכן מועתק אליהם.
 #   5. אין secrets; הרשאות מינימליות (contents:write ל־push ל־gh-pages בלבד).
 #   6. אין לבצע merge אוטומטי של ענף העבודה ל-main בעקבות פריסה מוצלחת.
@@ -79,7 +79,7 @@ jobs:
           test -f gh-pages-checkout/index.html || { echo 'FATAL: gh-pages root index.html missing'; exit 1; }
           test -d gh-pages-checkout/assets || { echo 'FATAL: gh-pages root assets/ missing'; exit 1; }
           test -d gh-pages-checkout/assets/imud/fonts || { echo 'FATAL: shared fonts missing'; exit 1; }
-          test -f gh-pages-checkout/CNAME || { echo 'FATAL: CNAME missing'; exit 1; }
+          test -f gh-pages-checkout/.nojekyll || { echo 'FATAL: .nojekyll missing'; exit 1; }
           N_FONTS=$(ls gh-pages-checkout/assets/imud/fonts | wc -l)
           test "$N_FONTS" -gt 1000 || { echo "FATAL: shared font catalog incomplete ($N_FONTS)"; exit 1; }
 
@@ -110,7 +110,7 @@ jobs:
           done
           cmp -s gh-pages-checkout/app.bundle.js "$P/app.bundle.js" || { echo 'FATAL: root and preview app bundles differ'; exit 1; }
           cmp -s gh-pages-checkout/engine-worker.bundle.js "$P/engine-worker.bundle.js" || { echo 'FATAL: root and preview Worker bundles differ'; exit 1; }
-          test -f gh-pages-checkout/CNAME || { echo 'FATAL: CNAME was lost'; exit 1; }
+          test -f gh-pages-checkout/.nojekyll || { echo 'FATAL: .nojekyll was lost'; exit 1; }
           echo "root size: $(du -sh gh-pages-checkout | cut -f1)"
           echo "preview size: $(du -sh $P | cut -f1)"
 
