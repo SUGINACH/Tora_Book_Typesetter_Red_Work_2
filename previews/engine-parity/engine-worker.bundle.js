@@ -10388,7 +10388,11 @@ function folioGeometry(page, settings, folioMeasure) {
 function headerGeometry(page) {
   const tpl = page && page.template;
   if (!tpl || !Number.isFinite(tpl.headerTop)) {
-    throw new TypeError('PageTemplate.headerTop must be a finite page-space coordinate');
+    const pageId = page && page.index != null ? String(page.index) : 'unknown';
+    const pageType = page && page.type ? String(page.type) : 'unknown';
+    const templateKeys = tpl ? Object.keys(tpl).sort().join(',') : '<missing-template>';
+    const value = tpl ? String(tpl.headerTop) : '<missing>';
+    throw new TypeError(`PageTemplate.headerTop must be finite; page=${pageType}#${pageId}; headerTop=${value}; templateKeys=${templateKeys}`);
   }
   return { y: Math.max(0, tpl.headerTop) };
 }
