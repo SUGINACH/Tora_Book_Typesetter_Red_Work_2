@@ -4153,3 +4153,14 @@ scan-control 0 הפרות · באנדלים נבנו מחדש (app `365f9ece`, w
 ## 19.11.2026 — בקרת שלמות מעמיקה של קטלוג ההגדרות
 
 נסרקו סטטית 98 מודולי engine ו־20 מודולי UI. אומתה התאמה מלאה בין 256 registry settings, 256 bindings ו־256 רשומות קטלוג (אפס אי־התאמות). הקטלוג הורחב בקבועי מימוש ובמנגנוני fallback; inventory SHA מלא נשמר לכל המודולים. נמצאו שתי נקודות הדורשות טיפול/הכרעה: `padEm=0` נדרס ל־0.3em בצינור, וברירת־המחדל `fn-reset-mode` שונה בין import legacy ל־runtime legacy. ראו `audits/CATALOG_IMPLEMENTATION_COMPLETENESS_AUDIT_2026-11-19.md`. לא שונה קוד מנוע ולא הורצו בדיקות runtime.
+
+
+## 20.11.2026 — פריסת Unified ישירה ל־GitHub Pages ללא מיזוג
+
+- לבקשת המשתמש עודכן `.github/workflows/preview-engine-parity.yml` כך שה-build המלא של ענף `engine/legacy-parity-preview-20261119` נפרס גם לשורש `gh-pages` וגם ל-`previews/engine-parity/`. לא בוצע merge ל-main ולא שונה קוד main.
+- ה-build נבנה מהמקור ב-commit `068989ea82d1152250fe21f785cf791ce53d1e0f`, עם `profile=unified`. ה-workflow והפריסה של Pages הסתיימו בהצלחה: preview workflow run `44637290349`; Pages deployment run `44637336799`.
+- אומתה זהות SHA בין root ל-preview עבור `index.html`, `styles.css`, `app.bundle.js`, `engine-worker.bundle.js`, favicon ואייקון. שני הנתיבים כוללים 1,760 קובצי גופן; `.nojekyll` נשמר. root `build-info.json` מציין `mode=direct-gh-pages-deploy-no-main-merge`.
+- `main` נשאר `eafd27d5c8476789a52ebc1d89dc16fb920cbd9c`; מנוע legacy לא הוסר ממנו. לא בוצע merge ל-PR או בין ענפי עבודה.
+- **טרם הושלמו בדיקת דפדפן אינטראקטיבית וייצוא PDF חי בסשן זה.** פריסת Pages מוצלחת ואימות SHA אינם תחליף להוכחת Worker/typeset/PageModel/PDF בפועל.
+- Full Math על `068989e`: 856/856 עמודים, 44,823 שורות, 354,606 מילים; רצפת הנפח הושגה. האודיט נכשל עם 119 ממצאים: FN_OVERLAPS_BODY 62, COLUMN_BOTTOMS_BALANCE 14, LINE_BELOW_COLUMN 8, HEAD_JUSTIFIED 28, LAST_NOT_CENTERED 5, MARKER_NOTE_MATCH 2.
+- CI מטריצת Node ו-Layout Audit היו עדיין בתהליך בעת עדכון זה; יש לרענן סטטוס ולא לטעון שעברו.

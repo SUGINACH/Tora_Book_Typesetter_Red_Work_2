@@ -77,3 +77,42 @@
 - לא שונו ברירות מחדל, הגדרות, פורמט מסמך, pagination, טיפוגרפיה או פלט כלשהו (מוכח בזהות ביט-לביט).
 - לא הוסר קוד legacy; לא מוזגו PR #65/#66; לא בוצע rendered visual diff (raster).
 - ‏layout-audit/full-math-audit נותרו כישלונות CI קיימים (מתועדים, לא נוטרלו).
+
+
+---
+
+## עדכון מצב מחייב — 20.11.2026 01:16 Asia/Jerusalem
+
+### מצב Git ופריסה (מאומת)
+
+- main: `eafd27d5c8476789a52ebc1d89dc16fb920cbd9c` — לא שונה; מנוע legacy נשאר בו.
+- ענף העבודה: `068989ea82d1152250fe21f785cf791ce53d1e0f`.
+- gh-pages: `249a27333d1c7251dbf229349f598967450c07e1`.
+- ענף ההצלה: `rescue/engine-parity-local-20261119` ב-`706b0fac2195ff2c3142abb3349623683151b9ca`; ענף נפרד ועצמאי. אין למזג, cherry-pick או לדרוס אותו. מותר לקרוא ממנו כהשוואת reference בלבד. המשתמש הורה מפורשות: **אין לבצע מיזוג כלל**.
+- PR #65 נשאר Draft ולא מוזג.
+
+### Pages root — תוקן ונפרס
+
+- ה-build המלא של ענף העבודה נפרס גם לשורש GitHub Pages וגם ל-`previews/engine-parity/`, בלי merge ל-main.
+- root ו-preview משתמשים באותם SHA של `index.html`, `styles.css`, `app.bundle.js`, `engine-worker.bundle.js`, favicon ואייקון. בשני הנתיבים 1,760 קובצי גופן. `.nojekyll` נשמר.
+- root `build-info.json`: `profile=unified`, source commit `068989ea82d1152250fe21f785cf791ce53d1e0f`, `mode=direct-gh-pages-deploy-no-main-merge`.
+- Preview workflow run `44637290349` עבר; Pages deployment `44637336799` עבר.
+- קישור root: https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/
+- קישור preview: https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/previews/engine-parity/
+- **לא בוצעה עדיין בדיקת browser automation אינטראקטיבית או PDF חי בסשן זה.** יש לבצע ולאשר אותן לפני טענה שהאפליקציה פועלת מקצה לקצה.
+
+### CI / אודיט
+
+- Full Math על commit `068989e`: 856/856 עמודים; 44,823 שורות; 354,606 מילים; רצפת 98% עברה. Full Math עדיין נכשל: 119 ממצאים — `FN_OVERLAPS_BODY=62`, `COLUMN_BOTTOMS_BALANCE=14`, `LINE_BELOW_COLUMN=8`, `HEAD_JUSTIFIED=28`, `LAST_NOT_CENTERED=5`, `MARKER_NOTE_MATCH=2`.
+- Corpus invariants עבר.
+- CI מטריצת Node ו-Layout Audit עדיין היו בתהליך בעת כתיבת העדכון; יש לרענן סטטוס ולא להציגם כירוקים.
+- אין להחליש ספים, להסיר ממצאים או לשנות fixtures כדי להציג PASS.
+
+### הצעד הבא
+
+1. בדיקת root ו-preview בדפדפן אמיתי: chip unified, Worker, טעינת 1,760 גופנים, עורך, הגדרות, ערכת 40, עימוד מסמך תקין, PageModel, תצוגה וייצוא PDF אמיתי (כולל pdftotext/pdfinfo).
+2. ביקורת U-8 עצמאית בענף העבודה. ב-`column-flow.js` הנוכחי `planningUsedHeight()` עדיין מוסיף `fnReservedHeightPx` רק לטור האחרון; יש לעקוב גם אחרי budget, capacity, marker placement, AQ stretch והקרנת gutter. אין להעתיק תיקון מענף rescue ללא ביקורת ובדיקות משלו.
+3. אחרי U-8: להריץ את כל הקורפוסים ושני הפרופילים, ואז לאבחן מחדש U-9 איזון טורים ו-U-10 LINE_BELOW_COLUMN. לבדוק גם U-3a, U-7a (הכרעה מוצרית — להשאיר פתוחה ללא משתמש), U-15.
+4. לבדוק MeasureAPI הנוכחי מול טענות U-11..U-14 שבענף ההצלה. הקבצים `measure-api.js`, `legacy-imud-flow.js`, `dp-planner.js`, `column-flow.js`, האודיטים והמסמכים נבדלים בין הענפים; אין להניח שהוכחות/תיקונים מה-rescue קיימים בענף העבודה. בדיקות s3d ו-s9h שנמצאות רק ב-rescue אינן הוכחה שהן רצות ב-work.
+5. עדכון WORKLOG/ISSUE_REGISTRY/handoff עם ראיות ו-commit מדויק.
+
