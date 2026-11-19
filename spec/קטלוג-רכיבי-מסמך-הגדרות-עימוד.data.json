@@ -27,10 +27,13 @@
     "settings": 256,
     "auditRows": 253,
     "legacyDefaults": 265,
-    "dispositionEntries": 1,
+    "dispositionEntries": 169,
     "nonDefaultAudit": 67,
     "pageItems": 12,
-    "hardcoded": 42
+    "hardcoded": 42,
+    "dispositionUnique": 161,
+    "familyRules": 14,
+    "legacyOldState": 126
   },
   "settings": [
     {
@@ -281,7 +284,7 @@
         "description": "גאומטריה, שוליים, טורים ומספור עמודים."
       },
       "description": "מרחק עליון H2 (px): PT-05: מרחק עליון נפרד H2",
-      "history": "",
+      "history": "h2-top-distance: 22% מגובה תיבת התוכן (1040px ב-A4 של RED) ⇒ פיקסלים",
       "legacyKeys": [
         "h2-top-distance"
       ],
@@ -316,7 +319,7 @@
         "description": "גאומטריה, שוליים, טורים ומספור עמודים."
       },
       "description": "סגנון מפריד טורים: גובה = Math.min(שני הטורים) − 8px",
-      "history": "",
+      "history": "col-divider-style: ",
       "legacyKeys": [
         "col-divider-style"
       ],
@@ -350,7 +353,7 @@
         "description": "גאומטריה, שוליים, טורים ומספור עמודים."
       },
       "description": "תבנית מספור עמודים: גאומטריה, שוליים, טורים ומספור עמודים.",
-      "history": "",
+      "history": "page-num-format: ",
       "legacyKeys": [
         "page-num-format"
       ],
@@ -388,7 +391,7 @@
         "description": "גאומטריה, שוליים, טורים ומספור עמודים."
       },
       "description": "מסגרת מספר עמוד: גאומטריה, שוליים, טורים ומספור עמודים.",
-      "history": "",
+      "history": "page-num-frame: ",
       "legacyKeys": [
         "page-num-frame"
       ],
@@ -426,7 +429,7 @@
         "description": "גאומטריה, שוליים, טורים ומספור עמודים."
       },
       "description": "מיקום מספר עמוד: גאומטריה, שוליים, טורים ומספור עמודים.",
-      "history": "",
+      "history": "page-num-position: ",
       "legacyKeys": [
         "page-num-position"
       ],
@@ -456,7 +459,7 @@
         "description": "גאומטריה, שוליים, טורים ומספור עמודים."
       },
       "description": "ערך התחלתי של מספור: שוחזר מ‑V1 (REQ-HDR-03)",
-      "history": "",
+      "history": "page-num-initial-value: ",
       "legacyKeys": [
         "page-num-initial-value"
       ],
@@ -570,7 +573,7 @@
         "description": "גאומטריה, שוליים, טורים ומספור עמודים."
       },
       "description": "עמוד תחילת התצוגה (סוד): שוחזר מ‑V1 (REQ-HDR-03): סוד העמוד הנספר שממנו מתחיל התצוגה",
-      "history": "",
+      "history": "page-num-start-idx: ",
       "legacyKeys": [
         "page-num-start-idx"
       ],
@@ -600,7 +603,7 @@
         "description": "גאומטריה, שוליים, טורים ומספור עמודים."
       },
       "description": "מניית עמודי שער במספור: גאומטריה, שוליים, טורים ומספור עמודים.",
-      "history": "",
+      "history": "main-shaar-count-numbering: RED מונה עמודי שער גלובלית (count-shaar-pages); בקרה פר-סוג טרם נפרדה | main-shaar-show-number: הצגת מספר בשער ראשי — בקרה פר-סוג במעקב | back-shaar-count-numbering: מניית שער אחורי — RED מונה עמודי שער גלובלית | back-shaar-show-number: הצגת מספר בשער אחורי — בקרה פר-סוג במעקב | sub-shaar-count-numbering: מניית שער משנה — RED מונה עמודי שער גלובלית | sub-shaar-show-number: הצגת מספר בשער משנה — בקרה פר-סוג במעקב",
       "legacyKeys": [
         "main-shaar-count-numbering",
         "main-shaar-show-number",
@@ -749,7 +752,7 @@
         "description": "גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים."
       },
       "description": "גודל גוף הטקסט (pt): גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים.",
-      "history": "",
+      "history": "size-body: pt (המקור 12; RED 14 — ההפרש מתועד כהחלטת RED)",
       "legacyKeys": [
         "size-body"
       ],
@@ -779,7 +782,7 @@
         "description": "גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים."
       },
       "description": "גובה שורה (יחס): פלפול 1.25 / קריאה 1.45",
-      "history": "",
+      "history": "line-height-body: ",
       "legacyKeys": [
         "line-height-body"
       ],
@@ -842,7 +845,7 @@
         "description": "גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים."
       },
       "description": "אופן מילה ראשונה: גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים.",
-      "history": "",
+      "history": "drop-word-mode: window ⇒ drop (אותו מנגנון חלון)",
       "legacyKeys": [
         "drop-word-mode"
       ],
@@ -875,7 +878,7 @@
         "description": "גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים."
       },
       "description": "אורך מילה ראשונה (מילים): גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים.",
-      "history": "",
+      "history": "drop-word-count: ",
       "legacyKeys": [
         "drop-word-count"
       ],
@@ -905,7 +908,7 @@
         "description": "גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים."
       },
       "description": "סף שורות למילה ראשונה: גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים.",
-      "history": "",
+      "history": "drop-word-min-lines: המקור 2; RED 3 — הייבוא משחזר את המקור",
       "legacyKeys": [
         "drop-word-min-lines"
       ],
@@ -963,7 +966,7 @@
         "description": "גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים."
       },
       "description": "first-word-size-em: S4.5: גודל המילה הראשונה ב-em (המקור: size-first-word=1.5; בעבר היה כפול 2 מוקשה)",
-      "history": "",
+      "history": "size-first-word: S4.5: מפתח חדש ב-RED (היה כפול 2 מוקשה)",
       "legacyKeys": [
         "size-first-word"
       ],
@@ -993,7 +996,7 @@
         "description": "גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים."
       },
       "description": "גופן מילה ראשונה: S4.5: גופן נפרד למילה הראשונה (המקור: font-first-word=FrankReal); ריק = גופן הגוף",
-      "history": "",
+      "history": "font-first-word: S4.5: מפתח חדש ב-RED (היה חסר)",
       "legacyKeys": [
         "font-first-word"
       ],
@@ -1051,7 +1054,7 @@
         "description": "גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים."
       },
       "description": "זיהוי אוטומטי של דיבור־המתחיל: דיבור המתחיל עד נקודה/מקף",
-      "history": "",
+      "history": "auto-dh: ",
       "legacyKeys": [
         "auto-dh"
       ],
@@ -1081,7 +1084,7 @@
         "description": "גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים."
       },
       "description": "גופן דיבור־המתחיל: גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים.",
-      "history": "",
+      "history": "font-dh: ",
       "legacyKeys": [
         "font-dh"
       ],
@@ -1139,7 +1142,7 @@
         "description": "רכיב כותרת ברמה 0 במסמך."
       },
       "description": "גופן גוף ההקדמה (f-h0-body): S6.3: גוף ההקדמה — מדידה (prefaceApi) ורינדור באותו גופן",
-      "history": "",
+      "history": "f-h0-body: S6.3: גופן גוף ההקדמה (Frank Ruhl Libre במקור)",
       "legacyKeys": [
         "f-h0-body"
       ],
@@ -1169,7 +1172,7 @@
         "description": "מיקום, מספור, מדידה, פיצול וגופני ההערות."
       },
       "description": "גופן כותרת עמודי ההערות (f-note-title): S6.3: גופן כותרת עמודי הערות",
-      "history": "",
+      "history": "f-note-title: S6.3: גופן כותרת ההערות",
       "legacyKeys": [
         "f-note-title"
       ],
@@ -1203,7 +1206,7 @@
         "description": "גופן, גודל, צבע, גובה שורה ומקטעים מיוחדים."
       },
       "description": "יישור שורה אחרונה בפסקה: wiring מ‑Orange ✓",
-      "history": "",
+      "history": "body-last-line-align: ",
       "legacyKeys": [
         "body-last-line-align"
       ],
@@ -1238,7 +1241,7 @@
         "description": "רכיב כותרת ברמה 0 במסמך."
       },
       "description": "כותרת אפס — אופן: רכיב כותרת ברמה 0 במסמך.",
-      "history": "",
+      "history": "mode-h0: ",
       "legacyKeys": [
         "mode-h0"
       ],
@@ -1268,7 +1271,7 @@
         "description": "רכיב כותרת ברמה 0 במסמך."
       },
       "description": "כותרת אפס — גופן: רכיב כותרת ברמה 0 במסמך.",
-      "history": "",
+      "history": "f-h0: S4.6: גופן כותרת H0 — קיים ברישום RED (heading-0-font)",
       "legacyKeys": [
         "f-h0"
       ],
@@ -1326,7 +1329,7 @@
         "description": "רכיב כותרת ברמה 0 במסמך."
       },
       "description": "כותרת אפס — גודל (pt): רכיב כותרת ברמה 0 במסמך.",
-      "history": "",
+      "history": "s-h0: S4.6: גודל H0 (26 ⇒ 26pt; חריגת טווח מדווחת במיזוג ולא מושמטת) | s-h0: S6.3: גודל H0 — גם נקרא מה-raw בפרופיל המורשת (SZ.h0Title; במקור 26pt)",
       "legacyKeys": [
         "s-h0"
       ],
@@ -1361,7 +1364,7 @@
         "description": "רכיב כותרת ברמה 1 במסמך."
       },
       "description": "כותרת 1 — אופן: רכיב כותרת ברמה 1 במסמך.",
-      "history": "",
+      "history": "mode-h1: sub_shaar ⇒ new-page + show-shaar-sub=true (השער המשנה מובנה ב-S8)",
       "legacyKeys": [
         "mode-h1"
       ],
@@ -1391,7 +1394,7 @@
         "description": "רכיב כותרת ברמה 1 במסמך."
       },
       "description": "כותרת 1 — גופן: רכיב כותרת ברמה 1 במסמך.",
-      "history": "",
+      "history": "f-h1: S4.6: גופן H1",
       "legacyKeys": [
         "f-h1"
       ],
@@ -1449,7 +1452,7 @@
         "description": "רכיב כותרת ברמה 1 במסמך."
       },
       "description": "כותרת 1 — גודל (pt): רכיב כותרת ברמה 1 במסמך.",
-      "history": "",
+      "history": "s-h1: S4.6: גודל H1 (50 במקור — נשמר נאמן למקור; חריגת טווח מדווחת) | s-h1: S6.3: גודל H1 — נקרא מה-raw לשער-המשנה (cfg.h1Size; במקור 50pt)",
       "legacyKeys": [
         "s-h1"
       ],
@@ -1484,7 +1487,7 @@
         "description": "רכיב כותרת ברמה 2 במסמך."
       },
       "description": "כותרת 2 — אופן: רכיב כותרת ברמה 2 במסמך.",
-      "history": "",
+      "history": "mode-h2: ",
       "legacyKeys": [
         "mode-h2"
       ],
@@ -1514,7 +1517,7 @@
         "description": "רכיב כותרת ברמה 2 במסמך."
       },
       "description": "כותרת 2 — גופן: רכיב כותרת ברמה 2 במסמך.",
-      "history": "",
+      "history": "f-h2: S4.6: גופן H2",
       "legacyKeys": [
         "f-h2"
       ],
@@ -1572,7 +1575,7 @@
         "description": "רכיב כותרת ברמה 2 במסמך."
       },
       "description": "כותרת 2 — גודל (pt): רכיב כותרת ברמה 2 במסמך.",
-      "history": "",
+      "history": "s-h2: S4.6: גודל H2",
       "legacyKeys": [
         "s-h2"
       ],
@@ -1607,7 +1610,7 @@
         "description": "רכיב כותרת ברמה 3 במסמך."
       },
       "description": "כותרת 3 — אופן: רכיב כותרת ברמה 3 במסמך.",
-      "history": "",
+      "history": "mode-h3: ",
       "legacyKeys": [
         "mode-h3"
       ],
@@ -1637,7 +1640,7 @@
         "description": "רכיב כותרת ברמה 3 במסמך."
       },
       "description": "כותרת 3 — גופן: רכיב כותרת ברמה 3 במסמך.",
-      "history": "",
+      "history": "f-h3: S4.6: גופן H3",
       "legacyKeys": [
         "f-h3"
       ],
@@ -1695,7 +1698,7 @@
         "description": "רכיב כותרת ברמה 3 במסמך."
       },
       "description": "כותרת 3 — גודל (pt): רכיב כותרת ברמה 3 במסמך.",
-      "history": "",
+      "history": "s-h3: S4.6: גודל H3",
       "legacyKeys": [
         "s-h3"
       ],
@@ -1730,7 +1733,7 @@
         "description": "רכיב כותרת ברמה 4 במסמך."
       },
       "description": "כותרת 4 — אופן: רכיב כותרת ברמה 4 במסמך.",
-      "history": "",
+      "history": "mode-h4: ",
       "legacyKeys": [
         "mode-h4"
       ],
@@ -1760,7 +1763,7 @@
         "description": "רכיב כותרת ברמה 4 במסמך."
       },
       "description": "כותרת 4 — גופן: רכיב כותרת ברמה 4 במסמך.",
-      "history": "",
+      "history": "f-h4: S4.6: גופן H4",
       "legacyKeys": [
         "f-h4"
       ],
@@ -1818,7 +1821,7 @@
         "description": "רכיב כותרת ברמה 4 במסמך."
       },
       "description": "כותרת 4 — גודל (pt): רכיב כותרת ברמה 4 במסמך.",
-      "history": "",
+      "history": "s-h4: S4.6: גודל H4",
       "legacyKeys": [
         "s-h4"
       ],
@@ -1853,7 +1856,7 @@
         "description": "רכיב כותרת ברמה 5 במסמך."
       },
       "description": "כותרת 5 — אופן: רכיב כותרת ברמה 5 במסמך.",
-      "history": "",
+      "history": "mode-h5: ",
       "legacyKeys": [
         "mode-h5"
       ],
@@ -1883,7 +1886,7 @@
         "description": "רכיב כותרת ברמה 5 במסמך."
       },
       "description": "כותרת 5 — גופן: רכיב כותרת ברמה 5 במסמך.",
-      "history": "",
+      "history": "f-h5: S4.6: גופן H5",
       "legacyKeys": [
         "f-h5"
       ],
@@ -1941,7 +1944,7 @@
         "description": "רכיב כותרת ברמה 5 במסמך."
       },
       "description": "כותרת 5 — גודל (pt): רכיב כותרת ברמה 5 במסמך.",
-      "history": "",
+      "history": "s-h5: S4.6: גודל H5",
       "legacyKeys": [
         "s-h5"
       ],
@@ -1976,7 +1979,7 @@
         "description": "רכיב כותרת ברמה 6 במסמך."
       },
       "description": "כותרת 6 — אופן: רכיב כותרת ברמה 6 במסמך.",
-      "history": "",
+      "history": "mode-h6: ",
       "legacyKeys": [
         "mode-h6"
       ],
@@ -2006,7 +2009,7 @@
         "description": "רכיב כותרת ברמה 6 במסמך."
       },
       "description": "כותרת 6 — גופן: רכיב כותרת ברמה 6 במסמך.",
-      "history": "",
+      "history": "f-h6: S4.6: גופן H6",
       "legacyKeys": [
         "f-h6"
       ],
@@ -2064,7 +2067,7 @@
         "description": "רכיב כותרת ברמה 6 במסמך."
       },
       "description": "כותרת 6 — גודל (pt): רכיב כותרת ברמה 6 במסמך.",
-      "history": "",
+      "history": "s-h6: S4.6: גודל H6",
       "legacyKeys": [
         "s-h6"
       ],
@@ -2099,7 +2102,7 @@
         "description": "רכיב כותרת ברמה 7 במסמך."
       },
       "description": "כותרת 7 — אופן: רכיב כותרת ברמה 7 במסמך.",
-      "history": "",
+      "history": "mode-h7: ",
       "legacyKeys": [
         "mode-h7"
       ],
@@ -2129,7 +2132,7 @@
         "description": "רכיב כותרת ברמה 7 במסמך."
       },
       "description": "כותרת 7 — גופן: רכיב כותרת ברמה 7 במסמך.",
-      "history": "",
+      "history": "f-h7: S4.6: גופן H7",
       "legacyKeys": [
         "f-h7"
       ],
@@ -2187,7 +2190,7 @@
         "description": "רכיב כותרת ברמה 7 במסמך."
       },
       "description": "כותרת 7 — גודל (pt): רכיב כותרת ברמה 7 במסמך.",
-      "history": "",
+      "history": "s-h7: S4.6: גודל H7 (6 במקור; חריגת טווח מדווחת)",
       "legacyKeys": [
         "s-h7"
       ],
@@ -2290,7 +2293,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד ימני — מקור ימין: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "hdr-r-type: S77: סוג סלוט ימין (recto) ⇒ מקור חי בנתיב המורשת",
       "legacyKeys": [
         "hdr-r-type"
       ],
@@ -2334,7 +2337,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד ימני — מקור מרכז: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "hdr-c-type: S77: סוג סלוט מרכז (recto) ⇒ מקור חי בנתיב המורשת",
       "legacyKeys": [
         "hdr-c-type"
       ],
@@ -2378,7 +2381,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד ימני — מקור שמאל: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "hdr-l-type: S77: סוג סלוט שמאל (recto) ⇒ מקור חי בנתיב המורשת",
       "legacyKeys": [
         "hdr-l-type"
       ],
@@ -2422,7 +2425,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד שמאלי — מקור ימין: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "hdr-verso-r-type: S77: סוג סלוט ימין (verso) ⇒ מקור חי בנתיב המורשת",
       "legacyKeys": [
         "hdr-verso-r-type"
       ],
@@ -2508,7 +2511,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד שמאלי — מקור שמאל: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "hdr-verso-l-type: S77: סוג סלוט שמאל (verso) ⇒ מקור חי בנתיב המורשת",
       "legacyKeys": [
         "hdr-verso-l-type"
       ],
@@ -2840,7 +2843,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד ימני — סלוט ימין — גופן: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "f-hdr-r: S4.6: גופן סלוט ימין בכותרת עליונה (recto)",
       "legacyKeys": [
         "f-hdr-r"
       ],
@@ -2898,7 +2901,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד ימני — סלוט ימין — גודל (pt): מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "s-hdr-r: S4.6: גודל סלוט ימין (recto)",
       "legacyKeys": [
         "s-hdr-r"
       ],
@@ -2928,7 +2931,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד ימני — סלוט ימין — טקסט מותאם: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "hdr-r-custom: S77: טקסט מותאם סלוט ימין (recto)",
       "legacyKeys": [
         "hdr-r-custom"
       ],
@@ -3018,7 +3021,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד ימני — סלוט מרכז — גופן: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "f-hdr-c: S4.6: גופן סלוט מרכז (recto)",
       "legacyKeys": [
         "f-hdr-c"
       ],
@@ -3076,7 +3079,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד ימני — סלוט מרכז — גודל (pt): מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "s-hdr-c: S4.6: גודל סלוט מרכז (recto)",
       "legacyKeys": [
         "s-hdr-c"
       ],
@@ -3106,7 +3109,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד ימני — סלוט מרכז — טקסט מותאם: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "hdr-c-custom: S77: טקסט מותאם סלוט מרכז (recto)",
       "legacyKeys": [
         "hdr-c-custom"
       ],
@@ -3196,7 +3199,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד ימני — סלוט שמאל — גופן: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "f-hdr-l: S4.6: גופן סלוט שמאל (recto)",
       "legacyKeys": [
         "f-hdr-l"
       ],
@@ -3254,7 +3257,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד ימני — סלוט שמאל — גודל (pt): מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "s-hdr-l: S4.6: גודל סלוט שמאל (recto)",
       "legacyKeys": [
         "s-hdr-l"
       ],
@@ -3284,7 +3287,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד ימני — סלוט שמאל — טקסט מותאם: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "hdr-l-custom: S77: טקסט מותאם סלוט שמאל (recto)",
       "legacyKeys": [
         "hdr-l-custom"
       ],
@@ -3374,7 +3377,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד שמאלי — סלוט ימין — גופן: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "f-hdr-verso-r: S4.6: גופן סלוט ימין (verso)",
       "legacyKeys": [
         "f-hdr-verso-r"
       ],
@@ -3432,7 +3435,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד שמאלי — סלוט ימין — גודל (pt): מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "s-hdr-verso-r: S4.6: גודל סלוט ימין (verso)",
       "legacyKeys": [
         "s-hdr-verso-r"
       ],
@@ -3462,7 +3465,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד שמאלי — סלוט ימין — טקסט מותאם: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "hdr-verso-r-custom: S77: טקסט מותאם סלוט ימין (verso)",
       "legacyKeys": [
         "hdr-verso-r-custom"
       ],
@@ -3552,7 +3555,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד שמאלי — סלוט מרכז — גופן: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "f-hdr-verso-c: S4.6: גופן סלוט מרכז (verso)",
       "legacyKeys": [
         "f-hdr-verso-c"
       ],
@@ -3610,7 +3613,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד שמאלי — סלוט מרכז — גודל (pt): מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "s-hdr-verso-c: S4.6: גודל סלוט מרכז (verso)",
       "legacyKeys": [
         "s-hdr-verso-c"
       ],
@@ -3640,7 +3643,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד שמאלי — סלוט מרכז — טקסט מותאם: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "hdr-verso-c-custom: S77: טקסט מותאם סלוט מרכז (verso)",
       "legacyKeys": [
         "hdr-verso-c-custom"
       ],
@@ -3730,7 +3733,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד שמאלי — סלוט שמאל — גופן: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "f-hdr-verso-l: S4.6: גופן סלוט שמאל (verso)",
       "legacyKeys": [
         "f-hdr-verso-l"
       ],
@@ -3788,7 +3791,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד שמאלי — סלוט שמאל — גודל (pt): מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "s-hdr-verso-l: S4.6: גודל סלוט שמאל (verso)",
       "legacyKeys": [
         "s-hdr-verso-l"
       ],
@@ -3818,7 +3821,7 @@
         "description": "מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי."
       },
       "description": "עמוד שמאלי — סלוט שמאל — טקסט מותאם: מקור תוכן, יישור, רוחב, גופן, גודל וצבע של סלוט עצמאי.",
-      "history": "",
+      "history": "hdr-verso-l-custom: S77: טקסט מותאם סלוט שמאל (verso)",
       "legacyKeys": [
         "hdr-verso-l-custom"
       ],
@@ -3913,7 +3916,7 @@
         "description": "מיקום, מספור, מדידה, פיצול וגופני ההערות."
       },
       "description": "סגנון סמן הערה: מיקום, מספור, מדידה, פיצול וגופני ההערות.",
-      "history": "",
+      "history": "note-numbering-style: ",
       "legacyKeys": [
         "note-numbering-style"
       ],
@@ -3948,7 +3951,7 @@
         "description": "מיקום, מספור, מדידה, פיצול וגופני ההערות."
       },
       "description": "מדיניות איפוס מונה הערות: S4.26 (דיווח משתמש 05.11): ברירת המחדל איפוס פר-פרק (section/siman) — לא פר-עמוד",
-      "history": "",
+      "history": "fn-reset-mode: ",
       "legacyKeys": [
         "fn-reset-mode"
       ],
@@ -3981,7 +3984,7 @@
         "description": "מיקום, מספור, מדידה, פיצול וגופני ההערות."
       },
       "description": "מספר טורי הערות שוליים: מיקום, מספור, מדידה, פיצול וגופני ההערות.",
-      "history": "",
+      "history": "fn-columns: ",
       "legacyKeys": [
         "fn-columns"
       ],
@@ -4018,7 +4021,7 @@
         "description": "מיקום, מספור, מדידה, פיצול וגופני ההערות."
       },
       "description": "קו הפרדה של סרגל הערות: מיקום, מספור, מדידה, פיצול וגופני ההערות.",
-      "history": "",
+      "history": "note-rule-style: star ⇒ star (enum זהה ב-RED)",
       "legacyKeys": [
         "note-rule-style"
       ],
@@ -4051,7 +4054,7 @@
         "description": "מיקום, מספור, מדידה, פיצול וגופני ההערות."
       },
       "description": "אופן פריסת הערות (בלוק/רציף): S4.26 (דיווח משתמש 05.11): ברירת המחדל זרימה רציפה — הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה; block=כל הערה בלוק משלה",
-      "history": "",
+      "history": "fn-layout-mode: ",
       "legacyKeys": [
         "fn-layout-mode"
       ],
@@ -4140,7 +4143,7 @@
         "description": "מיקום, מספור, מדידה, פיצול וגופני ההערות."
       },
       "description": "כותרת עמודי הערות: מיקום, מספור, מדידה, פיצול וגופני ההערות.",
-      "history": "",
+      "history": "fn-title-text: ",
       "legacyKeys": [
         "fn-title-text"
       ],
@@ -4201,7 +4204,7 @@
         "description": "מיקום, מספור, מדידה, פיצול וגופני ההערות."
       },
       "description": "גופן גוף הערת־שוליים: S74 (בעיה 5): ברירת המחדל של הרינדור בפועל של הגרסה הישנה — Assistant ExtraLight 8.5pt (נמדד בייחוס עמ׳ 31/37: כל שורות גוף ההערה; הסמן בלבד FRL 8pt). הגדרת f-note-body הישנה (FRL) לא חוברה לרינדור בפועל במקור",
-      "history": "",
+      "history": "f-note-body: S74: גוף ההערה — ברירת המחדל = הרינדור בפועל של המקור (Assistant ExtraLight, נמדד בייחוס)",
       "legacyKeys": [
         "f-note-body"
       ],
@@ -4375,7 +4378,7 @@
         "description": "אלמנות, יתומים, שורות קצרות, איזון ומתיחה."
       },
       "description": "מנע אלמנות בראש עמוד: טוגל נפרד לתחילת עמוד (Mapping #4)",
-      "history": "",
+      "history": "avoid-widows: כנ\"ל",
       "legacyKeys": [
         "avoid-widows"
       ],
@@ -4433,7 +4436,7 @@
         "description": "אלמנות, יתומים, שורות קצרות, איזון ומתיחה."
       },
       "description": "מנע יתומים בראש עמוד: אלמנות, יתומים, שורות קצרות, איזון ומתיחה.",
-      "history": "",
+      "history": "avoid-orphans: RED מפריד יתומים עליונים/תחתונים בנפרד",
       "legacyKeys": [
         "avoid-orphans"
       ],
@@ -4523,7 +4526,7 @@
         "description": "אלמנות, יתומים, שורות קצרות, איזון ומתיחה."
       },
       "description": "רוחב מזערי לשורת־שדון (%): אלמנות, יתומים, שורות קצרות, איזון ומתיחה.",
-      "history": "",
+      "history": "avoid-runt-word: בוליאני המקור ⇒ סף אחוז ב-RED (כבוי=0; דלוק=20%)",
       "legacyKeys": [
         "avoid-runt-word"
       ],
@@ -4641,7 +4644,7 @@
         "description": "אלמנות, יתומים, שורות קצרות, איזון ומתיחה."
       },
       "description": "איכות אוטומטית (AQ) מופעלת: AutoQuality מ‑Gold — שלוש שכבות יחד (REQ-BAL-06); נקרא בפועל מהpipeline (תיקון P1-1)",
-      "history": "",
+      "history": "aq-enabled: S6.3: מתג AutoQuality של המקור ⇒ מפתח הרישום (ברירת מחדל במקור true) | aq-word-spacing: S6.3: שכבת מרווחי-מילים (דלוקה במקור) — משורטטת למתג הכולל של ה-AQ",
       "legacyKeys": [
         "aq-enabled",
         "aq-word-spacing"
@@ -4672,7 +4675,7 @@
         "description": "אלמנות, יתומים, שורות קצרות, איזון ומתיחה."
       },
       "description": "AQ — ריווח מילים מזערי: אלמנות, יתומים, שורות קצרות, איזון ומתיחה.",
-      "history": "",
+      "history": "aq-word-spacing-min: S6.3: גבול תחתון (0.95 במקור וברישום כאחד)",
       "legacyKeys": [
         "aq-word-spacing-min"
       ],
@@ -4702,7 +4705,7 @@
         "description": "אלמנות, יתומים, שורות קצרות, איזון ומתיחה."
       },
       "description": "AQ — ריווח מילים מקסימלי: אלמנות, יתומים, שורות קצרות, איזון ומתיחה.",
-      "history": "",
+      "history": "aq-word-spacing-max: S6.3: גבול עליון (1.05)",
       "legacyKeys": [
         "aq-word-spacing-max"
       ],
@@ -4844,7 +4847,7 @@
         "description": "אלמנות, יתומים, שורות קצרות, איזון ומתיחה."
       },
       "description": "AQ — עומס משותף: אלמנות, יתומים, שורות קצרות, איזון ומתיחה.",
-      "history": "",
+      "history": "aq-shared-load: S6.3: עומס משותף בין השכבות (true במקור וברישום)",
       "legacyKeys": [
         "aq-shared-load"
       ],
@@ -4963,7 +4966,7 @@
         "description": "עיטורים סביב כותרות, סוף פרק ומפרידי חלקים."
       },
       "description": "היקף עיטורי H2: REQ-ORN-02: סימן בלבד / כותרת בלבד / שניהם / כלום. **S4.6 (ביקורת 3):** none נוסף — במקור IMUD h2-title-orn-mode=none היה מומר ל-both (היפוך הגדרת המשתמש); ornament-fit כבר תומך (scope-off)",
-      "history": "",
+      "history": "h2-title-orn-mode: S4.6 (ביקורת 3): none נשמר כ-none — בעבר הומר ל-both (היפוך הגדרת המקור); enum RED כעת כולל none. onlyIfAbsent: כשהקובץ מכיל גם את המפתח הישיר h2-orn-scope — הישיר גובר (קדימות מפורשת, לא סדר איטרציה) | h2-orn-scope: ",
       "legacyKeys": [
         "h2-title-orn-mode",
         "h2-orn-scope"
@@ -5001,7 +5004,7 @@
         "description": "עיטורים סביב כותרות, סוף פרק ומפרידי חלקים."
       },
       "description": "עיטור עליון לסימן H2: עיטור עליון לסימן (V4: מצבים עצמאיים). עיטורים מעוצבים מהמקור (302 עיצובים) — בפאנל \"ספריית העיצובים של המקור\"",
-      "history": "",
+      "history": "h2-ornament-set: ערכת עיטורים כללית ⇒ העיטור העליון; ערכות IMUD דרך imud-orn-* | h2-ornament-top-style:  | h2-title-ornament-top-style: עיטור כותרת-הסימן — מוזג לעיטור הסימן (RED מאחד)",
       "legacyKeys": [
         "h2-ornament-set",
         "h2-ornament-top-style",
@@ -5040,7 +5043,7 @@
         "description": "עיטורים סביב כותרות, סוף פרק ומפרידי חלקים."
       },
       "description": "עיטור תחתון לסימן H2: עיטור תחתון לסימן. עיטורים מעוצבים מהמקור — בפאנל \"ספריית העיצובים של המקור\"",
-      "history": "",
+      "history": "h2-ornament-bottom-style:  | h2-title-ornament-bottom-style: עיטור כותרת-הסימן התחתון — מוזג לעיטור הסימן ב-RED",
       "legacyKeys": [
         "h2-ornament-bottom-style",
         "h2-title-ornament-bottom-style"
@@ -5078,7 +5081,7 @@
         "description": "עיטורים סביב כותרות, סוף פרק ומפרידי חלקים."
       },
       "description": "עיטור צד לכותרת H2: עיטור צדדי לכותרת (V4)",
-      "history": "",
+      "history": "h2-title-ornament-r:  | h2-title-ornament-l: RED מציב עיטור צד אחד לשני הצדדים",
       "legacyKeys": [
         "h2-title-ornament-r",
         "h2-title-ornament-l"
@@ -5109,7 +5112,7 @@
         "description": "עיטורים סביב כותרות, סוף פרק ומפרידי חלקים."
       },
       "description": "התאמת עיטור H2 לטקסט: REQ-ORN-01: התאמת רוחב לטקסט במדידת JS — CSS fit-content נכשל (V3/V4); המידות נקבעות בהזמנת הפריסה (F-08)",
-      "history": "",
+      "history": "h2-orn-fit-text: ",
       "legacyKeys": [
         "h2-orn-fit-text"
       ],
@@ -5145,7 +5148,7 @@
         "description": "עיטורים סביב כותרות, סוף פרק ומפרידי חלקים."
       },
       "description": "עיטורי צד H3: REQ-ORN-01: עיטורי צד H3 — התאמת גובה לשורה",
-      "history": "",
+      "history": "h3-ornament-set: ערכת H3 ⇒ עיטור הצד של H3 | h3-ornament-r:  | h3-ornament-l: עיטור צד שמאל של H3 — RED מאחד לעיטור צד יחיד",
       "legacyKeys": [
         "h3-ornament-set",
         "h3-ornament-r",
@@ -5296,7 +5299,7 @@
         "description": "עיטורים סביב כותרות, סוף פרק ומפרידי חלקים."
       },
       "description": "מפרידי כותרות H3–H6: REQ-ORN-04: fits() נמדד בכל אתרי ההוספה; בלי עיטור בראש טור/עמוד ריק; rollback-aware (Orange)",
-      "history": "",
+      "history": "heading-divider-h3: ",
       "legacyKeys": [
         "heading-divider-h3"
       ],
@@ -5392,7 +5395,7 @@
         "description": "הצגת רמות, קיבוץ, מספור וסגנון רשומות."
       },
       "description": "תוכן־עניינים כללי מופעל: הצגת רמות, קיבוץ, מספור וסגנון רשומות.",
-      "history": "",
+      "history": "enable-general-toc: S77: מתג תוכן-עניינים כללי — חי בנתיב המורשת",
       "legacyKeys": [
         "enable-general-toc"
       ],
@@ -5422,7 +5425,7 @@
         "description": "הצגת רמות, קיבוץ, מספור וסגנון רשומות."
       },
       "description": "תוכן־עניינים מפורט מופעל: הצגת רמות, קיבוץ, מספור וסגנון רשומות.",
-      "history": "",
+      "history": "enable-detailed-toc: S77: מתג תוכן-עניינים מפורט — חי בנתיב המורשת",
       "legacyKeys": [
         "enable-detailed-toc"
       ],
@@ -5452,7 +5455,7 @@
         "description": "הצגת רמות, קיבוץ, מספור וסגנון רשומות."
       },
       "description": "מספור שורות תוכן כללי: שוחזר מ‑V1/V2 (REQ-HDR-03/HDR-05)",
-      "history": "",
+      "history": "general-toc-count-numbering: ",
       "legacyKeys": [
         "general-toc-count-numbering"
       ],
@@ -5482,7 +5485,7 @@
         "description": "הצגת רמות, קיבוץ, מספור וסגנון רשומות."
       },
       "description": "מספור שורות תוכן מפורט: S9: מספור שורות בתוכן־עניינים המפורט (Orange eb21383 — הושלם)",
-      "history": "",
+      "history": "detailed-toc-count-numbering: ",
       "legacyKeys": [
         "detailed-toc-count-numbering"
       ],
@@ -5512,7 +5515,7 @@
         "description": "הצגת רמות, קיבוץ, מספור וסגנון רשומות."
       },
       "description": "תצוגת גיליון בעמודי תוכן כלליים: S9: עמודי תוכן־עניינים כלליים מציגים גיליון כשהם נספרים (count-toc-pages=true)",
-      "history": "",
+      "history": "general-toc-show-numbering: ",
       "legacyKeys": [
         "general-toc-show-numbering"
       ],
@@ -5542,7 +5545,7 @@
         "description": "הצגת רמות, קיבוץ, מספור וסגנון רשומות."
       },
       "description": "תצוגת גיליון בעמודי תוכן מפורטים: S9: עמודי תוכן־עניינים מפורטים מציגים גיליון כשהם נספרים",
-      "history": "",
+      "history": "detailed-toc-show-numbering: ",
       "legacyKeys": [
         "detailed-toc-show-numbering"
       ],
@@ -6132,7 +6135,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער אחורי מופעל: PT-03: 4 מקטעים עצמאיים; כיבוי ראשי מבטל את כולם",
-      "history": "",
+      "history": "show-back-shaar: 03.11(ד): מתג שער אחורי — ברירת מחדל true כמקור",
       "legacyKeys": [
         "show-back-shaar"
       ],
@@ -6474,7 +6477,7 @@
         "description": "עיטורים סביב כותרות, סוף פרק ומפרידי חלקים."
       },
       "description": "מפריד מעוצב (IMUD): מפריד סעיפים מעוצב (323 עיצובים) — משמש מפרידי שער/כותרות במצב תמונה",
-      "history": "",
+      "history": "section-divider-style: מפרידי סעיפים מעוצבים — דרך ספריית IMUD (image) או heading-dividers-h3-h6; spear ⇒ עיצוב ספרייה",
       "legacyKeys": [
         "section-divider-style"
       ],
@@ -6504,7 +6507,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "כותרת הספר בשער (עקיפה): כותרת הספר בשער (עקיפת מטא-נתוני המסמך אם הוגדר)",
-      "history": "",
+      "history": "inp-book-title: S4.6: כותרת הספר — נצרכת בשער הראשי (dom-renderer)",
       "legacyKeys": [
         "inp-book-title"
       ],
@@ -6534,7 +6537,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "כותרת־משנה בשער: כותרת־משנה בשער",
-      "history": "",
+      "history": "inp-book-subtitle: S4.6: כותרת־משנה — נצרכת בשער הראשי",
       "legacyKeys": [
         "inp-book-subtitle"
       ],
@@ -6564,10 +6567,12 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "imud-book-back-copyright: זכויות יוצרים בשער האחורי (D-107; עקיפת מטא-נתוני המסמך אם הוגדר)",
-      "history": "",
-      "legacyKeys": [],
-      "importedValue": null,
-      "importEvidence": "",
+      "history": "inp-book-back-copyright: 9b.5: זכויות יוצרים בשער האחורי — נצרכת ב-buildShaarBlocks (D-107: ארבעת המקטעים)",
+      "legacyKeys": [
+        "inp-book-back-copyright"
+      ],
+      "importedValue": "inp-book-back-copyright = \"כל הזכויות הפקר\"",
+      "importEvidence": "ערך מקור גולמי מקובץ default_settings.json; ה־transform לא חושב מחדש.",
       "nonDefault": false,
       "consumers": "",
       "readBy": "",
@@ -6592,10 +6597,12 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "imud-book-back-publishing: פרטי הוצאה לאור בשער האחורי (D-107)",
-      "history": "",
-      "legacyKeys": [],
-      "importedValue": null,
-      "importEvidence": "",
+      "history": "inp-book-back-publishing: 9b.5: פרטי הוצאה לאור בשער האחורי (D-107)",
+      "legacyKeys": [
+        "inp-book-back-publishing"
+      ],
+      "importedValue": "inp-book-back-publishing = \"הוצאת זוכמיר בע\\\"מ\"",
+      "importEvidence": "ערך מקור גולמי מקובץ default_settings.json; ה־transform לא חושב מחדש.",
       "nonDefault": false,
       "consumers": "",
       "readBy": "",
@@ -6620,10 +6627,12 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "imud-book-back-contact: פרטי קשר בשער האחורי (D-107)",
-      "history": "",
-      "legacyKeys": [],
-      "importedValue": null,
-      "importEvidence": "",
+      "history": "inp-book-back-contact: 9b.5: פרטי קשר בשער האחורי (D-107)",
+      "legacyKeys": [
+        "inp-book-back-contact"
+      ],
+      "importedValue": "inp-book-back-contact = \"052-7666666\"",
+      "importEvidence": "ערך מקור גולמי מקובץ default_settings.json; ה־transform לא חושב מחדש.",
       "nonDefault": false,
       "consumers": "",
       "readBy": "",
@@ -6648,10 +6657,12 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "imud-book-back-extra: פרטים נוספים בשער האחורי (D-107)",
-      "history": "",
-      "legacyKeys": [],
-      "importedValue": null,
-      "importEvidence": "",
+      "history": "inp-book-back-extra: 9b.5: פרטים נוספים בשער האחורי (D-107)",
+      "legacyKeys": [
+        "inp-book-back-extra"
+      ],
+      "importedValue": "inp-book-back-extra = \"אין לסמוך על האמור להלכה\"",
+      "importEvidence": "ערך מקור גולמי מקובץ default_settings.json; ה־transform לא חושב מחדש.",
       "nonDefault": false,
       "consumers": "",
       "readBy": "",
@@ -6676,7 +6687,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער ראשי מופעל (כמקור): 03.11(ד): שער ראשי כברירת מחדל — כמקור (show-main-shaar=true). מתג שער-העיצוב/ערכת-הנושא מוסיף רקע מעוצב, לא מחליף את המתג",
-      "history": "",
+      "history": "show-main-shaar: 03.11(ד): מתג שער ראשי — ברירת המחדל במקור true (השער חלק ממבנה הספר, לא אופציה)",
       "legacyKeys": [
         "show-main-shaar"
       ],
@@ -6706,7 +6717,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער־משנה לכל חלק (כמקור): 03.11(ד): שער־משנה לכל פתיחת חלק — כמקור (show-sub-shaar=true); show-shaar-sub הישן נשמר כמתג נוסף (או)",
-      "history": "",
+      "history": "show-sub-shaar: 03.11(ד): מתג שער־משנה — ברירת מחדל true כמקור",
       "legacyKeys": [
         "show-sub-shaar"
       ],
@@ -6736,7 +6747,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער — גופן כותרת הספר: מקור: f-sh-title=\"'Lia Sgula', 'Bellefair', serif\" — Lia Sgula אינה זמינה; Bellefair המוטמע",
-      "history": "",
+      "history": "f-sh-title: 03.11(ד): גופן כותרת השער (מקור: Lia Sgula → Bellefair המוטמע)",
       "legacyKeys": [
         "f-sh-title"
       ],
@@ -6794,7 +6805,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער — גודל כותרת הספר (pt): מקור: s-sh-title=46",
-      "history": "",
+      "history": "s-sh-title: 03.11(ד): גודל כותרת השער (מקור: 46) | s-sh-title: S6.3: גם נקרא מה-raw (cfg.shTitle)",
       "legacyKeys": [
         "s-sh-title"
       ],
@@ -6824,7 +6835,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער — גופן כותרת־משנה: מקור: f-sh-sub=\"'Livorna', 'David Libre', serif\"",
-      "history": "",
+      "history": "f-sh-sub: 03.11(ד): גופן כותרת־משנה בשער (מקור: Livorna → David Libre)",
       "legacyKeys": [
         "f-sh-sub"
       ],
@@ -6882,7 +6893,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער — גודל כותרת־משנה (pt): מקור: s-sh-sub=21",
-      "history": "",
+      "history": "s-sh-sub: 03.11(ד): גודל כותרת־משנה (מקור: 21) | s-sh-sub: S6.3: גם נקרא מה-raw (cfg.shSub)",
       "legacyKeys": [
         "s-sh-sub"
       ],
@@ -6912,7 +6923,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער — גופן התיאור: מקור: f-sh-desc=\"'Livorna', 'Frank Ruhl Libre', serif\"",
-      "history": "",
+      "history": "f-sh-desc: 03.11(ד): גופן התיאור (מקור: Livorna → Frank Ruhl Libre)",
       "legacyKeys": [
         "f-sh-desc"
       ],
@@ -6970,7 +6981,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער — גודל התיאור (pt): מקור: s-sh-desc=12",
-      "history": "",
+      "history": "s-sh-desc: 03.11(ד): גודל התיאור (מקור: 12) | s-sh-desc: S6.3: גם נקרא מה-raw (cfg.shDesc)",
       "legacyKeys": [
         "s-sh-desc"
       ],
@@ -7000,7 +7011,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער — גופן פרטי מהדורא: מקור: f-sh-sec=\"'David Libre', serif\"",
-      "history": "",
+      "history": "f-sh-sec: 03.11(ד): גופן פרטי המהדורא (מקור: David Libre)",
       "legacyKeys": [
         "f-sh-sec"
       ],
@@ -7058,7 +7069,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער — גודל פרטי מהדורא (pt): מקור: s-sh-sec=11.5",
-      "history": "",
+      "history": "s-sh-sec: 03.11(ד): גודל פרטי המהדורא (מקור: 11.5) | s-sh-sec: S6.3: גם נקרא מה-raw (cfg.shSec)",
       "legacyKeys": [
         "s-sh-sec"
       ],
@@ -7088,7 +7099,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער — גופן שם המחבר: מקור: f-sh-author=\"'David Libre', serif\"",
-      "history": "",
+      "history": "f-sh-author: 03.11(ד): גופן שם המחבר (מקור: David Libre)",
       "legacyKeys": [
         "f-sh-author"
       ],
@@ -7146,7 +7157,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער — גודל שם המחבר (pt): מקור: s-sh-author=15",
-      "history": "",
+      "history": "s-sh-author: 03.11(ד): גודל שם המחבר (מקור: 15) | s-sh-author: S6.3: גם נקרא מה-raw (cfg.shAuthor)",
       "legacyKeys": [
         "s-sh-author"
       ],
@@ -7176,7 +7187,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער — גופן מקום ושנה: מקור: f-sh-year=\"'David Libre', serif\"",
-      "history": "",
+      "history": "f-sh-year: 03.11(ד): גופן השנה/בס״ד (מקור: David Libre)",
       "legacyKeys": [
         "f-sh-year"
       ],
@@ -7234,7 +7245,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שער — גודל מקום ושנה (pt): מקור: s-sh-year=12",
-      "history": "",
+      "history": "s-sh-year: 03.11(ד): גודל השנה (מקור: 12) | s-sh-year: S6.3: גם נקרא מה-raw (cfg.shYear)",
       "legacyKeys": [
         "s-sh-year"
       ],
@@ -7320,7 +7331,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "תיאור (שער — נושא מפורט): תיאור בשער הראשי (מקור: inp-book-desc ← «נושא מפורט»)",
-      "history": "",
+      "history": "inp-book-desc: 03.11(ד): תיאור הספר בשער (מקור: inp-book-desc ← «נושא מפורט»)",
       "legacyKeys": [
         "inp-book-desc"
       ],
@@ -7350,7 +7361,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "פרטי מהדורא (שער): פרטי מהדורא בשער הראשי (מקור: inp-book-sections ← «פרטי מהדורא»)",
-      "history": "",
+      "history": "inp-book-sections: 03.11(ד): פרטי מהדורא בשער (מקור: inp-book-sections ← «פרטי מהדורא»)",
       "legacyKeys": [
         "inp-book-sections"
       ],
@@ -7380,7 +7391,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "שם המחבר (שער): שם המחבר בשערים (מקור: inp-book-author ← «שם המחבר»)",
-      "history": "",
+      "history": "inp-book-author: 03.11(ד): שם המחבר בשערים (מקור: inp-book-author ← «שם המחבר»)",
       "legacyKeys": [
         "inp-book-author"
       ],
@@ -7410,7 +7421,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "מקום ושנת הוצאה (שער): מקום ושנת הוצאה בשערים (מקור: inp-book-year ← «מקום ושנת הוצאה»)",
-      "history": "",
+      "history": "inp-book-year: 03.11(ד): מקום ושנה בשערים (מקור: inp-book-year ← «מקום ושנת הוצאה»)",
       "legacyKeys": [
         "inp-book-year"
       ],
@@ -7440,7 +7451,7 @@
         "description": "שערים, טקסטי ספר, ערכות עיצוב ורקעים."
       },
       "description": "טקסט השער האחורי (שמירת זכויות): טקסט השער האחורי (מקור: inp-back-shaar-text; ברירת מחדל בזמן ריצה: «שמירת זכויות» מהמטא או ״כל הזכויות שמורות למחבר.״)",
-      "history": "",
+      "history": "inp-back-shaar-text: 03.11(ד): טקסט השער האחורי (שמירת זכויות)",
       "legacyKeys": [
         "inp-back-shaar-text"
       ],
@@ -7470,7 +7481,7 @@
         "description": "הגדרות רכיב."
       },
       "description": "קידומת הערת סיום (ריק = ביטול): שורה המתחילה בקידומת ⇒ הערת סיום (הקידומת אינה מופיעה בפלט). ריק = ביטול הזיהוי. הוראת כותרת עמודי ההערות — רק בצורת הרבים «הערות סיום - כותרת»",
-      "history": "",
+      "history": "en-line-prefix: ",
       "legacyKeys": [
         "en-line-prefix"
       ],
@@ -7500,7 +7511,7 @@
         "description": "מיקום, מספור, מדידה, פיצול וגופני ההערות."
       },
       "description": "תוחם פתיחת הערת שוליים: תוחם פתיחת הערת שוליים; ריק = ביטול",
-      "history": "",
+      "history": "fn-delim-open: ",
       "legacyKeys": [
         "fn-delim-open"
       ],
@@ -7530,7 +7541,7 @@
         "description": "מיקום, מספור, מדידה, פיצול וגופני ההערות."
       },
       "description": "תוחם סגירת הערת שוליים: תוחם סגירת הערת שוליים (בברירת המחדל נתמכת גם הצורה ]ם); ריק = ביטול",
-      "history": "",
+      "history": "fn-delim-close: ",
       "legacyKeys": [
         "fn-delim-close"
       ],
@@ -7808,7 +7819,1183 @@
       "kind": "mapped",
       "target": "body-font",
       "reason": "מחסנית CSS של המקור — נפתרת מול הקטלוג המוטמע כשהוא זמין (EXT-9: גוף המקור \"'Guttman Rashi', 'Frank Ruhl Libre'\" ⇒ Frank Ruhl Libre המוטמע); בלי קטלוג — המשפחה הראשונה (התנהגות היסטורית). בלי זה המדידה נפלה לטבלה בעוד התצוגה בגופן אמיתי — סחף live↔ייצוא מסוג EXT-13",
+      "issue": ""
+    },
+    {
+      "key": "size-body",
+      "kind": "mapped",
+      "target": "body-font-size-pt",
+      "reason": "pt (המקור 12; RED 14 — ההפרש מתועד כהחלטת RED)",
+      "issue": ""
+    },
+    {
+      "key": "line-height-body",
+      "kind": "mapped",
+      "target": "body-line-height",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "body-last-line-align",
+      "kind": "mapped",
+      "target": "body-last-line-align",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "drop-word-mode",
+      "kind": "mapped",
+      "target": "first-word-mode",
+      "reason": "window ⇒ drop (אותו מנגנון חלון)",
+      "issue": ""
+    },
+    {
+      "key": "drop-word-count",
+      "kind": "mapped",
+      "target": "first-word-length",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "drop-word-min-lines",
+      "kind": "mapped",
+      "target": "first-word-threshold-lines",
+      "reason": "המקור 2; RED 3 — הייבוא משחזר את המקור",
+      "issue": ""
+    },
+    {
+      "key": "font-first-word",
+      "kind": "mapped",
+      "target": "first-word-font",
+      "reason": "S4.5: מפתח חדש ב-RED (היה חסר)",
+      "issue": ""
+    },
+    {
+      "key": "size-first-word",
+      "kind": "mapped",
+      "target": "first-word-size-em",
+      "reason": "S4.5: מפתח חדש ב-RED (היה כפול 2 מוקשה)",
+      "issue": ""
+    },
+    {
+      "key": "auto-dh",
+      "kind": "mapped",
+      "target": "dh-auto-detect",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "font-dh",
+      "kind": "mapped",
+      "target": "dh-font",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h0",
+      "kind": "mapped",
+      "target": "heading-0-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h1",
+      "kind": "merged",
+      "target": "heading-1-mode",
+      "reason": "sub_shaar ⇒ new-page + show-shaar-sub=true (השער המשנה מובנה ב-S8)",
+      "issue": ""
+    },
+    {
+      "key": "mode-h2",
+      "kind": "mapped",
+      "target": "heading-2-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h3",
+      "kind": "mapped",
+      "target": "heading-3-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h4",
+      "kind": "mapped",
+      "target": "heading-4-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h5",
+      "kind": "mapped",
+      "target": "heading-5-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h6",
+      "kind": "mapped",
+      "target": "heading-6-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h7",
+      "kind": "mapped",
+      "target": "heading-7-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "odd-h0",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "פתיחת H0 בעמוד אי-זוגי — ensureOddPageStart של המקור, מיושם בהרכבת ה-legacy (עמוד ריק לפני פתיחת מקטע בגב) — S4.20",
       "issue": "EXT-15"
+    },
+    {
+      "key": "odd-h1",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "פתיחת H1 בעמוד אי-זוגי — כמו odd-h0 (החליף את המקרה הפרטי של שער-המשנה) — S4.20",
+      "issue": "EXT-15"
+    },
+    {
+      "key": "odd-h2",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "פתיחת H2 בעמוד אי-זוגי — ברירת המחדל של המקור כבויה — S4.20",
+      "issue": "EXT-15"
+    },
+    {
+      "key": "h2-auto-siman",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "מספור סימן אוטומטי (א-ב-ג) — מיושם ב-legacy-imud-flow (autoSimanH2) — S4.20/EXT-16",
+      "issue": ""
+    },
+    {
+      "key": "h2-reset-siman",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "איפוס מונה סימנים לכל פרק — מיושם ב-legacy-imud-flow (resetSimanOnH1) — S4.20/EXT-16",
+      "issue": ""
+    },
+    {
+      "key": "h2-top-distance",
+      "kind": "mapped",
+      "target": "h2-top-offset",
+      "reason": "22% מגובה תיבת התוכן (1040px ב-A4 של RED) ⇒ פיקסלים",
+      "issue": ""
+    },
+    {
+      "key": "en-line-prefix",
+      "kind": "mapped",
+      "target": "en-line-prefix",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "fn-delim-open",
+      "kind": "mapped",
+      "target": "fn-delim-open",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "fn-delim-close",
+      "kind": "mapped",
+      "target": "fn-delim-close",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "f-h0",
+      "kind": "mapped",
+      "target": "heading-0-font",
+      "reason": "S4.6: גופן כותרת H0 — קיים ברישום RED (heading-0-font)",
+      "issue": ""
+    },
+    {
+      "key": "f-h1",
+      "kind": "mapped",
+      "target": "heading-1-font",
+      "reason": "S4.6: גופן H1",
+      "issue": ""
+    },
+    {
+      "key": "f-h2",
+      "kind": "mapped",
+      "target": "heading-2-font",
+      "reason": "S4.6: גופן H2",
+      "issue": ""
+    },
+    {
+      "key": "f-h3",
+      "kind": "mapped",
+      "target": "heading-3-font",
+      "reason": "S4.6: גופן H3",
+      "issue": ""
+    },
+    {
+      "key": "f-h4",
+      "kind": "mapped",
+      "target": "heading-4-font",
+      "reason": "S4.6: גופן H4",
+      "issue": ""
+    },
+    {
+      "key": "f-h5",
+      "kind": "mapped",
+      "target": "heading-5-font",
+      "reason": "S4.6: גופן H5",
+      "issue": ""
+    },
+    {
+      "key": "f-h6",
+      "kind": "mapped",
+      "target": "heading-6-font",
+      "reason": "S4.6: גופן H6",
+      "issue": ""
+    },
+    {
+      "key": "f-h7",
+      "kind": "mapped",
+      "target": "heading-7-font",
+      "reason": "S4.6: גופן H7",
+      "issue": ""
+    },
+    {
+      "key": "s-h0",
+      "kind": "mapped",
+      "target": "heading-0-size-pt",
+      "reason": "S4.6: גודל H0 (26 ⇒ 26pt; חריגת טווח מדווחת במיזוג ולא מושמטת)",
+      "issue": ""
+    },
+    {
+      "key": "s-h1",
+      "kind": "mapped",
+      "target": "heading-1-size-pt",
+      "reason": "S4.6: גודל H1 (50 במקור — נשמר נאמן למקור; חריגת טווח מדווחת)",
+      "issue": ""
+    },
+    {
+      "key": "s-h2",
+      "kind": "mapped",
+      "target": "heading-2-size-pt",
+      "reason": "S4.6: גודל H2",
+      "issue": ""
+    },
+    {
+      "key": "s-h3",
+      "kind": "mapped",
+      "target": "heading-3-size-pt",
+      "reason": "S4.6: גודל H3",
+      "issue": ""
+    },
+    {
+      "key": "s-h4",
+      "kind": "mapped",
+      "target": "heading-4-size-pt",
+      "reason": "S4.6: גודל H4",
+      "issue": ""
+    },
+    {
+      "key": "s-h5",
+      "kind": "mapped",
+      "target": "heading-5-size-pt",
+      "reason": "S4.6: גודל H5",
+      "issue": ""
+    },
+    {
+      "key": "s-h6",
+      "kind": "mapped",
+      "target": "heading-6-size-pt",
+      "reason": "S4.6: גודל H6",
+      "issue": ""
+    },
+    {
+      "key": "s-h7",
+      "kind": "mapped",
+      "target": "heading-7-size-pt",
+      "reason": "S4.6: גודל H7 (6 במקור; חריגת טווח מדווחת)",
+      "issue": ""
+    },
+    {
+      "key": "f-note-body",
+      "kind": "mapped",
+      "target": "f-note-body-font",
+      "reason": "S74: גוף ההערה — ברירת המחדל = הרינדור בפועל של המקור (Assistant ExtraLight, נמדד בייחוס)",
+      "issue": ""
+    },
+    {
+      "key": "f-hdr-r",
+      "kind": "mapped",
+      "target": "header-recto-right-font",
+      "reason": "S4.6: גופן סלוט ימין בכותרת עליונה (recto)",
+      "issue": ""
+    },
+    {
+      "key": "f-hdr-c",
+      "kind": "mapped",
+      "target": "header-recto-center-font",
+      "reason": "S4.6: גופן סלוט מרכז (recto)",
+      "issue": ""
+    },
+    {
+      "key": "f-hdr-l",
+      "kind": "mapped",
+      "target": "header-recto-left-font",
+      "reason": "S4.6: גופן סלוט שמאל (recto)",
+      "issue": ""
+    },
+    {
+      "key": "s-hdr-r",
+      "kind": "mapped",
+      "target": "header-recto-right-size-pt",
+      "reason": "S4.6: גודל סלוט ימין (recto)",
+      "issue": ""
+    },
+    {
+      "key": "s-hdr-c",
+      "kind": "mapped",
+      "target": "header-recto-center-size-pt",
+      "reason": "S4.6: גודל סלוט מרכז (recto)",
+      "issue": ""
+    },
+    {
+      "key": "s-hdr-l",
+      "kind": "mapped",
+      "target": "header-recto-left-size-pt",
+      "reason": "S4.6: גודל סלוט שמאל (recto)",
+      "issue": ""
+    },
+    {
+      "key": "f-hdr-verso-r",
+      "kind": "mapped",
+      "target": "header-verso-right-font",
+      "reason": "S4.6: גופן סלוט ימין (verso)",
+      "issue": ""
+    },
+    {
+      "key": "f-hdr-verso-c",
+      "kind": "mapped",
+      "target": "header-verso-center-font",
+      "reason": "S4.6: גופן סלוט מרכז (verso)",
+      "issue": ""
+    },
+    {
+      "key": "f-hdr-verso-l",
+      "kind": "mapped",
+      "target": "header-verso-left-font",
+      "reason": "S4.6: גופן סלוט שמאל (verso)",
+      "issue": ""
+    },
+    {
+      "key": "s-hdr-verso-r",
+      "kind": "mapped",
+      "target": "header-verso-right-size-pt",
+      "reason": "S4.6: גודל סלוט ימין (verso)",
+      "issue": ""
+    },
+    {
+      "key": "s-hdr-verso-c",
+      "kind": "mapped",
+      "target": "header-verso-center-size-pt",
+      "reason": "S4.6: גודל סלוט מרכז (verso)",
+      "issue": ""
+    },
+    {
+      "key": "s-hdr-verso-l",
+      "kind": "mapped",
+      "target": "header-verso-left-size-pt",
+      "reason": "S4.6: גודל סלוט שמאל (verso)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-r-type",
+      "kind": "mapped",
+      "target": "header-recto-right-source",
+      "reason": "S77: סוג סלוט ימין (recto) ⇒ מקור חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "hdr-l-type",
+      "kind": "mapped",
+      "target": "header-recto-left-source",
+      "reason": "S77: סוג סלוט שמאל (recto) ⇒ מקור חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "hdr-c-type",
+      "kind": "mapped",
+      "target": "header-recto-center-source",
+      "reason": "S77: סוג סלוט מרכז (recto) ⇒ מקור חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "hdr-verso-r-type",
+      "kind": "mapped",
+      "target": "header-verso-right-source",
+      "reason": "S77: סוג סלוט ימין (verso) ⇒ מקור חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "hdr-verso-l-type",
+      "kind": "mapped",
+      "target": "header-verso-left-source",
+      "reason": "S77: סוג סלוט שמאל (verso) ⇒ מקור חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "hdr-r-custom",
+      "kind": "mapped",
+      "target": "header-recto-right-custom-text",
+      "reason": "S77: טקסט מותאם סלוט ימין (recto)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-c-custom",
+      "kind": "mapped",
+      "target": "header-recto-center-custom-text",
+      "reason": "S77: טקסט מותאם סלוט מרכז (recto)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-l-custom",
+      "kind": "mapped",
+      "target": "header-recto-left-custom-text",
+      "reason": "S77: טקסט מותאם סלוט שמאל (recto)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-verso-r-custom",
+      "kind": "mapped",
+      "target": "header-verso-right-custom-text",
+      "reason": "S77: טקסט מותאם סלוט ימין (verso)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-verso-c-custom",
+      "kind": "mapped",
+      "target": "header-verso-center-custom-text",
+      "reason": "S77: טקסט מותאם סלוט מרכז (verso)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-verso-l-custom",
+      "kind": "mapped",
+      "target": "header-verso-left-custom-text",
+      "reason": "S77: טקסט מותאם סלוט שמאל (verso)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-title",
+      "kind": "mapped",
+      "target": "imud-book-title",
+      "reason": "S4.6: כותרת הספר — נצרכת בשער הראשי (dom-renderer)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-subtitle",
+      "kind": "mapped",
+      "target": "imud-book-subtitle",
+      "reason": "S4.6: כותרת־משנה — נצרכת בשער הראשי",
+      "issue": ""
+    },
+    {
+      "key": "show-main-shaar",
+      "kind": "mapped",
+      "target": "shaar-main-enabled",
+      "reason": "03.11(ד): מתג שער ראשי — ברירת המחדל במקור true (השער חלק ממבנה הספר, לא אופציה)",
+      "issue": ""
+    },
+    {
+      "key": "show-sub-shaar",
+      "kind": "mapped",
+      "target": "shaar-sub-enabled",
+      "reason": "03.11(ד): מתג שער־משנה — ברירת מחדל true כמקור",
+      "issue": ""
+    },
+    {
+      "key": "show-back-shaar",
+      "kind": "mapped",
+      "target": "shaar-back-enabled",
+      "reason": "03.11(ד): מתג שער אחורי — ברירת מחדל true כמקור",
+      "issue": ""
+    },
+    {
+      "key": "f-sh-title",
+      "kind": "mapped",
+      "target": "shaar-title-font",
+      "reason": "03.11(ד): גופן כותרת השער (מקור: Lia Sgula → Bellefair המוטמע)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-title",
+      "kind": "mapped",
+      "target": "shaar-title-size-pt",
+      "reason": "03.11(ד): גודל כותרת השער (מקור: 46)",
+      "issue": ""
+    },
+    {
+      "key": "f-sh-sub",
+      "kind": "mapped",
+      "target": "shaar-subtitle-font",
+      "reason": "03.11(ד): גופן כותרת־משנה בשער (מקור: Livorna → David Libre)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-sub",
+      "kind": "mapped",
+      "target": "shaar-subtitle-size-pt",
+      "reason": "03.11(ד): גודל כותרת־משנה (מקור: 21)",
+      "issue": ""
+    },
+    {
+      "key": "f-sh-desc",
+      "kind": "mapped",
+      "target": "shaar-desc-font",
+      "reason": "03.11(ד): גופן התיאור (מקור: Livorna → Frank Ruhl Libre)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-desc",
+      "kind": "mapped",
+      "target": "shaar-desc-size-pt",
+      "reason": "03.11(ד): גודל התיאור (מקור: 12)",
+      "issue": ""
+    },
+    {
+      "key": "f-sh-sec",
+      "kind": "mapped",
+      "target": "shaar-sections-font",
+      "reason": "03.11(ד): גופן פרטי המהדורא (מקור: David Libre)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-sec",
+      "kind": "mapped",
+      "target": "shaar-sections-size-pt",
+      "reason": "03.11(ד): גודל פרטי המהדורא (מקור: 11.5)",
+      "issue": ""
+    },
+    {
+      "key": "f-sh-author",
+      "kind": "mapped",
+      "target": "shaar-author-font",
+      "reason": "03.11(ד): גופן שם המחבר (מקור: David Libre)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-author",
+      "kind": "mapped",
+      "target": "shaar-author-size-pt",
+      "reason": "03.11(ד): גודל שם המחבר (מקור: 15)",
+      "issue": ""
+    },
+    {
+      "key": "f-sh-year",
+      "kind": "mapped",
+      "target": "shaar-year-font",
+      "reason": "03.11(ד): גופן השנה/בס״ד (מקור: David Libre)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-year",
+      "kind": "mapped",
+      "target": "shaar-year-size-pt",
+      "reason": "03.11(ד): גודל השנה (מקור: 12)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-desc",
+      "kind": "mapped",
+      "target": "imud-book-desc",
+      "reason": "03.11(ד): תיאור הספר בשער (מקור: inp-book-desc ← «נושא מפורט»)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-sections",
+      "kind": "mapped",
+      "target": "imud-book-sections",
+      "reason": "03.11(ד): פרטי מהדורא בשער (מקור: inp-book-sections ← «פרטי מהדורא»)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-author",
+      "kind": "mapped",
+      "target": "imud-book-author",
+      "reason": "03.11(ד): שם המחבר בשערים (מקור: inp-book-author ← «שם המחבר»)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-year",
+      "kind": "mapped",
+      "target": "imud-book-year",
+      "reason": "03.11(ד): מקום ושנה בשערים (מקור: inp-book-year ← «מקום ושנת הוצאה»)",
+      "issue": ""
+    },
+    {
+      "key": "inp-back-shaar-text",
+      "kind": "mapped",
+      "target": "shaar-back-text",
+      "reason": "03.11(ד): טקסט השער האחורי (שמירת זכויות)",
+      "issue": ""
+    },
+    {
+      "key": "fn-bar-max-height-px",
+      "kind": "removed",
+      "target": "",
+      "reason": "מפתח RED-מקורי (תקרת מרזב ההערות) — נקרא מהמרשם עצמו; אינו מפתח מקור",
+      "issue": "S5.2-S2"
+    },
+    {
+      "key": "fn-columns",
+      "kind": "mapped",
+      "target": "footnote-columns",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "fn-layout-mode",
+      "kind": "mapped",
+      "target": "fn-layout-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "fn-reset-mode",
+      "kind": "mapped",
+      "target": "footnote-reset-policy",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "fn-title-text",
+      "kind": "mapped",
+      "target": "endnote-title-text",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "note-numbering-style",
+      "kind": "mapped",
+      "target": "footnote-marker-style",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "note-marker-type",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "סוג הסמן (super) — עניין העלאת-בסיס ברינדור, לא סגנון מספור; הסגנון מגיע מ-note-numbering-style",
+      "issue": ""
+    },
+    {
+      "key": "note-marker-size",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "גודל מילת-הסמן בגוף (ברירת מחדל 8) — מיושם בפרויקטור ה-legacy (S4.20/EXT-17)",
+      "issue": "EXT-17"
+    },
+    {
+      "key": "note-listing-num-size",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "גודל סמן הרישום ברשימת ההערות — מיושם בפרויקטור ה-legacy — S4.20/EXT-17",
+      "issue": ""
+    },
+    {
+      "key": "note-num-separator",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "המפריד אחרי מספר ההערה (ברירת מחדל .) — מיושם ב-markerWord — S4.20/EXT-17",
+      "issue": ""
+    },
+    {
+      "key": "note-rule-style",
+      "kind": "mapped",
+      "target": "footnote-separator-rule",
+      "reason": "star ⇒ star (enum זהה ב-RED)",
+      "issue": ""
+    },
+    {
+      "key": "note-header-orn-r",
+      "kind": "removed",
+      "target": "",
+      "reason": "עיטור בצד ימין של כותרת עמודי-ההערות — טרם ממומש ב-RED",
+      "issue": "EXT-4"
+    },
+    {
+      "key": "note-header-orn-l",
+      "kind": "removed",
+      "target": "",
+      "reason": "עיטור בצד שמאל של כותרת עמודי-ההערות — טרם ממומש ב-RED",
+      "issue": "EXT-4"
+    },
+    {
+      "key": "avoid-orphans",
+      "kind": "merged",
+      "target": "prevent-orphans-top",
+      "reason": "RED מפריד יתומים עליונים/תחתונים בנפרד",
+      "issue": ""
+    },
+    {
+      "key": "avoid-widows",
+      "kind": "merged",
+      "target": "prevent-widows-top",
+      "reason": "כנ\"ל",
+      "issue": ""
+    },
+    {
+      "key": "avoid-runt-word",
+      "kind": "mapped",
+      "target": "runt-min-width-pct",
+      "reason": "בוליאני המקור ⇒ סף אחוז ב-RED (כבוי=0; דלוק=20%)",
+      "issue": ""
+    },
+    {
+      "key": "h2-ornament-set",
+      "kind": "merged",
+      "target": "h2-orn-top",
+      "reason": "ערכת עיטורים כללית ⇒ העיטור העליון; ערכות IMUD דרך imud-orn-*",
+      "issue": ""
+    },
+    {
+      "key": "h2-ornament-top-style",
+      "kind": "mapped",
+      "target": "h2-orn-top",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h2-ornament-bottom-style",
+      "kind": "mapped",
+      "target": "h2-orn-bottom",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h2-title-orn-mode",
+      "kind": "mapped",
+      "target": "h2-orn-scope",
+      "reason": "S4.6 (ביקורת 3): none נשמר כ-none — בעבר הומר ל-both (היפוך הגדרת המקור); enum RED כעת כולל none. onlyIfAbsent: כשהקובץ מכיל גם את המפתח הישיר h2-orn-scope — הישיר גובר (קדימות מפורשת, לא סדר איטרציה)",
+      "issue": ""
+    },
+    {
+      "key": "h2-title-ornament-top-style",
+      "kind": "merged",
+      "target": "h2-orn-top",
+      "reason": "עיטור כותרת-הסימן — מוזג לעיטור הסימן (RED מאחד)",
+      "issue": ""
+    },
+    {
+      "key": "h2-title-ornament-bottom-style",
+      "kind": "merged",
+      "target": "h2-orn-bottom",
+      "reason": "עיטור כותרת-הסימן התחתון — מוזג לעיטור הסימן ב-RED",
+      "issue": ""
+    },
+    {
+      "key": "h2-title-ornament-r",
+      "kind": "mapped",
+      "target": "h2-orn-side",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h2-title-ornament-l",
+      "kind": "merged",
+      "target": "h2-orn-side",
+      "reason": "RED מציב עיטור צד אחד לשני הצדדים",
+      "issue": ""
+    },
+    {
+      "key": "h2-orn-fit-text",
+      "kind": "mapped",
+      "target": "h2-orn-fit-to-text",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h3-ornament-set",
+      "kind": "merged",
+      "target": "h3-side-orn",
+      "reason": "ערכת H3 ⇒ עיטור הצד של H3",
+      "issue": ""
+    },
+    {
+      "key": "h3-ornament-r",
+      "kind": "mapped",
+      "target": "h3-side-orn",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h3-ornament-l",
+      "kind": "merged",
+      "target": "h3-side-orn",
+      "reason": "עיטור צד שמאל של H3 — RED מאחד לעיטור צד יחיד",
+      "issue": ""
+    },
+    {
+      "key": "section-divider-style",
+      "kind": "merged",
+      "target": "imud-divider",
+      "reason": "מפרידי סעיפים מעוצבים — דרך ספריית IMUD (image) או heading-dividers-h3-h6; spear ⇒ עיצוב ספרייה",
+      "issue": ""
+    },
+    {
+      "key": "heading-divider-h3",
+      "kind": "mapped",
+      "target": "heading-dividers-h3-h6",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h2-orn-scope",
+      "kind": "mapped",
+      "target": "h2-orn-scope",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "col-divider-style",
+      "kind": "mapped",
+      "target": "column-divider-style",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "page-num-position",
+      "kind": "mapped",
+      "target": "page-num-position",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "page-num-format",
+      "kind": "mapped",
+      "target": "page-num-format",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "page-num-frame",
+      "kind": "mapped",
+      "target": "page-num-frame",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "page-num-start-idx",
+      "kind": "mapped",
+      "target": "page-num-start-idx",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "page-num-initial-value",
+      "kind": "mapped",
+      "target": "page-num-initial-value",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "main-shaar-count-numbering",
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "RED מונה עמודי שער גלובלית (count-shaar-pages); בקרה פר-סוג טרם נפרדה",
+      "issue": "EXT-18"
+    },
+    {
+      "key": "main-shaar-show-number",
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "הצגת מספר בשער ראשי — בקרה פר-סוג במעקב",
+      "issue": "EXT-18"
+    },
+    {
+      "key": "back-shaar-count-numbering",
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "מניית שער אחורי — RED מונה עמודי שער גלובלית",
+      "issue": "EXT-18"
+    },
+    {
+      "key": "back-shaar-show-number",
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "הצגת מספר בשער אחורי — בקרה פר-סוג במעקב",
+      "issue": "EXT-18"
+    },
+    {
+      "key": "sub-shaar-count-numbering",
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "מניית שער משנה — RED מונה עמודי שער גלובלית",
+      "issue": "EXT-18"
+    },
+    {
+      "key": "sub-shaar-show-number",
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "הצגת מספר בשער משנה — בקרה פר-סוג במעקב",
+      "issue": "EXT-18"
+    },
+    {
+      "key": "general-toc-count-numbering",
+      "kind": "mapped",
+      "target": "general-toc-count-numbering",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "general-toc-show-numbering",
+      "kind": "mapped",
+      "target": "general-toc-show-numbering",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "detailed-toc-count-numbering",
+      "kind": "mapped",
+      "target": "detailed-toc-count-numbering",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "detailed-toc-show-numbering",
+      "kind": "mapped",
+      "target": "detailed-toc-show-numbering",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "enable-general-toc",
+      "kind": "mapped",
+      "target": "toc-general-enabled",
+      "reason": "S77: מתג תוכן-עניינים כללי — חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "enable-detailed-toc",
+      "kind": "mapped",
+      "target": "toc-detail-enabled",
+      "reason": "S77: מתג תוכן-עניינים מפורט — חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "style-set-select",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "בורר סגנון כללי בפאנל הישן; ב-RED: תבניות/ערכות נושא",
+      "issue": ""
+    },
+    {
+      "key": "active-theme-select",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "ערכת נושא פעילה — ב-RED: theme-set-id / imud-shaar-*",
+      "issue": ""
+    },
+    {
+      "key": "aq-enabled",
+      "kind": "mapped",
+      "target": "aq-enabled",
+      "reason": "S6.3: מתג AutoQuality של המקור ⇒ מפתח הרישום (ברירת מחדל במקור true)",
+      "issue": ""
+    },
+    {
+      "key": "aq-word-spacing",
+      "kind": "mapped",
+      "target": "aq-enabled",
+      "reason": "S6.3: שכבת מרווחי-מילים (דלוקה במקור) — משורטטת למתג הכולל של ה-AQ",
+      "issue": ""
+    },
+    {
+      "key": "aq-word-spacing-min",
+      "kind": "mapped",
+      "target": "aq-word-spacing-min",
+      "reason": "S6.3: גבול תחתון (0.95 במקור וברישום כאחד)",
+      "issue": ""
+    },
+    {
+      "key": "aq-word-spacing-max",
+      "kind": "mapped",
+      "target": "aq-word-spacing-max",
+      "reason": "S6.3: גבול עליון (1.05)",
+      "issue": ""
+    },
+    {
+      "key": "aq-word-spacing-threshold",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "S6.3: סף הפעלת מרווחי-מילים במקור — מנגנון ה-AQ של RED מופעל מתמטית (מדידת הפרש); נשמר כנתון",
+      "issue": "S6.3-AQ"
+    },
+    {
+      "key": "aq-word-spacing-max-diff",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "S6.3: הפרש מקסימלי בין שורות במקור — ב-RED ה-clamp המרכזי aq-overshoot-clamp-px; נשמר כנתון",
+      "issue": "S6.3-AQ"
+    },
+    {
+      "key": "aq-para-spacing",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "S6.3: מתיחת מרווחי-פסקה במקור — נצרכת דרך ה-raw בפרופיל המורשת כשתמומש; נשמרת כנתון",
+      "issue": "S6.3-AQ"
+    },
+    {
+      "key": "aq-para-spacing-max",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "S6.3: תקרת מרווחי-פסקה — כנ\"ל",
+      "issue": "S6.3-AQ"
+    },
+    {
+      "key": "aq-line-height",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "S6.3: מתיחת גובה-שורה במקור — מנגנון EXT-20 של RED (aqStretch) פועל מההפרש הנמדד; נשמר כנתון",
+      "issue": "S6.3-AQ"
+    },
+    {
+      "key": "aq-line-height-max",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "S6.3: תקרת מתיחת שורה (3% במקור) — ב-RED נקלטת דרך aq-letter-spacing-max המרכזי; נשמר כנתון",
+      "issue": "S6.3-AQ"
+    },
+    {
+      "key": "aq-shared-load",
+      "kind": "mapped",
+      "target": "aq-shared-load",
+      "reason": "S6.3: עומס משותף בין השכבות (true במקור וברישום)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-back-copyright",
+      "kind": "mapped",
+      "target": "imud-book-back-copyright",
+      "reason": "9b.5: זכויות יוצרים בשער האחורי — נצרכת ב-buildShaarBlocks (D-107: ארבעת המקטעים)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-back-publishing",
+      "kind": "mapped",
+      "target": "imud-book-back-publishing",
+      "reason": "9b.5: פרטי הוצאה לאור בשער האחורי (D-107)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-back-contact",
+      "kind": "mapped",
+      "target": "imud-book-back-contact",
+      "reason": "9b.5: פרטי קשר בשער האחורי (D-107)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-back-extra",
+      "kind": "mapped",
+      "target": "imud-book-back-extra",
+      "reason": "9b.5: פרטים נוספים בשער האחורי (D-107)",
+      "issue": ""
+    },
+    {
+      "key": "s-note-body",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "S6.3: גודל גוף ההערה — נקרא מה-raw (readConfig ⇒ SZ.fnBody; ברירת המחדל של המקור 9)",
+      "issue": ""
+    },
+    {
+      "key": "s-h0",
+      "kind": "mapped",
+      "target": "heading-0-size-pt",
+      "reason": "S6.3: גודל H0 — גם נקרא מה-raw בפרופיל המורשת (SZ.h0Title; במקור 26pt)",
+      "issue": ""
+    },
+    {
+      "key": "s-h1",
+      "kind": "mapped",
+      "target": "heading-1-size-pt",
+      "reason": "S6.3: גודל H1 — נקרא מה-raw לשער-המשנה (cfg.h1Size; במקור 50pt)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-title",
+      "kind": "mapped",
+      "target": "shaar-title-size-pt",
+      "reason": "S6.3: גם נקרא מה-raw (cfg.shTitle)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-sub",
+      "kind": "mapped",
+      "target": "shaar-subtitle-size-pt",
+      "reason": "S6.3: גם נקרא מה-raw (cfg.shSub)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-desc",
+      "kind": "mapped",
+      "target": "shaar-desc-size-pt",
+      "reason": "S6.3: גם נקרא מה-raw (cfg.shDesc)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-sec",
+      "kind": "mapped",
+      "target": "shaar-sections-size-pt",
+      "reason": "S6.3: גם נקרא מה-raw (cfg.shSec)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-author",
+      "kind": "mapped",
+      "target": "shaar-author-size-pt",
+      "reason": "S6.3: גם נקרא מה-raw (cfg.shAuthor)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-year",
+      "kind": "mapped",
+      "target": "shaar-year-size-pt",
+      "reason": "S6.3: גם נקרא מה-raw (cfg.shYear)",
+      "issue": ""
+    },
+    {
+      "key": "f-note-title",
+      "kind": "mapped",
+      "target": "endnote-title-font",
+      "reason": "S6.3: גופן כותרת ההערות",
+      "issue": ""
+    },
+    {
+      "key": "f-h0-body",
+      "kind": "mapped",
+      "target": "heading-0-body-font",
+      "reason": "S6.3: גופן גוף ההקדמה (Frank Ruhl Libre במקור)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-title-split",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "פיצול שם הספר לחצאים בכותרת העליונה — מיושם תמידית ב-legacy (hdrR/hdrL) כמו בייחוס — S4.20/EXT-19",
+      "issue": ""
+    },
+    {
+      "key": "hdr-alternating",
+      "kind": "ui-state",
+      "target": "",
+      "reason": "החלפת החצאים בעמודים זוגיים-פיזיים — מיושם בהרכבת ה-legacy (S4.20/EXT-19)",
+      "issue": "EXT-19"
     }
   ],
   "familyRules": [
@@ -7901,17 +9088,17 @@
     {
       "key": "style-set-select",
       "value": "",
-      "kind": "unclassified",
+      "kind": "ui-state",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "reason": "בורר סגנון כללי בפאנל הישן; ב-RED: תבניות/ערכות נושא",
       "issue": ""
     },
     {
       "key": "active-theme-select",
       "value": "json_theme_40",
-      "kind": "unclassified",
+      "kind": "ui-state",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "reason": "ערכת נושא פעילה — ב-RED: theme-set-id / imud-shaar-*",
       "issue": ""
     },
     {
@@ -7941,25 +9128,25 @@
     {
       "key": "show-main-shaar",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "shaar-main-enabled",
+      "reason": "03.11(ד): מתג שער ראשי — ברירת המחדל במקור true (השער חלק ממבנה הספר, לא אופציה)",
       "issue": ""
     },
     {
       "key": "show-back-shaar",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "shaar-back-enabled",
+      "reason": "03.11(ד): מתג שער אחורי — ברירת מחדל true כמקור",
       "issue": ""
     },
     {
       "key": "show-sub-shaar",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "shaar-sub-enabled",
+      "reason": "03.11(ד): מתג שער־משנה — ברירת מחדל true כמקור",
       "issue": ""
     },
     {
@@ -7973,177 +9160,177 @@
     {
       "key": "inp-book-title",
       "value": "ספר מלכי המלוכה",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך",
+      "kind": "mapped",
+      "target": "imud-book-title",
+      "reason": "S4.6: כותרת הספר — נצרכת בשער הראשי (dom-renderer)",
       "issue": ""
     },
     {
       "key": "f-sh-title",
       "value": "'Lia Sgula', 'Bellefair', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "shaar-title-font",
+      "reason": "03.11(ד): גופן כותרת השער (מקור: Lia Sgula → Bellefair המוטמע)",
       "issue": ""
     },
     {
       "key": "s-sh-title",
       "value": "46",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "shaar-title-size-pt",
+      "reason": "03.11(ד): גודל כותרת השער (מקור: 46)",
       "issue": ""
     },
     {
       "key": "inp-book-subtitle",
       "value": "ביאורים וחידושים עמוקים על מסכתות הש\"ס",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך",
+      "kind": "mapped",
+      "target": "imud-book-subtitle",
+      "reason": "S4.6: כותרת־משנה — נצרכת בשער הראשי",
       "issue": ""
     },
     {
       "key": "f-sh-sub",
       "value": "'Livorna', 'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "shaar-subtitle-font",
+      "reason": "03.11(ד): גופן כותרת־משנה בשער (מקור: Livorna → David Libre)",
       "issue": ""
     },
     {
       "key": "s-sh-sub",
       "value": "21",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "shaar-subtitle-size-pt",
+      "reason": "03.11(ד): גודל כותרת־משנה (מקור: 21)",
       "issue": ""
     },
     {
       "key": "inp-book-desc",
       "value": "בירור שיטות הראשונים והאחרונים ובירורי הלכות למעשה",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך",
+      "kind": "mapped",
+      "target": "imud-book-desc",
+      "reason": "03.11(ד): תיאור הספר בשער (מקור: inp-book-desc ← «נושא מפורט»)",
       "issue": ""
     },
     {
       "key": "f-sh-desc",
       "value": "'Livorna', 'Frank Ruhl Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "shaar-desc-font",
+      "reason": "03.11(ד): גופן התיאור (מקור: Livorna → Frank Ruhl Libre)",
       "issue": ""
     },
     {
       "key": "s-sh-desc",
       "value": "12",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "shaar-desc-size-pt",
+      "reason": "03.11(ד): גודל התיאור (מקור: 12)",
       "issue": ""
     },
     {
       "key": "inp-book-sections",
       "value": "מהדורה שניה ומורחבת בסייעתא דשמיא",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך",
+      "kind": "mapped",
+      "target": "imud-book-sections",
+      "reason": "03.11(ד): פרטי מהדורא בשער (מקור: inp-book-sections ← «פרטי מהדורא»)",
       "issue": ""
     },
     {
       "key": "f-sh-sec",
       "value": "'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "shaar-sections-font",
+      "reason": "03.11(ד): גופן פרטי המהדורא (מקור: David Libre)",
       "issue": ""
     },
     {
       "key": "s-sh-sec",
       "value": "11.5",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "shaar-sections-size-pt",
+      "reason": "03.11(ד): גודל פרטי המהדורא (מקור: 11.5)",
       "issue": ""
     },
     {
       "key": "inp-book-author",
       "value": "הצעיר ידידיה בר אבא הלוי",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך",
+      "kind": "mapped",
+      "target": "imud-book-author",
+      "reason": "03.11(ד): שם המחבר בשערים (מקור: inp-book-author ← «שם המחבר»)",
       "issue": ""
     },
     {
       "key": "f-sh-author",
       "value": "'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "shaar-author-font",
+      "reason": "03.11(ד): גופן שם המחבר (מקור: David Libre)",
       "issue": ""
     },
     {
       "key": "s-sh-author",
       "value": "15",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "shaar-author-size-pt",
+      "reason": "03.11(ד): גודל שם המחבר (מקור: 15)",
       "issue": ""
     },
     {
       "key": "inp-book-year",
       "value": "ירושלים עיה\"ק תובב\"א שנת ה'תשפ\"ו",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך",
+      "kind": "mapped",
+      "target": "imud-book-year",
+      "reason": "03.11(ד): מקום ושנה בשערים (מקור: inp-book-year ← «מקום ושנת הוצאה»)",
       "issue": ""
     },
     {
       "key": "f-sh-year",
       "value": "'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "shaar-year-font",
+      "reason": "03.11(ד): גופן השנה/בס״ד (מקור: David Libre)",
       "issue": ""
     },
     {
       "key": "s-sh-year",
       "value": "12",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "shaar-year-size-pt",
+      "reason": "03.11(ד): גודל השנה (מקור: 12)",
       "issue": ""
     },
     {
       "key": "inp-book-back-copyright",
       "value": "כל הזכויות הפקר",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך",
+      "kind": "mapped",
+      "target": "imud-book-back-copyright",
+      "reason": "9b.5: זכויות יוצרים בשער האחורי — נצרכת ב-buildShaarBlocks (D-107: ארבעת המקטעים)",
       "issue": ""
     },
     {
       "key": "inp-book-back-publishing",
       "value": "הוצאת זוכמיר בע\"מ",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך",
+      "kind": "mapped",
+      "target": "imud-book-back-publishing",
+      "reason": "9b.5: פרטי הוצאה לאור בשער האחורי (D-107)",
       "issue": ""
     },
     {
       "key": "inp-book-back-contact",
       "value": "052-7666666",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך",
+      "kind": "mapped",
+      "target": "imud-book-back-contact",
+      "reason": "9b.5: פרטי קשר בשער האחורי (D-107)",
       "issue": ""
     },
     {
       "key": "inp-book-back-extra",
       "value": "אין לסמוך על האמור להלכה",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך",
+      "kind": "mapped",
+      "target": "imud-book-back-extra",
+      "reason": "9b.5: פרטים נוספים בשער האחורי (D-107)",
       "issue": ""
     },
     {
@@ -8373,17 +9560,17 @@
     {
       "key": "h2-ornament-set",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "merged",
+      "target": "h2-orn-top",
+      "reason": "ערכת עיטורים כללית ⇒ העיטור העליון; ערכות IMUD דרך imud-orn-*",
       "issue": ""
     },
     {
       "key": "h2-ornament-top-style",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "h2-orn-top",
+      "reason": "",
       "issue": ""
     },
     {
@@ -8405,9 +9592,9 @@
     {
       "key": "h2-ornament-bottom-style",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "h2-orn-bottom",
+      "reason": "",
       "issue": ""
     },
     {
@@ -8429,41 +9616,41 @@
     {
       "key": "h2-title-orn-mode",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "h2-orn-scope",
+      "reason": "S4.6 (ביקורת 3): none נשמר כ-none — בעבר הומר ל-both (היפוך הגדרת המקור); enum RED כעת כולל none. onlyIfAbsent: כשהקובץ מכיל גם את המפתח הישיר h2-orn-scope — הישיר גובר (קדימות מפורשת, לא סדר איטרציה)",
       "issue": ""
     },
     {
       "key": "h2-title-ornament-top-style",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "merged",
+      "target": "h2-orn-top",
+      "reason": "עיטור כותרת-הסימן — מוזג לעיטור הסימן (RED מאחד)",
       "issue": ""
     },
     {
       "key": "h2-title-ornament-bottom-style",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "merged",
+      "target": "h2-orn-bottom",
+      "reason": "עיטור כותרת-הסימן התחתון — מוזג לעיטור הסימן ב-RED",
       "issue": ""
     },
     {
       "key": "h2-title-ornament-r",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "h2-orn-side",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "h2-title-ornament-l",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "merged",
+      "target": "h2-orn-side",
+      "reason": "RED מציב עיטור צד אחד לשני הצדדים",
       "issue": ""
     },
     {
@@ -8485,33 +9672,33 @@
     {
       "key": "h2-orn-fit-text",
       "value": false,
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "h2-orn-fit-to-text",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "h3-ornament-set",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "merged",
+      "target": "h3-side-orn",
+      "reason": "ערכת H3 ⇒ עיטור הצד של H3",
       "issue": ""
     },
     {
       "key": "h3-ornament-r",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "h3-side-orn",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "h3-ornament-l",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "merged",
+      "target": "h3-side-orn",
+      "reason": "עיטור צד שמאל של H3 — RED מאחד לעיטור צד יחיד",
       "issue": ""
     },
     {
@@ -8533,9 +9720,9 @@
     {
       "key": "section-divider-style",
       "value": "spear",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "merged",
+      "target": "imud-divider",
+      "reason": "מפרידי סעיפים מעוצבים — דרך ספריית IMUD (image) או heading-dividers-h3-h6; spear ⇒ עיצוב ספרייה",
       "issue": ""
     },
     {
@@ -8565,18 +9752,18 @@
     {
       "key": "note-header-orn-r",
       "value": "none",
-      "kind": "unclassified",
+      "kind": "removed",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
-      "issue": ""
+      "reason": "עיטור בצד ימין של כותרת עמודי-ההערות — טרם ממומש ב-RED",
+      "issue": "EXT-4"
     },
     {
       "key": "note-header-orn-l",
       "value": "none",
-      "kind": "unclassified",
+      "kind": "removed",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
-      "issue": ""
+      "reason": "עיטור בצד שמאל של כותרת עמודי-ההערות — טרם ממומש ב-RED",
+      "issue": "EXT-4"
     },
     {
       "key": "dim-note-side-w",
@@ -8600,54 +9787,54 @@
       "kind": "mapped",
       "target": "body-font",
       "reason": "מחסנית CSS של המקור — נפתרת מול הקטלוג המוטמע כשהוא זמין (EXT-9: גוף המקור \"'Guttman Rashi', 'Frank Ruhl Libre'\" ⇒ Frank Ruhl Libre המוטמע); בלי קטלוג — המשפחה הראשונה (התנהגות היסטורית). בלי זה המדידה נפלה לטבלה בעוד התצוגה בגופן אמיתי — סחף live↔ייצוא מסוג EXT-13",
-      "issue": "EXT-15"
+      "issue": ""
     },
     {
       "key": "size-body",
       "value": "12",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "body-font-size-pt",
+      "reason": "pt (המקור 12; RED 14 — ההפרש מתועד כהחלטת RED)",
       "issue": ""
     },
     {
       "key": "line-height-body",
       "value": "1.34",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "body-line-height",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "body-last-line-align",
       "value": "center",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "body-last-line-align",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "drop-word-mode",
       "value": "window",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "first-word-mode",
+      "reason": "window ⇒ drop (אותו מנגנון חלון)",
       "issue": ""
     },
     {
       "key": "font-first-word",
       "value": "'FrankReal', 'Frank Ruhl Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "first-word-font",
+      "reason": "S4.5: מפתח חדש ב-RED (היה חסר)",
       "issue": ""
     },
     {
       "key": "size-first-word",
       "value": "1.5",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "first-word-size-em",
+      "reason": "S4.5: מפתח חדש ב-RED (היה כפול 2 מוקשה)",
       "issue": ""
     },
     {
@@ -8677,25 +9864,25 @@
     {
       "key": "drop-word-count",
       "value": "1",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "first-word-length",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "drop-word-min-lines",
       "value": "2",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "first-word-threshold-lines",
+      "reason": "המקור 2; RED 3 — הייבוא משחזר את המקור",
       "issue": ""
     },
     {
       "key": "auto-dh",
       "value": false,
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "dh-auto-detect",
+      "reason": "",
       "issue": ""
     },
     {
@@ -8709,41 +9896,41 @@
     {
       "key": "mode-h0",
       "value": "new_page_1col",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "heading-0-mode",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "f-h0",
       "value": "'AlphaBlack', 'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-0-font",
+      "reason": "S4.6: גופן כותרת H0 — קיים ברישום RED (heading-0-font)",
       "issue": ""
     },
     {
       "key": "s-h0",
       "value": "26",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-0-size-pt",
+      "reason": "S4.6: גודל H0 (26 ⇒ 26pt; חריגת טווח מדווחת במיזוג ולא מושמטת)",
       "issue": ""
     },
     {
       "key": "odd-h0",
       "value": true,
-      "kind": "unclassified",
+      "kind": "ui-state",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
-      "issue": ""
+      "reason": "פתיחת H0 בעמוד אי-זוגי — ensureOddPageStart של המקור, מיושם בהרכבת ה-legacy (עמוד ריק לפני פתיחת מקטע בגב) — S4.20",
+      "issue": "EXT-15"
     },
     {
       "key": "f-h0-body",
       "value": "'Frank Ruhl Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-0-body-font",
+      "reason": "S6.3: גופן גוף ההקדמה (Frank Ruhl Libre במקור)",
       "issue": ""
     },
     {
@@ -8757,81 +9944,81 @@
     {
       "key": "mode-h1",
       "value": "sub_shaar",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "merged",
+      "target": "heading-1-mode",
+      "reason": "sub_shaar ⇒ new-page + show-shaar-sub=true (השער המשנה מובנה ב-S8)",
       "issue": ""
     },
     {
       "key": "f-h1",
       "value": "'Lia Sgula', 'Bellefair', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-1-font",
+      "reason": "S4.6: גופן H1",
       "issue": ""
     },
     {
       "key": "s-h1",
       "value": "50",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-1-size-pt",
+      "reason": "S4.6: גודל H1 (50 במקור — נשמר נאמן למקור; חריגת טווח מדווחת)",
       "issue": ""
     },
     {
       "key": "odd-h1",
       "value": true,
-      "kind": "unclassified",
+      "kind": "ui-state",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
-      "issue": ""
+      "reason": "פתיחת H1 בעמוד אי-זוגי — כמו odd-h0 (החליף את המקרה הפרטי של שער-המשנה) — S4.20",
+      "issue": "EXT-15"
     },
     {
       "key": "mode-h2",
       "value": "new_page_1col",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "heading-2-mode",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "f-h2",
       "value": "'AlphaBlack', 'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-2-font",
+      "reason": "S4.6: גופן H2",
       "issue": ""
     },
     {
       "key": "s-h2",
       "value": "17",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-2-size-pt",
+      "reason": "S4.6: גודל H2",
       "issue": ""
     },
     {
       "key": "odd-h2",
       "value": false,
-      "kind": "unclassified",
+      "kind": "ui-state",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
-      "issue": ""
+      "reason": "פתיחת H2 בעמוד אי-זוגי — ברירת המחדל של המקור כבויה — S4.20",
+      "issue": "EXT-15"
     },
     {
       "key": "h2-auto-siman",
       "value": true,
-      "kind": "unclassified",
+      "kind": "ui-state",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "reason": "מספור סימן אוטומטי (א-ב-ג) — מיושם ב-legacy-imud-flow (autoSimanH2) — S4.20/EXT-16",
       "issue": ""
     },
     {
       "key": "h2-reset-siman",
       "value": true,
-      "kind": "unclassified",
+      "kind": "ui-state",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "reason": "איפוס מונה סימנים לכל פרק — מיושם ב-legacy-imud-flow (resetSimanOnH1) — S4.20/EXT-16",
       "issue": ""
     },
     {
@@ -8853,185 +10040,185 @@
     {
       "key": "mode-h3",
       "value": "span_1col",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "heading-3-mode",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "f-h3",
       "value": "'Alpha', 'Noto Serif Hebrew', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-3-font",
+      "reason": "S4.6: גופן H3",
       "issue": ""
     },
     {
       "key": "s-h3",
       "value": "13.5",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-3-size-pt",
+      "reason": "S4.6: גודל H3",
       "issue": ""
     },
     {
       "key": "mode-h4",
       "value": "inline_2col",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "heading-4-mode",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "f-h4",
       "value": "'Alpha', 'Frank Ruhl Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-4-font",
+      "reason": "S4.6: גופן H4",
       "issue": ""
     },
     {
       "key": "s-h4",
       "value": "12.5",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-4-size-pt",
+      "reason": "S4.6: גודל H4",
       "issue": ""
     },
     {
       "key": "mode-h5",
       "value": "inline_2col",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "heading-5-mode",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "f-h5",
       "value": "'AlphaLight', 'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-5-font",
+      "reason": "S4.6: גופן H5",
       "issue": ""
     },
     {
       "key": "s-h5",
       "value": "11.5",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-5-size-pt",
+      "reason": "S4.6: גודל H5",
       "issue": ""
     },
     {
       "key": "mode-h6",
       "value": "inline_2col",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "heading-6-mode",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "f-h6",
       "value": "'Noto Serif Hebrew', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-6-font",
+      "reason": "S4.6: גופן H6",
       "issue": ""
     },
     {
       "key": "s-h6",
       "value": "10.5",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-6-size-pt",
+      "reason": "S4.6: גודל H6",
       "issue": ""
     },
     {
       "key": "mode-h7",
       "value": "side_note",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "heading-7-mode",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "f-h7",
       "value": "'Hadassah Friedlaender', 'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-7-font",
+      "reason": "S4.6: גופן H7",
       "issue": ""
     },
     {
       "key": "s-h7",
       "value": "6",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "heading-7-size-pt",
+      "reason": "S4.6: גודל H7 (6 במקור; חריגת טווח מדווחת)",
       "issue": ""
     },
     {
       "key": "fn-delim-open",
       "value": "[",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "fn-delim-open",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "fn-delim-close",
       "value": "]",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "fn-delim-close",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "en-line-prefix",
       "value": "הערת סיום -",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "en-line-prefix",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "fn-columns",
       "value": "1",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "footnote-columns",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "fn-layout-mode",
       "value": "continuous",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "fn-layout-mode",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "fn-reset-mode",
       "value": "siman",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "footnote-reset-policy",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "fn-title-text",
       "value": "",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "endnote-title-text",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "f-note-title",
       "value": "'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "endnote-title-font",
+      "reason": "S6.3: גופן כותרת ההערות",
       "issue": ""
     },
     {
@@ -9045,9 +10232,9 @@
     {
       "key": "f-note-body",
       "value": "'Frank Ruhl Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "f-note-body-font",
+      "reason": "S74: גוף ההערה — ברירת המחדל = הרינדור בפועל של המקור (Assistant ExtraLight, נמדד בייחוס)",
       "issue": ""
     },
     {
@@ -9055,79 +10242,79 @@
       "value": "9",
       "kind": "ui-state",
       "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "reason": "S6.3: גודל גוף ההערה — נקרא מה-raw (readConfig ⇒ SZ.fnBody; ברירת המחדל של המקור 9)",
       "issue": ""
     },
     {
       "key": "note-numbering-style",
       "value": "gematria",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "footnote-marker-style",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "note-marker-type",
       "value": "super",
-      "kind": "unclassified",
+      "kind": "ui-state",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "reason": "סוג הסמן (super) — עניין העלאת-בסיס ברינדור, לא סגנון מספור; הסגנון מגיע מ-note-numbering-style",
       "issue": ""
     },
     {
       "key": "note-marker-size",
       "value": "8",
-      "kind": "unclassified",
+      "kind": "ui-state",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
-      "issue": ""
+      "reason": "גודל מילת-הסמן בגוף (ברירת מחדל 8) — מיושם בפרויקטור ה-legacy (S4.20/EXT-17)",
+      "issue": "EXT-17"
     },
     {
       "key": "note-listing-num-size",
       "value": "8",
-      "kind": "unclassified",
+      "kind": "ui-state",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "reason": "גודל סמן הרישום ברשימת ההערות — מיושם בפרויקטור ה-legacy — S4.20/EXT-17",
       "issue": ""
     },
     {
       "key": "note-num-separator",
       "value": ".",
-      "kind": "unclassified",
+      "kind": "ui-state",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "reason": "המפריד אחרי מספר ההערה (ברירת מחדל .) — מיושם ב-markerWord — S4.20/EXT-17",
       "issue": ""
     },
     {
       "key": "note-rule-style",
       "value": "star",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "footnote-separator-rule",
+      "reason": "star ⇒ star (enum זהה ב-RED)",
       "issue": ""
     },
     {
       "key": "avoid-orphans",
       "value": true,
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "merged",
+      "target": "prevent-orphans-top",
+      "reason": "RED מפריד יתומים עליונים/תחתונים בנפרד",
       "issue": ""
     },
     {
       "key": "avoid-widows",
       "value": true,
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "merged",
+      "target": "prevent-widows-top",
+      "reason": "כנ\"ל",
       "issue": ""
     },
     {
       "key": "avoid-runt-word",
       "value": true,
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "runt-min-width-pct",
+      "reason": "בוליאני המקור ⇒ סף אחוז ב-RED (כבוי=0; דלוק=20%)",
       "issue": ""
     },
     {
@@ -9141,9 +10328,9 @@
     {
       "key": "hdr-verso-r-type",
       "value": "book_title_split_r",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
+      "kind": "mapped",
+      "target": "header-verso-right-source",
+      "reason": "S77: סוג סלוט ימין (verso) ⇒ מקור חי בנתיב המורשת",
       "issue": ""
     },
     {
@@ -9157,25 +10344,25 @@
     {
       "key": "f-hdr-verso-r",
       "value": "'Livorna', 'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "header-verso-right-font",
+      "reason": "S4.6: גופן סלוט ימין (verso)",
       "issue": ""
     },
     {
       "key": "s-hdr-verso-r",
       "value": "15",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "header-verso-right-size-pt",
+      "reason": "S4.6: גודל סלוט ימין (verso)",
       "issue": ""
     },
     {
       "key": "hdr-verso-r-custom",
       "value": "",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
+      "kind": "mapped",
+      "target": "header-verso-right-custom-text",
+      "reason": "S77: טקסט מותאם סלוט ימין (verso)",
       "issue": ""
     },
     {
@@ -9197,33 +10384,33 @@
     {
       "key": "f-hdr-verso-c",
       "value": "'Livorna', 'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "header-verso-center-font",
+      "reason": "S4.6: גופן סלוט מרכז (verso)",
       "issue": ""
     },
     {
       "key": "s-hdr-verso-c",
       "value": "11",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "header-verso-center-size-pt",
+      "reason": "S4.6: גודל סלוט מרכז (verso)",
       "issue": ""
     },
     {
       "key": "hdr-verso-c-custom",
       "value": "",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
+      "kind": "mapped",
+      "target": "header-verso-center-custom-text",
+      "reason": "S77: טקסט מותאם סלוט מרכז (verso)",
       "issue": ""
     },
     {
       "key": "hdr-verso-l-type",
       "value": "book_title_split_l",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
+      "kind": "mapped",
+      "target": "header-verso-left-source",
+      "reason": "S77: סוג סלוט שמאל (verso) ⇒ מקור חי בנתיב המורשת",
       "issue": ""
     },
     {
@@ -9237,25 +10424,25 @@
     {
       "key": "f-hdr-verso-l",
       "value": "'Livorna', 'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "header-verso-left-font",
+      "reason": "S4.6: גופן סלוט שמאל (verso)",
       "issue": ""
     },
     {
       "key": "s-hdr-verso-l",
       "value": "15",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "header-verso-left-size-pt",
+      "reason": "S4.6: גודל סלוט שמאל (verso)",
       "issue": ""
     },
     {
       "key": "hdr-verso-l-custom",
       "value": "",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
+      "kind": "mapped",
+      "target": "header-verso-left-custom-text",
+      "reason": "S77: טקסט מותאם סלוט שמאל (verso)",
       "issue": ""
     },
     {
@@ -9263,15 +10450,15 @@
       "value": false,
       "kind": "ui-state",
       "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
-      "issue": ""
+      "reason": "החלפת החצאים בעמודים זוגיים-פיזיים — מיושם בהרכבת ה-legacy (S4.20/EXT-19)",
+      "issue": "EXT-19"
     },
     {
       "key": "hdr-title-split",
       "value": false,
       "kind": "ui-state",
       "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
+      "reason": "פיצול שם הספר לחצאים בכותרת העליונה — מיושם תמידית ב-legacy (hdrR/hdrL) כמו בייחוס — S4.20/EXT-19",
       "issue": ""
     },
     {
@@ -9309,9 +10496,9 @@
     {
       "key": "hdr-r-type",
       "value": "book_title_split_r",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
+      "kind": "mapped",
+      "target": "header-recto-right-source",
+      "reason": "S77: סוג סלוט ימין (recto) ⇒ מקור חי בנתיב המורשת",
       "issue": ""
     },
     {
@@ -9325,33 +10512,33 @@
     {
       "key": "f-hdr-r",
       "value": "'Livorna', 'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "header-recto-right-font",
+      "reason": "S4.6: גופן סלוט ימין בכותרת עליונה (recto)",
       "issue": ""
     },
     {
       "key": "s-hdr-r",
       "value": "15",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "header-recto-right-size-pt",
+      "reason": "S4.6: גודל סלוט ימין (recto)",
       "issue": ""
     },
     {
       "key": "hdr-r-custom",
       "value": "",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
+      "kind": "mapped",
+      "target": "header-recto-right-custom-text",
+      "reason": "S77: טקסט מותאם סלוט ימין (recto)",
       "issue": ""
     },
     {
       "key": "hdr-c-type",
       "value": "h2_without_siman",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
+      "kind": "mapped",
+      "target": "header-recto-center-source",
+      "reason": "S77: סוג סלוט מרכז (recto) ⇒ מקור חי בנתיב המורשת",
       "issue": ""
     },
     {
@@ -9365,25 +10552,25 @@
     {
       "key": "f-hdr-c",
       "value": "'Livorna', 'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "header-recto-center-font",
+      "reason": "S4.6: גופן סלוט מרכז (recto)",
       "issue": ""
     },
     {
       "key": "s-hdr-c",
       "value": "11",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "header-recto-center-size-pt",
+      "reason": "S4.6: גודל סלוט מרכז (recto)",
       "issue": ""
     },
     {
       "key": "hdr-c-custom",
       "value": "",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
+      "kind": "mapped",
+      "target": "header-recto-center-custom-text",
+      "reason": "S77: טקסט מותאם סלוט מרכז (recto)",
       "issue": ""
     },
     {
@@ -9397,9 +10584,9 @@
     {
       "key": "hdr-l-type",
       "value": "book_title_split_l",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
+      "kind": "mapped",
+      "target": "header-recto-left-source",
+      "reason": "S77: סוג סלוט שמאל (recto) ⇒ מקור חי בנתיב המורשת",
       "issue": ""
     },
     {
@@ -9413,33 +10600,33 @@
     {
       "key": "f-hdr-l",
       "value": "'Livorna', 'David Libre', serif",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "header-recto-left-font",
+      "reason": "S4.6: גופן סלוט שמאל (recto)",
       "issue": ""
     },
     {
       "key": "s-hdr-l",
       "value": "15",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17",
+      "kind": "mapped",
+      "target": "header-recto-left-size-pt",
+      "reason": "S4.6: גודל סלוט שמאל (recto)",
       "issue": ""
     },
     {
       "key": "hdr-l-custom",
       "value": "",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source",
+      "kind": "mapped",
+      "target": "header-recto-left-custom-text",
+      "reason": "S77: טקסט מותאם סלוט שמאל (recto)",
       "issue": ""
     },
     {
       "key": "enable-general-toc",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "toc-general-enabled",
+      "reason": "S77: מתג תוכן-עניינים כללי — חי בנתיב המורשת",
       "issue": ""
     },
     {
@@ -9557,9 +10744,9 @@
     {
       "key": "enable-detailed-toc",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "toc-detail-enabled",
+      "reason": "S77: מתג תוכן-עניינים מפורט — חי בנתיב המורשת",
       "issue": ""
     },
     {
@@ -9733,153 +10920,153 @@
     {
       "key": "h2-top-distance",
       "value": "22%",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "h2-top-offset",
+      "reason": "22% מגובה תיבת התוכן (1040px ב-A4 של RED) ⇒ פיקסלים",
       "issue": ""
     },
     {
       "key": "col-divider-style",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "column-divider-style",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "page-num-position",
       "value": "bottom_center",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "הגדרות עמוד בפאנל הישן",
+      "kind": "mapped",
+      "target": "page-num-position",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "page-num-format",
       "value": "gematria",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "הגדרות עמוד בפאנל הישן",
+      "kind": "mapped",
+      "target": "page-num-format",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "page-num-frame",
       "value": "none",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "הגדרות עמוד בפאנל הישן",
+      "kind": "mapped",
+      "target": "page-num-frame",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "page-num-start-idx",
       "value": "1",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "הגדרות עמוד בפאנל הישן",
+      "kind": "mapped",
+      "target": "page-num-start-idx",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "page-num-initial-value",
       "value": "1",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "הגדרות עמוד בפאנל הישן",
+      "kind": "mapped",
+      "target": "page-num-initial-value",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "main-shaar-count-numbering",
       "value": false,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
-      "issue": ""
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "RED מונה עמודי שער גלובלית (count-shaar-pages); בקרה פר-סוג טרם נפרדה",
+      "issue": "EXT-18"
     },
     {
       "key": "main-shaar-show-number",
       "value": false,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
-      "issue": ""
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "הצגת מספר בשער ראשי — בקרה פר-סוג במעקב",
+      "issue": "EXT-18"
     },
     {
       "key": "back-shaar-count-numbering",
       "value": false,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
-      "issue": ""
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "מניית שער אחורי — RED מונה עמודי שער גלובלית",
+      "issue": "EXT-18"
     },
     {
       "key": "back-shaar-show-number",
       "value": false,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
-      "issue": ""
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "הצגת מספר בשער אחורי — בקרה פר-סוג במעקב",
+      "issue": "EXT-18"
     },
     {
       "key": "sub-shaar-count-numbering",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
-      "issue": ""
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "מניית שער משנה — RED מונה עמודי שער גלובלית",
+      "issue": "EXT-18"
     },
     {
       "key": "sub-shaar-show-number",
       "value": false,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
-      "issue": ""
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "הצגת מספר בשער משנה — בקרה פר-סוג במעקב",
+      "issue": "EXT-18"
     },
     {
       "key": "general-toc-count-numbering",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "general-toc-count-numbering",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "general-toc-show-numbering",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "general-toc-show-numbering",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "detailed-toc-count-numbering",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "detailed-toc-count-numbering",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "detailed-toc-show-numbering",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי UI של האפליקציה הישנה",
+      "kind": "mapped",
+      "target": "detailed-toc-show-numbering",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "h2-orn-scope",
       "value": "both",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "h2-orn-scope",
+      "reason": "",
       "issue": ""
     },
     {
       "key": "heading-divider-h3",
       "value": "none",
-      "kind": "unclassified",
-      "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "kind": "mapped",
+      "target": "heading-dividers-h3-h6",
+      "reason": "",
       "issue": ""
     },
     {
@@ -9887,7 +11074,7 @@
       "value": "none",
       "kind": "unclassified",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "reason": "לא נמצא disposition מפורש או כלל משפחתי; נדרש בירור.",
       "issue": ""
     },
     {
@@ -9895,7 +11082,7 @@
       "value": "none",
       "kind": "unclassified",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "reason": "לא נמצא disposition מפורש או כלל משפחתי; נדרש בירור.",
       "issue": ""
     },
     {
@@ -9903,7 +11090,7 @@
       "value": "none",
       "kind": "unclassified",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
+      "reason": "לא נמצא disposition מפורש או כלל משפחתי; נדרש בירור.",
       "issue": ""
     },
     {
@@ -9925,33 +11112,33 @@
     {
       "key": "aq-enabled",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*",
+      "kind": "mapped",
+      "target": "aq-enabled",
+      "reason": "S6.3: מתג AutoQuality של המקור ⇒ מפתח הרישום (ברירת מחדל במקור true)",
       "issue": ""
     },
     {
       "key": "aq-word-spacing",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*",
+      "kind": "mapped",
+      "target": "aq-enabled",
+      "reason": "S6.3: שכבת מרווחי-מילים (דלוקה במקור) — משורטטת למתג הכולל של ה-AQ",
       "issue": ""
     },
     {
       "key": "aq-word-spacing-min",
       "value": "0.95",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*",
+      "kind": "mapped",
+      "target": "aq-word-spacing-min",
+      "reason": "S6.3: גבול תחתון (0.95 במקור וברישום כאחד)",
       "issue": ""
     },
     {
       "key": "aq-word-spacing-max",
       "value": "1.05",
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*",
+      "kind": "mapped",
+      "target": "aq-word-spacing-max",
+      "reason": "S6.3: גבול עליון (1.05)",
       "issue": ""
     },
     {
@@ -9959,64 +11146,64 @@
       "value": "2",
       "kind": "ui-state",
       "target": "",
-      "reason": "מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*",
-      "issue": ""
+      "reason": "S6.3: סף הפעלת מרווחי-מילים במקור — מנגנון ה-AQ של RED מופעל מתמטית (מדידת הפרש); נשמר כנתון",
+      "issue": "S6.3-AQ"
     },
     {
       "key": "aq-word-spacing-max-diff",
       "value": "20",
       "kind": "ui-state",
       "target": "",
-      "reason": "מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*",
-      "issue": ""
+      "reason": "S6.3: הפרש מקסימלי בין שורות במקור — ב-RED ה-clamp המרכזי aq-overshoot-clamp-px; נשמר כנתון",
+      "issue": "S6.3-AQ"
     },
     {
       "key": "aq-para-spacing",
       "value": true,
       "kind": "ui-state",
       "target": "",
-      "reason": "מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*",
-      "issue": ""
+      "reason": "S6.3: מתיחת מרווחי-פסקה במקור — נצרכת דרך ה-raw בפרופיל המורשת כשתמומש; נשמרת כנתון",
+      "issue": "S6.3-AQ"
     },
     {
       "key": "aq-para-spacing-max",
       "value": "9",
       "kind": "ui-state",
       "target": "",
-      "reason": "מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*",
-      "issue": ""
+      "reason": "S6.3: תקרת מרווחי-פסקה — כנ\"ל",
+      "issue": "S6.3-AQ"
     },
     {
       "key": "aq-line-height",
       "value": true,
       "kind": "ui-state",
       "target": "",
-      "reason": "מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*",
-      "issue": ""
+      "reason": "S6.3: מתיחת גובה-שורה במקור — מנגנון EXT-20 של RED (aqStretch) פועל מההפרש הנמדד; נשמר כנתון",
+      "issue": "S6.3-AQ"
     },
     {
       "key": "aq-line-height-max",
       "value": "3",
       "kind": "ui-state",
       "target": "",
-      "reason": "מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*",
-      "issue": ""
+      "reason": "S6.3: תקרת מתיחת שורה (3% במקור) — ב-RED נקלטת דרך aq-letter-spacing-max המרכזי; נשמר כנתון",
+      "issue": "S6.3-AQ"
     },
     {
       "key": "aq-shared-load",
       "value": true,
-      "kind": "ui-state",
-      "target": "",
-      "reason": "מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*",
+      "kind": "mapped",
+      "target": "aq-shared-load",
+      "reason": "S6.3: עומס משותף בין השכבות (true במקור וברישום)",
       "issue": ""
     },
     {
       "key": "fn-bar-max-height-px",
       "value": "0",
-      "kind": "unclassified",
+      "kind": "removed",
       "target": "",
-      "reason": "לא נמצא disposition או כלל משפחתי; נדרש בירור.",
-      "issue": ""
+      "reason": "מפתח RED-מקורי (תקרת מרזב ההערות) — נקרא מהמרשם עצמו; אינו מפתח מקור",
+      "issue": "S5.2-S2"
     }
   ],
   "legacyMappedNames": [
@@ -10025,7 +11212,1022 @@
       "kind": "mapped",
       "target": "body-font",
       "reason": "מחסנית CSS של המקור — נפתרת מול הקטלוג המוטמע כשהוא זמין (EXT-9: גוף המקור \"'Guttman Rashi', 'Frank Ruhl Libre'\" ⇒ Frank Ruhl Libre המוטמע); בלי קטלוג — המשפחה הראשונה (התנהגות היסטורית). בלי זה המדידה נפלה לטבלה בעוד התצוגה בגופן אמיתי — סחף live↔ייצוא מסוג EXT-13",
-      "issue": "EXT-15"
+      "issue": ""
+    },
+    {
+      "key": "size-body",
+      "kind": "mapped",
+      "target": "body-font-size-pt",
+      "reason": "pt (המקור 12; RED 14 — ההפרש מתועד כהחלטת RED)",
+      "issue": ""
+    },
+    {
+      "key": "line-height-body",
+      "kind": "mapped",
+      "target": "body-line-height",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "body-last-line-align",
+      "kind": "mapped",
+      "target": "body-last-line-align",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "drop-word-mode",
+      "kind": "mapped",
+      "target": "first-word-mode",
+      "reason": "window ⇒ drop (אותו מנגנון חלון)",
+      "issue": ""
+    },
+    {
+      "key": "drop-word-count",
+      "kind": "mapped",
+      "target": "first-word-length",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "drop-word-min-lines",
+      "kind": "mapped",
+      "target": "first-word-threshold-lines",
+      "reason": "המקור 2; RED 3 — הייבוא משחזר את המקור",
+      "issue": ""
+    },
+    {
+      "key": "font-first-word",
+      "kind": "mapped",
+      "target": "first-word-font",
+      "reason": "S4.5: מפתח חדש ב-RED (היה חסר)",
+      "issue": ""
+    },
+    {
+      "key": "size-first-word",
+      "kind": "mapped",
+      "target": "first-word-size-em",
+      "reason": "S4.5: מפתח חדש ב-RED (היה כפול 2 מוקשה)",
+      "issue": ""
+    },
+    {
+      "key": "auto-dh",
+      "kind": "mapped",
+      "target": "dh-auto-detect",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "font-dh",
+      "kind": "mapped",
+      "target": "dh-font",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h0",
+      "kind": "mapped",
+      "target": "heading-0-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h1",
+      "kind": "merged",
+      "target": "heading-1-mode",
+      "reason": "sub_shaar ⇒ new-page + show-shaar-sub=true (השער המשנה מובנה ב-S8)",
+      "issue": ""
+    },
+    {
+      "key": "mode-h2",
+      "kind": "mapped",
+      "target": "heading-2-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h3",
+      "kind": "mapped",
+      "target": "heading-3-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h4",
+      "kind": "mapped",
+      "target": "heading-4-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h5",
+      "kind": "mapped",
+      "target": "heading-5-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h6",
+      "kind": "mapped",
+      "target": "heading-6-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "mode-h7",
+      "kind": "mapped",
+      "target": "heading-7-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h2-top-distance",
+      "kind": "mapped",
+      "target": "h2-top-offset",
+      "reason": "22% מגובה תיבת התוכן (1040px ב-A4 של RED) ⇒ פיקסלים",
+      "issue": ""
+    },
+    {
+      "key": "en-line-prefix",
+      "kind": "mapped",
+      "target": "en-line-prefix",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "fn-delim-open",
+      "kind": "mapped",
+      "target": "fn-delim-open",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "fn-delim-close",
+      "kind": "mapped",
+      "target": "fn-delim-close",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "f-h0",
+      "kind": "mapped",
+      "target": "heading-0-font",
+      "reason": "S4.6: גופן כותרת H0 — קיים ברישום RED (heading-0-font)",
+      "issue": ""
+    },
+    {
+      "key": "f-h1",
+      "kind": "mapped",
+      "target": "heading-1-font",
+      "reason": "S4.6: גופן H1",
+      "issue": ""
+    },
+    {
+      "key": "f-h2",
+      "kind": "mapped",
+      "target": "heading-2-font",
+      "reason": "S4.6: גופן H2",
+      "issue": ""
+    },
+    {
+      "key": "f-h3",
+      "kind": "mapped",
+      "target": "heading-3-font",
+      "reason": "S4.6: גופן H3",
+      "issue": ""
+    },
+    {
+      "key": "f-h4",
+      "kind": "mapped",
+      "target": "heading-4-font",
+      "reason": "S4.6: גופן H4",
+      "issue": ""
+    },
+    {
+      "key": "f-h5",
+      "kind": "mapped",
+      "target": "heading-5-font",
+      "reason": "S4.6: גופן H5",
+      "issue": ""
+    },
+    {
+      "key": "f-h6",
+      "kind": "mapped",
+      "target": "heading-6-font",
+      "reason": "S4.6: גופן H6",
+      "issue": ""
+    },
+    {
+      "key": "f-h7",
+      "kind": "mapped",
+      "target": "heading-7-font",
+      "reason": "S4.6: גופן H7",
+      "issue": ""
+    },
+    {
+      "key": "s-h0",
+      "kind": "mapped",
+      "target": "heading-0-size-pt",
+      "reason": "S4.6: גודל H0 (26 ⇒ 26pt; חריגת טווח מדווחת במיזוג ולא מושמטת)",
+      "issue": ""
+    },
+    {
+      "key": "s-h1",
+      "kind": "mapped",
+      "target": "heading-1-size-pt",
+      "reason": "S4.6: גודל H1 (50 במקור — נשמר נאמן למקור; חריגת טווח מדווחת)",
+      "issue": ""
+    },
+    {
+      "key": "s-h2",
+      "kind": "mapped",
+      "target": "heading-2-size-pt",
+      "reason": "S4.6: גודל H2",
+      "issue": ""
+    },
+    {
+      "key": "s-h3",
+      "kind": "mapped",
+      "target": "heading-3-size-pt",
+      "reason": "S4.6: גודל H3",
+      "issue": ""
+    },
+    {
+      "key": "s-h4",
+      "kind": "mapped",
+      "target": "heading-4-size-pt",
+      "reason": "S4.6: גודל H4",
+      "issue": ""
+    },
+    {
+      "key": "s-h5",
+      "kind": "mapped",
+      "target": "heading-5-size-pt",
+      "reason": "S4.6: גודל H5",
+      "issue": ""
+    },
+    {
+      "key": "s-h6",
+      "kind": "mapped",
+      "target": "heading-6-size-pt",
+      "reason": "S4.6: גודל H6",
+      "issue": ""
+    },
+    {
+      "key": "s-h7",
+      "kind": "mapped",
+      "target": "heading-7-size-pt",
+      "reason": "S4.6: גודל H7 (6 במקור; חריגת טווח מדווחת)",
+      "issue": ""
+    },
+    {
+      "key": "f-note-body",
+      "kind": "mapped",
+      "target": "f-note-body-font",
+      "reason": "S74: גוף ההערה — ברירת המחדל = הרינדור בפועל של המקור (Assistant ExtraLight, נמדד בייחוס)",
+      "issue": ""
+    },
+    {
+      "key": "f-hdr-r",
+      "kind": "mapped",
+      "target": "header-recto-right-font",
+      "reason": "S4.6: גופן סלוט ימין בכותרת עליונה (recto)",
+      "issue": ""
+    },
+    {
+      "key": "f-hdr-c",
+      "kind": "mapped",
+      "target": "header-recto-center-font",
+      "reason": "S4.6: גופן סלוט מרכז (recto)",
+      "issue": ""
+    },
+    {
+      "key": "f-hdr-l",
+      "kind": "mapped",
+      "target": "header-recto-left-font",
+      "reason": "S4.6: גופן סלוט שמאל (recto)",
+      "issue": ""
+    },
+    {
+      "key": "s-hdr-r",
+      "kind": "mapped",
+      "target": "header-recto-right-size-pt",
+      "reason": "S4.6: גודל סלוט ימין (recto)",
+      "issue": ""
+    },
+    {
+      "key": "s-hdr-c",
+      "kind": "mapped",
+      "target": "header-recto-center-size-pt",
+      "reason": "S4.6: גודל סלוט מרכז (recto)",
+      "issue": ""
+    },
+    {
+      "key": "s-hdr-l",
+      "kind": "mapped",
+      "target": "header-recto-left-size-pt",
+      "reason": "S4.6: גודל סלוט שמאל (recto)",
+      "issue": ""
+    },
+    {
+      "key": "f-hdr-verso-r",
+      "kind": "mapped",
+      "target": "header-verso-right-font",
+      "reason": "S4.6: גופן סלוט ימין (verso)",
+      "issue": ""
+    },
+    {
+      "key": "f-hdr-verso-c",
+      "kind": "mapped",
+      "target": "header-verso-center-font",
+      "reason": "S4.6: גופן סלוט מרכז (verso)",
+      "issue": ""
+    },
+    {
+      "key": "f-hdr-verso-l",
+      "kind": "mapped",
+      "target": "header-verso-left-font",
+      "reason": "S4.6: גופן סלוט שמאל (verso)",
+      "issue": ""
+    },
+    {
+      "key": "s-hdr-verso-r",
+      "kind": "mapped",
+      "target": "header-verso-right-size-pt",
+      "reason": "S4.6: גודל סלוט ימין (verso)",
+      "issue": ""
+    },
+    {
+      "key": "s-hdr-verso-c",
+      "kind": "mapped",
+      "target": "header-verso-center-size-pt",
+      "reason": "S4.6: גודל סלוט מרכז (verso)",
+      "issue": ""
+    },
+    {
+      "key": "s-hdr-verso-l",
+      "kind": "mapped",
+      "target": "header-verso-left-size-pt",
+      "reason": "S4.6: גודל סלוט שמאל (verso)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-r-type",
+      "kind": "mapped",
+      "target": "header-recto-right-source",
+      "reason": "S77: סוג סלוט ימין (recto) ⇒ מקור חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "hdr-l-type",
+      "kind": "mapped",
+      "target": "header-recto-left-source",
+      "reason": "S77: סוג סלוט שמאל (recto) ⇒ מקור חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "hdr-c-type",
+      "kind": "mapped",
+      "target": "header-recto-center-source",
+      "reason": "S77: סוג סלוט מרכז (recto) ⇒ מקור חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "hdr-verso-r-type",
+      "kind": "mapped",
+      "target": "header-verso-right-source",
+      "reason": "S77: סוג סלוט ימין (verso) ⇒ מקור חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "hdr-verso-l-type",
+      "kind": "mapped",
+      "target": "header-verso-left-source",
+      "reason": "S77: סוג סלוט שמאל (verso) ⇒ מקור חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "hdr-r-custom",
+      "kind": "mapped",
+      "target": "header-recto-right-custom-text",
+      "reason": "S77: טקסט מותאם סלוט ימין (recto)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-c-custom",
+      "kind": "mapped",
+      "target": "header-recto-center-custom-text",
+      "reason": "S77: טקסט מותאם סלוט מרכז (recto)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-l-custom",
+      "kind": "mapped",
+      "target": "header-recto-left-custom-text",
+      "reason": "S77: טקסט מותאם סלוט שמאל (recto)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-verso-r-custom",
+      "kind": "mapped",
+      "target": "header-verso-right-custom-text",
+      "reason": "S77: טקסט מותאם סלוט ימין (verso)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-verso-c-custom",
+      "kind": "mapped",
+      "target": "header-verso-center-custom-text",
+      "reason": "S77: טקסט מותאם סלוט מרכז (verso)",
+      "issue": ""
+    },
+    {
+      "key": "hdr-verso-l-custom",
+      "kind": "mapped",
+      "target": "header-verso-left-custom-text",
+      "reason": "S77: טקסט מותאם סלוט שמאל (verso)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-title",
+      "kind": "mapped",
+      "target": "imud-book-title",
+      "reason": "S4.6: כותרת הספר — נצרכת בשער הראשי (dom-renderer)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-subtitle",
+      "kind": "mapped",
+      "target": "imud-book-subtitle",
+      "reason": "S4.6: כותרת־משנה — נצרכת בשער הראשי",
+      "issue": ""
+    },
+    {
+      "key": "show-main-shaar",
+      "kind": "mapped",
+      "target": "shaar-main-enabled",
+      "reason": "03.11(ד): מתג שער ראשי — ברירת המחדל במקור true (השער חלק ממבנה הספר, לא אופציה)",
+      "issue": ""
+    },
+    {
+      "key": "show-sub-shaar",
+      "kind": "mapped",
+      "target": "shaar-sub-enabled",
+      "reason": "03.11(ד): מתג שער־משנה — ברירת מחדל true כמקור",
+      "issue": ""
+    },
+    {
+      "key": "show-back-shaar",
+      "kind": "mapped",
+      "target": "shaar-back-enabled",
+      "reason": "03.11(ד): מתג שער אחורי — ברירת מחדל true כמקור",
+      "issue": ""
+    },
+    {
+      "key": "f-sh-title",
+      "kind": "mapped",
+      "target": "shaar-title-font",
+      "reason": "03.11(ד): גופן כותרת השער (מקור: Lia Sgula → Bellefair המוטמע)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-title",
+      "kind": "mapped",
+      "target": "shaar-title-size-pt",
+      "reason": "03.11(ד): גודל כותרת השער (מקור: 46)",
+      "issue": ""
+    },
+    {
+      "key": "f-sh-sub",
+      "kind": "mapped",
+      "target": "shaar-subtitle-font",
+      "reason": "03.11(ד): גופן כותרת־משנה בשער (מקור: Livorna → David Libre)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-sub",
+      "kind": "mapped",
+      "target": "shaar-subtitle-size-pt",
+      "reason": "03.11(ד): גודל כותרת־משנה (מקור: 21)",
+      "issue": ""
+    },
+    {
+      "key": "f-sh-desc",
+      "kind": "mapped",
+      "target": "shaar-desc-font",
+      "reason": "03.11(ד): גופן התיאור (מקור: Livorna → Frank Ruhl Libre)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-desc",
+      "kind": "mapped",
+      "target": "shaar-desc-size-pt",
+      "reason": "03.11(ד): גודל התיאור (מקור: 12)",
+      "issue": ""
+    },
+    {
+      "key": "f-sh-sec",
+      "kind": "mapped",
+      "target": "shaar-sections-font",
+      "reason": "03.11(ד): גופן פרטי המהדורא (מקור: David Libre)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-sec",
+      "kind": "mapped",
+      "target": "shaar-sections-size-pt",
+      "reason": "03.11(ד): גודל פרטי המהדורא (מקור: 11.5)",
+      "issue": ""
+    },
+    {
+      "key": "f-sh-author",
+      "kind": "mapped",
+      "target": "shaar-author-font",
+      "reason": "03.11(ד): גופן שם המחבר (מקור: David Libre)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-author",
+      "kind": "mapped",
+      "target": "shaar-author-size-pt",
+      "reason": "03.11(ד): גודל שם המחבר (מקור: 15)",
+      "issue": ""
+    },
+    {
+      "key": "f-sh-year",
+      "kind": "mapped",
+      "target": "shaar-year-font",
+      "reason": "03.11(ד): גופן השנה/בס״ד (מקור: David Libre)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-year",
+      "kind": "mapped",
+      "target": "shaar-year-size-pt",
+      "reason": "03.11(ד): גודל השנה (מקור: 12)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-desc",
+      "kind": "mapped",
+      "target": "imud-book-desc",
+      "reason": "03.11(ד): תיאור הספר בשער (מקור: inp-book-desc ← «נושא מפורט»)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-sections",
+      "kind": "mapped",
+      "target": "imud-book-sections",
+      "reason": "03.11(ד): פרטי מהדורא בשער (מקור: inp-book-sections ← «פרטי מהדורא»)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-author",
+      "kind": "mapped",
+      "target": "imud-book-author",
+      "reason": "03.11(ד): שם המחבר בשערים (מקור: inp-book-author ← «שם המחבר»)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-year",
+      "kind": "mapped",
+      "target": "imud-book-year",
+      "reason": "03.11(ד): מקום ושנה בשערים (מקור: inp-book-year ← «מקום ושנת הוצאה»)",
+      "issue": ""
+    },
+    {
+      "key": "inp-back-shaar-text",
+      "kind": "mapped",
+      "target": "shaar-back-text",
+      "reason": "03.11(ד): טקסט השער האחורי (שמירת זכויות)",
+      "issue": ""
+    },
+    {
+      "key": "fn-columns",
+      "kind": "mapped",
+      "target": "footnote-columns",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "fn-layout-mode",
+      "kind": "mapped",
+      "target": "fn-layout-mode",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "fn-reset-mode",
+      "kind": "mapped",
+      "target": "footnote-reset-policy",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "fn-title-text",
+      "kind": "mapped",
+      "target": "endnote-title-text",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "note-numbering-style",
+      "kind": "mapped",
+      "target": "footnote-marker-style",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "note-rule-style",
+      "kind": "mapped",
+      "target": "footnote-separator-rule",
+      "reason": "star ⇒ star (enum זהה ב-RED)",
+      "issue": ""
+    },
+    {
+      "key": "avoid-orphans",
+      "kind": "merged",
+      "target": "prevent-orphans-top",
+      "reason": "RED מפריד יתומים עליונים/תחתונים בנפרד",
+      "issue": ""
+    },
+    {
+      "key": "avoid-widows",
+      "kind": "merged",
+      "target": "prevent-widows-top",
+      "reason": "כנ\"ל",
+      "issue": ""
+    },
+    {
+      "key": "avoid-runt-word",
+      "kind": "mapped",
+      "target": "runt-min-width-pct",
+      "reason": "בוליאני המקור ⇒ סף אחוז ב-RED (כבוי=0; דלוק=20%)",
+      "issue": ""
+    },
+    {
+      "key": "h2-ornament-set",
+      "kind": "merged",
+      "target": "h2-orn-top",
+      "reason": "ערכת עיטורים כללית ⇒ העיטור העליון; ערכות IMUD דרך imud-orn-*",
+      "issue": ""
+    },
+    {
+      "key": "h2-ornament-top-style",
+      "kind": "mapped",
+      "target": "h2-orn-top",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h2-ornament-bottom-style",
+      "kind": "mapped",
+      "target": "h2-orn-bottom",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h2-title-orn-mode",
+      "kind": "mapped",
+      "target": "h2-orn-scope",
+      "reason": "S4.6 (ביקורת 3): none נשמר כ-none — בעבר הומר ל-both (היפוך הגדרת המקור); enum RED כעת כולל none. onlyIfAbsent: כשהקובץ מכיל גם את המפתח הישיר h2-orn-scope — הישיר גובר (קדימות מפורשת, לא סדר איטרציה)",
+      "issue": ""
+    },
+    {
+      "key": "h2-title-ornament-top-style",
+      "kind": "merged",
+      "target": "h2-orn-top",
+      "reason": "עיטור כותרת-הסימן — מוזג לעיטור הסימן (RED מאחד)",
+      "issue": ""
+    },
+    {
+      "key": "h2-title-ornament-bottom-style",
+      "kind": "merged",
+      "target": "h2-orn-bottom",
+      "reason": "עיטור כותרת-הסימן התחתון — מוזג לעיטור הסימן ב-RED",
+      "issue": ""
+    },
+    {
+      "key": "h2-title-ornament-r",
+      "kind": "mapped",
+      "target": "h2-orn-side",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h2-title-ornament-l",
+      "kind": "merged",
+      "target": "h2-orn-side",
+      "reason": "RED מציב עיטור צד אחד לשני הצדדים",
+      "issue": ""
+    },
+    {
+      "key": "h2-orn-fit-text",
+      "kind": "mapped",
+      "target": "h2-orn-fit-to-text",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h3-ornament-set",
+      "kind": "merged",
+      "target": "h3-side-orn",
+      "reason": "ערכת H3 ⇒ עיטור הצד של H3",
+      "issue": ""
+    },
+    {
+      "key": "h3-ornament-r",
+      "kind": "mapped",
+      "target": "h3-side-orn",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h3-ornament-l",
+      "kind": "merged",
+      "target": "h3-side-orn",
+      "reason": "עיטור צד שמאל של H3 — RED מאחד לעיטור צד יחיד",
+      "issue": ""
+    },
+    {
+      "key": "section-divider-style",
+      "kind": "merged",
+      "target": "imud-divider",
+      "reason": "מפרידי סעיפים מעוצבים — דרך ספריית IMUD (image) או heading-dividers-h3-h6; spear ⇒ עיצוב ספרייה",
+      "issue": ""
+    },
+    {
+      "key": "heading-divider-h3",
+      "kind": "mapped",
+      "target": "heading-dividers-h3-h6",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "h2-orn-scope",
+      "kind": "mapped",
+      "target": "h2-orn-scope",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "col-divider-style",
+      "kind": "mapped",
+      "target": "column-divider-style",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "page-num-position",
+      "kind": "mapped",
+      "target": "page-num-position",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "page-num-format",
+      "kind": "mapped",
+      "target": "page-num-format",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "page-num-frame",
+      "kind": "mapped",
+      "target": "page-num-frame",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "page-num-start-idx",
+      "kind": "mapped",
+      "target": "page-num-start-idx",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "page-num-initial-value",
+      "kind": "mapped",
+      "target": "page-num-initial-value",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "main-shaar-count-numbering",
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "RED מונה עמודי שער גלובלית (count-shaar-pages); בקרה פר-סוג טרם נפרדה",
+      "issue": "EXT-18"
+    },
+    {
+      "key": "main-shaar-show-number",
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "הצגת מספר בשער ראשי — בקרה פר-סוג במעקב",
+      "issue": "EXT-18"
+    },
+    {
+      "key": "back-shaar-count-numbering",
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "מניית שער אחורי — RED מונה עמודי שער גלובלית",
+      "issue": "EXT-18"
+    },
+    {
+      "key": "back-shaar-show-number",
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "הצגת מספר בשער אחורי — בקרה פר-סוג במעקב",
+      "issue": "EXT-18"
+    },
+    {
+      "key": "sub-shaar-count-numbering",
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "מניית שער משנה — RED מונה עמודי שער גלובלית",
+      "issue": "EXT-18"
+    },
+    {
+      "key": "sub-shaar-show-number",
+      "kind": "merged",
+      "target": "count-shaar-pages",
+      "reason": "הצגת מספר בשער משנה — בקרה פר-סוג במעקב",
+      "issue": "EXT-18"
+    },
+    {
+      "key": "general-toc-count-numbering",
+      "kind": "mapped",
+      "target": "general-toc-count-numbering",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "general-toc-show-numbering",
+      "kind": "mapped",
+      "target": "general-toc-show-numbering",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "detailed-toc-count-numbering",
+      "kind": "mapped",
+      "target": "detailed-toc-count-numbering",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "detailed-toc-show-numbering",
+      "kind": "mapped",
+      "target": "detailed-toc-show-numbering",
+      "reason": "",
+      "issue": ""
+    },
+    {
+      "key": "enable-general-toc",
+      "kind": "mapped",
+      "target": "toc-general-enabled",
+      "reason": "S77: מתג תוכן-עניינים כללי — חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "enable-detailed-toc",
+      "kind": "mapped",
+      "target": "toc-detail-enabled",
+      "reason": "S77: מתג תוכן-עניינים מפורט — חי בנתיב המורשת",
+      "issue": ""
+    },
+    {
+      "key": "aq-enabled",
+      "kind": "mapped",
+      "target": "aq-enabled",
+      "reason": "S6.3: מתג AutoQuality של המקור ⇒ מפתח הרישום (ברירת מחדל במקור true)",
+      "issue": ""
+    },
+    {
+      "key": "aq-word-spacing",
+      "kind": "mapped",
+      "target": "aq-enabled",
+      "reason": "S6.3: שכבת מרווחי-מילים (דלוקה במקור) — משורטטת למתג הכולל של ה-AQ",
+      "issue": ""
+    },
+    {
+      "key": "aq-word-spacing-min",
+      "kind": "mapped",
+      "target": "aq-word-spacing-min",
+      "reason": "S6.3: גבול תחתון (0.95 במקור וברישום כאחד)",
+      "issue": ""
+    },
+    {
+      "key": "aq-word-spacing-max",
+      "kind": "mapped",
+      "target": "aq-word-spacing-max",
+      "reason": "S6.3: גבול עליון (1.05)",
+      "issue": ""
+    },
+    {
+      "key": "aq-shared-load",
+      "kind": "mapped",
+      "target": "aq-shared-load",
+      "reason": "S6.3: עומס משותף בין השכבות (true במקור וברישום)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-back-copyright",
+      "kind": "mapped",
+      "target": "imud-book-back-copyright",
+      "reason": "9b.5: זכויות יוצרים בשער האחורי — נצרכת ב-buildShaarBlocks (D-107: ארבעת המקטעים)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-back-publishing",
+      "kind": "mapped",
+      "target": "imud-book-back-publishing",
+      "reason": "9b.5: פרטי הוצאה לאור בשער האחורי (D-107)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-back-contact",
+      "kind": "mapped",
+      "target": "imud-book-back-contact",
+      "reason": "9b.5: פרטי קשר בשער האחורי (D-107)",
+      "issue": ""
+    },
+    {
+      "key": "inp-book-back-extra",
+      "kind": "mapped",
+      "target": "imud-book-back-extra",
+      "reason": "9b.5: פרטים נוספים בשער האחורי (D-107)",
+      "issue": ""
+    },
+    {
+      "key": "s-h0",
+      "kind": "mapped",
+      "target": "heading-0-size-pt",
+      "reason": "S6.3: גודל H0 — גם נקרא מה-raw בפרופיל המורשת (SZ.h0Title; במקור 26pt)",
+      "issue": ""
+    },
+    {
+      "key": "s-h1",
+      "kind": "mapped",
+      "target": "heading-1-size-pt",
+      "reason": "S6.3: גודל H1 — נקרא מה-raw לשער-המשנה (cfg.h1Size; במקור 50pt)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-title",
+      "kind": "mapped",
+      "target": "shaar-title-size-pt",
+      "reason": "S6.3: גם נקרא מה-raw (cfg.shTitle)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-sub",
+      "kind": "mapped",
+      "target": "shaar-subtitle-size-pt",
+      "reason": "S6.3: גם נקרא מה-raw (cfg.shSub)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-desc",
+      "kind": "mapped",
+      "target": "shaar-desc-size-pt",
+      "reason": "S6.3: גם נקרא מה-raw (cfg.shDesc)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-sec",
+      "kind": "mapped",
+      "target": "shaar-sections-size-pt",
+      "reason": "S6.3: גם נקרא מה-raw (cfg.shSec)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-author",
+      "kind": "mapped",
+      "target": "shaar-author-size-pt",
+      "reason": "S6.3: גם נקרא מה-raw (cfg.shAuthor)",
+      "issue": ""
+    },
+    {
+      "key": "s-sh-year",
+      "kind": "mapped",
+      "target": "shaar-year-size-pt",
+      "reason": "S6.3: גם נקרא מה-raw (cfg.shYear)",
+      "issue": ""
+    },
+    {
+      "key": "f-note-title",
+      "kind": "mapped",
+      "target": "endnote-title-font",
+      "reason": "S6.3: גופן כותרת ההערות",
+      "issue": ""
+    },
+    {
+      "key": "f-h0-body",
+      "kind": "mapped",
+      "target": "heading-0-body-font",
+      "reason": "S6.3: גופן גוף ההקדמה (Frank Ruhl Libre במקור)",
+      "issue": ""
     }
   ],
   "v19Only": [
