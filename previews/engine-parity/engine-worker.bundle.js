@@ -22509,7 +22509,8 @@ function notePlacement(n, proj, where) {
       baselineY: wd.baselineY != null ? r2(wd.baselineY) : null,
       ...(wd.sizePt != null ? { sizePt: wd.sizePt } : {}),
       ...(wd.fontKey != null ? { fontKey: wd.fontKey } : {}),
-      ...(wd.color != null ? { color: wd.color } : {})
+      ...(wd.color != null ? { color: wd.color } : {}),
+      ...(wd.mk ? { mk: true } : {})
     })) : [],
     ...where
   };
@@ -23162,7 +23163,7 @@ function projectStampedRows(n, x, w, yTop, opts) {
   const prefix = [];
   if (isCont && Number(n.contMarkW) > 0) prefix.push({ text: NM.CONTINUATION_MARK, w: glyph(n.contMarkW) });
   const mkTxt = noteMarkerOf(n, { 'footnote-marker-style': null });
-  if (mkTxt && Number(n.markerW) > 0) prefix.push({ text: scrubPUAText(mkTxt), w: glyph(n.markerW) });
+  if (mkTxt && Number(n.markerW) > 0) prefix.push({ text: scrubPUAText(mkTxt), w: glyph(n.markerW), mk: true });
   if (!isCont && n.counterMark != null && String(n.counterMark) !== '' && Number(n.counterMarkW) > 0) {
     prefix.push({ text: scrubPUAText(String(n.counterMark)), w: glyph(n.counterMarkW) });
   }
@@ -23188,7 +23189,8 @@ function projectStampedRows(n, x, w, yTop, opts) {
     let cursor = gx + gw; // RTL — מימין לשמאל
     for (const t of live) {
       cursor -= t.w;
-      const wd = { text: t.text, x: cursor, w: t.w, sizePt, baselineY, fontKey: opts.fontKey, ...(opts.color ? { color: opts.color } : {}) };
+      const wd = { text: t.text, x: cursor, w: t.w, sizePt, baselineY, fontKey: opts.fontKey,
+        ...(t.mk ? { mk: true } : {}), ...(opts.color ? { color: opts.color } : {}) };
       wds.push(wd);
       flat.push(wd);
       cursor -= gapW;
@@ -27899,7 +27901,10 @@ function familyOf(key) {
  */
 function renderModelLine(ml, doc, relX, relY) {
   const el = doc.createElement('div');
-  el.className = 'line' + (ml.isLast ? ' line--last' : '') + (ml.kind === 'toc-title' ? ' toc-title' : '');
+  el.className = 'line'
+    + (ml.isLast ? ' line--last' : '')
+    + (ml.kind === 'heading' ? ' line--heading' : '')
+    + (ml.kind === 'toc-title' ? ' toc-title' : '');
   el.setAttribute('dir', 'rtl');
   el.style.position = 'absolute';
   el.style.left = `${px2(ml.x - relX)}px`;
@@ -27923,7 +27928,7 @@ function renderModelLine(ml, doc, relX, relY) {
     if (!firstWord && typeof doc.createTextNode === 'function') el.appendChild(doc.createTextNode(' '));
     firstWord = false;
     const span = doc.createElement('span');
-    span.className = 'w';
+    span.className = 'w' + (wd.mk ? ' w--fnmarker' : '');
     span.style.position = 'absolute';
     span.style.left = `${px2(wd.x - ml.x)}px`;
     span.style.top = '0';
@@ -28278,7 +28283,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
           if (!firstFnWord && typeof doc.createTextNode === 'function') row.appendChild(doc.createTextNode(' '));
           firstFnWord = false;
           const span = doc.createElement('span');
-          span.className = 'w';
+          span.className = 'w' + (wd.mk ? ' w--fnmarker' : '');
           span.style.position = 'absolute';
           span.style.left = `${px2(wd.x - (n.x != null ? n.x : 0))}px`;
           span.style.top = '0';
