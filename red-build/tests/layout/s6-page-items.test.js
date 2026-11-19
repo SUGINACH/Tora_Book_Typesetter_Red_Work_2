@@ -142,10 +142,10 @@ describe('גיאומטריית ריהוט — מקור יחיד ל-DOM ול-PDF 
     const imudSignRecto = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, imud, true);
     const imudSignVerso = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, imud, false);
     assertEq(imudSignRecto.contentBox.top - imudRegular.contentBox.top, 180, 'היסט פתיחת סימן נשמר לגוף');
-    assertEq(headerGeometry(imudSignRecto).y, headerGeometry(imudRegular).y, 'כותרת sign-open recto נשארת בעוגן העמוד');
-    assertEq(headerGeometry(imudSignVerso).y, headerGeometry(imudRegular).y, 'כותרת sign-open verso נשארת בעוגן העמוד');
+    assertEq(headerGeometry({ template: imudSignRecto }).y, headerGeometry({ template: imudRegular }).y, 'כותרת sign-open recto נשארת בעוגן העמוד');
+    assertEq(headerGeometry({ template: imudSignVerso }).y, headerGeometry({ template: imudRegular }).y, 'כותרת sign-open verso נשארת בעוגן העמוד');
     for (const type of [PAGE_TYPES.PREFACE, PAGE_TYPES.H3_SPREAD, PAGE_TYPES.TOC_GENERAL, PAGE_TYPES.TOC_DETAIL]) {
-      assertEq(headerGeometry(buildPageTemplate(type, imud, true)).y, headerGeometry(imudRegular).y, `עוגן כותרת יציב: ${type}`);
+      assertEq(headerGeometry({ template: buildPageTemplate(type, imud, true) }).y, headerGeometry({ template: imudRegular }).y, `עוגן כותרת יציב: ${type}`);
     }
 
     // נתיב DP כללי: גם כאן h2-top-offset שייך לגוף בלבד.
@@ -153,7 +153,7 @@ describe('גיאומטריית ריהוט — מקור יחיד ל-DOM ול-PDF 
     generic['header-enabled'] = true;
     const genericRegular = buildPageTemplate(PAGE_TYPES.REGULAR, generic, true);
     const genericSign = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, generic, true);
-    assertEq(headerGeometry(genericSign).y, headerGeometry(genericRegular).y, 'בפרופיל כללי h2-top-offset אינו מזיז כותרת');
+    assertEq(headerGeometry({ template: genericSign }).y, headerGeometry({ template: genericRegular }).y, 'בפרופיל כללי h2-top-offset אינו מזיז כותרת');
   });
 });
 
