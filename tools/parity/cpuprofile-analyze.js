@@ -16,7 +16,7 @@ function classify(fn, url) {
   if (u.includes('node:internal/crypto') || u.includes('node:internal/encoding')) return 'key-building';
   if (['Hash', 'update', 'digest', 'encode', 'encodeUtf8String', 'hmacProcess', 'sha256Hex'].includes(fn)
     && (u.includes('crypto') || u === '' || u.includes('hash256'))) return 'key-building';
-  if (fn === '_itemCacheKey' || fn === '_canonicalStringify' || fn === 'environmentFingerprint' || fn === '_assetIdentityFp') return 'key-building';
+  if (fn === '_itemCacheKey' || fn === '_canonicalStringify' || fn === 'environmentFingerprint' || fn === '_assetIdentityFp' || fn === '_fastKeyHash' || fn === '_canonicalStringifyStable') return 'key-building';
   // האנונימיים של measure-api (line 387 = ה-map callback של _canonicalStringify; גם יתר האנונימיים שם)
   if ((fn === '(anonymous)' || fn === '') && u.includes('measure-api')) return 'key-building';
   if (fn === '_itemCacheGet' || fn === '_itemCacheSet') return 'item-cache-ops';

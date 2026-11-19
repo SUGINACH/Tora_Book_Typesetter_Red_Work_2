@@ -52,6 +52,9 @@ function registerFont(profileName, bytes) {
   // ההסרה ניקתה ⇒ רישום מחדש של אותה משפחה החזיר מופע ישן מהמטמון
   // (קשור לגופן הקודם) והמדידה המשיכה במטריקות הישנות.
   _familyApiCache.clear();
+  // **אופטימיזציה (19.11):** ניקוי מופעי ה-fallback המשותפים — אותה סיבה
+  // בדיוק (מופע font-metrics קשור-שם שלא יחזיק פרופיל גופן מת אחרי מחזור רישום).
+  _sharedFallbackApis.clear();
   // **S4.26 (גליפים חסרים):** 'Frank Ruhl Libre' הוא fallback הפיסוק
   // של מחסנית הרינדור (fontStack מוסיף אותו שני) — גם המדידה תשתמש
   // בו לתווים שחסרים בגופן הראשי (בדיוק כמו הדפדפן).
@@ -103,6 +106,7 @@ function clearRegisteredFonts() {
   _fontContentIds.clear();
   fm.setMissingGlyphFallbackFont(null);
   _familyApiCache.clear();
+  _sharedFallbackApis.clear();
   _invalidateEnvFp();
   if (!_fontClearSync) {
     _fontClearSync = true;
@@ -389,6 +393,46 @@ function _canonicalStringify(value, depth = 0) {
   return String(value);
 }
 
+/** **אופטימיזציית מפתח (19.11, הוראת ביצועים §5):** מֵימוֹ של המחרוזת הקנונית
+ *  לאובייקטים יציבים בלבד (ctx/ctx.constraints — אותה הפניה לכל אורך ה-typeset).
+ *  התוצאה זהה בדיוק (אותה פונקציה על אותו אובייק�) — הפונקציה טהורה והאובייקט
+ *  אינו משתנה (חוזה הטוהר של שלב 3); WeakMap — אין החזקה. */
+const _canonicalMemo = new WeakMap();
+function _canonicalStringifyStable(value) {
+  if (value === null || typeof value !== 'object') return _canonicalStringify(value);
+  let m = _canonicalMemo.get(value);
+  if (m === undefined) { m = _canonicalStringify(value); _canonicalMemo.set(value, m); }
+  return m;
+}
+
+/** **אופטימיזציית מפתח (19.11, הוראת ביצועים §5):** חשיש מפתח מהיר לא-קריפטוגרפי
+ *  עבור מטמון הפריטים בתוך התהליך בלבד. מחליף את sha256Hex (Node crypto — יקר
+ *  לקריאה: ~3.4µs, נמדד) בשלושה ערוצי 32-bit (FNV-1a, ערוץ מעורבב-מיקום, sdbm)
+ *  + אורך, עם finalization של murmur3 — 96 ביטים יעילים: סף birthday ל-10⁷
+ *  מחרוזות ≈ 2⁻⁵⁸ — הגנת ההתנגשות של PR #22 נשמרת (אותם רכיבי תוכן בדיוק,
+ *  אותה שלמות מפתח; רק פונקציית החשיש שהתה). sha256Hex נשאר לזהויות
+ *  content-addressed (גופנים/נכסים) — שם הוא חלק מהחוזה. המפתח אינו נשמר
+ *  בין תהליכים ואינו חוצה את גבול ה-Worker — אין השלכות שחזור. */
+function _fmix32(h) {
+  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
+  return h | 0;
+}
+function _fastKeyHash(s) {
+  let h1 = 0x811c9dc5, h2 = 0x9e3779b9, h3 = 5381;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193);
+    h2 = Math.imul(h2 ^ Math.imul(i + 1, c), 0x85ebca6b);
+    h3 = (Math.imul(h3, 0x21) ^ c) | 0;
+  }
+  const len = s.length;
+  h1 = _fmix32(h1 ^ len); h2 = _fmix32(h2 ^ Math.imul(len, 0x9e3779b9)); h3 = _fmix32(h3 ^ h1);
+  return (h1 >>> 0).toString(16).padStart(8, '0')
+    + (h2 >>> 0).toString(16).padStart(8, '0')
+    + (h3 >>> 0).toString(16).padStart(8, '0')
+    + len.toString(16).padStart(8, '0');
+}
+
 /** זהות נכס content-addressed לפי שרשרת המועמדים של הפריט — מה-resolver בלבד
  * (הזהות מחושבת מהבתים, לא מההצהרה). אותה הפניה (resourcePath) עם תוכן נכס
  * אחר ⇒ מזהה אחר ⇒ מפתח מטמון אחר. פותר את הפגם שבו item.id לבדו קבע את המפתח. */
@@ -421,12 +465,16 @@ function _assetIdentityFp(item, ctx) {
  * + מפתח הקשר; (9) גרסת מנוע המדידה; (10) חית סביבה **חיה** (מחושבת כעת
  * מהרישומים בפועל — לא הצהרת caller) + חית ההקשר שהועברה. */
 function _itemCacheKey(item, style, ctx) {
-  // **מקטע ב׳ (זיכרון):** המפתח קומפקטי — sha256 יחיד על שריות הקנוניות המלאות
+  // **מקטע ב׳ (זיכרון):** המפתח קומפקטי — חשיש יחיד על שריות הקנוניות המלאות
   // (אותה חד-משמעיות, כולל זהות-תוכן של החלקים) — בספרים גדולים
-  // מיליוני מחרוזות-מפתח משוריבות זיכרון משמעותית.
+  // מיליוני מחרוזות-מפתח משורבות זיכרון משמעותית.
+  // **אופטימיזציה (19.11, הוראת ביצועים §5):** (א) _fastKeyHash במקום sha256Hex —
+  // המפתח משרת מטמון בתהליך בלבד (לא זהות content-addressed); (ב) ctx.constraints
+  // דרך מֵימוֹ קנוני לפי זהות — אותה הפניה לכל אורך ה-typeset, אותה תוצאה בדיוק.
+  // אותם רכיבי תוכן ובאותו סדר — הגנת ההתנגשות של PR #22 נשמרת במלואה.
   const it = item || {};
-  return 'ik2:' + sha256Hex([
-    'item-key-v2',
+  return 'ik3:' + _fastKeyHash([
+    'item-key-v3',
     MEASURE_ENGINE_VERSION,
     environmentFingerprint(),
     (ctx && ctx.environmentFingerprint) || '',
@@ -437,7 +485,7 @@ function _itemCacheKey(item, style, ctx) {
     _canonicalStringify(style || null),
     (ctx && ctx.direction) || '',
     (ctx && ctx.language) || '',
-    _canonicalStringify((ctx && ctx.constraints) || null),
+    _canonicalStringifyStable((ctx && ctx.constraints) || null),
     (ctx && ctx.constraintsKey) || '',
     (ctx && ctx.assetId) != null ? String(ctx.assetId) : '',
     _assetIdentityFp(item, ctx)
@@ -475,6 +523,25 @@ function _deepFreeze(value, seen) {
  * = תיבת הדיו המשוערת מהתווים (מקור: advance-approximation — מתועד; עיגול
  * גליפים אמיתי יתווסף כשמנוע המדידה יחשוף glyf — בלי שינוי החוזה).
  */
+/** **אופטימיזציה (19.11, הוראת ביצועים §5):** מופעי מדידה משותפים לנתיבי
+ *  ה-fallback שבתוך measureItem (noteMarker/atomic/glue/penalty + טקסט בלי
+ *  גופן-רזולב). בעבר נוצר מופע חדש (+Map +stats) לכל קריאה — ב-very_long
+ *  נמדדו 333,456 מופעים חד-פעמיים לריצה; מטמון המחרוזות שלהם מת עם הקריאה.
+ *  המופע חסר מצב פר-קריאה (sizePt תמיד מועבר מפורשות ל-measureTextWidth;
+ *  ה-body-font בהגדרות משפיע רק על _bindProfile) — לכן מֵימוֹ לפי
+ *  (impl|family|sizePt) — בדיוק אותם ארגומנטים כמו הבנאי הקודם — מחזיר התנהגות
+ *  זהה: אותן תוצאות מדידה, ומטמון המחרוזות משריך ערכים דטרמיניסטיים זהים. */
+const _sharedFallbackApis = new Map();
+function _sharedMeasureApi(impl, family, settingsSizePt) {
+  const key = impl + '|' + (family || '') + '|' + (settingsSizePt || 0);
+  let api = _sharedFallbackApis.get(key);
+  if (!api) {
+    api = new MeasureAPI({ 'body-font-size-pt': settingsSizePt, 'body-font': family || '' }, impl);
+    _sharedFallbackApis.set(key, api);
+  }
+  return api;
+}
+
 function measureItem(item, style, ctx) {
   if (!item || typeof item !== 'object') return { ok: false, code: 'no-item', message: 'measureItem: פריט חסר' };
   const sizePt = (style && Number.isFinite(style.sizePt)) ? style.sizePt : 12;
@@ -533,7 +600,7 @@ function measureItem(item, style, ctx) {
             // בדיוק כפי ש-widthFor של הנתיב החי עשה; מקור ההחלטה אחד.
             const famFactor = (style && Number.isFinite(style.familyFactor) && style.familyFactor > 0) ? style.familyFactor : 1;
             const famFloor = !!(style && style.familyUnknownFloor);
-            const fallbackApi = new MeasureAPI({ 'body-font-size-pt': sizePt, 'body-font': (style && style.defaultFamily) || '' }, 'table');
+            const fallbackApi = _sharedMeasureApi('table', (style && style.defaultFamily) || '', sizePt);
             let w = fallbackApi.measureTextWidth(run.text, sizePt, 0) * famFactor;
             if (famFloor) w = Math.max(w, String(run.text).length * 0.6 * sizePt * (96 / 72));
             segments.push({ fontId: null, text: run.text, advancePx: w, family: null, tableApproximation: true });
@@ -608,7 +675,7 @@ function measureItem(item, style, ctx) {
     // סמן הערה אטומי — רוחב הסמן בגודל הרישום (גימטריה); נמדד כפריט יחיד
     const markerText = (item.payload && item.payload.markerText) || 'א.';
     const fnSizePt = (style && Number.isFinite(style.sizePt)) ? style.sizePt : 8;
-    const api = new MeasureAPI({ 'body-font-size-pt': fnSizePt }, 'table');
+    const api = _sharedMeasureApi('table', '', fnSizePt);
     const w = api.measureTextWidth(markerText, fnSizePt, 0);
     const sizePx = ptToPx(fnSizePt);
     out = {
@@ -623,8 +690,8 @@ function measureItem(item, style, ctx) {
     };
   } else if (kind === 'atomicToken' || kind === 'anchor' || kind === 'glue' || kind === 'penalty' || kind === 'custom' || (kind && kind.startsWith('custom:'))) {
     const text = (item.payload && (item.payload.text != null ? item.payload.text : item.payload.atomicText)) || '';
-    const api = new MeasureAPI({ 'body-font-size-pt': sizePt, 'body-font': (style && style.defaultFamily) || '' },
-      (style && style.fontIds && style.fontIds[0]) ? 'font-metrics' : 'table');
+    const api = _sharedMeasureApi((style && style.fontIds && style.fontIds[0]) ? 'font-metrics' : 'table',
+      (style && style.defaultFamily) || '', sizePt);
     // **§5 (מדידה יחידה — הוראת שלב 4 ב׳):** advanceFactor חל גם כאן (אטומים
     // עם שכבת סגנון) — אותו חוזה כמו פריטי טקסט.
     const advanceFactor = (style && Number.isFinite(style.advanceFactor) && style.advanceFactor > 0) ? style.advanceFactor : 1;
