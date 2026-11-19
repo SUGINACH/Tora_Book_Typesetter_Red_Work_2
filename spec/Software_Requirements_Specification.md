@@ -2,6 +2,8 @@
 ## Torah Book Typesetting Engine (`IMUD_TORANI`)
 ### Unambiguous Technical & Algorithmic Master Specification
 
+> קטלוג ההגדרות והאלמנטים העדכני נמצא ב-[קטלוג רכיבי המסמך והגדרות העימוד](קטלוג-רכיבי-מסמך-הגדרות-עימוד.html) וב-[נתוני המקור](קטלוג-רכיבי-מסמך-הגדרות-עימוד.data.json). אין לשכפל כאן רשימות הגדרות/אפשרויות/ברירות מחדל; יש להפנות לקטלוג ולעדכן אותו עם כל שינוי מימוש.
+
 ---
 
 ### Scope & Terminology Standards
