@@ -62,6 +62,21 @@ describe('s9b-toc-d107 — D-107: כללי 1–6, מפורט 2–6, שניהם �
   const detPages = res.pages.filter(p => p.type === 'toc-detail');
   const rowsOf = (pages) => pages.flatMap(p => (p.toc && p.toc.rows) || []).flatMap(r => (r.kind === 'group' ? (r.items || []) : [r]));
 
+  it('אין ליצור עמוד TOC מפורט ריק כשאין במסמך כותרות H2–H6', () => {
+    const text = [
+      'כותרת 1 - פרק יחיד',
+      'פסקה קצרה ותקינה שמכילה תוכן ממשי אחרי הכותרת.'
+    ].join('\\n');
+    const singleLevel = typeset(text, getDefaultSettings(), {});
+    const general = singleLevel.pages.filter(p => p.type === 'toc-general');
+    const detail = singleLevel.pages.filter(p => p.type === 'toc-detail');
+    assert(general.length >= 1, 'תוכן כללי עבור H1 נשאר פעיל');
+    assert(general.every(p => (p.toc.rows || []).length > 0), 'כל עמוד TOC כללי נושא רשומות');
+    assertEq(detail.length, 0, 'אין עמוד מפורט כשאין כותרות H2–H6');
+    assertEq(singleLevel.pageModel.meta.materializeFallbacks, 0, 'אין fallback של עמוד TOC ריק');
+    assertEq(singleLevel.pageModelValidation.violations.length, 0, 'חוזה PageModel נשאר נקי');
+  });
+
   it('שניהם פעילים בברירת המחדל — עמודי toc-general ו-toc-detail נבנים', () => {
     assert(genPages.length >= 1, `toc-general חסר (עמודים: ${genPages.length})`);
     assert(detPages.length >= 1, `toc-detail חסר (עמודים: ${detPages.length}) — D-107: תוכן מפורט פעיל`);
