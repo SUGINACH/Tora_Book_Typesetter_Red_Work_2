@@ -54,10 +54,16 @@ function folioGeometry(page, settings, folioMeasure) {
   };
 }
 
-/** ראש אזור הכותרת העליונה במרחב העמוד (מקור: המקרן ההיסטורי — contentBox.top − 18). */
+/**
+ * מיקום תיבת הכותרת העליונה — נקבע ב-PageTemplate בנפרד מ-contentBox.
+ * היסטים של גוף התוכן (למשל h2-top-offset בעמוד sign-open) אינם מזיזים ריהוט.
+ */
 function headerGeometry(page) {
-  const tpl = page.template;
-  return { y: Math.max(0, tpl.contentBox.top - 18) };
+  const tpl = page && page.template;
+  if (!tpl || !Number.isFinite(tpl.headerTop)) {
+    throw new TypeError('PageTemplate.headerTop must be a finite page-space coordinate');
+  }
+  return { y: Math.max(0, tpl.headerTop) };
 }
 
 module.exports = {

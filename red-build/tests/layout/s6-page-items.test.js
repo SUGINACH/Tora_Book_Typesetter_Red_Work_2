@@ -8,6 +8,7 @@ const {
   registerPageItem, pageItemDescriptorOf, registeredPageItems, reservePageItemSpace
 } = require('../../src/engine/layout/page-items');
 const { folioGeometry, headerGeometry } = require('../../src/engine/layout/furniture-geometry');
+const { PAGE_TYPES, buildPageTemplate } = require('../../src/engine/layout/page-templates');
 const { typeset } = require('../../src/engine/core/pipeline');
 const { getDefaultSettings } = require('../../src/engine/core/settings-registry');
 const { MeasureAPI } = require('../../src/engine/typography/measure-api');
@@ -129,7 +130,26 @@ describe('גיאומטריית ריהוט — מקור יחיד ל-DOM ול-PDF 
       const out = projectPage(pg, s, new MeasureAPI(s, 'table'));
       assertEq(out.header.y, headerGeometry(pg).y, 'ראש הכותרת מהמקור היחיד');
     }
-    assert(headerGeometry({ template: { contentBox: { top: 60 } } }).y === 42, 'הנוסחה (top−18) נשמרת');
+    assertEq(headerGeometry({ template: { headerTop: 42 } }).y, 42, 'הכותרת נקראת מעוגן PageTemplate מפורש');
+
+    // IMUD: היסט 180px נשאר בתוכן של sign-open, אך אינו מזיז את הכותרת.
+    const imud = { '_layout-profile': 'imud', 'binding-offset-px': 0 };
+    const imudRegular = buildPageTemplate(PAGE_TYPES.REGULAR, imud, true);
+    const imudSignRecto = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, imud, true);
+    const imudSignVerso = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, imud, false);
+    assertEq(imudSignRecto.contentBox.top - imudRegular.contentBox.top, 180, 'היסט פתיחת סימן נשמר לגוף');
+    assertEq(headerGeometry(imudSignRecto).y, headerGeometry(imudRegular).y, 'כותרת sign-open recto נשארת בעוגן העמוד');
+    assertEq(headerGeometry(imudSignVerso).y, headerGeometry(imudRegular).y, 'כותרת sign-open verso נשארת בעוגן העמוד');
+    for (const type of [PAGE_TYPES.PREFACE, PAGE_TYPES.H3_SPREAD, PAGE_TYPES.TOC_GENERAL, PAGE_TYPES.TOC_DETAIL]) {
+      assertEq(headerGeometry(buildPageTemplate(type, imud, true)).y, headerGeometry(imudRegular).y, `עוגן כותרת יציב: ${type}`);
+    }
+
+    // נתיב DP כללי: גם כאן h2-top-offset שייך לגוף בלבד.
+    const generic = getDefaultSettings();
+    generic['header-enabled'] = true;
+    const genericRegular = buildPageTemplate(PAGE_TYPES.REGULAR, generic, true);
+    const genericSign = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, generic, true);
+    assertEq(headerGeometry(genericSign).y, headerGeometry(genericRegular).y, 'בפרופיל כללי h2-top-offset אינו מזיז כותרת');
   });
 });
 

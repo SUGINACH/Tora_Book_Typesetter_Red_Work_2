@@ -20,6 +20,8 @@ const PAGE_TYPES = {
 };
 
 const MM_TO_PX = 96 / 25.4;
+// מרחק ראש תיבת הכותרת מתחילת אזור הזרימה — אינו תלוי בהיסט תוכן של sign-open.
+const RUNNING_HEAD_TOP_INSET_PX = 18;
 const PAGE_SIZES = {
   // **S5.2 (O14 — A4 מדויק):** 210×297מ״מ @96dpi = 793.70×1122.52px — הערכים
   // המעוגלים (794×1123) הזיזו את גוף ה-DP ב-0.3px ויצרו MediaBox שאינו זהה
@@ -76,6 +78,7 @@ function buildImudPageTemplate(type, settings, isRecto) {
     margins: { top: GEO.FLOW_TOP, bottom: GEO.PAGE_H - FLOW_BOTTOM, side: GEO.COL_L_X, outer: GEO.PAGE_W - (GEO.COL_R_X + GEO.COL_W) },
     columns, gutter,
     headerHeight: GEO.HEADER_BASELINE,   // פס הכותרת: גליפים 42.56–57.56pt (גאומטריית הפס; התוכן — מקטע 3)
+    headerTop: GEO.FLOW_TOP - RUNNING_HEAD_TOP_INSET_PX,
     folioHeight: GEO.PAGE_H - GEO.FOLIO_BASELINE,
     h2TopOffset: type === PAGE_TYPES.SIGN_OPEN ? 180 : 0,
     contentBox: { top: textTop, bottom: FLOW_BOTTOM, height: FLOW_BOTTOM - textTop },
@@ -113,6 +116,8 @@ function buildPageTemplate(type, settings, isRecto = true) {
 
   const textTop = marginTop + headerH + (type === PAGE_TYPES.SIGN_OPEN ? settings['h2-top-offset'] : 0);
   const textBottom = size.h - marginBottom - folioH;
+  // ריהוט העמוד מקבל עוגן עצמאי; h2-top-offset מזיז את הגוף בלבד.
+  const headerTop = marginTop + headerH - RUNNING_HEAD_TOP_INSET_PX;
 
   return {
     type, isRecto,
@@ -124,6 +129,7 @@ function buildPageTemplate(type, settings, isRecto = true) {
     ],
     gutter,
     headerHeight: headerH,
+    headerTop,
     folioHeight: folioH,
     // **S8:** אזור העיטורים שמעל תיבת התוכן (אזור h2-top-offset) — מסומן במפורש
     // כך שאודיט עיטורים יודע מה חוקי (עיטור H2 עליון חי באזור זה — לא גלישה).
