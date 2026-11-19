@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1330 510" width="1330" height="510" role="img" aria-labelledby="brand-title">
+  <title id="brand-title">Imudify</title>
+  <defs>
+    <filter id="light-paper" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" seed="5" result="noise"/>
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.02 0" in="noise" result="coloredNoise"/>
+      <feComposite operator="in" in2="SourceGraphic"/>
+    </filter>
+    <radialGradient id="clean-bg" cx="50%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#FCFBF9"/>
+      <stop offset="100%" stop-color="#F5F3EE"/>
+    </radialGradient>
+  </defs>
+  <rect width="1330" height="510" fill="url(#clean-bg)"/>
+  <rect width="1330" height="510" fill="#E5E1D8" filter="url(#light-paper)" opacity="0.5"/>
+  <g id="imudify-mark">
+    <rect x="36" y="36" width="440" height="440" rx="76" fill="#FAF9F6" stroke="#191815" stroke-width="22"/>
+    <rect x="84" y="84" width="344" height="22" rx="2" fill="#1B2A41"/>
+    <rect x="84" y="120" width="106" height="20" rx="2" fill="#C5A467"/>
+    <rect x="206" y="120" width="100" height="20" rx="2" fill="#C5A467"/>
+    <rect x="322" y="120" width="106" height="20" rx="2" fill="#C5A467"/>
+    <g fill="#1B2A41">
+      <rect x="84" y="156" width="42" height="148" rx="2"/>
+      <rect x="84" y="320" width="42" height="36" rx="2"/>
+    </g>
+    <g fill="#E8DFC5">
+      <rect x="140" y="156" width="50" height="36" rx="2"/>
+      <rect x="140" y="208" width="50" height="148" rx="2"/>
+      <rect x="322" y="156" width="50" height="148" rx="2"/>
+      <rect x="322" y="320" width="50" height="36" rx="2"/>
+    </g>
+    <g fill="#1B2A41">
+      <rect x="140" y="156" width="50" height="6" rx="1"/>
+      <rect x="140" y="171" width="50" height="6" rx="1"/>
+      <rect x="140" y="186" width="50" height="6" rx="1"/>
+      <rect x="140" y="206" width="50" height="6" rx="1"/>
+      <rect x="140" y="218" width="50" height="6" rx="1"/>
+      <rect x="140" y="230" width="50" height="6" rx="1"/>
+      <rect x="140" y="242" width="50" height="6" rx="1"/>
+      <rect x="140" y="254" width="50" height="6" rx="1"/>
+      <rect x="140" y="266" width="50" height="6" rx="1"/>
+      <rect x="140" y="278" width="50" height="6" rx="1"/>
+      <rect x="140" y="290" width="50" height="6" rx="1"/>
+      <rect x="140" y="302" width="50" height="6" rx="1"/>
+      <rect x="140" y="314" width="50" height="6" rx="1"/>
+      <rect x="140" y="326" width="50" height="6" rx="1"/>
+      <rect x="140" y="338" width="50" height="6" rx="1"/>
+      <rect x="140" y="350" width="50" height="6" rx="1"/>
+    </g>
+    <g fill="#1B2A41">
+      <rect x="206" y="156" width="100" height="32" rx="2"/>
+      <rect x="237" y="188" width="38" height="136"/>
+      <rect x="206" y="324" width="100" height="32" rx="2"/>
+      <rect x="386" y="156" width="42" height="36" rx="2"/>
+      <rect x="386" y="208" width="42" height="148" rx="2"/>
+    </g>
+    <g fill="#1B2A41">
+      <rect x="322" y="156" width="50" height="6" rx="1"/>
+      <rect x="322" y="168" width="50" height="6" rx="1"/>
+      <rect x="322" y="180" width="50" height="6" rx="1"/>
+      <rect x="322" y="192" width="50" height="6" rx="1"/>
+      <rect x="322" y="204" width="50" height="6" rx="1"/>
+      <rect x="322" y="216" width="50" height="6" rx="1"/>
+      <rect x="322" y="228" width="50" height="6" rx="1"/>
+      <rect x="322" y="240" width="50" height="6" rx="1"/>
+      <rect x="322" y="252" width="50" height="6" rx="1"/>
+      <rect x="322" y="264" width="50" height="6" rx="1"/>
+      <rect x="322" y="276" width="50" height="6" rx="1"/>
+      <rect x="322" y="288" width="50" height="6" rx="1"/>
+      <rect x="322" y="300" width="50" height="6" rx="1"/>
+      <rect x="322" y="320" width="50" height="6" rx="1"/>
+      <rect x="322" y="335" width="50" height="6" rx="1"/>
+      <rect x="322" y="350" width="50" height="6" rx="1"/>
+    </g>
+    <rect x="84" y="372" width="106" height="20" rx="2" fill="#C5A467"/>
+    <rect x="206" y="372" width="100" height="20" rx="2" fill="#C5A467"/>
+    <rect x="322" y="372" width="106" height="20" rx="2" fill="#C5A467"/>
+    <rect x="84" y="406" width="344" height="22" rx="2" fill="#1B2A41"/>
+  </g>
+  <text x="500" y="340" font-family="Futura, 'Century Gothic', Montserrat, 'Segoe UI', Arial, sans-serif" font-size="230" font-weight="700" letter-spacing="-2" fill="#1B2A41">Imudify</text>
+</svg>
