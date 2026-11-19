@@ -1,3 +1,8 @@
+
+> **חובה — קטלוג מקור האמת של אלמנטים והגדרות:** לפני כל שינוי באלמנט מסמך, פריט עימוד, הגדרה, ברירת מחדל/fallback, parser, renderer, פונקציית layout/decoration או פונקציה המשפיעה עליהם, חובה לעיין ב-[קטלוג האלמנטים וההגדרות](../ELEMENTS_AND_SETTINGS_CATALOG.html), לאמת את המצב מול קוד המקור ולעדכן את הקטלוג באותו PR. אין לתחזק רשימות מקבילות של הגדרות/אפשרויות/תיאורים. יש לתעד בו סתירה, ערך ללא צרכן, יכולת מתועדת ללא מימוש או קוד ללא תיעוד. אין לערוך ידנית את `bindings.generated.js`; מקורו ב-`settings-registry.js` ובמחולל.
+
+---
+
 # Software Requirements Specification (SRS)
 ## Torah Book Typesetting Engine (`IMUD_TORANI`)
 ### Unambiguous Technical & Algorithmic Master Specification
