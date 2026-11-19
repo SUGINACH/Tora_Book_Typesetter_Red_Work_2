@@ -6,16 +6,16 @@
 # בספריית משנה קבועה ב־gh-pages: previews/engine-parity/.
 #
 # כללים מחייבים:
-#   1. שורש gh-pages (האתר הציבורי = המנוע המורשת) אינו משתנה: לא מוחקים,
-#      לא מחליפים index.html בשורש, לא נוגעים ב-assets/ הקיימים. רק
-#      previews/engine-parity/* נכתב/מוחלף.
-#   2. ה-push ל־gh-pages מפעיל את deploy-pages.yml הקיים שמעלה את כל
-#      האתר (שורש + previews) — אין workflow פריסה נפרד.
-#   3. אין secrets; הרשאות מינימליות (contents:write ל־push ל־gh-pages בלבד).
-#   4. preview-info.json + build-info.json מתעדים source branch, commit,
-#      חותמת זמן, profile=unified ותווית "סביבת ניסוי — אינה אישור לנכונות
-#      המנוע או לאישור cutover".
-#   5. אין למזג את הענף ל־main בעקבות פריסה מוצלחת — preview אינו cutover.
+#   1. לבקשת המשתמש, gh-pages root וגם previews/engine-parity/ מוגשים כעת
+#      מה-build המלא של ענף הניסוי בפרופיל unified. זהו עדכון Pages ישיר בלבד:
+#      אין merge ל-main, אין שינוי בקוד main, ואין מחיקת מנוע legacy מהמקור.
+#   2. root מתעד ב-build-info.json את source branch/commit ומסומן כסביבת ניסוי.
+#      תיקון נוסף ל-main אינו מתבצע כאן; זהו נתיב צפייה בגרסה המאוחדת בלבד.
+#   3. שומרים על CNAME, assets קיימים, קובצי gh-pages אחרים ועל previews/.
+#      rsync לשורש לעולם אינו משתמש ב---delete.
+#   4. assets/fonts הקיימים נשארים במקומם; תוכן ui מעודכן מועתק אליהם.
+#   5. אין secrets; הרשאות מינימליות (contents:write ל־push ל־gh-pages בלבד).
+#   6. אין לבצע merge אוטומטי של ענף העבודה ל-main בעקבות פריסה מוצלחת.
 name: preview-engine-parity
 
 on:
@@ -54,10 +54,14 @@ jobs:
           test -s red-build/ui/app.bundle.js
           test -s red-build/ui/engine-worker.bundle.js
 
-      - name: 'Sanity: bundle contains the unified dispatch flag path'
+      - name: 'Sanity: app and Worker both carry the unified dispatch path'
         run: |
+          grep -q '_engine-force-unified' red-build/ui/app.bundle.js \
+            || { echo 'FATAL: app bundle does not inject the unified engine flag'; exit 1; }
           grep -q '_engine-force-unified' red-build/ui/engine-worker.bundle.js \
-            || { echo 'FATAL: worker bundle lacks unified dispatch flag'; exit 1; }
+            || { echo 'FATAL: worker bundle lacks the unified dispatch branch'; exit 1; }
+          grep -q 'pageModel' red-build/ui/engine-worker.bundle.js \
+            || { echo 'FATAL: worker bundle lacks PageModel output'; exit 1; }
 
       - name: Write build-info.json (commit + timestamp + profile)
         run: |
@@ -70,39 +74,52 @@ jobs:
           ref: gh-pages
           path: gh-pages-checkout
 
-      - name: Verify production root is intact before staging
+      - name: Verify Pages root and shared assets before staging
         run: |
           test -f gh-pages-checkout/index.html || { echo 'FATAL: gh-pages root index.html missing'; exit 1; }
           test -d gh-pages-checkout/assets || { echo 'FATAL: gh-pages root assets/ missing'; exit 1; }
+          test -d gh-pages-checkout/assets/imud/fonts || { echo 'FATAL: shared fonts missing'; exit 1; }
+          test -f gh-pages-checkout/CNAME || { echo 'FATAL: CNAME missing'; exit 1; }
+          N_FONTS=$(ls gh-pages-checkout/assets/imud/fonts | wc -l)
+          test "$N_FONTS" -gt 1000 || { echo "FATAL: shared font catalog incomplete ($N_FONTS)"; exit 1; }
 
-      - name: Stage full app into previews/engine-parity/ (subpath only)
+      - name: Stage full app into preview and Pages root (no source-branch merge)
         run: |
           mkdir -p gh-pages-checkout/previews/engine-parity
-          # תוכן האפליקציה השלמה: bundles, worker, styles, assets, fonts, icons, index
+          # Preview קבוע: build מלא ומבודד.
           rsync -a --delete red-build/ui/ gh-pages-checkout/previews/engine-parity/
-          # preview-info נפרד לתיעוד הפריסה עצמה
+          # Pages root: בקשת המשתמש להציג את Unified בלי למזג ל-main.
+          # אין --delete: CNAME, assets משותפים, previews וקבצים אחרים נשמרים.
+          rsync -a --exclude='_export_test.html' --exclude='_fx.txt' --exclude='_vl.txt' red-build/ui/ gh-pages-checkout/
+          # root + preview מקבלים provenance מפורש של אותו build.
+          printf '%s' '{"profile":"unified","branch":"engine/legacy-parity-preview-20261119","commit":"${{ github.sha }}","builtAt":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","mode":"direct-gh-pages-deploy-no-main-merge","note":"סביבת ניסוי — קוד main ומנוע legacy נשארו ללא שינוי"}' > gh-pages-checkout/build-info.json
           printf '%s' '{"sourceBranch":"engine/legacy-parity-preview-20261119","commit":"${{ github.sha }}","builtAt":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","profile":"unified","label":"סביבת ניסוי — אינה אישור לנכונות המנוע או לאישור cutover"}' > gh-pages-checkout/previews/engine-parity/preview-info.json
-          # לא להשאיר קבצי דיפולט/דיבאג של העץ בפריסה
           rm -f gh-pages-checkout/previews/engine-parity/_export_test.html gh-pages-checkout/previews/engine-parity/_fx.txt gh-pages-checkout/previews/engine-parity/_vl.txt || true
 
-      - name: Verify subpath integrity (all assets staged)
+      - name: Verify root and subpath run the same unified build
         run: |
           P=gh-pages-checkout/previews/engine-parity
-          for f in index.html styles.css app.bundle.js engine-worker.bundle.js build-info.json preview-info.json favicon.ico imudify-icon.svg assets/imud/default_settings.json; do
-            test -f "$P/$f" || { echo "FATAL: missing $f in staged preview"; exit 1; }
+          for D in gh-pages-checkout "$P"; do
+            for f in index.html styles.css app.bundle.js engine-worker.bundle.js build-info.json favicon.ico imudify-icon.svg assets/imud/default_settings.json; do
+              test -f "$D/$f" || { echo "FATAL: missing $D/$f"; exit 1; }
+            done
+            test -d "$D/assets/imud/fonts" || { echo "FATAL: fonts dir missing in $D"; exit 1; }
+            N_FONTS=$(ls "$D/assets/imud/fonts" | wc -l)
+            test "$N_FONTS" -gt 1000 || { echo "FATAL: font catalog incomplete in $D ($N_FONTS)"; exit 1; }
+            grep -q '"profile":"unified"' "$D/build-info.json" || { echo "FATAL: $D is not marked unified"; exit 1; }
           done
-          test -d "$P/assets/imud/fonts" || { echo 'FATAL: fonts dir missing'; exit 1; }
-          N_FONTS=$(ls "$P/assets/imud/fonts" | wc -l)
-          echo "staged font files: $N_FONTS"
-          test "$N_FONTS" -gt 1000 || { echo 'FATAL: font staging looks incomplete'; exit 1; }
-          echo "staged size: $(du -sh $P | cut -f1)"
+          cmp -s gh-pages-checkout/app.bundle.js "$P/app.bundle.js" || { echo 'FATAL: root and preview app bundles differ'; exit 1; }
+          cmp -s gh-pages-checkout/engine-worker.bundle.js "$P/engine-worker.bundle.js" || { echo 'FATAL: root and preview Worker bundles differ'; exit 1; }
+          test -f gh-pages-checkout/CNAME || { echo 'FATAL: CNAME was lost'; exit 1; }
+          echo "root size: $(du -sh gh-pages-checkout | cut -f1)"
+          echo "preview size: $(du -sh $P | cut -f1)"
 
       - name: Commit staged preview to gh-pages
         run: |
           cd gh-pages-checkout
           git config user.name "github-actions[preview-engine-parity]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A previews/engine-parity
+          git add -A -- . ':!_export_test.html' ':!_fx.txt' ':!_vl.txt'
           if git diff --cached --quiet; then
             echo "no changes to stage — preview identical"
           else
@@ -113,9 +130,10 @@ jobs:
       - name: Summary
         run: |
           cat <<'EOF'
-          Preview staged to gh-pages:previews/engine-parity/ from ${{ github.sha }}.
-          Deployment happens via the existing deploy-pages.yml (triggered by the gh-pages push).
-          Expected URL: https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/previews/engine-parity/
-          The link is NOT considered working until verified open in a browser (HTTP 200, bundle loads, worker up, fonts load).
-          This preview is an experimental environment — not an approval of engine correctness and not a cutover approval.
+          Unified app staged to both Pages root and previews/engine-parity/ from ${{ github.sha }}.
+          No merge or push to main was performed; main retains the legacy engine source.
+          Root URL: https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/
+          Preview URL: https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/previews/engine-parity/
+          Both URLs must be verified in a browser with an actual typeset request, Worker, fonts and PDF export.
+          The Pages deployment is an experimental presentation of Unified, not a declaration that all parity audits passed.
           EOF
