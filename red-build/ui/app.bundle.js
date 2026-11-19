@@ -12188,9 +12188,30 @@ function folioGeometry(page, settings, folioMeasure) {
   };
 }
 
-/** ראש אזור הכותרת העליונה במרחב העמוד (מקור: המקרן ההיסטורי — contentBox.top − 18). */
+/**
+ * ראש אזור הכותרת העליונה במרחב העמוד.
+ *
+ * **תיקון שור (חקירת 19.11, HEADER_POSITION ×88 ב-full-math):** עד כאן המיקום
+ * נגזר מ-`contentBox.top − 18`. בפרופיל IMUD, עמוד פתיחת-סימן (sign-open) מרים את
+ * `contentBox.top` בהיסט h2TopOffset (180px) — והכותרת העליונה, שהיא **ריהוט עמוד**
+ * (Page Item participation=FURNITURE), נגררה יחד עם היסט התוכן ל-269.2px במקום
+ * 89.2px (נמדד ב-CI: עמ' 7 מסוג sign-open — headerBox 269.19–283.19 מול 89.19–103.19
+ * בעמודים רגילים; הפרש של בדיוק ההיסט).
+ *
+ * מקור גאומטרי עצמאי: בתבנית IMUD `margins.top` הוא קבוע החוזה (GEO.FLOW_TOP)
+ * ל**כל** סוגי העמודים — הוא אינו מושפע מהיסט פתיחת הסימן. הכותרת נעוצה אליו:
+ * ערך זהה (89.2) בכל עמודי הפרופיל, כולל sign-open — בדיוק כמו פס הכותרת של
+ * המורשת, שמיקומו קבוע בכל עמוד עם כותרת (חוזה 9C3 §ה: baseline 71.9px,
+ * כלל תחתון (43,62)–(553,63)pt בכל עמודי התוכן כולל פתיחות-סימן).
+ *
+ * הנתיב הלא-IMUD (קורפוס ה-DP הכללי) אינו משתנה: שם נשמר החישוב ההיסטורי
+ * `contentBox.top − 18` מילה במילה — נעילת fdff19d8 של s9d נשמרת.
+ */
 function headerGeometry(page) {
   const tpl = page.template;
+  if (tpl && tpl.imud === true && tpl.margins && Number.isFinite(tpl.margins.top)) {
+    return { y: Math.max(0, tpl.margins.top - 18) };
+  }
   return { y: Math.max(0, tpl.contentBox.top - 18) };
 }
 
@@ -19691,15 +19712,33 @@ function familyOf(key) {
 }
 
 // ─── שורת טקסט: תיבה ממוקמת מהמודל + מילים ממוקמות מהמודל ───
+/** וריאנט יישור שורה-אחרונה (חוזה dom-renderer.js:75 — lastLineClass):
+ * body-last-line-align (center|right|stretch) — העור והאודיט (LAST_NOT_CENTERED)
+ * מבחינים בין המצבים לפי המחלקה. ברירת המחדל — center (כמו המורשת). */
+function lastLineVariant(ml, settings) {
+  if (!ml || !ml.isLast) return '';
+  const mode = (settings && settings['body-last-line-align']) || 'center';
+  if (mode === 'right') return ' line--last-right';
+  if (mode === 'stretch') return ' line--last-stretch';
+  return ' line--last-center';
+}
+
 /**
  * כל שורה = div.line ממוקם ב-(x,y,w,h) מהמודל; כל מילה = span.w ממוקם
  * ב-x הסופי שלה (כולל הקצאת דבק/יישור שנקבעה בתכנון). הדפדפר אינו זז
  * דבר — גם לא מילים בתוך השורה. הקו-בסיס נופל באותה נוסחת half-leading
  * שבה הסמכות (attachBaselines) חישבה את baselineY במודל.
  */
-function renderModelLine(ml, doc, relX, relY) {
+function renderModelLine(ml, doc, relX, relY, settings) {
   const el = doc.createElement('div');
-  el.className = 'line' + (ml.isLast ? ' line--last' : '');
+  // **חוזה class של המורשת (dom-renderer.js:949):** line--heading מסמן שורות
+  // כותרת — האודיט החי (BODY_FONT_UNIFORMITY / LAST_NOT_CENTERED / head)
+  // וכללי ה-CSS (BASE_CSS .line:not(.line--last):not(.line--heading)) נשענים
+  // עליו. בלעדיו שורות כותרת בעמוד סווגו כשורות גוף עם גופן "חריג".
+  // **סיווג מפורש מהמודל (ml.kind) — לא החרגת דף.**
+  el.className = 'line'
+    + (ml.isLast ? ' line--last' + lastLineVariant(ml, settings) : '')
+    + (ml.kind === 'heading' ? ' line--heading' : '');
   el.setAttribute('dir', 'rtl');
   el.style.position = 'absolute';
   el.style.left = `${px2(ml.x - relX)}px`;
@@ -19723,7 +19762,11 @@ function renderModelLine(ml, doc, relX, relY) {
     if (!firstWord && typeof doc.createTextNode === 'function') el.appendChild(doc.createTextNode(' '));
     firstWord = false;
     const span = doc.createElement('span');
-    span.className = 'w';
+    // **חוזה סמני הערה (dom-renderer.js:1130):** מילה שסומנה במודל (wd.mk —
+    // פיצול "פרוסה 3 סמן מודבק" ב-materialize) מקבלת w--fnmarker. האודיט
+    // (MARKER_NOTE_MATCH) והעור (גודל/הגבהה) נשענים על המחלקה; הגיאומטריה
+    // עצמה מהמודל — המיקום והגודל אינם משתנים.
+    span.className = wd.mk ? 'w w--fnmarker' : 'w';
     span.style.position = 'absolute';
     span.style.left = `${px2(wd.x - ml.x)}px`;
     span.style.top = '0';
@@ -19830,13 +19873,51 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     wrap.style.width = `${px2(mp.shaar.box.w)}px`;
     wrap.style.height = `${px2(mp.shaar.box.h)}px`;
     for (const ln of mp.lines.filter(l => l.area === 'structural')) {
-      wrap.appendChild(renderModelLine(ln, doc, mp.shaar.box.x, mp.shaar.box.y));
+      const lineEl = renderModelLine(ln, doc, mp.shaar.box.x, mp.shaar.box.y, settings);
+      // **חוזה שורות השער (dom-renderer:915):** שורות תוכן השער נושאות
+      // band band--gate — האודיט (SHAAR_EMPTY/gates/ספירת מילים) והעור נשענים
+      // על העוגן. עד כאן השורות היו .line חשוף בתוך .shaar-content — השער
+      // נחשב ריק (SHAAR_EMPTY) ומילותיו לא נספרו. הגאומטריה אינה משתנה.
+      lineEl.className += ' band band--gate';
+      lineEl.style.margin = '0';
+      wrap.appendChild(lineEl);
     }
     root.appendChild(wrap);
   } else if ((mp.lines || []).some(l => l.area === 'structural')) {
-    // שורות מובנות בלי תיבה (TOC/כותרת הערות) — מוקרנות ישירות בקואורדינטות העמוד
-    for (const ln of mp.lines.filter(l => l.area === 'structural')) {
-      root.appendChild(renderModelLine(ln, doc, 0, 0));
+    // שורות מובנות בלי תיבה (TOC/כותרת הערות) — מוקרנות ישירות בקואורדינטות העמוד.
+    // **חוזה ה-DOM של ה-TOC (dom-renderer renderPaginatedTOC):** שורות תוכן-העניינים
+    // חיות בתוך מיכל .toc-rows ועל כל שורה מחלקת toc-row — האודיט החי
+    // (tocRows/tocWords/TOC_ROWS/חישוב רצפת הנפח), ה-CSS של הייצוא והעתקה
+    // נשענים על העוגנים האלה. עד כאן הוקרנו כ-.line חשוף — ה-TOC כולו היה
+    // בלתי-נראה לאודיט (0 מילים ב-28 עמודי TOC ב-very_long) וללא עור.
+    // הגאומטריה אינה משתנה: השורות ממוקמות-מוחלט בקואורדינטות עמוד; המיכל
+    // מאופס מפורשות (top/left=0) כדי שלא ייווצר אב-מיקום מוסט — בייצוא
+    // ה-CSS של .toc-rows (top:70px) נדרס בסגנון צמוד.
+    const structural = mp.lines.filter(l => l.area === 'structural');
+    const tocRows = structural.filter(l => l.kind === 'toc-row');
+    const others = structural.filter(l => l.kind !== 'toc-row');
+    for (const ln of others) {
+      root.appendChild(renderModelLine(ln, doc, 0, 0, settings));
+    }
+    if (tocRows.length) {
+      const tocWrap = doc.createElement('div');
+      tocWrap.className = 'toc-rows';
+      tocWrap.setAttribute('dir', 'rtl');
+      tocWrap.style.position = 'absolute';
+      tocWrap.style.top = '0';
+      tocWrap.style.left = '0';
+      tocWrap.style.right = 'auto';
+      tocWrap.style.bottom = 'auto';
+      tocWrap.style.margin = '0';
+      for (const ln of tocRows) {
+        const row = renderModelLine(ln, doc, 0, 0, settings);
+        // מחלקות החוזה (string-concat — תואם לכל דומי-ה-DOM של הבדיקות)
+        row.className += ' toc-row' + (ln.level != null ? ` toc-lvl-${ln.level}` : '');
+        // ניטרול שולי ה-CSS של הייצוא (margin:2px 0 מזיז שורות ממוקמות-מוחלט)
+        row.style.margin = '0';
+        tocWrap.appendChild(row);
+      }
+      root.appendChild(tocWrap);
     }
   }
 
@@ -19875,7 +19956,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     band.style.width = `${px2(mp.spanning.w)}px`;
     band.style.height = `${px2(mp.spanning.h)}px`;
     for (const ln of mp.lines.filter(l => l.area === 'spanning')) {
-      band.appendChild(renderModelLine(ln, doc, mp.spanning.x, mp.spanning.y));
+      band.appendChild(renderModelLine(ln, doc, mp.spanning.x, mp.spanning.y, settings));
     }
     root.appendChild(band);
   }
@@ -19919,7 +20000,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
       note.style.left = `${px2(ln.x)}px`;
       note.style.top = `${px2(ln.y)}px`;
       note.style.width = `${px2(ln.w)}px`;
-      note.appendChild(renderModelLine(ln, doc, ln.x, ln.y));
+      note.appendChild(renderModelLine(ln, doc, ln.x, ln.y, settings));
       enWrap.appendChild(note);
     }
     root.appendChild(enWrap);
@@ -19938,7 +20019,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     colEl.style.top = `${px2(colTops[ci])}px`;
     colEl.style.height = `${px2(Math.max(0, (geo.contentBox ? geo.contentBox.height : 0) - (geo.spanOffset || 0)))}px`;
     for (const ln of mp.lines.filter(l => l.area === 'column' && l.col === ci)) {
-      colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci]));
+      colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci], settings));
     }
     colsWrap.appendChild(colEl);
   });
@@ -19997,7 +20078,16 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     // שורות הטקסט של אותה הערה: אותו עמוד-שוליים (x) בטווח התיבה (yTop..yTop+h)
     const own = marginLines.filter(l => l.x != null && sn.x != null && Math.abs(l.x - sn.x) < 0.01
       && l.y != null && sn.yTop != null && l.y >= sn.yTop - 0.01 && l.y <= sn.yTop + (sn.heightPx || 0) + 0.01);
-    for (const ln of own) el.appendChild(renderModelLine(ln, doc, sn.x, sn.yTop));
+    // **מפרידי שורות (חוזה renderModelLine לגוף):** השורות ממוקמות-מוחלט
+    // בתוך אלמנט ההערה; בלי צומת רווח בין שורות, textContent מתמזג בגבול
+    // השורה ("בשםשבת") — שובר ספירת נפח (רצפת האודיט; נמדד: −6,104 מילים
+    // ב-very_long), העתקה ונגישות. הרווח אינו נראה (מילים ממוקמות-מוחלט).
+    let snFirstLine = true;
+    for (const ln of own) {
+      if (!snFirstLine && typeof doc.createTextNode === 'function') el.appendChild(doc.createTextNode(' '));
+      snFirstLine = false;
+      el.appendChild(renderModelLine(ln, doc, sn.x, sn.yTop, settings));
+    }
     if (!own.length && sn.text) {
       // רשומה בלי שורות מוקרנות — דיאגנוסטיק גלוי; הטקסט אינו נעלם (§2.4)
       diags.push({ kind: 'pmr-side-note-without-lines', noteId: sn.noteId || null, anchorId: sn.anchorId || null });
@@ -20020,7 +20110,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
   for (const ln of marginLines) {
     if (claimed.has(ln.id)) continue;
     diags.push({ kind: 'pmr-margin-line-orphan', lineId: ln.id || null });
-    const el = renderModelLine(ln, doc, 0, 0);
+    const el = renderModelLine(ln, doc, 0, 0, settings);
     el.classList.add('pmr-orphan-margin');
     root.appendChild(el);
   }
@@ -20073,12 +20163,19 @@ function renderModelPage(mp, settings, doc, opts = {}) {
         row.className = 'fn-row';
         row.style.position = 'relative';
         if (lineH > 0) { row.style.height = `${px2(lineH)}px`; row.style.lineHeight = `${px2(lineH)}px`; }
+        // **מפריד בין שורות ההערה (חוזה renderModelLine לגוף):** בלי צומת רווח
+        // בין השורות, textContent מתמזג בגבול השורה — שובר ספירת נפח (רצפת
+        // האודיט; נמדד: −758 מילים ב-very_long), העתקה ונגישות. אינו נראה.
+        if (k > 0 && typeof doc.createTextNode === 'function') el.appendChild(doc.createTextNode(' '));
         let firstFnWord = true;
         for (const wd of words) {
           if (!firstFnWord && typeof doc.createTextNode === 'function') row.appendChild(doc.createTextNode(' '));
           firstFnWord = false;
           const span = doc.createElement('span');
-          span.className = 'w';
+          // **חוזה סמני הערה:** הסמן של פתיחת ההערה (wd.mk מהחותמת) מסומן
+          // w--fnmarker — כמו בגוף וכמו ברנדרר המורשת. האודיט (MARKER_NOTE_MATCH)
+          // משווה סמני-גוף מול פתיחות-הערה לפי המחלקה הזו.
+          span.className = wd.mk ? 'w w--fnmarker' : 'w';
           span.style.position = 'absolute';
           span.style.left = `${px2(wd.x - (n.x != null ? n.x : 0))}px`;
           span.style.top = '0';

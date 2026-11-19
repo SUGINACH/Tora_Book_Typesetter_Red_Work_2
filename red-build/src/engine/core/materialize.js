@@ -442,7 +442,9 @@ function projectStampedRows(n, x, w, yTop, opts) {
   const prefix = [];
   if (isCont && Number(n.contMarkW) > 0) prefix.push({ text: NM.CONTINUATION_MARK, w: glyph(n.contMarkW) });
   const mkTxt = noteMarkerOf(n, { 'footnote-marker-style': null });
-  if (mkTxt && Number(n.markerW) > 0) prefix.push({ text: scrubPUAText(mkTxt), w: glyph(n.markerW) });
+  // **חוזה סמני הערה:** סמן פתיחת-ההערה מסומן mk=true — ההקרנה (DOM/PDF)
+  // והאודיט (MARKER_NOTE_MATCH) מזהים אותו לפי הדגל, בלי ניחוש לפי טקסט.
+  if (mkTxt && Number(n.markerW) > 0) prefix.push({ text: scrubPUAText(mkTxt), w: glyph(n.markerW), mk: true });
   if (!isCont && n.counterMark != null && String(n.counterMark) !== '' && Number(n.counterMarkW) > 0) {
     prefix.push({ text: scrubPUAText(String(n.counterMark)), w: glyph(n.counterMarkW) });
   }
@@ -468,7 +470,7 @@ function projectStampedRows(n, x, w, yTop, opts) {
     let cursor = gx + gw; // RTL — מימין לשמאל
     for (const t of live) {
       cursor -= t.w;
-      const wd = { text: t.text, x: cursor, w: t.w, sizePt, baselineY, fontKey: opts.fontKey, ...(opts.color ? { color: opts.color } : {}) };
+      const wd = { text: t.text, x: cursor, w: t.w, sizePt, baselineY, fontKey: opts.fontKey, ...(opts.color ? { color: opts.color } : {}), ...(t.mk ? { mk: true } : {}) };
       wds.push(wd);
       flat.push(wd);
       cursor -= gapW;
@@ -980,6 +982,10 @@ function projectLine(ln, colX, y, colW, settings, measure, align, production) {
     const eff = effSizeOf(i);
     const frags = (lm && lm.wordFrags && lm.wordFrags[i]) || null;
     const mkFrag = frags && frags.length >= 2 ? frags[frags.length - 1] : null;
+    // **סמן בראש מילה (חקירת 19.11, MARKER_NOTE_MATCH):** סמן שהוצמד לפני
+    // הטקסט — עצמאי ("א׳") או לפני פיסוק ("ד׳ .") — לא כוסה בפיצול הסמן-האחרון
+    // והוקרן בגודל השורה ובלי דגל mk. אותו פיצול בסמכות ההקרנה, בכיוון ההפוך.
+    const mkFirst = frags && frags.length >= 1 && frags[0].kind === 'noteMarker' && frags[0].advance > 0 ? frags[0] : null;
     if (mkFrag && mkFrag.kind === 'noteMarker' && mkFrag.advance > 0 && widths[i] > mkFrag.advance) {
       // פיצול: [טקסט ..., סמן] — הסמן החלק האחרון (מודבק אחרי המילה)
       const mkW = mkFrag.advance;
@@ -992,6 +998,24 @@ function projectLine(ln, colX, y, colW, settings, measure, align, production) {
       emitWord(txtTxt, txtW, eff, null);
       cursor -= mkW;
       emitWord(mkTxt, mkW, fnSizePt, { mk: true });
+    } else if (mkFirst && frags.length === 1) {
+      // מילת-סמן עצמאית — כולה סמן: גודל הרישום ודגל mk (כמו במורשת)
+      cursor -= widths[i];
+      emitWord(words[i], widths[i], fnSizePt, { mk: true });
+    } else if (mkFirst && widths[i] > mkFirst.advance && frags.length >= 2) {
+      // פיצול: [סמן, טקסט ...] — הסמן החלק הראשון (לפני פיסוק/המשך)
+      const mkW = mkFirst.advance;
+      const restW = widths[i] - mkW;
+      const raw = String(words[i]);
+      const sp = raw.indexOf(' ');
+      const mkTxt = sp >= 0 ? raw.slice(0, sp) : raw;
+      const restTxt = sp >= 0 ? raw.slice(sp + 1) : '';
+      cursor -= mkW;
+      emitWord(mkTxt, mkW, fnSizePt, { mk: true });
+      if (restTxt && restW > 0) {
+        cursor -= restW;
+        emitWord(restTxt, restW, eff, null);
+      }
     } else {
       cursor -= widths[i];
       // **S68:** סמן גודל פר-מילה רק כשהוא שונה מגודל השורה — שורות רגילות

@@ -153,7 +153,10 @@ describe('S8E-2 פרוסה 4 — זהות תוכן וגיאומטריה עם ה-
 
   it('אותן מילים: טקסט כל מילה מופיע; מספר עוגני המילים זהה למודל', () => {
     const html = exportHtmlFromModel(model, S, doc, {});
-    const wCount = (html.match(/class="w"/g) || []).length;
+    // **חוזה סמני הערה (s9e/renderer):** מילת-סמן נושאת class="w w--fnmarker" —
+    // העוגן הוא המחלקה w עם מודיפיקטורים אפשריים; הספירה נשארת מדויקת
+    // (כל מילת מודל = עוגן אחד בדיוק).
+    const wCount = (html.match(/class="w[ "]/g) || []).length;
     // מקורות עוגני המילים במקרין: שורות (כל האזורים) + מילות מרזב ההערות
     let modelWords = 0;
     for (const mp of model.pages) {
@@ -241,7 +244,7 @@ describe('S8E-3 פרוסה 4 — כיסוי, עצמאות וקישורים', () 
       for (const ln of mp.lines) modelWords += (ln.words || []).length;
       for (const n of (mp.footnotes || [])) modelWords += (n.words || []).length;
     }
-    const wCount = (html.match(/class="w"/g) || []).length;
+    const wCount = (html.match(/class="w[ "]/g) || []).length;
     assertEq(wCount, modelWords, `כל ${modelWords.toLocaleString()} מילי המודל בקובץ`);
     // רצפת נפח בסטרינג: מילים בטקסט הגולמי של השורות
     let textWords = 0;

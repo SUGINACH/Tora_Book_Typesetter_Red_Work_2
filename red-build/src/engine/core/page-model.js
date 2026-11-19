@@ -521,7 +521,10 @@ function notePlacement(n, proj, where) {
       baselineY: wd.baselineY != null ? r2(wd.baselineY) : null,
       ...(wd.sizePt != null ? { sizePt: wd.sizePt } : {}),
       ...(wd.fontKey != null ? { fontKey: wd.fontKey } : {}),
-      ...(wd.color != null ? { color: wd.color } : {})
+      ...(wd.color != null ? { color: wd.color } : {}),
+      // **חוזה סמני הערה:** דגל מילת-הסמן עובר גם למודל — ההקרנה (w--fnmarker)
+      // והאודיט (MARKER_NOTE_MATCH) מזהים את פתיחת-ההערה לפי הדגל.
+      ...(wd.mk ? { mk: true } : {})
     })) : [],
     ...where
   };

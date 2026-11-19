@@ -141,7 +141,9 @@ describe('S8G-2 parity תלת-יעדי — אותו מודל, אותן עובד�
     const htmlBody = String(html).replace(/<style>[\s\S]*?<\/style>/g, '');
     const htmlPages = (htmlBody.match(/class="[^"]*pmr-page/g) || []).length;
     const htmlLines = (htmlBody.match(/class="line[ "]/g) || []).length;
-    const htmlWords = (htmlBody.match(/class="w"/g) || []).length;
+    // **חוזה סמני הערה (s9f):** מילת-סמן נושאת class="w w--fnmarker" — העוגן
+    // הוא המחלקה w עם מודיפיקטורים אפשריים; הספירה נשארת מדויקת.
+    const htmlWords = (htmlBody.match(/class="w[ "]/g) || []).length;
     // PDF
     const pdf = exportPdfFromModel(model, S, fontBytes, 'Frank Ruhl Libre');
     assert(pdf.ok, 'PDF ok');
