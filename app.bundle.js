@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 75 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 76 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -329,6 +329,8 @@ var __paths = {
   "src/engine/extensions/extensions-io.js|./style-schema": "src/engine/extensions/style-schema.js",
   "src/engine/extensions/extensions-io.js|../decoration/custom-pages": "src/engine/decoration/custom-pages.js",
   "src/engine/decoration/custom-pages.js|../layout/page-templates": "src/engine/layout/page-templates.js",
+  "src/engine/layout/page-templates.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
+  "src/engine/layout/page-templates.js|./furniture-geometry": "src/engine/layout/furniture-geometry.js",
   "src/engine/import/docx-import.js|./zip-reader": "src/engine/import/zip-reader.js",
   "src/engine/import/docx-import.js|./xml-lite": "src/engine/import/xml-lite.js",
   "src/ui/preview-tab.js|../engine/output/dom-renderer": "src/engine/output/dom-renderer.js",
@@ -367,7 +369,10 @@ var __paths = {
   "src/engine/layout/legacy-imud-flow.js|../core/events": "src/engine/core/events.js",
   "src/engine/layout/legacy-imud-flow.js|../core/ledger": "src/engine/core/ledger.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/headers-builder": "src/engine/decoration/headers-builder.js",
+  "src/engine/layout/legacy-imud-flow.js|../decoration/folio": "src/engine/decoration/folio.js",
   "src/engine/layout/legacy-imud-flow.js|../output/line-font": "src/engine/output/line-font.js",
+  "src/engine/layout/legacy-imud-flow.js|./furniture-geometry": "src/engine/layout/furniture-geometry.js",
+  "src/engine/layout/legacy-imud-flow.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/layout/legacy-imud-flow.js|../core/h3-contract": "src/engine/core/h3-contract.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/legacy-ornaments": "src/engine/decoration/legacy-ornaments.js",
   "src/engine/decoration/legacy-ornaments.js|./ornament-fit": "src/engine/decoration/ornament-fit.js",
@@ -503,11 +508,27 @@ function pickBinaryFile(accept, cb) {
   inp.click();
 }
 
+// **ענף preview לצורך parity (engine/legacy-parity-preview-20261119):**
+// הענף מריץ את המנוע המאוחד בנתיב הַחַן של הַאַפַּלִיקָצִיה בלבד — אותן הגדרות מיובאות (IMUD),
+// אותם גופנים, אותן תבניות הערכה 40 — אך במנוע המאוחד. זהו צד הַהַשְוואה של המיילסטון — לא cutover.
+// בַּאַתְרורִית: האתר הציבורי ממשיך לעבוד עם המנוע המורשת; הענף הזה אינו מוזג לאחר שערי parity יוכחו.
+const BRANCH_ENGINE_PROFILE = 'unified';
+
+/** מידע בריאה עבור צ'יפ הפרופיל: build-info.json נכתב על ידי הַוּוַרְקְפְלוֹ (commit SHA + חותמת זמן). נתיב יחסי — עובד גם מתוך subpath של Pages. */
+async function fetchBuildInfo() {
+  try {
+    const r = await fetch('build-info.json');
+    if (!r.ok) return null;
+    const j = await r.json();
+    return (j && typeof j === 'object') ? j : null;
+  } catch (e) { return null; }
+}
+
 function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-18-s9c3'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-19-parity1'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -519,9 +540,12 @@ function boot() {
   const settingsPersistence = (typeof window !== 'undefined' && window.localStorage)
     ? createSettingsPersistence(window.localStorage)
     : null;
+  const buildInfoPromise = fetchBuildInfo();
   const app = createApp(document, {
     engineClient: engine,
-    engineVersion: ASSET_VERSION, // **S1-ה/U-2:** מזהה גרסת הנכסים (שתי החבילות נבנות יחד) — מוצג במידע הריצה
+    engineVersion: ASSET_VERSION,
+    branchEngineProfile: BRANCH_ENGINE_PROFILE, // **ענף preview:** unified בנתיב החן; בַּאַתְרוֹ main השורה אינה קיימת
+    branchBuildInfoPromise: buildInfoPromise, // **S1-ה/U-2:** מזהה גרסת הנכסים (שתי החבילות נבנות יחד) — מוצג במידע הריצה
     settingsPersistence, // **S6.1 (פער 2):** השתמרות הגדרות (SRS §17.1)
     fontStatus: (typeof document !== 'undefined' && document.fonts) ? 'loading' : 'ready',
     // **03.11:** ייצוא PDF/ZIP במנוע ה־Worker + הורדה בפועל בדפדפן
@@ -717,6 +741,13 @@ function readSavedSplitPct() {
 
 function createApp(doc, opts = {}) {
   const settings = getDefaultSettings();
+  // **ענף preview לצורך parity (engine/legacy-parity-preview-20261119):** הענף
+  // מפעיל את המנוע המאוחד בנתיב ה־UI/Worker האמיתי — דגל in-band שזורם עם
+  // ההגדרות לאותה נקודת dispatch אחת ב־pipeline (בלי מנגנון מקבילי). ב־main
+  // הערך null ושום דבר אינו מוזרק — ברירת המחדל של main אינה משתנה.
+  const branchProfile = opts.branchEngineProfile === 'unified' ? 'unified' : null;
+  const branchBuildInfo = opts.branchBuildInfo || null; // { commit, builtAt } — מוזרק מ־build-info.json בזמן פריסה
+  if (branchProfile === 'unified') settings['_engine-force-unified'] = true;
   let text = '';
   let result = null;            // תוצאה מסוריאליזת פרוטוקול (D-65)
   let pageModelObj = null;      // **שלב 8 פרוסה 2 (§4.4):** PageModel שהתקבל מה-Worker — מאומת וקפוא מחדש
@@ -799,8 +830,19 @@ function createApp(doc, opts = {}) {
   const engineVersion = opts.engineVersion || null;
   const status = buildStatusStrip(doc, {
     onExplicitRetypeset: () => onExplicitRetypeset(),
-    onCancel: () => onCancelTypeset()
+    onCancel: () => onCancelTypeset(),
+    // **ענף preview:** צ'יפ פרופיל מנוע — מזהה profile + commit + תווית ניסוי.
+    branchProfile,
+    branchBuildInfo
   });
+  // **ענף preview:** הצ'יפ מוצג מיד בעליה — מחוור חייבת לראות את הפרופיל בענף הניסיון.
+  if (branchProfile) {
+    status.setBranchProfile(branchProfile, branchBuildInfo);
+    // build-info.json נטען בַּאַסִינקְצִיה מהַשֶרת (fetch) — כשמגיע מעדכנים את הצ'יפ עם commit/חותמת זמן.
+    if (opts.branchBuildInfoPromise && typeof opts.branchBuildInfoPromise.then === 'function') {
+      opts.branchBuildInfoPromise.then((info) => { status.setBranchProfile(branchProfile, info || branchBuildInfo); }).catch(() => {});
+    }
+  }
 
   const editor = buildEditorTab(doc, {
     onTextChange: (t) => { text = t; markHeavyDirty('טקסט השתנה'); },
@@ -1104,6 +1146,16 @@ function createApp(doc, opts = {}) {
       // נשמר לכל רינדור חוזר (גם keepView) כדי שהתצוגה לא תחליף רנדרר
       // באמצע סשן.
       engineProfile = (res && res.legacyProfile) ? 'legacy' : 'unified';
+      // **ענף preview (§ג.4 בהוראה):** כשל מפורש כשחסר PageModel או כשהמנוע
+      // נפל בשקט ל־legacy למרות פרופיל הענף — אין fallback שקט ואין המשך תצוגה
+      // כאילו הכול תקין. התצוגה הקיימת נשמרת כמו שהיא, אך מצב המנוע הופך לשגיאה.
+      if (branchProfile === 'unified') {
+        if (engineProfile === 'legacy') {
+          status.setEngineState('error', { message: 'ענף preview: המנוע נפל ל־legacy למרות פרופיל unified — fallback שקט אסור. דווחו זאת.' });
+        } else if (!pageModelObj) {
+          status.setEngineState('error', { message: 'ענף preview: תוצאת המנוע המאוחד הגיעה ללא PageModel תקין — אין fallback. דווחו זאת.' });
+        }
+      }
       typesetGen++; // **S5.2 (5):** +1 על כל עימוד שהושלם (בדיוק במקום ההשמה ל-result) — ביטול/החלפה אינם נספרים
       applyResultToViews();
       status.setEngineState('idle');
@@ -2095,6 +2147,16 @@ function buildStatusStrip(doc, opts) {
   root.className = 'status-strip';
   root.setAttribute('role', 'status');
 
+  // ---- צ'יפ פרופיל ענף preview (engine/legacy-parity-preview-20261119) ----
+  // מזהה בעין אנושית איזה מנוע רץ בענף זה + commit — כדי שאף אחד לא יטעה
+  // בין האתר הציבורי (legacy) לבין סביבת הניסוי (unified). תווית הניסוי
+  // מפורשת: preview אינו אישור לנכונות המנוע ואינו אישור cutover.
+  const profileChip = doc.createElement('span');
+  profileChip.className = 'chip chip--profile';
+  profileChip.style.display = 'none';
+  root.appendChild(profileChip);
+
+
   // ---- מצב מנוע + התקדמות ----
   const engine = doc.createElement('span');
   engine.className = 'chip chip--engine';
@@ -2233,6 +2295,22 @@ function buildStatusStrip(doc, opts) {
       runInfo.title = tip.join('\n');
     },
     /** הודעה חולפת (8 שניות) — ייבוא, סירוב פורמט, החלת המלצה. */
+    /** **ענף preview:** צ'יפ פרופיל מנוע ומידע בריאה — מוצג רק בענף הניסיון. */
+    setBranchProfile(profile, buildInfo) {
+      if (!profile) { profileChip.style.display = 'none'; return; }
+      const commit = buildInfo && buildInfo.commit ? String(buildInfo.commit).slice(0, 7) : null;
+      const builtAt = buildInfo && buildInfo.builtAt ? String(buildInfo.builtAt) : null;
+      profileChip.style.display = '';
+      profileChip.textContent = commit
+        ? `⚙ מנוע: unified (ניסיון) · ${commit}`
+        : '⚙ מנוע: unified (ניסיון)';
+      profileChip.title = [
+        'סביבת ניסיון — ענף engine/legacy-parity-preview',
+        'אינה אישור לנכונות המנוע ולא אישור cutover.',
+        commit ? `מקור: ${commit}` : null,
+        builtAt ? `נבנה: ${builtAt}` : null
+      ].filter(Boolean).join('\n');
+    },
     setNotice(text) {
       notice.textContent = String(text != null ? text : '');
       notice.classList.toggle('chip--notice-on', !!text);
@@ -2848,7 +2926,7 @@ const TENS = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
 const HUND = ['', 'ק', 'ר', 'ש', 'ת', 'תר', 'תש', 'תת', 'תתק'];
 
 /**
- * מספר עברי (D-37):
+ * מספר עברי (D-37) — **לשדות שאינם פוליו בלבד** (D-108: פוליו חשוף, ראה toBareGematria):
  *  - אות בודדת ⇒ אות + גרש (׳): א׳=1, כ׳=20, ת׳=400.
  *  - שתי אותיות ומעלה ⇒ גרשיים (״) לפני האות האחרונה: ט״ו=15, ט״ז=16, כ״א=21, תש״ב=702, תשמ״ב=742.
  *  - 15/16 ⇒ ט״ו/ט״ז (לא יה+וו).
@@ -2894,11 +2972,46 @@ function finish(thousands, letters) {
   return thousands ? thousands + body : body;
 }
 
+/** **D-108 (19.11 — תיקון מפורש להחלת D-31 על פוליו):** גימטריה חשופה למספרי
+ *  עמודים מודפסים — הגיליון בתחתית העמוד ומספרי העמודים בתוכן העניינים —
+ *  בלי גרש (U+05F3), בלי גרשיים (U+05F4), בלי אפוסטרוף ASCII ובלי מפריד
+ *  אחר, גם בחלק האלפים: 1=א, 2=ב, 15=טו, 16=טז, 21=כא, 22=כב, 100=ק,
+ *  999=תתקצט, 1000=א, 1001=אא, 5702=התשב.
+ *  D-31/D-37 (המספור עם גרש/גרשיים) **אינם חלים על פוליו** — הם נשארים
+ *  לשדות שאינם פוליו (סמני הערות ותצוגות אחרות; "אין להסיק מכלל זה דבר
+ *  על סימני ציטוט/גרש בהערות, בגוף הטקסט או בשדות אחרים").
+ *  **מקור סמכות יחיד:** זהו פורמט הפוליו הקנוני של שני המנועים — מסלול
+ *  המורשת (legacy-imud-flow) קורא אותה ל-folioDisplay ולתוויות ה-TOC
+ *  (parity legacy↔unified; היסטורית toGematria של המורשת היה חשוף עד 999
+ *  והוסיף מפריד אלפים מעליו — D-108 אוסר מפריד בכל ערך).
+ *  ערך לא-חיובי/בלתי-נבדל ⇒ '' (כמו המורשת: folioDisplay ריק). */
+function toBareGematria(n) {
+  n = parseInt(n, 10);
+  if (isNaN(n) || n <= 0) return '';
+  if (n === 15) return 'טו';
+  if (n === 16) return 'טז';
+  // אלפים — בלי שום מפריד (D-108): 1000=א, 1001=אא, 5702=התשב
+  if (n >= 1000) return toBareGematria(Math.floor(n / 1000)) + toBareGematria(n % 1000);
+  const hundreds = ['', 'ק', 'ר', 'ש', 'ת', 'תק', 'תר', 'תש', 'תת', 'תתק'];
+  const tens = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
+  const ones = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+  let str = '';
+  let h = Math.floor(n / 100);
+  if (h > 0) { str += hundreds[Math.min(h, 9)]; n %= 100; }
+  const t = Math.floor(n / 10), o = n % 10;
+  if (t === 1 && (o === 5 || o === 6)) str += (o === 5) ? 'טו' : 'טז';
+  else str += tens[t] + ones[o];
+  return str;
+}
+
 function formatPageNumber(value, settings) {
   switch (settings['page-num-format']) {
     case 'decimal': return String(value);
-    case 'daf-hebrew': return `דף ${toHebrewNumber(value)}`;
-    default: return toHebrewNumber(value);
+    // **D-108:** מספר עמוד מוצג בגימטריה חשופה בלבד — הן הפורמט העברי
+    // (ברירת המחדל; 'gematria' של ערכות IMUD נופל לכאן) והן חלק המספר
+    // של daf-hebrew. אין גרש/גרשיים/מפריד בשום פוליו ובשום תווית TOC.
+    case 'daf-hebrew': return `דף ${toBareGematria(value)}`;
+    default: return toBareGematria(value);
   }
 }
 
@@ -2969,7 +3082,7 @@ function assignNumbers(pages, settings) {
 }
 
 module.exports = {
-  toHebrewNumber, formatPageNumber, frameNumber, tocPageLabel,
+  toHebrewNumber, toBareGematria, formatPageNumber, frameNumber, tocPageLabel,
   isCssFrame, assignNumbers,
 };
 
@@ -8162,7 +8275,61 @@ const PAGE_SIZES = {
  * @param {object} settings
  * @param {boolean} isRecto
  */
+// **שלב ההעברה למנוע המאוחד — מקטע 1 (גאומטריית עמוד וטורים):**
+// כשפרופיל IMUD פעיל (הגדרות שמקורן ב-default_settings.json של התוכנה
+// המקורית — importImudSettings מסמן _layout-profile='imud' ומצרף _imudRaw),
+// הגריד נבנה **מהחוזה המכויל מהייחוס** (core/imud-geometry.js) ולא מהאחוזים
+// הגנריים. הפער שתוקן (דוח חקירת האתר החי 19.11, ג.10): האחוזים הגנריים
+// (grid-col-width-pct=40% מהתוכן) ייצרו חור מרכזי של 134.9px בין הטורים,
+// מול מרזב 13.48px במקור; שוליים של 7.5% מול 120.72px (15.2%) במקור.
+// לא ערכי קסם: המקור הוא החוזה המשותף ששני המנועים צורכים.
+const {
+  GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
+} = require('../core/imud-geometry');
+const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
+
+function isImudProfile(settings) {
+  return !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+}
+
+/** תבנית עמוד מהחוזה המכויל של IMUD — אותה גאומטריה שהמורשת מייצרת. */
+function buildImudPageTemplate(type, settings, isRecto) {
+  const twoCol = !( [PAGE_TYPES.PREFACE, PAGE_TYPES.SHAAR_MAIN, PAGE_TYPES.SHAAR_SUB,
+    PAGE_TYPES.SHAAR_BACK, PAGE_TYPES.TOC_GENERAL, PAGE_TYPES.TOC_DETAIL,
+    PAGE_TYPES.CUSTOM, PAGE_TYPES.FILLER].includes(type) );
+  const binding = Number(settings['binding-offset-px']) || 0;
+  const columns = twoCol
+    ? [
+        { x: GEO.COL_R_X + (isRecto ? binding : -binding), w: GEO.COL_W }, // ימין קודם (RTL)
+        { x: GEO.COL_L_X + (isRecto ? binding : -binding), w: GEO.COL_W }
+      ]
+    : [ { x: GEO.COL_L_X, w: SINGLE_W } ]; // טור רחב — 2×269.41+13.48 (grid)
+  const gutter = GEO.COL_R_X - (GEO.COL_L_X + GEO.COL_W); // 13.48
+  // תחתית הזרימה קבועה מהחוזה; הפוליו מתחתיה (baseline 1054.5 — מקטע 3)
+  const textTop = type === PAGE_TYPES.SIGN_OPEN
+    ? GEO.FLOW_TOP + 180 // h2-spacer (GEO.H2_SPACER) לפני סימן+כותרת — כמו flowSection של המורשת
+    : GEO.FLOW_TOP;
+  return {
+    type, isRecto, imud: true,
+    width: GEO.PAGE_W, height: GEO.PAGE_H,
+    margins: { top: GEO.FLOW_TOP, bottom: GEO.PAGE_H - FLOW_BOTTOM, side: GEO.COL_L_X, outer: GEO.PAGE_W - (GEO.COL_R_X + GEO.COL_W) },
+    columns, gutter,
+    headerHeight: GEO.HEADER_BASELINE,   // פס הכותרת: גליפים 42.56–57.56pt (גאומטריית הפס; התוכן — מקטע 3)
+    headerTop: GEO.FLOW_TOP - RUNNING_HEAD_TOP_INSET_PX,
+    folioHeight: GEO.PAGE_H - GEO.FOLIO_BASELINE,
+    h2TopOffset: type === PAGE_TYPES.SIGN_OPEN ? 180 : 0,
+    contentBox: { top: textTop, bottom: FLOW_BOTTOM, height: FLOW_BOTTOM - textTop },
+    numbered: true,
+    counts: true,
+    hasRunningHead: [PAGE_TYPES.REGULAR, PAGE_TYPES.SIGN_OPEN, PAGE_TYPES.H3_SPREAD,
+      PAGE_TYPES.PREFACE, PAGE_TYPES.TOC_GENERAL, PAGE_TYPES.TOC_DETAIL].includes(type)
+  };
+}
+
 function buildPageTemplate(type, settings, isRecto = true) {
+  // **מקטע 1:** פרופיל IMUD ⇒ החוזה המכויל (לא הגריד הגנרי). הנתיב הלא-IMUD
+  // (קורפוס ה-DP הכללי) אינו משתנה כלל — אותן נוסחאות אחוזים כמו קודם.
+  if (isImudProfile(settings)) return buildImudPageTemplate(type, settings, isRecto);
   const size = PAGE_SIZES[settings['page-size']] || PAGE_SIZES.A4;
   const marginSide = size.w * settings['grid-margin-side-pct'] / 100;
   const binding = settings['binding-offset-px'] || 0;
@@ -8186,6 +8353,8 @@ function buildPageTemplate(type, settings, isRecto = true) {
 
   const textTop = marginTop + headerH + (type === PAGE_TYPES.SIGN_OPEN ? settings['h2-top-offset'] : 0);
   const textBottom = size.h - marginBottom - folioH;
+  // ריהוט העמוד מקבל עוגן עצמאי; h2-top-offset מזיז את הגוף בלבד.
+  const headerTop = marginTop + headerH - RUNNING_HEAD_TOP_INSET_PX;
 
   return {
     type, isRecto,
@@ -8197,6 +8366,7 @@ function buildPageTemplate(type, settings, isRecto = true) {
     ],
     gutter,
     headerHeight: headerH,
+    headerTop,
     folioHeight: folioH,
     // **S8:** אזור העיטורים שמעל תיבת התוכן (אזור h2-top-offset) — מסומן במפורש
     // כך שאודיט עיטורים יודע מה חוקי (עיטור H2 עליון חי באזור זה — לא גלישה).
@@ -8211,7 +8381,176 @@ function buildPageTemplate(type, settings, isRecto = true) {
   };
 }
 
-module.exports = { PAGE_TYPES, PAGE_SIZES, buildPageTemplate, MM_TO_PX };
+module.exports = { PAGE_TYPES, PAGE_SIZES, buildPageTemplate, buildImudPageTemplate, isImudProfile, MM_TO_PX };
+
+};
+__modules["src/engine/core/imud-geometry.js"] = function (require, module, exports) {
+// src/engine/core/imud-geometry.js — חוזה גאומטריית IMUD המכוילת (מקור אמת יחיד)
+'use strict';
+
+/**
+ * **שלב ההעברה למנוע המאוחד — מקטע 1 (גאומטריית עמוד וטורים).**
+ *
+ * עד כאן חיו הקבועים הללו רק בתוך `layout/legacy-imud-flow.js` — והמנוע
+ * המאוחד בנה גריד גנרי מאחוזים (grid-col-width-pct וכו') שאין לו מיפוי
+ * מפתחות IMUD. התוצאה הנמדדת: חור מרכזי של 134.9px בין הטורים מול מרזב
+ * 13.48px במקור (דוח חקירת האתר החי, 19.11, ג.10).
+ *
+ * כעת הגאומטריה המכוילת מהייחוס היא **מודול חוזה משותף** — בדיוק כמו
+ * `core/h3-contract.js` שכבר משותף לשני המנועים. שני הצרכנים:
+ *   1. `layout/legacy-imud-flow.js` — מייבא את אותם הערכים (אפס שינוי
+ *      התנהגות; מוכח ב-digest זהה של הקורפוסים).
+ *   2. `layout/page-templates.js` — כשפרופיל IMUD פעיל (הגדרות שמקורן
+ *      ב-default_settings.json של המקור), תבנית העמוד נבנית מהחוזה
+ *      הזה ולא מהאחוזים הגנריים.
+ *
+ * החוזה המלא (מיקומים, גדלים, פורמטים): audits/ENGINE_CONTRACT_9C3.md.
+ * יחידות: px @96dpi; PDF = px×0.75.
+ */
+
+// ---------- גיאומטריית עמוד (מכויל מהייחוס המסומן) ----------
+const GEO = {
+  PAGE_W: 793.7, PAGE_H: 1122.5,               // A4
+  COL_W: 269.41,                                // רוחב טור (col:right 269 בתגיות המקור)
+  COL_R_X: 403.61, COL_L_X: 120.72,             // שפות טורים (ימני/שמאלי)
+  MARGIN_R_X: 686.3, MARGIN_L_X: 56.7, MARGIN_W: 50.5, // טורי שוליים (margin-col)
+  FLOW_TOP: 107.2,                              // ראשית זרימת הגוף בעמוד רגיל
+  FLOW_H: 915,
+  LINE_H: 21.44,
+  H2_SPACER: 180,                               // h2-spacer לפני סימן+כותרת
+  HEADER_BASELINE: 71.9,                        // פס כותרת: גליפים 42.56–57.56pt
+  FOLIO_BASELINE: 1054.5,                       // עמודון: y0=783.82pt (גליף ~1045px), ממורכז
+  FN_AREA_TOP: 969.5,                           // תחילת מרזב ההערות (y0=727.1pt בייחוס)
+  FN_PITCH: 16.7,                               // פס שורות הערה (8.5pt × 1.5 × 4/3)
+  TOC_NUM_X: 66.1,                              // מספרי תוכן-עניינים בשמאל (x0≈49.6pt)
+  TOC_TITLE_X1: 727.4,                          // שפה ימנית של כותרות תוכן-עניינים (545.6pt)
+  TOC_STAIR: 8,                                 // מדרגת כניסה לפי רמה (padding-right 8px)
+  MN_PITCH: 9.6                                 // פס שורות הערת-צד (8px × 1.2)
+};
+
+// ---------- קבועים אנכיים נגזרים ----------
+const FLOW_BOTTOM = GEO.FLOW_TOP + GEO.FLOW_H; // 1022.2px — תחתית הזרימה האמיתית
+const H2_AREA_H = 284.25;   // אזור h2: מרווח-עליון 22% + סימן + כותרת + שוליים (S4.19)
+const H0_AREA_H = 249.2;    // זרימת ההקדמה מתחילה ב-356.4px (S4.19)
+const SINGLE_W = 552.3;     // .single-wide-col = 2×269.41+13.48 (grid)
+const TITLE_W_PCT = 0.6;    // תיבת כותרת 2/3 — 60% מרוחב הפס (S74)
+const H23_TITLE_W = SINGLE_W * TITLE_W_PCT; // 331.38px
+const H0_LINE_H = 20.55;    // פס שורת ההקדמה (11.5pt×1.34×4/3 — S4.13)
+const H0_TITLE_Y = 309.0;   // מיקום כותרת ההקדמה (S4.24)
+const TOC_TITLE_BLOCK_H = 213;
+// גיאומטריית עמודי תוכן-העניינים — אבסולוטית ונפרדת מזרימת הגוף (S4.14)
+const TOC_FIRST_TOP = 370.7;
+const TOC_CONT_TOP = 113.7;
+const TOC_STRETCH_BOTTOM = 1005.7;
+
+// ---------- מתיחת סוף-עמוד + משיכת זנב-יתום (העתק נאמן מ-v21-glm, S4.17) ----------
+const PAGE_STRETCH_MAX = 48;      // v21: תקרת מתיחת הבלוק האחרון בעמוד (px)
+const JUSTIFY_MAX_GAP = 9;        // v21: תקרת ריווח (padding) שמתווסף אחרי פסקה
+const JUSTIFY_MAX_LH_EXTRA = 3;   // v21: תקרת תוספת גובה-שורה במתיחת עמוד (px)
+const ORPHAN_RECLAIM_BUFFER = 12; // v21: באפר "חירום" בתחתית העמוד למשיכת יתום
+const RECLAIM_BELOW_BASE = 2;     // v21: היתר כיווץ מתחת לבסיס לשורה (px)
+
+// ---------- גדלי גופן (pt — כמו הגדרות המקור; פיקסלים = pt×4/3) ----------
+// ליבה סטטית בלבד: legacy-imud-flow מוטט חלק מהשדות מההגדרות (S6.3) —
+// המוטציה נשארת שם; המנוע המאוחד קורא את ערכי ברירת המחדל מכאן.
+const SZ_CORE = {
+  body: 12, h0Title: 17, h0Body: 11.5, h2: 17, siman: 20, h3: 13.5,
+  h4: 12.5, h5: 11.5, h6: 10.5, parenDelta: -2,
+  fnBody: 8.5, fnMarker: 8, marginNote: 6, folio: 10.5,
+  hdrR: 15, hdrC: 11, hdrL: 15, divider: 6.75,
+  tocNum: 10.5, tocTitle: 17,
+  tocLevel: { 1: 12, 2: 11, 3: 10.5, 4: 10, 5: 9.5, 6: 9, 7: 8.8 }
+};
+
+module.exports = {
+  GEO,
+  FLOW_BOTTOM, H2_AREA_H, H0_AREA_H, SINGLE_W, TITLE_W_PCT, H23_TITLE_W,
+  H0_LINE_H, H0_TITLE_Y,
+  TOC_TITLE_BLOCK_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM,
+  PAGE_STRETCH_MAX, JUSTIFY_MAX_GAP, JUSTIFY_MAX_LH_EXTRA, ORPHAN_RECLAIM_BUFFER, RECLAIM_BELOW_BASE,
+  SZ_CORE
+};
+
+};
+__modules["src/engine/layout/furniture-geometry.js"] = function (require, module, exports) {
+// src/engine/layout/furniture-geometry.js — גיאומטריית ריהוט עמוד ממקור יחיד (שלב 6 פרוסה 1)
+'use strict';
+
+/**
+ * **מעמד (הוראת שלב 6 §8):** "כותרות עליונות, תחתונות ומספרי עמוד יהיו Page
+ * Items בעלי placement model אחיד; **אין לחשב את מיקומם בנפרד ב-DOM וב-PDF**."
+ *
+ * עד כאן המקרן ל-PDF חישב את תיבת הגיליון והבסיס במתמטיקה מפורשת
+ * (FOLIO_BOTTOM_PX=25, half-leading, ascent) בעוד ה-DOM הסתמך על CSS חי
+ * (.folio{bottom:25px} וכו') שכויל להתאים בעבר (S69/S5.1) — שני מקורות
+ * של אותה גיאומטריה שכל אחד מהם יכול לסטות בשקט. מעתה שני המקרינים
+ * קוראים מכאן: המקרן מציב את המספרים כמות שהם; ה-DOM מציב אותם כסגנון
+ * מפורש (top/lineHeight) לצד ה-class הקיים שנשאר אחראי לעור (מסגרת/צבע).
+ */
+
+/** תחתית תיבת הגיליון מה-CSS החי (styles.css: .folio{bottom:25px}) — קבוע המקור. */
+const FOLIO_BOTTOM_PX = 25;
+/** ראש תיבת גיליון במצב top (styles.css: .folio--top{top:4px}). */
+const FOLIO_TOP_PX = 4;
+/** ראש תיבת גיליון בתוך הכותרת העליונה (styles.css: .folio--in-header{top:6px}). */
+const FOLIO_IN_HEADER_PX = 6;
+/** מרחק תיבת הכותרת העליונה מעל ראשית זרימת התוכן — קבוע משותף לתבניות. */
+const RUNNING_HEAD_TOP_INSET_PX = 18;
+
+/**
+ * גיאומטריית הגיליון — מחושבת פעם אחת מאותם קלטים ששני המקרינים צורכים.
+ * @param {object} page — עמוד (index, folioDisplay, template)
+ * @param {object} settings
+ * @param {{measureTextWidth:(t:string,pt:number)=>number, ascentEm:()=>number, descentEm:()=>number}} folioMeasure
+ *   מדידת הגיליון (גופן הגיליון כשרשום — אותו מופע שהמקרן בונה)
+ * @returns {null|{y, baselineY, x, w, sizePt, text, lineHeightPx, position}}
+ */
+function folioGeometry(page, settings, folioMeasure) {
+  const pos = String((settings && settings['page-num-position']) || 'bottom-center');
+  if (pos === 'none' || !page || !page.folioDisplay) return null;
+  const tpl = page.template;
+  const text = String(page.folioDisplay);
+  const folioSz = Number(settings['page-num-size-pt']) > 0 ? Number(settings['page-num-size-pt']) : 10;
+  const fw = Math.max(1, Math.round(folioMeasure.measureTextWidth(text, folioSz)));
+  const folioPx = folioSz * (96 / 72);
+  // line-height: normal ≈ 1.2 (חסר הגדרה מפורשת ב-CSS לגיליון) — הנוסחה ההיסטורית
+  const folioLineH = Math.round(folioPx * 1.2);
+  const ascEm = folioMeasure.ascentEm(), descEm = folioMeasure.descentEm();
+  const halfLead = Math.max(0, (folioLineH - (ascEm + descEm) * folioPx) / 2);
+  const recto = (page.index % 2 === 0);
+  let fx = Math.round((tpl.width - fw) / 2);
+  let boxTop = tpl.height - FOLIO_BOTTOM_PX - folioLineH;
+  let baselineY = boxTop + halfLead + ascEm * folioPx;
+  if (pos === 'outer-left' || (pos === 'outer' && recto)) fx = 8;
+  else if (pos === 'outer-right' || (pos === 'outer' && !recto)) fx = Math.max(8, Math.round(tpl.width - fw - 8));
+  else if (pos === 'top') { boxTop = FOLIO_TOP_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
+  else if (pos === 'in-header') { boxTop = FOLIO_IN_HEADER_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
+  return {
+    y: boxTop, baselineY, x: fx, w: fw, sizePt: folioSz, text,
+    lineHeightPx: folioLineH, position: pos
+  };
+}
+
+/**
+ * מיקום תיבת הכותרת העליונה — נקבע ב-PageTemplate בנפרד מ-contentBox.
+ * היסטים של גוף התוכן (למשל h2-top-offset בעמוד sign-open) אינם מזיזים ריהוט.
+ */
+function headerGeometry(page) {
+  const tpl = page && page.template;
+  if (!tpl || !Number.isFinite(tpl.headerTop)) {
+    const pageId = page && page.index != null ? String(page.index) : 'unknown';
+    const pageType = page && page.type ? String(page.type) : 'unknown';
+    const templateKeys = tpl ? Object.keys(tpl).sort().join(',') : '<missing-template>';
+    const value = tpl ? String(tpl.headerTop) : '<missing>';
+    throw new TypeError(`PageTemplate.headerTop must be finite; page=${pageType}#${pageId}; headerTop=${value}; templateKeys=${templateKeys}`);
+  }
+  return { y: Math.max(0, tpl.headerTop) };
+}
+
+module.exports = {
+  FOLIO_BOTTOM_PX, FOLIO_TOP_PX, FOLIO_IN_HEADER_PX, RUNNING_HEAD_TOP_INSET_PX,
+  folioGeometry, headerGeometry
+};
 
 };
 __modules["src/engine/import/docx-import.js"] = function (require, module, exports) {
@@ -9364,8 +9703,18 @@ function buildPreviewTab(doc, opts) {
   function rebuildFolioIndex() {
     folioIndex = new Map();
     const pages = virtual.pages || [];
-    for (let i = 0; i < pages.length; i++) { // מעבר ראשון: גיליונות אמיתיים — עדיפות
-      const n = folioNumberOf(pages[i] && pages[i].folioDisplay);
+    // **D-108:** הגיליון חשוף (בלי גרש/גרשיים ובלי מפריד אלפים) — פענוח מספרי
+    // מהטקסט עמום באלפים ('אקפ' = 1180 אך גם 181 בסכימה פשוטה). לכן, לעמודים
+    // שמציגים גיליון, מקור המפתחה המספרי הוא page.pageNumber (קיים בשני
+    // הפרופילים) במקום פענוח הטקסט. סמנטיקת S5.2 (12) נשמרת בדיוק: רק עמוד
+    // שמציג גיליון תופס את מספרו; עמוד ללא גיליון (שער/תוכן/פתיחה מדוכאת)
+    // נכנס תחת אינדקס+1 במעבר השני.
+    for (let i = 0; i < pages.length; i++) { // מעבר ראשון: גיליון מוצג — מספר קנוני
+      const pg = pages[i] || {};
+      if (!pg.folioDisplay) continue;
+      const n = (typeof pg.pageNumber === 'number' && pg.pageNumber >= 1)
+        ? pg.pageNumber
+        : folioNumberOf(pg.folioDisplay);
       if (n != null && !folioIndex.has(n)) folioIndex.set(n, i);
     }
     for (let i = 0; i < pages.length; i++) { // מעבר שני: בלי גיליון — מספר פיזי (אם פנוי)
@@ -11870,75 +12219,6 @@ module.exports = {
 };
 
 };
-__modules["src/engine/layout/furniture-geometry.js"] = function (require, module, exports) {
-// src/engine/layout/furniture-geometry.js — גיאומטריית ריהוט עמוד ממקור יחיד (שלב 6 פרוסה 1)
-'use strict';
-
-/**
- * **מעמד (הוראת שלב 6 §8):** "כותרות עליונות, תחתונות ומספרי עמוד יהיו Page
- * Items בעלי placement model אחיד; **אין לחשב את מיקומם בנפרד ב-DOM וב-PDF**."
- *
- * עד כאן המקרן ל-PDF חישב את תיבת הגיליון והבסיס במתמטיקה מפורשת
- * (FOLIO_BOTTOM_PX=25, half-leading, ascent) בעוד ה-DOM הסתמך על CSS חי
- * (.folio{bottom:25px} וכו') שכויל להתאים בעבר (S69/S5.1) — שני מקורות
- * של אותה גיאומטריה שכל אחד מהם יכול לסטות בשקט. מעתה שני המקרינים
- * קוראים מכאן: המקרן מציב את המספרים כמות שהם; ה-DOM מציב אותם כסגנון
- * מפורש (top/lineHeight) לצד ה-class הקיים שנשאר אחראי לעור (מסגרת/צבע).
- */
-
-/** תחתית תיבת הגיליון מה-CSS החי (styles.css: .folio{bottom:25px}) — קבוע המקור. */
-const FOLIO_BOTTOM_PX = 25;
-/** ראש תיבת גיליון במצב top (styles.css: .folio--top{top:4px}). */
-const FOLIO_TOP_PX = 4;
-/** ראש תיבת גיליון בתוך הכותרת העליונה (styles.css: .folio--in-header{top:6px}). */
-const FOLIO_IN_HEADER_PX = 6;
-
-/**
- * גיאומטריית הגיליון — מחושבת פעם אחת מאותם קלטים ששני המקרינים צורכים.
- * @param {object} page — עמוד (index, folioDisplay, template)
- * @param {object} settings
- * @param {{measureTextWidth:(t:string,pt:number)=>number, ascentEm:()=>number, descentEm:()=>number}} folioMeasure
- *   מדידת הגיליון (גופן הגיליון כשרשום — אותו מופע שהמקרן בונה)
- * @returns {null|{y, baselineY, x, w, sizePt, text, lineHeightPx, position}}
- */
-function folioGeometry(page, settings, folioMeasure) {
-  const pos = String((settings && settings['page-num-position']) || 'bottom-center');
-  if (pos === 'none' || !page || !page.folioDisplay) return null;
-  const tpl = page.template;
-  const text = String(page.folioDisplay);
-  const folioSz = Number(settings['page-num-size-pt']) > 0 ? Number(settings['page-num-size-pt']) : 10;
-  const fw = Math.max(1, Math.round(folioMeasure.measureTextWidth(text, folioSz)));
-  const folioPx = folioSz * (96 / 72);
-  // line-height: normal ≈ 1.2 (חסר הגדרה מפורשת ב-CSS לגיליון) — הנוסחה ההיסטורית
-  const folioLineH = Math.round(folioPx * 1.2);
-  const ascEm = folioMeasure.ascentEm(), descEm = folioMeasure.descentEm();
-  const halfLead = Math.max(0, (folioLineH - (ascEm + descEm) * folioPx) / 2);
-  const recto = (page.index % 2 === 0);
-  let fx = Math.round((tpl.width - fw) / 2);
-  let boxTop = tpl.height - FOLIO_BOTTOM_PX - folioLineH;
-  let baselineY = boxTop + halfLead + ascEm * folioPx;
-  if (pos === 'outer-left' || (pos === 'outer' && recto)) fx = 8;
-  else if (pos === 'outer-right' || (pos === 'outer' && !recto)) fx = Math.max(8, Math.round(tpl.width - fw - 8));
-  else if (pos === 'top') { boxTop = FOLIO_TOP_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
-  else if (pos === 'in-header') { boxTop = FOLIO_IN_HEADER_PX; baselineY = boxTop + halfLead + ascEm * folioPx; }
-  return {
-    y: boxTop, baselineY, x: fx, w: fw, sizePt: folioSz, text,
-    lineHeightPx: folioLineH, position: pos
-  };
-}
-
-/** ראש אזור הכותרת העליונה במרחב העמוד (מקור: המקרן ההיסטורי — contentBox.top − 18). */
-function headerGeometry(page) {
-  const tpl = page.template;
-  return { y: Math.max(0, tpl.contentBox.top - 18) };
-}
-
-module.exports = {
-  FOLIO_BOTTOM_PX, FOLIO_TOP_PX, FOLIO_IN_HEADER_PX,
-  folioGeometry, headerGeometry
-};
-
-};
 __modules["src/engine/decoration/asset-registry.js"] = function (require, module, exports) {
 // src/engine/decoration/asset-registry.js — רישום נכסי עיצוב ופתרון הפניות (03.11, EXT-14)
 'use strict';
@@ -12978,6 +13258,9 @@ function registerFont(profileName, bytes) {
   // ההסרה ניקתה ⇒ רישום מחדש של אותה משפחה החזיר מופע ישן מהמטמון
   // (קשור לגופן הקודם) והמדידה המשיכה במטריקות הישנות.
   _familyApiCache.clear();
+  // **אופטימיזציה (19.11):** ניקוי מופעי ה-fallback המשותפים — אותה סיבה
+  // בדיוק (מופע font-metrics קשור-שם שלא יחזיק פרופיל גופן מת אחרי מחזור רישום).
+  _sharedFallbackApis.clear();
   // **S4.26 (גליפים חסרים):** 'Frank Ruhl Libre' הוא fallback הפיסוק
   // של מחסנית הרינדור (fontStack מוסיף אותו שני) — גם המדידה תשתמש
   // בו לתווים שחסרים בגופן הראשי (בדיוק כמו הדפדפן).
@@ -13029,6 +13312,7 @@ function clearRegisteredFonts() {
   _fontContentIds.clear();
   fm.setMissingGlyphFallbackFont(null);
   _familyApiCache.clear();
+  _sharedFallbackApis.clear();
   _invalidateEnvFp();
   if (!_fontClearSync) {
     _fontClearSync = true;
@@ -13315,6 +13599,46 @@ function _canonicalStringify(value, depth = 0) {
   return String(value);
 }
 
+/** **אופטימיזציית מפתח (19.11, הוראת ביצועים §5):** מֵימוֹ של המחרוזת הקנונית
+ *  לאובייקטים יציבים בלבד (ctx/ctx.constraints — אותה הפניה לכל אורך ה-typeset).
+ *  התוצאה זהה בדיוק (אותה פונקציה על אותו אובייק�) — הפונקציה טהורה והאובייקט
+ *  אינו משתנה (חוזה הטוהר של שלב 3); WeakMap — אין החזקה. */
+const _canonicalMemo = new WeakMap();
+function _canonicalStringifyStable(value) {
+  if (value === null || typeof value !== 'object') return _canonicalStringify(value);
+  let m = _canonicalMemo.get(value);
+  if (m === undefined) { m = _canonicalStringify(value); _canonicalMemo.set(value, m); }
+  return m;
+}
+
+/** **אופטימיזציית מפתח (19.11, הוראת ביצועים §5):** חשיש מפתח מהיר לא-קריפטוגרפי
+ *  עבור מטמון הפריטים בתוך התהליך בלבד. מחליף את sha256Hex (Node crypto — יקר
+ *  לקריאה: ~3.4µs, נמדד) בשלושה ערוצי 32-bit (FNV-1a, ערוץ מעורבב-מיקום, sdbm)
+ *  + אורך, עם finalization של murmur3 — 96 ביטים יעילים: סף birthday ל-10⁷
+ *  מחרוזות ≈ 2⁻⁵⁸ — הגנת ההתנגשות של PR #22 נשמרת (אותם רכיבי תוכן בדיוק,
+ *  אותה שלמות מפתח; רק פונקציית החשיש שהתה). sha256Hex נשאר לזהויות
+ *  content-addressed (גופנים/נכסים) — שם הוא חלק מהחוזה. המפתח אינו נשמר
+ *  בין תהליכים ואינו חוצה את גבול ה-Worker — אין השלכות שחזור. */
+function _fmix32(h) {
+  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
+  return h | 0;
+}
+function _fastKeyHash(s) {
+  let h1 = 0x811c9dc5, h2 = 0x9e3779b9, h3 = 5381;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193);
+    h2 = Math.imul(h2 ^ Math.imul(i + 1, c), 0x85ebca6b);
+    h3 = (Math.imul(h3, 0x21) ^ c) | 0;
+  }
+  const len = s.length;
+  h1 = _fmix32(h1 ^ len); h2 = _fmix32(h2 ^ Math.imul(len, 0x9e3779b9)); h3 = _fmix32(h3 ^ h1);
+  return (h1 >>> 0).toString(16).padStart(8, '0')
+    + (h2 >>> 0).toString(16).padStart(8, '0')
+    + (h3 >>> 0).toString(16).padStart(8, '0')
+    + len.toString(16).padStart(8, '0');
+}
+
 /** זהות נכס content-addressed לפי שרשרת המועמדים של הפריט — מה-resolver בלבד
  * (הזהות מחושבת מהבתים, לא מההצהרה). אותה הפניה (resourcePath) עם תוכן נכס
  * אחר ⇒ מזהה אחר ⇒ מפתח מטמון אחר. פותר את הפגם שבו item.id לבדו קבע את המפתח. */
@@ -13347,12 +13671,16 @@ function _assetIdentityFp(item, ctx) {
  * + מפתח הקשר; (9) גרסת מנוע המדידה; (10) חית סביבה **חיה** (מחושבת כעת
  * מהרישומים בפועל — לא הצהרת caller) + חית ההקשר שהועברה. */
 function _itemCacheKey(item, style, ctx) {
-  // **מקטע ב׳ (זיכרון):** המפתח קומפקטי — sha256 יחיד על שריות הקנוניות המלאות
+  // **מקטע ב׳ (זיכרון):** המפתח קומפקטי — חשיש יחיד על שריות הקנוניות המלאות
   // (אותה חד-משמעיות, כולל זהות-תוכן של החלקים) — בספרים גדולים
-  // מיליוני מחרוזות-מפתח משוריבות זיכרון משמעותית.
+  // מיליוני מחרוזות-מפתח משורבות זיכרון משמעותית.
+  // **אופטימיזציה (19.11, הוראת ביצועים §5):** (א) _fastKeyHash במקום sha256Hex —
+  // המפתח משרת מטמון בתהליך בלבד (לא זהות content-addressed); (ב) ctx.constraints
+  // דרך מֵימוֹ קנוני לפי זהות — אותה הפניה לכל אורך ה-typeset, אותה תוצאה בדיוק.
+  // אותם רכיבי תוכן ובאותו סדר — הגנת ההתנגשות של PR #22 נשמרת במלואה.
   const it = item || {};
-  return 'ik2:' + sha256Hex([
-    'item-key-v2',
+  return 'ik3:' + _fastKeyHash([
+    'item-key-v3',
     MEASURE_ENGINE_VERSION,
     environmentFingerprint(),
     (ctx && ctx.environmentFingerprint) || '',
@@ -13363,7 +13691,7 @@ function _itemCacheKey(item, style, ctx) {
     _canonicalStringify(style || null),
     (ctx && ctx.direction) || '',
     (ctx && ctx.language) || '',
-    _canonicalStringify((ctx && ctx.constraints) || null),
+    _canonicalStringifyStable((ctx && ctx.constraints) || null),
     (ctx && ctx.constraintsKey) || '',
     (ctx && ctx.assetId) != null ? String(ctx.assetId) : '',
     _assetIdentityFp(item, ctx)
@@ -13401,6 +13729,25 @@ function _deepFreeze(value, seen) {
  * = תיבת הדיו המשוערת מהתווים (מקור: advance-approximation — מתועד; עיגול
  * גליפים אמיתי יתווסף כשמנוע המדידה יחשוף glyf — בלי שינוי החוזה).
  */
+/** **אופטימיזציה (19.11, הוראת ביצועים §5):** מופעי מדידה משותפים לנתיבי
+ *  ה-fallback שבתוך measureItem (noteMarker/atomic/glue/penalty + טקסט בלי
+ *  גופן-רזולב). בעבר נוצר מופע חדש (+Map +stats) לכל קריאה — ב-very_long
+ *  נמדדו 333,456 מופעים חד-פעמיים לריצה; מטמון המחרוזות שלהם מת עם הקריאה.
+ *  המופע חסר מצב פר-קריאה (sizePt תמיד מועבר מפורשות ל-measureTextWidth;
+ *  ה-body-font בהגדרות משפיע רק על _bindProfile) — לכן מֵימוֹ לפי
+ *  (impl|family|sizePt) — בדיוק אותם ארגומנטים כמו הבנאי הקודם — מחזיר התנהגות
+ *  זהה: אותן תוצאות מדידה, ומטמון המחרוזות משריך ערכים דטרמיניסטיים זהים. */
+const _sharedFallbackApis = new Map();
+function _sharedMeasureApi(impl, family, settingsSizePt) {
+  const key = impl + '|' + (family || '') + '|' + (settingsSizePt || 0);
+  let api = _sharedFallbackApis.get(key);
+  if (!api) {
+    api = new MeasureAPI({ 'body-font-size-pt': settingsSizePt, 'body-font': family || '' }, impl);
+    _sharedFallbackApis.set(key, api);
+  }
+  return api;
+}
+
 function measureItem(item, style, ctx) {
   if (!item || typeof item !== 'object') return { ok: false, code: 'no-item', message: 'measureItem: פריט חסר' };
   const sizePt = (style && Number.isFinite(style.sizePt)) ? style.sizePt : 12;
@@ -13459,7 +13806,7 @@ function measureItem(item, style, ctx) {
             // בדיוק כפי ש-widthFor של הנתיב החי עשה; מקור ההחלטה אחד.
             const famFactor = (style && Number.isFinite(style.familyFactor) && style.familyFactor > 0) ? style.familyFactor : 1;
             const famFloor = !!(style && style.familyUnknownFloor);
-            const fallbackApi = new MeasureAPI({ 'body-font-size-pt': sizePt, 'body-font': (style && style.defaultFamily) || '' }, 'table');
+            const fallbackApi = _sharedMeasureApi('table', (style && style.defaultFamily) || '', sizePt);
             let w = fallbackApi.measureTextWidth(run.text, sizePt, 0) * famFactor;
             if (famFloor) w = Math.max(w, String(run.text).length * 0.6 * sizePt * (96 / 72));
             segments.push({ fontId: null, text: run.text, advancePx: w, family: null, tableApproximation: true });
@@ -13534,7 +13881,7 @@ function measureItem(item, style, ctx) {
     // סמן הערה אטומי — רוחב הסמן בגודל הרישום (גימטריה); נמדד כפריט יחיד
     const markerText = (item.payload && item.payload.markerText) || 'א.';
     const fnSizePt = (style && Number.isFinite(style.sizePt)) ? style.sizePt : 8;
-    const api = new MeasureAPI({ 'body-font-size-pt': fnSizePt }, 'table');
+    const api = _sharedMeasureApi('table', '', fnSizePt);
     const w = api.measureTextWidth(markerText, fnSizePt, 0);
     const sizePx = ptToPx(fnSizePt);
     out = {
@@ -13549,8 +13896,8 @@ function measureItem(item, style, ctx) {
     };
   } else if (kind === 'atomicToken' || kind === 'anchor' || kind === 'glue' || kind === 'penalty' || kind === 'custom' || (kind && kind.startsWith('custom:'))) {
     const text = (item.payload && (item.payload.text != null ? item.payload.text : item.payload.atomicText)) || '';
-    const api = new MeasureAPI({ 'body-font-size-pt': sizePt, 'body-font': (style && style.defaultFamily) || '' },
-      (style && style.fontIds && style.fontIds[0]) ? 'font-metrics' : 'table');
+    const api = _sharedMeasureApi((style && style.fontIds && style.fontIds[0]) ? 'font-metrics' : 'table',
+      (style && style.defaultFamily) || '', sizePt);
     // **§5 (מדידה יחידה — הוראת שלב 4 ב׳):** advanceFactor חל גם כאן (אטומים
     // עם שכבת סגנון) — אותו חוזה כמו פריטי טקסט.
     const advanceFactor = (style && Number.isFinite(style.advanceFactor) && style.advanceFactor > 0) ? style.advanceFactor : 1;
@@ -15110,44 +15457,27 @@ const { Ledger } = require('../core/ledger');
 // (מקור יחיד לפענוח מקורות הסלוטים) + חיצוץ החצאים — אותה נוסחה כמו hdrR/hdrL.
 // headers-builder אינו דורש כלום — אין תלות מעגלית.
 const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = require('../decoration/headers-builder');
+// **D-108 (19.11):** פורמט הפוליו הקנוני של שני המנועים — גימטריה חשופה
+// (בלי גרש/גרשיים ובלי מפריד אלפים) חי ב-decoration/folio.js לצד שאר
+// המספור; מסלול המורשת קורא אותו ל-folioDisplay ולתוויות ה-TOC בלבד.
+// toGematria המקומי נשאר לשדות שאינם פוליו (סמני הערות, סימנים) — D-108:
+// "אין להסיק מכלל זה דבר על סימני ציטוט/גרש בהערות...".
+const { toBareGematria } = require('../decoration/folio');
 // **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
+const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
 
 // ---------- גיאומטריה (px @96dpi; PDF = px×0.75) — מכויל מהייחוס ----------
-const GEO = {
-  PAGE_W: 793.7, PAGE_H: 1122.5,               // A4
-  COL_W: 269.41,                                // רוחב טור (col:right 269 בתגיות המקור)
-  COL_R_X: 403.61, COL_L_X: 120.72,             // שפות טורים (ימני/שמאלי)
-  MARGIN_R_X: 686.3, MARGIN_L_X: 56.7, MARGIN_W: 50.5, // טורי שוליים (margin-col)
-  // **S4.14 (מסומן-גיאומטריה):** ראשית הזרימה האמיתית בעמוד רגיל = 107.2px —
-  // נגזר ממחסנית תוויות הייחוס (body-flow label − היסט השכבה) ומהשורה הראשונה
-  // הנמדדת בעמודים רגילים (13-15: שורת-גוף ראשונה ב-107.2px בדיוק). הערך
-  // הקודם 96.7 היה נמוך ב-10.5px — הזרימה כולה ישבה גבוה מדי.
-  FLOW_TOP: 107.2,                              // ראשית זרימת הגוף בעמוד רגיל
-  // **S4.14:** גובה הזרימה המקסימלי = 915px — נמדד ישירות מתוויות body-flow
-  // של הייחוס בעמודים ללא הערות (13-15: block 914/915, תחתית אמיתית 1022.2).
-  // הערך הקודם 925 הכניס שורה עודפת בעמודים ללא הערות (סה"כ +8 שורות במסמך).
-  FLOW_H: 915,
-  // **S4.13 (פס שורה אמיתי — היסוד לכל הסטייה המצטברת):** המקור מגדיר
-  // line-height: var(--line-height-body)=1.34 על 12pt ⇒ 16.08pt = **21.44px**
-  // לכל תיבת שורה. הדפדפן שומר את השבר בסכומי ה-DOM (scrollHeight), ורק
-  // ההדפסה ל-PDF מצמידה כל שורה לפיקסל שלם — לכן במדידת הייחוס נראים פסים
-  // מעורבים 21/22px (15.75/16.5pt, היסטוגרמה: 1277+1101) שהממוצע שלהם 21.44.
-  // הקליברציה הקודמת (21 שטוח) חסכה 0.44px לשורה ⇒ 2% קיבולת ⇒ כשורה
-  // לטור ⇒ +2 שורות לעמוד — בדיוק הסטייה המצטברת שנצפתה (עמודינו 90-93
-  // שורות מול 87-90 בייחוס). כעת: המילוי, הפריסה והמודל כולם ב-21.44.
-  LINE_H: 21.44,
-  H2_SPACER: 180,                               // h2-spacer לפני סימן+כותרת
-  HEADER_BASELINE: 71.9,                        // פס כותרת: גליפים 42.56–57.56pt
-  FOLIO_BASELINE: 1054.5,                       // עמודון: y0=783.82pt (גליף ~1045px), ממורכז
-  FN_AREA_TOP: 969.5,                           // תחילת מרזב ההערות (y0=727.1pt בייחוס)
-  FN_PITCH: 16.7,                               // פס שורות הערה (8.5pt × 1.5 × 4/3)
-  TOC_NUM_X: 66.1,                              // מספרי תוכן-עניינים בשמאל (x0≈49.6pt)
-  TOC_TITLE_X1: 727.4,                          // שפה ימנית של כותרות תוכן-עניינים (545.6pt)
-  TOC_STAIR: 8,                                 // מדרגת כניסה לפי רמה (padding-right 8px)
-  MN_PITCH: 9.6                                 // פס שורות הערת-צד (8px × 1.2)
-};
+// **שלב ההעברה למנוע המאוחד — מקטע 1:** הקבועים הגאומטריים עברו למודול
+// החוזה המשותף `core/imud-geometry.js` (מקור אמת יחיד — כמו h3-contract).
+// הערכים זהים מילולית; ההוכחה: digest הקורפוסים אינו משתנה. ההערות
+// ההיסטוריות (S4.13/S4.14 — הכיול מול הייחוס המסומן) נשמרות שם.
+const {
+  GEO, FLOW_BOTTOM, H2_AREA_H, H0_AREA_H, SINGLE_W, TITLE_W_PCT, H23_TITLE_W,
+  H0_LINE_H, TOC_TITLE_BLOCK_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM,
+  PAGE_STRETCH_MAX, JUSTIFY_MAX_GAP, JUSTIFY_MAX_LH_EXTRA, ORPHAN_RECLAIM_BUFFER, RECLAIM_BELOW_BASE
+} = require('../core/imud-geometry');
 
 // גדלי גופן (pt — כמו הגדרות המקור; פיקסלים = pt×4/3)
 const SZ = {
@@ -15172,11 +15502,13 @@ function toGematria(num) {
   if (num === 16) return 'טז';
   // **מגן ספרים גדולים:** מעל 999 — חלק האלפים בגימטריה + גרשיים (לא נצפה
   // בייחוס; מונע undefined ושומר דטרמיניזם — הקורפוס הגדול מגיע ל־~730).
+  // **D-108 (19.11):** פונקציה זו אינה עוד מקור פורמט הפוליו — הפוליו ותוויות
+  // ה-TOC משתמשים ב-toBareGematria (חשוף בכל ערך, גם באלפים). הגרש כאן
+  // נשאר לשדות שאינם פוליו בלבד — סמני הערות (markerWord) וסימנים — לפי
+  // D-31; שינויים בהם אסורים במסגרת D-108 ("אין להסיק מכלל זה דבר על
+  // סימני ציטוט/גרש בהערות, בגוף הטקסט או בשדות אחרים").
   if (num >= 1000) {
     const th = Math.floor(num / 1000);
-    // **S5.2 (אחידות D-31):** גרש עברי (U+05F3) במקום ASCII ' — כמו
-    // toHebrewNumber של folio.js (ה׳תש״ב); שני מחלקי המספור במאגר חייבים
-    // להסכים על אותו תו.
     return toGematria(th) + '\u05F3' + toGematria(num % 1000);
   }
   const hundreds = ['', 'ק', 'ר', 'ש', 'ת', 'תק', 'תר', 'תש', 'תת', 'תתק'];
@@ -15807,18 +16139,6 @@ class LineBreaker {
 //  מודל: עמוד = מחסנית אנכית של פסים (span של h3) ובלוקים דו-טוריים מאוזנים.
 // =====================================================================
 
-const FLOW_BOTTOM = GEO.FLOW_TOP + GEO.FLOW_H; // 1022.2px — תחתית הזרימה האמיתית (עמודים 13-15: block עד 1021)
-// **S4.19 (ה-spacer המלא של המקור):** אזור ה-h2 = מרווח-עליון
-// 22% × גובה הזרימה (0.22×915=201.3) + סימן (20pt×1.1+6=35.3) + כותרת (27.2)
-// + שולי כותרת (20). המדידה מהייחוס (עמ' 24/38 — עמודי h2 ללא הערות): סימן ב-y=307.88px,
-// כותרת ב-344.05, תוכן ב-391.45 — בדיוק הנוסחה. **עמ' 11 (עם הערות) נראה נמוך יותר
-// כי ה-fn-area מוכנס ל-wrapper לפני הפוטר (insertBefore במקור) ומקטין את ה-flow —
-// ה-spacer (flex-basis 22%) מתכווץ ב-0.22×גובה-ההערות וכל אזור ה-h2 זז למעלה**
-// (ההוכחה: עמ' 11 — הפרש 22.98px = 0.22×שמורת-הערות 105.3). ההזזה מיושמת
-// בסוף מילוי העמוד (הערות ידועות רק אז — כמו ה-relayout של ה-flex במקור).
-// הערך הקודם 261.3 כויל מעמ' 11 בלבד — עמודי ה-h2 הרגילים (24/38) שקעו 23px
-// וכל הפרקים שאחריהם הוסטו בשורה שלמה.
-const H2_AREA_H = 284.25;
 // **S4.19:** פטור עמודי h2+span מה-spacer המלא — כיול S4.14 (261.3) נשאר להם.
 const H2_SPAN_EXEMPT = (
   (typeof process !== 'undefined' && process.env && process.env.RED_H2_SPAN_EXEMPT) !== '0'
@@ -15836,50 +16156,7 @@ const H3_SPAN_TOP_PAD_PX = H3_TOP_PAD_PX;
 const H3_SPAN_BOTTOM_PAD_PX = H3_BOTTOM_PAD_PX;
 const H3_SPAN_MARGIN_BOTTOM_PX = H3_MARGIN_BOTTOM_PX;
 const H3_SPAN_H = H3_SPAN_LINE_H + H3_SPAN_BOTTOM_PAD_PX;
-const H0_AREA_H = 249.2;   // **S4.19:** זרימת ההקדמה מתחילה ב-356.4px — המדידה מהייחוס
-// (עמ' 10, שורות ההקדמה 2-3): הייחוס יושב 9.7-10.2px מתחת ל-348 הקודם; גם לדף
-// ה-h0 יש spacer (הכותרת ב-309 = 107.2+201.3+0.5) + כותרת (27.2) + שוליים (20)
-// ⇒ 309+47.4 = 356.4. הערך הקודם 240.8 השאיר את שורות ההקדמה גבוהות בכ-10px.
-const SINGLE_W = 552.3;    // .single-wide-col = 2×269.41+13.48 (grid)
-// **S74 (בעיה 1 — בקשת משתמש 12.11):** כותרות 2 ו-3 החד-טוריות מוגבלות ל־60%
-// מרוחב הפס **הנוכחי** (לא מרוחב העמוד) — תיבה של 331.38px הממורכזת בפס.
-// כותרת ארוכה נעטפת לשורות במקום למלא את רוחב הפס. הרינדור (DOM ו-PDF)
-// ממרכז את הפסים ברוחב הפס המלא — תיבת ה־60% חולקת את אותו מרכז בדיוק,
-// ולכן אין כל שינוי ברינדור: רק רוחב העטיפה כאן מצטמצם.
-const TITLE_W_PCT = 0.6;
-const H23_TITLE_W = SINGLE_W * TITLE_W_PCT; // 331.38px
-// **S4.13:** פס שורת ההקדמה — אותו line-height של הגוף (1.34) על 11.5pt
-// ⇒ 15.41pt = 20.55px. מדידת הייחוס בעמוד ההקדמה: פסים 15.0–16.3pt (ממוצע 20.5px
-// לפני הצמדת ההדפסה). הערך הקודם (22.2 = ×1.45) היה קליברציה שגויה שדחפה
-// את שורות ההקדמה והזיזה את נקודות החיתוך שלה (נצפה ב-P7: שורות ההקדמה
-// הראשונות שנותרו שונות אחרי תיקון LINE_H).
-const H0_LINE_H = 20.55;
-const TOC_TITLE_BLOCK_H = 213;
-// **S4.14:** גיאומטריית עמודי תוכן-העניינים — אבסולוטית ונפרדת מזרימת הגוף
-// (השורה הראשונה בעמודי ה-TOC של הייחוס ב-113.6px, לא ב-FLOW_TOP). הערכים
-// שומרים על המיקומים הקודמים המכוילים (96.7+213+61 / 96.7+17 / 1011.7−6).
-const TOC_FIRST_TOP = 370.7;
-const TOC_CONT_TOP = 113.7;
-const TOC_STRETCH_BOTTOM = 1005.7;
 
-// =====================================================================
-// **S4.17 — יישור תחתית עמוד + משיכת זנב-יתום (העתק נאמן מ-v21-glm).**
-// הייחוס (דוגמא מגרסא ישנה) יוצר ב-v21-glm ע"י מנוע שכולל מערכת מתיחה/כיווץ
-// שחסרה בפורט שלנו: בסוף כל עמוד שהפרק ממשיך אחריו רצים stretchPageToBottom
-// (מתיחת הבלוק האחרון עד תחתית שטח הגוף) ואז tryReclaimOrphanTail — משיכת
-// זנב פסקה יתום של 1-2 שורות חזרה לעמוד ע"י כיווץ עדין של הטור השמאלי.
-// ההוכחה מהייחוס עצמו (בלי עיניים): היסטוגרט הפסים של הייחוס מכילה זנב של
-// ~230 פסים ב-23-24.4px (= בסיס 21.44 + עד 3px מתיחה — JUSTIFY_MAX_LH_EXTRA)
-// ו-74 זוגות פסים ב-19-20px (= בסיס 21.44 − עד 2px כיווץ — ALLOW_BELOW_BASE),
-// וקטעי הכיווץ מתחילים תמיד בפסקאות הראשונות של הטור (compressColumnBy
-// מחלק לפי הסדר). זו בדיוק הסיבה שעמודי הייחוס מכילים 1-2 שורות יותר
-// בנקודות החיתוך — הפערים שנצפו כ-delete+insert שכנים ב-P7.
-// =====================================================================
-const PAGE_STRETCH_MAX = 48;      // v21: תקרת מתיחת הבלוק האחרון בעמוד (px)
-const JUSTIFY_MAX_GAP = 9;        // v21: תקרת ריווח (padding) שמתווסף אחרי פסקה
-const JUSTIFY_MAX_LH_EXTRA = 3;   // v21: תקרת תוספת גובה-שורה במתיחת עמוד (px)
-const ORPHAN_RECLAIM_BUFFER = 12; // v21: באפר "חירום" בתחתית העמוד למשיכת יתום
-const RECLAIM_BELOW_BASE = 2;     // v21: היתר כיווץ מתחת לבסיס לשורה (px)
 // **S4.18:** רצפת מרווח-הפסקה בכיווץ משיכת-יתום — נמדד מהייחוס (עמ' 14 שמאל:
 // מרווחי פסקה 22.4-24.4px ⇒ gap 1-3px; הרצפה 2). דריסה: RED_GAP_COMPRESS_FLOOR.
 const GAP_COMPRESS_FLOOR = parseFloat(
@@ -16268,6 +16545,7 @@ function legacyTypeset(rawText, settings, env) {
         width: GEO.PAGE_W, height: GEO.PAGE_H,
         columns: [{ x: GEO.COL_R_X, w: GEO.COL_W }, { x: GEO.COL_L_X, w: GEO.COL_W }],
         gutter: 13.48,
+        headerTop: GEO.FLOW_TOP - RUNNING_HEAD_TOP_INSET_PX,
         contentBox: { top: GEO.FLOW_TOP, bottom: FLOW_BOTTOM, height: GEO.FLOW_H }
       }
     };
@@ -18510,7 +18788,9 @@ function legacyTypeset(rawText, settings, env) {
     const counted = ['toc-general', 'toc-detailed', 'blank', 'shaar-sub', 'regular', 'sign-open', 'preface'].includes(p.type);
     p.pageNumber = counted ? pn++ : null;
     const shows = ['toc-general', 'toc-detailed', 'regular', 'sign-open', 'preface'].includes(p.type);
-    p.folioDisplay = shows && p.pageNumber ? toGematria(p.pageNumber) : '';
+    // **D-108:** הגיליון המודפס בגימטריה חשופה בלבד — toBareGematria (מקור
+    // הפורמט המשותף לשני המנועים), לא toGematria המפריד אלפים בגרש.
+    p.folioDisplay = shows && p.pageNumber ? toBareGematria(p.pageNumber) : '';
   }
   final.forEach((p, i) => { p.index = i; });
   // **שלב 6 פרוסה 2 (§8 בהוראה — שורש SIDE_NOTE_OVERLAP בעמ' 107):** עד כאן
@@ -18634,7 +18914,8 @@ function legacyTypeset(rawText, settings, env) {
     // — ההוכחה מהייחוס: הערך הראשון בתוכן-העניינים הכללי (ה-h1 "הקדמות
     // וכללים") מסומן "ו" = גימטריה של מיקום עמוד השער (0-מבוסס 6), בעוד
     // לעמוד עצמו אין פוליו כלל. שאר הכותרות: הפוליו המודפס של עמודן.
-    if (p._h1Token) folioByToken.set(p._h1Token.id, p.folioDisplay || toGematria(pi));
+    // **D-108:** תווית TOC חשופה — toBareGematria גם בנפילה הזו.
+    if (p._h1Token) folioByToken.set(p._h1Token.id, p.folioDisplay || toBareGematria(pi));
     for (const b of (p.bands || [])) if (b.tokenId != null) folioByToken.set(b.tokenId, p.folioDisplay);
     for (const col of p.columns) for (const ln of col) {
       if (ln.kind === 'heading' && ln.tokenId != null && !folioByToken.has(ln.tokenId)) folioByToken.set(ln.tokenId, p.folioDisplay);
@@ -19439,7 +19720,10 @@ function familyOf(key) {
  */
 function renderModelLine(ml, doc, relX, relY) {
   const el = doc.createElement('div');
-  el.className = 'line' + (ml.isLast ? ' line--last' : '');
+  el.className = 'line'
+    + (ml.isLast ? ' line--last' : '')
+    + (ml.kind === 'heading' ? ' line--heading' : '')
+    + (ml.kind === 'toc-title' ? ' toc-title' : '');
   el.setAttribute('dir', 'rtl');
   el.style.position = 'absolute';
   el.style.left = `${px2(ml.x - relX)}px`;
@@ -19451,6 +19735,12 @@ function renderModelLine(ml, doc, relX, relY) {
   if (ml.sizePt != null) el.style.fontSize = `${px2(ml.sizePt * PT_TO_PX)}px`;
   if (ml.bold) el.style.fontWeight = '700';
   if (ml.letterSpacingPx) el.style.letterSpacing = `${px2(ml.letterSpacingPx)}px`;
+  // Diagnostic provenance from the immutable PageModel; no layout behavior changes.
+  el.dataset.modelY = String(ml.y);
+  el.dataset.modelH = String(ml.h);
+  el.dataset.modelAQ = String(ml.aqStretch != null ? ml.aqStretch : 1);
+  el.dataset.modelGap = String(ml.gapBeforePx != null ? ml.gapBeforePx : 0);
+  if (ml.sourceTokenId != null) el.dataset.sourceTokenId = String(ml.sourceTokenId);
   if (ml.styleClass) el.dataset.styleClass = ml.styleClass;
   if (ml.id) el.dataset.id = ml.id;
   const tok = ml.sourceTokenId != null ? ml.sourceTokenId : null;
@@ -19463,7 +19753,7 @@ function renderModelLine(ml, doc, relX, relY) {
     if (!firstWord && typeof doc.createTextNode === 'function') el.appendChild(doc.createTextNode(' '));
     firstWord = false;
     const span = doc.createElement('span');
-    span.className = 'w';
+    span.className = 'w' + (wd.mk ? ' w--fnmarker' : '');
     span.style.position = 'absolute';
     span.style.left = `${px2(wd.x - ml.x)}px`;
     span.style.top = '0';
@@ -19537,8 +19827,8 @@ function renderModelPage(mp, settings, doc, opts = {}) {
   root.dataset.pageIndex = String(mp.index);
   root.setAttribute('id', `page-${mp.index}`);
   root.setAttribute('dir', 'rtl');
-  if (geo.width != null) root.style.width = `${px2(geo.width)}px`;
-  if (geo.height != null) root.style.height = `${px2(geo.height)}px`;
+  if (geo.width != null) { root.style.width = `${px2(geo.width)}px`; root.dataset.modelWidth = String(geo.width); }
+  if (geo.height != null) { root.style.height = `${px2(geo.height)}px`; root.dataset.modelHeight = String(geo.height); }
   // ברירות מחדל גלובליות (הגדרות משתמש — לא החלטות עימוד): גוף/רקע
   const bf = settings['body-font'];
   if (bf) root.style.fontFamily = fontStack(bf);
@@ -19673,10 +19963,16 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     const colEl = doc.createElement('section');
     colEl.className = 'column';
     colEl.style.position = 'absolute';
+    const colHeight = Math.max(0, (geo.contentBox ? geo.contentBox.height : 0) - (geo.spanOffset || 0));
     colEl.style.left = `${px2(c.x)}px`;
     colEl.style.width = `${px2(c.w)}px`;
     colEl.style.top = `${px2(colTops[ci])}px`;
-    colEl.style.height = `${px2(Math.max(0, (geo.contentBox ? geo.contentBox.height : 0) - (geo.spanOffset || 0)))}px`;
+    colEl.style.height = `${px2(colHeight)}px`;
+    colEl.dataset.modelX = String(c.x);
+    colEl.dataset.modelW = String(c.w);
+    colEl.dataset.modelTop = String(colTops[ci]);
+    colEl.dataset.modelHeight = String(colHeight);
+    colEl.dataset.modelBottom = String(colTops[ci] + colHeight);
     for (const ln of mp.lines.filter(l => l.area === 'column' && l.col === ci)) {
       colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci]));
     }
@@ -19818,7 +20114,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
           if (!firstFnWord && typeof doc.createTextNode === 'function') row.appendChild(doc.createTextNode(' '));
           firstFnWord = false;
           const span = doc.createElement('span');
-          span.className = 'w';
+          span.className = 'w' + (wd.mk ? ' w--fnmarker' : '');
           span.style.position = 'absolute';
           span.style.left = `${px2(wd.x - (n.x != null ? n.x : 0))}px`;
           span.style.top = '0';
