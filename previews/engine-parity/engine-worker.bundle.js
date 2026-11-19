@@ -18762,6 +18762,20 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
   let rowsConsumed = 0;
   let budgetExceeded = false;
 
+  // תוכן כללי/מפורט ללא רשומות אינו עמוד. יצירת עמוד ריק גורמת בהמשך
+  // ל-materialization fallback כי אין מה להטביע ב-tocLayout, ופוגעת בחוזה
+  // PageModel (עמוד TOC חייב לשאת תוכן אמיתי). שני התכנים נשארים פעילים;
+  // פשוט לא נוצרת יחידת עימוד שאין לה רשומות.
+  if (!model || !Array.isArray(model.rows)) {
+    throw new TypeError('buildTocPages: model.rows must be an array');
+  }
+  if (model.rows.length === 0) {
+    if (eventLog) eventLog.emit('toc', 'toc-pages-built', {
+      type: pageType, pages: 0, rows: 0, overflow: 0, budgetExceeded: false, empty: true
+    });
+    return { pages, overflow: overflowFindings, budgetExceeded: false };
+  }
+
   const prefix = pageType === 'toc-detail' ? 'dtoc' : 'gtoc';
   const raw = settings && settings._imudRaw ? settings._imudRaw : {};
   const sizeOf = (level, imud) => {
