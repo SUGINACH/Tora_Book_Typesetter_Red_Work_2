@@ -10,6 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 const { describe, it, assert, assertEq, report } = require('../harness');
 
 const { typeset } = require('../../src/engine/core/pipeline');
@@ -17,8 +18,9 @@ const { getDefaultSettings } = require('../../src/engine/core/settings-registry'
 const { importImudSettings } = require('../../src/engine/core/legacy-settings-map');
 const { registerFont } = require('../../src/engine/typography/measure-api');
 const {
-  toBareGematria, toHebrewNumber, formatPageNumber, tocPageLabel,
+  toBareGematria, toHebrewNumber, formatPageNumber, tocPageLabel, assignNumbers,
 } = require('../../src/engine/decoration/folio');
+const { exportHtmlFromModel, exportPdfFromModel } = require('../../src/engine/output/export-api');
 const { markerFor } = require('../../src/engine/notes/markers');
 const {
   toGematria, LineBreaker,
@@ -282,5 +284,173 @@ describe('D-108 פענוח האודיט — גימטריה חשופה נקראת
     assertEq(g2n('22'), 22, 'decimal');
   });
 });
+
+// =====================================================================
+// הוראת 19.11 (סשן הביצועים, §2): בדיקת אינטגרציה ישירה לנתיב המספור
+// בערכים מעל 999 — לא רק בדיקת פונקציית toBareGematria. ה־unified תומך
+// ב־page-num-initial-value (נוסחת V1: effective = ordinal − start‑idx +
+// initial‑value), ולכן קורפוס רגיל מגיע לטווח האלפים בנתיב ה־typeset המלא:
+// assignNumbers → folioDisplay → תוויות TOC → PageModel.folio.text → HTML → PDF.
+// המורשת מתחילה תמיד ב־pn=1 (אין כפתור initial‑value בנתיב ה־IMUD) — מעל 999
+// במורשת נדרש מסמך בן 1000+ עמודים; שם הכיסוי הוא המקור המשותף (toBareGematria,
+// נסרק בבדיקת המקור לעיל) + זהות בין־מנועית 1..999 + בדיקת הפונקציה ב־1000/1001/5702.
+// =====================================================================
+describe('D-108 אינטגרציה מעל 999 — נתיב מלא: assignNumbers → typeset → TOC → PageModel → HTML → PDF', () => {
+  const CORPUS = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'canonical_corpus.txt'), 'utf8');
+  const IV = 995; // חוצה את גבול ה־999→1000 בתוך העמודים המוצגים
+  const g2n = createG2n();
+
+  it('assignNumbers (נתיב המספור האמיתי): initial-value=995 ⇒ 995..1004, הכל חשוף', () => {
+    const pages = Array.from({ length: 10 }, () => ({ type: 'regular', template: { counts: true } }));
+    const settings = {
+      'page-num-format': 'hebrew', 'page-num-start-idx': 1, 'page-num-initial-value': IV,
+      'page-num-position': 'bottom-center', 'page-num-frame': 'none',
+    };
+    const numbers = assignNumbers(pages, settings);
+    const expected = ['תתקצה', 'תתקצו', 'תתקצז', 'תתקצח', 'תתקצט', 'א', 'אא', 'אב', 'אג', 'אד'];
+    numbers.forEach((n, i) => {
+      assertEq(n.page, IV + i, `effective ${IV + i}`);
+      assertEq(n.display, expected[i], `display ${IV + i}`);
+      assert(isBareFolio(n.display), `display ${IV + i} חשוף (התקבל "${n.display}")`);
+      assert(n.shown, `עמוד ${IV + i} מציג גיליון`);
+      assert(n.counted, `עמוד ${IV + i} נספר`);
+    });
+  });
+
+  it('typeset מלא (unified): כל פוליו/תווית TOC מעל 999 חשופים דרך הנתיב החי; פריסה לא זזה', () => {
+    const S = { ...getDefaultSettings(), 'page-num-initial-value': IV };
+    const r = typeset(CORPUS, S);
+    const folioPages = r.pages.filter(p => p.folioDisplay);
+    assert(folioPages.length >= 5, `יש פוליות לבדיקה (התקבלו ${folioPages.length})`);
+    let above999 = 0;
+    for (const p of folioPages) {
+      assert(p.pageNumber >= IV, `ערך יעיל ${p.pageNumber} ≥ ${IV}`);
+      assertEq(p.folioDisplay, toBareGematria(p.pageNumber), `עמוד ${p.index + 1}: folioDisplay דרך המקור הקנוני`);
+      assert(isBareFolio(p.folioDisplay), `עמוד ${p.index + 1}: פוליו "${p.folioDisplay}" חשוף (D-108, מעל 999)`);
+      if (p.pageNumber >= 1000) above999++;
+    }
+    assert(above999 >= 3, `פוליו בטווח האלפים דרך הנתיב החי (התקבלו ${above999})`);
+    // תוויות TOC — resolveTocTargets דרך tocPageLabel ⇒ formatPageNumber:
+    let labels = 0, labelsAbove = 0;
+    for (const p of r.pages) {
+      if (!p.toc || !Array.isArray(p.toc.rows)) continue;
+      for (const row of p.toc.rows) {
+        const entries = row.kind === 'group' ? row.items : [row];
+        for (const e of entries) {
+          if (!e.label) continue;
+          labels++;
+          assert(isBareFolio(e.label), `עמוד ${p.index + 1}: תווית TOC "${e.label}" חשופה (מעל 999)`);
+          const v = g2n(e.label, { atLeast: IV - 1 });
+          if (v != null && v >= 1000) labelsAbove++;
+        }
+      }
+    }
+    assert(labels >= 3, `יש תוויות TOC (התקבלו ${labels})`);
+    assert(labelsAbove >= 1, `תוויות TOC בטווח האלפים (התקבלו ${labelsAbove})`);
+    // PageModel — מקור היחיד ל־HTML/PDF (mp.folio.text) — עקבי לעמוד המקור באותו אינדקס:
+    const modelFolios = r.pageModel.pages.filter(mp => mp.folio && mp.folio.text);
+    assert(modelFolios.length === folioPages.length, `כמות פוליו במודל (${modelFolios.length}) = בעמודים (${folioPages.length})`);
+    for (const mp of modelFolios) {
+      assert(isBareFolio(mp.folio.text), `PageModel folio "${mp.folio.text}" חשוף — מקור ה־HTML/PDF`);
+      const src = r.pages[mp.index];
+      assert(src, `עמוד מקור ${mp.index} למודל`);
+      assertEq(mp.folio.text, src.folioDisplay, `PageModel folio (עמ' ${mp.index + 1}) זהה ל־folioDisplay של העמוד`);
+      assertEq(src.folioDisplay, toBareGematria(src.pageNumber), `עמ' ${mp.index + 1}: folioDisplay דרך המקור הקנוני`);
+    }
+    // המספור אינו חלק מהפריסה: initial-value משנה תצוגה בלבד — ה־hash זהה לברירת המחדל:
+    const rDefault = typeset(CORPUS, getDefaultSettings());
+    assertEq(r.layoutHash, rDefault.layoutHash, 'layoutHash נשמר — שינוי המספור תצוגתי בלבד');
+  });
+
+  it('HTML מהמודל: כל גיליונות ה־footer חשופים וזהים למודל', () => {
+    const S = { ...getDefaultSettings(), 'page-num-initial-value': IV };
+    const r = typeset(CORPUS, S);
+    const html = exportHtmlFromModel(r.pageModel, S, makeDoc(), { title: 'D-108 >999' });
+    assert(html.startsWith('<!DOCTYPE html>'), 'מבנה HTML תקין');
+    // חילוץ טקסט ה־footer של הגיליון מה־HTML המיוצא:
+    const folioTexts = [...html.matchAll(/<footer class="folio[^"]*"[^>]*>([^<]*)<\/footer>/g)].map(m => m[1].trim());
+    const modelFolios = r.pageModel.pages.filter(mp => mp.folio && mp.folio.text).map(mp => mp.folio.text);
+    assert(folioTexts.length >= 5, `גיליונות footer ב־HTML (התקבלו ${folioTexts.length})`);
+    assertEq(folioTexts.length, modelFolios.length, 'כמות ה־footer = כמות פוליו המודל');
+    for (const t of folioTexts) {
+      assert(isBareFolio(t), `HTML folio "${t}" חשוף (D-108, מעל 999)`);
+      assert(modelFolios.includes(t), `HTML folio "${t}" קיים במודל`);
+    }
+  });
+
+  it('PDF מהמודל: הגיליונות החשופים מעל 999 מוטמעים בבתים האמיתיים', () => {
+    if (typeof Buffer === 'undefined') { console.error('  [מדלג — Node]'); return; }
+    let HAS = true;
+    try { execFileSync('pdftotext', ['-v'], { stdio: 'pipe' }); } catch (e) { HAS = false; }
+    if (!HAS) { console.error('  [מדלג — poppler לא במערכת]'); return; }
+    const ASSETS = path.join(__dirname, '..', '..', 'ui/assets/imud');
+    const CATALOG = JSON.parse(fs.readFileSync(path.join(ASSETS, 'imud-fonts.json'), 'utf8'));
+    const e = CATALOG.find(x => x.family === 'Frank Ruhl Libre');
+    const fontBytes = fs.readFileSync(path.join(ASSETS, 'fonts', e.file));
+    const S = { ...getDefaultSettings(), 'page-num-initial-value': IV };
+    const r = typeset(CORPUS, S);
+    const res = exportPdfFromModel(r.pageModel, S, fontBytes, 'Frank Ruhl Libre');
+    assert(res.ok, 'ייצוא עבר: ' + (res.error || ''));
+    const tmp = path.join(__dirname, '..', 'artifacts', 'd108-over999.pdf');
+    fs.mkdirSync(path.dirname(tmp), { recursive: true });
+    fs.writeFileSync(tmp, res.bytes);
+    const txt = execFileSync('pdftotext', [tmp, '-'], { encoding: 'utf8' });
+    // הפוליו הוא המקור היחיד של emitWord לגיליון (pdf-writer: pg.folio.text) —
+    // מקורו נבדק לעיל; כאן מוכיחים שהערכים החשופים (אורך ≥ 2 — חד־משמעיים
+    // למחרוזות כמו תתקצח/אא/אד/איג) אכן נמצאים בבתים של ה־PDF האמיתי:
+    const distinctive = [...new Set(r.pageModel.pages.filter(mp => mp.folio && mp.folio.text && mp.folio.text.length >= 2).map(mp => mp.folio.text))];
+    assert(distinctive.length >= 4, `ערכי פוליו ייחודיים לבדיקה (התקבלו ${distinctive.length}: ${distinctive.join(',')})`);
+    for (const t of distinctive) {
+      assert(txt.includes(t), `פוליו "${t}" נחלץ מה־PDF האמיתי`);
+    }
+    // בדיקת היעדר גורפת אינה אפשרית: סמני ההערות (hebrew-geresh — 'א׳') לגיטימיים
+    // בגוף ה־PDF לפי D-108 ("אין להסיק"). הפרדת הפוליו הוכחה לעיל ברמת המקור והחילוץ.
+  });
+});
+
+function createG2n() {
+  const { createFullMathAudit } = require(path.join(__dirname, '..', '..', '..', 'tools', 'layout-audit', 'full-math-audit.js'));
+  return createFullMathAudit().gematriaToNumber;
+}
+
+// ---------- DOM shim מינימלי (דפוס s8e, כולל סריאליזציה) לייצוא HTML ----------
+function makeDoc() {
+  class ClassList {
+    constructor(el) { this.el = el; this.set = new Set(); }
+    _sync() { this.el._class = [...this.set].join(' '); }
+    add(...ns) { ns.forEach(n => this.set.add(n)); this._sync(); }
+    remove(...ns) { ns.forEach(n => this.set.delete(n)); this._sync(); }
+    contains(n) { return this.set.has(n); }
+  }
+  class El {
+    constructor(tag) {
+      this.tagName = tag.toUpperCase(); this.children = []; this.attrs = {}; this.dataset = {};
+      this.style = {}; this._class = ''; this._text = '';
+      this.classList = new ClassList(this);
+    }
+    set className(v) { this._class = String(v); this.classList.set = new Set(String(v).split(/\s+/).filter(Boolean)); }
+    get className() { return this._class; }
+    appendChild(c) { this.children.push(c); c.parentNode = this; return c; }
+    set textContent(v) { this._text = String(v); this.children = []; }
+    get textContent() { if (this.children.length) return this.children.map(c => c.textContent).join(''); return this._text; }
+    setAttribute(k, v) { this.attrs[k] = String(v); if (k === 'id') this.id = String(v); }
+    getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; }
+    scrollIntoView() {}
+    focus() {}
+    // סריאליזציה (כמו s8e/s10): הייצוא צורך outerHTML — בלי זה אין פלט מה-shim.
+    _esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    _cssKey(k) { return k.replace(/[A-Z]/g, m => '-' + m.toLowerCase()); }
+    outerHTML() {
+      const styleStr = Object.entries(this.style).map(([k, v]) => `${this._cssKey(k)}:${this._esc(v)}`).join(';');
+      const attrsStr = Object.entries(this.attrs).map(([k, v]) => ` ${k}="${this._esc(v)}"`).join('')
+        + (this._class ? ` class="${this._esc(this._class)}"` : '')
+        + (styleStr ? ` style="${styleStr}"` : '')
+        + Object.entries(this.dataset).map(([k, v]) => ` data-${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}="${this._esc(v)}"`).join('');
+      const inner = this.children.length ? this.children.map(c => c.outerHTML()).join('') : this._esc(this._text);
+      return `<${this.tagName.toLowerCase()}${attrsStr}>${inner}</${this.tagName.toLowerCase()}>`;
+    }
+  }
+  return { createElement: (t) => new El(t), createTextNode: (t) => { const e = new El('#text'); e._text = String(t); return e; } };
+}
 
 report();
