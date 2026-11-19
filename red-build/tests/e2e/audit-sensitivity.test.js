@@ -11,6 +11,7 @@
  * מבנה pageData מתועד בראש full-math-audit.js; הדבק הדפדפן אוסף אותו מה-DOM החי
  * ולכן החוזה כאן הוא אותו חוזה של הריצה האמיתית — לא העתק.
  */
+const fs = require('fs');
 const path = require('path');
 const { describe, it, assert, assertEq, report } = require('../harness');
 
@@ -93,6 +94,25 @@ describe('audit-sensitivity — הוכחת רגישות הגלאים (S5.2)', ()
     assertEq(audit.gematriaToNumber('17'), 17, 'ספרות לועזיות');
     assertEq(audit.gematriaToNumber('ה׳תש״ב'), 5702, 'אלפים');
     assertEq(audit.gematriaToNumber('---'), null, 'זבל → null');
+  });
+
+  it('DOM audit collectors use the actual rect height field for TOC collision checks', () => {
+    const repoRoot = path.resolve(__dirname, '..', '..', '..');
+    const source = fs.readFileSync(path.join(repoRoot, 'tools/layout-audit/audit-in-page.js'), 'utf8');
+    const start = source.indexOf("const tocWrapEl = pg.querySelector('.toc-rows')");
+    const end = source.indexOf('// תוכן שער (מנוע מורשת)', start);
+    assert(start >= 0 && end > start, 'TOC collector source region exists');
+    const collector = source.slice(start, end);
+    assert(collector.includes('h: rr.h'), 'legacy TOC rows use DOMRect height');
+    assert(!collector.includes('rr.height'), 'TOC overlap checks must not read an undefined height property');
+    assert(collector.includes('g = { y, h: rr.h'), 'PageModel grouped TOC rows use DOMRect height');
+    assert(collector.includes('Math.max(g.h, rr.h)'), 'group height uses DOMRect height');
+  });
+
+  it('Full Math treats PageModel structural shaar lines as visible gate content', () => {
+    const repoRoot = path.resolve(__dirname, '..', '..', '..');
+    const source = fs.readFileSync(path.join(repoRoot, 'tools/layout-audit/full-math-audit.js'), 'utf8');
+    assert(source.includes("if (!info.gates) info.gates = shaarLines.length;"), 'PageModel gate collector must recognize shaar-content lines');
   });
 
   it('PageModel TOC: structural rows are required and excluded from body-word floor', () => {

@@ -188,7 +188,7 @@
     info.tocInContainer = !!(tocWrapEl && tocWrapEl.querySelector('.toc-row'));
     info.tocRows = [...pg.querySelectorAll('.toc-row')].map((rowEl) => {
       const rr = R(rowEl);
-      return { y: rr.y - pgR.y, h: rr.height, text: (rowEl.textContent || '').trim().slice(0, 24) };
+      return { y: rr.y - pgR.y, h: rr.h, text: (rowEl.textContent || '').trim().slice(0, 24) };
     });
     // PageModel TOC שורות הן .line מבניות ישירות תחת .pmr-page; פריטי inline
     // בעלי אותו baseline מקובצים לשורה אחת. תחום המתיחה של legacy לא חל כאן.
@@ -202,8 +202,8 @@
         const y = rr.y - pgR.y;
         const key = Math.round(y * 10) / 10;
         let g = groups.get(key);
-        if (!g) { g = { y, h: rr.height, texts: [] }; groups.set(key, g); }
-        else g.h = Math.max(g.h, rr.height);
+        if (!g) { g = { y, h: rr.h, texts: [] }; groups.set(key, g); }
+        else g.h = Math.max(g.h, rr.h);
         g.texts.push((rowEl.textContent || '').trim());
       }
       info.tocRows = [...groups.values()].map(g => ({ y: g.y, h: g.h, text: g.texts.join(' | ').slice(0, 48) }));

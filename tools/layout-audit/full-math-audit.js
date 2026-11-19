@@ -766,6 +766,11 @@ if (typeof document !== 'undefined') {
     if (info.pagemodel) {
       const shaarLines = [...pg.querySelectorAll('.shaar-content .line')];
       info.shaarLines = shaarLines.length;
+      // SHAAR_EMPTY הוא בדיקת קיום תוכן שער, לא רק class של נתיב legacy.
+      // ב-PageModel שורות השער structural בתוך .shaar-content; סופרים אותן
+      // כגייטים רק כאשר אין band--gate (שלא ליצור כפילות).
+      if (!info.gates) info.gates = shaarLines.length;
+      info.g = info.gates;
       for (const ln of shaarLines) { const nWords = wc(ln.textContent); info.words += nWords; info.shaarWords += nWords; }
     }
 
