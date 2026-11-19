@@ -191,8 +191,8 @@ const gotoView = async () => {
   await ev(`(async () => { for (const t of document.querySelectorAll('[role=tab],.tab,button')) if (/תצוגה/.test(t.textContent)) t.click(); await new Promise(r => setTimeout(r, 2500)); return 'VIEW'; })()`);
 };
 
-// ═════════ main ═════════
-(async function buildLocalBrowserBundles() {
+// בניית bundles מקומיים — לפני פתיחת השרת והדפדפן.
+async function buildLocalBrowserBundles() {
   const script = path.join(ROOT, 'tools', 'build-worker-bundle.js');
   log('Building browser bundles from current source before local full-math audit...');
   await new Promise((resolve, reject) => {
@@ -217,7 +217,8 @@ const gotoView = async () => {
   }
 }
 
-async function main() {
+// ═════════ main ═════════
+(async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   if (!fs.existsSync(FIXTURE)) throw new Error(`חסר fixture: ${FIXTURE}`);
   // **F-BL1 (17.11 — שורש הפער ההיסטורי 353,687<355,967):** רצפת הנפח השוותה
