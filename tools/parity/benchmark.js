@@ -24,7 +24,11 @@ const AUD = path.join(ROOT, 'audits');
 const { typeset } = require(path.join(RB, 'src/engine/core/pipeline'));
 const { getDefaultSettings, getSettingDefs } = require(path.join(RB, 'src/engine/core/settings-registry'));
 const { importImudSettings } = require(path.join(RB, 'src/engine/core/legacy-settings-map'));
-const { registerFont } = require(path.join(RB, 'src/engine/typography/measure-api'));
+// **תיקון הארנס (19.11, סשן הביצועים §3.1):** רישום דרך fontResolver — נקודת
+// הכניסה היחידה של ה־Worker החי — כך שהמאוחד מודד בנתיב הייצור (font-metrics
+// דרך forFontId) ולא בקירוב-טבלה עם מופע חדש לכל קריאה. ה-resolver מסונכרן
+// גם ל-measure-api (אותם בתים) — המורשת לא נפגעת.
+const fontResolver = require(path.join(RB, 'src/engine/typography/font-resolver'));
 
 function liveSettings() {
   const legacy = JSON.parse(fs.readFileSync(path.join(RB, 'ui/assets/imud/default_settings.json'), 'utf8'));
@@ -46,10 +50,17 @@ function registerLiveFonts() {
     ['David Libre', 'DavidLibre-Regular.ttf'], ['DavidLibre', 'DavidLibre-Bold.ttf'],
     ['Hadassah Friedlaender', 'Hadassah-Friedlaender-Regular.ttf']
   ];
+  const hasher = crypto.createHash('sha256');
   for (const [fam, file] of FONTS) {
     const fp = path.join(RB, 'ui/assets/imud/fonts', file);
-    if (fs.existsSync(fp)) registerFont(fam, fs.readFileSync(fp));
+    if (fs.existsSync(fp)) {
+      const bytes = fs.readFileSync(fp);
+      hasher.update(fam).update(file).update(bytes);
+      const res = fontResolver.registerFont(fam, bytes, { source: 'benchmark' });
+      if (!res.ok) console.error(`registerFont failed for ${fam}: ${res.code}`);
+    }
   }
+  return hasher.digest('hex');
 }
 
 function typesetEnvExtras() {
@@ -82,7 +93,7 @@ function main() {
   }
   if (!corpora.length) corpora.push('no_long', 'mid_long', 'long', 'very_long');
 
-  registerLiveFonts();
+  const fontsSha256 = registerLiveFonts();
   const base = liveSettings();
   const settings = { ...getDefaultSettings(), ...base, 'measure-impl': 'font-metrics' };
   const envExtras = typesetEnvExtras();
@@ -94,6 +105,8 @@ function main() {
     const file = corpus === 'canonical' ? path.join(RB, 'tests/fixtures/canonical_corpus.txt') : path.join(AUD, `${corpus}_test_text.txt`);
     if (!fs.existsSync(file)) { console.error(`corpus not found: ${file}`); process.exit(2); }
     const text = fs.readFileSync(file, 'utf8');
+    const inputSha256 = crypto.createHash('sha256').update(text).digest('hex');
+    const inputBytes = Buffer.byteLength(text, 'utf8');
 
     const runOnce = (unified) => {
       const t0 = process.hrtime.bigint();
@@ -117,16 +130,20 @@ function main() {
     const ratio = su.p50 / sl.p50;
     const pass = su.p50 <= sl.p50; // הוראה ו.5: median unified ≤ median legacy
     if (!pass) allPass = false;
-    results.push({ corpus, runs, warmups, legacy: { ...sl, pages: legPages }, unified: { ...su, pages: uniPages }, ratioP50: Number(ratio.toFixed(3)), pass });
+    const mem = { heapUsedAfter: Math.round(process.memoryUsage().heapUsed / 1048576), maxRssMb: Math.round((process.resourceUsage ? process.resourceUsage().maxRSS : 0) / 1024) };
+    results.push({ corpus, inputFile: path.relative(ROOT, file), inputBytes, inputSha256, runs, warmups, legacy: { ...sl, pages: legPages }, unified: { ...su, pages: uniPages }, ratioP50: Number(ratio.toFixed(3)), pageDeltaUnifiedMinusLegacy: uniPages - legPages, memoryMb: mem, pass });
     console.log(`${corpus.padEnd(10)} legacy p50=${sl.p50.toFixed(0)}ms p95=${sl.p95.toFixed(0)}ms (${legPages}p) · unified p50=${su.p50.toFixed(0)}ms p95=${su.p95.toFixed(0)}ms (${uniPages}p) · ratio=${ratio.toFixed(2)} ${pass ? '✓' : '✗ SLOWER'}`);
   }
 
   const report = {
     tool: 'tools/parity/benchmark.js',
+    command: `node ${process.argv.slice(1).join(' ')}`,
     node: process.version,
     commit: (() => { try { return require('child_process').execSync('git rev-parse HEAD', { cwd: ROOT }).toString().trim(); } catch (e) { return null; } })(),
     settingsSha256: crypto.createHash('sha256').update(JSON.stringify(settings)).digest('hex'),
+    fontsSha256,
     acceptance: 'median unified ≤ median legacy בכל קורפוס (הוראת 19.11 סעיף ו.5)',
+    note: 'typeset בלבד (מנוע); PageModel בתוך ה-typeset של המאוחד; אין דפדפן/PDF/נכסים במדידה. סדר מתחלף legacy→unified בwarmups ובמדידות.',
     results, allPass, generatedAt: new Date().toISOString()
   };
   if (outFile) { fs.mkdirSync(path.dirname(outFile), { recursive: true }); fs.writeFileSync(outFile, JSON.stringify(report, null, 1)); }

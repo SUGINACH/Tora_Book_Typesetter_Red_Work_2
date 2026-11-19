@@ -31,7 +31,14 @@ const AUD = path.join(ROOT, 'audits');
 const { typeset } = require(path.join(RB, 'src/engine/core/pipeline'));
 const { getDefaultSettings, getSettingDefs } = require(path.join(RB, 'src/engine/core/settings-registry'));
 const { importImudSettings } = require(path.join(RB, 'src/engine/core/legacy-settings-map'));
-const { registerFont } = require(path.join(RB, 'src/engine/typography/measure-api'));
+// **תיקון הארנס (19.11, סשן הביצועים §3.1):** רישום הגופנים עובר ל-fontResolver —
+// נקודת הכניסה היחידה של ה־Worker החי (engine-worker-main handleRegisterFont).
+// בעבר נרשם ישירות ב-measure-api בלבד ⇒ ה-resolver נותר ריק ⇒ המאוחד מדד
+// מילים בקירוב טבלה (מופע חדש לכל קריאה) בזמן שהמורשת מדדה במטריקות אמת —
+// פער מדידה מלאכותי בין המנועים שהנפיח גם את הפרשי הביצועים וגם את מספרי
+// ה-parity (very_long: 992 עמ' במקום 851 בנתיב הייצור). הרישום דרך ה-resolver
+// מסונכרן גם ל-measure-api (אותם בתים, אותה זהות תוכן) — המורשת לא נפגעת.
+const fontResolver = require(path.join(RB, 'src/engine/typography/font-resolver'));
 const { GEO } = require(path.join(RB, 'src/engine/core/imud-geometry'));
 
 // ---------- כימות קואורדינטות — מקום אחד, סימטרי לשני הצדדים ----------
@@ -64,7 +71,11 @@ function registerLiveFonts() {
   const registered = [];
   for (const [fam, file] of FONTS) {
     const fp = path.join(RB, 'ui/assets/imud/fonts', file);
-    if (fs.existsSync(fp)) { registerFont(fam, fs.readFileSync(fp)); registered.push(fam); }
+    if (fs.existsSync(fp)) {
+      const bytes = fs.readFileSync(fp);
+      const res = fontResolver.registerFont(fam, bytes, { source: 'parity-signature' });
+      if (res.ok) registered.push(fam); else console.error(`registerFont failed for ${fam}: ${res.code}`);
+    }
   }
   return registered;
 }
