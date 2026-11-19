@@ -27,6 +27,12 @@ const { Ledger } = require('../core/ledger');
 // (מקור יחיד לפענוח מקורות הסלוטים) + חיצוץ החצאים — אותה נוסחה כמו hdrR/hdrL.
 // headers-builder אינו דורש כלום — אין תלות מעגלית.
 const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = require('../decoration/headers-builder');
+// **D-108 (19.11):** פורמט הפוליו הקנוני של שני המנועים — גימטריה חשופה
+// (בלי גרש/גרשיים ובלי מפריד אלפים) חי ב-decoration/folio.js לצד שאר
+// המספור; מסלול המורשת קורא אותו ל-folioDisplay ולתוויות ה-TOC בלבד.
+// toGematria המקומי נשאר לשדות שאינם פוליו (סמני הערות, סימנים) — D-108:
+// "אין להסיק מכלל זה דבר על סימני ציטוט/גרש בהערות...".
+const { toBareGematria } = require('../decoration/folio');
 // **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
@@ -65,11 +71,13 @@ function toGematria(num) {
   if (num === 16) return 'טז';
   // **מגן ספרים גדולים:** מעל 999 — חלק האלפים בגימטריה + גרשיים (לא נצפה
   // בייחוס; מונע undefined ושומר דטרמיניזם — הקורפוס הגדול מגיע ל־~730).
+  // **D-108 (19.11):** פונקציה זו אינה עוד מקור פורמט הפוליו — הפוליו ותוויות
+  // ה-TOC משתמשים ב-toBareGematria (חשוף בכל ערך, גם באלפים). הגרש כאן
+  // נשאר לשדות שאינם פוליו בלבד — סמני הערות (markerWord) וסימנים — לפי
+  // D-31; שינויים בהם אסורים במסגרת D-108 ("אין להסיק מכלל זה דבר על
+  // סימני ציטוט/גרש בהערות, בגוף הטקסט או בשדות אחרים").
   if (num >= 1000) {
     const th = Math.floor(num / 1000);
-    // **S5.2 (אחידות D-31):** גרש עברי (U+05F3) במקום ASCII ' — כמו
-    // toHebrewNumber של folio.js (ה׳תש״ב); שני מחלקי המספור במאגר חייבים
-    // להסכים על אותו תו.
     return toGematria(th) + '\u05F3' + toGematria(num % 1000);
   }
   const hundreds = ['', 'ק', 'ר', 'ש', 'ת', 'תק', 'תר', 'תש', 'תת', 'תתק'];
@@ -3348,7 +3356,9 @@ function legacyTypeset(rawText, settings, env) {
     const counted = ['toc-general', 'toc-detailed', 'blank', 'shaar-sub', 'regular', 'sign-open', 'preface'].includes(p.type);
     p.pageNumber = counted ? pn++ : null;
     const shows = ['toc-general', 'toc-detailed', 'regular', 'sign-open', 'preface'].includes(p.type);
-    p.folioDisplay = shows && p.pageNumber ? toGematria(p.pageNumber) : '';
+    // **D-108:** הגיליון המודפס בגימטריה חשופה בלבד — toBareGematria (מקור
+    // הפורמט המשותף לשני המנועים), לא toGematria המפריד אלפים בגרש.
+    p.folioDisplay = shows && p.pageNumber ? toBareGematria(p.pageNumber) : '';
   }
   final.forEach((p, i) => { p.index = i; });
   // **שלב 6 פרוסה 2 (§8 בהוראה — שורש SIDE_NOTE_OVERLAP בעמ' 107):** עד כאן
@@ -3472,7 +3482,8 @@ function legacyTypeset(rawText, settings, env) {
     // — ההוכחה מהייחוס: הערך הראשון בתוכן-העניינים הכללי (ה-h1 "הקדמות
     // וכללים") מסומן "ו" = גימטריה של מיקום עמוד השער (0-מבוסס 6), בעוד
     // לעמוד עצמו אין פוליו כלל. שאר הכותרות: הפוליו המודפס של עמודן.
-    if (p._h1Token) folioByToken.set(p._h1Token.id, p.folioDisplay || toGematria(pi));
+    // **D-108:** תווית TOC חשופה — toBareGematria גם בנפילה הזו.
+    if (p._h1Token) folioByToken.set(p._h1Token.id, p.folioDisplay || toBareGematria(pi));
     for (const b of (p.bands || [])) if (b.tokenId != null) folioByToken.set(b.tokenId, p.folioDisplay);
     for (const col of p.columns) for (const ln of col) {
       if (ln.kind === 'heading' && ln.tokenId != null && !folioByToken.has(ln.tokenId)) folioByToken.set(ln.tokenId, p.folioDisplay);

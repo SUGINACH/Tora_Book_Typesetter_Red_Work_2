@@ -18,7 +18,7 @@
  ],
  "fontsDirSha256": "6d59128356b37188ef0cefb9cb0828ebee35295f9731ca5a358a9d22350976c6",
  "node": "v24.22.3",
- "commit": "aa35cded4de11b3edd1f96d09f722b4726e5d9dd",
+ "commit": "b86ed2c5ceaccbdb25f21c45d6f4bff03d200559",
  "quantization": {
   "COORD_Q": 0.01,
   "rule": "round(v/COORD_Q)*COORD_Q — סימטרי לשני הצדדים"
@@ -27,17 +27,17 @@
   "legacy": {
    "layoutHash": "legacy-b8e8b646fcbed32b",
    "pages": 139,
-   "ms": 374
+   "ms": 355
   },
   "unified": {
    "layoutHash": "56990257527694f4c58e1e00bedc5c8cb0fbb879f1ebad6e3e2cda1b2d89e8a8",
    "pages": 191,
-   "ms": 2901
+   "ms": 2827
   }
  },
  "determinism": {
   "legacy": true,
   "unified": true
  },
- "generatedAt": "2026-11-19T10:16:11.088Z"
+ "generatedAt": "2026-11-19T11:45:48.740Z"
 }

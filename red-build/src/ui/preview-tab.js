@@ -428,8 +428,18 @@ function buildPreviewTab(doc, opts) {
   function rebuildFolioIndex() {
     folioIndex = new Map();
     const pages = virtual.pages || [];
-    for (let i = 0; i < pages.length; i++) { // מעבר ראשון: גיליונות אמיתיים — עדיפות
-      const n = folioNumberOf(pages[i] && pages[i].folioDisplay);
+    // **D-108:** הגיליון חשוף (בלי גרש/גרשיים ובלי מפריד אלפים) — פענוח מספרי
+    // מהטקסט עמום באלפים ('אקפ' = 1180 אך גם 181 בסכימה פשוטה). לכן, לעמודים
+    // שמציגים גיליון, מקור המפתחה המספרי הוא page.pageNumber (קיים בשני
+    // הפרופילים) במקום פענוח הטקסט. סמנטיקת S5.2 (12) נשמרת בדיוק: רק עמוד
+    // שמציג גיליון תופס את מספרו; עמוד ללא גיליון (שער/תוכן/פתיחה מדוכאת)
+    // נכנס תחת אינדקס+1 במעבר השני.
+    for (let i = 0; i < pages.length; i++) { // מעבר ראשון: גיליון מוצג — מספר קנוני
+      const pg = pages[i] || {};
+      if (!pg.folioDisplay) continue;
+      const n = (typeof pg.pageNumber === 'number' && pg.pageNumber >= 1)
+        ? pg.pageNumber
+        : folioNumberOf(pg.folioDisplay);
       if (n != null && !folioIndex.has(n)) folioIndex.set(n, i);
     }
     for (let i = 0; i < pages.length; i++) { // מעבר שני: בלי גיליון — מספר פיזי (אם פנוי)

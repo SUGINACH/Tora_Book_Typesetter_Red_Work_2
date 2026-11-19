@@ -197,7 +197,7 @@
    "category": "line-text",
    "where": "page 3, toc col, line 1",
    "expected": "חלק 1: ענייני החלק",
-   "actual": "חלק 1: ענייני החלק ב׳"
+   "actual": "חלק 1: ענייני החלק ב"
   },
   {
    "category": "line-y",
@@ -227,7 +227,7 @@
    "category": "line-text",
    "where": "page 3, toc col, line 2",
    "expected": "סימן א של חלק 1",
-   "actual": "סימן א של חלק 1 ג׳"
+   "actual": "סימן א של חלק 1 ג"
   },
   {
    "category": "line-sizePt",

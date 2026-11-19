@@ -155,7 +155,7 @@
    "category": "line-text",
    "where": "page 3, toc col, line 1",
    "expected": "יורה דעה",
-   "actual": "יורה דעה א׳"
+   "actual": "יורה דעה א"
   },
   {
    "category": "line-y",
@@ -185,7 +185,7 @@
    "category": "line-text",
    "where": "page 3, toc col, line 2",
    "expected": "הערות בסוגיית הגרמה",
-   "actual": "הערות בסוגיית הגרמה ב׳"
+   "actual": "הערות בסוגיית הגרמה ב"
   },
   {
    "category": "line-sizePt",
@@ -221,7 +221,7 @@
    "category": "line-text",
    "where": "page 3, toc col, line 3",
    "expected": "א. משנת השוחט מתוך הטבעת וגדרי פסול הגרמה בסימנים ובצוואר",
-   "actual": "א. משנת השוחט מתוך הטבעת וגדרי פסול הגרמה בסימנים ובצוואר ג׳"
+   "actual": "א. משנת השוחט מתוך הטבעת וגדרי פסול הגרמה בסימנים ובצוואר ג"
   },
   {
    "category": "line-sizePt",

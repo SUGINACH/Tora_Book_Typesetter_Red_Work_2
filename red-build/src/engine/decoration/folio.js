@@ -6,7 +6,7 @@ const TENS = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
 const HUND = ['', 'ק', 'ר', 'ש', 'ת', 'תר', 'תש', 'תת', 'תתק'];
 
 /**
- * מספר עברי (D-37):
+ * מספר עברי (D-37) — **לשדות שאינם פוליו בלבד** (D-108: פוליו חשוף, ראה toBareGematria):
  *  - אות בודדת ⇒ אות + גרש (׳): א׳=1, כ׳=20, ת׳=400.
  *  - שתי אותיות ומעלה ⇒ גרשיים (״) לפני האות האחרונה: ט״ו=15, ט״ז=16, כ״א=21, תש״ב=702, תשמ״ב=742.
  *  - 15/16 ⇒ ט״ו/ט״ז (לא יה+וו).
@@ -52,11 +52,46 @@ function finish(thousands, letters) {
   return thousands ? thousands + body : body;
 }
 
+/** **D-108 (19.11 — תיקון מפורש להחלת D-31 על פוליו):** גימטריה חשופה למספרי
+ *  עמודים מודפסים — הגיליון בתחתית העמוד ומספרי העמודים בתוכן העניינים —
+ *  בלי גרש (U+05F3), בלי גרשיים (U+05F4), בלי אפוסטרוף ASCII ובלי מפריד
+ *  אחר, גם בחלק האלפים: 1=א, 2=ב, 15=טו, 16=טז, 21=כא, 22=כב, 100=ק,
+ *  999=תתקצט, 1000=א, 1001=אא, 5702=התשב.
+ *  D-31/D-37 (המספור עם גרש/גרשיים) **אינם חלים על פוליו** — הם נשארים
+ *  לשדות שאינם פוליו (סמני הערות ותצוגות אחרות; "אין להסיק מכלל זה דבר
+ *  על סימני ציטוט/גרש בהערות, בגוף הטקסט או בשדות אחרים").
+ *  **מקור סמכות יחיד:** זהו פורמט הפוליו הקנוני של שני המנועים — מסלול
+ *  המורשת (legacy-imud-flow) קורא אותה ל-folioDisplay ולתוויות ה-TOC
+ *  (parity legacy↔unified; היסטורית toGematria של המורשת היה חשוף עד 999
+ *  והוסיף מפריד אלפים מעליו — D-108 אוסר מפריד בכל ערך).
+ *  ערך לא-חיובי/בלתי-נבדל ⇒ '' (כמו המורשת: folioDisplay ריק). */
+function toBareGematria(n) {
+  n = parseInt(n, 10);
+  if (isNaN(n) || n <= 0) return '';
+  if (n === 15) return 'טו';
+  if (n === 16) return 'טז';
+  // אלפים — בלי שום מפריד (D-108): 1000=א, 1001=אא, 5702=התשב
+  if (n >= 1000) return toBareGematria(Math.floor(n / 1000)) + toBareGematria(n % 1000);
+  const hundreds = ['', 'ק', 'ר', 'ש', 'ת', 'תק', 'תר', 'תש', 'תת', 'תתק'];
+  const tens = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
+  const ones = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+  let str = '';
+  let h = Math.floor(n / 100);
+  if (h > 0) { str += hundreds[Math.min(h, 9)]; n %= 100; }
+  const t = Math.floor(n / 10), o = n % 10;
+  if (t === 1 && (o === 5 || o === 6)) str += (o === 5) ? 'טו' : 'טז';
+  else str += tens[t] + ones[o];
+  return str;
+}
+
 function formatPageNumber(value, settings) {
   switch (settings['page-num-format']) {
     case 'decimal': return String(value);
-    case 'daf-hebrew': return `דף ${toHebrewNumber(value)}`;
-    default: return toHebrewNumber(value);
+    // **D-108:** מספר עמוד מוצג בגימטריה חשופה בלבד — הן הפורמט העברי
+    // (ברירת המחדל; 'gematria' של ערכות IMUD נופל לכאן) והן חלק המספר
+    // של daf-hebrew. אין גרש/גרשיים/מפריד בשום פוליו ובשום תווית TOC.
+    case 'daf-hebrew': return `דף ${toBareGematria(value)}`;
+    default: return toBareGematria(value);
   }
 }
 
@@ -127,6 +162,6 @@ function assignNumbers(pages, settings) {
 }
 
 module.exports = {
-  toHebrewNumber, formatPageNumber, frameNumber, tocPageLabel,
+  toHebrewNumber, toBareGematria, formatPageNumber, frameNumber, tocPageLabel,
   isCssFrame, assignNumbers,
 };

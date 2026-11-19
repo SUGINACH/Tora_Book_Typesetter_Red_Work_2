@@ -17,7 +17,7 @@ const {
   firstLastWordsText, trimEdgePunctuation,
 } = require('../../src/engine/decoration/headers-builder');
 const {
-  toHebrewNumber, formatPageNumber, frameNumber, isCssFrame, tocPageLabel, assignNumbers,
+  toHebrewNumber, toBareGematria, formatPageNumber, frameNumber, isCssFrame, tocPageLabel, assignNumbers,
 } = require('../../src/engine/decoration/folio');
 const { auditNumbering, FOLIO_BUDGET_PCT } = require('../../src/engine/decoration/numbering-audit');
 const {
@@ -106,7 +106,7 @@ describe('S9.2 gate 1 — מטריצת כותרות: כל מקור×יישור×
     template: { hasRunningHead: true },
     firstWord: 'ראשונה', lastWord: 'אחרונה',
     h1: 'חלק ראשון - החלק הגדול', h2: 'סימן טוב',
-    pageNumberDisplay: 'כ״ב',
+    pageNumberDisplay: 'כב', // **D-108:** המקור הוא פורמט הפוליו החשוף
     opensWithHeadingLevel: null,
     chapterOpening: false,
     ...extra,
@@ -151,7 +151,7 @@ describe('S9.2 gate 1 — מטריצת כותרות: כל מקור×יישור×
                 'book-name-rest': 'מהדורה חדשה',
                 'h1': 'חלק ראשון',
                 'h2': 'סימן טוב',
-                'page-num': 'כ״ב',
+                'page-num': 'כב', // D-108: חשוף כמו pageNumberDisplay
                 'first-word': 'ראשונה',
                 'last-word': 'אחרונה',
                 'first-last-words': 'ראשונה – אחרונה',
@@ -276,8 +276,9 @@ describe('S9.2 gate 2 — מספור: initial-value (כרך ב׳), start-idx, co
     const firstCounted = r.numbers.find(n => n.counted);
     assert(firstCounted, 'must have counted pages');
     assertEq(firstCounted.page, 22, 'effective value');
-    assertEq(firstCounted.display, toHebrewNumber(22), 'display כ״ב');
-    assertEq(firstCounted.display, 'כ״ב', 'hebrew letters with gershayim');
+    // **D-108:** הפוליו בגימטריה חשופה בלבד — בלי גרשיים (היה 'כ״ב' לפני 19.11)
+    assertEq(firstCounted.display, toBareGematria(22), 'display כב');
+    assertEq(firstCounted.display, 'כב', 'hebrew bare letters (D-108)');
     // עמוד ה־TOC עצמו אינו נספר (count-toc-pages=false כברירת מחדל):
     const tocNum = r.numbers[r.pages.findIndex(p => p.type === 'toc-general')];
     assert(tocNum && tocNum.counted === false, 'TOC page uncounted by default');
@@ -295,8 +296,8 @@ describe('S9.2 gate 2 — מספור: initial-value (כרך ב׳), start-idx, co
     assert(counted.length >= 4, `enough counted pages (got ${counted.length})`);
     assertEq(counted[0].display, '', 'ordinal 1 < start-idx: no display');
     assertEq(counted[1].display, '', 'ordinal 2 < start-idx: no display');
-    assertEq(counted[2].display, 'ה׳', 'ordinal 3 → initial 5');
-    assertEq(counted[3].display, 'ו׳', 'ordinal 4 → 6');
+    assertEq(counted[2].display, 'ה', 'ordinal 3 → initial 5 (D-108: חשוף)');
+    assertEq(counted[3].display, 'ו', 'ordinal 4 → 6 (D-108: חשוף)');
     assertEq(counted[2].page, 5, 'effective formula');
     assertEq(counted[3].page, 6, 'effective formula (2)');
   });
@@ -334,8 +335,9 @@ describe('S9.2 gate 2 — מספור: initial-value (כרך ב׳), start-idx, co
 
   it('פורמטים ומסגרות (REQ-HDR-04): hebrew / daf-hebrew / decimal; מסגרות נבדלות', () => {
     const s = getDefaultSettings();
-    assertEq(formatPageNumber(22, { ...s, 'page-num-format': 'hebrew' }), 'כ״ב');
-    assertEq(formatPageNumber(22, { ...s, 'page-num-format': 'daf-hebrew' }), 'דף כ״ב');
+    // **D-108:** גימטריה חשופה בפוליו ובתווית TOC — גם בחלק המספר של daf-hebrew
+    assertEq(formatPageNumber(22, { ...s, 'page-num-format': 'hebrew' }), 'כב');
+    assertEq(formatPageNumber(22, { ...s, 'page-num-format': 'daf-hebrew' }), 'דף כב');
     assertEq(formatPageNumber(22, { ...s, 'page-num-format': 'decimal' }), '22');
     assertEq(frameNumber('כב', 'none'), 'כב');
     assertEq(frameNumber('כב', 'parenthesis'), '(כב)');
@@ -346,7 +348,7 @@ describe('S9.2 gate 2 — מספור: initial-value (כרך ב׳), start-idx, co
     assertEq(isCssFrame('circle'), true); assertEq(isCssFrame('square'), true);
     assertEq(isCssFrame('parenthesis'), false); assertEq(isCssFrame('squares'), false);
     // תווית TOC תמיד בפורמט המספור בלי מסגרת:
-    assertEq(tocPageLabel(22, { ...s, 'page-num-format': 'daf-hebrew' }), 'דף כ״ב');
+    assertEq(tocPageLabel(22, { ...s, 'page-num-format': 'daf-hebrew' }), 'דף כב');
     // מסגרת CSS מרונדרת כ‑badge בעמוד אמיתי:
     const r = typeset(sampleDoc(1, 18), { ...s, 'page-num-frame': 'circle' });
     const doc = makeDoc();
@@ -389,7 +391,8 @@ describe('S9.2 gate 3 — תוכן־עניינים: עמודים אמיתיים,
     const entries = tocPg.toc.rows.filter(x => x.kind === 'entry');
     assert(entries.length >= 3, `entries for 3 parts+simanim (got ${entries.length})`);
     for (const e of entries) {
-      assert(e.label && /[\u05F3\u05F4]/.test(e.label) || /^\d+$/.test(e.label), `hebrew-numeral label (got ${e.label})`);
+      // **D-108:** תווית ה-TOC בגימטריה חשופה — אותיות בלבד (בלי גרש/גרשיים) או ספרות (decimal)
+      assert(e.label && (/^[\u05D0-\u05EA]+$/.test(e.label) || /^\d+$/.test(e.label)), `bare hebrew-numeral label (got ${e.label})`);
       assert(e.targetPage != null && e.targetPage >= 0 && e.targetPage < r.pages.length, 'target in range');
       const target = r.pages[e.targetPage];
       assert(target && target.type !== 'toc-general', 'target is a body page');

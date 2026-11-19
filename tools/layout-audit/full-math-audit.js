@@ -83,12 +83,62 @@
 
     const typeOfCls = (cls) => { const s = String(cls || ''); for (const t of TYPES) if (s.includes('page--' + t)) return t; return 'unknown'; };
 
-    // ── **S5.2:** גימטריה ← מספר — היפוך toHebrewNumber (folio.js) ──
-    // ט״ו/ט״ז נספרים טבעית (ט+ו=15); גרש בודד אחרי אות אחת = אות בודדת (א׳=1);
-    // גרש ואחריו אותיות נוספות = אלפים (ה׳תש״ב=5702); גרשיים מוסרים; נתמכות מסגרות
-    // (א) [א] ❖א❖ ◇א◇, קידומת "דף " (daf-hebrew) וספרות לועזיות (decimal).
+    // ── **S5.2:** גימטריה ← מספר — היפוך פורמט הפוליו ──
+    // **D-108 (19.11):** הפוליו המודפס חשוף — בלי גרש/גרשיים ובלי מפריד אלפים
+    // ('אקפ'=1180). מחרוזת חשופה עמומה באלפים: 'א' יכול להיות 1 או 1000, ו-'אקפ'
+    // נסכם 181 אך 181 הקנוני הוא 'קפא'. לכן הפענוח מחזיר **מועמדים קנוניים
+    // בלבד** — ערך שאינו מרוכב בדיוק כמו פורמט הפוליו אינו מועמד — ואי-העמימות
+    // של אלפים שלמים נפתרת בהקשר הרצף (atLeast = הגיליון הקודם). הכלי עצמאי
+    // בכוונה (מוזרק לדפדפן בלי המנוע) — ההתאמה ל-folio.toBareGematria נאכפת
+    // בבדיקות (d108-bare-folio: round-trip מלא).
+    // נתמכות מסגרות (א) [א] ❖א❖ ◇א◇, קידומת "דף " (daf-hebrew), ספרות לועזיות
+    // (decimal) וגם צורות היסטוריות עם גרש (א׳) וגרשיים (ט״ו, ה׳תש״ב=5702).
     const GEM = { 'א': 1, 'ב': 2, 'ג': 3, 'ד': 4, 'ה': 5, 'ו': 6, 'ז': 7, 'ח': 8, 'ט': 9, 'י': 10, 'כ': 20, 'ל': 30, 'מ': 40, 'נ': 50, 'ס': 60, 'ע': 70, 'פ': 80, 'צ': 90, 'ק': 100, 'ר': 200, 'ש': 300, 'ת': 400 };
-    function gematriaToNumber(txt) {
+    /** הרכבה חשופה — מקבילה ל-folio.toBareGematria (D-108). */
+    function composeBare(n) {
+      if (!Number.isInteger(n) || n <= 0) return '';
+      if (n === 15) return 'טו';
+      if (n === 16) return 'טז';
+      if (n >= 1000) return composeBare(Math.floor(n / 1000)) + composeBare(n % 1000);
+      const H = ['', 'ק', 'ר', 'ש', 'ת', 'תק', 'תר', 'תש', 'תת', 'תתק'];
+      const T = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
+      const O = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+      let s = '';
+      const h = Math.floor(n / 100);
+      if (h > 0) { s += H[Math.min(h, 9)]; n %= 100; }
+      const t = Math.floor(n / 10), o = n % 10;
+      if (t === 1 && (o === 5 || o === 6)) s += (o === 5) ? 'טו' : 'טז';
+      else s += T[t] + O[o];
+      return s;
+    }
+    function sumLetters(str) {
+      let v = 0;
+      for (const ch of str) { const g = GEM[ch]; if (g == null) return null; v += g; }
+      return v;
+    }
+    /** כל הערכים שההרכבה החשופה הקנונית שלהם === המחרוזת (טווח העמודים עד
+     *  999,999 — שתי רמות אלפים; מעבר לזה אין לספרים משמעות). כולל
+     *  אלפים שלמים: 'א' מייצג גם 1 וגם 1000 — ההכרעה בהקשר (atLeast). */
+    function bareCandidates(s) {
+      const out = [];
+      const plain = sumLetters(s);
+      if (plain != null && plain >= 1 && composeBare(plain) === s) out.push(plain);
+      for (let i = 1; i < s.length; i++) {
+        const p = sumLetters(s.slice(0, i)), r = sumLetters(s.slice(i));
+        if (p == null || r == null || p < 1 || r < 1 || r >= 1000) continue;
+        const v = p * 1000 + r;
+        if (composeBare(v) === s && !out.includes(v)) out.push(v);
+      }
+      // אלפים שלמים (שארית 0): 'א'=1000, 'כב'=22000 — המחרוזת כולה היא חלק
+      // האלפים. בלי זה עמוד 1000 ('א') היה נפענח כ-1 ושובר את רצף הגיליונות.
+      if (plain != null && plain >= 1) {
+        const v = plain * 1000;
+        if (composeBare(v) === s && !out.includes(v)) out.push(v);
+      }
+      return out;
+    }
+    function gematriaToNumber(txt, opts) {
+      const atLeast = (opts && typeof opts.atLeast === 'number' && opts.atLeast >= 1) ? opts.atLeast : null;
       let s = String(txt == null ? '' : txt).trim();
       if (!s) return null;
       s = s.replace(/^דף\s*/u, '')
@@ -107,10 +157,17 @@
         for (const ch of s.slice(geresh + 1).replace(/\u05F4/g, '')) { const v = GEM[ch]; if (v == null) return null; rest += v; }
         return th * 1000 + rest;
       }
-      s = s.replace(/[\u05F3\u05F4]/g, '');
-      if (!s) return null;
+      const bare = s.replace(/[\u05F3\u05F4]/g, '');
+      if (!bare) return null;
+      // **D-108:** חשוף — מועמדים קנוניים בלבד; אלפים שלמים ('א'=1|1000) לפי הקשר
+      const cands = bareCandidates(bare);
+      if (cands.length) {
+        const ok = atLeast != null ? cands.filter(c => c >= atLeast) : cands;
+        return (ok.length ? ok : cands)[0];
+      }
+      // צורה לא-קנונית — סכום פשוט כרשת ביטחון (טקסט שאינו מפורמט הפוליו)
       let sum = 0;
-      for (const ch of s) { const v = GEM[ch]; if (v == null) return null; sum += v; }
+      for (const ch of bare) { const v = GEM[ch]; if (v == null) return null; sum += v; }
       return sum >= 1 ? sum : null;
     }
 
@@ -402,7 +459,10 @@
         let lastVal = null, lastIdx = null;
         for (const p of seq) {
           if (!p.folio || !p.folio.text) continue;
-          const v = gematriaToNumber(p.folio.text);
+          // **D-108:** atLeast=הגיליון הקודם — פותר את עמימות האלפים החשופים
+          // ('א' אחרי 999 = 1000, לא 1). גיליון יורד אמיתי עדיין נתפס: אם
+          // אין מועמד קנוני ≥ הקודם, חוזר הקטן והדלתא שלילית.
+          const v = gematriaToNumber(p.folio.text, { atLeast: lastVal });
           if (v == null) { cnt('FOLIO_SEQUENCE', { type: 'FOLIO_SEQUENCE', severity: 'high', page: p.i, text: p.folio.text, detail: 'טקסט גיליון לא ניתן לפענוח בגימטריה' }); continue; }
           if (lastVal != null) {
             const gap = p.i - lastIdx - 1;

@@ -368,6 +368,7 @@ var __paths = {
   "src/engine/layout/legacy-imud-flow.js|../core/events": "src/engine/core/events.js",
   "src/engine/layout/legacy-imud-flow.js|../core/ledger": "src/engine/core/ledger.js",
   "src/engine/layout/legacy-imud-flow.js|../decoration/headers-builder": "src/engine/decoration/headers-builder.js",
+  "src/engine/layout/legacy-imud-flow.js|../decoration/folio": "src/engine/decoration/folio.js",
   "src/engine/layout/legacy-imud-flow.js|../output/line-font": "src/engine/output/line-font.js",
   "src/engine/layout/legacy-imud-flow.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/layout/legacy-imud-flow.js|../core/h3-contract": "src/engine/core/h3-contract.js",
@@ -2923,7 +2924,7 @@ const TENS = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
 const HUND = ['', 'ק', 'ר', 'ש', 'ת', 'תר', 'תש', 'תת', 'תתק'];
 
 /**
- * מספר עברי (D-37):
+ * מספר עברי (D-37) — **לשדות שאינם פוליו בלבד** (D-108: פוליו חשוף, ראה toBareGematria):
  *  - אות בודדת ⇒ אות + גרש (׳): א׳=1, כ׳=20, ת׳=400.
  *  - שתי אותיות ומעלה ⇒ גרשיים (״) לפני האות האחרונה: ט״ו=15, ט״ז=16, כ״א=21, תש״ב=702, תשמ״ב=742.
  *  - 15/16 ⇒ ט״ו/ט״ז (לא יה+וו).
@@ -2969,11 +2970,46 @@ function finish(thousands, letters) {
   return thousands ? thousands + body : body;
 }
 
+/** **D-108 (19.11 — תיקון מפורש להחלת D-31 על פוליו):** גימטריה חשופה למספרי
+ *  עמודים מודפסים — הגיליון בתחתית העמוד ומספרי העמודים בתוכן העניינים —
+ *  בלי גרש (U+05F3), בלי גרשיים (U+05F4), בלי אפוסטרוף ASCII ובלי מפריד
+ *  אחר, גם בחלק האלפים: 1=א, 2=ב, 15=טו, 16=טז, 21=כא, 22=כב, 100=ק,
+ *  999=תתקצט, 1000=א, 1001=אא, 5702=התשב.
+ *  D-31/D-37 (המספור עם גרש/גרשיים) **אינם חלים על פוליו** — הם נשארים
+ *  לשדות שאינם פוליו (סמני הערות ותצוגות אחרות; "אין להסיק מכלל זה דבר
+ *  על סימני ציטוט/גרש בהערות, בגוף הטקסט או בשדות אחרים").
+ *  **מקור סמכות יחיד:** זהו פורמט הפוליו הקנוני של שני המנועים — מסלול
+ *  המורשת (legacy-imud-flow) קורא אותה ל-folioDisplay ולתוויות ה-TOC
+ *  (parity legacy↔unified; היסטורית toGematria של המורשת היה חשוף עד 999
+ *  והוסיף מפריד אלפים מעליו — D-108 אוסר מפריד בכל ערך).
+ *  ערך לא-חיובי/בלתי-נבדל ⇒ '' (כמו המורשת: folioDisplay ריק). */
+function toBareGematria(n) {
+  n = parseInt(n, 10);
+  if (isNaN(n) || n <= 0) return '';
+  if (n === 15) return 'טו';
+  if (n === 16) return 'טז';
+  // אלפים — בלי שום מפריד (D-108): 1000=א, 1001=אא, 5702=התשב
+  if (n >= 1000) return toBareGematria(Math.floor(n / 1000)) + toBareGematria(n % 1000);
+  const hundreds = ['', 'ק', 'ר', 'ש', 'ת', 'תק', 'תר', 'תש', 'תת', 'תתק'];
+  const tens = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
+  const ones = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+  let str = '';
+  let h = Math.floor(n / 100);
+  if (h > 0) { str += hundreds[Math.min(h, 9)]; n %= 100; }
+  const t = Math.floor(n / 10), o = n % 10;
+  if (t === 1 && (o === 5 || o === 6)) str += (o === 5) ? 'טו' : 'טז';
+  else str += tens[t] + ones[o];
+  return str;
+}
+
 function formatPageNumber(value, settings) {
   switch (settings['page-num-format']) {
     case 'decimal': return String(value);
-    case 'daf-hebrew': return `דף ${toHebrewNumber(value)}`;
-    default: return toHebrewNumber(value);
+    // **D-108:** מספר עמוד מוצג בגימטריה חשופה בלבד — הן הפורמט העברי
+    // (ברירת המחדל; 'gematria' של ערכות IMUD נופל לכאן) והן חלק המספר
+    // של daf-hebrew. אין גרש/גרשיים/מפריד בשום פוליו ובשום תווית TOC.
+    case 'daf-hebrew': return `דף ${toBareGematria(value)}`;
+    default: return toBareGematria(value);
   }
 }
 
@@ -3044,7 +3080,7 @@ function assignNumbers(pages, settings) {
 }
 
 module.exports = {
-  toHebrewNumber, formatPageNumber, frameNumber, tocPageLabel,
+  toHebrewNumber, toBareGematria, formatPageNumber, frameNumber, tocPageLabel,
   isCssFrame, assignNumbers,
 };
 
@@ -9579,8 +9615,18 @@ function buildPreviewTab(doc, opts) {
   function rebuildFolioIndex() {
     folioIndex = new Map();
     const pages = virtual.pages || [];
-    for (let i = 0; i < pages.length; i++) { // מעבר ראשון: גיליונות אמיתיים — עדיפות
-      const n = folioNumberOf(pages[i] && pages[i].folioDisplay);
+    // **D-108:** הגיליון חשוף (בלי גרש/גרשיים ובלי מפריד אלפים) — פענוח מספרי
+    // מהטקסט עמום באלפים ('אקפ' = 1180 אך גם 181 בסכימה פשוטה). לכן, לעמודים
+    // שמציגים גיליון, מקור המפתחה המספרי הוא page.pageNumber (קיים בשני
+    // הפרופילים) במקום פענוח הטקסט. סמנטיקת S5.2 (12) נשמרת בדיוק: רק עמוד
+    // שמציג גיליון תופס את מספרו; עמוד ללא גיליון (שער/תוכן/פתיחה מדוכאת)
+    // נכנס תחת אינדקס+1 במעבר השני.
+    for (let i = 0; i < pages.length; i++) { // מעבר ראשון: גיליון מוצג — מספר קנוני
+      const pg = pages[i] || {};
+      if (!pg.folioDisplay) continue;
+      const n = (typeof pg.pageNumber === 'number' && pg.pageNumber >= 1)
+        ? pg.pageNumber
+        : folioNumberOf(pg.folioDisplay);
       if (n != null && !folioIndex.has(n)) folioIndex.set(n, i);
     }
     for (let i = 0; i < pages.length; i++) { // מעבר שני: בלי גיליון — מספר פיזי (אם פנוי)
@@ -15325,6 +15371,12 @@ const { Ledger } = require('../core/ledger');
 // (מקור יחיד לפענוח מקורות הסלוטים) + חיצוץ החצאים — אותה נוסחה כמו hdrR/hdrL.
 // headers-builder אינו דורש כלום — אין תלות מעגלית.
 const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = require('../decoration/headers-builder');
+// **D-108 (19.11):** פורמט הפוליו הקנוני של שני המנועים — גימטריה חשופה
+// (בלי גרש/גרשיים ובלי מפריד אלפים) חי ב-decoration/folio.js לצד שאר
+// המספור; מסלול המורשת קורא אותו ל-folioDisplay ולתוויות ה-TOC בלבד.
+// toGematria המקומי נשאר לשדות שאינם פוליו (סמני הערות, סימנים) — D-108:
+// "אין להסיק מכלל זה דבר על סימני ציטוט/גרש בהערות...".
+const { toBareGematria } = require('../decoration/folio');
 // **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
 // מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
 const { hexColorToRgb } = require('../output/line-font');
@@ -15363,11 +15415,13 @@ function toGematria(num) {
   if (num === 16) return 'טז';
   // **מגן ספרים גדולים:** מעל 999 — חלק האלפים בגימטריה + גרשיים (לא נצפה
   // בייחוס; מונע undefined ושומר דטרמיניזם — הקורפוס הגדול מגיע ל־~730).
+  // **D-108 (19.11):** פונקציה זו אינה עוד מקור פורמט הפוליו — הפוליו ותוויות
+  // ה-TOC משתמשים ב-toBareGematria (חשוף בכל ערך, גם באלפים). הגרש כאן
+  // נשאר לשדות שאינם פוליו בלבד — סמני הערות (markerWord) וסימנים — לפי
+  // D-31; שינויים בהם אסורים במסגרת D-108 ("אין להסיק מכלל זה דבר על
+  // סימני ציטוט/גרש בהערות, בגוף הטקסט או בשדות אחרים").
   if (num >= 1000) {
     const th = Math.floor(num / 1000);
-    // **S5.2 (אחידות D-31):** גרש עברי (U+05F3) במקום ASCII ' — כמו
-    // toHebrewNumber של folio.js (ה׳תש״ב); שני מחלקי המספור במאגר חייבים
-    // להסכים על אותו תו.
     return toGematria(th) + '\u05F3' + toGematria(num % 1000);
   }
   const hundreds = ['', 'ק', 'ר', 'ש', 'ת', 'תק', 'תר', 'תש', 'תת', 'תתק'];
@@ -18646,7 +18700,9 @@ function legacyTypeset(rawText, settings, env) {
     const counted = ['toc-general', 'toc-detailed', 'blank', 'shaar-sub', 'regular', 'sign-open', 'preface'].includes(p.type);
     p.pageNumber = counted ? pn++ : null;
     const shows = ['toc-general', 'toc-detailed', 'regular', 'sign-open', 'preface'].includes(p.type);
-    p.folioDisplay = shows && p.pageNumber ? toGematria(p.pageNumber) : '';
+    // **D-108:** הגיליון המודפס בגימטריה חשופה בלבד — toBareGematria (מקור
+    // הפורמט המשותף לשני המנועים), לא toGematria המפריד אלפים בגרש.
+    p.folioDisplay = shows && p.pageNumber ? toBareGematria(p.pageNumber) : '';
   }
   final.forEach((p, i) => { p.index = i; });
   // **שלב 6 פרוסה 2 (§8 בהוראה — שורש SIDE_NOTE_OVERLAP בעמ' 107):** עד כאן
@@ -18770,7 +18826,8 @@ function legacyTypeset(rawText, settings, env) {
     // — ההוכחה מהייחוס: הערך הראשון בתוכן-העניינים הכללי (ה-h1 "הקדמות
     // וכללים") מסומן "ו" = גימטריה של מיקום עמוד השער (0-מבוסס 6), בעוד
     // לעמוד עצמו אין פוליו כלל. שאר הכותרות: הפוליו המודפס של עמודן.
-    if (p._h1Token) folioByToken.set(p._h1Token.id, p.folioDisplay || toGematria(pi));
+    // **D-108:** תווית TOC חשופה — toBareGematria גם בנפילה הזו.
+    if (p._h1Token) folioByToken.set(p._h1Token.id, p.folioDisplay || toBareGematria(pi));
     for (const b of (p.bands || [])) if (b.tokenId != null) folioByToken.set(b.tokenId, p.folioDisplay);
     for (const col of p.columns) for (const ln of col) {
       if (ln.kind === 'heading' && ln.tokenId != null && !folioByToken.has(ln.tokenId)) folioByToken.set(ln.tokenId, p.folioDisplay);
