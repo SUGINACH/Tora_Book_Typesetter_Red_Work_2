@@ -64,6 +64,12 @@ function renderModelLine(ml, doc, relX, relY) {
   if (ml.sizePt != null) el.style.fontSize = `${px2(ml.sizePt * PT_TO_PX)}px`;
   if (ml.bold) el.style.fontWeight = '700';
   if (ml.letterSpacingPx) el.style.letterSpacing = `${px2(ml.letterSpacingPx)}px`;
+  // Diagnostic provenance from the immutable PageModel; no layout behavior changes.
+  el.dataset.modelY = String(ml.y);
+  el.dataset.modelH = String(ml.h);
+  el.dataset.modelAQ = String(ml.aqStretch != null ? ml.aqStretch : 1);
+  el.dataset.modelGap = String(ml.gapBeforePx != null ? ml.gapBeforePx : 0);
+  if (ml.sourceTokenId != null) el.dataset.sourceTokenId = String(ml.sourceTokenId);
   if (ml.styleClass) el.dataset.styleClass = ml.styleClass;
   if (ml.id) el.dataset.id = ml.id;
   const tok = ml.sourceTokenId != null ? ml.sourceTokenId : null;
@@ -150,8 +156,8 @@ function renderModelPage(mp, settings, doc, opts = {}) {
   root.dataset.pageIndex = String(mp.index);
   root.setAttribute('id', `page-${mp.index}`);
   root.setAttribute('dir', 'rtl');
-  if (geo.width != null) root.style.width = `${px2(geo.width)}px`;
-  if (geo.height != null) root.style.height = `${px2(geo.height)}px`;
+  if (geo.width != null) { root.style.width = `${px2(geo.width)}px`; root.dataset.modelWidth = String(geo.width); }
+  if (geo.height != null) { root.style.height = `${px2(geo.height)}px`; root.dataset.modelHeight = String(geo.height); }
   // ברירות מחדל גלובליות (הגדרות משתמש — לא החלטות עימוד): גוף/רקע
   const bf = settings['body-font'];
   if (bf) root.style.fontFamily = fontStack(bf);
@@ -286,10 +292,16 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     const colEl = doc.createElement('section');
     colEl.className = 'column';
     colEl.style.position = 'absolute';
+    const colHeight = Math.max(0, (geo.contentBox ? geo.contentBox.height : 0) - (geo.spanOffset || 0));
     colEl.style.left = `${px2(c.x)}px`;
     colEl.style.width = `${px2(c.w)}px`;
     colEl.style.top = `${px2(colTops[ci])}px`;
-    colEl.style.height = `${px2(Math.max(0, (geo.contentBox ? geo.contentBox.height : 0) - (geo.spanOffset || 0)))}px`;
+    colEl.style.height = `${px2(colHeight)}px`;
+    colEl.dataset.modelX = String(c.x);
+    colEl.dataset.modelW = String(c.w);
+    colEl.dataset.modelTop = String(colTops[ci]);
+    colEl.dataset.modelHeight = String(colHeight);
+    colEl.dataset.modelBottom = String(colTops[ci] + colHeight);
     for (const ln of mp.lines.filter(l => l.area === 'column' && l.col === ci)) {
       colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci]));
     }

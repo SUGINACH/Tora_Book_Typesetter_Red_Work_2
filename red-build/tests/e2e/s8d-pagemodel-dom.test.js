@@ -530,6 +530,30 @@ describe('S8D-6 פרוסה 3 — זהות גופן/עוגן/קריאה מהמו�
     assert(saw >= 0, 'בדיקת עוגן עברה'); // מסמך הבדיקה עשוי שלא להכיל הערות-צד — הכיסוי ב-S8D-1
   });
 
+  it('גאומטריית אבחון DOM נושאת בדיוק את ערכי PageModel (ללא שינוי פריסה)', () => {
+    for (const mp of r.pageModel.pages) {
+      const el = renderModelPage(mp, S, doc);
+      assertEq(Number(el.dataset.modelWidth), mp.geometry.width, `model page width p${mp.index}`);
+      assertEq(Number(el.dataset.modelHeight), mp.geometry.height, `model page height p${mp.index}`);
+      const cols = collectByClass(el, 'column');
+      for (let ci = 0; ci < cols.length; ci++) {
+        const col = cols[ci];
+        const expectedTop = mp.geometry.contentBox.top + (mp.geometry.spanOffset || 0);
+        const expectedHeight = Math.max(0, mp.geometry.contentBox.height - (mp.geometry.spanOffset || 0));
+        assertEq(Number(col.dataset.modelTop), expectedTop, `column model top p${mp.index}/c${ci}`);
+        assertEq(Number(col.dataset.modelHeight), expectedHeight, `column model height p${mp.index}/c${ci}`);
+        for (const lineEl of (col.children || []).filter(x => has(x, 'line'))) {
+          const line = mp.lines.find(x => x.id === lineEl.dataset.id);
+          assert(line, `model line exists for ${lineEl.dataset.id}`);
+          assertEq(Number(lineEl.dataset.modelY), line.y, `model line y ${line.id}`);
+          assertEq(Number(lineEl.dataset.modelH), line.h, `model line h ${line.id}`);
+          assertEq(Number(lineEl.dataset.modelAQ), line.aqStretch, `model aqStretch ${line.id}`);
+          assertEq(Number(lineEl.dataset.modelGap), line.gapBeforePx, `model gap ${line.id}`);
+        }
+      }
+    }
+  });
+
   it('reading order: סדר ה-DOM של שורות הטור = סדרן במודל (li עולה בכל טור)', () => {
     for (const mp of r.pageModel.pages) {
       const el = renderModelPage(mp, S, doc);
