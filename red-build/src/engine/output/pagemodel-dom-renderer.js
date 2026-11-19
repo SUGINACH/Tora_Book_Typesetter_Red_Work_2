@@ -226,7 +226,10 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     const tocRows = structural.filter(l => l.kind === 'toc-row');
     const others = structural.filter(l => l.kind !== 'toc-row');
     for (const ln of others) {
-      root.appendChild(renderModelLine(ln, doc, 0, 0, settings));
+      const lineEl = renderModelLine(ln, doc, 0, 0, settings);
+      // כותרת ה-TOC — מחלקת החוזה של המורשת (.toc-title)
+      if (ln.kind === 'toc-title') lineEl.className += ' toc-title';
+      root.appendChild(lineEl);
     }
     if (tocRows.length) {
       const tocWrap = doc.createElement('div');

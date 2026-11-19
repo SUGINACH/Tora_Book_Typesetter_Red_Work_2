@@ -24,6 +24,10 @@
 const { buildShaarBlocks, shaarFontOf } = require('../output/shaar-content');
 const { folioGeometry, headerGeometry } = require('../layout/furniture-geometry');
 const { assignFootnoteLanes } = require('../layout/footnote-lanes');
+const { isImudProfile } = require('../layout/page-templates');
+const {
+  GEO, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
+} = require('../core/imud-geometry');
 // **שלב 8 ביקורת §3.1:** המיפוי משפחה→מפתח גופן — מקור יחיד משותף (היה כפול
 // כאן וב-materialize); ה-scrub — מהמודול הניטרלי core/pua-text.
 const { familyFontKeyOf } = require('../typography/font-keys');
@@ -48,10 +52,17 @@ function colorOfSetting(hex) {
 }
 
 /**
- * הטבעת שורות תוכן-העניינים — אותה פריסה שהייתה בהקרנה (top 70, שורה 24px,
- * כותרת מימין ותווית משמאל; קבוצה — פריטים במרווחי 80px) — עם רוחבי מילים
- * ורוחב רווח **נמדדים פעם אחת** (ההקרנה מקבלת מילים ממוקמות, לא טקסט למדידה).
- * נשמר ב-page.tocLayout.
+ * הטבעת שורות תוכן-העניינים — עם רוחבי מילים ורוחב רווח **נמדדים פעם אחת**
+ * (ההקרנה מקבלת מילים ממוקמות, לא טקסט למדידה). נשמר ב-page.tocLayout.
+ *
+ * **גיאומטריית ה-TOC לפי חוזה 9C3 (חקירת 19.11 — TOC_ROWS ×56):** בפרופיל
+ * IMUD השורות חיות באזור המתיחה המכויל: עמוד ראשון — כותרת ב-FLOW_TOP+136
+ * (30px, ממורכזת) ושורות מ-TOC_FIRST_TOP (370.7); המשך — מ-TOC_CONT_TOP
+ * (113.7); תחתית — TOC_STRETCH_BOTTOM (1005.7). עד כאן הוטבעה פריסה שטוחה
+ * y=70+24i שנלקחה מה-CSS הישן — שורות עלו על הכותרת העליונה (89.2–103.2)
+ * והתיבה המכוילת לא מומשה. המתיחה כמו במורשת (F1/F6): gap טבעי עם רצפת
+ * גובה-שורה מרבי, ומערך טבעי כשהרצפה גולשת מהתחתית. הנתיב הלא-IMUD נשמר
+ * כמו שהיה (קורפוס ה-DP נעול).
  */
 function stampTocLayout(page, settings, measure) {
   if (page.type !== 'toc-general' && page.type !== 'toc-detail') return false;
@@ -64,9 +75,40 @@ function stampTocLayout(page, settings, measure) {
     text: w, w: measure.measureTextWidth(w, PT, 0)
   }));
   const layout = [];
+  const imud = isImudProfile(settings);
+  const isFirst = !!(page.toc && (page.toc.isFirst || page.toc.title));
+  const isLast = !!(page.toc && page.toc.isLast);
+  // גבהי השורות כפי שנקבעו בעימוד (buildTocPages מטביע r._h); נפילה — 22px
+  const rowH = (r) => (Number(r._h) > 0 ? Number(r._h) : 22);
+  let rowYs = null;
+  if (imud) {
+    const top = isFirst ? TOC_FIRST_TOP : TOC_CONT_TOP;
+    const yArr = [];
+    if (!isLast && rows.length > 1) {
+      // מתיחה (legacy F1/F6): gap טבעי בין top לתחתית, רצפת גובה-שורה מרבי;
+      // אם הרצפה דוחפת את האחרונה מעבר לתחתית — מערך טבעי לפי הגבהים
+      const maxH = Math.max.apply(null, rows.map(rowH));
+      const hLast = rowH(rows[rows.length - 1]);
+      const naturalGap = (TOC_STRETCH_BOTTOM - top - hLast) / (rows.length - 1);
+      const gap = Math.max(naturalGap, maxH);
+      const lastTop = top + (rows.length - 1) * gap;
+      if (lastTop <= TOC_STRETCH_BOTTOM - hLast + 0.5) {
+        rows.forEach((r, i) => yArr.push(top + i * gap));
+      } else {
+        let yy = top;
+        for (const r of rows) { yArr.push(yy); yy += rowH(r); }
+      }
+    } else {
+      let yy = top;
+      for (const r of rows) { yArr.push(yy); yy += rowH(r); }
+    }
+    rowYs = yArr;
+  } else {
+    rowYs = rows.map((r, i) => 70 + i * 24);
+  }
   let yi = 0;
   for (const row of rows) {
-    const y = 70 + yi * 24;
+    const y = rowYs[yi];
     if (row.kind === 'group') {
       let xi = 0;
       const items = [];
@@ -88,7 +130,16 @@ function stampTocLayout(page, settings, measure) {
     }
     yi++;
   }
-  page.tocLayout = { schema: 'toc-layout-v1', rows: layout, pageWidth: tpl.width, sizePt: PT };
+  // כותרת ה-TOC בעמוד הראשון (חוזה 9C3: y=FLOW_TOP+136, גובה 30, ממורכזת, 17pt)
+  let title = null;
+  if (imud && isFirst && page.toc && page.toc.title) {
+    const t = String(page.toc.title);
+    title = {
+      x: GEO.COL_L_X, y: GEO.FLOW_TOP + 136, w: 2 * GEO.COL_W + 13.48, h: 30,
+      sizePt: 17, words: wordsOf(t), spaceW, align: 'center'
+    };
+  }
+  page.tocLayout = { schema: 'toc-layout-v1', rows: layout, pageWidth: tpl.width, sizePt: PT, ...(title ? { title } : {}) };
   return true;
 }
 

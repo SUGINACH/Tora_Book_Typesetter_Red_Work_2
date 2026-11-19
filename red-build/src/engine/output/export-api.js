@@ -210,20 +210,23 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
       outline.push({ title: b.text, page: pg, level: b.level });
     }
 
-    // קישורי TOC: שורות tocPages עם targetPage נפתר (S9). מיקום השורות — פריסת
-    // הרנדרר (toc-rows: top 70, שורה ~24px) — מלבן לחיץ לכל שורה/פריט קבוצה.
+    // קישורי TOC: שורות tocPages עם targetPage נפתר (S9). מיקום השורות — מהחותמת
+    // (page.tocLayout.rows[].y — גיאומטריית חוזה 9C3 בפרופיל IMUD); נפילה לנוסחת
+    // הרנדרר הישנה (toc-rows: top 70, שורה ~24px) — מלבן לחיץ לכל שורה/פריט קבוצה.
     const tocLinks = [];
     for (const tp of result.tocPages || []) {
+      const stamped = tp.tocLayout && tp.tocLayout.rows;
       let yi = 0;
       for (const row of (tp.toc && tp.toc.rows) || []) {
+        const y = stamped && stamped[yi] && Number.isFinite(stamped[yi].y) ? stamped[yi].y : 70 + yi * 24;
         if (row.kind === 'group') {
           let xi = 0;
           for (const it of row.items || []) {
-            if (it.targetPage != null) tocLinks.push({ page: tp.index, x: 18 + xi, y: 70 + yi * 24, w: 60, h: 22, targetPage: it.targetPage });
+            if (it.targetPage != null) tocLinks.push({ page: tp.index, x: 18 + xi, y, w: 60, h: 22, targetPage: it.targetPage });
             xi += 80;
           }
         } else if (row.targetPage != null) {
-          tocLinks.push({ page: tp.index, x: 18, y: 70 + yi * 24, w: 700, h: 22, targetPage: row.targetPage });
+          tocLinks.push({ page: tp.index, x: 18, y, w: 700, h: 22, targetPage: row.targetPage });
         }
         yi++;
       }

@@ -18,7 +18,8 @@
  * toc-budget-exceeded ועצירה דטרמיניסטית. אף לולאה לא חסרת חסם.
  */
 
-const { PAGE_TYPES, buildPageTemplate } = require('../layout/page-templates');
+const { PAGE_TYPES, buildPageTemplate, isImudProfile } = require('../layout/page-templates');
+const { TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM } = require('../core/imud-geometry');
 
 const TOC_MAX_ROWS = 20000;     // תקציב שורות כולל (general+detail)
 const TOC_MAX_PAGES = 500;      // תקציב עמודי TOC כולל
@@ -172,6 +173,16 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
         : cur.template.width));
   }
   let availH = cur.template.contentBox.height - (TITLE_SIZE_PT * (96 / 72) + TITLE_MARGIN_PX);
+  // **חוזה 9C3 (חקירת 19.11 — TOC_ROWS):** בפרופיל IMUD הקיבולת היא אזור
+  // המתיחה המכויל — עמוד ראשון TOC_FIRST_TOP..TOC_STRETCH_BOTTOM (635px,
+  // בניכוי בלוק הכותרת), המשך TOC_CONT_TOP..TOC_STRETCH_BOTTOM (892px) —
+  // לא תיבת התוכן הגנרית (915px) שאפשרה דחיסה מעבר לתחתית. הנתיב הלא-IMUD
+  // נשמר (קורפוס ה-DP נעול).
+  if (isImudProfile(settings)) {
+    const zoneOf = (f) => TOC_STRETCH_BOTTOM - (f ? TOC_FIRST_TOP : TOC_CONT_TOP);
+    availH = zoneOf(true) - (TITLE_SIZE_PT * (96 / 72) + TITLE_MARGIN_PX);
+    cur._tocZoneCont = zoneOf(false);
+  }
   let usedH = 0;
 
   for (const r of model.rows) {
@@ -182,10 +193,11 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
       break;
     }
     const { h } = rowHeightOf(r);
+    r._h = h; // להטבעת הגיאומטריה (structural-stamps) — אותו גובה שנקבע בעימוד
     if (usedH + h > availH && cur.toc.rows.length) {
       if (pages.length >= TOC_MAX_PAGES) { budgetExceeded = true; break; }
       cur = mkPage(false);
-      availH = cur.template.contentBox.height;
+      availH = cur._tocZoneCont != null ? cur._tocZoneCont : cur.template.contentBox.height;
       usedH = 0;
     }
     // שורה בודדת גבוהה מעמוד שלם ⇒ אל תיתלה: הנח אותה ותעד (אין לולאה — usedH מתקדם תמיד)
@@ -210,6 +222,9 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
   if (eventLog) {
     eventLog.emit('toc', 'toc-pages-built', { type: pageType, pages: pages.length, rows: rowsConsumed, overflow: overflowFindings.length, budgetExceeded });
   }
+  // סימון העמוד האחרון של הרצף — להטבעת המתיחה (רק עמודים שאינם-אחרונים
+  // נמתחים; האחרון נערם מלמעלה בפריסה טבעית) — כמו isLast של המורשת.
+  if (pages.length) pages[pages.length - 1].toc.isLast = true;
   return { pages, overflow: overflowFindings, budgetExceeded };
 }
 

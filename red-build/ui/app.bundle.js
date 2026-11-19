@@ -19897,7 +19897,10 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     const tocRows = structural.filter(l => l.kind === 'toc-row');
     const others = structural.filter(l => l.kind !== 'toc-row');
     for (const ln of others) {
-      root.appendChild(renderModelLine(ln, doc, 0, 0, settings));
+      const lineEl = renderModelLine(ln, doc, 0, 0, settings);
+      // כותרת ה-TOC — מחלקת החוזה של המורשת (.toc-title)
+      if (ln.kind === 'toc-title') lineEl.className += ' toc-title';
+      root.appendChild(lineEl);
     }
     if (tocRows.length) {
       const tocWrap = doc.createElement('div');
@@ -20830,7 +20833,7 @@ const crypto = require('crypto');
 // **חוזה H3 (D-S2H3/CSS parity):** ריפודי פס כותרת 3 ממקור יחיד —
 // אותו חוזה כמו המנוע המורשת (legacy-imud-flow) ומדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, h3BandHeightPx } = require('../core/h3-contract');
-const { PAGE_TYPES, buildPageTemplate } = require('./page-templates');
+const { PAGE_TYPES, buildPageTemplate, isImudProfile } = require('./page-templates');
 const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
 const { runRetreatLoop } = require('./retreat-loop');
@@ -21484,19 +21487,71 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     // עתה היא מוצבת בפס חוצה־טורים כמו H2 (FWD-1) — בלי עמוד חדש (המקור:
     // כותרת הענף ממשיכה באותו עמוד; עמוד חדש רק אם אין מקום לפס).
     if (blk.kind === 'heading' && blk.level >= 3 && blk.level <= 6 && blk.fullWidth) {
-      if (cur.spanning || cur.columns.some(c => c.length)) {
+      // **מקבץ פתיחת-סימן (חקירת 19.11 — עמודי sign-open ריקים):** במורשת,
+      // פתיחת סימן שסעיפה נפתח בכותרת-רוחבית מוסיפה את פס ה-H3 **מתחת לשער
+      // באותו עמוד** והזרימה ממשיכה שם (flowSection: areaH=261.3 בלי החלפת
+      // עמוד). עד כאן סעיף ה-H3 ראה "טורים לא-ריקים" (שורות השער שהוצבו
+      // בטור עם הליווי) והחליף עמוד — עמוד פתיחת-הסימן נשאר כמעט ריק
+      // (נמדד: 7,873 מילים ב-88 עמודי sign-open מול 36,027 במורשת; 851
+      // עמודים מול 699). תיקון השורש: כשהעמוד הוא פתיחת-סימן שטוריו מכילים
+      // **רק** שורות שער (heading) — השער נבלע בפס יחד עם ה-H3 (ערימה:
+      // שער → H3 → טורים), כמו במורשת. מקרה ב': שער שכבר בפס (h2 full-width)
+      // — ה-H3 מתלכד לתוכו.
+      const bandH3 = blk.lines.reduce((s, ln) => s + (ln.heightPx || 0), 0);
+      const h3H = h3BandHeightPx(bandH3);
+      const colContentNow = cur.columns.some(c => c.length);
+      // **היקף:** פרופיל IMUD בלבד — קורפוס ה-DP הכללי נעול (fdff19d8/s72)
+      // והחלטת המילוי של פתיחות-הסימן שם היא הכרעה מוצרית נפרדת; כאן מתוקן
+      // נתיב ה-parity החי (ברירות המחדל של IMUD). נמדד לפני התחום: ה-DP
+      // ב-long היה מושפע (987→933 עמ') — מחוץ למנדט הנוכחי.
+      const imudGateStack = isImudProfile(settings);
+      const gateOnlyInColumns = imudGateStack && cur.chapterOpening === true
+        && cur.type === PAGE_TYPES.SIGN_OPEN
+        && colContentNow
+        && cur.columns.every(col => col.every(ln => ln.kind === 'heading'));
+      const gateBandExtendable = imudGateStack && cur.chapterOpening === true
+        && cur.spanning && cur.spanning.gateStack === true && !colContentNow;
+      const fitsInBox = (cur.spanning ? cur.spanning.heightPx : 0) + h3H
+        + (gateOnlyInColumns ? cur.columns.flat().reduce((s, ln) => s + (ln.heightPx || 0), 0) : 0)
+        <= (cur.template.contentBox ? cur.template.contentBox.height : Infinity);
+      if (gateOnlyInColumns && fitsInBox && cur.template.columns.length >= 2) {
+        // מקרה א': שורות השער מהטורים אל ראש הפס — אותו y (contentBox.top),
+        // ה-H3 מתחתיו, הטורים מתחת לשניהם
+        const gateLines = cur.columns.flat().map(ln => ({ ...ln }));
+        const gateH = gateLines.reduce((s, ln) => s + (ln.heightPx || 0), 0);
+        for (const col of cur.columns) col.length = 0;
+        cur.spanning = {
+          lines: [
+            ...gateLines,
+            ...blk.lines.map((ln, i) => ({ ...ln, meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part }, seq: seqCounter++ }))
+          ],
+          heightPx: gateH + h3H,
+          titleTopPadPx: 0, // השער בראש הפס — מיקום זהה לקודם (contentBox.top)
+          orn: null,
+          gateStack: true
+        };
+        eventLog.emit('page-plan', 'h2-gate-h3-stack', { token: blk.tokenId, gateH: Math.round(gateH), bandH: Math.round(h3H) }, cur.index);
+        continue;
+      }
+      if (gateBandExtendable && fitsInBox) {
+        // מקרה ב': שער בפס (h2 full-width) — ה-H3 מתלכד לפס הקיים
+        cur.spanning.lines.push(...blk.lines.map((ln, i) => ({ ...ln, meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part }, seq: seqCounter++ })));
+        cur.spanning.heightPx += h3H;
+        eventLog.emit('page-plan', 'h2-gate-band-extend', { token: blk.tokenId, addH: Math.round(h3H) }, cur.index);
+        continue;
+      }
+      if (cur.spanning || colContentNow) {
         flushPage();
         cur = newPage(PAGE_TYPES.REGULAR);
       }
       if (!cur.spanning && cur.template.columns.length >= 2) {
-        const bandH3 = blk.lines.reduce((s, ln) => s + (ln.heightPx || 0), 0);
         // **חוזה H3 (D-S2H3/CSS parity):** הפס נושא ריפוד עליון 8px פעם אחת,
         // ריפוד תחתון 4px + שוליים 4px פעם אחת אחרי השורה האחרונה — כמו
         // .block-h3-span ב-CSS המקורי. ה-line-height עצמו (1.22) נקבע במדידה
         // (core/pipeline.js). מקור יחיד: core/h3-contract.js.
         cur.spanning = {
           lines: blk.lines.map((ln, i) => ({ ...ln, meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part }, seq: seqCounter++ })),
-          heightPx: h3BandHeightPx(bandH3),
+          heightPx: h3H,
           titleTopPadPx: H3_TOP_PAD_PX,
           orn: null
         };
@@ -21529,7 +21584,11 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
           lines: blk.lines.map((ln, i) => ({ ...ln, meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part }, seq: seqCounter++ })),
           heightPx: topPad + bandH + bottomPad,
           titleTopPadPx: topPad,
-          orn: orn || null
+          orn: orn || null,
+          // **מקבץ פתיחת-סימן:** פס שער זה ניתן להארכה — H3 רוחבי שמגיע מיד
+          // אחריו מתלכד לתוכו באותו עמוד (כמו flowSection של המורשת), במקום
+          // להחליף עמוד ולהותיר את פתיחת הסימן ריקה.
+          gateStack: true
         };
         eventLog.emit('page-plan', 'h2-spanning', { token: blk.tokenId, heightPx: cur.spanning.heightPx, ornTop: topPad, ornBottom: bottomPad }, cur.index);
         continue; // הכותרת הוצבה בפס; הבלוקים הבאים ימלאו את הטורים מתחתיו
@@ -24738,20 +24797,23 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
       outline.push({ title: b.text, page: pg, level: b.level });
     }
 
-    // קישורי TOC: שורות tocPages עם targetPage נפתר (S9). מיקום השורות — פריסת
-    // הרנדרר (toc-rows: top 70, שורה ~24px) — מלבן לחיץ לכל שורה/פריט קבוצה.
+    // קישורי TOC: שורות tocPages עם targetPage נפתר (S9). מיקום השורות — מהחותמת
+    // (page.tocLayout.rows[].y — גיאומטריית חוזה 9C3 בפרופיל IMUD); נפילה לנוסחת
+    // הרנדרר הישנה (toc-rows: top 70, שורה ~24px) — מלבן לחיץ לכל שורה/פריט קבוצה.
     const tocLinks = [];
     for (const tp of result.tocPages || []) {
+      const stamped = tp.tocLayout && tp.tocLayout.rows;
       let yi = 0;
       for (const row of (tp.toc && tp.toc.rows) || []) {
+        const y = stamped && stamped[yi] && Number.isFinite(stamped[yi].y) ? stamped[yi].y : 70 + yi * 24;
         if (row.kind === 'group') {
           let xi = 0;
           for (const it of row.items || []) {
-            if (it.targetPage != null) tocLinks.push({ page: tp.index, x: 18 + xi, y: 70 + yi * 24, w: 60, h: 22, targetPage: it.targetPage });
+            if (it.targetPage != null) tocLinks.push({ page: tp.index, x: 18 + xi, y, w: 60, h: 22, targetPage: it.targetPage });
             xi += 80;
           }
         } else if (row.targetPage != null) {
-          tocLinks.push({ page: tp.index, x: 18, y: 70 + yi * 24, w: 700, h: 22, targetPage: row.targetPage });
+          tocLinks.push({ page: tp.index, x: 18, y, w: 700, h: 22, targetPage: row.targetPage });
         }
         yi++;
       }

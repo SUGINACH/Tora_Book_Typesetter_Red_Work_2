@@ -106,6 +106,12 @@ function projectPage(page, settings, apiOrOpts) {
   if (page.type === 'toc-general' || page.type === 'toc-detail') {
     if (page.tocLayout && page.tocLayout.rows) {
       const pt = page.tocLayout.sizePt || 12;
+      // **חוזה 9C3:** כותרת ה-TOC בעמוד הראשון — מהחותמת (structural-stamps),
+      // שורה ממורכזת בגובה 30px במקום המכויל
+      if (page.tocLayout.title) {
+        const t = page.tocLayout.title;
+        out.lines.push(stampedRowLine(t, t.sizePt || 17, 'toc-title'));
+      }
       for (const row of page.tocLayout.rows) {
         if (row.kind === 'group') {
           for (const it of row.items || []) out.lines.push(stampedRowLine(it, pt, 'toc-row'));
@@ -1112,7 +1118,9 @@ function stampedRowLine(row, pt, kind, fontKey) {
     wordPos.push({ text: wd.text, x: cursor, w: wd.w, sizePt: pt, ...(fontKey ? { fontKey } : {}) });
     cursor -= (row.spaceW || 0);
   }
-  return { x: row.x, y: row.y, w: row.w, h: row.h, words: wordPos, align: 'right', kind: kind || 'toc-row', level: null, isLast: false, sizePt: pt, baselineY: null, tokenId: null };
+  // יישור מהחותמת כשניתן (כותרת ה-TOC — ממורכזת); ברירת המחדל כמו קודם
+  const align = row.align || 'right';
+  return { x: row.x, y: row.y, w: row.w, h: row.h, words: wordPos, align, kind: kind || 'toc-row', level: null, isLast: false, sizePt: pt, baselineY: null, tokenId: null };
 }
 
 function fakeLine(text, x, y, w, h, settings, measure, sizePt, fontKey, kind) {

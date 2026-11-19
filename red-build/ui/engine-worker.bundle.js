@@ -427,6 +427,7 @@ var __paths = {
   "src/engine/decoration/shaar-pages.js|./theme-sets": "src/engine/decoration/theme-sets.js",
   "src/engine/decoration/custom-pages.js|../layout/page-templates": "src/engine/layout/page-templates.js",
   "src/engine/decoration/toc-builder.js|../layout/page-templates": "src/engine/layout/page-templates.js",
+  "src/engine/decoration/toc-builder.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/layout/side-notes.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/layout/side-notes.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/decoration/ornament-plan.js|./ornament-fit": "src/engine/decoration/ornament-fit.js",
@@ -442,6 +443,8 @@ var __paths = {
   "src/engine/layout/structural-stamps.js|../output/shaar-content": "src/engine/output/shaar-content.js",
   "src/engine/layout/structural-stamps.js|../layout/furniture-geometry": "src/engine/layout/furniture-geometry.js",
   "src/engine/layout/structural-stamps.js|../layout/footnote-lanes": "src/engine/layout/footnote-lanes.js",
+  "src/engine/layout/structural-stamps.js|../layout/page-templates": "src/engine/layout/page-templates.js",
+  "src/engine/layout/structural-stamps.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/layout/structural-stamps.js|../typography/font-keys": "src/engine/typography/font-keys.js",
   "src/engine/layout/structural-stamps.js|../core/pua-text": "src/engine/core/pua-text.js",
   "src/engine/layout/structural-stamps.js|../typography/measure-api": "src/engine/typography/measure-api.js",
@@ -8984,7 +8987,7 @@ const crypto = require('crypto');
 // **חוזה H3 (D-S2H3/CSS parity):** ריפודי פס כותרת 3 ממקור יחיד —
 // אותו חוזה כמו המנוע המורשת (legacy-imud-flow) ומדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, h3BandHeightPx } = require('../core/h3-contract');
-const { PAGE_TYPES, buildPageTemplate } = require('./page-templates');
+const { PAGE_TYPES, buildPageTemplate, isImudProfile } = require('./page-templates');
 const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
 const { runRetreatLoop } = require('./retreat-loop');
@@ -9638,19 +9641,71 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     // עתה היא מוצבת בפס חוצה־טורים כמו H2 (FWD-1) — בלי עמוד חדש (המקור:
     // כותרת הענף ממשיכה באותו עמוד; עמוד חדש רק אם אין מקום לפס).
     if (blk.kind === 'heading' && blk.level >= 3 && blk.level <= 6 && blk.fullWidth) {
-      if (cur.spanning || cur.columns.some(c => c.length)) {
+      // **מקבץ פתיחת-סימן (חקירת 19.11 — עמודי sign-open ריקים):** במורשת,
+      // פתיחת סימן שסעיפה נפתח בכותרת-רוחבית מוסיפה את פס ה-H3 **מתחת לשער
+      // באותו עמוד** והזרימה ממשיכה שם (flowSection: areaH=261.3 בלי החלפת
+      // עמוד). עד כאן סעיף ה-H3 ראה "טורים לא-ריקים" (שורות השער שהוצבו
+      // בטור עם הליווי) והחליף עמוד — עמוד פתיחת-הסימן נשאר כמעט ריק
+      // (נמדד: 7,873 מילים ב-88 עמודי sign-open מול 36,027 במורשת; 851
+      // עמודים מול 699). תיקון השורש: כשהעמוד הוא פתיחת-סימן שטוריו מכילים
+      // **רק** שורות שער (heading) — השער נבלע בפס יחד עם ה-H3 (ערימה:
+      // שער → H3 → טורים), כמו במורשת. מקרה ב': שער שכבר בפס (h2 full-width)
+      // — ה-H3 מתלכד לתוכו.
+      const bandH3 = blk.lines.reduce((s, ln) => s + (ln.heightPx || 0), 0);
+      const h3H = h3BandHeightPx(bandH3);
+      const colContentNow = cur.columns.some(c => c.length);
+      // **היקף:** פרופיל IMUD בלבד — קורפוס ה-DP הכללי נעול (fdff19d8/s72)
+      // והחלטת המילוי של פתיחות-הסימן שם היא הכרעה מוצרית נפרדת; כאן מתוקן
+      // נתיב ה-parity החי (ברירות המחדל של IMUD). נמדד לפני התחום: ה-DP
+      // ב-long היה מושפע (987→933 עמ') — מחוץ למנדט הנוכחי.
+      const imudGateStack = isImudProfile(settings);
+      const gateOnlyInColumns = imudGateStack && cur.chapterOpening === true
+        && cur.type === PAGE_TYPES.SIGN_OPEN
+        && colContentNow
+        && cur.columns.every(col => col.every(ln => ln.kind === 'heading'));
+      const gateBandExtendable = imudGateStack && cur.chapterOpening === true
+        && cur.spanning && cur.spanning.gateStack === true && !colContentNow;
+      const fitsInBox = (cur.spanning ? cur.spanning.heightPx : 0) + h3H
+        + (gateOnlyInColumns ? cur.columns.flat().reduce((s, ln) => s + (ln.heightPx || 0), 0) : 0)
+        <= (cur.template.contentBox ? cur.template.contentBox.height : Infinity);
+      if (gateOnlyInColumns && fitsInBox && cur.template.columns.length >= 2) {
+        // מקרה א': שורות השער מהטורים אל ראש הפס — אותו y (contentBox.top),
+        // ה-H3 מתחתיו, הטורים מתחת לשניהם
+        const gateLines = cur.columns.flat().map(ln => ({ ...ln }));
+        const gateH = gateLines.reduce((s, ln) => s + (ln.heightPx || 0), 0);
+        for (const col of cur.columns) col.length = 0;
+        cur.spanning = {
+          lines: [
+            ...gateLines,
+            ...blk.lines.map((ln, i) => ({ ...ln, meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part }, seq: seqCounter++ }))
+          ],
+          heightPx: gateH + h3H,
+          titleTopPadPx: 0, // השער בראש הפס — מיקום זהה לקודם (contentBox.top)
+          orn: null,
+          gateStack: true
+        };
+        eventLog.emit('page-plan', 'h2-gate-h3-stack', { token: blk.tokenId, gateH: Math.round(gateH), bandH: Math.round(h3H) }, cur.index);
+        continue;
+      }
+      if (gateBandExtendable && fitsInBox) {
+        // מקרה ב': שער בפס (h2 full-width) — ה-H3 מתלכד לפס הקיים
+        cur.spanning.lines.push(...blk.lines.map((ln, i) => ({ ...ln, meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part }, seq: seqCounter++ })));
+        cur.spanning.heightPx += h3H;
+        eventLog.emit('page-plan', 'h2-gate-band-extend', { token: blk.tokenId, addH: Math.round(h3H) }, cur.index);
+        continue;
+      }
+      if (cur.spanning || colContentNow) {
         flushPage();
         cur = newPage(PAGE_TYPES.REGULAR);
       }
       if (!cur.spanning && cur.template.columns.length >= 2) {
-        const bandH3 = blk.lines.reduce((s, ln) => s + (ln.heightPx || 0), 0);
         // **חוזה H3 (D-S2H3/CSS parity):** הפס נושא ריפוד עליון 8px פעם אחת,
         // ריפוד תחתון 4px + שוליים 4px פעם אחת אחרי השורה האחרונה — כמו
         // .block-h3-span ב-CSS המקורי. ה-line-height עצמו (1.22) נקבע במדידה
         // (core/pipeline.js). מקור יחיד: core/h3-contract.js.
         cur.spanning = {
           lines: blk.lines.map((ln, i) => ({ ...ln, meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part }, seq: seqCounter++ })),
-          heightPx: h3BandHeightPx(bandH3),
+          heightPx: h3H,
           titleTopPadPx: H3_TOP_PAD_PX,
           orn: null
         };
@@ -9683,7 +9738,11 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
           lines: blk.lines.map((ln, i) => ({ ...ln, meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part }, seq: seqCounter++ })),
           heightPx: topPad + bandH + bottomPad,
           titleTopPadPx: topPad,
-          orn: orn || null
+          orn: orn || null,
+          // **מקבץ פתיחת-סימן:** פס שער זה ניתן להארכה — H3 רוחבי שמגיע מיד
+          // אחריו מתלכד לתוכו באותו עמוד (כמו flowSection של המורשת), במקום
+          // להחליף עמוד ולהותיר את פתיחת הסימן ריקה.
+          gateStack: true
         };
         eventLog.emit('page-plan', 'h2-spanning', { token: blk.tokenId, heightPx: cur.spanning.heightPx, ornTop: topPad, ornBottom: bottomPad }, cur.index);
         continue; // הכותרת הוצבה בפס; הבלוקים הבאים ימלאו את הטורים מתחתיו
@@ -18566,7 +18625,8 @@ __modules["src/engine/decoration/toc-builder.js"] = function (require, module, e
  * toc-budget-exceeded ועצירה דטרמיניסטית. אף לולאה לא חסרת חסם.
  */
 
-const { PAGE_TYPES, buildPageTemplate } = require('../layout/page-templates');
+const { PAGE_TYPES, buildPageTemplate, isImudProfile } = require('../layout/page-templates');
+const { TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM } = require('../core/imud-geometry');
 
 const TOC_MAX_ROWS = 20000;     // תקציב שורות כולל (general+detail)
 const TOC_MAX_PAGES = 500;      // תקציב עמודי TOC כולל
@@ -18720,6 +18780,16 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
         : cur.template.width));
   }
   let availH = cur.template.contentBox.height - (TITLE_SIZE_PT * (96 / 72) + TITLE_MARGIN_PX);
+  // **חוזה 9C3 (חקירת 19.11 — TOC_ROWS):** בפרופיל IMUD הקיבולת היא אזור
+  // המתיחה המכויל — עמוד ראשון TOC_FIRST_TOP..TOC_STRETCH_BOTTOM (635px,
+  // בניכוי בלוק הכותרת), המשך TOC_CONT_TOP..TOC_STRETCH_BOTTOM (892px) —
+  // לא תיבת התוכן הגנרית (915px) שאפשרה דחיסה מעבר לתחתית. הנתיב הלא-IMUD
+  // נשמר (קורפוס ה-DP נעול).
+  if (isImudProfile(settings)) {
+    const zoneOf = (f) => TOC_STRETCH_BOTTOM - (f ? TOC_FIRST_TOP : TOC_CONT_TOP);
+    availH = zoneOf(true) - (TITLE_SIZE_PT * (96 / 72) + TITLE_MARGIN_PX);
+    cur._tocZoneCont = zoneOf(false);
+  }
   let usedH = 0;
 
   for (const r of model.rows) {
@@ -18730,10 +18800,11 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
       break;
     }
     const { h } = rowHeightOf(r);
+    r._h = h; // להטבעת הגיאומטריה (structural-stamps) — אותו גובה שנקבע בעימוד
     if (usedH + h > availH && cur.toc.rows.length) {
       if (pages.length >= TOC_MAX_PAGES) { budgetExceeded = true; break; }
       cur = mkPage(false);
-      availH = cur.template.contentBox.height;
+      availH = cur._tocZoneCont != null ? cur._tocZoneCont : cur.template.contentBox.height;
       usedH = 0;
     }
     // שורה בודדת גבוהה מעמוד שלם ⇒ אל תיתלה: הנח אותה ותעד (אין לולאה — usedH מתקדם תמיד)
@@ -18758,6 +18829,9 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
   if (eventLog) {
     eventLog.emit('toc', 'toc-pages-built', { type: pageType, pages: pages.length, rows: rowsConsumed, overflow: overflowFindings.length, budgetExceeded });
   }
+  // סימון העמוד האחרון של הרצף — להטבעת המתיחה (רק עמודים שאינם-אחרונים
+  // נמתחים; האחרון נערם מלמעלה בפריסה טבעית) — כמו isLast של המורשת.
+  if (pages.length) pages[pages.length - 1].toc.isLast = true;
   return { pages, overflow: overflowFindings, budgetExceeded };
 }
 
@@ -21290,6 +21364,10 @@ __modules["src/engine/layout/structural-stamps.js"] = function (require, module,
 const { buildShaarBlocks, shaarFontOf } = require('../output/shaar-content');
 const { folioGeometry, headerGeometry } = require('../layout/furniture-geometry');
 const { assignFootnoteLanes } = require('../layout/footnote-lanes');
+const { isImudProfile } = require('../layout/page-templates');
+const {
+  GEO, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
+} = require('../core/imud-geometry');
 // **שלב 8 ביקורת §3.1:** המיפוי משפחה→מפתח גופן — מקור יחיד משותף (היה כפול
 // כאן וב-materialize); ה-scrub — מהמודול הניטרלי core/pua-text.
 const { familyFontKeyOf } = require('../typography/font-keys');
@@ -21314,10 +21392,17 @@ function colorOfSetting(hex) {
 }
 
 /**
- * הטבעת שורות תוכן-העניינים — אותה פריסה שהייתה בהקרנה (top 70, שורה 24px,
- * כותרת מימין ותווית משמאל; קבוצה — פריטים במרווחי 80px) — עם רוחבי מילים
- * ורוחב רווח **נמדדים פעם אחת** (ההקרנה מקבלת מילים ממוקמות, לא טקסט למדידה).
- * נשמר ב-page.tocLayout.
+ * הטבעת שורות תוכן-העניינים — עם רוחבי מילים ורוחב רווח **נמדדים פעם אחת**
+ * (ההקרנה מקבלת מילים ממוקמות, לא טקסט למדידה). נשמר ב-page.tocLayout.
+ *
+ * **גיאומטריית ה-TOC לפי חוזה 9C3 (חקירת 19.11 — TOC_ROWS ×56):** בפרופיל
+ * IMUD השורות חיות באזור המתיחה המכויל: עמוד ראשון — כותרת ב-FLOW_TOP+136
+ * (30px, ממורכזת) ושורות מ-TOC_FIRST_TOP (370.7); המשך — מ-TOC_CONT_TOP
+ * (113.7); תחתית — TOC_STRETCH_BOTTOM (1005.7). עד כאן הוטבעה פריסה שטוחה
+ * y=70+24i שנלקחה מה-CSS הישן — שורות עלו על הכותרת העליונה (89.2–103.2)
+ * והתיבה המכוילת לא מומשה. המתיחה כמו במורשת (F1/F6): gap טבעי עם רצפת
+ * גובה-שורה מרבי, ומערך טבעי כשהרצפה גולשת מהתחתית. הנתיב הלא-IMUD נשמר
+ * כמו שהיה (קורפוס ה-DP נעול).
  */
 function stampTocLayout(page, settings, measure) {
   if (page.type !== 'toc-general' && page.type !== 'toc-detail') return false;
@@ -21330,9 +21415,40 @@ function stampTocLayout(page, settings, measure) {
     text: w, w: measure.measureTextWidth(w, PT, 0)
   }));
   const layout = [];
+  const imud = isImudProfile(settings);
+  const isFirst = !!(page.toc && (page.toc.isFirst || page.toc.title));
+  const isLast = !!(page.toc && page.toc.isLast);
+  // גבהי השורות כפי שנקבעו בעימוד (buildTocPages מטביע r._h); נפילה — 22px
+  const rowH = (r) => (Number(r._h) > 0 ? Number(r._h) : 22);
+  let rowYs = null;
+  if (imud) {
+    const top = isFirst ? TOC_FIRST_TOP : TOC_CONT_TOP;
+    const yArr = [];
+    if (!isLast && rows.length > 1) {
+      // מתיחה (legacy F1/F6): gap טבעי בין top לתחתית, רצפת גובה-שורה מרבי;
+      // אם הרצפה דוחפת את האחרונה מעבר לתחתית — מערך טבעי לפי הגבהים
+      const maxH = Math.max.apply(null, rows.map(rowH));
+      const hLast = rowH(rows[rows.length - 1]);
+      const naturalGap = (TOC_STRETCH_BOTTOM - top - hLast) / (rows.length - 1);
+      const gap = Math.max(naturalGap, maxH);
+      const lastTop = top + (rows.length - 1) * gap;
+      if (lastTop <= TOC_STRETCH_BOTTOM - hLast + 0.5) {
+        rows.forEach((r, i) => yArr.push(top + i * gap));
+      } else {
+        let yy = top;
+        for (const r of rows) { yArr.push(yy); yy += rowH(r); }
+      }
+    } else {
+      let yy = top;
+      for (const r of rows) { yArr.push(yy); yy += rowH(r); }
+    }
+    rowYs = yArr;
+  } else {
+    rowYs = rows.map((r, i) => 70 + i * 24);
+  }
   let yi = 0;
   for (const row of rows) {
-    const y = 70 + yi * 24;
+    const y = rowYs[yi];
     if (row.kind === 'group') {
       let xi = 0;
       const items = [];
@@ -21354,7 +21470,16 @@ function stampTocLayout(page, settings, measure) {
     }
     yi++;
   }
-  page.tocLayout = { schema: 'toc-layout-v1', rows: layout, pageWidth: tpl.width, sizePt: PT };
+  // כותרת ה-TOC בעמוד הראשון (חוזה 9C3: y=FLOW_TOP+136, גובה 30, ממורכזת, 17pt)
+  let title = null;
+  if (imud && isFirst && page.toc && page.toc.title) {
+    const t = String(page.toc.title);
+    title = {
+      x: GEO.COL_L_X, y: GEO.FLOW_TOP + 136, w: 2 * GEO.COL_W + 13.48, h: 30,
+      sizePt: 17, words: wordsOf(t), spaceW, align: 'center'
+    };
+  }
+  page.tocLayout = { schema: 'toc-layout-v1', rows: layout, pageWidth: tpl.width, sizePt: PT, ...(title ? { title } : {}) };
   return true;
 }
 
@@ -22672,6 +22797,12 @@ function projectPage(page, settings, apiOrOpts) {
   if (page.type === 'toc-general' || page.type === 'toc-detail') {
     if (page.tocLayout && page.tocLayout.rows) {
       const pt = page.tocLayout.sizePt || 12;
+      // **חוזה 9C3:** כותרת ה-TOC בעמוד הראשון — מהחותמת (structural-stamps),
+      // שורה ממורכזת בגובה 30px במקום המכויל
+      if (page.tocLayout.title) {
+        const t = page.tocLayout.title;
+        out.lines.push(stampedRowLine(t, t.sizePt || 17, 'toc-title'));
+      }
       for (const row of page.tocLayout.rows) {
         if (row.kind === 'group') {
           for (const it of row.items || []) out.lines.push(stampedRowLine(it, pt, 'toc-row'));
@@ -23678,7 +23809,9 @@ function stampedRowLine(row, pt, kind, fontKey) {
     wordPos.push({ text: wd.text, x: cursor, w: wd.w, sizePt: pt, ...(fontKey ? { fontKey } : {}) });
     cursor -= (row.spaceW || 0);
   }
-  return { x: row.x, y: row.y, w: row.w, h: row.h, words: wordPos, align: 'right', kind: kind || 'toc-row', level: null, isLast: false, sizePt: pt, baselineY: null, tokenId: null };
+  // יישור מהחותמת כשניתן (כותרת ה-TOC — ממורכזת); ברירת המחדל כמו קודם
+  const align = row.align || 'right';
+  return { x: row.x, y: row.y, w: row.w, h: row.h, words: wordPos, align, kind: kind || 'toc-row', level: null, isLast: false, sizePt: pt, baselineY: null, tokenId: null };
 }
 
 function fakeLine(text, x, y, w, h, settings, measure, sizePt, fontKey, kind) {
@@ -25080,20 +25213,23 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
       outline.push({ title: b.text, page: pg, level: b.level });
     }
 
-    // קישורי TOC: שורות tocPages עם targetPage נפתר (S9). מיקום השורות — פריסת
-    // הרנדרר (toc-rows: top 70, שורה ~24px) — מלבן לחיץ לכל שורה/פריט קבוצה.
+    // קישורי TOC: שורות tocPages עם targetPage נפתר (S9). מיקום השורות — מהחותמת
+    // (page.tocLayout.rows[].y — גיאומטריית חוזה 9C3 בפרופיל IMUD); נפילה לנוסחת
+    // הרנדרר הישנה (toc-rows: top 70, שורה ~24px) — מלבן לחיץ לכל שורה/פריט קבוצה.
     const tocLinks = [];
     for (const tp of result.tocPages || []) {
+      const stamped = tp.tocLayout && tp.tocLayout.rows;
       let yi = 0;
       for (const row of (tp.toc && tp.toc.rows) || []) {
+        const y = stamped && stamped[yi] && Number.isFinite(stamped[yi].y) ? stamped[yi].y : 70 + yi * 24;
         if (row.kind === 'group') {
           let xi = 0;
           for (const it of row.items || []) {
-            if (it.targetPage != null) tocLinks.push({ page: tp.index, x: 18 + xi, y: 70 + yi * 24, w: 60, h: 22, targetPage: it.targetPage });
+            if (it.targetPage != null) tocLinks.push({ page: tp.index, x: 18 + xi, y, w: 60, h: 22, targetPage: it.targetPage });
             xi += 80;
           }
         } else if (row.targetPage != null) {
-          tocLinks.push({ page: tp.index, x: 18, y: 70 + yi * 24, w: 700, h: 22, targetPage: row.targetPage });
+          tocLinks.push({ page: tp.index, x: 18, y, w: 700, h: 22, targetPage: row.targetPage });
         }
         yi++;
       }
@@ -27943,7 +28079,10 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     const tocRows = structural.filter(l => l.kind === 'toc-row');
     const others = structural.filter(l => l.kind !== 'toc-row');
     for (const ln of others) {
-      root.appendChild(renderModelLine(ln, doc, 0, 0, settings));
+      const lineEl = renderModelLine(ln, doc, 0, 0, settings);
+      // כותרת ה-TOC — מחלקת החוזה של המורשת (.toc-title)
+      if (ln.kind === 'toc-title') lineEl.className += ' toc-title';
+      root.appendChild(lineEl);
     }
     if (tocRows.length) {
       const tocWrap = doc.createElement('div');
