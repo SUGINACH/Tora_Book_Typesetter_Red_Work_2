@@ -19720,7 +19720,10 @@ function familyOf(key) {
  */
 function renderModelLine(ml, doc, relX, relY) {
   const el = doc.createElement('div');
-  el.className = 'line' + (ml.isLast ? ' line--last' : '') + (ml.kind === 'toc-title' ? ' toc-title' : '');
+  el.className = 'line'
+    + (ml.isLast ? ' line--last' : '')
+    + (ml.kind === 'heading' ? ' line--heading' : '')
+    + (ml.kind === 'toc-title' ? ' toc-title' : '');
   el.setAttribute('dir', 'rtl');
   el.style.position = 'absolute';
   el.style.left = `${px2(ml.x - relX)}px`;
@@ -19744,7 +19747,7 @@ function renderModelLine(ml, doc, relX, relY) {
     if (!firstWord && typeof doc.createTextNode === 'function') el.appendChild(doc.createTextNode(' '));
     firstWord = false;
     const span = doc.createElement('span');
-    span.className = 'w';
+    span.className = 'w' + (wd.mk ? ' w--fnmarker' : '');
     span.style.position = 'absolute';
     span.style.left = `${px2(wd.x - ml.x)}px`;
     span.style.top = '0';
@@ -20099,7 +20102,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
           if (!firstFnWord && typeof doc.createTextNode === 'function') row.appendChild(doc.createTextNode(' '));
           firstFnWord = false;
           const span = doc.createElement('span');
-          span.className = 'w';
+          span.className = 'w' + (wd.mk ? ' w--fnmarker' : '');
           span.style.position = 'absolute';
           span.style.left = `${px2(wd.x - (n.x != null ? n.x : 0))}px`;
           span.style.top = '0';
