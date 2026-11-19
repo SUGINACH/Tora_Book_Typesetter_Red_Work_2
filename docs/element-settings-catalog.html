@@ -4122,11 +4122,30 @@ footer{max-width:1440px;margin:0 auto;padding:0 20px 35px;color:var(--muted);fon
   </div>
  </div>
  <h3>רישום פריטי עמוד (layout/page-items.js)</h3>
- <p class="table-note">נמצאו 12 רישומים פעילים בקוד — לא 11. כל סוג מצהיר על אופן השתתפות, slot, ולידציה, מדידה, הצבה והקרנת DOM/PDF.</p>
- <div class="table-wrap"><table><thead><tr><th>שם בקוד</th><th>שם רגיל</th><th>תיאור</th><th>הערות / סמכות מימוש</th></tr></thead><tbody>
- <tr><td><code>body-block</code></td><td>גוף העמוד</td><td>זרימת השורות והבלוקים בגוף הטורים.</td><td>layout/dp-planner; dom-renderer.renderLine; geometry-projector.projectLine</td></tr><tr><td><code>spanning-band</code></td><td>פס חוצה־טורים</td><td>בלוק/כותרת ברוחב מלא שמקצר את קיבולת כל הטורים.</td><td>layout/dp-planner; column-flow; reservation על כל הטורים</td></tr><tr><td><code>running-header</code></td><td>כותרת רצה</td><td>ריהוט עמוד עליון עם שלושה סלוטים.</td><td>headers-builder; furniture-geometry; DOM/PDF</td></tr><tr><td><code>folio</code></td><td>גיליון</td><td>מספר העמוד ומיקומו באזור הריהוט התחתון.</td><td>decoration/folio; furniture-geometry; DOM/PDF; F-J6</td></tr><tr><td><code>column-divider</code></td><td>קו מפריד טורים</td><td>קו דקורטיבי בין הטורים; מוגדר כ-overlay שאינו תופס גובה.</td><td>ornament-fit; reservation px=0</td></tr><tr><td><code>footnote-gutter</code></td><td>אזור הערות שוליים</td><td>אזור הקצאת הערות בתחתית/מרזב, לפי תקציב עמוד.</td><td>footnote-budget; dp-planner.reserveNotes</td></tr><tr><td><code>side-note</code></td><td>הערת צד</td><td>פריט עוגן בשוליים, ממוקם ביחס לפסקה מארחת.</td><td>notes-model.stampNote; side-notes.placeSideNotes</td></tr><tr><td><code>info-box</code></td><td>תיבת מידע</td><td>פריט מותאם בשוליים; משתמש במסלול העוגן של הערת הצד.</td><td>extensions/style-schema; notes-model; side-notes</td></tr><tr><td><code>ornament</code></td><td>עיטור</td><td>פריט גרפי עם מקור, גודל טבעי, fit, עוגן, clipping, z-order ו-reservation.</td><td>ornament-plan; ornament-fit; ornament-ink</td></tr><tr><td><code>shaar-gate</code></td><td>שער</td><td>עמוד שער מבני עם תיבות ונכסי ערכה.</td><td>shaar-pages; theme-sets; הערכה המקורית פעילה אוטומטית</td></tr><tr><td><code>toc-page</code></td><td>עמוד תוכן עניינים</td><td>עמוד שנבנה משורות TOC, כולל קישורי עוגן.</td><td>toc-builder</td></tr><tr><td><code>endnote-page</code></td><td>עמוד הערות סיום</td><td>עמוד הערות לפי חלק, עם שורות שכבר נמדדו.</td><td>endnote-pages; notes-model</td></tr>
+ <p class="table-note">נמצאו 12 רישומים פעילים בקוד. השדות participation ו-slot הם חוזה קוד מפורש; schema מפרט את צורת הנתון. לרישום יש גם validate, measurement, placement, diagnostics, authority והקרנות DOM/PDF. אלה אינם 12 פקדים בלוח ההגדרות.</p>
+ <div class="table-wrap"><table><thead><tr><th>שם בקוד</th><th>שם רגיל</th><th>אופן השתתפות</th><th>slot / סכמת נתונים</th><th>תפקיד והצבה</th><th>סמכות / הקרנות / הערות</th></tr></thead><tbody>
+ <tr><td><code>body-block</code></td><td>גוף העמוד</td><td><code>flow</code></td><td><code>body</code><br>lines: LineModel[]; tokenId: string</td><td>שורות ובלוקים זורמים בגוף העמוד; נמדדים דרך measureDocumentModel ומוצבים ב-dp-planner.</td><td>authority: line/pipeline-bridge + dp-planner; DOM: renderLine; PDF: projectLine.</td></tr>
+ <tr><td><code>spanning-band</code></td><td>פס חוצה־טורים</td><td><code>block</code></td><td><code>band</code><br>lines: LineModel[]; heightPx: number</td><td>בלוק ברוחב מלא; שומר גובה ומקטין את קיבולת כל הטורים.</td><td>dp-planner + column-flow; DOM: renderSpanningBand; PDF: band lines.</td></tr>
+ <tr><td><code>running-header</code></td><td>כותרת רצה</td><td><code>furniture</code></td><td><code>header</code><br>slots: {right,center,left}</td><td>כותרת עליונה בת שלושה סלוטים, הנמדדת לפני ההצבה.</td><td>headers-builder + furniture-geometry; DOM: renderHeader; PDF: header slots.</td></tr>
+ <tr><td><code>folio</code></td><td>גיליון / מספר עמוד</td><td><code>furniture</code></td><td><code>footer</code><br>folioDisplay: string; pageNumber: number</td><td>מספר העמוד; נמדד לפי גופן/גודל ומוקרן באזור הריהוט.</td><td>decoration/folio + furniture-geometry; DOM: renderFolio; PDF: folio. F-J6: פיסוק הגימטריה במימוש סותר את D-108.</td></tr>
+ <tr><td><code>column-divider</code></td><td>מפריד טורים</td><td><code>reserved</code></td><td><code>divider</code><br>style: thin|dashed|double|none</td><td>קו overlay בין הטורים; reservation.px=0 ולכן אינו מקטין את גובה הטקסט.</td><td>ornament-fit; DOM: renderColumnDivider; PDF: projectColumnDivider.</td></tr>
+ <tr><td><code>footnote-gutter</code></td><td>אזור הערות שוליים</td><td><code>reserved</code></td><td><code>notes-area</code><br>footnotes: Note[]</td><td>מזמין גובה לפני הצבת הטקסט לפי fnReservedHeightPx; ההצבה לפי תקציב המרזב.</td><td>footnote-budget + dp-planner; DOM: renderFootnoteArea; PDF: projectFootnoteGutter.</td></tr>
+ <tr><td><code>side-note</code></td><td>הערת צד</td><td><code>anchor</code></td><td><code>margin</code><br>text, anchorToken, ownToken, noteRows, noteWords, lineH</td><td>פריט עוגן לפסקה מארחת; נמדד פעם אחת ומוקצה אנכית ב-cascade.</td><td>notes-model + side-notes; DOM: aside rows; PDF: projectStampedRows.</td></tr>
+ <tr><td><code>info-box</code></td><td>תיבת מידע</td><td><code>anchor</code></td><td><code>margin</code><br>text, anchorToken, itemKind, boxSpec, boxChrome, styleSpec, rows, heightPx</td><td>תיבה בשוליים באותו מסלול עוגן של הערת צד; רוחב פנימי וגובה כוללים מסגרת וריפוד.</td><td>extensions/style-schema + notes-model + side-notes; DOM: aside.info-box; PDF: projectSideNotes.</td></tr>
+ <tr><td><code>ornament</code></td><td>עיטור</td><td><code>reserved</code></td><td><code>variable</code><br>ornId, kindStyle, x/y/w/h, source, ink, natural, scale, fit, anchor, clip, zOrder, reservation, constraints</td><td>פריט גרפי עם מידות טבעיות/יעד, fit, עוגן, גבולות clipping והזמנת שטח בזמן תכנון.</td><td>ornament-plan + ornament-fit + ornament-ink; DOM: renderDecorations; PDF: decorations pdfOps.</td></tr>
+ <tr><td><code>shaar-gate</code></td><td>שער</td><td><code>block</code></td><td><code>gate-page</code><br>boxes: ShaarBox[]; theme: string|null</td><td>עמוד שער מבני עם תיבות ונכסי ערכה.</td><td>shaar-pages + theme-sets; העיצובים המקוריים פעילים אוטומטית; DOM/PDF מקרינים תיבות שער.</td></tr>
+ <tr><td><code>toc-page</code></td><td>עמוד תוכן עניינים</td><td><code>block</code></td><td><code>toc-page</code><br>rows: TocRow[]</td><td>עמוד תוכן עניינים כללי או מפורט, עם שורות וקישורי עוגן.</td><td>toc-builder; DOM: renderTocPageContent; PDF: toc rows.</td></tr>
+ <tr><td><code>endnote-page</code></td><td>עמוד הערות סיום</td><td><code>block</code></td><td><code>notes-page</code><br>notes: Note[]; part: number; noteRows per note</td><td>עמוד הערות לפי חלק; שורות ההערות כבר נמדדו.</td><td>endnote-pages + notes-model; DOM: stamped rows; PDF: projectEndnotePage.</td></tr>
+ </tbody></table></div> <h3>מילון מצבים של מודל העמוד והפריט (model/kinds.js + layout/page-items.js)</h3>
+ <div class="table-wrap"><table><thead><tr><th>שדה/enum בקוד</th><th>אפשרויות</th><th>משמעות</th><th>הערות</th></tr></thead><tbody>
+ <tr><td><code>IMAGE_PLACEMENT</code></td><td><code>inline</code>, <code>block</code>, <code>centered</code>, <code>float-start</code>, <code>float-end</code></td><td>מיקום תמונה בתוך שורה, כבלוק, במרכז, או בציפה לצד תחילת/סוף השורה.</td><td>במסמך RTL float-start הוא בצד ימין; float-end בצד שמאל.</td></tr>
+ <tr><td><code>PAGE_ITEM_PARTICIPATION</code></td><td><code>flow</code>, <code>block</code>, <code>anchor</code>, <code>furniture</code>, <code>reserved</code></td><td>זרימה, בלוק, עוגן, ריהוט קבוע, או פריט שמזמין שטח.</td><td>חוזה page-items; כל פריט חייב להצהיר מצב אחד.</td></tr>
+ <tr><td><code>PARTICIPATION</code></td><td><code>inline</code>, <code>block</code>, <code>pageFurniture</code>, <code>background</code></td><td>אופן ההשתתפות ברמת פריט המודל האחיד.</td><td>נפרד מ-PAGE_ITEM_PARTICIPATION; אין לבלבל בין שני חוזים.</td></tr>
+ <tr><td><code>OVERFLOW_POLICIES</code></td><td><code>shrink</code>, <code>move</code>, <code>diagnose</code></td><td>צמצום, העברה, או הפקת אבחון מפורש כשפריט חורג.</td><td>מדיניות חוזית; אינה פקד כללי ב-BINDINGS.</td></tr>
+ <tr><td><code>SPLIT_POLICIES</code></td><td><code>never</code>, <code>line</code>, <code>block</code></td><td>אין לפצל; לפצל בגבול שורה; או להעביר בלוק בשלמותו.</td><td>מדיניות פיצול לאורך עמודים; הערה ארוכה משתמשת גם בהגדרה נפרדת long-footnote-policy.</td></tr>
+ <tr><td><code>ASSET_KINDS</code></td><td><code>image</code>, <code>font</code>, <code>ornament</code></td><td>שלוש משפחות משאבים שה-AssetResolver מזהה.</td><td>asset-registry פותר SVG/הפניות imud; גופנים נטענים בנפרד.</td></tr>
  </tbody></table></div>
- <div class="two-col">
+<div class="two-col">
   <div class="info-card">
    <h3>סוגי עמוד (layout/page-templates.js)</h3>
    <table><thead><tr><th>שם בקוד</th><th>שם רגיל</th><th>תיאור</th><th>הערות</th></tr></thead><tbody>
@@ -4144,7 +4163,28 @@ footer{max-width:1440px;margin:0 auto;padding:0 20px 35px;color:var(--muted);fon
    <tr><td><code>infoBox</code></td><td>תיבת מידע</td><td>רוחב פנימי 3–8em; padding 0–1.5em.</td><td>הסכמה בודקת גבולות וקשר לפריט מארח.</td></tr>
    </tbody></table>
   </div>
- </div>
+ <div class="info-card">
+   <h3>הרחבות Pages מותאמות (decoration/custom-pages.js)</h3>
+   <table><thead><tr><th>שדה</th><th>שם רגיל</th><th>אפשרויות / ברירת מחדל</th><th>הערות</th></tr></thead><tbody>
+   <tr><td><code>position</code></td><td>מיקום ביחס למבנה הספר</td><td><code>before-shaar-main</code>, <code>after-shaar-main</code>, <code>before-part</code>, <code>after-part</code>, <code>end</code>; ברירת מחדל: <code>end</code>.</td><td>עמוד מותאם ממוקם לפני/אחרי שער או חלק או בסוף הספר.</td></tr>
+   <tr><td><code>counted</code></td><td>האם העמוד נספר</td><td>ברירת מחדל true.</td><td>משפיע על מספור/מניית עמודים לפי מסלול היישום.</td></tr>
+   <tr><td><code>boxes</code></td><td>תיבות טקסט מותאמות</td><td>תיבות במידות/מיקום מוחלטים במ״מ.</td><td>מומרות ל-px; אינן חלק מ-grid רגיל.</td></tr>
+   <tr><td><code>images</code></td><td>תמונות בעמוד מותאם</td><td>מקור נכס, מיקום, רוחב/גובה והתאמה.</td><td>הנכסים נפתרים דרך AssetResolver/הפניות imud.</td></tr>
+   <tr><td><code>background</code></td><td>רקע העמוד</td><td>צבע/תמונת רקע לפי מטען העמוד והגדרות העיצוב.</td><td>יש להצליב כל שינוי עם page-decorations והקרנת DOM/PDF.</td></tr>
+   </tbody></table>
+  </div>
+<div class="info-card">
+   <h3>קבוצות נכסים מוטמעות (imud-library.js)</h3>
+   <table><thead><tr><th>collection</th><th>שם רגיל</th><th>קובץ מקור</th><th>שימוש</th></tr></thead><tbody>
+   <tr><td><code>shaar-main</code></td><td>שער ראשי</td><td><code>shaar_main.json</code></td><td>תמונות/עיטורי שער ראשי.</td></tr>
+   <tr><td><code>shaar-sub</code></td><td>שער משנה</td><td><code>shaar_sub.json</code></td><td>נכסי שערי משנה.</td></tr>
+   <tr><td><code>shaar-back</code></td><td>שער אחורי</td><td><code>shaar_back.json</code></td><td>נכסי גב/שער אחורי.</td></tr>
+   <tr><td><code>orn-ud</code></td><td>עיטורים עליונים/תחתונים</td><td><code>ornaments_up_down.json</code></td><td>עיטורי H2.</td></tr>
+   <tr><td><code>orn-lr</code></td><td>עיטורים צדדיים</td><td><code>ornaments_left_right.json</code></td><td>עיטורי צד.</td></tr>
+   <tr><td><code>divider</code></td><td>מפרידים</td><td><code>section_dividers.json</code></td><td>קווים/מפרידים מעוצבים.</td></tr>
+   </tbody></table>
+  </div>
+</div>
  <div class="two-col">
   <div class="info-card">
    <h3>ספריות נכסים / בורר עיצובים</h3>
@@ -4184,7 +4224,29 @@ footer{max-width:1440px;margin:0 auto;padding:0 20px 35px;color:var(--muted);fon
  <tr><td><code>fn-layout-mode fixture</code></td><td>ערך ברירת מחדל שונה בבדיקות</td><td>המרשם ו-default_settings.json הנוכחי מצביעים על continuous; fixture בדיקה ישן מכיל block. בנוסף fixture מכיל 264 מפתחות לעומת 265 בקובץ המוטמע.</td><td class="bad">סתירה בין fixture לבין הגדרות האתחול. הבדיקה עלולה לא לייצג את ה-boot הנוכחי.</td></tr>
  <tr><td><code>settings audit inventory</code></td><td>סיכום ספירות מיושן</td><td>האודיט הישן מציין 253 הגדרות, 161 dispositions ו-67 סטיות; המניפסט הנוכחי הוא 256 הגדרות. קובץ fixture ישן אינו זהה לקובץ האתחול.</td><td>האודיט ההיסטורי אינו מקור אמת למצב הנוכחי. הקטלוג הוא המקור היחיד למיפוי הנוכחי; האודיט נשמר לצורכי provenance.</td></tr>
  </tbody></table></div>
- <div class="notice danger"><b>כלל גרשיים:</b> סמני הערות יכולים להשתמש ב-<code>hebrew-geresh</code> לפי הגדרת footnote-marker-style. אין להסיק מכך שמספרי עמודים מקבלים גרש/גרשיים. גיליונות ועמודוני TOC חייבים גימטריה חשופה ללא סימני פיסוק.</div>
+ <h3>קבועים ומשטרי ברירת מחדל המוטמעים בקוד</h3>
+ <p class="table-note">אלה אינם פקדים רגילים בלוח 256 ההגדרות. חלק מהערכים הם כיול גאומטרי של פרופיל IMUD; חלקם baseline שממנו ערכים מסוימים נדרסים דרך הגדרות או גשרי התאימות. יש לקרוא כל שורה לפי ציון המקור והיקף התחולה.</p>
+ <div class="table-wrap"><table><thead><tr><th>שם בקוד</th><th>שם רגיל</th><th>ערך / התנהגות</th><th>גבול והערה</th></tr></thead><tbody>
+ <tr><td><code>GEO</code></td><td>גאומטריית פרופיל IMUD</td><td>PAGE_W=793.7; PAGE_H=1122.5; COL_W=269.41; COL_R_X=403.61; COL_L_X=120.72; MARGIN_R_X=686.3; MARGIN_L_X=56.7; MARGIN_W=50.5; FLOW_TOP=107.2; FLOW_H=915; LINE_H=21.44; H2_SPACER=180; HEADER_BASELINE=71.9; FOLIO_BASELINE=1054.5; FN_AREA_TOP=969.5; FN_PITCH=16.7; TOC_NUM_X=66.1; TOC_TITLE_X1=727.4; TOC_STAIR=8; MN_PITCH=9.6.</td><td><code>core/imud-geometry.js</code>. יחידות px@96dpi; PDF=px×0.75. כאשר _layout-profile=imud הגאומטריה הזו גוברת על grid-* הגנרי.</td></tr>
+ <tr><td><code>SZ_CORE</code></td><td>גדלי baseline של רכיבים (pt)</td><td>body 12; h0Title 17; h0Body 11.5; h2 17; siman 20; h3 13.5; h4 12.5; h5 11.5; h6 10.5; parenDelta −2; fnBody 8.5; fnMarker 8; marginNote 6; folio 10.5; hdrR 15; hdrC 11; hdrL 15; divider 6.75; tocNum 10.5; tocTitle 17; tocLevel 1–7 = 12/11/10.5/10/9.5/9/8.8.</td><td><code>core/imud-geometry.js</code>. חלק מגדלי גוף/כותרות בכיול IMUD אינם בגשר S77 (למשל size-body, line-height-body, s-h2…s-h7); לכן אינם בהכרח משתנים כשמשנים פקד דומה ב-UI. נדרש מיפוי נפרד לפני שינוי.</td></tr>
+ <tr><td><code>HEADING_MODES</code></td><td>מצבי כותרת בפרופיל legacy</td><td>H0=new_page_1col; H1=sub_shaar; H2=new_page_1col; H3=span_1col; H4–H6=inline_2col; H7=side_note.</td><td><code>legacy-imud-flow.js</code>. אלו modes פנימיים של נתיב legacy; אין להניח שהם זהים לערכי enum של heading-N-mode ב-RED.</td></tr>
+ <tr><td><code>STRETCH_RATIO / SHRINK_RATIO</code></td><td>יכולת מתיחה/כיווץ של רווח</td><td>0.6 / 0.5 מרוחב הרווח.</td><td><code>typography/kp-linebreak.js</code>; אינם בחירה בלוח.</td></tr>
+ <tr><td><code>LINE_DEMERIT</code></td><td>קנס בסיס לכל שורה</td><td>100.</td><td><code>typography/kp-linebreak.js</code>; רכיב פונקציית המטרה של KP.</td></tr>
+ <tr><td><code>FIT_EPS</code></td><td>סבילות כניסה שמרנית</td><td>0.75 px.</td><td><code>typography/kp-linebreak.js</code>; שורה חייבת להיות קצרה מ-maxWidth ב-0.75px לפחות.</td></tr>
+ <tr><td><code>RAGGED_END_STRETCH_FACTOR</code></td><td>פקטור מתיחת סוף שורה</td><td>10× maxWidthPx.</td><td><code>typography/kp-linebreak.js</code>; מנגנון DP לשורות ragged; לא רוחב רווח בפועל.</td></tr>
+ <tr><td><code>NOTE_FONT_FACTORS</code></td><td>פקטורי מדידה לגופני הערות</td><td>David HB=1.06; David=1.04; Narkisim=1.10; Nachlieli=0.96; Alef=1.02; Rubin=1.05.</td><td><code>layout/notes-model.js</code>. מוחל בטבלת מטריקות A; במדידה font-metrics הפקטור כבוי.</td></tr>
+ <tr><td><code>CONTINUATION_MARK</code></td><td>סימון המשך הערה</td><td>(המשך).</td><td><code>layout/notes-model.js</code>; מחרוזת קבועה, לא הגדרה לבחירת משתמש.</td></tr>
+ <tr><td><code>NOTE_METRICS</code></td><td>יחסי גודל/גובה להערות</td><td>הערת שוליים: 0.8× גודל גוף, pitch=1.25; הערת צד ותיבת מידע: 0.75× גוף, pitch=1.15; הערת סיום: 0.8× גוף ו-line-height של גוף המסמך.</td><td><code>layout/notes-model.js</code>. אלו נוסחאות נגזרות; רוחב ומיקום נגזרים מהקשר עמוד/טור.</td></tr>
+ <tr><td><code>PAGE_STRETCH_MAX / JUSTIFY_MAX_GAP / JUSTIFY_MAX_LH_EXTRA</code></td><td>תקרות מתיחה</td><td>48px / 9px / 3px.</td><td><code>core/imud-geometry.js</code>; כיול פרופיל IMUD.</td></tr>
+ <tr><td><code>ORPHAN_RECLAIM_BUFFER / RECLAIM_BELOW_BASE</code></td><td>באפר משיכת יתום וכיווץ</td><td>12px / 2px.</td><td><code>core/imud-geometry.js</code>; גבולות פנימיים של פרופיל IMUD.</td></tr>
+ <tr><td><code>TOC_MAX_ROWS / TOC_MAX_PAGES / TOC_MAX_TITLE_LINES</code></td><td>תקציבי תוכן עניינים</td><td>20,000 שורות; 500 עמודים; 2 שורות לכותרת.</td><td><code>decoration/toc-builder.js</code>; חריגה מפיקה אבחון ועצירה דטרמיניסטית.</td></tr>
+ <tr><td><code>DOTS_MIN_PX / LABEL_RESERVE_PX / ROW_GAP_PX</code></td><td>מרווחי TOC</td><td>24px נקודות מובילות מינימום; 48px שמורת תווית גיליון; 4px רווח שורות.</td><td><code>decoration/toc-builder.js</code>; אין פקד נפרד.</td></tr>
+ <tr><td><code>TITLE_SIZE_PT / TITLE_MARGIN_PX</code></td><td>כותרת עמוד תוכן עניינים</td><td>16pt / 24px.</td><td><code>decoration/toc-builder.js</code>.</td></tr>
+ <tr><td><code>ORN_NATURAL_W_EM / ORN_NATURAL_H_EM / DIVIDER_H_PX / H2_ORN_W_EM / H2_ORN_H_EM</code></td><td>מידות baseline לעיטורים</td><td>4em / 1.2em / 2px / 3em / 0.6em.</td><td><code>decoration/ornament-plan.js</code>; משמשים ערכי טבע/מידות בסיס ולא מבטלים fit או גודל של נכס ספציפי.</td></tr>
+ <tr><td><code>RED_ENABLE_STRETCH_RECLAIM</code></td><td>מתג סביבת מתיחת זנב</td><td>נקרא ממשתנה סביבה; שולט על פעולת stretch-reclaim.</td><td>לא פקד UI ולא ערך מסמך; תלוי סביבת הרצה.</td></tr>
+ <tr><td><code>justify</code></td><td>יישור לשני הצדדים</td><td>מופעל באופן קשיח בנתיבי legacy/DOM/HTML export המתועדים, ללא מפתח כיבוי מקביל בלוח.</td><td>יש לאמת כל renderer/export בנפרד; אין להניח שהיעדר מפתח פירושו אותה תוצאה בכל פרופיל.</td></tr>
+ </tbody></table></div>
+<div class="notice danger"><b>כלל גרשיים:</b> סמני הערות יכולים להשתמש ב-<code>hebrew-geresh</code> לפי הגדרת footnote-marker-style. אין להסיק מכך שמספרי עמודים מקבלים גרש/גרשיים. גיליונות ועמודוני TOC חייבים גימטריה חשופה ללא סימני פיסוק.</div>
 </section>
 <section id="section5">
  <h2>5. הגדרות שהיו רק בגרסאות קודמות</h2>
@@ -5163,7 +5225,29 @@ footer{max-width:1440px;margin:0 auto;padding:0 20px 35px;color:var(--muted);fon
   <td contenteditable="true">ערך מקור ברירת מחדל: &quot;3&quot;. סטטוס במפת ההגירה: נשמר כמצב ממשק/נתון מורשת. יעד: &#39;aq-shared-load&#39;. S6.3: תקרת מתיחת שורה (3% במקור) — ב-RED נקלטת דרך aq-letter-spacing-max המרכזי; נשמר כנתון</td>
   <td contenteditable="true">הוראה מפורשת ב-legacy-settings-map.js, שורה 317.</td>
  </tr></tbody></table></div>
- <h3>ערכות סגנון ישנות</h3>
+ <h3>השוואה ישירה בין ערכות הסגנון הנוכחיות</h3>
+ <p class="table-note">שלושת קובצי המקור נבדקו ישירות. כל ערכה מכילה את אותם 249 מפתחות; 18 מפתחות מקבלים ערכים שונים. הערכים מוצגים כמחרוזות גולמיות מתוך JSON, לפני ההמרה במפת ההגירה.</p>
+ <div class="table-wrap"><table><thead><tr><th>מפתח מקור</th><th>תלמוד</th><th>פרשנות</th><th>קונטרס</th><th>הערה</th></tr></thead><tbody>
+ <tr><td><code>body-last-line-align</code></td><td><code>right</code></td><td><code>center</code></td><td><code>right</code></td><td>יישור שורה אחרונה.</td></tr>
+ <tr><td><code>drop-word-mode</code></td><td><code>none</code></td><td><code>window</code></td><td><code>window</code></td><td>מצב המילה הראשונה.</td></tr>
+ <tr><td><code>fn-columns</code></td><td><code>2</code></td><td><code>2</code></td><td><code>1</code></td><td>מספר טורי הערות.</td></tr>
+ <tr><td><code>line-height-body</code></td><td><code>1.25</code></td><td><code>1.28</code></td><td><code>1.4</code></td><td>גובה שורה.</td></tr>
+ <tr><td><code>page-num-position</code></td><td><code>bottom_outer</code></td><td><code>bottom_center</code></td><td><code>bottom_center</code></td><td>ערך מורשת; המפה ממירה לאיות RED.</td></tr>
+ <tr><td><code>prop-col</code></td><td><code>36</code></td><td><code>38</code></td><td><code>42</code></td><td>נתון עיצוב מורשת.</td></tr>
+ <tr><td><code>prop-gap</code></td><td><code>1</code></td><td><code>1.5</code></td><td><code>3</code></td><td>נתון עיצוב מורשת.</td></tr>
+ <tr><td><code>prop-gutter</code></td><td><code>2</code></td><td><code>2</code></td><td><code>3</code></td><td>נתון עיצוב מורשת.</td></tr>
+ <tr><td><code>prop-margin</code></td><td><code>5</code></td><td><code>6</code></td><td><code>8</code></td><td>נתון עיצוב מורשת.</td></tr>
+ <tr><td><code>s-h0</code></td><td><code>22</code></td><td><code>24</code></td><td><code>30</code></td><td>גודל H0 במפתח מורשת.</td></tr>
+ <tr><td><code>s-h1</code></td><td><code>40</code></td><td><code>44</code></td><td><code>56</code></td><td>גודל H1 במפתח מורשת.</td></tr>
+ <tr><td><code>s-h2</code></td><td><code>14</code></td><td><code>15</code></td><td><code>20</code></td><td>גודל H2 במפתח מורשת.</td></tr>
+ <tr><td><code>s-h3</code></td><td><code>11</code></td><td><code>12</code></td><td><code>15</code></td><td>גודל H3 במפתח מורשת.</td></tr>
+ <tr><td><code>s-h4</code></td><td><code>10.5</code></td><td><code>11</code></td><td><code>14</code></td><td>גודל H4 במפתח מורשת.</td></tr>
+ <tr><td><code>s-h5</code></td><td><code>10</code></td><td><code>10.5</code></td><td><code>13</code></td><td>גודל H5 במפתח מורשת.</td></tr>
+ <tr><td><code>s-h6</code></td><td><code>9.5</code></td><td><code>10</code></td><td><code>12</code></td><td>גודל H6 במפתח מורשת.</td></tr>
+ <tr><td><code>s-note-body</code></td><td><code>7</code></td><td><code>7.5</code></td><td><code>8.5</code></td><td>גודל גוף הערת צד.</td></tr>
+ <tr><td><code>size-body</code></td><td><code>10</code></td><td><code>10.5</code></td><td><code>13</code></td><td>גודל גוף טקסט.</td></tr>
+ </tbody></table></div>
+<h3>ערכות סגנון ישנות</h3>
  <p>בדיקה ישירה של קובצי המקור: שלוש הערכות <code>תלמוד</code>, <code>פרשנות</code>, <code>קונטרס</code> מכילות כל אחת 249 מפתחות; בכל אחת אותם 249 שמות. קובצי הערכות נמצאים ב-<code>red-build/ui/assets/imud/setting_sets/</code>; הם נטענים דרך loadSettingSet() ומועברים באותה מפת importImudSettings. בדיקה ישירה של שלושת קובצי הערכות הנוכחיים מצאה 18 מפתחות שונים ביניהן (מתוך 249 מפתחות משותפים בכל ערכה). הערכים לא הועתקו כאן כמצב עדכני; יש לאמתם בקבצים עצמם לפני שינוי הגדרה שמשפיעה על ערכה.</p>
 </section>
 <section>
