@@ -481,7 +481,6 @@ describe('S8D-6 פרוסה 3 — זהות גופן/עוגן/קריאה מהמו�
 
   it('מחלקות סמנטיות: כותרת נשארת line--heading וסמן נשאר w--fnmarker', () => {
     let headings = 0, bodyMarkers = 0, noteMarkers = 0;
-    const has = (node, cls) => String(node.className || '').split(/\s+/).includes(cls);
     for (const mp of r.pageModel.pages) {
       const el = renderModelPage(mp, S, doc);
       const lineEls = collectByClass(el, 'line');
@@ -489,11 +488,11 @@ describe('S8D-6 פרוסה 3 — זהות גופן/עוגן/קריאה מהמו�
         const lineEl = lineEls.find(x => x.dataset.id === ln.id);
         if (!lineEl) continue;
         if (ln.kind === 'heading') {
-          assert(has(lineEl, 'line--heading'), `heading line ${ln.id} lost line--heading`);
+          assert(String(lineEl.className || '').split(/\s+/).includes('line--heading'), `heading line ${ln.id} lost line--heading`);
           headings++;
         }
         for (const wd of (ln.words || []).filter(w => w.mk)) {
-          const span = (lineEl.children || []).find(x => has(x, 'w--fnmarker') && x.textContent === wd.text);
+          const span = (lineEl.children || []).find(x => String(x.className || '').split(/\s+/).includes('w--fnmarker') && x.textContent === wd.text);
           assert(span, `body marker ${wd.text} lost w--fnmarker on ${ln.id}`);
           bodyMarkers++;
         }
