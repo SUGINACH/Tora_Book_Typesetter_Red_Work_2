@@ -481,7 +481,7 @@ describe('S8D-6 פרוסה 3 — זהות גופן/עוגן/קריאה מהמו�
 
   it('מחלקות סמנטיות: כותרת נשארת line--heading וסמן נשאר w--fnmarker', () => {
     let headings = 0, bodyMarkers = 0, noteMarkers = 0;
-    const has = (node, cls) => String(node.className || '').split(/\\s+/).includes(cls);
+    const has = (node, cls) => String(node.className || '').split(/\s+/).includes(cls);
     for (const mp of r.pageModel.pages) {
       const el = renderModelPage(mp, S, doc);
       const lineEls = collectByClass(el, 'line');
