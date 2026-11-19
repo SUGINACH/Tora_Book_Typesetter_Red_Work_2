@@ -127,6 +127,10 @@ describe('גיאומטריית ריהוט — מקור יחיד ל-DOM ול-PDF 
     const pg = r.pages.find(p => p.header && p.header.slots && Object.values(p.header.slots).some(x => x && x.text));
     if (!pg) { console.error('  [אין כותרת עליונה במסמך הקטן — נבדק ה-API בלבד]'); }
     else {
+      assert(
+        pg.template && Number.isFinite(pg.template.headerTop),
+        `PageTemplate.headerTop חסר לפני הקרנה: type=${pg.type}, index=${pg.index}, template=${JSON.stringify(pg.template)}`
+      );
       const out = projectPage(pg, s, new MeasureAPI(s, 'table'));
       assertEq(out.header.y, headerGeometry(pg).y, 'ראש הכותרת מהמקור היחיד');
     }
