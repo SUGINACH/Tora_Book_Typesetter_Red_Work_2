@@ -1,0 +1,121 @@
+# .github/workflows/preview-engine-parity.yml — פריסת preview מבודד לענף המנוע המאוחד
+#
+# **סעיף ד בהוראת 19.11 (מיילסטון legacy↔unified parity):** ענף
+# engine/legacy-parity-preview-20261119 מקבל build מלא של האפליקציה — לא
+# UI mock/debug bundle — המריץ את פרופיל unified בנתיב ה־UI/Worker האמיתי,
+# בספריית משנה קבועה ב־gh-pages: previews/engine-parity/.
+#
+# כללים מחייבים:
+#   1. שורש gh-pages (האתר הציבורי = המנוע המורשת) אינו משתנה: לא מוחקים,
+#      לא מחליפים index.html בשורש, לא נוגעים ב-assets/ הקיימים. רק
+#      previews/engine-parity/* נכתב/מוחלף.
+#   2. ה-push ל־gh-pages מפעיל את deploy-pages.yml הקיים שמעלה את כל
+#      האתר (שורש + previews) — אין workflow פריסה נפרד.
+#   3. אין secrets; הרשאות מינימליות (contents:write ל־push ל־gh-pages בלבד).
+#   4. preview-info.json + build-info.json מתעדים source branch, commit,
+#      חותמת זמן, profile=unified ותווית "סביבת ניסוי — אינה אישור לנכונות
+#      המנוע או לאישור cutover".
+#   5. אין למזג את הענף ל־main בעקבות פריסה מוצלחת — preview אינו cutover.
+name: preview-engine-parity
+
+on:
+  push:
+    branches: [ engine/legacy-parity-preview-20261119 ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: preview-engine-parity
+  cancel-in-progress: true
+
+jobs:
+  build-and-stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout engine branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # הבדיקות עצמן רצות ב-ci.yml/corpus-invariants על push לענף זה.
+      # כאן מוודאים רק שהבנדלים נבנים מהמקור ללא שגיאה — שער מקדים לפריסה.
+      - name: Build browser bundles from source (real build, no mocks)
+        run: |
+          node --version
+          node tools/build-worker-bundle.js
+          test -s red-build/ui/app.bundle.js
+          test -s red-build/ui/engine-worker.bundle.js
+
+      - name: Sanity: bundle contains the unified dispatch flag path
+        run: |
+          grep -q '_engine-force-unified' red-build/ui/engine-worker.bundle.js \
+            || { echo 'FATAL: worker bundle lacks unified dispatch flag'; exit 1; }
+
+      - name: Write build-info.json (commit + timestamp + profile)
+        run: |
+          printf '%s' '{"profile":"unified","branch":"engine/legacy-parity-preview-20261119","commit":"${{ github.sha }}","builtAt":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","note":"סביבת ניסוי — אינה אישור לנכונות המנוע או לאישור cutover"}' > red-build/ui/build-info.json
+          cat red-build/ui/build-info.json
+
+      - name: Checkout gh-pages (preserving production root)
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages-checkout
+
+      - name: Verify production root is intact before staging
+        run: |
+          test -f gh-pages-checkout/index.html || { echo 'FATAL: gh-pages root index.html missing'; exit 1; }
+          test -d gh-pages-checkout/assets || { echo 'FATAL: gh-pages root assets/ missing'; exit 1; }
+
+      - name: Stage full app into previews/engine-parity/ (subpath only)
+        run: |
+          mkdir -p gh-pages-checkout/previews/engine-parity
+          # תוכן האפליקציה השלמה: bundles, worker, styles, assets, fonts, icons, index
+          rsync -a --delete red-build/ui/ gh-pages-checkout/previews/engine-parity/
+          # preview-info נפרד לתיעוד הפריסה עצמה
+          printf '%s' '{"sourceBranch":"engine/legacy-parity-preview-20261119","commit":"${{ github.sha }}","builtAt":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","profile":"unified","label":"סביבת ניסוי — אינה אישור לנכונות המנוע או לאישור cutover"}' > gh-pages-checkout/previews/engine-parity/preview-info.json
+          # לא להשאיר קבצי דיפולט/דיבאג של העץ בפריסה
+          rm -f gh-pages-checkout/previews/engine-parity/_export_test.html gh-pages-checkout/previews/engine-parity/_fx.txt gh-pages-checkout/previews/engine-parity/_vl.txt || true
+
+      - name: Verify subpath integrity (all assets staged)
+        run: |
+          P=gh-pages-checkout/previews/engine-parity
+          for f in index.html styles.css app.bundle.js engine-worker.bundle.js build-info.json preview-info.json favicon.ico imudify-icon.svg assets/imud/default_settings.json; do
+            test -f "$P/$f" || { echo "FATAL: missing $f in staged preview"; exit 1; }
+          done
+          test -d "$P/assets/imud/fonts" || { echo 'FATAL: fonts dir missing'; exit 1; }
+          N_FONTS=$(ls "$P/assets/imud/fonts" | wc -l)
+          echo "staged font files: $N_FONTS"
+          test "$N_FONTS" -gt 1000 || { echo 'FATAL: font staging looks incomplete'; exit 1; }
+          echo "staged size: $(du -sh $P | cut -f1)"
+
+      - name: Commit staged preview to gh-pages
+        run: |
+          cd gh-pages-checkout
+          git config user.name "github-actions[preview-engine-parity]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A previews/engine-parity
+          if git diff --cached --quiet; then
+            echo "no changes to stage — preview identical"
+          else
+            git commit -m "preview(engine-parity): ${{ github.sha }} — unified experimental from engine/legacy-parity-preview-20261119"
+            git push origin gh-pages
+          fi
+
+      - name: Summary
+        run: |
+          cat <<'EOF'
+          Preview staged to gh-pages:previews/engine-parity/ from ${{ github.sha }}.
+          Deployment happens via the existing deploy-pages.yml (triggered by the gh-pages push).
+          Expected URL: https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/previews/engine-parity/
+          The link is NOT considered working until verified open in a browser (HTTP 200, bundle loads, worker up, fonts load).
+          This preview is an experimental environment — not an approval of engine correctness and not a cutover approval.
+          EOF

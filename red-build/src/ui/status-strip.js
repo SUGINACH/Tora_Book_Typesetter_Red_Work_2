@@ -15,6 +15,16 @@ function buildStatusStrip(doc, opts) {
   root.className = 'status-strip';
   root.setAttribute('role', 'status');
 
+  // ---- צ'יפ פרופיל ענף preview (engine/legacy-parity-preview-20261119) ----
+  // מזהה בעין אנושית איזה מנוע רץ בענף זה + commit — כדי שאף אחד לא יטעה
+  // בין האתר הציבורי (legacy) לבין סביבת הניסוי (unified). תווית הניסוי
+  // מפורשת: preview אינו אישור לנכונות המנוע ואינו אישור cutover.
+  const profileChip = doc.createElement('span');
+  profileChip.className = 'chip chip--profile';
+  profileChip.style.display = 'none';
+  root.appendChild(profileChip);
+
+
   // ---- מצב מנוע + התקדמות ----
   const engine = doc.createElement('span');
   engine.className = 'chip chip--engine';
@@ -153,6 +163,22 @@ function buildStatusStrip(doc, opts) {
       runInfo.title = tip.join('\n');
     },
     /** הודעה חולפת (8 שניות) — ייבוא, סירוב פורמט, החלת המלצה. */
+    /** **ענף preview:** צ'יפ פרופיל מנוע ומידע בריאה — מוצג רק בענף הניסיון. */
+    setBranchProfile(profile, buildInfo) {
+      if (!profile) { profileChip.style.display = 'none'; return; }
+      const commit = buildInfo && buildInfo.commit ? String(buildInfo.commit).slice(0, 7) : null;
+      const builtAt = buildInfo && buildInfo.builtAt ? String(buildInfo.builtAt) : null;
+      profileChip.style.display = '';
+      profileChip.textContent = commit
+        ? `⚙ מנוע: unified (ניסיון) · ${commit}`
+        : '⚙ מנוע: unified (ניסיון)';
+      profileChip.title = [
+        'סביבת ניסיון — ענף engine/legacy-parity-preview',
+        'אינה אישור לנכונות המנוע ולא אישור cutover.',
+        commit ? `מקור: ${commit}` : null,
+        builtAt ? `נבנה: ${builtAt}` : null
+      ].filter(Boolean).join('\n');
+    },
     setNotice(text) {
       notice.textContent = String(text != null ? text : '');
       notice.classList.toggle('chip--notice-on', !!text);

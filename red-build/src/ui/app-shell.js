@@ -58,6 +58,13 @@ function readSavedSplitPct() {
 
 function createApp(doc, opts = {}) {
   const settings = getDefaultSettings();
+  // **ענף preview לצורך parity (engine/legacy-parity-preview-20261119):** הענף
+  // מפעיל את המנוע המאוחד בנתיב ה־UI/Worker האמיתי — דגל in-band שזורם עם
+  // ההגדרות לאותה נקודת dispatch אחת ב־pipeline (בלי מנגנון מקבילי). ב־main
+  // הערך null ושום דבר אינו מוזרק — ברירת המחדל של main אינה משתנה.
+  const branchProfile = opts.branchEngineProfile === 'unified' ? 'unified' : null;
+  const branchBuildInfo = opts.branchBuildInfo || null; // { commit, builtAt } — מוזרק מ־build-info.json בזמן פריסה
+  if (branchProfile === 'unified') settings['_engine-force-unified'] = true;
   let text = '';
   let result = null;            // תוצאה מסוריאליזת פרוטוקול (D-65)
   let pageModelObj = null;      // **שלב 8 פרוסה 2 (§4.4):** PageModel שהתקבל מה-Worker — מאומת וקפוא מחדש
@@ -140,8 +147,19 @@ function createApp(doc, opts = {}) {
   const engineVersion = opts.engineVersion || null;
   const status = buildStatusStrip(doc, {
     onExplicitRetypeset: () => onExplicitRetypeset(),
-    onCancel: () => onCancelTypeset()
+    onCancel: () => onCancelTypeset(),
+    // **ענף preview:** צ'יפ פרופיל מנוע — מזהה profile + commit + תווית ניסוי.
+    branchProfile,
+    branchBuildInfo
   });
+  // **ענף preview:** הצ'יפ מוצג מיד בעליה — מחוור חייבת לראות את הפרופיל בענף הניסיון.
+  if (branchProfile) {
+    status.setBranchProfile(branchProfile, branchBuildInfo);
+    // build-info.json נטען בַּאַסִינקְצִיה מהַשֶרת (fetch) — כשמגיע מעדכנים את הצ'יפ עם commit/חותמת זמן.
+    if (opts.branchBuildInfoPromise && typeof opts.branchBuildInfoPromise.then === 'function') {
+      opts.branchBuildInfoPromise.then((info) => { status.setBranchProfile(branchProfile, info || branchBuildInfo); }).catch(() => {});
+    }
+  }
 
   const editor = buildEditorTab(doc, {
     onTextChange: (t) => { text = t; markHeavyDirty('טקסט השתנה'); },
@@ -445,6 +463,16 @@ function createApp(doc, opts = {}) {
       // נשמר לכל רינדור חוזר (גם keepView) כדי שהתצוגה לא תחליף רנדרר
       // באמצע סשן.
       engineProfile = (res && res.legacyProfile) ? 'legacy' : 'unified';
+      // **ענף preview (§ג.4 בהוראה):** כשל מפורש כשחסר PageModel או כשהמנוע
+      // נפל בשקט ל־legacy למרות פרופיל הענף — אין fallback שקט ואין המשך תצוגה
+      // כאילו הכול תקין. התצוגה הקיימת נשמרת כמו שהיא, אך מצב המנוע הופך לשגיאה.
+      if (branchProfile === 'unified') {
+        if (engineProfile === 'legacy') {
+          status.setEngineState('error', { message: 'ענף preview: המנוע נפל ל־legacy למרות פרופיל unified — fallback שקט אסור. דווחו זאת.' });
+        } else if (!pageModelObj) {
+          status.setEngineState('error', { message: 'ענף preview: תוצאת המנוע המאוחד הגיעה ללא PageModel תקין — אין fallback. דווחו זאת.' });
+        }
+      }
       typesetGen++; // **S5.2 (5):** +1 על כל עימוד שהושלם (בדיוק במקום ההשמה ל-result) — ביטול/החלפה אינם נספרים
       applyResultToViews();
       status.setEngineState('idle');

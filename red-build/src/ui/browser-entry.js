@@ -76,11 +76,27 @@ function pickBinaryFile(accept, cb) {
   inp.click();
 }
 
+// **ענף preview לצורך parity (engine/legacy-parity-preview-20261119):**
+// הענף מריץ את המנוע המאוחד בנתיב הַחַן של הַאַפַּלִיקָצִיה בלבד — אותן הגדרות מיובאות (IMUD),
+// אותם גופנים, אותן תבניות הערכה 40 — אך במנוע המאוחד. זהו צד הַהַשְוואה של המיילסטון — לא cutover.
+// בַּאַתְרורִית: האתר הציבורי ממשיך לעבוד עם המנוע המורשת; הענף הזה אינו מוזג לאחר שערי parity יוכחו.
+const BRANCH_ENGINE_PROFILE = 'unified';
+
+/** מידע בריאה עבור צ'יפ הפרופיל: build-info.json נכתב על ידי הַוּוַרְקְפְלוֹ (commit SHA + חותמת זמן). נתיב יחסי — עובד גם מתוך subpath של Pages. */
+async function fetchBuildInfo() {
+  try {
+    const r = await fetch('build-info.json');
+    if (!r.ok) return null;
+    const j = await r.json();
+    return (j && typeof j === 'object') ? j : null;
+  } catch (e) { return null; }
+}
+
 function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-18-s9c3'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-19-parity1'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -92,9 +108,12 @@ function boot() {
   const settingsPersistence = (typeof window !== 'undefined' && window.localStorage)
     ? createSettingsPersistence(window.localStorage)
     : null;
+  const buildInfoPromise = fetchBuildInfo();
   const app = createApp(document, {
     engineClient: engine,
-    engineVersion: ASSET_VERSION, // **S1-ה/U-2:** מזהה גרסת הנכסים (שתי החבילות נבנות יחד) — מוצג במידע הריצה
+    engineVersion: ASSET_VERSION,
+    branchEngineProfile: BRANCH_ENGINE_PROFILE, // **ענף preview:** unified בנתיב החן; בַּאַתְרוֹ main השורה אינה קיימת
+    branchBuildInfoPromise: buildInfoPromise, // **S1-ה/U-2:** מזהה גרסת הנכסים (שתי החבילות נבנות יחד) — מוצג במידע הריצה
     settingsPersistence, // **S6.1 (פער 2):** השתמרות הגדרות (SRS §17.1)
     fontStatus: (typeof document !== 'undefined' && document.fonts) ? 'loading' : 'ready',
     // **03.11:** ייצוא PDF/ZIP במנוע ה־Worker + הורדה בפועל בדפדפן

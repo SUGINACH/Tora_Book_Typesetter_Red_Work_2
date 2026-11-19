@@ -30,7 +30,7 @@ name: corpus-invariants
 
 on:
   push:
-    branches: [ main, UNIFIED ]
+    branches: [ main, UNIFIED, engine/legacy-parity-preview-20261119 ]
   pull_request:
     branches: [ main, UNIFIED ]
   workflow_dispatch:

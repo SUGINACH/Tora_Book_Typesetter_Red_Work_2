@@ -112,8 +112,14 @@ function typeset(rawText, settingsIn, env = {}) {
   // אסור שיהיה דרך להפעלה בנתיב החי. הלקח מהחיתוך הכושל של 9c.4 (דוח חקירת
   // האתר החי, סעיף ד): ה-CI בדק את המנוע שהמשתמשים *לא* קיבלו — הדגל הזה
   // מאפשר לבדוק את שניהם על אותם קלטים ולהשוות מול בסיס 9C.3.
-  const forceUnifiedImud = !!(typeof process !== 'undefined' && process.env
-    && String(process.env.RED_UNIFIED_IMUD) === '1');
+  // **ענף preview לצורך parity (engine/legacy-parity-preview-20261119):** אותה
+  // הפעלה מדויקת זמינה גם ב־settings עצמם (`_engine-force-unified === true`) —
+  // דגל in-band שזורם באותו ערוץ הגדרות דרך ה־Worker לנתיב ה־UI החי של ענף
+  // ה־preview בלבד. זו לא מנגנון dispatch מקבילי: אותה נקודת הכרעה אחת
+  // בדיוק, וב־main הדגל לא נקבע לעולם (browser-entry של main אינו מזריק אותו).
+  const forceUnifiedImud = (!!(typeof process !== 'undefined' && process.env
+    && String(process.env.RED_UNIFIED_IMUD) === '1'))
+    || !!(settingsIn && settingsIn['_engine-force-unified'] === true);
   if (!forceUnifiedImud && settingsIn && settingsIn['_layout-profile'] === 'imud' && settingsIn._imudRaw) {
     const { legacyTypeset } = require('../layout/legacy-imud-flow');
     return legacyTypeset(rawText, settingsIn, env);

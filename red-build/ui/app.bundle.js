@@ -505,11 +505,27 @@ function pickBinaryFile(accept, cb) {
   inp.click();
 }
 
+// **ענף preview לצורך parity (engine/legacy-parity-preview-20261119):**
+// הענף מריץ את המנוע המאוחד בנתיב הַחַן של הַאַפַּלִיקָצִיה בלבד — אותן הגדרות מיובאות (IMUD),
+// אותם גופנים, אותן תבניות הערכה 40 — אך במנוע המאוחד. זהו צד הַהַשְוואה של המיילסטון — לא cutover.
+// בַּאַתְרורִית: האתר הציבורי ממשיך לעבוד עם המנוע המורשת; הענף הזה אינו מוזג לאחר שערי parity יוכחו.
+const BRANCH_ENGINE_PROFILE = 'unified';
+
+/** מידע בריאה עבור צ'יפ הפרופיל: build-info.json נכתב על ידי הַוּוַרְקְפְלוֹ (commit SHA + חותמת זמן). נתיב יחסי — עובד גם מתוך subpath של Pages. */
+async function fetchBuildInfo() {
+  try {
+    const r = await fetch('build-info.json');
+    if (!r.ok) return null;
+    const j = await r.json();
+    return (j && typeof j === 'object') ? j : null;
+  } catch (e) { return null; }
+}
+
 function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-18-s9c3'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-19-parity1'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -521,9 +537,12 @@ function boot() {
   const settingsPersistence = (typeof window !== 'undefined' && window.localStorage)
     ? createSettingsPersistence(window.localStorage)
     : null;
+  const buildInfoPromise = fetchBuildInfo();
   const app = createApp(document, {
     engineClient: engine,
-    engineVersion: ASSET_VERSION, // **S1-ה/U-2:** מזהה גרסת הנכסים (שתי החבילות נבנות יחד) — מוצג במידע הריצה
+    engineVersion: ASSET_VERSION,
+    branchEngineProfile: BRANCH_ENGINE_PROFILE, // **ענף preview:** unified בנתיב החן; בַּאַתְרוֹ main השורה אינה קיימת
+    branchBuildInfoPromise: buildInfoPromise, // **S1-ה/U-2:** מזהה גרסת הנכסים (שתי החבילות נבנות יחד) — מוצג במידע הריצה
     settingsPersistence, // **S6.1 (פער 2):** השתמרות הגדרות (SRS §17.1)
     fontStatus: (typeof document !== 'undefined' && document.fonts) ? 'loading' : 'ready',
     // **03.11:** ייצוא PDF/ZIP במנוע ה־Worker + הורדה בפועל בדפדפן
@@ -719,6 +738,13 @@ function readSavedSplitPct() {
 
 function createApp(doc, opts = {}) {
   const settings = getDefaultSettings();
+  // **ענף preview לצורך parity (engine/legacy-parity-preview-20261119):** הענף
+  // מפעיל את המנוע המאוחד בנתיב ה־UI/Worker האמיתי — דגל in-band שזורם עם
+  // ההגדרות לאותה נקודת dispatch אחת ב־pipeline (בלי מנגנון מקבילי). ב־main
+  // הערך null ושום דבר אינו מוזרק — ברירת המחדל של main אינה משתנה.
+  const branchProfile = opts.branchEngineProfile === 'unified' ? 'unified' : null;
+  const branchBuildInfo = opts.branchBuildInfo || null; // { commit, builtAt } — מוזרק מ־build-info.json בזמן פריסה
+  if (branchProfile === 'unified') settings['_engine-force-unified'] = true;
   let text = '';
   let result = null;            // תוצאה מסוריאליזת פרוטוקול (D-65)
   let pageModelObj = null;      // **שלב 8 פרוסה 2 (§4.4):** PageModel שהתקבל מה-Worker — מאומת וקפוא מחדש
@@ -801,8 +827,19 @@ function createApp(doc, opts = {}) {
   const engineVersion = opts.engineVersion || null;
   const status = buildStatusStrip(doc, {
     onExplicitRetypeset: () => onExplicitRetypeset(),
-    onCancel: () => onCancelTypeset()
+    onCancel: () => onCancelTypeset(),
+    // **ענף preview:** צ'יפ פרופיל מנוע — מזהה profile + commit + תווית ניסוי.
+    branchProfile,
+    branchBuildInfo
   });
+  // **ענף preview:** הצ'יפ מוצג מיד בעליה — מחוור חייבת לראות את הפרופיל בענף הניסיון.
+  if (branchProfile) {
+    status.setBranchProfile(branchProfile, branchBuildInfo);
+    // build-info.json נטען בַּאַסִינקְצִיה מהַשֶרת (fetch) — כשמגיע מעדכנים את הצ'יפ עם commit/חותמת זמן.
+    if (opts.branchBuildInfoPromise && typeof opts.branchBuildInfoPromise.then === 'function') {
+      opts.branchBuildInfoPromise.then((info) => { status.setBranchProfile(branchProfile, info || branchBuildInfo); }).catch(() => {});
+    }
+  }
 
   const editor = buildEditorTab(doc, {
     onTextChange: (t) => { text = t; markHeavyDirty('טקסט השתנה'); },
@@ -1106,6 +1143,16 @@ function createApp(doc, opts = {}) {
       // נשמר לכל רינדור חוזר (גם keepView) כדי שהתצוגה לא תחליף רנדרר
       // באמצע סשן.
       engineProfile = (res && res.legacyProfile) ? 'legacy' : 'unified';
+      // **ענף preview (§ג.4 בהוראה):** כשל מפורש כשחסר PageModel או כשהמנוע
+      // נפל בשקט ל־legacy למרות פרופיל הענף — אין fallback שקט ואין המשך תצוגה
+      // כאילו הכול תקין. התצוגה הקיימת נשמרת כמו שהיא, אך מצב המנוע הופך לשגיאה.
+      if (branchProfile === 'unified') {
+        if (engineProfile === 'legacy') {
+          status.setEngineState('error', { message: 'ענף preview: המנוע נפל ל־legacy למרות פרופיל unified — fallback שקט אסור. דווחו זאת.' });
+        } else if (!pageModelObj) {
+          status.setEngineState('error', { message: 'ענף preview: תוצאת המנוע המאוחד הגיעה ללא PageModel תקין — אין fallback. דווחו זאת.' });
+        }
+      }
       typesetGen++; // **S5.2 (5):** +1 על כל עימוד שהושלם (בדיוק במקום ההשמה ל-result) — ביטול/החלפה אינם נספרים
       applyResultToViews();
       status.setEngineState('idle');
@@ -2097,6 +2144,16 @@ function buildStatusStrip(doc, opts) {
   root.className = 'status-strip';
   root.setAttribute('role', 'status');
 
+  // ---- צ'יפ פרופיל ענף preview (engine/legacy-parity-preview-20261119) ----
+  // מזהה בעין אנושית איזה מנוע רץ בענף זה + commit — כדי שאף אחד לא יטעה
+  // בין האתר הציבורי (legacy) לבין סביבת הניסוי (unified). תווית הניסוי
+  // מפורשת: preview אינו אישור לנכונות המנוע ואינו אישור cutover.
+  const profileChip = doc.createElement('span');
+  profileChip.className = 'chip chip--profile';
+  profileChip.style.display = 'none';
+  root.appendChild(profileChip);
+
+
   // ---- מצב מנוע + התקדמות ----
   const engine = doc.createElement('span');
   engine.className = 'chip chip--engine';
@@ -2235,6 +2292,22 @@ function buildStatusStrip(doc, opts) {
       runInfo.title = tip.join('\n');
     },
     /** הודעה חולפת (8 שניות) — ייבוא, סירוב פורמט, החלת המלצה. */
+    /** **ענף preview:** צ'יפ פרופיל מנוע ומידע בריאה — מוצג רק בענף הניסיון. */
+    setBranchProfile(profile, buildInfo) {
+      if (!profile) { profileChip.style.display = 'none'; return; }
+      const commit = buildInfo && buildInfo.commit ? String(buildInfo.commit).slice(0, 7) : null;
+      const builtAt = buildInfo && buildInfo.builtAt ? String(buildInfo.builtAt) : null;
+      profileChip.style.display = '';
+      profileChip.textContent = commit
+        ? `⚙ מנוע: unified (ניסיון) · ${commit}`
+        : '⚙ מנוע: unified (ניסיון)';
+      profileChip.title = [
+        'סביבת ניסיון — ענף engine/legacy-parity-preview',
+        'אינה אישור לנכונות המנוע ולא אישור cutover.',
+        commit ? `מקור: ${commit}` : null,
+        builtAt ? `נבנה: ${builtAt}` : null
+      ].filter(Boolean).join('\n');
+    },
     setNotice(text) {
       notice.textContent = String(text != null ? text : '');
       notice.classList.toggle('chip--notice-on', !!text);
