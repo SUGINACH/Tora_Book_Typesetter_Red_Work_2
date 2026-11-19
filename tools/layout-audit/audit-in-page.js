@@ -283,7 +283,7 @@
             return Number.isFinite(n) ? n : null;
           };
           const modelPageH = numData(pg, 'modelHeight');
-          const scaleY = modelPageH > 0 ? pr.h / modelPageH : null;
+          const scaleY = modelPageH > 0 ? pgR.h / modelPageH : null;
           const modelLineY = numData(lr.el, 'modelY');
           const modelLineH = numData(lr.el, 'modelH');
           const modelColTop = numData(col, 'modelTop');
