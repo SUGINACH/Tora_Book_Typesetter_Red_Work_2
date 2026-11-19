@@ -48,10 +48,10 @@ function makeDoc() {
 }
 
 function countWordAnchors(html) {
-  const spans = String(html).matchAll(/<span\\b[^>]*class="([^"]*)"[^>]*>/g);
+  const spans = String(html).matchAll(/<span\b[^>]*class="([^"]*)"[^>]*>/g);
   let count = 0;
   for (const match of spans) {
-    if (match[1].split(/\\s+/).includes('w')) count++;
+    if (match[1].split(/\s+/).includes('w')) count++;
   }
   return count;
 }
