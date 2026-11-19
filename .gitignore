@@ -3,3 +3,7 @@ red-build/tmp-dbg.js
 audits/very-long-artifacts/
 .secrets/
 package-lock.json
+# parity-signature: חתימות מלאות הן ענק (3–49MB) וניתנות לשחזור בפקודה אחת —
+# נשמרות ב-git רק לקורפוס הקטן (canonical) כדוגמת שחזור; השאר מחוץ לעץ.
+audits/parity-signature/*/signature-*.json
+!audits/parity-signature/canonical_corpus/signature-*.json
