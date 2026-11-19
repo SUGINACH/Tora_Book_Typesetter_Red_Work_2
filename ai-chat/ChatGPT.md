@@ -18709,3 +18709,1098 @@ PageModel חייב לשקף את התוצאה הסופית לכל סוגי הפ�
 
 
 ---
+
+
+## Prompt:
+19.11.2026, 3:53:49
+
+זה המשך לשיחה שהתארכה והיה צורך להתחיל שיחה חדשה, הוספתי את השיחה הישנה לקובץ שיחות שלנו : [https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/main/ai-chat/ChatGPT.md](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/main/ai-chat/ChatGPT.md) התעדכן ונמשיך בעבודה הקשה!!!
+
+## Response:
+19.11.2026, 3:53:53 · gpt-6
+
+> **Searched 1 website**
+>
+> 
+>
+> **Fetched recent chat context and inspected raw GitHub content lines**
+>
+> 
+>
+> **Searching the web**
+>
+> 
+>
+> **Inspecting Layout Parity Tests and Migration Plan**
+>
+> 
+>
+> Worked for 53s
+
+בהחלט\! נמשיך מכאן כפרויקט הנדסי רציף, ולא כפתיחת עבודה חדשה.
+
+אני מבין שהשיחה הקודמת התארכה, ולכן העברת אותה לקובץ `ChatGPT.md` בריפו החדש `Tora_Book_Typesetter_Red_Work_2`, כדי שנוכל להמשיך בלי לאבד את רצף ההחלטות, הבדיקות, התיקונים והדרישות שהצטברו.
+
+**העיקר מבחינתי הוא לא רק להמשיך לכתוב קוד, אלא להמשיך לנהל את הפרויקט באחריות\:**
+
+- לשמר את כל הדרישות וההחלטות שכבר התקבלו.
+- לבדוק מה באמת בוצע, ולא להסתמך על דיווחים בלבד.
+- לאתר את מקור הבעיות ולא להסתפק בתיקונים נקודתיים.
+- למנוע רגרסיות ולוודא שכל תיקון משתלב בארכיטקטורה.
+- להמשיך בשאיפה למנוע עימוד פשוט, אחיד, דטרמיניסטי, מדויק וניתן להרחבה — ללא טלאים וללא סיבוך מיותר.
+
+### שחזור רצף העבודה
+
+הקישור אכן מוביל לקובץ השיחה בריפו החדש, ואני מאמת מולו את נקודת ההמשך. הקובץ גדול מאוד — כ־18,711 שורות — והגישה אליו דרך ממשק הקריאה שבו השתמשתי לא הצליחה להחזיר את תוכנו. אני לא רוצה להעמיד פנים שקראתי את השיחה כולה כשעדיין לא הצלחתי לחלץ אותה.
+
+## נקודת ההמשך שאיתרתי
+
+הצלחתי לשחזר את סוף השיחה מתוך קובץ ה־Git עצמו, כולל ההקשר העדכני של העבודה. בנוסף, בדקתי את מצב המאגר, ולא הסתפקתי בשיחה בלבד.
+
+נכון לבדיקה שלי, ב־19 בנובמבר 2026, העבודה כבר התקדמה לשלב **9D — איחוד גאומטריית העמוד והטורים**\.
+
+המצב המהותי\:
+
+- שלב 9C.3 הוא בסיס היציבות הקודם.
+- כבר זוהו ותועדו כשלים עמוקים במנוע: מסלולי חישוב כפולים, מדידות גובה שאינן אחידות, החלטות ליווי כותרות שאינן מחייבות את ההצבה בפועל, ומנגנוני נסיגה שלא תמיד משנים גאומטריה.
+- קיים PR מס' 17, המוגדר במפורש **DO NOT MERGE (yet)**, עם תיקוני שורש FX-1 עד FX-6. לא נמהר למזג אותו.
+- התקדמות חדשה יותר כבר נכנסה ל־`main`\: מיזוג PR מס' 64, בנושא חוזה גאומטריה משותף ופרופיל IMUD למנוע המאוחד.
+
+### ממצאי הביקורת הראשוניים על 9D.1
+
+אני לא מאשר עדיין את המקטע רק משום שהוא מוזג. יש בו התקדמות נכונה, אבל גם נקודות שצריך לבדוק בזהירות לפני שממשיכים לבנות עליהן\:
+
+1. **מקור גאומטריה משותף** — נכון מבחינה ארכיטקטונית; עדיף קובץ חוזה משותף על העתקת קבועים לשני מנועים.
+2. **הפעלת פרופיל IMUD** — יש לוודא שהזיהוי נעשה לפי מקור הגדרות אמין, ולא בטעות על מסמכים או תצורות אחרות.
+3. **שימור המנוע הישן** — בדיקת digest זהה היא ראיה טובה לכך שלא שינו את התוצאה הישנה, אבל אינה מוכיחה שהגאומטריה עצמה היא התוצאה הרצויה.
+4. **גאומטריה מדויקת** — יש לוודא שהערכים והיחסים אכן מייצגים את ההכרעות המוצריות, ולא הופכים מדידות מתוך מקור היסטורי שגוי לקבועים בלתי־ניתנים לשינוי.
+5. **בדיקת דו־מנועית** — חשוב לוודא שהדגל `--unified` באמת מנתב למנוע המאוחד, ושכל דוחות ההשוואה מציינים באופן חד־משמעי איזה מנוע הפיק כל תוצאה.
+
+ההבחנה החשובה ביותר: **9C.3 הוא בסיס להשוואה ולשימור יכולות, אך אינו אוטומטית אמת מוחלטת לכל החלטה עיצובית או גאומטרית.** אנחנו צריכים לשמר יכולות מאושרות, לתקן פגמים, ולא לשכפל טעויות ישנות.
+
+### שתי נקודות חשודות שכבר מצאתי בקוד עצמו
+
+**א. בדיקת `headerHeight`**
+
+החוזה מגדיר את 71.9px כ־baseline של הכותרת העליונה, אך `page-templates.js` מעביר את הערך לתכונה `headerHeight`\.
+
+יש לבדוק האם צרכני התבנית מתייחסים אליו כאל גובה אזור, או כאל קו בסיס. זה אינו בהכרח באג, אבל מדובר בהבדל סמנטי משמעותי: baseline אינו גובה. בדיקה שמאמתת רק את המספר 71.9 אינה מוכיחה את מיקומם הנכון של הגליפים או של הקו המפריד.
+
+**ב. בדיקת ה־binding offset**
+
+הבדיקה הקיימת בודקת את הסטת הטור הימני בעמוד recto ו־verso, אך אינה מספיקה לבדה להוכיח את נכונות הגאומטריה של שני הטורים, את השוליים, את המרזב ואת היחס בין הסטה פנימית להסטה חיצונית.
+
+אלה בדיוק המקומות שבהם נדרשת בדיקת גאומטריה מלאה ולא רק בדיקות נקודתיות.
+
+---
+
+## סדר העבודה שלנו מכאן
+
+אני ממשיך כמנהל הביקורת והעבודה, לפי הסדר\:
+
+1. **ביקורת מלאה של מקטע 9D.1** — קוד, חוזה, בדיקות, גאומטריה ונתיבי ריצה.
+2. **הצלבת החוזה מול ההחלטות המקוריות שלך** — זיהוי ערכים שנקבעו בטעות כמוחלטים, או החלטות מוצר שעדיין לא הוכרעו.
+3. **בדיקת התשתית להשוואת מנועים** — לוודא שההשוואה באמת מודדת את המנוע המאוחד מול בסיס 9C.3, ולא משווה בטעות מנוע לעצמו.
+4. **הערכת מוכנות מקטע 2** — רק אחרי שנדע שמקטע 1 אמין, נבחן את השלב הבא ונמנע העברת פגמים לתוך שכבות נוספות.
+5. **בקרה על PR מס' 17** — הוא יישאר ללא מיזוג עד שנבצע סקירה עצמאית של התיקונים, נוודא שהם פותרים את השורשים, ונבחן את השלכותיהם על מנוע העימוד.
+
+המטרה נשארת חד־משמעית: מנוע אחד, פשוט ומזוקק, ללא מנגנונים כפולים, ללא טלאים, עם גאומטריה נכונה, מדידה אחידה, ותכנון עימוד שאפשר להבין, לבדוק ולהרחיב בבטחה.
+
+אני כבר משוחזר להקשר העבודה וממשיך מכאן.
+
+## Prompt:
+19.11.2026, 4:03:41
+
+אני רוצה בעיקר שתהיה אחראי על המעבר החלק!!! של המנוע החדש, בצע חקירה עמוקה בכל הקבצים ובכל הוורקלוג ובכל הקומיטים כך שתוכל לתת לעצמך הסבר לכל שורת קוד שנכתבה במנוע הישן וחקור היטיב את המנוע החדש והדרך הראויה לודאות תוצאה אחידה כמו במנוע הישן גם מבחינת מהירות, עבור על כל קבצי התוכנית וכו', ובהודעה הבאה תעבוד על יצירת מסמך המפרט את כל חלקי המסמך וחלקי העמוד, את כל מזהי הטקסט, את הגדרות העימוד של כל אחד הגופן \סוג\גודל\צבע הכל הכל הכל, לאחר מכן עבור על הדוח השוואת הגדרות ברירת מחדל לגרסאות קודמות, ושוב בצע חקירה בכל ההיסטוריה של הריפו על מקומות בהם הוזכר והוגדר דרך הביצוע וכו'!!!
+
+## Response:
+19.11.2026, 4:03:59 · gpt-6
+
+> **Comparing default settings**
+>
+> I’m comparing the report’s imported defaults with earlier accepted decisions. Several values conflict, including body text size, spacing, alignment behavior, and detailed display options, so I need to distinguish source defaults from later user-approved changes.
+>
+> **Compared default settings**
+>
+> 
+>
+> **Reconciling active settings**
+>
+> I’m finding that later decisions explicitly override older defaults, yet the audit still reports imported values and unresolved mismatches. I’m treating this as an implementation gap, especially for typography, spacing, alignment, display options, and geometry.
+>
+> **Reconciled active settings**
+>
+> 
+>
+> **Inventorying report scope**
+>
+> I’m assembling the document around active settings, page components, templates, typography, colors, headers, footnotes, folios, gates, and geometry. I’m clearly marking legacy reference values as provisional rather than final.
+>
+> **Reconciling active defaults**
+>
+> I’m identifying further conflicts: folio settings mostly align, but automatic alignment, table-of-contents detail levels, body typography, drop caps, paragraph scaling, heading limits, and geometry still need synchronization.
+>
+> **Inventoried report scope and reconciled active defaults**
+>
+> 
+>
+> **Audited engine migration history, geometry, settings, documentation, pull requests, and transition requirements**
+>
+> 
+>
+> Worked for 6m 10s
+
+קיבלתי. אני משנה את מוקד העבודה בהתאם: **אני לוקח אחריות על ניהול המעבר למנוע החדש, ולא מסתפק בבדיקת התקדמות הסוכן או באישור שהשלבים בתוכנית הושלמו.**
+
+המטרה אינה רק שהמנוע החדש יפיק מסמך שנראה דומה. המטרה היא מעבר שבו לא הולכת לאיבוד אף יכולת של המנוע הישן, לא משתנה שום ברירת מחדל שלא הוחלט לשנות, לא נגרמת נסיגה במהירות, וכל מנגנון חדש משתלב במבנה אחיד, פשוט, דטרמיניסטי וניתן להבנה.
+
+### עקרונות הבדיקה שאאמץ
+
+1. **הישן הוא מקור ידע, לא תורה מסיני.** אני אלמד את כל פעולותיו, לרבות תיקונים היסטוריים, אבל לא אשמר אוטומטית באגים, החלטות שגויות או פתרונות מסורבלים.
+2. **אין העברת יכולת בלי להבין אותה.** לכל מנגנון, תנאי, חישוב, חריג, משתנה ומסלול בקוד הישן נצטרך להבין את תפקידו, את הסיבה שנוצר ואת ההשלכות של הסרתו או שינויו.
+3. **אין תחליף לבדיקת ההיסטוריה.** קוד נוכחי לבדו לא מגלה מדוע נכתב. נחקור קומיטים, שינויים שבוטלו, תיקוני רגרסיות, Worklogs, תוכניות, דיונים, בדיקות ודוחות.
+4. **שוויון בתוצאה ובביצועים.** נבדוק לא רק גאומטריה ותוצר חזותי, אלא גם החלטות חלוקת טקסט, התאמת שורות, חלוקת עמודים, הערות, כותרות, אזורים מיוחדים, התנהגות קצה, זמני ריצה ויציבות.
+5. **איחוד ולא טלאים.** כשמתגלה הבדל, לא נפתור אותו באמצעות חריג נוסף במנוע החדש. נחקור את מקור ההבדל ונעדיף תיקון ארכיטקטוני נקי.
+
+## ממצא ראשון חשוב מהחקירה
+
+כבר נחשף שצריך להיזהר מאוד מלהסתמך על מסמכי התוכנית בלבד. יש במאגר שכבות תיעוד מתקופות שונות, והן אינן בהכרח משקפות את המצב הנוכחי\:
+
+- תוכנית השלמת המנוע המקורית, שהייתה בעלת עשרה שלבים.
+- תוכנית המעבר החדשה ממנוע המורשת למנוע המאוחד, 9D.
+- יומן עבודה מפורט המתעד העברות, תיקונים, בעיות שהתגלו, שורשי תקלות ותוצאות בדיקות.
+- חוזה תוצאה קנוני של מנוע 9C.3.
+- מסמכי מצב, מסלולי ריצה, כפילויות, הגדרות ומזהי טקסט.
+- היסטוריית קומיטים וענפים, ובהם גם עבודות קודמות שלא נכנסו ל־`main`\.
+
+הנקודה הקריטית: במאגר יש מידע עשיר מאוד על מה שהמנוע הישן עושה בפועל. אני לא מתכוון להעתיק את החוזה הקיים ולסמן וי. אני בודק את החוזה מול הקוד, מול היסטוריית התיקונים ומול התנהגות המוצר.
+
+## בדיקת מקטע 9D.1 - כבר נמצאו נקודות שדורשות ביקורת עצמאית
+
+מקטע 9D.1 אכן ביצע את הצעד הראשון: יצירת חוזה גאומטריה משותף והעברת תבניות העמוד של המנוע המאוחד לפרופיל IMUD. עם זאת, אני מפריד בין מה שהוכח לבין מה שהבדיקות עדיין לא מוכיחות.
+
+**מה הוכח**
+
+- קבועי הגאומטריה הועברו למודול משותף.
+- מנוע המורשת מייבא אותם במקום לשמור עותק מקומי.
+- הוכח לפי דיווח הקומיט שה־digest של שני קורפוסים נשמר במורשת.
+- הנתיב הגנרי שאינו IMUD נבדק כנתיב שלא אמור להשתנות.
+- נוספה אפשרות להריץ את מנוע המאוחד בנפרד לצורכי השוואה.
+
+### מה עדיין מחייב בדיקה
+
+- **הזזת הכריכה\:** הבדיקה מאמתת את מיקום הטור הימני Recto/Verso, אבל אינה מאמתת באופן מלא את כל גאומטריית שני הטורים, השוליים, מרווח הכריכה והשלכות ההזזה.
+- **פס הכותרת\:** יש בדיקה לערך `headerHeight=71.9`, אך זה לבדו אינו מוכיח שהכותרת בפועל נרנדרת במקום הנכון, עם גובה גליפים נכון, או שמיקומה זהה למורשת.
+- **הטור הרחב\:** נבדק רוחב הקדמה, אך נדרש אימות של מיקומה ושל כל סוגי העמודים החד־טוריים.
+- **הגאומטריה\:** בדיקות קבועים אינן תחליף לאימות הגאומטריה המתקבלת בפועל, כולל PDF, DOM, Recto/Verso, גבולות עמוד, הערות, עיטורים וגלישה.
+- **חוזה המקור\:** חלק מהערכים מסומנים כ"מכוילים מהייחוס". צריך לבדוק כל אחד מהם מול מקור היסטורי אמין והחלטותיך, ולא להניח שהמספר נכון רק משום שהוא קבוע ומשותף לשני המנועים.
+
+אלה כרגע **פערי הוכחה**, לא קביעה שכל הנקודות הן באגים. אני לא רוצה לשנות קוד לפני שאשלים את המעקב אחר הצרכנים והמקור של כל ערך.
+
+## ממצא היסטורי מהותי: המעבר הקודם כבר נכשל פעם אחת בתהליך
+
+ההיסטוריה מראה מדוע נדרש כאן ניהול מעבר קפדני\:
+
+- ב־9A נבנתה השוואת צללים בין שני המנועים.
+- ב־9B התגלו פערים אמיתיים, כולל חוסרים בתוכן, הערות, דקדוק כותרות, תוכן עניינים ומטא־דאטה.
+- ב־9B.1 התברר שגם כלי ההשוואה עצמו היה פגום מתודולוגית. הוא הוחלף בכלי מדויק יותר עם השוואה דו־כיוונית, זיהוי זהויות, סדר, עוגנים, תוכן עניינים ומדדים סמנטיים.
+- ב־9B.2-9B.5 תוקנו פערי שורש, ולא רק תסמינים.
+- ב־9C.4 בוצע Cutover למנוע המאוחד. בבדיקת האודיט החיה התגלו 26 עמודים שבהם טקסט הגוף חפף לטקסט הערות. נעשו תיקוני שורש, אבל במהלך אותו תיקון גם בדיקת האודיט רוככה בטעות; הרגרסיה נתפסה בבדיקת CI נוספת, והסף המקורי הוחזר.
+- ב־9C.5 הוסרו נתונים כפולים מהפרוטוקול, על בסיס הטענה שכל צרכני הממשק כבר עברו למודל החדש.
+
+זהו שיעור הנדסי חשוב: **גם כלי הבדיקה, גם הגדרת ה־parity וגם הדרך שבה מפרשים תוצאה ירוקה חייבים לעבור ביקורת.** לא אסתפק באישור שמספר הבדיקות עבר או שהסוכן כתב "הוכח".
+
+## המסמך נוצר בפועל במאגר
+
+**ENGINE\_TRANSITION\_INVENTORY\_2026-11-19.md**
+
+מסמך מלאי ראשוני של רכיבי המסמך והעמוד, מזהי הטקסט, הגאומטריה, הגופנים, הגדלים, הצבעים, ברירות המחדל, הפערים בין ההחלטות לבין האתחול, והוכחות המעבר.
+
+נשמר בענף נפרד - ללא שינוי ב-main
+
+Commit: b8b79dc28ff8b0798e3007ada10c2c2ca24abc72
+
+[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/audit/engine-transition-inventory-20261119/audits/ENGINE_TRANSITION_INVENTORY_2026-11-19.md?utm_source=chatgpt.com)
+
+המסמך כולל כרגע\:
+
+- מלאי מזהי הטקסט ותחבירם.
+- מפת רכיבי העמוד וסוגי העמודים.
+- מידות גאומטריה שנמצאו במנוע 9C.3.
+- הגדרות גופן, סוג, גודל וצבע.
+- ברירות המחדל המאושרות בהחלטה D-107.
+- פערים בין ברירות המחדל המאושרות לבין ההגדרות שמיובאות בפועל.
+- הוכחות קיימות של 9D.1, ומה עדיין לא הוכח.
+- כשלי המעבר הקודמים ושערי הקבלה המחייבים.
+- רשימת חקירה פתוחה להמשך.
+
+### סדר העבודה הבא שלי
+
+1. להשלים קריאה שיטתית של מנוע המורשת, פונקציה אחר פונקציה, כולל התנאים, הקבועים, האלגוריתמים ותיקוני השורש ההיסטוריים.
+2. להצליב כל יכולת עם WORKLOG, קומיטים, החלטות משתמש, בדיקות ותיקונים קודמים.
+3. לחקור את מנוע המאוחד באותה רמת עומק, ולבנות טבלת התאמה בין כל יכולת ישנה לבין המימוש החדש, כולל יכולות חסרות, כפילויות ומנגנונים שלא באמת מאוחדים.
+4. לבצע אודיט מלא של הגדרות ברירת המחדל לאורך גרסאות, ולהכריע לפי ההחלטות שלך היכן יש סטיות בלתי־ממומשות.
+5. לבדוק ביצועים באופן השוואתי ומדיד, ולא להסתפק בכך שהמנוע החדש מהיר במקרה או שהבדיקות שלו עוברות.
+6. רק לאחר שהחקירה תאפשר להבין את כל המנגנונים - להחליט כיצד ממשיכים את 9D בצורה בטוחה, פשוטה ואחידה.
+
+**אני לא מאשר כרגע את המעבר, לא ממזג את PR \#17, ולא משנה את מנוע העימוד.** בשלב זה אני בונה את בסיס הידע והביקורת הדרוש כדי שאוכל להיות אחראי באמת על המעבר, ולא רק על התקדמותו.
+
+העבודה נמשכת מתוך נקודת המצב הזאת, כאשר הפישוט והאיחוד של המנוע הם עקרון מנחה בכל החלטה.
+
+## Prompt:
+19.11.2026, 4:15:51
+
+עכשיו אני רוצה שתעדכן את קובץ הREADME הראשי, שיכלול פירוט של כל הקבצים בריפו (חוץ מהגופנים) עם פירוט קצר על כל תוכנם, וכך תעשה לכל תיקיה בריפו עם הרחבת פירוט ככל שנכנסים לעומק עץ התיקיות. ואחרי כן תיצור מילון מושגים מפלצתי של כל התוכנה עם הפניות לקבצים ובעיקר לקבצי התוכניות המעקב הביצוע ושיחות הAI.
+
+## Response:
+19.11.2026, 4:16:00 · gpt-6
+
+> **Updating documentation references**
+>
+> I’m checking the README and glossary links, then verifying branch content, file paths, and inventory counts. I’m also adding the missing engine-transition inventory reference so the documentation stays complete.
+>
+> **Organizing inventory sections**
+>
+> I’m restructuring the README inventory so nested folders receive their own headings instead of appearing as one flat list. I’ll preserve file descriptions, verify totals, and update the glossary reference afterward.
+>
+> **Updated documentation references and organized inventory sections**
+>
+> 
+>
+> **Created comprehensive repository inventory, glossary, documentation links, and draft PR**
+>
+> 
+>
+> Worked for 4m 20s
+
+אני מבצע את זה כעבודת **תיעוד ארכיטקטונית מקיפה של הריפו**, ולא ככתיבת README שטחי.
+
+אני מתכוון ליצור שתי שכבות תיעוד משלימות\:
+
+1. **README ראשי חדש ומקיף** - מדריך ניווט היררכי לכל המאגר, מהשורש ועד הקבצים שבתיקיות הפנימיות. כל קובץ שאינו קובץ גופן ייכלל, עם תיאור תפקידו ותוכנו. ככל שנעמיק בתיקייה, הפירוט יהיה מדויק יותר, לרבות חלוקה לקבצים ולתתי-מערכות.
+2. **מילון מושגים מקיף ביותר** - מילון טכני ופרויקטלי, הכולל מושגים של מנוע העימוד, אלגוריתמים, מודלים, הגדרות, רכיבי UI, בדיקות, תהליכי מעבר, החלטות, Worklog, תוכניות ביצוע, ביקורות ושיחות AI, עם הפניות ישירות למקורות הרלוונטיים.
+
+מטרתי היא שהמסמכים יהפכו לכלי עבודה ממשי: גם אדם וגם סוכן AI חדש יוכלו להבין מה יש בריפו, היכן כל דבר נמצא, מדוע הוא קיים, מה כבר נעשה, מה עדיין פתוח ומה אסור לשנות בלי להבין את ההיסטוריה.
+
+## התיעוד שנבנה
+
+**README - מפת המאגר**
+
+נוצר ונבדק מול עץ הקבצים בפועל
+
+- 471 קבצים שאינם קובצי גופן.
+- 1,759 קובצי גופן הוצאו מהמיפוי, כפי שביקשת.
+- 47 כותרות תתי־תיקיות המרחיבות את הפירוט.
+- חלוקה לפי תחומי האחריות: מקור המנוע, ממשק, בדיקות, כלים, audits, תכנון, AI והיסטוריה.
+
+**PROJECT\_GLOSSARY - מילון הפרויקט**
+
+נוצר - כ־48,000 תווים
+
+המילון כולל ארכיטקטורה, מנוע מורשת, מנוע מאוחד, מודלים, parser, typography, measurement, line breaking, planner, constraints, עמודים, הערות, מקרינים, PDF, הגדרות, בדיקות, CI, שלבים היסטוריים, תקלות מעבר, החלטות משתמש ומקורות AI.
+
+## קישורים ישירים למסמכים
+
+## PR \#65 - תיעוד מקיף
+
+(נפתח כ־Draft, ללא מיזוג)
+
+3 קבצים · 1,561 שורות נוספו · 84 שורות הוסרו
+
+[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/pull/65?utm_source=chatgpt.com)
+
+---
+
+**1\. README ראשי - מפת כל המאגר**
+
+[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/docs/repo-map-glossary-20261119/README.md?utm_source=chatgpt.com)
+
+---
+
+**2\. מילון מושגים מפלצתי**
+
+[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/docs/repo-map-glossary-20261119/PROJECT_GLOSSARY.md?utm_source=chatgpt.com)
+
+---
+
+**3\. מלאי יכולות והגדרות המעבר**
+
+[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/docs/repo-map-glossary-20261119/audits/ENGINE_TRANSITION_INVENTORY_2026-11-19.md?utm_source=chatgpt.com)
+
+### מה אימתתי
+
+בדיקת המיפוי מול עץ GitHub בפועל הסתיימה\:
+
+- 471 קבצים נמצאים במיפוי.
+- 0 קבצים חסרים.
+- 0 קבצים מיותרים.
+- 0 כפילויות.
+- התיעוד נוצר בענף נפרד ולא שינה את `main`\.
+- לא בוצעו בדיקות תוכנה, משום שכל השינויים הם תיעוד.
+
+**חשוב\:** שלמות רשימת הקבצים אומתה באופן מלא; עדיין לא השלמתי קריאה פורנזית של כל אחד מ־471 הקבצים כדי לכתוב תיאור תוכני פרטני המבוסס על קריאה מלאה. ה־README הנוכחי הוא מפת ניווט מלאה, והשלב הבא של החקירה הוא להעמיק את תיאור הקבצים עצמם, במיוחד קוד המנוע, בדיקותיו, תוכניות הביצוע, ה־WORKLOG והיסטוריית הקומיטים. אינני רוצה להציג תיאור שניחשתי מתוך שם קובץ כאילו קראתי ואימתתי את תוכנו.
+
+המסמכים האלה הם עכשיו בסיס העבודה שלנו להמשך החקירה והמעבר, והם נמצאים ב־PR לבדיקה, ללא מיזוג אוטומטי.
+
+## Prompt:
+19.11.2026, 7:58:57
+
+סוכן הAI סיים את ביצוע הפרומט, והשיב את התשובה הבאה:&#x20;
+
+# "דוח עבודה — שלב 1 לפי התוכנית המחייבת (§8)
+
+**1. מטרה:** סגירת שלב המיפוי (§2 בתוכנית): מפת יכולות מלאה של המוצר בטבלת מעקב אחת ומחייבת, עם בסיס ראיות בריפו — כתנאי כניסה לפרוסות היישום.
+
+**2. שורש:** המיפוי הקיים היה פזור (6 מסמכים מחוץ לריפו, חוזה תוצאה, דוח A/B) ללא טבלת מעקב אחת עם מצב/פער/בדיקה/ראיה לכל יכולת. בנוסף נתגלה כשל תהליך: **בדיקת&#x20;**`s9d-segment1`**&#x20;לא הייתה מחוברת לשרשרת&#x20;**`npm test` — PR #64 הוכח ירוק ב־CI מבלי שהריץ אותה כלל (בדיוק מחלקת הכשל שהתוכנית אוסרת ב־§5 G8).
+
+**3. זרימת מידע:** המפה מקשרת לכל יכולת: דרישה ← מקור סמכות ← מימוש ישן (קובץ:פונקציה) ← מימוש חדש ← בדיקה ← ראיה. אומת בקוד ש־253/253 ההגדרות מקושרות לצרכן.
+
+**4. פתרון:** [**PR #66**](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/pull/66) — `audits/STAGE1_CAPABILITY_MAP.md` (‏\~85 יכולות על פני 13 התחומים, 11 עמודות לכל אחת לפי §2.2), הכנסת 6 מסמכי החקירה ל־`audits/stage1/`, וחיווט הבדיקה לשרשרת.
+
+**5. פישוט:** הטבלה היא מקור יחיד למצב ההעברה (מסמך חי שמתעדכן בכל פרוסה); הערות החקירה הופכות מקבצים ארעיים מחוץ לריפו לראיה מחייבת.
+
+**6. בדיקות:** `npm test` מלא + `test:determinism` — ירוקים כולל הבדיקה המחוברת החדשה (11/11). שקילות הנתיב החי מול בסיס 9C.3 אומתה מחדש ב־**4 קורפוסים — מלאה** (hash זהים לבסיס). מצב המאוחד נמדד: ‏66 עמ' מול 54, ‏12 בדיקות שקילות נכשלות, ‏**fontKey=0/4002, ‏0 פסקאות, אין y/sizePt בשורות המודל** — תועד כשורש המבני של רוב התסמינים (פרוסה 1).
+
+**7. שלילה:** לפני התיקון `rg s9d-segment1 package.json` = 0 תוצאות — הוכחה שהבדיקה לא רצה; אחריו היא רצה אחרונה בשרשרת.
+
+**8. מסלול ריצה:** הבדיקה המחוברת רצה דרך `npm test` הן מקומית והן ב־CI (שלוש גרסאות Node); השקילות דרך `run-ours.js` — אותו נתיב עלייה חיה.
+
+**9. תוצאות:** ענף `stage1/capability-map` ‏`9d86bfe` (‏9 קבצים, ‏+1,903). ‏[**PR #66**](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/pull/66) — כל הבדיקות ירוקות: ‏CI ‏(18/20/22), ‏corpus-invariants, ‏full-math-audit, ‏layout-audit, ‏very-long-corpus. main המקומי הושאר על `178bcc8` (זהה ל־origin).
+
+**10. סיכונים והכרעות נדרשות:** ‏**8 הכרעות פתוחות רשומות במפה (§3)** — הדחופות: קדימות מטא מול `imud-book-title` (פלייסהולדר מנצח ספרים אמיתיים), גימטריה בלי גרשיים, אישור חתימות השקילות כשעת CI, ומיזוג קטלוג הגופנים v3. הערה תפעולית: אירע אתחול סביבה אמצעי שהחזיר את הענף ל־main — תוקן, והקומיט הועבר לענף הייעודי; מומלץ לוודא במיזוגים הבאים שהעבודה נעשית על ענף נפרד בלבד.
+
+**הצעד הבא (פרוסה 1 — תיקון אובדן מידע):** ‏fontKey+sizePt+y לכל שורה במודל, ‏paragraphs במודל המאוחד, וקדימות מטא — עם הרחבת `signature-compare` ובדיקות שלילה." הכן פרומט השלב הבא כמו הקודם, והמשך במיפוי המלא!!!!
+
+## Response:
+19.11.2026, 7:59:05 · gpt-6-t-mini
+
+אבדוק תחילה את PR \#66 עצמו — לא אסתפק בדוח הסוכן — ואשווה בין המפה, התוכנית המחייבת, הקוד והבדיקות. על בסיס הפערים שאאמת אנסח פרומט ביצוע לשלב הבא, ובמקביל אמשיך להרחיב את המיפוי כך שיכסה גם יכולות שטרם קיבלו שורת מעקב מבוססת־ראיות.
+
+מצאתי כבר נקודת ביקורת מהותית במפת הסוכן: היא מכריזה על 100 שורות, אך יש בה רק 97 מזהים ייחודיים — שלושה מזהים כפולים (`TC-06`, `AS-04`, `TY-05`\). בנוסף, קובץ תוכנית ההעברה `audits/UNIFIED_ENGINE_MIGRATION_PLAN.md` מציג עשרה מקטעים, בעוד שהמפה מפנה לסדר של שמונה פרוסות ומייחסת אותו לסעיף שאינו תואם את מבנה אותו מסמך. אני בודק כעת אם מדובר בהפניה לתוכנית מחייבת אחרת, ומהן ההשלכות על סדר הביצוע ועל ההחלטות הפתוחות.
+
+התבררה גם הבחנה חשובה: התוכנית הקנונית הפעילה היא `spec/00_CURRENT_ENGINE_COMPLETION_PLAN.md` — עשרה שלבים — ולא `audits/UNIFIED_ENGINE_MIGRATION_PLAN.md`, שהוא מסמך העברה ממוקד וקודם יותר. המפה החדשה אינה יכולה להחליף את שערי הקבלה של התוכנית הקנונית. חלק גדול מתוצרי שלב 1 כבר קיים ב־`main@178bcc8`; כעת צריך לבדוק אם המפה החדשה מאחדת אותם באמת, ולא רק מפנה לחקירות ישנות.
+
+> **Reconciling migration counts**
+>
+> I’m checking the apparent mismatch between the reported totals and the table: 100 rows, 97 unique IDs, and three duplicates. I’m also separating validated evidence from planned migration claims and checking section numbering.
+>
+> **Reconciled migration counts**
+>
+> 
+>
+> **Clarifying the governing plan**
+>
+> I’m distinguishing the current authoritative completion plan from the migration document and locating the intended “stage 1” requirements. I’m also checking whether the next prompt should continue mapping or begin implementation.
+>
+> **Clarified the governing plan**
+>
+> 
+>
+> **Audited PR 66 changes, plans, capability maps, tests, configuration, and CI workflows**
+>
+> 
+>
+> **Verifying stage completion**
+>
+> I’m checking the repository’s actual artifacts against the authoritative plan, including required audit documents, duplicated identifiers, registry counts, and evidence freshness before deciding whether stage 1 is truly complete.
+>
+> **Verified stage completion**
+>
+> 
+>
+> **Closing audit gaps**
+>
+> I’m finding that the mapping appears substantial but may not satisfy every required stage-one artifact. I’m checking missing registers, reuse analysis, and current-state evidence before authorizing implementation.
+>
+> **Separating model layers**
+>
+> I’m distinguishing semantic runs from laid-out lines and final page geometry. Font identity belongs to inline fragments, while absolute Y belongs to pagination; metadata precedence also needs explicit, reversible tests before implementation.
+>
+> **Assessing readiness**
+>
+> I’m checking prior decisions, artifact completeness, parity evidence, and whether unified execution was tested across all corpora. I’ll avoid overstating completion and distinguish legacy validation from genuinely migrated behavior.
+>
+> **Closed audit gaps, separated model layers, and assessed readiness**
+>
+> 
+>
+> **Audited stage mappings, CI evidence, plans, and defined implementation slices**
+>
+> 
+>
+> **Audited stage documentation, capability maps, architecture, and implementation contradictions**
+>
+> 
+>
+> **Strengthening test evidence**
+>
+> I’m noting a serious gap: the new digest test checks only that a hash exists and pages are present, not that the digest matches an expected value. I’ll treat unified parity as unproven.
+>
+> **Reviewing migration readiness**
+>
+> I’m finding that the map is valuable but not yet closure-ready: several artifacts, prior decisions, layer boundaries, and parity claims need reconciliation before implementation begins.
+>
+> **Consolidating readiness findings**
+>
+> I’m identifying several closure issues: legacy and unified parity are being conflated, digest validation is incomplete, the map conflicts with recorded decisions, and required stage-one artifacts remain unverified.
+>
+> **Strengthened test evidence and consolidated migration readiness findings**
+>
+> 
+>
+> **Reviewed Stage 1 mapping decisions, conflicts, logs, and geometry tests**
+>
+> 
+>
+> **Reconciling migration readiness**
+>
+> I’m finding that the mapping is substantial but not closure-ready: legacy and unified parity are conflated, digest validation is incomplete, prior decisions conflict with recommendations, and required stage-one evidence remains unverified.
+>
+> **Reconciled migration readiness**
+>
+> 
+>
+> **Created capability audits, reconciliations, and PR documentation reviews**
+>
+> 
+>
+> Worked for 28m 55s
+
+## Prompt:
+19.11.2026, 8:29:16
+
+ההודעה נתקעה... המשך!!!
+
+## Response:
+19.11.2026, 8:29:41 · gpt-6-t-mini
+
+ההמשך בבדיקת שורות היכולת העלה ממצאים נוספים, וביניהם הבחנה חשובה עוד יותר: כלי ה־shadow של Stage 9 בודק את `result.pageModel` במפורש ומאשר כיסוי תוכן, בעוד `run-ours.js` בונה בעצמו מבנה חתימה אחר מתוך `result.pages`\. כלומר, נתון של אפס פסקאות במבנה החתימה אינו ראיה לכך שאין פסקאות ב־DocumentModel או שהן אבדו ב־PageModel. במקביל נמצאו אי־התאמות אמיתיות בייבוא תמונות DOCX ובבדיקת ה־digest של s9d. אני מתעד אותן בנפרד כדי שהפרומט לסוכן יכלול אבחנות מדויקות ולא רק אזהרות כלליות.
+
+בבדיקת הקבצים הסופית גיליתי טעות תפעולית שלי: נספח הביקורת האחרון נכתב בטעות ל־`main` במקום לענף PR \#67, משום שהשמטתי את פרמטר הענף בקריאת יצירת הקובץ. אני מתקן זאת כעת: מעביר את הנספח לענף הביקורת ומסיר את העותק שהוכנס בטעות ל־`main`\. לא בוצע שינוי בקוד המנוע.
+
+> **Continuing the audit**
+>
+> I’m resuming from the mapping review. The main issue is a mismatch between the model used by page generation and the model evaluated by reporting, so I’m tracing every field and stage before drafting the next patch.
+>
+> **Extending the mapping**
+>
+> I’m continuing the full reconciliation rather than stopping at the prompt. I’m checking every mapped row against its stage evidence, then I’ll separate confirmed coverage, partial coverage, and unresolved gaps.
+>
+> **Continued the audit and extended the mapping**
+>
+> 
+>
+> **Tracing parity gaps**
+>
+> I’m checking whether reported improvements are genuinely comparable: page counts, findings, hashes, performance, and gate coverage may come from different runs. I’m separating verified evidence from stale or incomplete claims before extending the mapping.
+>
+> **Traced parity gaps**
+>
+> 
+>
+> **Clarifying model differences**
+>
+> I’m distinguishing the legacy-style signature adapter from the full unified page model. The zero-paragraph result may reflect missing adapter fields, not missing document structure, so I’m updating the mapping to avoid overstating that gap.
+>
+> **Clarified model differences**
+>
+> 
+>
+> **Correcting regression evidence**
+>
+> I’ve found that the supposed legacy digest test actually runs the default profile, so it doesn’t prove legacy compatibility. I’m marking that claim unverified and separating genuine coverage from misleading test labels.
+>
+> **Corrected regression evidence**
+>
+> 
+>
+> **Audited repository capabilities, mappings, imports, rendering, parity, and test gaps**
+>
+> 
+>
+> **Flagging harness issues**
+>
+> I’m documenting that unified runs are being serialized through a legacy-shaped adapter, with hardcoded metadata and incomplete paragraph mapping. I’m treating those signatures as adapter results, not proof about the actual unified page model.
+>
+> **Flagged harness issues**
+>
+> 
+>
+> **Auditing evidence**
+>
+> I’ve identified a broader issue: unified results are being measured through a legacy-shaped adapter, while a labeled regression check uses default settings. I’m treating those claims as unverified until direct model coverage is added.
+>
+> **Audited evidence**
+>
+> 
+>
+> **Audited 97-capability mapping, updated prompts, and reviewed pull requests**
+>
+> 
+>
+> **Completing the audit**
+>
+> I’m continuing the reconciliation, but I’m not calling all 97 rows complete yet. I’ve documented the adapter mismatch, invalid regression label, and evidence gaps; the next pass must verify each capability against direct model outputs.
+>
+> **Reviewing evidence**
+>
+> I’m continuing the mapping carefully. The adapter mismatch and mislabeled regression test are now documented, while the full 97-capability reconciliation remains open pending direct verification of each capability against current outputs.
+>
+> **Completed the audit and reviewed evidence**
+>
+> 
+>
+> **Finalized Stage 1 reconciliation, audit cleanup, and PR67 review**
+>
+> 
+>
+> Worked for 18m 30s
+
+ממשיך. הבדיקה כבר שינתה את תמונת המצב הראשונית: **PR \#66 אינו רק מפת יכולות שצריך להוסיף לה פרוסת קוד - הוא דורש קודם תיקון של שיטת המיפוי עצמה.** אחרת הסוכן עלול להוסיף שדות שכבר קיימים, לשכפל מודלים, או לשנות התנהגות תקינה רק מפני שכלי ההשוואה בדק אובייקט ביניים במקום את המודל הסופי.
+
+פתחתי לכך PR ביקורת נפרד, כדי לא לערבב את תיקוני התיעוד עם שינויי המנוע. כעת אני ממשיך בבדיקת תחומי המפה ובקישורם למימושים ולשלבי העבודה שכבר הושלמו.
+
+המשכתי את הביקורת, והעמקתי אותה מעבר לקריאת דוח הסוכן. **המסקנה העיקרית היא שאין להתחיל עדיין בפרוסת תיקון המידע שהסוכן הציע.** חלק מהראיות שעליהן התבססה אבחנת אובדן המידע נוצרו מכלי השוואה שבודק מבנה ביניים, ולא את ה־PageModel עצמו.
+
+### 1\. הממצאים החשובים ביותר
+
+**א. כלי ההשוואה מערבב בין מודלים שונים**
+
+ב־`run-ours.js` נמצא ש־`--unified` אכן מפעיל את המנוע המאוחד, אבל בהמשך הסקריפט הוא בונה את `ours-model.json` מחדש מתוך `result.pages`\. הוא אינו מעתיק את `result.pageModel`, ואף מצמיד למודל תווית קבועה של מנוע המורשת גם בהרצת המאוחד.
+
+מכאן שהנתונים `0 paragraphs`,‏ `fontKey=0/4002` והיעדר שדות מסוימים אינם מוכיחים שהמידע אבד ב־PageModel. הם עשויים להצביע על כך שה־adapter של כלי ההשוואה אינו משמר את המבנה המאוחד.
+
+בדקתי גם את המימוש עצמו: `DocumentModel` כבר מכיל בלוקים מסוג `paragraph`, ופונקציית `placeLine` ב־`page-model.js` מעבירה למודל הסופי מיקומי `x/y`, מידות, `sizePt`, בסיס שורה, וכן `fontKey` ו־`sizePt` ברמת המילים כאשר הם זמינים. עדיין צריך לוודא שכל המידע הזה נשמר בכל סוגי השורות, ושזהות הפסקה עוברת כראוי עד המודל הסופי.
+
+**ב. בדיקת ה־digest של s9d אינה בודקת את מה ששמה מבטיח**
+
+(חיווט ה־CI אומת)
+
+בדיקת `s9d-segment1-geometry` אכן רצה ב־CI ועברה `11/11`\. אבל הבדיקה שכותרתה „digest הקורפוס הקטן זהה לנעילת 9C.3” משתמשת ב־`getDefaultSettings()`, שבאותו קובץ עצמו נבדק כפרופיל שאינו IMUD. בנוסף, היא אינה בודקת `legacyProfile` ואינה משווה את ה־hash לערך נעול.
+
+כלומר, החיבור ל־`npm test` תוקן, אבל **הוכחת אי־הרגרסיה של legacy עדיין אינה קיימת בבדיקה הזאת**\.
+
+**ג. Stage 8 כבר הושלם - המפה אינה מעודכנת**
+
+שש פרוסות Stage 8 מתועדות: materialization, העברת PageModel ב־Worker, תצוגת DOM, ייצוא HTML, ייצוא PDF, ולבסוף parity ופישוט.
+
+במדידה המתועדת של `very_long`, ייצוא PDF מהמודל חסך כ־94.9% מהזמן לעומת נתיב הייצוא הישן: 43.2 שניות לעומת 2.19 שניות. יש לעדכן את שורות PP ו־PF במפה בהתאם, תוך הבחנה בין ביצועי typeset לבין ביצועי ייצוא.
+
+**ד. Stage 9 - 13/13 אינו שקילות גאומטרית מלאה**
+
+דוח shadow v5 מציג 13/13 שערים ירוקים. אלה שערי כיסוי תוכן, זהות הערות, TOC, ביאורי צד, PageModel ודקדוק. הם אינם מוכיחים parity גאומטרי מלא או זהות במספר העמודים: באותו דוח מופיעים 695 עמודי legacy לעומת 896 עמודי unified.
+
+בנוסף, `STAGE9_CUTOVER_MAP.md` עדיין מתאר חלק מתיקוני 9b כלא הושלמו, בעוד `ISSUE_REGISTRY.md` מתעד סגירות מאוחרות יותר ב־9b.2-9b.5. יש ליישב את הסתירה הזאת לפני שמסתמכים על מפת המעבר.
+
+**ה. תמונות - המפה מערבבת שלוש יכולות**
+
+תמונות inline כבר קיימות כפריטים ב־DocumentModel, עברו דרך AssetResolver ו־LineModel, ומופיעות ב־PageModel ובמקריני Stage 8. אבל משטח UI להעלאת נכסי מסמך עדיין חסר.
+
+לעומת זאת, תמונות מתוך DOCX אכן אינן מטופלות: `docx-import.js` אוסף טקסט והפניות להערות, אך אינו מטפל ב־`w:drawing`, ב־`w:pict` או בקובצי `word/media`\. זה פער נפרד שצריך בדיקת DOCX עם תמונה ואזהרה מפורשת.
+
+### 2\. התוצרים שהכנתי
+
+פתחתי PR ביקורת נפרד, כדי לשמור את עבודת הביקורת והפרומט מחוץ ל־PR של הסוכן.
+
+**PR \#67 - ביקורת ומפת המשך** (פתוח, מוכן למיזוג)
+
+ענף: `audit/stage1-map-review-20261119` · תיעוד בלבד · ללא שינויי מנוע
+
+[פתיחת PR \#67](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/pull/67)
+
+---
+
+**שלושת הקבצים ב־PR\:**
+
+- [github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/audit/stage1-map-review-20261119/audits/STAGE1_MAP_REVIEW_2026-11-19.md?utm_source=chatgpt.com)
+- [github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/audit/stage1-map-review-20261119/audits/STAGE1_MAP_FORENSIC_FINDINGS_2026-11-19.md?utm_source=chatgpt.com)
+- [github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/audit/stage1-map-review-20261119/audits/STAGE1_MAP_RECONCILIATION_PROMPT_2026-11-19.md?utm_source=chatgpt.com)
+
+הפרומט עודכן כך שהוא מחייב את הסוכן\:
+
+1. לבצע reconciliation של כל 97 שורות המפה, ולא להסתפק בדגימה.
+2. להבחין בין DocumentModel,‏ LineModel,‏ PagePlan,‏ PageModel ומבנה החתימה של כלי ההשוואה.
+3. לתקן את בדיקת s9d ואת כלי החתימה לפני שמסיקים שיש אובדן מידע.
+4. לעדכן את סטטוסי Stage 8 ו־9 מול הקוד, ה־WORKLOG וה־ISSUE\_REGISTRY.
+5. לפצל את יכולות התמונות, ייבוא DOCX ונכסי העיצוב.
+6. לשמור על כל החלטות המשתמש הקיימות, ולא לפתוח אותן מחדש בגלל parity עם המורשת או עם PDF הייחוס.
+
+### 3\. מצב הבקשות והזהירות התפעולית
+
+- **PR \#66 נשאר פתוח ולא מוזג.** הוספתי בו הערות ביקורת מפורטות עם הקישורים ל־PR \#67.
+- **PR \#67 הוא טיוטה**, נפרד לחלוטין משינויי הקוד, ונבדק כ־mergeable.
+- לא שיניתי קוד מנוע, ברירות מחדל, קורפוסים או נעילות. לא הרצתי `npm test` בעצמי; אימתתי את לוגי ה־CI הקיימים ואת תוכן הבדיקות.
+
+הערה תפעולית: במהלך הוספת נספח הביקורת יצרתי בטעות קובץ ב־`main` במקום בענף הביקורת. הסרתי אותו מיד, העברתי את הקובץ לענף PR \#67 ואימתתי שהוא אינו קיים עוד בעץ הנוכחי של `main`\. נותרו בהיסטוריית `main` שני commits תיעודיים של יצירה והסרה; אין בהם שינוי קוד.
+
+**העבודה החשובה הבאה היא השלמת reconciliation של כל 97 היכולות.** עדיין איני מציג את המיפוי כגמור: עד כה הושלמה חקירה עמוקה של מוקדי הסתירה והסיכון, והפרומט המעודכן מחייב את הסוכן לבצע את ההשלמה השיטתית. אין להתחיל בפרוסת תיקון `fontKey/sizePt/y/paragraphs` לפני שהחסר האמיתי הוכח בגבול הנכון.
+
+כשתתקבל תשובת הסוכן על הפרומט הזה, השלב הבא יהיה לבקר את כל 97 השורות מול הקוד והראיות, ולא לאשר את הדוח על סמך הצהרת הצלחה או CI ירוק בלבד.
+
+## Prompt:
+19.11.2026, 10:34:49
+
+עכשיו סוכן הAI הודיע שהוא השלים את הפרומט, \
+להלן הדיווח שהוגש ע"י סוכן הAI בסיום הסשן:\
+
+# "דוח עבודה — שלב 1 לפי התוכנית המחייבת (§8)
+
+**1. מטרה:** סגירת שלב המיפוי (§2 בתוכנית): מפת יכולות מלאה של המוצר בטבלת מעקב אחת ומחייבת, עם בסיס ראיות בריפו — כתנאי כניסה לפרוסות היישום.
+
+**2. שורש:** המיפוי הקיים היה פזור (6 מסמכים מחוץ לריפו, חוזה תוצאה, דוח A/B) ללא טבלת מעקב אחת עם מצב/פער/בדיקה/ראיה לכל יכולת. בנוסף נתגלה כשל תהליך: **בדיקת&#x20;**`s9d-segment1`**&#x20;לא הייתה מחוברת לשרשרת&#x20;**`npm test` — PR #64 הוכח ירוק ב־CI מבלי שהריץ אותה כלל (בדיוק מחלקת הכשל שהתוכנית אוסרת ב־§5 G8).
+
+**3. זרימת מידע:** המפה מקשרת לכל יכולת: דרישה ← מקור סמכות ← מימוש ישן (קובץ:פונקציה) ← מימוש חדש ← בדיקה ← ראיה. אומת בקוד ש־253/253 ההגדרות מקושרות לצרכן.
+
+**4. פתרון:** [**PR #66**](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/pull/66) — `audits/STAGE1_CAPABILITY_MAP.md` (‏\~85 יכולות על פני 13 התחומים, 11 עמודות לכל אחת לפי §2.2), הכנסת 6 מסמכי החקירה ל־`audits/stage1/`, וחיווט הבדיקה לשרשרת.
+
+**5. פישוט:** הטבלה היא מקור יחיד למצב ההעברה (מסמך חי שמתעדכן בכל פרוסה); הערות החקירה הופכות מקבצים ארעיים מחוץ לריפו לראיה מחייבת.
+
+**6. בדיקות:** `npm test` מלא + `test:determinism` — ירוקים כולל הבדיקה המחוברת החדשה (11/11). שקילות הנתיב החי מול בסיס 9C.3 אומתה מחדש ב־**4 קורפוסים — מלאה** (hash זהים לבסיס). מצב המאוחד נמדד: ‏66 עמ' מול 54, ‏12 בדיקות שקילות נכשלות, ‏**fontKey=0/4002, ‏0 פסקאות, אין y/sizePt בשורות המודל** — תועד כשורש המבני של רוב התסמינים (פרוסה 1).
+
+**7. שלילה:** לפני התיקון `rg s9d-segment1 package.json` = 0 תוצאות — הוכחה שהבדיקה לא רצה; אחריו היא רצה אחרונה בשרשרת.
+
+**8. מסלול ריצה:** הבדיקה המחוברת רצה דרך `npm test` הן מקומית והן ב־CI (שלוש גרסאות Node); השקילות דרך `run-ours.js` — אותו נתיב עלייה חיה.
+
+**9. תוצאות:** ענף `stage1/capability-map` ‏`9d86bfe` (‏9 קבצים, ‏+1,903). ‏[**PR #66**](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/pull/66) — כל הבדיקות ירוקות: ‏CI ‏(18/20/22), ‏corpus-invariants, ‏full-math-audit, ‏layout-audit, ‏very-long-corpus. main המקומי הושאר על `178bcc8` (זהה ל־origin).
+
+**10. סיכונים והכרעות נדרשות:** ‏**8 הכרעות פתוחות רשומות במפה (§3)** — הדחופות: קדימות מטא מול `imud-book-title` (פלייסהולדר מנצח ספרים אמיתיים), גימטריה בלי גרשיים, אישור חתימות השקילות כשעת CI, ומיזוג קטלוג הגופנים v3. הערה תפעולית: אירע אתחול סביבה אמצעי שהחזיר את הענף ל־main — תוקן, והקומיט הועבר לענף הייעודי; מומלץ לוודא במיזוגים הבאים שהעבודה נעשית על ענף נפרד בלבד.
+
+**הצעד הבא (פרוסה 1 — תיקון אובדן מידע):** ‏fontKey+sizePt+y לכל שורה במודל, ‏paragraphs במודל המאוחד, וקדימות מטא — עם הרחבת `signature-compare` ובדיקות שלילה."
+
+\
+תתעדכן שוב במצב הריפו, והחזר את הפרומט הבא המעודכן לביצוע. \
+זכור!! התנהג אתה כמנהל הפרויקט! \
+בדוק את שלימות הביצוע!\
+נכונות דרך הביצוע! ובמיוחד בשלב זה בו פעם שעברה נתקלנו בבעיות רבות שצצו ורגרסיות!\
+בדוק היטיב את נכונות הבנת מקור הבעיה, ועריכה פשוטה אחידה ואלגנטית לפתירתה. חשוב!!! פעולת העימוד במנוע החדש אמורה להיות שקופה פשוטה ואחידה (ללא טלאים) שפעולת העימוד ברורה מתוך הקוד, והוא בעל יכולת חיזוי ודאי לתוצאה אחר כל שינוי בקוד, ועם יכולת מעקב ברורה אחרי כל שלבי העימוד והבנת תחולתם על תוצאת העימוד בוודאות!!! ובכל אופן לא יתכן שריצת העימוד במנוע החדש תהיה ארוכה יותר מהמנוע הישן!!!\
+ודא ביצוע בדיקות מתאימות והצלחתם!\
+מזג PR הראויים למיזוג! \
+והכן פרומט המפרט את כל הנצרך לסוכן הAI עם השלמות ותיקונים לשלבים הקודמים והפניה לשלב הבא עם פירוט השלב ליתר דיוק הביצוע כפי שאתה היית מבצע, ועם רמת ההקפדה והזהירות שלך, שאוכל להדביק והוא יתחיל!!! שים שככל הנראה הסנדבוקס של סוכן הAI מותחל בכל ביצוע פרומט, התייחס לזה ופרט את הנדרש בהתאם לזה. שים לב!!! שהודעותיך חייבות להיות מוגבלות לזמן שהפלטפורמה מאפשרת לך להגיב!!!\
+אין צורך להדגיש הוראות להעביר לסוכן, כי אני מעביר לו רק את הפרומטים שאתה נותן לי, ובמידת הצורך הכנס את ההוראות לפרומט.\
+אנחנו חייבים להתקדם לקראת סיום!!! \
+אי אפשר להתעכב יותר מדי!! \
+הדגש לסוכן שהמיילסטון הבא חייב להיות שתוצאת העימוד במנוע החדש תהיה זהה לחלוטין כמו המנוע הישן!!! הזהות הנדרשת היא בכל אספקט אפשרי בעימוד השערים ובמיקום הטקסט בהם, תוכן העניינים, העיטורים, מספר הדפים, מספר השורות בכל עמוד, מיקום הבלוקים על העמוד, מיקום כל מילה ואות, וכן זהות במיקום\גודל\סוג\צבע\גופן של כל סוגי הטקסט, ושדרך ההגעה לתוצאה זו נעשתה ע"י כיוונון המנוע בדייקנות ולא ע"י הוספת קוד מלאכותי!!! עשה כל הנדרש בכדי שנתקדם!!! \
+במידת הצורך הכן פרומט לסוכן הAI, ותוך כדי עבור מיד לביצוע הנדרש להתקדמות. \
+בשלבים בהם יהיה ניתן לבחון את השינויים (או את אימות אי השינויים) מנקודת מבט המשתמש, הוסף הוראה לבניית פייג'ס לאחר כל שינוי, האתר צריך לכלול את התוכנה בשלימותה עם חיבור כל ההגדרות וכו', למרות שלא אתן דיווח רק לאחר שיושלמו כל השלבים. שים לב!!! האתר צריך לכלול את התוכנה בשלימותה עם חיבור כל ההגדרות וכו'!!\
+הורה לסוכן הAI ליצור בראנצ' חדש בו יעשה שימוש במנוע החדש, ויגדיר את פייג'ס לטעון את גירסת הבראנצ' שאוכל לעקוב אחרי התקדמות חיבור המנוע החדש, אבל הדגש שאין בזה אישור לנכונות המעבר למנוע החדש או על נכונות פעולתו של המנוע!! בנתיים צור קובץ תיעוד (מהתוכנית הראשונית והקומיט המוקדם ביותר עד הנוכחית, עם הדגשה של שינויים ברצונותיי ופרשנות מוטעית שלהם) של כל הגדרות והחלטות שנעשו ביחס ל"איך העימוד צריך להיות" ביחס לכל החלקים שישנם במסמך, וכן ביחס למראה ותוכן הUI (ובפרט לתוכן והפונקציונליות של הכרטיסיות השונות!!! לדוגמא רק עכשיו שמתי לב שפונקציית הסנכרון הדו-סיטרית בין המסמך שבתצוגה לטקסט שבעורך (והסימונים של מיקומי הטקסט המעומד בתוך הטקסט שב"עורך") שהיתה בכל הגרסאות הקודמות נעלמה לחלוטין בגרסה הזו).
+
+## Response:
+19.11.2026, 10:35:02 · gpt-6-t-mini
+
+אבדוק תחילה את מצב GitHub בפועל — ענפים, PR‑ים, בדיקות והמסמכים המחייבים — ולא אסתמך על דוח הסוכן בלבד. במקביל אבנה את פרומט ההמשך כך שיתקן את פערי האימות שהתגלו, יפריד בין תיקון המודל לבין תיקון כלי המדידה, ויקדם במפורש את יעד הזהות המלאה מול המנוע הישן.
+
+הבדיקה כבר העלתה בעיית תיעוד ממשית ב־PR \#65: המילון שבו מציג מספור גימטריה ללא גרשיים — בניגוד להחלטת המשתמש המתועדת ב־D‑31. לכן לא אמזג אותו כפי שהוא. אני ממשיך עכשיו בבדיקת ענפי התיעוד והמקורות ההיסטוריים, ובפרט בדרישה החשובה שהעלית על סנכרון דו־סיטרי בין העורך לתצוגה, שאסור שתיעלם בין פרוסות המנוע.
+
+מצאתי עדכון חשוב שלא הופיע בדוח שהדבקת: ענף PR \#66 השתנה מאז הביקורת הקודמת. הוא כבר מכיל כעת גם מסמכי reconciliation, crosswalk לשערים, הכרעות פתוחות וארטיפקטים פורנזיים חדשים. לכן אני בודק את הגרסה המעודכנת הזאת — לא את ה־SHA הישן מהדוח — לפני שאחליט אם ניתן למזג את שלב המיפוי או להתחיל פרוסת מימוש.
+
+> **Reviewing repository updates**
+>
+> I’m checking the current pull requests and the requested documentation scope. I’m distinguishing safe documentation changes from incomplete or correction-dependent work before recommending any merge.
+>
+> **Reconciling parity requirements**
+>
+> I’m treating exact legacy-output parity as the next milestone, while flagging an existing documentation contradiction about Hebrew punctuation. I’ll verify the current main branch and pull-request contents before recommending changes or merges.
+>
+> **Resolving parity scope**
+>
+> I’m treating exact legacy parity as the milestone, while preserving explicitly recorded decisions unless this latest instruction clearly supersedes them. Any conflict must be documented and resolved deliberately, not silently changed.
+>
+> **Assessing merge candidates**
+>
+> I’m comparing the documentation pull requests against current main, reviewing their contents for contradictions, and deciding whether the audit material is safe to merge before preparing the next exact-parity milestone.
+>
+> **Resolved parity scope and assessed merge candidates**
+>
+> 
+>
+> **Audited repository history, PR65, documentation, and canonical decisions**
+>
+> 
+>
+> **Reviewing changes**
+>
+> I’m checking the documentation pull requests, current source structure, project history, and interface behavior. I’ll merge only material that remains accurate, then prepare a traceable history document and the next parity-focused milestone.
+>
+> **Reviewed changes**
+>
+> 
+>
+> **Reviewing project status**
+>
+> I’m validating the documentation changes, current interface behavior, and deployment path before proceeding. I’ll preserve useful audit material, avoid merging contradictory documentation, and keep the new-engine branch explicitly separate from production readiness.
+>
+> **Reviewed project status**
+>
+> 
+>
+> **Investigated Stage 1 plans, history, and bidirectional editor-preview synchronization**
+>
+> 
+>
+> **Audited PR66 Stage 1 reconciliation artifacts, metadata, maps, crosswalks, and coverage**
+>
+> 
+>
+> **Planning parity documentation**
+>
+> I’m tracing the project from its earliest recorded commit through current decisions, interface requirements, and deployment behavior. I’m also separating historical facts, unresolved contradictions, and the new parity branch’s non-production status.
+>
+> **Planned parity documentation**
+>
+> 
+>
+> **Documenting project history**
+>
+> I’m consolidating the project’s origin, historical requirements, interface behavior, architecture decisions, and current implementation status into a traceable record, while keeping legacy parity separate from production approval.
+>
+> **Specifying parity work**
+>
+> I’m defining the next milestone around full legacy-versus-unified comparison: identical inputs, settings, assets, fonts, pagination, glyphs, timing, and interface behavior, with unexplained differences blocking approval.
+>
+> **Documented project history and specified parity work**
+>
+> 
+>
+> **Formalizing parity tasks**
+>
+> I’m requiring a dedicated preview branch, complete legacy-versus-unified comparison, restored editor synchronization, strict performance checks, and traceable documentation. Production remains unchanged until every discrepancy is explained and approved.
+>
+> **Formalized parity tasks**
+>
+> 
+>
+> **Audited caret synchronization, engine parity, history documentation, and repository deployment files**
+>
+> 
+>
+> **Audited and updated legacy parity documentation, prompts, branches, and PR mergeability**
+>
+> 
+>
+> **Preparing project records**
+>
+> I’m consolidating the project history, preserving known decisions, documenting unresolved conflicts, and preparing a focused implementation prompt for a preview branch. The goal is exact legacy parity without silently changing approved behavior or production Pages.
+>
+> **Prepared project records**
+>
+> 
+>
+> **Merged documentation and parity changes, then verified branches, PRs, and CI statuses**
+>
+> 
+>
+> Worked for 12m 22s
+
+## מצב הריפו שאומת כרגע
+
+ב־GitHub לא מופיע PR חדש לאחר \#67. הענפים והבקשות הפתוחות המרכזיות הם\:
+
+| PR | מצב | החלטה ניהולית כרגע |
+|--------|--------|--------|
+| [github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/pull/66?utm_source=chatgpt.com) | פתוח, אינו Draft | **לא למזג עדיין** - ממצאי הביקורת הקודמת טרם קיבלו תיקון מוכח ב־PR הזה. |
+| [github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/pull/67?utm_source=chatgpt.com) | פתוח, Draft | **לא למזג עדיין** - זהו מסמך ביקורת ופרומט, לא השלמת המיפוי. |
+| [github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/pull/65?utm_source=chatgpt.com) | פתוח, Draft | בבדיקת מיזוג נפרדת; עצם היותו תיעוד אינו פוטר מבדיקת תוכנו והתאמתו למצב הנוכחי. |
+
+נקודה מהותית: דוח הסוכן שהובא כאן הוא עדיין דוח של PR \#66, באותו SHA `1153effe…` שאומת קודם. לא מצאתי עדיין ענף או PR חדש שמכיל את תיקוני ה־reconciliation שנדרשו. לכן **אין כרגע ראיה שהשלב הקודם הושלם לפי דרישות הביקורת**, גם אם הסוכן דיווח שהפרומט בוצע.
+
+## החלטת מיזוג ראשונה
+
+מיזגתי את **PR \#67** לאחר שהעברתי אותו מ־Draft ואימתתי את ה־HEAD המדויק. המיזוג הצליח ב־commit\:
+
+`710b4e75064f48edd290cd7381fc2c551a8a71f7`
+
+המיזוג הכניס ל־`main` את דוח הביקורת, הממצאים הפורנזיים ופרומט ה־reconciliation. הוא אינו משנה את מנוע העימוד.
+
+**PR \#65 לא ימוזג כרגע**\: המילון שבו סותר את D-31 בנושא הגרשיים במספור העברי. **PR \#66 עדיין בבדיקה**\: יש בו תיקונים חשובים, אך גם פרטי SHA ומספרי שורות שאינם מעודכנים, והדוח עצמו קובע שתנאי סגירת שלב 1 עדיין לא הוכח בגלל Q14.
+
+השלמתי את ביקורת המצב, מיזגתי את מסמכי הביקורת והתיעוד, והכנתי פרומט מעודכן ומפורט לסוכן.
+
+## 1\. מצב GitHub לאחר העדכון
+
+(מוזג) **PR \#67 - ביקורת Stage 1**
+
+מיזגתי את דוח הביקורת הפורנזית ואת מסמכי ה־reconciliation. Commit: `710b4e75064f48edd290cd7381fc2c551a8a71f7`\.
+
+(מוזג) **PR \#68 - היסטוריית הדרישות והפרומט החדש**
+
+יצרתי ומיזגתי שני קובצי תיעוד, ללא שינוי בקוד המנוע. Commit: `dd026c5b0d71d8d76e01f18ffc4a1e44a9047119`\.
+
+(נשאר פתוח) **PR \#66 - מפת היכולות**
+
+לא מיזגתי. למרות שבדיקות ה־CI על ה־HEAD שלו עברו, המסמכים וה־PR עדיין כוללים נתונים מיושנים, ה־base שלו לא מעודכן, וסגירת שלב 1 אינה מוכחת: Q14 עדיין פתוח. יש גם אי־התאמה בין ספירת היכולות בדוח לבין הספירה העצמאית של מזהי הטבלה.
+
+(נשאר פתוח) **PR \#65 - מילון הפרויקט**
+
+לא מיזגתי. הוא כולל סתירה להחלטת D-31 בנושא הגרשיים במספור העברי, ובנוסף ה־base שלו אינו מעודכן.
+
+main העדכני: `dd026c5b0d71d8d76e01f18ffc4a1e44a9047119`\.
+
+## 2\. מסמך הדרישות ההיסטורי
+
+יצרתי מסמך שמרכז את ההיסטוריה והדרישות, החל מהשלבים המוקדמים המתועדים בפרויקט ועד למצב הנוכחי. הוא כולל את 20 תחומי הדרישות, את החלטות המשתמש, את השינויים המאוחרים בהן, את כללי העימוד המרכזיים ואת מבנה שלוש לשוניות הממשק.
+
+[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/main/audits/USER_REQUIREMENTS_AND_UI_HISTORY_2026-11-19.md?utm_source=chatgpt.com)
+
+המסמך מבחין בין דרישה לבין מימוש מוכח - כדי שלא נסתמך בעתיד על תיעוד ישן או על הצהרת סוכן במקום על ראיות.
+
+## 3\. ממצא חשוב לגבי הסנכרון בעורך
+
+בדקתי את קוד הממשק עצמו. מנגנוני `caret-map.js`, החיבור `onCaretMove`, החזרה מעמוד לעורך והבדיקות לסנכרון דו־כיווני עדיין קיימים בקוד.
+
+אבל יש פער אמיתי: העורך משתמש ב־`textarea`, וסימוני שבירות העמוד מוצגים כרשימה נפרדת מתחתיו. הם אינם מוצגים במיקום המדויק בתוך טקסט המקור. כמו כן, בדיקות הסנכרון הקיימות הן בעיקר בדיקות DOM shim, ולא הוכחה עדכנית להתנהגות בדפדפן החי.
+
+לכן הפרומט דורש בדיקת דפדפן אמיתי של שני כיווני הסנכרון, שחזור הסימונים בתוך טקסט העורך על בסיס `sourceRange` ו־anchors, ושימור מוחלט של טקסט המקור. אין להחליף את המנגנון הקיים לפני שמוכיחים מה בדיוק נשבר.
+
+## 4\. הפרומט המוכן לסוכן
+
+**הפרומט לביצוע - הקמת ענף unified, Preview מבודד ו־parity מלא**
+
+המסמך כולל שחזור סביבת Sandbox מאופסת, תיקון חובות PR \#65/\#66, הקמת ענף חדש, פריסת Pages מבודדת, כלי השוואה, בדיקות דפדפן, benchmark ותיקוני שורש.
+
+**[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/main/audits/NEXT_LEGACY_PARITY_EXECUTION_PROMPT_2026-11-19.md?utm_source=chatgpt.com)**
+
+קובץ Markdown מוכן להעתקה לסוכן
+
+[פתח טקסט גולמי](https://raw.githubusercontent.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/main/audits/NEXT_LEGACY_PARITY_EXECUTION_PROMPT_2026-11-19.md)
+
+הדגשתי בפרומט את הדרישות הבאות\:
+
+- ענף חדש בשם `engine/legacy-parity-preview-20261119`, הנוצר מיד מ־`origin/main` העדכני, בלי להמתין לטיפול ב־PR-ים הקודמים.
+- סביבת Pages ניסיונית בנתיב `previews/engine-parity/`, תוך שמירה מוחלטת על האתר הציבורי הקיים. היא תכיל את התוכנה בשלמותה, לרבות הגדרות, Worker, גופנים, נכסים, עורך, תצוגה, בדיקה וייצוא.
+- כל שינוי משתמש־נראה משמעותי יחייב build ופריסה מחדש של סביבת הניסוי, ובדיקת דפדפן.
+- כלי השוואה ישיר של המודלים ושל הפלטים, ללא הסתמכות על adapter שאינו מקור אמת.
+- בדיקות שליליות שיוודאו שמנגנון ההשוואה מזהה שינוי במילה, בגופן, בגודל, בצבע ובמיקום.
+- benchmark הוגן: לפחות 7 מדידות לאחר חימום, עם אותם נתונים וסביבה. תנאי הקבלה הוא שהמנוע המאוחד יהיה מהיר לפחות כמו הישן - ולא רק יפיק פחות עמודים או ידלג על תוכן.
+
+## 5\. המיילסטון הבא - זהות מלאה
+
+אין להסתפק בשימור טקסט, במספר דומה של עמודים או ב־13 שערי shadow שעוברים. הזהות נדרשת ברמת העמוד, הטור, הבלוק, השורה, המילה והאות; לרבות הקואורדינטות, הגופן, הגודל, הצבע, העיטורים, השערים, תוכן העניינים, ההערות, הכותרות והייצוא.
+
+ישנה נקודה אחת שדורשת טיפול שקוף: אם התנהגות legacy סותרת החלטת משתמש מפורשת כגון D-31, אין לשנות את ההחלטה בשקט כדי ליצור התאמה מלאכותית. יש להציג את ההפרש ולהביא אותו להכרעה, בלי לעכב את תיקון שאר הפערים.
+
+**מה לא בוצע עדיין\:** לא שיניתי את קוד מנוע העימוד, לא פרסתי Preview חדש ולא הרצתי בעצמי `npm test`\. בדיקות ה־CI שאימתתי על HEAD של PR \#66 עברו, אך יש להריץ אותן מחדש לאחר עדכון הענף וה־base. האתר הציבורי עדיין מציג את פריסת `9c.3` מ־18 בנובמבר; אין לראות בו אישור למצב הנוכחי של `main`\.
+
+הפרומט מוכן להעברה לסוכן. השלב הבא צריך להתקדם דרך הוכחת ההבדלים ותיקונם בשורש, ולא דרך הוספת שכבות התאמה מלאכותיות.
+
+## Prompt:
+19.11.2026, 10:54:15
+
+אני לא מבין אותך! אם היית עובר על קובץ השיחה שלנו היית רואה מפורש שהדגשתי שלא אמור להיות גרש\גרשיים במספור העמוד!!! אם היית בודק בגרסאות הקודמות היית רואה שמעולם לא היה גרש\גרשיים במספר העמוד! אם היית משתמש בשכל הישר או בודק דוגמאות מספרים תורניים, היית יודע בוודאות! שאין ספר תורני שעושה שימוש בגרש\גרשיים במספר העמוד! ואם היית רק מקשיב להוראות שלי ש " חייב להיות שתוצאת העימוד במנוע החדש תהיה זהה לחלוטין כמו המנוע הישן!!! הזהות הנדרשת היא בכל אספקט אפשרי בעימוד השערים ובמיקום הטקסט בהם, תוכן העניינים, העיטורים, מספר הדפים, מספר השורות בכל עמוד, מיקום הבלוקים על העמוד, מיקום כל מילה ואות, וכן זהות במיקום\גודל\סוג\צבע\גופן של כל סוגי הטקסט " והיית בודק זאת היית רואה שמעולם לא היה גרש\גרשיים במספר העמוד!!! אני חש תסכול רב מהתנהלות זו!
+
+## Response:
+19.11.2026, 10:54:49 · gpt-6-t-mini
+
+אתה צודק, והטעות שלי כאן מהותית. ערבבתי בין כלל גימטריה כללי לבין כלל מספור העמודים, והפכתי החלטה כללית לדרישה שלא נתת — ואף סותרת את ההנחיה שלך ואת התנהגות הגרסאות הקודמות. לא הייתי צריך לקבוע זאת בלי לבדוק את השיחה ואת קוד המורשת. אני בודק עכשיו את המקורות ההיסטוריים ואת גרסאות הקוד, ואז אתקן את התיעוד והפרומט שכבר הכנסתי לריפו.
+
+המקורות מאשרים את דבריך בצורה חד־משמעית, ואף מצאתי שהטעות לא הייתה רק בפרשנות שלי ל־D-31 — היא כבר חלחלה למסמכי המפרט ולפרומט שהכנתי\:
+
+- בדוח הבסיס הישן נכתב במפורש: **„גימטריה יחידה בלי גרשיים (כמקור)”**\.
+- בחוזה 9C.3 נכתב: **„א, ב, ג … כד — לא א׳, ב׳, ד׳”**\.
+- גם בקוד המורשת ההיסטורי, לפני המיזוג הנוכחי, `folioDisplay` נבנה ישירות מ־`toGematria(pageNumber)` בלי גרש ובלי גרשיים במספרי העמודים הרגילים.
+- אותו קוד משמש גם בגרסאות `Red` ו־`Red_Work`, לא רק ב־`Work_2`\.
+
+כלומר, הייתי צריך לזהות שהוראת D-31 הכללית הוחלה בטעות על פוליו של עמודים. גם הניסוח שהכנסתי נגד PR \#65 היה שגוי בכיוון שלו: דווקא הדרישה לגרשיים בפוליו היא שאינה תואמת למורשת. אני מתקן זאת במפורש, ולא אנסה לגלגל את האחריות לפרשנות שלך.
+
+הבנתי גם את ההשלכה הטכנית: במורשת הרגילה `folioDisplay` אכן נוצר בלי סימני פיסוק, בעוד שמודול `decoration/folio.js` במסלול החדש מכיל formatter שמוסיף גרש/גרשיים. זו נקודת חשד קונקרטית לפער במסלול המאוחד — לא הצדקה לשנות את המורשת. אני מוסיף לפרומט הוראה לבדוק את נתיב `assignNumbers → formatPageNumber` ולתקן את מקור הפורמט המשותף, בלי לפגוע במספור הערות או במספרים אחרים.
+
+> **Correcting the record**
+>
+> I’m acknowledging the mistake: the user’s rule explicitly says page numbers never use geresh. I’ll verify the conversation archive and earlier revisions, then correct the documentation and related changes without asking the user to repeat anything.
+>
+> **Corrected the record**
+>
+> 
+>
+> **Clarifying the rule**
+>
+> I’m narrowing the interpretation: page folios use bare gematria with no geresh; any broader punctuation rule doesn’t override that. I’ll align the documentation and implementation accordingly, preserving the user’s explicit requirement.
+>
+> **Clarified the rule**
+>
+> 
+>
+> **Fixing the documentation**
+>
+> I’m correcting my earlier reading: PR65 actually introduced the punctuation error. The legacy implementation and parity notes consistently use bare gematria for page folios, so I’ll update the prompt, glossary, and decision mapping to match.
+>
+> **Recording the correction**
+>
+> I’m treating the no-punctuation page-folio rule as definitive. I’ll document it as superseding the older interpretation, update the prompt and glossary, and ensure future implementation work follows the legacy behavior.
+>
+> **Fixed the documentation**
+>
+> 
+>
+> **Reviewed legacy folio numbering, gematria formatting, and pre-D31 implementations**
+>
+> 
+>
+> **Implementing the correction**
+>
+> I’m treating the page-folio rule as definitive: bare gematria, never geresh or gershayim. I’ll align the historical record, prompt, glossary, and implementation notes, while preserving the older decision only as superseded context.
+>
+> **Implemented the correction**
+>
+> 
+>
+> **Reviewed and merged documentation corrections for D31–D108 folio numbering**
+>
+> 
+>
+> **Searched GitHub and inspected defaults, then updated migration documentation**
+>
+> 
+>
+> **Fetched and reviewed session handoff and ChatGPT documentation archives**
+>
+> 
+>
+> **Searched chat archive and inspected page number formatting context**
+>
+> 
+>
+> **Updated legacy folio documentation, audit records, migration plans, and issue tracking**
+>
+> 
+>
+> **Verified migration updates, corrected documentation, and merged PR 69**
+>
+> 
+>
+> **Verified main, pull requests, and migration artifacts**
+>
+> 
+>
+> Worked for 13m 40s
+
+אתה צודק. אני מבין עכשיו שהכשל שלי חמור יותר מטעות נקודתית בפרשנות: **לא הקשבתי להוראה שכבר נתת, לא בדקתי את ההיסטוריה לפני שקבעתי מה רצונך, ואז הפכתי את הפרשנות השגויה שלי להנחיה מחייבת לסוכן.** כך כמעט גרמתי לנו לתקן את המנוע בכיוון ההפוך מהנדרש.
+
+אני מתנצל. התסכול שלך מוצדק.
+
+### מה בדקתי ומה הוכח
+
+קראתי את ארכיון השיחה המלא `ai-chat/ChatGPT.md`, ולא רק את סיכומי העבודה. מצאתי שתי אמירות שלך מ־19 בנובמבר\:
+
+- בשורה 17642: **„למה למספר העמוד נוספו גרשיים כאלה כ"ד ???”**
+- בשורה 18138: **„מספור עמודים עם גרשיים במקום הפורמט המקורי.”**
+
+[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/main/ai-chat/ChatGPT.md?utm_source=chatgpt.com#L17642)
+
+בדקתי גם את הקוד ההיסטורי בגרסאות Red ו־Red\_Work. שם מספר העמוד נוצר באמצעות\:
+
+`folioDisplay = toGematria(pageNumber)`
+
+ללא גרש וללא גרשיים במספור העמודים הרגיל.
+
+בנוסף, חוזה 9C.3 אומר במפורש „גימטריה בלי גרשיים”, וכך גם בדיקת P3a ב־baseline S0. כלומר, כל המקורות מצביעים לאותה תוצאה.
+
+הפער הטכני שמצאתי נמצא במסלול החדש: `decoration/folio.js` מעביר את מספר העמוד דרך `toHebrewNumber()` ו־`formatPageNumber()`, שמוסיפים את סימני הפיסוק. זהו מועמד ברור לשורש הרגרסיה, שאותו יש לאמת ולתקן בקוד.
+
+### מה תיקנתי בפועל
+
+(תוקן ומוזג) **PR \#69**
+
+יצרתי ומיזגתי את תיקון התיעוד ב־[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/pull/69?utm_source=chatgpt.com), למיזוג `aedf5ba1`\.
+
+התיקון כולל\:
+
+1. הוספת D-108 ל־`DECISIONS.md`\: מספרי עמודים מודפסים ומספרי עמודים בתוכן העניינים הם גימטריה חשופה בלבד - ללא גרש, גרשיים או אפוסטרוף.
+2. תיקון היסטוריית הדרישות והפרומט לסוכן, כולל הציטוטים מארכיון השיחה.
+3. תיקון דוח סגירת S7 ודוח הביקורת ההיסטורי, כדי שלא ימשיכו להציג את הפרשנות השגויה כהנחיה פעילה.
+4. הוספת ממצא F-J6 ל־`ISSUE_REGISTRY.md`, המתעד את רגרסיית הפוליו במסלול המאוחד.
+5. תיקון תוכנית המיגרציה: הוספת הגרשיים לפוליו מסווגת כרגרסיית העברה, לא כהתנהגות מכוונת.
+
+גם תיקנתי את ההנחיה ב־PR \#65 והוספתי שם הערה שמבהירה את הטעות שלי. ענף PR \#65 כבר מכיל תיקון ל־Glossary ול־Transition Inventory, אבל PR עצמו עדיין דורש סנכרון עם `main` וביקורת נוספת.
+
+### ההפרדה החשובה להמשך
+
+אין לערבב בין שלושה דברים\:
+
+- **מספרי עמודים ועמודוני תוכן עניינים\:** גימטריה חשופה בלבד.
+- **סמני הערות שוליים\:** מערכת נפרדת, עם הגדרות משלה. אין לשנות אותם בגלל תיקון הפוליו.
+- **גרש וגרשיים בתוך הטקסט\:** נשארים חלק מהתוכן ומהסמנטיקה שלו, ואינם כפופים לתיקון הפוליו.
+
+**לא שיניתי עדיין את קוד המנוע ולא הרצתי בדיקות בעקבות התיקון הזה.** PR \#69 היה תיקון תיעוד והנחיות בלבד. ממצא F-J6 נשאר פתוח עד לתיקון ואימות בקוד.
+
+הפרומט המעודכן נמצא כעת גם ב־main\:
+
+[github.com](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/main/audits/NEXT_LEGACY_PARITY_EXECUTION_PROMPT_2026-11-19.md?utm_source=chatgpt.com)
+
+אני מקבל את הביקורת שלך. בתפקיד מנהל הפרויקט, האחריות שלי היא לוודא שהחלטותיך וההתנהגות התקינה של המוצר נשמרות - ולא להמציא פרשנות, ואז לבקש מהסוכן לממש אותה. מכאן ממשיכים לפי הקוד ההיסטורי, ארכיון השיחה וההוראות המפורשות שלך, ולא לפי ההנחה השגויה שלי.
+
+## Prompt:
+19.11.2026, 13:12:20
+
+אני רואה שעיקר הבעיות שלנו נובעות מאי סדר ופרשנות ברורה וקיבוץ של כל האלמנטים הקיימים במסמך, הגדרותיהם והאפשרויות לבחירה.
+לכן אני רוצה שתיצור דף HTML מועצב וקל לקריאה הניתן לעריכה וייצוא קובץ ערוך, עם כל האלמנטים, ועם כל ההגדרות של כל האלמנטים האפשריים להיות במסמך במבנה של טבלה. 
+הטבלה תהיה מחולקת לסקשנים נפרדים לפי הסדר הבא: 
+הגדרות ברירת המחדל, 
+אלו שאינם ברירת המחדל, 
+אלו המוטמעים בקוד ושאינם מופיעים בלוח ההגדרות, 
+אלו שאינם מוגדרים כלל ובעקבות כך נופלים לברירת המחדל כלשהיא, 
+הגדרות שהיו רק בגרסאות קודמות.
+כל אלמנט והגדרותיו יאוגדו במסגרת ברורה, 
+השורה הראשונה תכיל את: 
+שם האלמנט כפי שהוא מופיע בקוד.
+שם האלמנט בשפה רגילה.
+תיאור מילולי ברור של האלמנט שניתן לעריכה.
+הערות על שינויים\שמות\תיאורים אחרים שהיו קיימים בתוכניות ובגרסאות קוד קודמות. 
+
+בתוך מסגרת האלמנט יופיע עוד מסגרת עם סוג ההגדרה (כמו מיקום\גודל\) והאפשרויות שלה.
+השורה ראשונה תכיל את:
+שם האפשרות כפי שהא מופיע בקוד.
+שם ההגדרה בשפה רגילה.
+תיאור מילולי ברור של הההגדרה ואפשרויותה (כולל אפשרויות שאינם קיימות לבחירה כיום) והניתן לעריכה.
+הערות על שינויים\שמות\תיאורים אחרים שהיו קיימים בתוכניות ובגרסאות קוד קודמות.
+תחת שורה זו יהיו שורות האפשרויות של אותה הגדרה באותה מתכונת: 
+שם האפשרות כפי שהוא מופיע בקוד.
+שם האפשרות בשפה רגילה.
+תיאור מילולי ברור של ההאפשרות והניתן לעריכה.
+הערות על שינויים\שמות\תיאורים אחרים שהיו קיימים בתוכניות ובגרסאות קוד קודמות. 
+בראש הדף יופיע לחצן ייצוא של קובץ HTML זהה עם השינויים שנעשו.
+דחוף לריפו את הקובץ ובמידת הצורך אני אדחוף קובץ ערוך ומתוקן שיחליף אותו.
+ומעתה כל התעסקות עם אלמנט או פונקציה הקשורה לאלמנט, תחייב סקירה של קובץ זה.
+בתהליך חקירת נתוני האמת של טבלה זו אל תסתפק בעיון בקבצים המיועדים להכיל סיכום של נתונים אלו, עבור על הקוד ממש ובחן אותם, במידה והתוכנה צריכה לקבל נתונים, והם אינם קיימים בקבצי הסיכום או בקוד או בשניהם, או במידה ויש נתונים בקבצי הסיכום ולא מצאת יישום שלו בקוד כתוב זאת בהערות.
+אני רואה שעיקר הבעיות שלנו נובעות מאי סדר ופרשנות ברורה וקיבוץ של כל האלמנטים הקיימים במסמך, הגדרותיהם והאפשרויות לבחירה.
+לכן אני רוצה שתיצור דף HTML מועצב וקל לקריאה הניתן לעריכה וייצוא קובץ ערוך, עם כל האלמנטים, ועם כל ההגדרות של כל האלמנטים האפשריים להיות במסמך במבנה של טבלה. 
+הטבלה תהיה מחולקת לסקשנים נפרדים לפי הסדר הבא: 
+הגדרות ברירת המחדל, 
+אלו שאינם ברירת המחדל, 
+אלו המוטמעים בקוד ושאינם מופיעים בלוח ההגדרות, 
+אלו שאינם מוגדרים כלל ובעקבות כך נופלים לברירת המחדל כלשהיא, 
+הגדרות שהיו רק בגרסאות קודמות.
+כל אלמנט והגדרותיו יאוגדו במסגרת ברורה, 
+השורה הראשונה תכיל את: 
+שם האלמנט כפי שהוא מופיע בקוד.
+שם האלמנט בשפה רגילה.
+תיאור מילולי ברור של האלמנט שניתן לעריכה.
+הערות על שינויים\שמות\תיאורים אחרים שהיו קיימים בתוכניות ובגרסאות קוד קודמות. 
+
+בתוך מסגרת האלמנט יופיע עוד מסגרת עם סוג ההגדרה (כמו מיקום\גודל\) והאפשרויות שלה.
+השורה ראשונה תכיל את:
+שם האפשרות כפי שהא מופיע בקוד.
+שם ההגדרה בשפה רגילה.
+תיאור מילולי ברור של הההגדרה ואפשרויותה (כולל אפשרויות שאינם קיימות לבחירה כיום) והניתן לעריכה.
+הערות על שינויים\שמות\תיאורים אחרים שהיו קיימים בתוכניות ובגרסאות קוד קודמות.
+תחת שורה זו יהיו שורות האפשרויות של אותה הגדרה באותה מתכונת: 
+שם האפשרות כפי שהוא מופיע בקוד.
+שם האפשרות בשפה רגילה.
+תיאור מילולי ברור של ההאפשרות והניתן לעריכה.
+הערות על שינויים\שמות\תיאורים אחרים שהיו קיימים בתוכניות ובגרסאות קוד קודמות.
+בנוגע לאפשרויות כמו סוג גופן\גודל\מיקום וכדומה שאפשרויות הבחירה שלהם גדולות אין צורך לפרט את כולם אלא רק את את הנוכחית.
+בראש הדף יופיע לחצן ייצוא של קובץ HTML זהה עם השינויים שנעשו.
+דחוף לריפו את הקובץ ובמידת הצורך אני אדחוף קובץ ערוך ומתוקן שיחליף אותו.
+ומעתה כל התעסקות עם אלמנט או פונקציה הקשורה לאלמנט, תחייב סקירה של קובץ זה, הכנס פקודה זו לכל התוכניות שעל הפרק, ולקובץ הREADME הראשי, ובדוק כל קובץ תוכנית\סיכום וכו' בריפו ובמידה שהוא מכיל סיכום של נתונים אלו מחק את הסיכום והוסף הפניה לקובץ זה, וכן בכל מקום שיש איזכור של הגדרה או תיאורה הוסף הפניה לקובץ זה.
+בתהליך חקירת נתוני האמת של טבלה זו אל תסתפק בעיון בקבצים המיועדים להכיל סיכום של נתונים אלו, עבור על הקוד ממש ובחן אותם, במידה והתוכנה צריכה לקבל נתונים, והם אינם קיימים בקבצי הסיכום או בקוד או בשניהם, או במידה ויש נתונים בקבצי הסיכום ולא מצאת יישום שלו  בקוד, או שמצאת סתירות ביניהם ובין עצמם כתוב זאת בהערות.
+אני חושב שזה אחד מהאתגרים והפעולות התועלתיות הגדולות ביותר לפישוט כתיבת תוכנה זו, השקע בה את כל כוחך.
+
+## Response:
+19.11.2026, 13:14:20 · gpt-6-t-mini
+
+אעבוד על `Tora_Book_Typesetter_Red_Work_2` כעל מקור אמת אחד: תחילה אמפה את מבנה הריפו ואת כל מסלולי הקוד שמגדירים, יוצרים או מציגים פריטי עימוד והגדרות; אחר כך אבנה את מסמך ה־HTML מתוך הצלבה בין המימוש בפועל, לוח ההגדרות, התוכניות וההיסטוריה. במקביל אעדכן את כללי העבודה וההפניות, אך לא אמחק תיעוד לפני שאוודא שהוא אכן סיכום כפול ושאין בו מידע ייחודי שצריך לשמר. ბოლოს אבצע בדיקות, אדחוף לענף, ואדווח במדויק מה הושלם ומה נשאר פתוח.
+
+במיפוי הראשוני כבר מתברר מדוע נוצר חוסר הסדר: המידע אינו מרוכז במקור יחיד. יש לפחות כמה שכבות נפרדות שצריך להצליב — `settings-registry.js` שמגדיר הגדרות, `bindings.generated.js` שמחבר אותן לממשק, `legacy-settings-map.js` שממפה שמות ישנים, קובצי ברירות מחדל, ומימושים נפרדים של פריטי העימוד במנוע. לכן הטבלה לא תהיה העתקה של לוח ההגדרות: היא תציג גם הגדרות שהממשק אינו חושף, פערים בין שכבות, ומקרים שבהם התיעוד מצהיר על יכולת שלא מצאתי לה מימוש.
+
+
+
+---
