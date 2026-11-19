@@ -19,7 +19,16 @@
       "toc": "d3ad64060a4f4c303245c97a6457efda5a65292a",
       "legacyFlow": "e9033c5d3d1f17fb38c7d344cebc54570f6a1486",
       "geometry": "b90a0dd7b5d4767efa9acdb5837c61bcaccdb2a7",
-      "notes": "a4e64857f47d247e601eddf66776e72dbbbe6321"
+      "notes": "a4e64857f47d247e601eddf66776e72dbbbe6321",
+      "kpLinebreak": "33342102770cca6297ef66c858cc42dfad4bf033",
+      "sideNotes": "13bdf0eb870f5258840c0116b0b32e79ce34fd0f",
+      "h3Contract": "f7244b39dca8b14f39b74e13ea937349e37e6796",
+      "measureTable": "70fa94bace0fdf04ed0f1365a59477242bde8cba",
+      "notesModel": "a4e64857f47d247e601eddf66776e72dbbbe6321",
+      "folio": "a56cd594eee5fad1451031a445808f20b0f32b7d",
+      "ornamentFit": "ce9f8bb33a4e8fd3b5905256d6dd33dd604e042e",
+      "dividers": "35c47ea06534f8552ace82a3a86599b5b423f1ad",
+      "customPages": "2036ca806975e718ebb01d020a3940bf4620d725"
     },
     "auditCommit": "95e829d44e88f436c9397d82473cd9e2f4a698aa"
   },
@@ -30,10 +39,13 @@
     "dispositionEntries": 169,
     "nonDefaultAudit": 67,
     "pageItems": 12,
-    "hardcoded": 42,
+    "hardcoded": 64,
     "dispositionUnique": 161,
     "familyRules": 15,
-    "legacyOldState": 126
+    "legacyOldState": 126,
+    "legacySettingSets": 3,
+    "legacySettingSetKeys": 249,
+    "legacySettingSetDifferences": 18
   },
   "settings": [
     {
@@ -12625,6 +12637,204 @@
       "description": "חוזה פריט עמוד. authority=layout/endnote-pages + layout/notes-model; measurement=notes-model.stampNote (endnote ctx — רוחב הטור בפועל) — **פרוסה 2: המדידה היחידה, בבונה עצמו**; התקציב/DOM/PDF צורכים אותה; placement=endnote-pages.buildEndnotePages",
       "source": "red-build/src/engine/layout/page-items.js",
       "note": "הרישום מצביע על המימוש הקיים; אינו יוצר מנוע נוסף."
+    },
+    {
+      "group": "פרמטרים מוקשחים — מסלול legacy",
+      "code": "SZ",
+      "name": "גדלי גופן מורשת",
+      "value": "{\"body\":12,\"h0Title\":17,\"h0Body\":11.5,\"h2\":17,\"siman\":20,\"h3\":13.5,\"h4\":12.5,\"h5\":11.5,\"h6\":10.5,\"parenDelta\":-2,\"fnBody\":8.5,\"fnMarker\":8,\"marginNote\":6,\"folio\":10.5,\"hdrR\":15,\"hdrC\":11,\"hdrL\":15,\"divider\":6.75,\"tocNum\":10.5,\"tocTitle\":17,\"tocLevel\":{\"1\":12,\"2\":11,\"3\":10.5,\"4\":10,\"5\":9.5,\"6\":9,\"7\":8.8}}",
+      "description": "גדלי גופן לפי סוג רכיב בפרופיל legacy. זהו אוצר ערכים מוקשח, לא שכבת הגדרות משתמש; חלקם הועברו להגדרות RED וחלקם נשארו alias/legacy.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "יש להצליב כל מפתח מול registry ו־geometry contract לפני שינוי."
+    },
+    {
+      "group": "פרמטרים מוקשחים — מסלול legacy",
+      "code": "HEADING_MODES",
+      "name": "מצבי פתיחה קבועים לכותרות",
+      "value": "{\"0\":\"new_page_1col\",\"1\":\"sub_shaar\",\"2\":\"new_page_1col\",\"3\":\"span_1col\",\"4\":\"inline_2col\",\"5\":\"inline_2col\",\"6\":\"inline_2col\",\"7\":\"side_note\"}",
+      "description": "מיפוי רמות H0–H7 למצבי legacy: עמוד חדש, שער משנה, פס חוצה טורים, inline בטור או הערת צד.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "יש להבחין בין מיפוי היסטורי לבין ערך heading-N-mode ב־registry."
+    },
+    {
+      "group": "גשרי הגדרות מוקשחים",
+      "code": "RED_SETTING_BRIDGE_S77",
+      "name": "גשר מפתחות legacy ↔ RED",
+      "value": "{\"s-h0\":\"heading-0-size-pt\",\"s-h1\":\"heading-1-size-pt\",\"s-sh-sub\":\"shaar-subtitle-size-pt\",\"s-sh-title\":\"shaar-title-size-pt\",\"s-sh-desc\":\"shaar-desc-size-pt\",\"s-sh-sec\":\"shaar-sections-size-pt\",\"s-sh-author\":\"shaar-author-size-pt\",\"s-sh-year\":\"shaar-year-size-pt\",\"fn-delim-open\":\"fn-delim-open\",\"fn-delim-close\":\"fn-delim-close\",\"en-line-prefix\":\"en-line-prefix\",\"drop-word-mode\":\"first-word-mode\",\"drop-word-count\":\"first-word-length\",\"drop-word-min-lines\":\"first-word-threshold-lines\",\"show-main-shaar\":\"shaar-main-enabled\",\"show-back-shaar\":\"shaar-back-enabled\",\"show-sub-shaar\":\"shaar-sub-enabled\",\"fn-title-text\":\"endnote-title-text\",\"enable-general-toc\":\"toc-general-enabled\",\"enable-detailed-toc\":\"toc-detail-enabled\",\"general-toc-count-numbering\":\"general-toc-count-numbering\",\"detailed-toc-count-numbering\":\"detailed-toc-count-numbering\",\"imbalance-max-delta-px\":\"imbalance-max-delta-px\"}",
+      "description": "מיפוי מפורש של מפתחות _imudRaw למפתחות הגדרות RED שמחליפים אותם בנתיב המורשת החי. זהו גשר תאימות, לא פקד נוסף.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "שדות גיאומטריים מסוימים אינם בגשר מפני שהם מצומדים לקבועים מכוילים."
+    },
+    {
+      "group": "תחביר וזיהוי",
+      "code": "LEGACY_HEADING_RE",
+      "name": "ביטוי רגולרי לכותרות legacy",
+      "value": "^כותרת\\s*(\\d+)(?:\\s+מספר\\s+(\\d+))?.*?[-–—]\\s*(.*)$",
+      "description": "ביטוי ה־regex שהמורשת מייצאת לכלי האבחון; קבוצות: רמה, מספר, טקסט.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "אין להחזיק עותקים מתחרים בכלי audit."
+    },
+    {
+      "group": "פרמטרים מוקשחים — מסלול legacy",
+      "code": "FIT_EPS",
+      "name": "סבילות התאמת רוחב שורה",
+      "value": "0.75px",
+      "description": "שורה מתקבלת רק אם היא נכנסת ברוחב פחות epsilon; נועד למנוע שבירה מחדש בדפדפן עקב צבירת תת־פיקסל.",
+      "source": "legacy-imud-flow.js + typography/kp-linebreak.js",
+      "note": "ערך קיים בשני המסלולים; יש לשמר מקור סמכות יחיד."
+    },
+    {
+      "group": "פרמטרים מוקשחים — מסלול legacy",
+      "code": "H2_SPAN_EXEMPT",
+      "name": "פטור H2+span ממרווח spacer",
+      "value": "מופעל כברירת מחדל; RED_H2_SPAN_EXEMPT=0 מכבה",
+      "description": "מתג סביבה הקובע אם עמודי H2+span פטורים מ־spacer מלא.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "לא מופיע בלוח ההגדרות."
+    },
+    {
+      "group": "פרמטרים מוקשחים — מסלול legacy",
+      "code": "GAP_COMPRESS_FLOOR",
+      "name": "רצפת רווח פסקה בכיווץ",
+      "value": "2px; override: RED_GAP_COMPRESS_FLOOR",
+      "description": "רצפת מרווח פסקה במהלך משיכת orphan tail.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "ברירת מחדל מוקשחת, ניתנת לדריסה דרך environment."
+    },
+    {
+      "group": "פרמטרים מוקשחים — מסלול legacy",
+      "code": "RECLAIM_COMPRESS_MAX",
+      "name": "תקרת כיווץ למשיכת יתום",
+      "value": "0px; override: RED_RECLAIM_COMPRESS_MAX",
+      "description": "גג כיווץ מתחת לבסיס לצורך משיכת tail; ברירת מחדל אפס (רדום).",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "אין להחליף את הערך בלי לשחזר את מסלול legacy."
+    },
+    {
+      "group": "פרמטרים מוקשחים — מסלול legacy",
+      "code": "ALIGN_COMPRESS_MAX",
+      "name": "תקרת כיווץ ליישור תחתיות",
+      "value": "30px; override: RED_ALIGN_COMPRESS_MAX",
+      "description": "גג כיווץ מתחת לבסיס במהלך יישור תחתיות הטורים; נפרד מ־RECLAIM_COMPRESS_MAX.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "השפעה גיאומטרית ישירה."
+    },
+    {
+      "group": "פרמטרים מוקשחים — מסלול legacy",
+      "code": "STRETCH_RECLAIM_ENABLED",
+      "name": "מתג משיכת זנב/יתום",
+      "value": "כבוי כברירת מחדל; RED_ENABLE_STRETCH_RECLAIM=1 מפעיל",
+      "description": "משיכת שורות בין עמודים; נפרד ממתיחת סוף בלוק ליישור תחתית שמופעלת כברירת מחדל.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "environment flag; אינו פקד המשתמש."
+    },
+    {
+      "group": "פרמטרים מוקשחים — מסלול legacy",
+      "code": "FIT_MODEL / FIT_ROUND / FIT_MARGIN",
+      "name": "מודל התאמת גובה עמוד",
+      "value": "dom / round / 7px",
+      "description": "ברירות מחדל: FIT_MODEL=dom; FIT_ROUND=round; FIT_MARGIN=7. ניתנות לדריסה באמצעות environment. משפיעות על בדיקת התאמת תוכן.",
+      "source": "red-build/src/engine/layout/legacy-imud-flow.js",
+      "note": "שלוש הגדרות ניסוי בסביבה; דורשות audit לפני שינוי."
+    },
+    {
+      "group": "חוזה H3",
+      "code": "H3_LINE_HEIGHT / PADS / MARGIN",
+      "name": "גאומטריית כותרת 3",
+      "value": "line-height 1.22; top 8px; bottom 4px; margin-bottom 4px",
+      "description": "חוזה משותף שמגדיר line-height וריפודים פעם אחת לפני/אחרי הכותרת; אינו פקד בלוח.",
+      "source": "red-build/src/engine/core/h3-contract.js",
+      "note": "הוראה מפורשת: המרווח התחתון חל אחרי השורה האחרונה, לא בין שורות הכותרת."
+    },
+    {
+      "group": "מנוע שורות Knuth–Plass",
+      "code": "STRETCH_RATIO / SHRINK_RATIO / LINE_DEMERIT / RAGGED_END_STRETCH_FACTOR",
+      "name": "יחסי glue ועונשי שבירת שורות",
+      "value": "0.6 / 0.5 / 100 / 10",
+      "description": "יחסי מתיחה/כיווץ של glue, עלות בסיס לכל שורה וגורם מתיחת סוף שורה במודל ragged.",
+      "source": "red-build/src/engine/typography/kp-linebreak.js",
+      "note": "אלה פרמטרים אלגוריתמיים, לא אפשרויות UI."
+    },
+    {
+      "group": "מנוע הערות צד",
+      "code": "CONTAINMENT_PX / STACK_GAP_PX",
+      "name": "סבילות מיכל ומרווח הערות צד",
+      "value": "20px / 8px",
+      "description": "סבילות containment שאינה נחשבת overlap אמיתי ומרווח בין הערות צד סמוכות.",
+      "source": "red-build/src/engine/layout/side-notes.js",
+      "note": "קבועי layout; שינוי מחייב בדיקות חפיפה."
+    },
+    {
+      "group": "מודל הערות",
+      "code": "NOTE_FONT_FACTORS / SIDE_NOTE_FONT_FACTORS",
+      "name": "מקדמי תיקון רוחב גופני הערות",
+      "value": "[{\"name\":\"NOTE_FONT_FACTORS\",\"values\":\" 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 \",\"source\":\"red-build/src/engine/layout/notes-model.js\",\"description\":\"פקטור תיקון רוחב במימוש table; ב־font-metrics הפקטור מנוטרל.\"},{\"name\":\"SIDE_NOTE_FONT_FACTORS\",\"values\":\" 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 \",\"source\":\"red-build/src/engine/layout/notes-model.js\",\"description\":\"פקטור תיקון רוחב להערות צד ותיבות מידע; ב־font-metrics הפקטור מנוטרל.\"}]",
+      "description": "מקדמי רוחב לפי משפחת גופן. ב־font-metrics הם מנוטרלים; במימוש table הם משפיעים על מדידת שורות הערה.",
+      "source": "red-build/src/engine/layout/notes-model.js",
+      "note": "קיים מודל מקור אחד; צרכנים אחרים מייצאים ממנו."
+    },
+    {
+      "group": "מודל הערות",
+      "code": "NOTE_KINDS / CONTINUATION_MARK",
+      "name": "סוגי הערות וסימון המשך",
+      "value": "{\"noteKinds\":[{\"key\":\"FOOTNOTE\",\"value\":\"footnote\"},{\"key\":\"SIDE_NOTE\",\"value\":\"side-note\"},{\"key\":\"ENDNOTE\",\"value\":\"endnote\"},{\"key\":\"INFO_BOX\",\"value\":\"info-box\"}],\"continuation\":\"(המשך)\"}",
+      "description": "מילון סוגי הערות וקבוע הטקסט המופיע בהמשך הערה מפוצלת.",
+      "source": "red-build/src/engine/layout/notes-model.js",
+      "note": "הטקסט '(המשך)' אינו פקד הגדרה."
+    },
+    {
+      "group": "תבניות עמוד",
+      "code": "MM_TO_PX / PAGE_SIZES",
+      "name": "המרת מ״מ לפיקסלים וגדלי עמוד",
+      "value": "96/25.4 px per mm; [{\"key\":\"A4\",\"description\":\"210×297 מ״מ; המידות ב־px מחושבות באמצעות 96/25.4.\"},{\"key\":\"A5\",\"description\":\"148×210 מ״מ; חלק מהמידות מעוגלות לפי page-templates.js.\"},{\"key\":\"16x16\",\"description\":\"165×165 מ״מ; ערכי עמוד ריבועי.\"}]",
+      "description": "קבוע ההמרה וגדלי A4/A5/16x16 של תבניות עמוד.",
+      "source": "red-build/src/engine/layout/page-templates.js",
+      "note": "הגדרה מותאמת היא נתיב נפרד; אין להניח preset custom במפת PAGE_SIZES."
+    },
+    {
+      "group": "מספור גיליון",
+      "code": "UNITS / TENS / HUND",
+      "name": "טבלאות ספרות גימטריה",
+      "value": "[\"UNITS\",\"TENS\",\"HUND\"]",
+      "description": "טבלאות lookup עבור יחידות/עשרות/מאות במספר עברי. folio output משתמש ב־toBareGematria לפי D-108.",
+      "source": "red-build/src/engine/decoration/folio.js",
+      "note": "אין לערבב את הטבלאות עם כללי סמני הערות."
+    },
+    {
+      "group": "מדידת טקסט",
+      "code": "HEBREW_WIDTHS / WIDE_MARKS / FONT_PROFILES",
+      "name": "טבלאות רוחבי גליפים ופרופילי גופן",
+      "value": "{\"hebrewWidthCount\":27,\"wideMarkCount\":18,\"fontProfiles\":9,\"description\":\"טבלאות קבועות של רוחבי אותיות עבריות, סימני פיסוק/רווח ופרופילי רוחב לפי משפחת גופן. הן מקור מדידה ב־table ובחלק מהמקרים fallback לתווים לא ממופים.\"}",
+      "description": "טבלת רוחבי אותיות עבריות, סימני רווח/פיסוק ומקדמי משפחות. אלו calibration tables ל־measure table ול־fallback.",
+      "source": "red-build/src/engine/typography/measure-table.js",
+      "note": "שינוי מחייב parity של מדידה ושבירת שורות."
+    },
+    {
+      "group": "עיטורים",
+      "code": "CHAPTER_END_KINDS / H2_ORN_W_EM / H2_ORN_H_EM",
+      "name": "סוגי עיטורי סוף פרק ומידות H2",
+      "value": "pyramid, lance, shoshanta, scroll, image; H2 3em × 0.6em",
+      "description": "whitelist של סוגי עיטור ומידות טבעיות של עיטורי H2 לפני fit.",
+      "source": "red-build/src/engine/decoration/ornament-fit.js",
+      "note": "משתמשים בערכים אלו תחת חוזה fit יחיד."
+    },
+    {
+      "group": "עיטורים ומסגרות",
+      "code": "OUTLINE_PATHS",
+      "name": "נתיבי SVG למסגרות גיליון",
+      "value": "circle, square, diamond, parenthesis",
+      "description": "נתיבי SVG קבועים עבור מסגרות וקטוריות; אינם גופן או טקסט המספר.",
+      "source": "red-build/src/engine/decoration/dividers.js",
+      "note": "יש להבחין בין CSS frames ובין frames טקסטואליים."
+    },
+    {
+      "group": "עמודים מותאמים",
+      "code": "POSITIONS",
+      "name": "מיקומי insertion לעמודים מותאמים",
+      "value": "[\"before-shaar-main\",\"after-shaar-main\",\"before-part\",\"after-part\",\"end\"]",
+      "description": "ערכי position חוקיים: before/after main shaar, before/after part, end.",
+      "source": "red-build/src/engine/decoration/custom-pages.js",
+      "note": "position חסר נופל ל־end; מיקום part דורש מספר חלק חיובי."
     }
   ],
   "fallbacks": [
@@ -12734,110 +12944,6 @@
       {
         "key": "EDITORIAL",
         "value": "editorial"
-      },
-      {
-        "key": "TEXT",
-        "value": "text"
-      },
-      {
-        "key": "NOTE_MARKER",
-        "value": "noteMarker"
-      },
-      {
-        "key": "IMAGE",
-        "value": "image"
-      },
-      {
-        "key": "ANCHOR",
-        "value": "anchor"
-      },
-      {
-        "key": "ATOMIC_TOKEN",
-        "value": "atomicToken"
-      },
-      {
-        "key": "GLUE",
-        "value": "glue"
-      },
-      {
-        "key": "PENALTY",
-        "value": "penalty"
-      },
-      {
-        "key": "CUSTOM",
-        "value": "custom"
-      },
-      {
-        "key": "INLINE",
-        "value": "inline"
-      },
-      {
-        "key": "BLOCK",
-        "value": "block"
-      },
-      {
-        "key": "CENTERED",
-        "value": "centered"
-      },
-      {
-        "key": "FLOAT_START",
-        "value": "float-start"
-      },
-      {
-        "key": "FLOAT_END",
-        "value": "float-end"
-      },
-      {
-        "key": "IMAGE",
-        "value": "image"
-      },
-      {
-        "key": "FONT",
-        "value": "font"
-      },
-      {
-        "key": "ORNAMENT",
-        "value": "ornament"
-      },
-      {
-        "key": "INLINE",
-        "value": "inline"
-      },
-      {
-        "key": "BLOCK",
-        "value": "block"
-      },
-      {
-        "key": "PAGE_FURNITURE",
-        "value": "pageFurniture"
-      },
-      {
-        "key": "BACKGROUND",
-        "value": "background"
-      },
-      {
-        "key": "SHRINK",
-        "value": "shrink"
-      },
-      {
-        "key": "MOVE",
-        "value": "move"
-      },
-      {
-        "key": "DIAGNOSE",
-        "value": "diagnose"
-      },
-      {
-        "key": "NEVER",
-        "value": "never"
-      },
-      {
-        "key": "LINE",
-        "value": "line"
-      },
-      {
-        "key": "BLOCK",
-        "value": "block"
       }
     ],
     "pageTypes": [
@@ -12975,7 +13081,357 @@
         "none",
         "small-caps"
       ]
-    }
+    },
+    "itemKinds": [
+      {
+        "key": "TEXT",
+        "value": "text"
+      },
+      {
+        "key": "NOTE_MARKER",
+        "value": "noteMarker"
+      },
+      {
+        "key": "IMAGE",
+        "value": "image"
+      },
+      {
+        "key": "ANCHOR",
+        "value": "anchor"
+      },
+      {
+        "key": "ATOMIC_TOKEN",
+        "value": "atomicToken"
+      },
+      {
+        "key": "GLUE",
+        "value": "glue"
+      },
+      {
+        "key": "PENALTY",
+        "value": "penalty"
+      },
+      {
+        "key": "CUSTOM",
+        "value": "custom"
+      }
+    ],
+    "IMAGE_PLACEMENT": [
+      {
+        "key": "INLINE",
+        "value": "inline"
+      },
+      {
+        "key": "BLOCK",
+        "value": "block"
+      },
+      {
+        "key": "CENTERED",
+        "value": "centered"
+      },
+      {
+        "key": "FLOAT_START",
+        "value": "float-start"
+      },
+      {
+        "key": "FLOAT_END",
+        "value": "float-end"
+      }
+    ],
+    "PARTICIPATION": [
+      {
+        "key": "INLINE",
+        "value": "inline"
+      },
+      {
+        "key": "BLOCK",
+        "value": "block"
+      },
+      {
+        "key": "PAGE_FURNITURE",
+        "value": "pageFurniture"
+      },
+      {
+        "key": "BACKGROUND",
+        "value": "background"
+      }
+    ],
+    "OVERFLOW_POLICIES": [
+      {
+        "key": "SHRINK",
+        "value": "shrink"
+      },
+      {
+        "key": "MOVE",
+        "value": "move"
+      },
+      {
+        "key": "DIAGNOSE",
+        "value": "diagnose"
+      }
+    ],
+    "SPLIT_POLICIES": [
+      {
+        "key": "NEVER",
+        "value": "never"
+      },
+      {
+        "key": "LINE",
+        "value": "line"
+      },
+      {
+        "key": "BLOCK",
+        "value": "block"
+      }
+    ],
+    "pageItemNames": [
+      "body-block",
+      "spanning-band",
+      "running-header",
+      "folio",
+      "column-divider",
+      "footnote-gutter",
+      "side-note",
+      "info-box",
+      "ornament",
+      "shaar-gate",
+      "toc-page",
+      "endnote-page"
+    ],
+    "legacyMetadataFields": [
+      [
+        "bookTitle",
+        "שם הספר"
+      ],
+      [
+        "subject",
+        "נושא"
+      ],
+      [
+        "desc",
+        "נושא מפורט"
+      ],
+      [
+        "edition",
+        "פרטי מהדורא"
+      ],
+      [
+        "author",
+        "שם המחבר"
+      ],
+      [
+        "copyright",
+        "שמירת זכויות"
+      ],
+      [
+        "publisher",
+        "פרטי הוצאה לאור"
+      ],
+      [
+        "contact",
+        "פרטי קשר"
+      ],
+      [
+        "extra",
+        "פרטים נוספים"
+      ],
+      [
+        "year",
+        "מקום ושנת הוצאה"
+      ]
+    ],
+    "textSyntax": [
+      {
+        "code": "כותרת N - טקסט",
+        "name": "כותרת ברמה 0–7",
+        "description": "זיהוי כותרת רק כאשר המקף המפריד מופיע; N בטווח 0–7. ללא מקף, השורה אינה הוראת כותרת.",
+        "source": "red-build/src/engine/parser/block-tokenizer.js"
+      },
+      {
+        "code": "חלק <גימטריה> - טקסט",
+        "name": "פתיחת חלק",
+        "description": "כותרת חלק ברמה מבנית 1; מספר החלק משמש ליצירת מבנה ספר. האודיט הישן מצביע על השמטת האות מטקסט הכותרת, ולכן יש להפריד בין מזהה החלק לבין הטקסט המוצג.",
+        "source": "red-build/src/engine/parser/block-tokenizer.js"
+      },
+      {
+        "code": "הקדמה - טקסט",
+        "name": "הקדמה",
+        "description": "כותרת פתיחת הספר/ההקדמה ברמה 0; בפרופיל IMUD יש לה תבנית עמוד מיוחדת.",
+        "source": "red-build/src/engine/parser/block-tokenizer.js"
+      },
+      {
+        "code": "ספר / מחבר / מהדורא / מקום / שנה / מהדורה / editors / title",
+        "name": "מטא־נתונים קצרים",
+        "description": "מפתחות lexer המוכרים רק בשלב PREAMBLE בראש המסמך.",
+        "source": "red-build/src/engine/parser/dfa-lexer.js"
+      },
+      {
+        "code": "שם הספר / נושא / נושא מפורט / פרטי מהדורא / שם המחבר / שמירת זכויות / פרטי הוצאה לאור / פרטי קשר / פרטים נוספים / מקום ושנת הוצאה",
+        "name": "מטא־נתונים עשירים של legacy",
+        "description": "הפרסר legacy מזהה את עשרת שדות META_FIELDS ומסיר את שורות המטא מהטקסט; יש להבחין בינם לבין רשימת METADATA_KEYS של lexer המאוחד.",
+        "source": "red-build/src/engine/layout/legacy-imud-flow.js"
+      },
+      {
+        "code": "הערת סיום - טקסט",
+        "name": "תוכן הערת סיום",
+        "description": "תחילית ברירת המחדל של הקוד היא הערת סיום -; ניתן לשנותה דרך en-line-prefix, ומחרוזת ריקה מבטלת את הזיהוי.",
+        "source": "red-build/src/engine/parser/block-tokenizer.js"
+      },
+      {
+        "code": "הערת סיום-N - טקסט",
+        "name": "תוכן הערת סיום ממוספרת",
+        "description": "צורת קידומת עם מספר מזהה; נפרדת מהוראת כותרת עמודי ההערות.",
+        "source": "red-build/src/engine/parser/block-tokenizer.js"
+      },
+      {
+        "code": "הערות סיום - כותרת",
+        "name": "הוראת כותרת עמודי הערות",
+        "description": "צורת רבים המייצגת את כותרת עמודי ההערות, ואינה גוף הערה.",
+        "source": "red-build/src/engine/parser/block-tokenizer.js"
+      },
+      {
+        "code": "[טקסט הערה]",
+        "name": "הערת שוליים inline",
+        "description": "תוחמים ברירת מחדל בקוד [ ו־]; בפועל ניתן לקבוע fn-delim-open/fn-delim-close. רווחים בתוך ההערה אטומיים למדידה.",
+        "source": "red-build/src/engine/parser/block-tokenizer.js"
+      },
+      {
+        "code": "##טקסט##",
+        "name": "מקטע עריכתי מוסתר",
+        "description": "תוכן editorial מוסר מהפלט אך נשמר ברשומות שימור המקור/האודיט.",
+        "source": "red-build/src/engine/parser/block-tokenizer.js"
+      },
+      {
+        "code": "<Family> ... </>",
+        "name": "טווח גופן inline",
+        "description": "הקוד תומך בתג פתיחה גנרי עם משפחת גופן ובתג סגירה </>; בנוסף קיימות הגדרות open/close מותאמות. התנגשויות בין סמנים נדחות באזהרה.",
+        "source": "red-build/src/engine/parser/inline-content.js"
+      },
+      {
+        "code": "#path/image.png#",
+        "name": "תמונה inline",
+        "description": "תחביר #...# מזהה תמונה. ניתן להוסיף suffix .lNN/.cNN/.rNN ליישור ורוחב אחוזי. פורמטים מותרים: PNG/JPG/JPEG בלבד; פורמטים אחרים מזוהים כדמויי תמונה אך נדחים. בכותרות allowImages=false; במסלול noteBody הנוכחי ריצות תמונה מסוננות.",
+        "source": "red-build/src/engine/parser/inline-content.js"
+      },
+      {
+        "code": "customStyles",
+        "name": "סגנונות מותאמים",
+        "description": "טריגרים: linePrefix, inlineMarker, pattern או combinator; layoutMode לפי whitelist בקובץ style-schema.js. פריט מותאם דורש registry descriptor.",
+        "source": "red-build/src/engine/extensions/style-schema.js"
+      },
+      {
+        "code": "customPages JSON",
+        "name": "עמודים מותאמים",
+        "description": "JSON כמערך או כאובייקט {pages}; כל עמוד יכול לכלול position, counted, background, boxes ו־images. position חסר נופל ל־end.",
+        "source": "red-build/src/engine/decoration/custom-pages.js"
+      }
+    ],
+    "noteKinds": [
+      {
+        "key": "FOOTNOTE",
+        "value": "footnote"
+      },
+      {
+        "key": "SIDE_NOTE",
+        "value": "side-note"
+      },
+      {
+        "key": "ENDNOTE",
+        "value": "endnote"
+      },
+      {
+        "key": "INFO_BOX",
+        "value": "info-box"
+      }
+    ],
+    "noteContinuation": "(המשך)",
+    "noteFontFactors": [
+      {
+        "name": "NOTE_FONT_FACTORS",
+        "values": " 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 ",
+        "source": "red-build/src/engine/layout/notes-model.js",
+        "description": "פקטור תיקון רוחב במימוש table; ב־font-metrics הפקטור מנוטרל."
+      },
+      {
+        "name": "SIDE_NOTE_FONT_FACTORS",
+        "values": " 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 ",
+        "source": "red-build/src/engine/layout/notes-model.js",
+        "description": "פקטור תיקון רוחב להערות צד ותיבות מידע; ב־font-metrics הפקטור מנוטרל."
+      }
+    ],
+    "measurementTables": {
+      "hebrewWidthCount": 27,
+      "wideMarkCount": 18,
+      "fontProfiles": 9,
+      "description": "טבלאות קבועות של רוחבי אותיות עבריות, סימני פיסוק/רווח ופרופילי רוחב לפי משפחת גופן. הן מקור מדידה ב־table ובחלק מהמקרים fallback לתווים לא ממופים."
+    },
+    "pageSizes": [
+      {
+        "key": "A4",
+        "description": "210×297 מ״מ; המידות ב־px מחושבות באמצעות 96/25.4."
+      },
+      {
+        "key": "A5",
+        "description": "148×210 מ״מ; חלק מהמידות מעוגלות לפי page-templates.js."
+      },
+      {
+        "key": "16x16",
+        "description": "165×165 מ״מ; ערכי עמוד ריבועי."
+      }
+    ],
+    "headerSources": [
+      "none",
+      "book-name",
+      "book-name-rest",
+      "book-name-split",
+      "book-name-first-half",
+      "book-name-second-half",
+      "h1",
+      "h2",
+      "page-num",
+      "first-word",
+      "last-word",
+      "first-last-words",
+      "custom"
+    ],
+    "customPagePositions": [
+      "before-shaar-main",
+      "after-shaar-main",
+      "before-part",
+      "after-part",
+      "end"
+    ],
+    "folioFrameKinds": [
+      "none",
+      "circle",
+      "square",
+      "parenthesis",
+      "squares",
+      "floral",
+      "diamond"
+    ],
+    "folioNumberTableNames": [
+      "UNITS",
+      "TENS",
+      "HUND"
+    ],
+    "legacySettingSetFiles": [
+      {
+        "name": "תלמוד",
+        "keyCount": 249,
+        "sha": "bb99eb2cc8d59edce7a18c8f92a5597627217d93"
+      },
+      {
+        "name": "פרשנות",
+        "keyCount": 249,
+        "sha": "2f92a7002f3a9ef64e7e6592fb848ddf077bbe83"
+      },
+      {
+        "name": "קונטרס",
+        "keyCount": 249,
+        "sha": "c56c30f4f3d3c0f46411bba8760fa37a4ad5645a"
+      }
+    ]
   },
   "evidence": {
     "warning": "ערכי ייבוא באודיט הם תמונת מצב היסטורית מ־95e829d; אין להציגם כאימות import חוזר ב־HEAD הנוכחי.",
@@ -12985,7 +13441,171 @@
       "shaar-back-text-size-pt באודיט הישן אך חסר במניפסט הנוכחי",
       "קוד inline-content הנוכחי תומך בטווחי גופן למרות טענת האודיט הישן שאין תחביר כזה",
       "תמונות מפוענחות inline אך ריצות תמונה מסוננות בבניית noteBody",
-      "F-J6 באודיט הישן מתאר את D-108 כפתוח אך toBareGematria מחובר ב־HEAD הנוכחי"
+      "F-J6 באודיט הישן מתאר את D-108 כפתוח אך toBareGematria מחובר ב־HEAD הנוכחי",
+      "השוואה ישירה של שלוש ערכות הסגנון גילתה 18 מפתחות שונים, לעומת 17 שדווחו באודיט ההיסטורי; הנתונים המדויקים מקובצי JSON מוצגים בקטלוג."
     ]
-  }
+  },
+  "legacySettingSets": [
+    {
+      "name": "תלמוד",
+      "keyCount": 249,
+      "sha": "bb99eb2cc8d59edce7a18c8f92a5597627217d93"
+    },
+    {
+      "name": "פרשנות",
+      "keyCount": 249,
+      "sha": "2f92a7002f3a9ef64e7e6592fb848ddf077bbe83"
+    },
+    {
+      "name": "קונטרס",
+      "keyCount": 249,
+      "sha": "c56c30f4f3d3c0f46411bba8760fa37a4ad5645a"
+    }
+  ],
+  "legacySettingSetDifferences": [
+    {
+      "key": "body-last-line-align",
+      "values": {
+        "תלמוד": "right",
+        "פרשנות": "center",
+        "קונטרס": "right"
+      }
+    },
+    {
+      "key": "drop-word-mode",
+      "values": {
+        "תלמוד": "none",
+        "פרשנות": "window",
+        "קונטרס": "window"
+      }
+    },
+    {
+      "key": "fn-columns",
+      "values": {
+        "תלמוד": "2",
+        "פרשנות": "2",
+        "קונטרס": "1"
+      }
+    },
+    {
+      "key": "line-height-body",
+      "values": {
+        "תלמוד": "1.25",
+        "פרשנות": "1.28",
+        "קונטרס": "1.4"
+      }
+    },
+    {
+      "key": "page-num-position",
+      "values": {
+        "תלמוד": "bottom_outer",
+        "פרשנות": "bottom_center",
+        "קונטרס": "bottom_center"
+      }
+    },
+    {
+      "key": "prop-col",
+      "values": {
+        "תלמוד": "36",
+        "פרשנות": "38",
+        "קונטרס": "42"
+      }
+    },
+    {
+      "key": "prop-gap",
+      "values": {
+        "תלמוד": "1",
+        "פרשנות": "1.5",
+        "קונטרס": "3"
+      }
+    },
+    {
+      "key": "prop-gutter",
+      "values": {
+        "תלמוד": "2",
+        "פרשנות": "2",
+        "קונטרס": "3"
+      }
+    },
+    {
+      "key": "prop-margin",
+      "values": {
+        "תלמוד": "5",
+        "פרשנות": "6",
+        "קונטרס": "8"
+      }
+    },
+    {
+      "key": "s-h0",
+      "values": {
+        "תלמוד": "22",
+        "פרשנות": "24",
+        "קונטרס": "30"
+      }
+    },
+    {
+      "key": "s-h1",
+      "values": {
+        "תלמוד": "40",
+        "פרשנות": "44",
+        "קונטרס": "56"
+      }
+    },
+    {
+      "key": "s-h2",
+      "values": {
+        "תלמוד": "14",
+        "פרשנות": "15",
+        "קונטרס": "20"
+      }
+    },
+    {
+      "key": "s-h3",
+      "values": {
+        "תלמוד": "11",
+        "פרשנות": "12",
+        "קונטרס": "15"
+      }
+    },
+    {
+      "key": "s-h4",
+      "values": {
+        "תלמוד": "10.5",
+        "פרשנות": "11",
+        "קונטרס": "14"
+      }
+    },
+    {
+      "key": "s-h5",
+      "values": {
+        "תלמוד": "10",
+        "פרשנות": "10.5",
+        "קונטרס": "13"
+      }
+    },
+    {
+      "key": "s-h6",
+      "values": {
+        "תלמוד": "9.5",
+        "פרשנות": "10",
+        "קונטרס": "12"
+      }
+    },
+    {
+      "key": "s-note-body",
+      "values": {
+        "תלמוד": "7",
+        "פרשנות": "7.5",
+        "קונטרס": "8.5"
+      }
+    },
+    {
+      "key": "size-body",
+      "values": {
+        "תלמוד": "10",
+        "פרשנות": "10.5",
+        "קונטרס": "13"
+      }
+    }
+  ]
 }
