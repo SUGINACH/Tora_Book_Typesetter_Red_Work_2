@@ -18,7 +18,7 @@
 
 const path = require('path');
 const fs = require('fs');
-const { describe, it, assertEq, assertClose, report } = require('../harness');
+const { describe, it, assert, assertEq, assertClose, report } = require('../harness');
 
 const RB = path.join(__dirname, '..', '..');
 const { GEO, FLOW_BOTTOM, SINGLE_W, H2_AREA_H, H0_AREA_H,
