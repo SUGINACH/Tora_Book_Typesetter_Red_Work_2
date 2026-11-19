@@ -1,0 +1,306 @@
+{
+  "meta": {
+    "corpus": "no_long",
+    "engine": "unified",
+    "bodyFontSizeSetting": 12,
+    "bodyFont": "Guttman Rashi"
+  },
+  "kindStats": {
+    "heading/L1": {
+      "count": 4,
+      "hasFont": 0,
+      "fonts": {},
+      "sizePts": {},
+      "window": 0
+    },
+    "heading/L0": {
+      "count": 1,
+      "hasFont": 0,
+      "fonts": {},
+      "sizePts": {},
+      "window": 0
+    },
+    "paragraph/L-": {
+      "count": 3816,
+      "hasFont": 0,
+      "fonts": {},
+      "sizePts": {},
+      "window": 0
+    },
+    "heading/L2": {
+      "count": 3,
+      "hasFont": 0,
+      "fonts": {},
+      "sizePts": {},
+      "window": 0
+    },
+    "heading/L4": {
+      "count": 35,
+      "hasFont": 0,
+      "fonts": {},
+      "sizePts": {},
+      "window": 0
+    },
+    "heading/L5": {
+      "count": 9,
+      "hasFont": 0,
+      "fonts": {},
+      "sizePts": {},
+      "window": 0
+    },
+    "heading/L6": {
+      "count": 5,
+      "hasFont": 0,
+      "fonts": {},
+      "sizePts": {},
+      "window": 0
+    }
+  },
+  "pageTypeStats": {
+    "shaar-main": {
+      "pages": 1,
+      "colWidths": [
+        0
+      ],
+      "lineKinds": {}
+    },
+    "shaar-back": {
+      "pages": 1,
+      "colWidths": [
+        0
+      ],
+      "lineKinds": {}
+    },
+    "toc-general": {
+      "pages": 2,
+      "colWidths": [
+        0
+      ],
+      "lineKinds": {}
+    },
+    "toc-detail": {
+      "pages": 2,
+      "colWidths": [
+        0
+      ],
+      "lineKinds": {}
+    },
+    "shaar-sub": {
+      "pages": 1,
+      "colWidths": [
+        0
+      ],
+      "lineKinds": {}
+    },
+    "preface": {
+      "pages": 2,
+      "colWidths": [
+        238.67,
+        109.55
+      ],
+      "lineKinds": {
+        "heading/L1": {
+          "count": 4,
+          "font": null,
+          "sizePt": null
+        },
+        "heading/L0": {
+          "count": 1,
+          "font": null,
+          "sizePt": null
+        },
+        "paragraph/L-": {
+          "count": 21,
+          "font": null,
+          "sizePt": null
+        }
+      }
+    },
+    "sign-open": {
+      "pages": 3,
+      "colWidths": [
+        0,
+        265.65,
+        110.16,
+        94.72,
+        195.84,
+        228.8
+      ],
+      "lineKinds": {}
+    },
+    "regular": {
+      "pages": 54,
+      "colWidths": [
+        131.67,
+        262.72,
+        81.27,
+        240,
+        176.33,
+        264.64,
+        245.44,
+        153.28,
+        263.04,
+        226.24,
+        255.04,
+        265.28,
+        242.56,
+        258.56,
+        217.28,
+        234.56,
+        161,
+        266.24,
+        210.88,
+        229.12,
+        205.12,
+        238.4,
+        256.64,
+        248.96,
+        122.67,
+        264,
+        258.24,
+        268.48,
+        77.76,
+        231.04,
+        265.92,
+        232.96,
+        252.48,
+        221.44,
+        231.68,
+        53.12,
+        240.32,
+        241.92,
+        216.96,
+        227.52,
+        230.08,
+        263.68,
+        227.84,
+        242.24,
+        261.44,
+        197.76,
+        177,
+        268.16,
+        201.6,
+        230.4,
+        255.68,
+        55.68,
+        157.76,
+        223.68,
+        256.96,
+        231.36,
+        207.36,
+        210.24,
+        243.84,
+        246.4,
+        218.24,
+        81,
+        244.16,
+        112,
+        235.84,
+        89.28,
+        106.24,
+        155.84,
+        222.08,
+        249.92,
+        183.68,
+        228.8,
+        262.4,
+        261.12,
+        203.84,
+        243.52,
+        225.6,
+        211.84,
+        259.2,
+        241.28,
+        27.2,
+        249.6,
+        186.56,
+        255.36,
+        233.92,
+        267.52,
+        66.88,
+        223.04,
+        266.56,
+        260.8,
+        229.76
+      ],
+      "lineKinds": {}
+    }
+  },
+  "fontKeyWordSamples": [
+    {
+      "page": 7,
+      "kind": "heading",
+      "text": "הקדמות",
+      "fontKey": "Lia Sgula",
+      "sizePt": 50
+    },
+    {
+      "page": 7,
+      "kind": "heading",
+      "text": "וכללים",
+      "fontKey": "Lia Sgula",
+      "sizePt": 50
+    },
+    {
+      "page": 7,
+      "kind": "heading",
+      "text": "-",
+      "fontKey": "Lia Sgula",
+      "sizePt": 50
+    },
+    {
+      "page": 7,
+      "kind": "heading",
+      "text": "יום",
+      "fontKey": "Lia Sgula",
+      "sizePt": 50
+    },
+    {
+      "page": 7,
+      "kind": "heading",
+      "text": "השבת",
+      "fontKey": "Lia Sgula",
+      "sizePt": 50
+    },
+    {
+      "page": 7,
+      "kind": "heading",
+      "text": "-",
+      "fontKey": "Lia Sgula",
+      "sizePt": 50
+    },
+    {
+      "page": 7,
+      "kind": "heading",
+      "text": "גדרי",
+      "fontKey": "Lia Sgula",
+      "sizePt": 50
+    },
+    {
+      "page": 7,
+      "kind": "heading",
+      "text": "מלאכה",
+      "fontKey": "Lia Sgula",
+      "sizePt": 50
+    },
+    {
+      "page": 7,
+      "kind": "heading",
+      "text": "-",
+      "fontKey": "Lia Sgula",
+      "sizePt": 50
+    },
+    {
+      "page": 7,
+      "kind": "heading",
+      "text": "הוצאה",
+      "fontKey": "Lia Sgula",
+      "sizePt": 50
+    }
+  ],
+  "window": {
+    "linesWithWindowWordsInResultPages": 0,
+    "sample": null,
+    "pmColumnLinesWithNonBodySizePt": 57
+  }
+}

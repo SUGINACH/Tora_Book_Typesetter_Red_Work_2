@@ -1,0 +1,173 @@
+{
+  "meta": {
+    "date": "2026-11-19",
+    "branch": "stage1/capability-map",
+    "head": "9d86bfe",
+    "corpus": "audits/no_long_test_text.txt",
+    "engine": "unified (RED_UNIFIED_IMUD=1)",
+    "engineMs": 1402,
+    "pages": 66,
+    "layoutHash": "614b6bfad8d18f0c1bc3",
+    "legacyProfile": false,
+    "pageModelValidation": {
+      "pass": 21970,
+      "total": 21970,
+      "violations": 0,
+      "schema": "pagemodel-v1"
+    }
+  },
+  "A_DocumentModel": {
+    "totalBlocks": 459,
+    "byKind": {
+      "heading": 197,
+      "paragraph": 262
+    },
+    "hasParagraphBlocks": true
+  },
+  "B_resultPages_columns_adapterSource": {
+    "pages": 66,
+    "columnsLines": 3873,
+    "hasParaId": 0,
+    "hasKindParagraph": 3816,
+    "hasSizePt": 0,
+    "hasY": 0,
+    "hasHeightPx": 3873,
+    "fieldUnion": {
+      "words": 3873,
+      "widthPx": 3873,
+      "heightPx": 3873,
+      "isLast": 3873,
+      "kind": 3873,
+      "level": 57,
+      "measureW": 3873,
+      "lineModel": 3873,
+      "tokenId": 57,
+      "meta": 3873,
+      "seq": 3873,
+      "aqStretch": 3392,
+      "gapBeforePx": 290
+    }
+  },
+  "C_resultPageModel_canonical": {
+    "schema": "pagemodel-v1",
+    "pages": 66,
+    "geometryHash": "3952d30f16cad06cb8f217734025d6665e3f497750ddb6fcf51824c64a7be5a6",
+    "contentHash": "d07aad013dcc8d580fc4902b151996c6372b66dd494ea19aca68581982be1abf",
+    "lineFields": {
+      "total": 4489,
+      "x": 4489,
+      "y": 4489,
+      "w": 4489,
+      "h": 4489,
+      "sizePt": 4489,
+      "baselineY": 4489,
+      "fontKey": 0,
+      "words": 4489,
+      "wordCount": 23685,
+      "word_x": 23685,
+      "word_w": 23685,
+      "word_sizePt": 1800,
+      "word_fontKey": 1538,
+      "word_baselineY": 0,
+      "projected": 4489,
+      "sourceTokenId": 4348
+    },
+    "byArea": {
+      "structural": {
+        "total": 141,
+        "x": 141,
+        "y": 141,
+        "sizePt": 141,
+        "baselineY": 141,
+        "fontKeyLine": 0,
+        "words": 141,
+        "word_fontKey": 43,
+        "word_sizePt": 475
+      },
+      "column": {
+        "total": 3873,
+        "x": 3873,
+        "y": 3873,
+        "sizePt": 3873,
+        "baselineY": 3873,
+        "fontKeyLine": 0,
+        "words": 3873,
+        "word_fontKey": 137,
+        "word_sizePt": 5
+      },
+      "spanning": {
+        "total": 13,
+        "x": 13,
+        "y": 13,
+        "sizePt": 13,
+        "baselineY": 13,
+        "fontKeyLine": 0,
+        "words": 13,
+        "word_fontKey": 38,
+        "word_sizePt": 0
+      },
+      "margin": {
+        "total": 462,
+        "x": 462,
+        "y": 462,
+        "sizePt": 462,
+        "baselineY": 462,
+        "fontKeyLine": 0,
+        "words": 462,
+        "word_fontKey": 1320,
+        "word_sizePt": 1320
+      }
+    },
+    "wordFields": null,
+    "samplePaths": [
+      {
+        "page": 7,
+        "lineId": "p7.c0.0",
+        "keys": [
+          "id",
+          "sourceTokenId",
+          "part",
+          "seq",
+          "kind",
+          "level",
+          "isLast",
+          "align",
+          "sizePt",
+          "x",
+          "y",
+          "w",
+          "h",
+          "baselineY",
+          "ascentPx",
+          "descentPx",
+          "gapBeforePx",
+          "aqStretch",
+          "words",
+          "projected",
+          "page",
+          "area",
+          "col",
+          "li"
+        ],
+        "wordKeys": [
+          "text",
+          "x",
+          "w",
+          "fontKey",
+          "color"
+        ]
+      }
+    ]
+  },
+  "D_workerTransport": {
+    "schema": "pagemodel-transport-v1",
+    "bytesEstimate": 3452083,
+    "geometryHashMatches": true,
+    "lines": 4489,
+    "line_x": 4489,
+    "line_y": 4489,
+    "line_sizePt": 4489,
+    "words": 23685,
+    "word_fontKey": 1538
+  }
+}

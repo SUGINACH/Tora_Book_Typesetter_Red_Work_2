@@ -1,0 +1,789 @@
+{
+  "lineModelSamples": [
+    {
+      "page": 7,
+      "kind": "heading",
+      "level": 1,
+      "lineModel": {
+        "modelVersion": "line-model-v2(floats+justify-policy+gap-chars)",
+        "index": 0,
+        "isLast": false,
+        "blockId": "blk-db76987dabe9a",
+        "fragments": [
+          {
+            "itemId": "itm-4afd383db0122#w@349-355",
+            "sourceItemId": "itm-4afd383db0122",
+            "kind": "text",
+            "fontId": null,
+            "fragments": [
+              {
+                "itemId": "itm-4afd383db0122#w@349-355",
+                "runIndex": 0,
+                "text": "הקדמות",
+                "start": 0,
+                "end": 6,
+                "docStart": 349,
+                "docEnd": 355,
+                "fontId": null,
+                "fontFamily": null,
+                "advancePx": 238.66666666666663
+              }
+            ],
+            "measuredAdvance": 238.66666666666663,
+            "inkBounds": {
+              "left": 0,
+              "right": 238.66666666666663,
+              "top": -53.33333333333334,
+              "bottom": 13.333333333333336,
+              "source": "advance-approximation"
+            },
+            "constraints": {
+              "atomic": false,
+              "participates": "inline",
+              "splittable": "line"
+            },
+            "sourceRange": {
+              "blockId": "blk-db76987dabe9a",
+              "itemId": "itm-4afd383db0122",
+              "runIndex": 0,
+              "start": 349,
+              "end": 355,
+              "runLocal": {
+                "start": 0,
+                "end": 6
+              }
+            },
+            "sourceAnchor": null,
+            "overlay": null,
+            "diagnostics": [
+              {
+                "code": "font-unavailable-table-approximation",
+                "requested": "Lia Sgula",
+                "message": "הגופן 'Lia Sgula' אינו זמין ואין fallback רשום — מדידה קנונית לא תתבצע ללא אבחון"
+              }
+            ]
+          }
+        ],
+        "itemIds": [
+          "itm-4afd383db0122#w@349-355"
+        ],
+        "flow": [
+          {
+            "type": "box",
+            "itemId": "itm-4afd383db0122#w@349-355",
+            "kind": "text"
+          },
+          {
+            "type": "glue",
+            "itemId": "itm-4afd383db0122#g@355-356",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "breakGlue": true
+          }
+        ],
+        "naturalWidthPx": 238.667,
+        "effectiveMaxWidthPx": 552.3,
+        "floatAreas": [],
+        "assets": [],
+        "glue": [],
+        "baseline": {
+          "ascentPx": 53.333,
+          "descentPx": 13.333
+        },
+        "lineHeightPx": 89.333,
+        "breakReason": "legal-cut",
+        "badness": 0,
+        "constraints": {
+          "maxWidthPx": 552.3,
+          "justify": "stretch",
+          "justifyLastLine": "center",
+          "justifySource": "effective-product-default (03.11(ד) justify + body-last-line-align)"
+        },
+        "semantic": null,
+        "diagnostics": []
+      },
+      "meta": {
+        "tokenId": "t1",
+        "docPart": 1,
+        "firstOfBlock": true
+      },
+      "topLineWords": [
+        "הקדמות"
+      ]
+    },
+    {
+      "page": 7,
+      "kind": "heading",
+      "level": 1,
+      "lineModel": {
+        "modelVersion": "line-model-v2(floats+justify-policy+gap-chars)",
+        "index": 1,
+        "isLast": false,
+        "blockId": "blk-db76987dabe9a",
+        "fragments": [
+          {
+            "itemId": "itm-4afd383db0122#w@356-362",
+            "sourceItemId": "itm-4afd383db0122",
+            "kind": "text",
+            "fontId": null,
+            "fragments": [
+              {
+                "itemId": "itm-4afd383db0122#w@356-362",
+                "runIndex": 0,
+                "text": "וכללים",
+                "start": 7,
+                "end": 13,
+                "docStart": 356,
+                "docEnd": 362,
+                "fontId": null,
+                "fontFamily": null,
+                "advancePx": 205.33333333333331
+              }
+            ],
+            "measuredAdvance": 205.33333333333331,
+            "inkBounds": {
+              "left": 0,
+              "right": 205.33333333333331,
+              "top": -53.33333333333334,
+              "bottom": 13.333333333333336,
+              "source": "advance-approximation"
+            },
+            "constraints": {
+              "atomic": false,
+              "participates": "inline",
+              "splittable": "line"
+            },
+            "sourceRange": {
+              "blockId": "blk-db76987dabe9a",
+              "itemId": "itm-4afd383db0122",
+              "runIndex": 0,
+              "start": 356,
+              "end": 362,
+              "runLocal": {
+                "start": 7,
+                "end": 13
+              }
+            },
+            "sourceAnchor": null,
+            "overlay": null,
+            "diagnostics": [
+              {
+                "code": "font-unavailable-table-approximation",
+                "requested": "Lia Sgula",
+                "message": "הגופן 'Lia Sgula' אינו זמין ואין fallback רשום — מדידה קנונית לא תתבצע ללא אבחון"
+              }
+            ]
+          },
+          {
+            "itemId": "itm-4afd383db0122#w@363-364",
+            "sourceItemId": "itm-4afd383db0122",
+            "kind": "text",
+            "fontId": null,
+            "fragments": [
+              {
+                "itemId": "itm-4afd383db0122#w@363-364",
+                "runIndex": 0,
+                "text": "-",
+                "start": 14,
+                "end": 15,
+                "docStart": 363,
+                "docEnd": 364,
+                "fontId": null,
+                "fontFamily": null,
+                "advancePx": 22.666666666666664
+              }
+            ],
+            "measuredAdvance": 22.666666666666664,
+            "inkBounds": {
+              "left": 0,
+              "right": 22.666666666666664,
+              "top": -53.33333333333334,
+              "bottom": 13.333333333333336,
+              "source": "advance-approximation"
+            },
+            "constraints": {
+              "atomic": false,
+              "participates": "inline",
+              "splittable": "line"
+            },
+            "sourceRange": {
+              "blockId": "blk-db76987dabe9a",
+              "itemId": "itm-4afd383db0122",
+              "runIndex": 0,
+              "start": 363,
+              "end": 364,
+              "runLocal": {
+                "start": 14,
+                "end": 15
+              }
+            },
+            "sourceAnchor": null,
+            "overlay": null,
+            "diagnostics": [
+              {
+                "code": "font-unavailable-table-approximation",
+                "requested": "Lia Sgula",
+                "message": "הגופן 'Lia Sgula' אינו זמין ואין fallback רשום — מדידה קנונית לא תתבצע ללא אבחון"
+              }
+            ]
+          },
+          {
+            "itemId": "itm-4afd383db0122#w@365-368",
+            "sourceItemId": "itm-4afd383db0122",
+            "kind": "text",
+            "fontId": null,
+            "fragments": [
+              {
+                "itemId": "itm-4afd383db0122#w@365-368",
+                "runIndex": 0,
+                "text": "יום",
+                "start": 16,
+                "end": 19,
+                "docStart": 365,
+                "docEnd": 368,
+                "fontId": null,
+                "fontFamily": null,
+                "advancePx": 97.33333333333333
+              }
+            ],
+            "measuredAdvance": 97.33333333333333,
+            "inkBounds": {
+              "left": 0,
+              "right": 97.33333333333333,
+              "top": -53.33333333333334,
+              "bottom": 13.333333333333336,
+              "source": "advance-approximation"
+            },
+            "constraints": {
+              "atomic": false,
+              "participates": "inline",
+              "splittable": "line"
+            },
+            "sourceRange": {
+              "blockId": "blk-db76987dabe9a",
+              "itemId": "itm-4afd383db0122",
+              "runIndex": 0,
+              "start": 365,
+              "end": 368,
+              "runLocal": {
+                "start": 16,
+                "end": 19
+              }
+            },
+            "sourceAnchor": null,
+            "overlay": null,
+            "diagnostics": [
+              {
+                "code": "font-unavailable-table-approximation",
+                "requested": "Lia Sgula",
+                "message": "הגופן 'Lia Sgula' אינו זמין ואין fallback רשום — מדידה קנונית לא תתבצע ללא אבחון"
+              }
+            ]
+          },
+          {
+            "itemId": "itm-4afd383db0122#w@369-373",
+            "sourceItemId": "itm-4afd383db0122",
+            "kind": "text",
+            "fontId": null,
+            "fragments": [
+              {
+                "itemId": "itm-4afd383db0122#w@369-373",
+                "runIndex": 0,
+                "text": "השבת",
+                "start": 20,
+                "end": 24,
+                "docStart": 369,
+                "docEnd": 373,
+                "fontId": null,
+                "fontFamily": null,
+                "advancePx": 162.66666666666666
+              }
+            ],
+            "measuredAdvance": 162.66666666666666,
+            "inkBounds": {
+              "left": 0,
+              "right": 162.66666666666666,
+              "top": -53.33333333333334,
+              "bottom": 13.333333333333336,
+              "source": "advance-approximation"
+            },
+            "constraints": {
+              "atomic": false,
+              "participates": "inline",
+              "splittable": "line"
+            },
+            "sourceRange": {
+              "blockId": "blk-db76987dabe9a",
+              "itemId": "itm-4afd383db0122",
+              "runIndex": 0,
+              "start": 369,
+              "end": 373,
+              "runLocal": {
+                "start": 20,
+                "end": 24
+              }
+            },
+            "sourceAnchor": null,
+            "overlay": null,
+            "diagnostics": [
+              {
+                "code": "font-unavailable-table-approximation",
+                "requested": "Lia Sgula",
+                "message": "הגופן 'Lia Sgula' אינו זמין ואין fallback רשום — מדידה קנונית לא תתבצע ללא אבחון"
+              }
+            ]
+          }
+        ],
+        "itemIds": [
+          "itm-4afd383db0122#w@356-362",
+          "itm-4afd383db0122#w@363-364",
+          "itm-4afd383db0122#w@365-368",
+          "itm-4afd383db0122#w@369-373"
+        ],
+        "flow": [
+          {
+            "type": "box",
+            "itemId": "itm-4afd383db0122#w@356-362",
+            "kind": "text"
+          },
+          {
+            "type": "glue",
+            "itemId": "itm-4afd383db0122#g@362-363",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "noteRef": null
+          },
+          {
+            "type": "box",
+            "itemId": "itm-4afd383db0122#w@363-364",
+            "kind": "text"
+          },
+          {
+            "type": "glue",
+            "itemId": "itm-4afd383db0122#g@364-365",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "noteRef": null
+          },
+          {
+            "type": "box",
+            "itemId": "itm-4afd383db0122#w@365-368",
+            "kind": "text"
+          },
+          {
+            "type": "glue",
+            "itemId": "itm-4afd383db0122#g@368-369",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "noteRef": null
+          },
+          {
+            "type": "box",
+            "itemId": "itm-4afd383db0122#w@369-373",
+            "kind": "text"
+          },
+          {
+            "type": "glue",
+            "itemId": "itm-4afd383db0122#g@373-374",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "breakGlue": true
+          }
+        ],
+        "naturalWidthPx": 540,
+        "effectiveMaxWidthPx": 552.3,
+        "floatAreas": [],
+        "assets": [],
+        "glue": [
+          {
+            "itemId": "itm-4afd383db0122#g@362-363",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "noteRef": null,
+            "naturalPx": 17.333333333333332,
+            "stretchPx": 10.399999999999999,
+            "shrinkPx": 8.666666666666666,
+            "allocationPx": 21.333333333333332
+          },
+          {
+            "itemId": "itm-4afd383db0122#g@364-365",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "noteRef": null,
+            "naturalPx": 17.333333333333332,
+            "stretchPx": 10.399999999999999,
+            "shrinkPx": 8.666666666666666,
+            "allocationPx": 21.333333333333332
+          },
+          {
+            "itemId": "itm-4afd383db0122#g@368-369",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "noteRef": null,
+            "naturalPx": 17.333333333333332,
+            "stretchPx": 10.399999999999999,
+            "shrinkPx": 8.666666666666666,
+            "allocationPx": 21.333333333333332
+          }
+        ],
+        "baseline": {
+          "ascentPx": 53.333,
+          "descentPx": 13.333
+        },
+        "lineHeightPx": 89.333,
+        "breakReason": "legal-cut",
+        "badness": 0,
+        "constraints": {
+          "maxWidthPx": 552.3,
+          "justify": "stretch",
+          "justifyLastLine": "center",
+          "justifySource": "effective-product-default (03.11(ד) justify + body-last-line-align)"
+        },
+        "semantic": null,
+        "diagnostics": []
+      },
+      "meta": {
+        "tokenId": "t1",
+        "docPart": 1,
+        "firstOfBlock": true
+      },
+      "topLineWords": [
+        "וכללים",
+        "-",
+        "יום"
+      ]
+    },
+    {
+      "page": 7,
+      "kind": "heading",
+      "level": 1,
+      "lineModel": {
+        "modelVersion": "line-model-v2(floats+justify-policy+gap-chars)",
+        "index": 2,
+        "isLast": false,
+        "blockId": "blk-db76987dabe9a",
+        "fragments": [
+          {
+            "itemId": "itm-4afd383db0122#w@374-375",
+            "sourceItemId": "itm-4afd383db0122",
+            "kind": "text",
+            "fontId": null,
+            "fragments": [
+              {
+                "itemId": "itm-4afd383db0122#w@374-375",
+                "runIndex": 0,
+                "text": "-",
+                "start": 25,
+                "end": 26,
+                "docStart": 374,
+                "docEnd": 375,
+                "fontId": null,
+                "fontFamily": null,
+                "advancePx": 22.666666666666664
+              }
+            ],
+            "measuredAdvance": 22.666666666666664,
+            "inkBounds": {
+              "left": 0,
+              "right": 22.666666666666664,
+              "top": -53.33333333333334,
+              "bottom": 13.333333333333336,
+              "source": "advance-approximation"
+            },
+            "constraints": {
+              "atomic": false,
+              "participates": "inline",
+              "splittable": "line"
+            },
+            "sourceRange": {
+              "blockId": "blk-db76987dabe9a",
+              "itemId": "itm-4afd383db0122",
+              "runIndex": 0,
+              "start": 374,
+              "end": 375,
+              "runLocal": {
+                "start": 25,
+                "end": 26
+              }
+            },
+            "sourceAnchor": null,
+            "overlay": null,
+            "diagnostics": [
+              {
+                "code": "font-unavailable-table-approximation",
+                "requested": "Lia Sgula",
+                "message": "הגופן 'Lia Sgula' אינו זמין ואין fallback רשום — מדידה קנונית לא תתבצע ללא אבחון"
+              }
+            ]
+          },
+          {
+            "itemId": "itm-4afd383db0122#w@376-380",
+            "sourceItemId": "itm-4afd383db0122",
+            "kind": "text",
+            "fontId": null,
+            "fragments": [
+              {
+                "itemId": "itm-4afd383db0122#w@376-380",
+                "runIndex": 0,
+                "text": "גדרי",
+                "start": 27,
+                "end": 31,
+                "docStart": 376,
+                "docEnd": 380,
+                "fontId": null,
+                "fontFamily": null,
+                "advancePx": 134.66666666666666
+              }
+            ],
+            "measuredAdvance": 134.66666666666666,
+            "inkBounds": {
+              "left": 0,
+              "right": 134.66666666666666,
+              "top": -53.33333333333334,
+              "bottom": 13.333333333333336,
+              "source": "advance-approximation"
+            },
+            "constraints": {
+              "atomic": false,
+              "participates": "inline",
+              "splittable": "line"
+            },
+            "sourceRange": {
+              "blockId": "blk-db76987dabe9a",
+              "itemId": "itm-4afd383db0122",
+              "runIndex": 0,
+              "start": 376,
+              "end": 380,
+              "runLocal": {
+                "start": 27,
+                "end": 31
+              }
+            },
+            "sourceAnchor": null,
+            "overlay": null,
+            "diagnostics": [
+              {
+                "code": "font-unavailable-table-approximation",
+                "requested": "Lia Sgula",
+                "message": "הגופן 'Lia Sgula' אינו זמין ואין fallback רשום — מדידה קנונית לא תתבצע ללא אבחון"
+              }
+            ]
+          },
+          {
+            "itemId": "itm-4afd383db0122#w@381-386",
+            "sourceItemId": "itm-4afd383db0122",
+            "kind": "text",
+            "fontId": null,
+            "fragments": [
+              {
+                "itemId": "itm-4afd383db0122#w@381-386",
+                "runIndex": 0,
+                "text": "מלאכה",
+                "start": 32,
+                "end": 37,
+                "docStart": 381,
+                "docEnd": 386,
+                "fontId": null,
+                "fontFamily": null,
+                "advancePx": 204
+              }
+            ],
+            "measuredAdvance": 204,
+            "inkBounds": {
+              "left": 0,
+              "right": 204,
+              "top": -53.33333333333334,
+              "bottom": 13.333333333333336,
+              "source": "advance-approximation"
+            },
+            "constraints": {
+              "atomic": false,
+              "participates": "inline",
+              "splittable": "line"
+            },
+            "sourceRange": {
+              "blockId": "blk-db76987dabe9a",
+              "itemId": "itm-4afd383db0122",
+              "runIndex": 0,
+              "start": 381,
+              "end": 386,
+              "runLocal": {
+                "start": 32,
+                "end": 37
+              }
+            },
+            "sourceAnchor": null,
+            "overlay": null,
+            "diagnostics": [
+              {
+                "code": "font-unavailable-table-approximation",
+                "requested": "Lia Sgula",
+                "message": "הגופן 'Lia Sgula' אינו זמין ואין fallback רשום — מדידה קנונית לא תתבצע ללא אבחון"
+              }
+            ]
+          }
+        ],
+        "itemIds": [
+          "itm-4afd383db0122#w@374-375",
+          "itm-4afd383db0122#w@376-380",
+          "itm-4afd383db0122#w@381-386"
+        ],
+        "flow": [
+          {
+            "type": "box",
+            "itemId": "itm-4afd383db0122#w@374-375",
+            "kind": "text"
+          },
+          {
+            "type": "glue",
+            "itemId": "itm-4afd383db0122#g@375-376",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "noteRef": null
+          },
+          {
+            "type": "box",
+            "itemId": "itm-4afd383db0122#w@376-380",
+            "kind": "text"
+          },
+          {
+            "type": "glue",
+            "itemId": "itm-4afd383db0122#g@380-381",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "noteRef": null
+          },
+          {
+            "type": "box",
+            "itemId": "itm-4afd383db0122#w@381-386",
+            "kind": "text"
+          },
+          {
+            "type": "glue",
+            "itemId": "itm-4afd383db0122#g@386-387",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "breakGlue": true
+          }
+        ],
+        "naturalWidthPx": 396,
+        "effectiveMaxWidthPx": 552.3,
+        "floatAreas": [],
+        "assets": [],
+        "glue": [
+          {
+            "itemId": "itm-4afd383db0122#g@375-376",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "noteRef": null,
+            "naturalPx": 17.333333333333332,
+            "stretchPx": 10.399999999999999,
+            "shrinkPx": 8.666666666666666,
+            "allocationPx": 95.33333333333333
+          },
+          {
+            "itemId": "itm-4afd383db0122#g@380-381",
+            "sep": " ",
+            "gapChars": " ",
+            "internal": false,
+            "noteRef": null,
+            "naturalPx": 17.333333333333332,
+            "stretchPx": 10.399999999999999,
+            "shrinkPx": 8.666666666666666,
+            "allocationPx": 95.33333333333333
+          }
+        ],
+        "baseline": {
+          "ascentPx": 53.333,
+          "descentPx": 13.333
+        },
+        "lineHeightPx": 89.333,
+        "breakReason": "legal-cut",
+        "badness": 0,
+        "constraints": {
+          "maxWidthPx": 552.3,
+          "justify": "stretch",
+          "justifyLastLine": "center",
+          "justifySource": "effective-product-default (03.11(ד) justify + body-last-line-align)"
+        },
+        "semantic": null,
+        "diagnostics": []
+      },
+      "meta": {
+        "tokenId": "t1",
+        "docPart": 1,
+        "firstOfBlock": true
+      },
+      "topLineWords": [
+        "-",
+        "גדרי",
+        "מלאכה"
+      ]
+    }
+  ],
+  "metaSamples": [],
+  "lineModelStats": {
+    "lines": 3873,
+    "hasLineModel": 3873,
+    "lmKeys": {
+      "modelVersion": 3873,
+      "index": 3873,
+      "isLast": 3873,
+      "blockId": 3873,
+      "fragments": 3873,
+      "itemIds": 3873,
+      "flow": 3873,
+      "naturalWidthPx": 3873,
+      "effectiveMaxWidthPx": 3873,
+      "floatAreas": 3873,
+      "assets": 3873,
+      "glue": 3873,
+      "baseline": 3873,
+      "lineHeightPx": 3873,
+      "breakReason": 3873,
+      "badness": 3873,
+      "constraints": 3873,
+      "semantic": 3873,
+      "diagnostics": 3873
+    },
+    "lmFragments": 21796,
+    "fragKeys": {
+      "itemId": 21796,
+      "sourceItemId": 21796,
+      "kind": 21796,
+      "fontId": 21796,
+      "fragments": 21796,
+      "measuredAdvance": 21796,
+      "inkBounds": 21796,
+      "constraints": 21796,
+      "sourceRange": 21796,
+      "sourceAnchor": 21796,
+      "overlay": 21796,
+      "diagnostics": 21796,
+      "sourceText": 9
+    },
+    "fragHasFont": 0,
+    "fragHasSize": 0,
+    "metaKeys": {
+      "tokenId": 3873,
+      "docPart": 3837,
+      "firstOfBlock": 3349,
+      "part": 724,
+      "isLast": 36
+    },
+    "lmWordsTypeString": 0,
+    "lmWordsTypeObj": 0
+  }
+}
