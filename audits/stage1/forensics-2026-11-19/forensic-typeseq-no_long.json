@@ -1,0 +1,261 @@
+{
+  "typeSeq": [
+    "shaar-main",
+    "shaar-back",
+    "toc-general",
+    "toc-general",
+    "toc-detail",
+    "toc-detail",
+    "shaar-sub",
+    "preface",
+    "preface",
+    "sign-open",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "sign-open",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "sign-open",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular",
+    "regular"
+  ],
+  "counts": {
+    "shaar-main": 1,
+    "shaar-back": 1,
+    "toc-general": 2,
+    "toc-detail": 2,
+    "shaar-sub": 1,
+    "preface": 2,
+    "sign-open": 3,
+    "regular": 54
+  },
+  "geoByType": {
+    "shaar-main": {
+      "pages": 1,
+      "columnsSeen": {
+        "x=120.72,w=552.3": 1
+      }
+    },
+    "shaar-back": {
+      "pages": 1,
+      "columnsSeen": {
+        "x=120.72,w=552.3": 1
+      }
+    },
+    "toc-general": {
+      "pages": 2,
+      "columnsSeen": {
+        "x=120.72,w=552.3": 2
+      }
+    },
+    "toc-detail": {
+      "pages": 2,
+      "columnsSeen": {
+        "x=120.72,w=552.3": 2
+      },
+      "sample": {
+        "index": 4,
+        "lines": 38,
+        "firstLine": {
+          "id": "p4.c-1.0",
+          "kind": "toc-row",
+          "sizePt": 12,
+          "words": [
+            "קדושת",
+            "יום",
+            "השבת"
+          ]
+        }
+      }
+    },
+    "shaar-sub": {
+      "pages": 1,
+      "columnsSeen": {
+        "x=120.72,w=552.3": 1
+      }
+    },
+    "preface": {
+      "pages": 2,
+      "columnsSeen": {
+        "x=120.72,w=552.3": 2
+      }
+    },
+    "sign-open": {
+      "pages": 3,
+      "columnsSeen": {
+        "x=403.61,w=269.41": 3,
+        "x=120.72,w=269.41": 3
+      }
+    },
+    "regular": {
+      "pages": 54,
+      "columnsSeen": {
+        "x=403.61,w=269.41": 54,
+        "x=120.72,w=269.41": 54
+      }
+    }
+  },
+  "shaarPages": [
+    {
+      "index": 0,
+      "type": "shaar-main",
+      "shaar": {
+        "variant": "main",
+        "box": {
+          "x": 57,
+          "y": 76,
+          "w": 679.7,
+          "h": 986.5
+        }
+      },
+      "lines": 7,
+      "firstLines": [
+        {
+          "id": "p0.c-1.0",
+          "sizePt": 12,
+          "words": "בס״ד"
+        },
+        {
+          "id": "p0.c-1.1",
+          "sizePt": 46,
+          "words": "ספר מלכי המלוכה"
+        },
+        {
+          "id": "p0.c-1.2",
+          "sizePt": 21,
+          "words": "ביאורים וחידושים עמוקים על"
+        },
+        {
+          "id": "p0.c-1.3",
+          "sizePt": 12,
+          "words": "בירור שיטות הראשונים והאחרונים"
+        },
+        {
+          "id": "p0.c-1.4",
+          "sizePt": 11.5,
+          "words": "מהדורה שניה ומורחבת בסייעתא"
+        },
+        {
+          "id": "p0.c-1.5",
+          "sizePt": 15,
+          "words": "הצעיר ידידיה בר אבא"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "type": "shaar-back",
+      "shaar": {
+        "variant": "back",
+        "box": {
+          "x": 359,
+          "y": 83,
+          "w": 377.70000000000005,
+          "h": 971.5
+        }
+      },
+      "lines": 5,
+      "firstLines": [
+        {
+          "id": "p1.c-1.0",
+          "sizePt": 13.5,
+          "words": "כל הזכויות שמורות"
+        },
+        {
+          "id": "p1.c-1.1",
+          "sizePt": 10,
+          "words": "כל הזכויות הפקר"
+        },
+        {
+          "id": "p1.c-1.2",
+          "sizePt": 11,
+          "words": "הוצאת זוכמיר בע\"מ"
+        },
+        {
+          "id": "p1.c-1.3",
+          "sizePt": 10,
+          "words": "052-7666666"
+        },
+        {
+          "id": "p1.c-1.4",
+          "sizePt": 9.5,
+          "words": "אין לסמוך על האמור"
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "type": "shaar-sub",
+      "shaar": {
+        "variant": "sub",
+        "box": {
+          "x": 57,
+          "y": 76,
+          "w": 377.70000000000005,
+          "h": 970.5
+        }
+      },
+      "lines": 2,
+      "firstLines": [
+        {
+          "id": "p6.c-1.0",
+          "sizePt": 36,
+          "words": "הקדמות וכללים"
+        },
+        {
+          "id": "p6.c-1.1",
+          "sizePt": 21,
+          "words": "יום השבת - גדרי"
+        }
+      ]
+    }
+  ]
+}

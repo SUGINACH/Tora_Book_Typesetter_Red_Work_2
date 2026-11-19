@@ -1,0 +1,4 @@
+typeset: 799 pages in 35012ms (hash 927e0caa5375) [profile: dp]
+determinism: run2 799 pages in 22570ms (hash 927e0caa5375) — OK (identical)
+model: /tmp/uni-long/ours-model.json — 0 paragraphs, 799 pages
+pdf: /tmp/uni-long/ours.pdf — 16328 KB
