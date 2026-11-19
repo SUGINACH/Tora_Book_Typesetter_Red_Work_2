@@ -362,6 +362,19 @@ describe('audit-sensitivity — הוכחת רגישות הגלאים (S5.2)', ()
     assertEq(summary.problems, 0, 'legacy footnotes have no rule by design, got: ' + codes.join(','));
   });
 
+  it('LINE_BELOW_COLUMN keeps exact line and column DOMRect evidence without changing the threshold', () => {
+    const repoRoot = path.resolve(__dirname, '..', '..', '..');
+    const source = fs.readFileSync(path.join(repoRoot, 'tools/layout-audit/audit-in-page.js'), 'utf8');
+    const start = source.indexOf("type: 'LINE_BELOW_COLUMN'");
+    const end = source.indexOf('\n        }', start);
+    assert(start >= 0 && end > start, 'LINE_BELOW_COLUMN collector exists');
+    const region = source.slice(start, end);
+    for (const field of ['lineBox:', 'columnBox:', 'overflowPx:', 'lineId:', 'computed:']) {
+      assert(region.includes(field), `LINE_BELOW_COLUMN evidence missing ${field}`);
+    }
+    assert(source.includes('lr.r.b > cr.b + 2'), 'the existing 2px failure threshold is unchanged');
+  });
+
   it('מבנה הדוח: bySeverity מחושב מהרשימה המלאה גם מעל תקרת 2000 (תיקון S5.2)', () => {
     const { toHebrewNumber } = require('../../src/engine/decoration/folio.js');
     const book = cleanBook();

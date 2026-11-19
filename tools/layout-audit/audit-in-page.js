@@ -275,7 +275,19 @@
           problems.push({ page: idx, col: ci, type: 'LINE_OUTSIDE_COLUMN', severity: 'high', text: lr.el.textContent.slice(0, 25), dx: Math.round(Math.max(lr.r.r - cr.r, cr.x - lr.r.x)) });
         }
         if (lr.r.b > cr.b + 2) {
-          problems.push({ page: idx, col: ci, type: 'LINE_BELOW_COLUMN', severity: 'high', text: lr.el.textContent.slice(0, 25), dy: Math.round(lr.r.b - cr.b) });
+          // Evidence payload: preserve the exact DOMRect pair that caused the
+          // invariant to fire. Threshold and severity remain unchanged.
+          const px1 = (v) => Math.round(v * 10) / 10;
+          problems.push({
+            page: idx, col: ci, type: 'LINE_BELOW_COLUMN', severity: 'high',
+            text: lr.el.textContent.slice(0, 80),
+            lineId: lr.el.getAttribute('data-id') || null,
+            lineClass: String(lr.el.className || ''),
+            lineBox: { x: px1(lr.r.x), y: px1(lr.r.y), w: px1(lr.r.w), h: px1(lr.r.h), bottom: px1(lr.r.b) },
+            columnBox: { x: px1(cr.x), y: px1(cr.y), w: px1(cr.w), h: px1(cr.h), bottom: px1(cr.b) },
+            overflowPx: px1(lr.r.b - cr.b),
+            computed: { fontSize: getComputedStyle(lr.el).fontSize, lineHeight: getComputedStyle(lr.el).lineHeight, position: getComputedStyle(lr.el).position }
+          });
         }
       }
       // 3. יישור: שורות גוף שאינן אחרונות/כותרות — חייבות להיות מיושרות.
