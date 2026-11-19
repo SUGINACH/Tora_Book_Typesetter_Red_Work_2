@@ -13651,21 +13651,25 @@ function _flatSnapshot(value) {
   return snap;
 }
 function _snapshotMatches(snap, value) {
-  const keys = Object.keys(value);
-  if (keys.length !== snap.size) return false;
-  for (const k of keys) {
+  // ללא הקצאות (נקרא בכל מדידה): מניין שדות-עצם + השוואת ערכים מול התצלום
+  let n = 0;
+  for (const k in value) {
+    if (!Object.prototype.hasOwnProperty.call(value, k)) continue;
+    n++;
     if (!snap.has(k) || snap.get(k) !== value[k]) return false;
   }
-  return true;
+  return n === snap.size;
 }
 function _canonicalStringifyStable(value) {
   if (value === null || typeof value !== 'object') return _canonicalStringify(value);
-  const snap = _flatSnapshot(value);
-  if (snap === null) return _canonicalStringify(value); // מבנה מקונן — קנוניזציה טרייה בכל קריאה (נכונות מלאה)
   let m = _canonicalMemo.get(value);
-  if (m === undefined || !_snapshotMatches(m.snap, value)) {
-    m = { canon: _canonicalStringify(value), snap };
-    _canonicalMemo.set(value, m);
+  if (m === undefined || m.snap === null || !_snapshotMatches(m.snap, value)) {
+    // חישוב מחדש (מקור ראשון, מוטציה שזוהתה, או מבנה מקונן): התצלום נבנה רק כאן;
+    // מבנה מקונן (snap=null) אינו נשמר במֵימוֹ כלל — קנוניזציה טרייה בכל קריאה (נכונות מלאה)
+    const canon = _canonicalStringify(value);
+    const snap = _flatSnapshot(value);
+    if (snap !== null) _canonicalMemo.set(value, { canon, snap });
+    return canon;
   }
   return m.canon;
 }
@@ -13735,36 +13739,56 @@ function _assetIdentityFp(item, ctx) {
  * + מפתח הקשר; (9) גרסת מנוע המדידה; (10) חית סביבה **חיה** (מחושבת כעת
  * מהרישומים בפועל — לא הצהרת caller) + חית ההקשר שהועברה. */
 function _itemCacheKey(item, style, ctx) {
-  // **מקטע ב׳ (זיכרון):** המפתח קומפקטי — חשיש יחיד על שריות הקנוניות המלאות
-  // (אותה חד-משמעיות, כולל זהות-תוכן של החלקים) — בספרים גדולים
-  // מיליוני מחרוזות-מפתח משורבות זיכרון משמעותית.
-  // **אופטימיזציה (19.11, הוראת ביצועים §5):** (א) _fastKeyHash במקום sha256Hex —
-  // המפתח משרת מטמון בתהליך בלבד (לא זהות content-addressed); (ב) ctx.constraints
-  // דרך מֵימוֹ קנוני לפי זהות — אותה הפניה לכל אורך ה-typeset, אותה תוצאה בדיוק.
-  // **ביקורת בטיחות 19.11 (U-11):** מוחזרים המקור הקנוני המלא (s) והחשיש (k) יחד —
-  // המטמון מאמת מקור מדויק בכל קריאה; התנגשות hash אמיתית היא miss (חישוב מחדש),
-  // לא החזרת מדידה זרה — הגנת PR #22 מובטחת דטרמיניסטית, לא הסתברותית.
-  // פרדת רכיבים ב-NUL (\u0000): הקנוניזציה מבריחה תווי בקרה (JSON.stringify) —
-  // המפריד חד-משמעי; אין היווצרות מקור זהה מרכיבים שונים.
+  // **מקטע ב׳ (זיכרון) + ביקורת בטיחות 19.11 (U-11):** המקור הקנוני נחלק לשניים —
+  // (א) רכיב-יציב לכל ה-typeset (גרסה, חית סביבה חיה מהגופנים בפועל, הקשר,
+  // אילוצי ההקשר) — מֵימוּ על אובייקט ה-ctx: אותו תוכן ⇒ אותו אובייקט מחרוזת;
+  // (ב) רכיב-פריט (kind/id/payload/אילוצי-פריט/סגנון/נכס). המפתח = חשיש כפול
+  // על שני החלקים. המטמון מאמת בכל קריאה: **ייחוס** רכיב-היציב (השוואת אובייקט —
+  // מדויקת: תוכן שונה בונה אובייקט אחר בהכרח) ו**תוכן** רכיב-הפריט. התנגשות
+  // hash אמיתית — כולל כזו שהוזרקה בכוונה בבדיקה — היא miss (חישוב מחדש), לא
+  // החזרת מדידה זרה: הגנת PR #22 מובטחת דטרמיניסטית, לא הסתברותית.
+  // **ביקורת ביצועים (אותו יום, מדידה בפרופיל CPU):** אחסון המקור המלא לכל
+  // רשומה הכביד את אוסף-הזבל (‎+515ms על mid_long×3). הפיצול משתף מחרוזת אחת
+  // לרכיב-היציב ומאחסן לכל רשומה רק את רכיב-הפריט הקצר — גם ההיטיש בנתיב
+  // הקריאה מצטמצם לרכיב-הפריט בלבד. פרדת רכיבים ב-NUL (\u0000) — הקנוניזציה
+  // מבריחה תווי בקרה (JSON.stringify), ולכן המפריד חד-משמעי.
+  const P = _stableKeyPrefix(ctx);
   const it = item || {};
-  const s = [
-    'item-key-v3',
-    MEASURE_ENGINE_VERSION,
-    environmentFingerprint(),
-    (ctx && ctx.environmentFingerprint) || '',
+  const b = [
     it.kind || '',
     it.id != null ? String(it.id) : '',
     _canonicalStringify(it.payload !== undefined ? it.payload : it),
     _canonicalStringify(it.constraints || null),
     _canonicalStringify(style || null),
-    (ctx && ctx.direction) || '',
-    (ctx && ctx.language) || '',
-    _canonicalStringifyStable((ctx && ctx.constraints) || null),
-    (ctx && ctx.constraintsKey) || '',
-    (ctx && ctx.assetId) != null ? String(ctx.assetId) : '',
     _assetIdentityFp(item, ctx)
   ].join('\u0000');
-  return { k: 'ik3:' + _fastKeyHash(s), s };
+  return { k: 'ik3:' + P.h + _fastKeyHash(b), a: P.s, b };
+}
+
+/** רכיב-היציב של מפתח המטמון — מֵימוּ על אובייקט ה-ctx (WeakMap) עם בדיקת
+ *  שדות מדויקת: חית הסביבה החיה (גופנים בפועל), חית ההקשר, כיוון/שפה, הקנוני
+ *  של אילוצי ההקשר, מפתח האילוצים וזהות הנכס. כל שינוי ⇒ בנייה מחדש — אובייקט
+ *  מחרוזת חדש ⇒ כל הרשומות שנבנו תחת הישן נהפכות miss (התנהגות נכונה: מדידה
+ *  חוזרת מהסביבה החדשה). */
+const _keyPrefixMemo = new WeakMap();
+function _stableKeyPrefix(ctx) {
+  const c = ctx || {};
+  const envLive = environmentFingerprint();
+  const consCanon = _canonicalStringifyStable((c.constraints) || null);
+  const dir = c.direction || '';
+  const lang = c.language || '';
+  const envFp = c.environmentFingerprint || '';
+  const consKey = c.constraintsKey || '';
+  const assetId = c.assetId != null ? String(c.assetId) : '';
+  let m = ctx ? _keyPrefixMemo.get(ctx) : null;
+  if (m && m.envLive === envLive && m.consCanon === consCanon && m.dir === dir && m.lang === lang
+    && m.envFp === envFp && m.consKey === consKey && m.assetId === assetId) {
+    return m; // אותו תוכן ⇒ אותו אובייקט מחרוזת (s) ואותו חשיש (h)
+  }
+  const s = ['item-key-v3', MEASURE_ENGINE_VERSION, envLive, envFp, dir, lang, consCanon, consKey, assetId].join('\u0000');
+  m = { envLive, consCanon, dir, lang, envFp, consKey, assetId, s, h: _fastKeyHash(s) };
+  if (ctx) _keyPrefixMemo.set(ctx, m);
+  return m;
 }
 
 /** **תיקון ביקורת PR #22 (immutability אמיתי):** הקפאה עמוקה — כל המבנים
@@ -14047,10 +14071,10 @@ const _itemMeasureCache = new Map();
 function _itemCacheGet(ck) {
   const e = _itemMeasureCache.get(ck.k);
   if (e === undefined) return undefined;
-  // **ביקורת בטיחות 19.11 (U-11) — אימות מקור מדויק:** החשיש המהיר אינו הוכחת
-  // זהות. הרשומה שומרת את המקור הקנוני המלא; מקור שונה תחת אותו חשיש (התנגשות
-  // אמיתית — כולל כזו שהוזרקה בבדיקה) היא **miss**, לא החזרת מדידה זרה.
-  if (e.src !== ck.s) return undefined;
+  // **U-11 — אימות מקור מדויק:** ייחוס רכיב-היציב (אותו אובייקט מחרוזת מהמֵימוֹ)
+  // ותוכן רכיב-הפריט. מקור שונה תחת אותו חשיש (התנגשות אמיתית — כולל כזו
+  // שהוזרקה בבדיקה) היא **miss**, לא החזרת מדידה זרה.
+  if (e.a !== ck.a || e.b !== ck.b) return undefined;
   // LRU: חידוש עדכניות — מחיקה והחזרה לסוף (סדר ה-Map = סדר הכנסה)
   _itemMeasureCache.delete(ck.k);
   _itemMeasureCache.set(ck.k, e);
@@ -14067,7 +14091,7 @@ function _itemCacheSet(ck, value) {
   }
   // התנגשות hash (מקור אחר תחת אותו חשיש): הרשומה האחרונה גוברת — ההגנה
   // היא ב-get (אימות מקור); שני המקורות פשוט יחושבו מחדש לסירוגין.
-  _itemMeasureCache.set(ck.k, { src: ck.s, val: value });
+  _itemMeasureCache.set(ck.k, { a: ck.a, b: ck.b, val: value });
 }
 function itemCacheStats() {
   return { entries: _itemMeasureCache.size, capacity: ITEM_MEASURE_CACHE_MAX_ENTRIES };
