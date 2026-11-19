@@ -369,7 +369,7 @@ describe('audit-sensitivity — הוכחת רגישות הגלאים (S5.2)', ()
     const end = source.indexOf('\n        }', start);
     assert(start >= 0 && end > start, 'LINE_BELOW_COLUMN collector exists');
     const region = source.slice(start, end);
-    for (const field of ['lineBox:', 'columnBox:', 'overflowPx:', 'lineId:', 'computed:']) {
+    for (const field of ['lineBox:', 'columnBox:', 'modelLine:', 'modelColumn:', 'pageScaleY:', 'domVsModel:', 'overflowPx:', 'lineId:', 'computed:']) {
       assert(region.includes(field), `LINE_BELOW_COLUMN evidence missing ${field}`);
     }
     assert(source.includes('lr.r.b > cr.b + 2'), 'the existing 2px failure threshold is unchanged');

@@ -278,6 +278,17 @@
           // Evidence payload: preserve the exact DOMRect pair that caused the
           // invariant to fire. Threshold and severity remain unchanged.
           const px1 = (v) => Math.round(v * 10) / 10;
+          const numData = (el, key) => {
+            const n = Number(el && el.dataset ? el.dataset[key] : NaN);
+            return Number.isFinite(n) ? n : null;
+          };
+          const modelPageH = numData(pg, 'modelHeight');
+          const scaleY = modelPageH > 0 ? pr.h / modelPageH : null;
+          const modelLineY = numData(lr.el, 'modelY');
+          const modelLineH = numData(lr.el, 'modelH');
+          const modelColTop = numData(col, 'modelTop');
+          const modelColHeight = numData(col, 'modelHeight');
+          const modelColBottom = numData(col, 'modelBottom');
           problems.push({
             page: idx, col: ci, type: 'LINE_BELOW_COLUMN', severity: 'high',
             text: lr.el.textContent.slice(0, 80),
@@ -285,6 +296,19 @@
             lineClass: String(lr.el.className || ''),
             lineBox: { x: px1(lr.r.x), y: px1(lr.r.y), w: px1(lr.r.w), h: px1(lr.r.h), bottom: px1(lr.r.b) },
             columnBox: { x: px1(cr.x), y: px1(cr.y), w: px1(cr.w), h: px1(cr.h), bottom: px1(cr.b) },
+            modelLine: {
+              y: modelLineY, h: modelLineH,
+              bottom: modelLineY != null && modelLineH != null ? px1(modelLineY + modelLineH) : null,
+              aqStretch: numData(lr.el, 'modelAQ'), gapBeforePx: numData(lr.el, 'modelGap'),
+              sourceTokenId: lr.el.dataset ? lr.el.dataset.sourceTokenId || null : null
+            },
+            modelColumn: { top: modelColTop, height: modelColHeight, bottom: modelColBottom },
+            pageScaleY: scaleY,
+            domVsModel: scaleY != null && modelLineY != null && modelLineH != null ? {
+              topDeltaPx: px1((lr.r.y - pr.y) - modelLineY * scaleY),
+              heightDeltaPx: px1(lr.r.h - modelLineH * scaleY),
+              columnBottomDeltaPx: modelColBottom != null ? px1((cr.b - pr.y) - modelColBottom * scaleY) : null
+            } : null,
             overflowPx: px1(lr.r.b - cr.b),
             computed: { fontSize: getComputedStyle(lr.el).fontSize, lineHeight: getComputedStyle(lr.el).lineHeight, position: getComputedStyle(lr.el).position }
           });
