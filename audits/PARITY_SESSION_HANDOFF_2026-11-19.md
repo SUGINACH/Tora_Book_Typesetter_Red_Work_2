@@ -12,19 +12,19 @@
 | ענף/PR | HEAD או SHA | מצב מאומת |
 |---|---|---|
 | `main` | `aedf5ba1ccd218c4996063c3574331d8d166e778` | נשאר ללא שינוי במהלך עבודת הקטלוג. כולל PRs #68/#69 שמוזגו: היסטוריית דרישות משתמש ותיקון D-108. |
-| `engine/legacy-parity-preview-20261119` | `3157d1a4f733a975673866f8ffb07b8d454301ae` | ענף הניסוי/העבודה. תיקון המנוע D-108 נמצא ב־`f603c92`; ה־commits שאחריו עד HEAD זה כוללים handoff, prompts, קטלוג HTML/JSON והפניות תיעוד. לא בוצע שינוי מנוע במסגרת יצירת הקטלוג. |
+| `engine/legacy-parity-preview-20261119` | `fa51be41357c6329bc9805aadcd4647d96b2eabc` (HEAD מאומת לפני עדכון handoff זה) | ענף הניסוי/העבודה. תיקון המנוע D-108 נמצא ב־`f603c92`; מאז `3157d1a` נוספו רק מסמכי קטלוג/שאלות/Issue Registry/Prompt/Worklog. לא בוצע שינוי מנוע במסגרת יצירת הקטלוג. |
 | PR #65 — `docs/repo-map-glossary-20261119` | `a333023c81ddaf9d4a427c19f8538e17c473cb67` | **OPEN, לא מוזג**, base=`main`. אין למזג ללא הוראה מפורשת. |
 | PR #66 — `stage1/capability-map` | `99917fa9533b69fcc51fd8b31f3c94fa134ec36d` | **OPEN, לא מוזג**, base=`main`. אין למזג ללא הוראה מפורשת. |
 | PR #68 | `bafeea5e95a715fd93469bc588f9264b06f81ece` | מוזג ל־main; דרישות משתמש/תוכנית parity. |
 | PR #69 | `6fcaa01228f935e2f15228981773a4ebda877279` | מוזג ל־main; כלל פוליו חשוף D-108. |
-| `gh-pages` | `fef892e5d76fa0b0392663789ab5e4cdc61ab648` | deployment האחרון נוצר מ־`3157d1a` עבור Preview בלבד. שורש הייצור עדיין מכיל cache key `2026-11-18-s9c3`. |
+| `gh-pages` | `b3238f64f4972a45f0681caf2afd1b157f85a0f7` | Preview build האחרון נוצר מ־`f75cd0f`; שורש הייצור עדיין מכיל cache key `2026-11-18-s9c3`. |
 
 **מקור סמכות למצב Git:** GitHub API שנבדק בעת עדכון זה. טבלת המצב הקודמת במסמך זה הייתה שגויה לגבי PR #65/#66 והוחלפה. אין להסיק מסטטוס gh-pages או מ־Preview אישור ל־cutover.
 ## 2. Preview ופריסה — מצב מאומת
 
 **Preview חי:** https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/previews/engine-parity/
 
-- `build-info.json` העדכני שנשלף מ־gh-pages: `profile=unified`, branch=`engine/legacy-parity-preview-20261119`, commit=`3157d1a4f733a975673866f8ffb07b8d454301ae`, builtAt=`2026-11-19T14:30:53Z`. זה מוכיח שה־Preview נבנה מה־HEAD הנוכחי של ענף הניסוי.
+- `build-info.json` העדכני שנשלף מ־gh-pages: `profile=unified`, branch=`engine/legacy-parity-preview-20261119`, commit=`f75cd0f860ed9150a1fa10a185ba592575b3b1c3`, builtAt=`2026-11-19T14:34:04Z`. הוא קודם ל־HEAD הענף (`fa51be4`) בארבעה commits. בדיקת Git מראה שארבעת ה־commits שביניהם משנים רק `OPEN_QUESTIONS.md`, `ISSUE_REGISTRY.md`, את פרומט הביצועים ו־`WORKLOG.md`; אין בהם שינוי מנוע או קוד אפליקציה. לכן קוד ה־Preview זהה מבחינת קוד האפליקציה לענף, אך אין לכתוב שהוא נבנה מה־HEAD העדכני.
 - ה־Preview הוא סביבת ניסוי בלבד — build-info מציין במפורש שאינו אישור לנכונות המנוע או ל־cutover.
 - שורש הייצור: `red-build/ui/index.html` ב־gh-pages עדיין מציג `2026-11-18-s9c3` ב־favicon/styles/app bundle. לא בוצעה החלפת גרסת הייצור.
 - ה־Preview האחרון כולל את בניית האפליקציה מהענף; קובצי הקטלוג נמצאים ב־`spec/` של ענף GitHub ואינם חלק מ־bundle האפליקציה. אין להניח שה־HTML הועלה ל־gh-pages או נבדק בדפדפן מתוך ה־Preview.
@@ -100,5 +100,6 @@ D-108 (פוליו גימטריה חשופה — **תוקן בענף הניסוי
 - לא בוצע browser audit או PDF raster diff חדש בעקבות שינוי הקטלוג. בוצעו בדיקות סטטיות לתוכן ה־HTML, ל־JavaScript המוטמע ולנוכחות כל חמשת הסעיפים; אין להציג אותן כבדיקת דפדפן.
 - לא מוזגו PR #65/#66; הם נשארים OPEN.
 - לא שונה main או שורש אתר הייצור. ה־Preview עודכן מהענף בלבד.
-- הקטלוג HTML/JSON והפניות התיעוד נוצרו בענף הניסוי. ערכי יבוא שמקורם באודיט `95e829d` מסומנים כהיסטוריים ולא כאימות import מחודש ב־HEAD.
+- הקטלוג HTML/JSON והפניות התיעוד נוצרו בענף הניסוי. HTML blob `3753666ef77679d7f5bbff0a8ed6fb4c761441a5`; JSON blob `eb119071880fa3a8c0a17dcfd579057778d2c19b`. הקטלוג מכיל 256 הגדרות, 265 מפתחות מורשת, 64 פריטי קוד/חוזה, 14 מנגנוני fallback, 12 Page Items ו־3 ערכות סגנון (249 מפתחות כל אחת; 18 הבדלים). ערכי יבוא שמקורם באודיט `95e829d` מסומנים כהיסטוריים ולא כאימות import מחודש ב־HEAD.
+- העריכה הנוכחית של handoff זה עצמה יוצרת commit תיעודי נוסף לאחר `fa51be4`; יש לקרוא את branch ref החי ולא להניח שמספר זה נשאר HEAD לאחר שמירת מסמך המעבר.
 
