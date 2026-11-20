@@ -36,6 +36,25 @@ jobs:
       # 67 קבצי סוויטה + scan-control-triggers; הקודם ציין 1130/66 — פרוסה 2).
       - name: Run full test suite (1146 tests · 67 suite files + scan-control-triggers, zero deps)
         run: cd red-build && npm test
+      - name: Diagnose generated Worker bundle after full suite
+        if: always()
+        run: |
+          echo "Tracked changes after npm test:"
+          git status --short -- red-build/src red-build/ui tools
+          echo "Source diff:"
+          git diff --name-only -- red-build/src tools
+          echo "Worker bundle checksum:"
+          sha256sum red-build/ui/engine-worker.bundle.js
+
+      - name: Upload Worker bundle generated during D-65 (diagnostic)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d65-worker-bundle-node-${{ matrix.node }}
+          path: red-build/ui/engine-worker.bundle.js
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Determinism check
         run: cd red-build && npm run test:determinism
       # **S71 (הצלבה שיטתית מקומי↔CI↔חי):** אותן נעילות, אותו כלי, אותה פקודה —
