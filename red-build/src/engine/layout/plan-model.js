@@ -51,7 +51,10 @@ function buildColumnModel(page, ci, ctx) {
   let overflow = null;
   for (const ln of col) gapsPx += ln.gapBeforePx || 0;
   const usedPx = planningUsedHeight(col, page);
-  const capPx = colCapacityOf(page, { colIndex: ci, fnBudget: false });
+  // **U-8 (19.11):** capPx מודע-תקציב-הערות לכל טור — כמו המרזב המוקרן
+  // (רוחב תיבת-התוכן כולה); usedPx = שורות בלבד. בעבר התקציב נכלל רק
+  // ב-usedPx של הטור האחרון — הטור הימני חדר למרזב וגלאי החריגה היה עיוור לו.
+  const capPx = colCapacityOf(page, { colIndex: ci });
   if (usedPx > capPx + CAPACITY_EPS) {
     overflow = { usedPx: Math.round(usedPx * 100) / 100, capPx: Math.round(capPx * 100) / 100, by: Math.round((usedPx - capPx) * 100) / 100 };
   }

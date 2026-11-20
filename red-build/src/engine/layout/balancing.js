@@ -51,7 +51,7 @@ function pageImbalance(page) {
  */
 function optimalSplit(cols, opts = {}) {
   const cap = opts.cap != null ? opts.cap : Number.POSITIVE_INFINITY;
-  const extraLast = opts.extraLast || 0; // תקציב הערות של העמוד — על הטור האחרון (P1-8)
+  const extraLast = opts.extraLast || 0; // **U-8:** אין עוד צרכן מנוע — נשמר לבדיקות היחידה של המתמטיקה הגנרית בלבד
   const c0 = cols[0] || [], c1 = cols[1] || [];
   const seq = [...c0, ...c1];
   const n = seq.length;
@@ -103,10 +103,13 @@ function balancePage(page, maxDelta) {
   if (before <= maxDelta) return { changed: false, before, after: before, moves: 0 };
   if (!page.columns || page.columns.length < 2) return { changed: false, before, after: before };
   // **S5.2 (P-2 — קיבולת מאוחדת):** colCapacityOf (column-flow) — כולל הפס
-  // החוצה־טורים; תקציב ההערות עובר כ-extraLast של הטור האחרון (כמו ב-dp-planner,
-  // P1-8) — בעבר חושב מ-contentBox.height גולמי והתעלם משניהם.
-  const cap = colCapacityOf(page, { fnBudget: false });
-  const best = optimalSplit(page.columns, { cap, extraLast: page.fnReservedHeightPx || 0 });
+  // החוצה־טורים. **U-8 (19.11 — אמנה אחת):** הקיבולת מודעת-תקציב-הערות
+  // לכל טור (המרזב פרוש על רוחב תיבת-התוכן כולה) — extraLast הוסר; בעבר
+  // הוא הגביל רק את הטור האחרון והשאיר את הראשון חופשי לחדור למרזב
+  // בסוף-פרק (balance-chapter-end), והקיבולת חושבה מ-contentBox.height
+  // גולמי שהתעלם מהפס ומהתקציב גם יחד.
+  const cap = colCapacityOf(page);
+  const best = optimalSplit(page.columns, { cap });
   if (!best || best.k === page.columns[0].length) {
     // אין פיצול חוקי-קיבולת, או שהנוכחי כבר האופטימלי — לא מדווח שינוי
     return { changed: false, before, after: before, rollback_reason: best ? 'at-optimum' : 'capacity' };
@@ -156,13 +159,12 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     // תקרת בטיחות בעמודי הערות: הטקסט לא נכנס לאזור ההערות (R3-C2 —
     // האזור חוצה-רוחב); חדירה קיימת (pre-existing containment) — לא לנו,
     // דילוג מלא כדי לא להחריף
-    const capAll = colCapacityOf(page, { fnBudget: false }); // כולל פס חוצה-טורים
+    // **U-8 (אמנה אחת):** colCapacityOf כבר מפחית את תקציב ההערות
+    // (והפס החוצה־טורים) לכל טור — אין עוד חישוב תקרה מקביל כאן.
+    const capAll = colCapacityOf(page);
     let target = Math.max(h0, h1);
-    if (page.fnReservedHeightPx > 0) {
-      const fnCeil = capAll - page.fnReservedHeightPx;
-      if (Math.max(h0, h1) > fnCeil + 0.5) { skipped++; continue; } // חדירה קיימת
-      target = Math.min(target, fnCeil);
-    } else if (target > capAll + 0.5) { skipped++; continue; } // גלישה קיימת
+    if (target > capAll + 0.5) { skipped++; continue; } // חדירה/גלישה קיימת
+    target = Math.min(target, capAll);
     const shortI = h0 < h1 ? 0 : 1;
     const shortCol = cols[shortI];
     const usedS = Math.min(h0, h1);

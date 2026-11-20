@@ -67,8 +67,9 @@ function normalizeColumnGaps(col) {
  * @param {{colIndex?:number, fnBudget?:boolean}} [opts]
  *  - colIndex: הטור שאליו שייכת הקיבולת (ברירת מחדל: האחרון — המחמיר);
  *    שמורות last-column מופחתות ממנו בלבד.
- *  - fnBudget:false — ביטול הפחתת תקציב ההערות (למי שמודד usage כולל
- *    התקציב בעצמו — כמו usedHeight של dp-planner או extraLast של optimalSplit).
+ *  - fnBudget:false — ביטול הפחתת תקציב ההערות. **U-8 (19.11 — אמנה אחת):**
+ *    אף צרכן מנוע כבר אינו משתמש בזה — התקציב חי בקיבולת לכל טור ואינו
+ *    נכנס לשום מדידת usage. האופציה נשמרת לבדיקות יחידה של מכניקת הפחתות.
  */
 function colCapacityOf(page, opts = {}) {
   if (!page || !page.template || !page.template.contentBox) return 0;
@@ -116,17 +117,24 @@ function capacityReservationsOf(page, opts = {}) {
 /**
  * **שלב 5 (חילוץ שורש מ-PR #16, S78/D-107 — גובה תפוס בזמן תכנון, מקור יחיד):**
  * Σ גבהי שורות + פערי בלוקים (FX-6: `gapBeforePx` — הפער נצבר כאן בפועל,
- * לא רק בשער הכניסה) + יתרת תקציב ההערות של העמוד — נרשם על הטור האחרון (F-17).
- * זו סמנטיקת ה-**תכנון** (לפני AQ — בלי מקדם מתיחה); סמנטיקת ה-**רינדור**
- * (עם aqStretch) חיה ב-balancing.usedHeight. עד כאן היו שני מימושים מקבילים
- * באותו שם בשני מודולים (dp-planner מקומי מול זה) — כעת צרכן יחיד.
+ * לא רק בשער הכניסה). זו סמנטיקת ה-**תכנון** (לפני AQ — בלי מקדם מתיחה);
+ * סמנטיקת ה-**רינדור** (עם aqStretch) חיה ב-balancing.usedHeight. עד כאן היו
+ * שני מימושים מקבילים באותו שם בשני מודולים (dp-planner מקומי מול זה) — כעת
+ * צרכן יחיד.
+ *
+ * **U-8 (19.11, ביקורת שלמות — אמנה אחת):** מדידת שורות בלבד. תקציב ההערות
+ * אינו נכנס לכאן עוד — הוא נכנס לקיבולת (colCapacityOf) עבור **כל** הטורים,
+ * כמו המרזב המוקרן שפרוש על רוחב תיבת-התוכן כולה (S6.0/R3-C2). בעבר נוסף
+ * רק לטור האחרון ⇒ הטור הימני (RTL) חדר למרזב ההערות (נמדד בענף העבודה
+ * לפני התיקון: no_long ‏2 טורים חודרים — p58:‏ 44.5px, p62:‏ 3.4px; mid_long
+ * ‏27 טורים — עד 520.5px; **כולם** לא-אחרונים, הטור האחרון: אפס — החתימה
+ * הדטרמיניסטית של האמנה החצויה). הצרכנים שהסתמכו על הכפיל הישן הותאמו
+ * באותו תיקון (dp-planner: colCapacity מודע-תקציב, extraLast הוסר;
+ * balancing: אותה אמנה; plan-model: capPx מודע-תקציב).
  */
-function planningUsedHeight(col, page) {
+function planningUsedHeight(col) {
   let h = 0;
   for (const ln of col) h += (ln.heightPx || 0) + (ln.gapBeforePx || 0);
-  if (page && page.fnReservedHeightPx > 0 && page.columns[page.columns.length - 1] === col) {
-    h += page.fnReservedHeightPx; // נשמר פעם אחת — בסוף הטור האחרון
-  }
   return h;
 }
 

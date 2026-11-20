@@ -219,7 +219,7 @@ describe('S72.2 DP — יישור תחתיות ככלל עימוד (שיפורי
     assert(min >= 0.95 - 1e-9 && max <= 1.05 + 1e-9, `מקדם מחוץ לגבולות: [${min}, ${max}]`);
   });
 
-  it('נייטרליות: hash הקורפוס זהה לנעילה (4a1773cc) — aqStretch אינו משנה תוכן', () => {
+  it('נייטרליות: hash הקורפוס זהה לנעילה (ad283e71) — aqStretch אינו משנה תוכן', () => {
     // ננעל מחדש 16.11 (שלב 5 פרוסה 1 — תיקוני FX במתכנן): bef8ebbed977→89108321.
     // הפער מסווג בשיטת s5-corpus-comparison: חלוקת השורות של כל הבלוקים זהה
     // לבסיס (0 redivision/0 marker/0 content-diff) — השינוי הוא אריזת עמודים
@@ -234,7 +234,10 @@ describe('S72.2 DP — יישור תחתיות ככלל עימוד (שיפורי
     // **9b.3 (דקדוק הכותרות המלא — D-91):** ננעל מחדש 4a1773cc→0e657636 —
     // 27 שורות נוסח "מספר N"/"(מקור: …)" במסמך הבדיקה סווגו מפסקאות-גוף
     // לכותרות/ביאורי-צד; הוראות הדקדוק אינן נרנדרות כתוכן; contentPreserved=true.
-    assert(result.layoutHash.startsWith('0e657636'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
+    // **U-8 (20.11):** ננעל מחדש 0e657636→ad283e71 — תקציב ההערות מופחת מקיבולת
+    // כל הטורים (המרזב חוצה-רוחב; R3-C2) ⇒ אריזת עמודים בלבד; בלוקים זהים
+    // ביט-לביט (s5-corpus-comparison); contentPreserved=true; הקנוני נשמר.
+    assert(result.layoutHash.startsWith('ad283e71'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
     const r2 = typeset(corpus, getDefaultSettings(), {});
     assertEq(result.layoutHash, r2.layoutHash, 'דטרמיניזם');
     // הקנוני — נעילת fdff19d8 ממקטע ב׳ (מאומת ב-s13-acceptance)

@@ -9134,15 +9134,18 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   // והוצבה בטור רגיל ⇒ גלישה אופקית שקטה). הטורים מתחילים מתחת לפס.
   const spanH = (page) => (page && page.spanning ? page.spanning.heightPx : 0);
   // **S5.2 (P-2 — קיבולת מאוחדת):** כל חישובי הקיבולת עוברים דרך colCapacityOf
-  // (column-flow — מקור יחיד). כאן usedHeight כבר כולל את תקציב ההערות על
-  // הטור האחרון (F-17) — ולכן הקיבולת נלקחת בלי התקציב (fnBudget:false;
-  // שקול מתמטית: used+fn ≤ cap ⟺ used ≤ cap−fn). הפס החוצה־טורים נכלל תמיד.
-  const colCapacity = (tpl, page) => colCapacityOf(page, { fnBudget: false }) || (tpl && tpl.contentBox ? tpl.contentBox.height - spanH(page) : 0);
+  // (column-flow — מקור יחיד). **U-8 (19.11):** קיבולת מודעת-תקציב-הערות
+  // ל**כל** הטורים — כמו המרזב המוקרן (רוחב תיבת-התוכן כולה, R3-C2).
+  // בעבר fnBudget:false + הוספת התקציב ל-usedHeight של הטור האחרון בלבד
+  // (planningUsedHeight) ⇒ הטור הימני (RTL) מילא את הקיבולת המלאה וחדר
+  // למרזב ההערות. כעת: used = שורות בלבד, cap כולל את התקציב — אותו
+  // אי-שוויון (שורות ≤ cap−תקציב) לכל טור. הפס החוצה־טורים נכלל תמיד.
+  const colCapacity = (tpl, page) => colCapacityOf(page) || (tpl && tpl.contentBox ? tpl.contentBox.height - spanH(page) : 0);
 
   /**
-   * גובה תפוס = שורות + **יתרת תקציב ההערות של העמוד** — כך ה‑probe וה‑reservation
-   * זהים (F-17). התקציב נרשם פעם אחת בסוף הטור האחרון.
-   * תיקון P1-8: חתימה (col, page) — page חובה; אין עוד עמוד ברירת־מחדל שגוי.
+   * גובה תפוס = שורות בלבד (**U-8 — אמנה אחת**: התקציב חי בקיבולת, לא ב-used).
+   * תיקון P1-8: חתימה (col, page) — page נשמר לתאימות צרכנים; planningUsedHeight
+   * עצמו כבר אינו צורך אותו.
    */
   // **שלב 5 (חילוץ שורש מ-#16):** גובה תפוס בזמן תכנון — מקור יחיד
   // (column-flow.planningUsedHeight); סמנטיקת הרינדור (עם aqStretch) חיה
@@ -9176,6 +9179,21 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     return -1;
   }
 
+  /** **U-8 (ביקורת שלמות 19.11) — הכלה ברמת העמוד:** המרזב פרוש על רוחב
+   *  תיבת-התוכן כולה; כשהערה מתחייבת בעמוד, **כל** טורי העמוד חייבים לעמוד
+   *  מעל המרזב (used ≤ cap−תקציב). בדיקת המחסנית של שורת הסמן לבדה אינה
+   *  מספיקה: הסמן עשוי להיכנס לטור פנוי בעוד טור אחר כבר מלא מעבר למרזב
+   *  (נמדד: no_long ‏p58 — חדירה 44.5px; mid_long ‏26 עמודים כאלה). אם תנאי
+   *  זה נכשל — העמוד נסגר בלי ההערה (הקווים שהוצבו בלעדיה עומדים בקיבולת
+   *  המלאה) וההערה עוברת עם שורת הסמן לעמוד הבא — F-17 נשמר. */
+  function pageFitsNoteBudget() {
+    const cap = colCapacity(cur.template, cur);
+    for (let c = 0; c < cur.columns.length; c++) {
+      if (usedHeight(cur.columns[c], cur) > cap + CM.CAPACITY_EPS) return false;
+    }
+    return true;
+  }
+
   function flushPage() {
     // איזון טורים: Δ≤5px (BRZ-3) — **EXT-8: החלוקה הגלובלית האופטימלית**
     // (פיצול רציף ממזער |lH−rH| בכפוף לקיבולת; סדר קריאה נשמר מבנית — תיקון P0-3
@@ -9184,7 +9202,8 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       const a0 = usedHeight(cur.columns[0], cur), b0 = usedHeight(cur.columns[1], cur);
       if (Math.abs(a0 - b0) > imbMax) {
         const cap = colCapacity(cur.template, cur);
-        const best = optimalSplit(cur.columns, { cap, extraLast: cur.fnReservedHeightPx || 0 });
+        // **U-8:** התקציב כבר בתוך cap (לכל טור) — extraLast היה מכפיל אותו
+        const best = optimalSplit(cur.columns, { cap });
         if (best && best.k !== cur.columns[0].length) {
           const seq = [...cur.columns[0], ...cur.columns[1]];
           cur.columns[0] = seq.slice(0, best.k);
@@ -9433,11 +9452,13 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     if (!snap) return;
     const isFirst = !markerLine;
     const stack = CM.stackHeightPx([markerLine || blk.lines[0]], isFirst ? blockGapPx(settings, lineH) : 0);
-    if (snap.clean && ensureRoomFor(stack) === -1) {
+    // **U-8:** גם התאמת שורת הסמן וגם הכלת כל טורי העמוד מעל המרזב —
+    // אחרת העמוד נסגר בלי ההערה והיא עוברת עם הסמן לעמוד הבא (F-17).
+    if (snap.clean && (ensureRoomFor(stack) === -1 || !pageFitsNoteBudget())) {
       uncommitNotes(cur, snap);
       flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
       reserveNotes(blk);
-      if (ensureRoomFor(stack) === -1) {
+      if (ensureRoomFor(stack) === -1 || !pageFitsNoteBudget()) {
         // מצב פתולוגי (הערה בגודל עמוד): מתועד, לא שקט
         ledger.create('fn-degenerate', blk.tokenId, cur.index, { reservedPx: cur.fnReservedHeightPx }, 'notes-budget');
       }
@@ -9813,7 +9834,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     // (fn-tail-overflow) במקום גלישה שקטה. זהו מצב פתולוגי מבני (המשכים
     // שנצברו בסוף המסמך); לתקנת השורש המלאה נדרש מנגנון עמודי-גלישה להערות
     // — שלב B של התוכנית (דוח 06).
-    const tailCap = colCapacityOf(last, { fnBudget: false });
+    const tailCap = colCapacityOf(last); // **U-8:** מודע-תקציב, כמו ההצבה
     const tailUsed = planningUsedHeight(last.columns[last.columns.length - 1], last);
     if (tailUsed > tailCap + CM.CAPACITY_EPS) {
       const rec = ledger.create('fn-tail-overflow', `tail@p${last.index}`, last.index,
@@ -9911,11 +9932,12 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         }
         target.footnotes.splice(insertAt, 0, n);
         recomputeFnBudget(target);
-        // **קיבולת מצטברת אמיתית:** הטור האחרון של היעד (כולל התקציב המעודכן —
-        // כולל הערות שהועברו קודם לאותו עמוד באותה סריקה) אינו עובר את הקיבולת.
-        const capNoFn = colCapacityOf(target, { fnBudget: false });
+        // **קיבולת מצטברת אמיתית (U-8 — אמנה אחת):** cap מודע-תקציב לכל טור,
+        // used = שורות בלבד — אותו אי-שוויון בדיוק (שורות ≤ cap−תקציב), כולל
+        // הערות שהועברו קודם לאותו עמוד באותה סריקה.
+        const capWithFn = colCapacityOf(target);
         const usedLast = planningUsedHeight(target.columns[target.columns.length - 1], target);
-        if (usedLast <= capNoFn + CM.CAPACITY_EPS) {
+        if (usedLast <= capWithFn + CM.CAPACITY_EPS) {
           changed = true;
           movedCount++;
           movedList.push({ noteId: n.noteId || null, marker: n.marker, from: pg.index, to: target.index });
@@ -9989,21 +10011,24 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
  * **EXT-8 — חלוקה גלובלית אופטימלית** (במקום טיפוס גרידי שורה-שורה):
  * מרחב המצבים החוקי = פיצולים רציפים של רצף הקריאה; המינימום הגלובלי של |lH−rH|
  * נמצא ב-O(n) (הוכחה ב-balancing.optimalSplit). סדר קריאה נשמר מבנית.
- * תיקון P1-8: גובה כולל את תקציב ההערות של **העמוד המאוזן עצמו** (על הטור האחרון). */
+ * **U-8 (19.11):** הקיבולת מודעת-תקציב לכל טור; ה-|Δ| על שורות בלבד — התקציב
+ * משותף לשני הטורים (המרזב פרוש על רוחב תיבת-התוכן כולה). */
 function balancePageSafe(page, settings, ledger) {
   const deltaOf = () => {
-    const hh = (c) => c.reduce((s, ln) => s + (ln.heightPx || 0), 0)
-      + (page.columns[page.columns.length - 1] === c ? (page.fnReservedHeightPx || 0) : 0);
+    // **U-8:** התקציב משותף לשני הטורים (המרזב פרוש על כולם) — הוא אינו
+    // משפיע על הפרש האיזון ואינו נכנס לחישוב ה-|Δ|.
+    const hh = (c) => c.reduce((s, ln) => s + (ln.heightPx || 0), 0);
     return Math.abs(hh(page.columns[0]) - hh(page.columns[1]));
   };
   const maxDelta = settings['imbalance-max-delta-px'];
   if (deltaOf() <= maxDelta) return true; // כבר מאוזן — אין התערבות (יציבות פריסה)
   if (!page.columns || page.columns.length < 2) return false;
   // **S5.2 (P-2 — קיבולת מאוחדת):** colCapacityOf — כולל הפס החוצה־טורים
-  // (בעבר חושב מ-contentBox.height גולמי ⇒ איזון שגלש מתחת לפס בעמודי H2);
-  // תקציב ההערות עובר כ-extraLast (P1-8) — בלי כפילה.
-  const cap = colCapacityOf(page, { fnBudget: false });
-  const best = optimalSplit(page.columns, { cap, extraLast: page.fnReservedHeightPx || 0 });
+  // (בעבר חושב מ-contentBox.height גולמי ⇒ איזון שגלש מתחת לפס בעמודי H2).
+  // **U-8 (19.11):** תקציב ההערות בתוך cap לכל טור — extraLast הוסר (היה
+  // מכפיל את התקציב על הטור האחרון).
+  const cap = colCapacityOf(page);
+  const best = optimalSplit(page.columns, { cap });
   if (!best || best.k === page.columns[0].length) {
     // **EXT-8:** אין פיצול חוקי, או שהנוכחי כבר האופטימלי הגלובלי — הפרש שנותר
     // מעל הסף הוא **פשרה מתועדת**: שלמות פסקה (הימנעות מיתום/ווידוא בגבול
@@ -10838,7 +10863,7 @@ function pageImbalance(page) {
  */
 function optimalSplit(cols, opts = {}) {
   const cap = opts.cap != null ? opts.cap : Number.POSITIVE_INFINITY;
-  const extraLast = opts.extraLast || 0; // תקציב הערות של העמוד — על הטור האחרון (P1-8)
+  const extraLast = opts.extraLast || 0; // **U-8:** אין עוד צרכן מנוע — נשמר לבדיקות היחידה של המתמטיקה הגנרית בלבד
   const c0 = cols[0] || [], c1 = cols[1] || [];
   const seq = [...c0, ...c1];
   const n = seq.length;
@@ -10890,10 +10915,13 @@ function balancePage(page, maxDelta) {
   if (before <= maxDelta) return { changed: false, before, after: before, moves: 0 };
   if (!page.columns || page.columns.length < 2) return { changed: false, before, after: before };
   // **S5.2 (P-2 — קיבולת מאוחדת):** colCapacityOf (column-flow) — כולל הפס
-  // החוצה־טורים; תקציב ההערות עובר כ-extraLast של הטור האחרון (כמו ב-dp-planner,
-  // P1-8) — בעבר חושב מ-contentBox.height גולמי והתעלם משניהם.
-  const cap = colCapacityOf(page, { fnBudget: false });
-  const best = optimalSplit(page.columns, { cap, extraLast: page.fnReservedHeightPx || 0 });
+  // החוצה־טורים. **U-8 (19.11 — אמנה אחת):** הקיבולת מודעת-תקציב-הערות
+  // לכל טור (המרזב פרוש על רוחב תיבת-התוכן כולה) — extraLast הוסר; בעבר
+  // הוא הגביל רק את הטור האחרון והשאיר את הראשון חופשי לחדור למרזב
+  // בסוף-פרק (balance-chapter-end), והקיבולת חושבה מ-contentBox.height
+  // גולמי שהתעלם מהפס ומהתקציב גם יחד.
+  const cap = colCapacityOf(page);
+  const best = optimalSplit(page.columns, { cap });
   if (!best || best.k === page.columns[0].length) {
     // אין פיצול חוקי-קיבולת, או שהנוכחי כבר האופטימלי — לא מדווח שינוי
     return { changed: false, before, after: before, rollback_reason: best ? 'at-optimum' : 'capacity' };
@@ -10943,13 +10971,12 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     // תקרת בטיחות בעמודי הערות: הטקסט לא נכנס לאזור ההערות (R3-C2 —
     // האזור חוצה-רוחב); חדירה קיימת (pre-existing containment) — לא לנו,
     // דילוג מלא כדי לא להחריף
-    const capAll = colCapacityOf(page, { fnBudget: false }); // כולל פס חוצה-טורים
+    // **U-8 (אמנה אחת):** colCapacityOf כבר מפחית את תקציב ההערות
+    // (והפס החוצה־טורים) לכל טור — אין עוד חישוב תקרה מקביל כאן.
+    const capAll = colCapacityOf(page);
     let target = Math.max(h0, h1);
-    if (page.fnReservedHeightPx > 0) {
-      const fnCeil = capAll - page.fnReservedHeightPx;
-      if (Math.max(h0, h1) > fnCeil + 0.5) { skipped++; continue; } // חדירה קיימת
-      target = Math.min(target, fnCeil);
-    } else if (target > capAll + 0.5) { skipped++; continue; } // גלישה קיימת
+    if (target > capAll + 0.5) { skipped++; continue; } // חדירה/גלישה קיימת
+    target = Math.min(target, capAll);
     const shortI = h0 < h1 ? 0 : 1;
     const shortCol = cols[shortI];
     const usedS = Math.min(h0, h1);
@@ -11163,8 +11190,9 @@ function normalizeColumnGaps(col) {
  * @param {{colIndex?:number, fnBudget?:boolean}} [opts]
  *  - colIndex: הטור שאליו שייכת הקיבולת (ברירת מחדל: האחרון — המחמיר);
  *    שמורות last-column מופחתות ממנו בלבד.
- *  - fnBudget:false — ביטול הפחתת תקציב ההערות (למי שמודד usage כולל
- *    התקציב בעצמו — כמו usedHeight של dp-planner או extraLast של optimalSplit).
+ *  - fnBudget:false — ביטול הפחתת תקציב ההערות. **U-8 (19.11 — אמנה אחת):**
+ *    אף צרכן מנוע כבר אינו משתמש בזה — התקציב חי בקיבולת לכל טור ואינו
+ *    נכנס לשום מדידת usage. האופציה נשמרת לבדיקות יחידה של מכניקת הפחתות.
  */
 function colCapacityOf(page, opts = {}) {
   if (!page || !page.template || !page.template.contentBox) return 0;
@@ -11212,17 +11240,24 @@ function capacityReservationsOf(page, opts = {}) {
 /**
  * **שלב 5 (חילוץ שורש מ-PR #16, S78/D-107 — גובה תפוס בזמן תכנון, מקור יחיד):**
  * Σ גבהי שורות + פערי בלוקים (FX-6: `gapBeforePx` — הפער נצבר כאן בפועל,
- * לא רק בשער הכניסה) + יתרת תקציב ההערות של העמוד — נרשם על הטור האחרון (F-17).
- * זו סמנטיקת ה-**תכנון** (לפני AQ — בלי מקדם מתיחה); סמנטיקת ה-**רינדור**
- * (עם aqStretch) חיה ב-balancing.usedHeight. עד כאן היו שני מימושים מקבילים
- * באותו שם בשני מודולים (dp-planner מקומי מול זה) — כעת צרכן יחיד.
+ * לא רק בשער הכניסה). זו סמנטיקת ה-**תכנון** (לפני AQ — בלי מקדם מתיחה);
+ * סמנטיקת ה-**רינדור** (עם aqStretch) חיה ב-balancing.usedHeight. עד כאן היו
+ * שני מימושים מקבילים באותו שם בשני מודולים (dp-planner מקומי מול זה) — כעת
+ * צרכן יחיד.
+ *
+ * **U-8 (19.11, ביקורת שלמות — אמנה אחת):** מדידת שורות בלבד. תקציב ההערות
+ * אינו נכנס לכאן עוד — הוא נכנס לקיבולת (colCapacityOf) עבור **כל** הטורים,
+ * כמו המרזב המוקרן שפרוש על רוחב תיבת-התוכן כולה (S6.0/R3-C2). בעבר נוסף
+ * רק לטור האחרון ⇒ הטור הימני (RTL) חדר למרזב ההערות (נמדד בענף העבודה
+ * לפני התיקון: no_long ‏2 טורים חודרים — p58:‏ 44.5px, p62:‏ 3.4px; mid_long
+ * ‏27 טורים — עד 520.5px; **כולם** לא-אחרונים, הטור האחרון: אפס — החתימה
+ * הדטרמיניסטית של האמנה החצויה). הצרכנים שהסתמכו על הכפיל הישן הותאמו
+ * באותו תיקון (dp-planner: colCapacity מודע-תקציב, extraLast הוסר;
+ * balancing: אותה אמנה; plan-model: capPx מודע-תקציב).
  */
-function planningUsedHeight(col, page) {
+function planningUsedHeight(col) {
   let h = 0;
   for (const ln of col) h += (ln.heightPx || 0) + (ln.gapBeforePx || 0);
-  if (page && page.fnReservedHeightPx > 0 && page.columns[page.columns.length - 1] === col) {
-    h += page.fnReservedHeightPx; // נשמר פעם אחת — בסוף הטור האחרון
-  }
   return h;
 }
 
@@ -12508,7 +12543,10 @@ function buildColumnModel(page, ci, ctx) {
   let overflow = null;
   for (const ln of col) gapsPx += ln.gapBeforePx || 0;
   const usedPx = planningUsedHeight(col, page);
-  const capPx = colCapacityOf(page, { colIndex: ci, fnBudget: false });
+  // **U-8 (19.11):** capPx מודע-תקציב-הערות לכל טור — כמו המרזב המוקרן
+  // (רוחב תיבת-התוכן כולה); usedPx = שורות בלבד. בעבר התקציב נכלל רק
+  // ב-usedPx של הטור האחרון — הטור הימני חדר למרזב וגלאי החריגה היה עיוור לו.
+  const capPx = colCapacityOf(page, { colIndex: ci });
   if (usedPx > capPx + CAPACITY_EPS) {
     overflow = { usedPx: Math.round(usedPx * 100) / 100, capPx: Math.round(capPx * 100) / 100, by: Math.round((usedPx - capPx) * 100) / 100 };
   }

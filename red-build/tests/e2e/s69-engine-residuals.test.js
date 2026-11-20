@@ -359,7 +359,10 @@ describe('S70 (R3-M2/M3) — כיול orphan/widow: רק הפרות אמיתיו
     // 1,066 מילים עברו מהגוף לאזורי ההערות (D-30). הוכחות שימור:
     // contentPreserved=true; round-trip תו-לתו של very_long המלא; הקנוני
     // ללא שינוי (fdff19d8). הקודם: 008bbb68 (RLM/9b.3).
-    assert(r.layoutHash.startsWith('fa1f06e2'), `layout unchanged (got ${r.layoutHash.slice(0, 8)})`);
+    // **U-8 (20.11):** ננעל מחדש fa1f06e2→c330970a — תקציב ההערות מופחת מקיבולת
+    // כל הטורים ⇒ אריזת עמודים בלבד (1216→1242); 3636/3636 בלוקים זהים;
+    // contentPreserved=true; הקנוני נשמר (fdff19d8); המורשת לא נגעה.
+    assert(r.layoutHash.startsWith('c330970a'), `layout unchanged (got ${r.layoutHash.slice(0, 8)})`);
     const count = (kind) => [...r.ledger.issues.values()].filter(x => x.kind === kind && x.status === 'persists').length;
     assertEq(count('widow-bottom'), 0, 'false widow-bottom flood eliminated (was 1176)');
     assertEq(count('orphan-top'), 0, 'false orphan-top flood eliminated (was 791)');
