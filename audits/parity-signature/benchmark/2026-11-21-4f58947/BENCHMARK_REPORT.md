@@ -1,5 +1,14 @@
 # Benchmark מלא — 21.11.2026 (לאחר השלמת נכונות U-15/U-16/U-17)
 
+> **תיקון תיעוד (20.11, משימה C) — שניים:**
+> ‏(1) **תאריך:** הריצה בוצעה ב-**20.11.2026** (לפני 3274ffb ‏12:38 UTC);
+> תיאור התאריך ושם התיקייה ״2026-11-21״ שגויים — נשמרים לשימור הפניות.
+> ‏(2) **סדר המדידה:** הטבלה להלן תוארה ״סדר מתחלף legacy→unified״ — אינו
+> מדויק. הקוד (tools/parity/benchmark.js:118-128) קובע זוגות **קבועים**:
+> בכל איטרציה (warmups ומדידות כאחת) legacy ואז unified, ללא החלפת סדר
+> בין איטרציות. התוצאות כמדודות; תיקון פרוטוקול המדידה נדחה לפרוסה
+> נפרדת בהוראת מנהל הפרויקט — **דוח זה אינו מדווח כ-benchmark תקין עד אז**.
+
 **פרוטוקול:** §9 ב-`audits/NEXT_PERFORMANCE_OPTIMIZATION_PROMPT_2026-11-19.md`
 ("הפק baseline benchmark תקף ל-HEAD הנוכחי") + הפרוטוקול הקיים של
 `tools/parity/benchmark.js` — **לא הומצא benchmark חדש**.
@@ -17,7 +26,7 @@ node tools/parity/benchmark.js canonical no_long mid_long long very_long --runs 
 | settingsSha256 | `d6a75a9a8873f151…` — **זהה ביט-לביט ל-baseline 19.11** (אותם קלטות) |
 | fontsSha256 | `6791fd13355481cc…` — **זהה ביט-לביט ל-baseline 19.11** |
 | מה נמדד | typeset בלבד (מנוע; PageModel בתוך ה-typeset של המאוחד); אין דפדפן/PDF/נכסים |
-| סדר | מתחלף legacy→unified, ‏2 warmups ואז 7 מדידות תקינות לכל צד |
+| סדר | זוגות קבועים legacy→unified (תוקן מ״מתחלף״; ראה תיקון התיעוד למעלה), ‏2 warmups ואז 7 מדידות תקינות לכל צד |
 | metrics | p50/p95/mean/min/max לכל צד + pages + parity-count |
 | קריטריון קבלה | median unified ≤ median legacy בכל קורפוס (הוראה ו.5) |
 
