@@ -256,7 +256,7 @@ function projectPage(page, settings, apiOrOpts) {
         // פער הבלוקים מהחותמת שנקבעה בתכנון (gapBeforePx) — בדיוק כמו
         // margin-top ב-DOM. מקור יחיד: אין כאן חישוב פער עצמאי ואין כפילה.
         y += ln.gapBeforePx || 0;
-        out.lines.push(projectLine(ln, col.x, y, col.w, settings, measure, lastAlignOf(ln, settings), production));
+        out.lines.push(projectLine(ln, col.x, y, col.w, settings, measure, lineAlignOf(ln, settings), production));
         // **EXT-20:** מקדם ה-AQ מיושם על גובה השורה (אנכי) — השורות שאחריה
         // זזות בהתאם; התיבה והבסיס מחושבים מהגובה הנמתח (מודל תיבת שורה).
         // **FX-6:** הפער קבוע — אינו מתמתח עם השורות.
@@ -772,12 +772,13 @@ function pushRuleDecoration(out, tpl, spec) {
 }
 
 /** יישור שורה אחרונה לפי ההגדרה (ברירת מחדל center — תואם BASE_CSS). */
-function lastAlignOf(ln, settings) {
+/** יישור שורה: כותרות ממורכזות תמיד; גוף לפי מדיניות השורה האחרונה. */
+function lineAlignOf(ln, settings) {
+  if (ln && ln.kind === 'heading') return 'center';
   if (!ln.isLast) return 'justify';
   const mode = settings['body-last-line-align'] || 'center';
-  return mode === 'stretch' ? 'justify' : mode; // stretch בשורה אחרונה = יישור מלא כמו רגילה
+  return mode === 'stretch' ? 'justify' : mode; // stretch בשורה האחרונה = יישור מלא כמו רגילה
 }
-
 /**
  * הקרנת שורה בודדת: מילים עם מיקומי x מפורשים (RTL — מימין לשמאל).
  * @param {string} align — 'justify' | 'right' | 'center'
