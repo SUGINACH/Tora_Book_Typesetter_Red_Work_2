@@ -578,11 +578,10 @@ ledger column-imbalance במורשת: 307 → 11 רשומות (שאריות אמ
 | U-12 | גבוהה | **נסגר — c1ba905** | מוטציה באותה הפניה של ctx.constraints החזירה מדידה ישנה (158.35 אחרי 100→400; הצפוי 200.00). | מֵימוֹ מודע-מוטציה: תצלום-ערכים שטוח; מקונן — בלי מֵימוֹ; נתיב מהיר ללא הקצאות. | s3d (2) |
 | U-13 | גבוהה | **נסגר — c1ba905** | unregisterFont/restoreFontRegistration לא ניקו _sharedFallbackApis ⇒ מופע מחלון הרישום הזמני (exportPdf) המשיך במטריקות הזמני (76.86 במקום 67.81 אחרי שחזור+פינוי). | ניקוי _sharedFallbackApis בשתי הפונקציות (כמו registerFont/clearRegisteredFonts). | s3d (2) |
 | U-14 | בינונית | **נסגר — c1ba905** | מטמון מחרוקות לכל מופע בלתי-חסום (70,000 ⇒ 70,000 רשומות) — צמיחה בלתי-חסומה ב-Worker ארוך-חיים. | תקרה 65,536 + ניפוי-באצווה 8,192; stats.evictions; stringCacheStats(). | s3d (3) |
-| U-15 | בינונית | **פתוח — נמדד ותועד** | HEAD_JUSTIFIED ×28 ב-Full Math (medium): שורות המסווגות head עם text-align=justify — בעיקר שורות TOC (עמ' 36 וכו'; טקסטים כגון "- יום השבת"). קיים גם ב-068989e (אותו מספר) — לא נגרם ע"י תיקוני U-8/U-10. דרושה הכרעה: חוזה יישור שורות TOC מול סיווג head. | — | Full Math |
+| U-15 | בינונית | **נסגר — c45467a** | 28 הממצאים היו הפרות אמת של חוזה יישור הכותרות: כל הממצאים היו שורות .line--heading (sign-open 22, preface 5, regular 1), ולא שורות TOC. ב-materialize.js הפונקציה lastAlignOf החזירה justify לכל שורה שאינה אחרונה בלי להתחשב ב-kind; המקרין הוותיק מרכז כותרות. Full Math לאחר התיקון: HEAD_JUSTIFIED 28→0; 194 שורות כותרת ממורכזות. | c45467a — סמנטיקת heading→center ב-lineAlignOf לפני הצבת המילים והגאומטריה. ללא CSS patch וללא החלשת האודיט. חבילות D-65 (Worker + App) סונכרנו לתוצר הבנייה. | s8d 23/23; s8f 10/10; s10-ui 44/44; npm test 1,146 × Node 18/20/22; Determinism; Cross-check; Layout Audit; דוח U15 |
 | U-16 | בינונית | **פתוח — נמדד ותועד** | LAST_NOT_CENTERED ×5 (medium; asym 6.7–6.9px, שורות אחרונות קצרות כגון "ג׳ ."). קיים גם ב-068989e. | — | Full Math |
 | U-17 | בינונית | **פתוח — נמדד ותועד** | MARKER_NOTE_MATCH ×2 (medium). קיים גם ב-068989e. | — | Full Math |
 
-**סיכום Full Math very_long (882 עמ', אחרי U-8+U-10):** 119 ממצאים → **36**
-(FN_OVERLAPS_BODY 62→0; LINE_BELOW_COLUMN 8→0; COLUMN_BOTTOMS_BALANCE 14→1;
-נותרו: U-15 ‏28, U-16 ‏5, U-17 ‏2, U-9 ‏1). רצפת נפח ✓ (346,607 מילות תוכן ≥
-345,999). דוחות: audits/U8_FOOTNOTE_BUDGET_2026-11-20.md, audits/U10_AQ_ABSOLUTE_FACTOR_2026-11-20.md, audits/MEASURE_API_SAFETY_U11_U14_2026-11-20.md.
+**סיכום Full Math very_long (882 עמ', אחרי U-8+U-10+U-15):** 119 ממצאים → **8**
+(FN_OVERLAPS_BODY 62→0; LINE_BELOW_COLUMN 8→0; HEAD_JUSTIFIED 28→0; COLUMN_BOTTOMS_BALANCE 14→1).
+נותרו: U-16 LAST_NOT_CENTERED 5, U-17 MARKER_NOTE_MATCH 2, U-9 COLUMN_BOTTOMS_BALANCE 1. רצפת נפח ✓ (346,607 מילות תוכן ≥ 345,999). דוחות: audits/U8_FOOTNOTE_BUDGET_2026-11-20.md, audits/U10_AQ_ABSOLUTE_FACTOR_2026-11-20.md, audits/MEASURE_API_SAFETY_U11_U14_2026-11-20.md, audits/U15_HEADING_ALIGNMENT_2026-11-20.md.

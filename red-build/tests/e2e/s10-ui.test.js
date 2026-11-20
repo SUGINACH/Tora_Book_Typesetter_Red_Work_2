@@ -893,29 +893,8 @@ describe('חבילות הדפדפן (D-65) — הפרדת מנוע, שימה, of
     const wPath = path.join(BUNDLE_DIR, 'engine-worker.bundle.js');
     const aPath = path.join(BUNDLE_DIR, 'app.bundle.js');
     const beforeW = hash(wPath), beforeA = hash(aPath);
-    const beforeStatW = fs.statSync(wPath);
-    const buildCwd = path.join(SRC_ROOT, '..');
-    execSync('node tools/build-worker-bundle.js', { cwd: buildCwd, stdio: 'ignore' });
-    const afterW = hash(wPath), afterA = hash(aPath);
-    const diagnosticDir = path.join(SRC_ROOT, 'tests', 'artifacts');
-    fs.mkdirSync(diagnosticDir, { recursive: true });
-    const diagnostic = {
-      node: process.version,
-      cwd: process.cwd(),
-      buildCwd,
-      workerPath: wPath,
-      workerRealpath: fs.realpathSync(wPath),
-      beforeW,
-      afterW,
-      beforeA,
-      afterA,
-      workerSizeBefore: beforeStatW.size,
-      workerSizeAfter: fs.statSync(wPath).size
-    };
-    fs.writeFileSync(path.join(diagnosticDir, 'd65-worker-build-diagnostic.json'), JSON.stringify(diagnostic, null, 2));
-    fs.copyFileSync(wPath, path.join(diagnosticDir, 'd65-worker-after-build.bundle.js'));
-    console.log('[D65 build diagnostic] ' + JSON.stringify(diagnostic));
-    assertEq(afterW, beforeW, 'engine-worker.bundle.js: הבאנדל המחויב אינו תוצר בנייה מחדש (sha256)');
+    execSync('node tools/build-worker-bundle.js', { cwd: path.join(SRC_ROOT, '..'), stdio: 'ignore' });
+    assertEq(hash(wPath), beforeW, 'engine-worker.bundle.js: הבאנדל המחויב אינו תוצר בנייה מחדש (sha256)');
     assertEq(hash(aPath), beforeA, 'app.bundle.js: הבאנדל המחויב אינו תוצר בנייה מחדש (sha256)');
   });
 
