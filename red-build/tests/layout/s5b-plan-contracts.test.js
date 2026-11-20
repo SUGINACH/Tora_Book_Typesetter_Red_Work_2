@@ -261,6 +261,13 @@ describe('חוזי ColumnModel/PagePlan (§2.5) — בנייה, אימות, immu
     assert(list.some(x => x.kind === 'ornament' && x.px === 30), 'ייצוג השמורה ברשימת הקיבולת');
     assert(list.some(x => x.kind === 'furniture' && x.px === 20), 'ייצוג שמורת last-column');
     assert(list.some(x => x.kind === 'content-box'), 'תיבת התוכן מיוצגת');
+
+    // קיבולת אפס היא תוצאה לגיטימית של ה-SSOT (לא מצב חסר נתונים).
+    // היא חייבת להישאר אפס — אסור ל-fallback להחזיר שטח תיבת-תוכן גולמי.
+    const blocked = { ...pg, fnReservedHeightPx: 0, reservations: [
+      { kind: 'full-page-reservation', scope: 'all-columns', px: pg.template.contentBox.height, reason: 'zero-capacity-test' }
+    ] };
+    assertEq(colCapacityOf(blocked), 0, 'reservation מלאה מייצרת קיבולת אפס אמיתית');
   });
 
   it('validation: מצב תקין ⇒ אפס אבחונים; הפרות מבניות ⇒ אבחון מדויק', () => {

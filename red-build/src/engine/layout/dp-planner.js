@@ -149,15 +149,14 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   // **FWD-1 (S8):** פס כותרת חוצה־טורים (spanning band) — כותרת שנמדדה ברוחב
   // מלא מוצבת בפס עליון חוצה־טורים במקום בטור חצי־רוחב (בעבר: נמדדה ברוחב מלא
   // והוצבה בטור רגיל ⇒ גלישה אופקית שקטה). הטורים מתחילים מתחת לפס.
-  const spanH = (page) => (page && page.spanning ? page.spanning.heightPx : 0);
-  // **S5.2 (P-2 — קיבולת מאוחדת):** כל חישובי הקיבולת עוברים דרך colCapacityOf
-  // (column-flow — מקור יחיד). **U-8 (19.11):** קיבולת מודעת-תקציב-הערות
-  // ל**כל** הטורים — כמו המרזב המוקרן (רוחב תיבת-התוכן כולה, R3-C2).
-  // בעבר fnBudget:false + הוספת התקציב ל-usedHeight של הטור האחרון בלבד
-  // (planningUsedHeight) ⇒ הטור הימני (RTL) מילא את הקיבולת המלאה וחדר
-  // למרזב ההערות. כעת: used = שורות בלבד, cap כולל את התקציב — אותו
-  // אי-שוויון (שורות ≤ cap−תקציב) לכל טור. הפס החוצה־טורים נכלל תמיד.
-  const colCapacity = (tpl, page) => colCapacityOf(page) || (tpl && tpl.contentBox ? tpl.contentBox.height - spanH(page) : 0);
+  // **S5.2 / U-8 (מקור קיבולת יחיד):** כל חישובי ההצבה צורכים את
+  // colCapacityOf(page) בלבד. תבנית תקינה יכולה להניב קיבולת 0 לאחר הפחתת
+  // spanning/notes/reservations; אסור ל-fallback להחזיר שטח גולמי במקרה הזה.
+  // ה-fallback נשמר רק לעמודים ישנים ללא template קנוני (אם יגיעו מנתיב תאימות).
+  const colCapacity = (tpl, page) => {
+    if (page && page.template && page.template.contentBox) return colCapacityOf(page);
+    return tpl && tpl.contentBox ? tpl.contentBox.height - ((page && page.spanning && page.spanning.heightPx) || 0) : 0;
+  };
 
   /**
    * גובה תפוס = שורות בלבד (**U-8 — אמנה אחת**: התקציב חי בקיבולת, לא ב-used).
