@@ -1,0 +1,92 @@
+{
+ "url": "https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/",
+ "fixture": "mid_long_test_text.txt",
+ "at": "2026-11-20T12:36:12.320Z",
+ "results": [
+  {
+   "name": "אפליקציה עולה (__toraApp)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "עורך קיים",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "הגדרות קיימות (לשונית)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "צ'יפ מנוע unified",
+   "ok": true,
+   "detail": "⚙ מנוע: unified (ניסיון) · 4f58947"
+  },
+  {
+   "name": "engine-worker.bundle.js נטען",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "גופנים נטענים",
+   "ok": true,
+   "detail": "13 נטענו / 11 משפחות"
+  },
+  {
+   "name": "הגדרות מחוברות למנוע (getSettings)",
+   "ok": true,
+   "detail": "261 מפתחות, גוף=Guttman Rashi"
+  },
+  {
+   "name": "עימוד מלא דרך Worker (183 עמודים)",
+   "ok": true,
+   "detail": "183 עמ', 4s"
+  },
+  {
+   "name": "PageModel קיים בתוצאה (app.pageModel())",
+   "ok": true,
+   "detail": "183 עמודי מודל, geo=497853b494d02842"
+  },
+  {
+   "name": "פרופיל unified (צ'יפ + הרצה מחייבת PageModel)",
+   "ok": true,
+   "detail": "⚙ מנוע: unified (ניסיון) · 4f58947"
+  },
+  {
+   "name": "אפס שגיאות JS",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "אפס בקשות נכסים שנכשלו",
+   "ok": true,
+   "detail": "0 נכשלו"
+  },
+  {
+   "name": "ייצוא PDF הצליח",
+   "ok": true,
+   "detail": "4,140,603 בתים"
+  },
+  {
+   "name": "חתימת PDF תקינה",
+   "ok": true,
+   "detail": "%PDF-"
+  },
+  {
+   "name": "PDF נשמר בשלמותו",
+   "ok": true,
+   "detail": "4,140,603 בתים → /tmp/live-verify/live-export.pdf"
+  },
+  {
+   "name": "דטרמיניזם חי (עימוד חוזר)",
+   "ok": true,
+   "detail": "183→183"
+  },
+  {
+   "name": "אפס שגיאות JS אחרי מחזור מלא",
+   "ok": true,
+   "detail": "[]"
+  }
+ ]
+}
