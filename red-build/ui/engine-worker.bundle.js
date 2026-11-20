@@ -22993,7 +22993,7 @@ function projectPage(page, settings, apiOrOpts) {
       // (נמדד: אסימטריה 170–222px ממרכז הפס) בניגוד לחוזה המרכוז של המורשת
       // ושל המקרן הישן. כותרת ⇒ center; שורת callout שאינה-אחרונה ⇒ justify —
       // בדיוק כמו renderLine הישן שרינדר את שורות הפס באותה החלטה.
-      band.lines.push(projectLine(ln, band.x, y, band.w, settings, measure, lastAlignOf(ln, settings), production));
+      band.lines.push(projectLine(ln, band.x, y, band.w, settings, measure, lineAlignOf(ln, settings), production));
       y += ln.heightPx || 0;
     }
     out.spanning = band;
@@ -23166,7 +23166,7 @@ function projectPage(page, settings, apiOrOpts) {
         // פער הבלוקים מהחותמת שנקבעה בתכנון (gapBeforePx) — בדיוק כמו
         // margin-top ב-DOM. מקור יחיד: אין כאן חישוב פער עצמאי ואין כפילה.
         y += ln.gapBeforePx || 0;
-        out.lines.push(projectLine(ln, col.x, y, col.w, settings, measure, lastAlignOf(ln, settings), production));
+        out.lines.push(projectLine(ln, col.x, y, col.w, settings, measure, lineAlignOf(ln, settings), production));
         // **EXT-20:** מקדם ה-AQ מיושם על גובה השורה (אנכי) — השורות שאחריה
         // זזות בהתאם; התיבה והבסיס מחושבים מהגובה הנמתח (מודל תיבת שורה).
         // **FX-6:** הפער קבוע — אינו מתמתח עם השורות.
@@ -23681,7 +23681,7 @@ function pushRuleDecoration(out, tpl, spec) {
   });
 }
 
-/** יישור שורה בודדת — **מקור הסמכות היחיד להחלטת היישור** (U-15, ביקורת שלמות 20.11).
+/** יישור שורה בודדת — **מקור הסמכות היחיד להחלטת היישור** (U-15, ביקורת שלמות 20-21.11).
  * חוזה יישור הכותרות — כל שורות הכותרת ממורכזות, בכל מסלול (טור/פס חוצה־טורים),
  * בלי תלות ב-isLast. חמש רשויות מסכימות: המקרן הישן (dom-renderer renderLine —
  * text-align:center לכל kind='heading'), המקרן של המורשת (legacy-projector:407 —
@@ -23696,14 +23696,15 @@ function pushRuleDecoration(out, tpl, spec) {
  * בכולן הדיו פרוש בדיוק על רוחב התיבה (inkL=x, inkR=x+w). בנוסף נמצא
  * הכפל שני באותו שורש: שורות הפס החוצה־טורים קיבלו 'right' קבוע (H2/H3 —
  * ‏340 שורות צמודות-ימין ב-very_long, אסימטריה 170–222px ממרכז הפס) בניגוד
- * למורשת שממרכזת אותן. שני המסלולים מנותבים כעת דרך פונקציה זו — החלטה אחת. */
-function lastAlignOf(ln, settings) {
-  if (ln.kind === 'heading') return 'center';
+ * למורשת שממרכזת אותן. שני המסלולים מנותבים כעת דרך פונקציה זו — החלטה אחת.
+ * (מיזוג 21.11: תיקון העמית c45467a — כותרות ממורכזות בנתיב הטור, שינוי השם
+ * ‏lastAlignOf→lineAlignOf — מאומץ כאן; ההשלמה: ניתוב הפס החוצה-טורים.) */
+function lineAlignOf(ln, settings) {
+  if (ln && ln.kind === 'heading') return 'center';
   if (!ln.isLast) return 'justify';
   const mode = settings['body-last-line-align'] || 'center';
-  return mode === 'stretch' ? 'justify' : mode; // stretch בשורה אחרונה = יישור מלא כמו רגילה
+  return mode === 'stretch' ? 'justify' : mode; // stretch בשורה האחרונה = יישור מלא כמו רגילה
 }
-
 /**
  * הקרנת שורה בודדת: מילים עם מיקומי x מפורשים (RTL — מימין לשמאל).
  * @param {string} align — 'justify' | 'right' | 'center'

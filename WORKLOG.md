@@ -4181,6 +4181,26 @@ scan-control 0 הפרות · באנדלים נבנו מחדש (app `365f9ece`, w
 **אימות מלא אחרי הכל:** npm test **87 שלבים/0 כשלים** · דטרמיניזם fdff19d8 · cross-check **3/3** · אודיט Layout ‏(small+very_long) אפס בעיות · Full Math: רצפת נפח ✓ ‏(346,607 ≥ 345,999), ‏36 ממצאים נותרו (U-15 ‏HEAD_JUSTIFIED ‏28, U-16 ‏LAST_NOT_CENTERED ‏5, U-17 ‏MARKER_NOTE_MATCH ‏2, U-9 ‏COLUMN_BOTTOMS_BALANCE ‏1 — כולם קיימים גם ב-068989e, נמדדו ותועדו ברישום). באנדלים נבנו מהמקור (D-65 תפס ונענה).
 
 **נותר פתוח:** U-9 שארית אחת; U-15/U-16/U-17 (הכרעות חוזה יישור/מרכוז/התאמת-סמן); ביצועים — הרצת benchmark מלאה לפי פרוטוקול §9 בהוראת הביצועים לא בוצעה בסשן זה (מותנית בהשלמת נכונות; שיפור-צד נמדד בעקיפין: very_long ‏31s→13.7s באבחון).
+ 
+## 20.11.2026 (ב') — ביקורת עצמאית והכרעת U-15; ניקוי D-65
+
+**נקודת מוצא ובקרת ענפים:** העבודה החלה מ-Work 87355c9c3f5fa69b084ee9d9d7bcb288ec801df8. לאחר חמשת commits ממוקדים, main נשאר eafd27d5c8476789a52ebc1d89dc16fb920cbd9c, ו-rescue/engine-parity-local-20261119 נשאר 706b0fac2195ff2c3142abb3349623683151b9ca. לא בוצע merge, cutover או force-push. כל שינוי נשאר בענף העבודה.
+
+**U-15 — הכרעה מבוססת נתונים:** ב-Full Math המקורי נמצאו 28 שורות HEAD_JUSTIFIED. ביקורת ה-HTML/DOM וה-PageModel הראתה שכל 28 הן שורות סמנטיות .line--heading, ולא שורות TOC: 22 בעמודי sign-open, חמש בעמודי preface ואחת בעמוד regular. לכן לא מדובר ב-false positive של האודיט. שורש הכשל היה ב-materialize.js: lastAlignOf() החזירה justify לכל שורה שאינה אחרונה בלי לבדוק את סוג הפריט, בניגוד לחוזה הישן שבו כותרות ממורכזות.
+
+**תיקון שורש — c45467a:** פונקציית ההחלטה הוגדרה מחדש כ-lineAlignOf(): שורת heading מקבלת center לפני הצבת המילים וחישוב הגאומטריה; שאר השורות ממשיכות להשתמש במדיניות body-last-line-align הקיימת. נוסף מבחן S8D-2 עם מסמך היררכי תקין וכותרת H4 ארוכה שנשברת למספר שורות. הבדיקה מאמתת PageModel alignment, מרכז גאומטרי של ה-ink מול תיבת השורה, DOM style והמחלקה הסמנטית. אין שינוי ב-CSS, בסף אודיט או ב-expected output.
+
+**D-65 — ממצא נפרד ותיקון artifact:** ה-Worker bundle עבר את בדיקת הזהות לפני/אחרי build. הכשל היה app.bundle.js ישן: SHA-256 לפני build f0cdc329…, אחרי build 5afbf27e…. ה-App bundle הוחלף בתוצר המדויק שנוצר ב-Preview ונבדק מול build עצמאי; בדיקת D-65 המקורית נשארה קשיחה, ללא שינוי expected hash. לאחר התיקון Worker ו-App זהים לפני ואחרי בנייה. קוד האבחון הזמני שהוסף ל-CI ול-s10-ui הוסר בעדכון זה; בדיקת D-65 המקורית שוחזרה בשלמותה.
+
+**בדיקות ואימות:** CI run 44724048284 הסתיים success על feb15f60: כל 1,146 הבדיקות ב-67 קובצי סוויטה עברו בשלוש גרסאות Node (18, 20, 22); Determinism ו-Cross-check עברו בכל המטריצה; Layout Audit (smoke והקורפוס הגדול, 849 עמודים) עבר. בדיקות ספציפיות: S8D 23/23, S8F PDF 10/10, S10 UI 44/44. corpus-invariants עבר. Preview build-and-stage עבר, ו-preview-info.json מצביע על feb15f60. אומתה זהות Git blob בין Work, root ו-previews/engine-parity/ עבור index.html, app.bundle.js, engine-worker.bundle.js, default_settings.json ו-imud-fonts.json; בנתיב ה-preview 1,790 קבצים.
+
+**תוצאת Full Math לאחר U-15:** 882 עמודים, 44,823 שורות, 354,606 מילים; רצפת תוכן 346,607 ≥ 345,999. HEAD_JUSTIFIED ירד מ-28 ל-0; נמצאו 194 שורות כותרת ממורכזות. נשארו שמונה ממצאים אחרים בלבד: U-16 LAST_NOT_CENTERED ×5, U-17 MARKER_NOTE_MATCH ×2, U-9 COLUMN_BOTTOMS_BALANCE ×1. לכן שער Full Math עדיין נכשל בכוונה עד הכרעת residuals; U-15 נסגר, הפרויקט כולו לא הוכרז כמושלם.
+
+**PDF:** הייצוא צורך את PageModel; pdf-writer מצייר את המילים לפי w.x ו-w.baselineY מהמודל ואינו מבצע יישור עצמאי. S8F עבר 10/10 בדיקות ייצוא מהמודל. לא בוצעה בפרוסה זו בדיקת GUI ידנית נפרדת או יצירת PDF עצמאי מחוץ למסלול CI, ולכן אין לטעון לכך.
+
+**לא בוצע:** benchmark מלא לפי הפרוטוקול הקיים לא בוצע; הוא נדחה עד השלמת נכונות residuals. לא שונו U-16/U-17/U-9, לא בוצע cutover ולא בוצע merge.
+
+---
 
 ## 20-21.11.2026 (ג') — הכרעות חוזה U-15/U-16/U-17 + שארית U-9 + ביקורת עצמאית U-8/U-10/U-11..U-14
 

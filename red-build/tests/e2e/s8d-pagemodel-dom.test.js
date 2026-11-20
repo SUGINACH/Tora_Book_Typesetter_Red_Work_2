@@ -590,4 +590,50 @@ describe('S8D-6 פרוסה 3 — זהות גופן/עוגן/קריאה מהמו�
   });
 });
 
+const HEADING_ALIGNMENT_DOC = [
+  'כותרת 1 - חלק לבדיקת יישור',
+  'פסקת פתיחה עם טקסט ממשי שמבסס את החלק ומספק תוכן אחרי הכותרת הראשונה.',
+  'כותרת 2 - פרק לבדיקת יישור',
+  'פסקה ממשית אחרי פתיחת הפרק כדי לשמור על מבנה תקין ולמלא את תחילת הטור.',
+  'כותרת 3 - כותרת ביניים לבדיקת יישור',
+  'פסקה ממשית אחרי כותרת שלוש לפני הכותרת הבאה.',
+  'כותרת 4 - כותרת ארוכה במיוחד שנועדה להישבר למספר שורות בתוך רוחב הטור ולבדוק שכל שורות הכותרת ממורכזות באופן מדויק ללא מתיחת הרווחים בין המילים גם כאשר הטקסט ממשיך לשורה נוספת',
+  'פסקת גוף אחרי הכותרת הארוכה עם תוכן ממשי נוסף לבדיקת תקינות המבנה וסיום הרצף.'
+].join('\n');
+
+describe('S8D-2 — יישור כותרת אחיד במודל וב-DOM', () => {
+  it('כל שורות כותרת רב-שורתית ממורכזות גם כאשר יישור השורה האחרונה של הגוף הוא right', () => {
+    registerCoreFonts();
+    const S = getDefaultSettings();
+    S['heading-4-mode'] = 'regular';
+    S['body-last-line-align'] = 'right';
+    S['toc-general-enabled'] = false;
+    S['toc-detail-enabled'] = false;
+    const result = typeset(HEADING_ALIGNMENT_DOC, S, {});
+    const model = result.pageModel;
+    assert(model && Array.isArray(model.pages), 'typeset מחזיר PageModel');
+    const headingLines = [];
+    for (const page of model.pages) {
+      for (const line of page.lines) {
+        if (line.area === 'column' && line.kind === 'heading' && line.level === 4) headingLines.push({ page, line });
+      }
+    }
+    assert(headingLines.length >= 2, `כותרת 4 נשברה למספר שורות: ${headingLines.length}`);
+    assert(headingLines.some(x => x.line.words.length >= 2), 'נבדקת שורת כותרת עם כמה מילים');
+    for (const { page, line } of headingLines) {
+      assertEq(line.align, 'center', `PageModel heading alignment ${line.id}`);
+      const left = Math.min(...line.words.map(w => w.x));
+      const right = Math.max(...line.words.map(w => w.x + w.w));
+      const inkCenter = (left + right) / 2;
+      const boxCenter = line.x + line.w / 2;
+      assert(Math.abs(inkCenter - boxCenter) <= TOL, `כותרת ממורכזת בגאומטריית PageModel ${line.id}: ${inkCenter} מול ${boxCenter}`);
+      const pageEl = renderModelPage(page, S, makeDoc());
+      const domLine = collectByClass(pageEl, 'line').find(el => el.dataset.id === line.id);
+      assert(domLine, `DOM line exists ${line.id}`);
+      assertEq(domLine.style.textAlign, 'center', `DOM alignment ${line.id}`);
+      assert(domLine.classList.contains('line--heading'), `DOM semantic heading class ${line.id}`);
+    }
+  });
+});
+
 report('s8d-pagemodel-dom');
