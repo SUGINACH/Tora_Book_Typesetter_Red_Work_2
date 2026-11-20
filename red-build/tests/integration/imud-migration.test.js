@@ -166,7 +166,26 @@ describe('S4.20 — EXT-15/16/17/19 בפרופיל ה-legacy (פתיחה אי-ז
     const r = typesetWith({ 'note-num-separator': ')' }, 'ספר - מקום בינה\n\nכותרת 2 - סימן\nפסקה עם הערה [תוכן הערה לבדיקה] בתוכה.');
     const allText = JSON.stringify(r);
     assert(allText.includes('א)'), 'הסמן א) עם המפריד המותאם');
-    assert(!/"א\."/.test(allText) || true, 'בלי דרישה לפורמט הישן');
+    // **בקרת איכות 21.11:** בעבר `assert(!/"א\."/.test(allText) || true)` — תנאי
+    // קבוע שעבר תמיד (וגם חיפוש מחרוזת ב-JSON כולו אינו מדויק — תוכן הערה
+    // עצמו יכול להכיל 'א.'). כעת נבדקים הסמנים עצמם בשלוש הצורות שבהן הם
+    // מופיעים בתוצא: fn.marker (פתיחת הערה), מילות mk בשורות ההערה, וסמני
+    // הגוף לפי markerIdx. כל סמן חייב להסתיים במפריד שהוגדר — הפורמט הישן
+    // 'א.' נכשל כאן מעצמו.
+    const markers = [];
+    for (const p of r.pages) {
+      for (const fn of (p.footnotes || [])) {
+        if (fn.marker != null && fn.marker !== '') markers.push(String(fn.marker));
+        for (const ln of (fn.lines || [])) for (const w of (ln.words || [])) if (w && w.mk) markers.push(String(w.t));
+      }
+      for (const col of (p.columns || [])) for (const ln of col) {
+        if (Array.isArray(ln.markerIdx)) for (const i of ln.markerIdx) if (ln.words && ln.words[i] != null) markers.push(String(ln.words[i]));
+      }
+    }
+    assert(markers.length >= 1, `נבדק סמן הערה בפועל — התרחיש חייב להתרחש (נאספו ${markers.length})`);
+    for (const m of markers) {
+      assert(/\)$/.test(m), `סמן '${m}' מסתיים במפריד שהוגדר ')' — לא בפורמט הישן 'א.'`);
+    }
   });
 
   it('EXT-19: hdr-alternating מחליף את חצאי שם הספר בעמודים זוגיים-פיזיים', () => {
