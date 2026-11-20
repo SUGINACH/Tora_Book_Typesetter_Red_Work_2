@@ -223,6 +223,26 @@ describe('S8D-1 פרוסה 3 — כיסוי מלא: כל העמודים, כל ס
     }
   });
 
+  it('המשך PageModel מזוהה לפי data-continuation-of ללא מחלקת legacy', () => {
+    const source = model.pages.find(p => (p.footnotes || []).length);
+    assert(source, 'נדרש עמוד מקור עם הערות');
+    const synthetic = JSON.parse(JSON.stringify(source));
+    synthetic.footnotes = [{
+      noteId: 'audit-continuation', anchorId: 'audit-anchor', continuationOf: 'audit-original',
+      marker: 'א״ה', text: '(המשך) מילות המשך', x: 100, y: 980, w: 220, lineH: 18,
+      words: [
+        { text: '(המשך)', x: 280, w: 38, baselineY: 995, mk: false },
+        { text: 'מילות', x: 220, w: 44, baselineY: 995, mk: false },
+        { text: 'המשך', x: 170, w: 44, baselineY: 995, mk: false }
+      ]
+    }];
+    const el = renderModelPage(synthetic, S, doc);
+    const fn = collectByClass(el, 'footnote').find(x => x.dataset.noteId === 'audit-continuation');
+    assert(fn, 'הערת ההמשך קיימת ב-DOM');
+    assertEq(fn.dataset.continuationOf, 'audit-original', 'הזהות הקנונית של ההמשך נשמרת');
+    assert(!String(fn.className).split(/\\s+/).includes('fn--continuation'), 'המקרין אינו נדרש למחלקת legacy');
+  });
+
   it('הערות: כל רשומות המודל מרונדרות עם זהות מלאה (noteId/anchor/continuationOf)', () => {
     let renderedIds = new Set();
     for (const mp of model.pages) {

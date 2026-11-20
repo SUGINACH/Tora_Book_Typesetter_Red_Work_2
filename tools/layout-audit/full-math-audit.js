@@ -937,18 +937,23 @@ if (typeof document !== 'undefined') {
     for (const f of fns) {
       const fr = rel(R(f), origin);
       const fcs = getComputedStyle(f);
-      const markers = [...f.querySelectorAll('.w--fnmarker')].map((m) => (m.textContent || '').trim()).filter(Boolean);
+      const continuationOf = f.getAttribute('data-continuation-of') || (f.dataset && f.dataset.continuationOf) || null;
+      const isContinuation = continuationOf != null || /fn--continuation/.test(String(f.className));
+      const visualMarkers = [...f.querySelectorAll('.w--fnmarker')].map((m) => (m.textContent || '').trim()).filter(Boolean);
+      // PageModel uses data-continuation-of rather than the legacy CSS class.
+      // Continuation rows are not new openings, even when they re-display a marker.
+      const markers = isContinuation ? [] : visualMarkers.slice();
       // נפילה (נתיב מודרני בלי ספאנים): המילה הראשונה של הטקסט. **S5.2 (תיקון
       // המשכים):** אלמנט המשך (.fn--continuation — מורשת block ומודרני כאחד) אינו
       // פתיחת-הערה ואסור לו לתרום סמן למולטיסט: במודרני ההמשך מציג את הסמן
       // בשנית (S7.1.3) ובמורשת block הוא נפתח ב-'(המשך)' בלבד — שניהם היו
       // מזייפים "סמן בהערות בלי סמן בגוף" (או כפילות). המולטיסט משווה
       // **פתיחות** מול סמני-גוף — המשכים מחוץ לאוכלוסייה מטבעם.
-      if (!markers.length && !/fn--continuation/.test(String(f.className))) {
+      if (!isContinuation && !markers.length) {
         const first = (f.textContent || '').trim().replace(/^\(המשך\)\s*/, '').split(/[\s\u200F]+/)[0] || '';
         if (first && !/^\(המשך\)$/.test(first)) markers.push(first);
       }
-      info.fns.push({ x: fr.x, y: fr.y, w: fr.w, h: fr.h, markers, text: (f.textContent || '').slice(0, 24), fs: parseFloat(fcs.fontSize) || 0 });
+      info.fns.push({ x: fr.x, y: fr.y, w: fr.w, h: fr.h, markers, visualMarkers, isContinuation, continuationOf, noteId: f.getAttribute('data-note-id') || (f.dataset && f.dataset.noteId) || null, anchor: f.getAttribute('data-anchor') || (f.dataset && f.dataset.anchor) || null, text: (f.textContent || '').slice(0, 24), fs: parseFloat(fcs.fontSize) || 0 });
       info.fnMk += markers.join('');
       info.fnMkList.push(...markers);
       info.words += wc(f.textContent);
