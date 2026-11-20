@@ -13225,6 +13225,13 @@ const { sha256Hex } = require('../assets/hash256');
 // כל קריאותיו מעבירות tracking=0 במפורש (אומת בסקירה).
 const DEFAULT_TRACKING = 0; // em
 
+/** **ביקורת בטיחות 20.11 (U-14):** תקרת מטמון המחרורות לכל מופע MeasureAPI —
+ * אותם קבועים כמו מטמון הפריטים (מדיניות חסימה אחת לכל מטמוני המדידה).
+ * נמדד לפני החסימה (בקרה שלילית): ‏70,000 מחרורות שונות ⇒ ‏70,000 רשומות
+ * במופע — צמיחה בלתי-חסומה ב-Worker ארוך-חיים. */
+const STRING_CACHE_MAX_ENTRIES = 65536;
+const STRING_CACHE_EVICT_BATCH = 8192;
+
 /** גופנים רשומים (פרופיל → פרנסר). ההרשמה מפורשת — אין טעינת רשת (offline). */
 const registeredFonts = new Map();
 /** **תיקון ביקורת PR #22 (מפתח מטמון):** זהות תוכן לכל רישום — `fnt-<sha256[:14]>`
@@ -13288,6 +13295,11 @@ function restoreFontRegistration(profileName, font, bytes) {
   }
   if (String(profileName) === 'Frank Ruhl Libre') fm.setMissingGlyphFallbackFont(font);
   _familyApiCache.clear();
+  // **ביקורת בטיחות 20.11 (U-13):** גם מופעי ה-fallback המשותפים חייבים להימחק —
+  // מופע font-metrics נקשר לפרופיל הגופן בבנאי; מופע שנוצר בזמן הרישום הזמני
+  // (מסלול exportPdf) המשיך למדוד בגופן הזמני גם אחרי השחזור (נמדד:
+  // ‏76.86 במקום 67.81 אחרי מחזור רישום-החלפה-שחזור + פינוי מטמון פריטים).
+  _sharedFallbackApis.clear();
   _invalidateEnvFp();
 }
 
@@ -13300,6 +13312,7 @@ function unregisterFont(profileName) {
   _fontContentIds.delete(name);
   if (name === 'Frank Ruhl Libre') fm.setMissingGlyphFallbackFont(null);
   _familyApiCache.clear(); // **S5.2:** מטמון ה-API-פר-משפחה נגרר אחרי ההרשמה
+  _sharedFallbackApis.clear(); // **U-13 (20.11):** אין מופע-fallback הקשור לגופן שהוסר
   _invalidateEnvFp();
   if (!_fontClearSync) {
     _fontClearSync = true;
@@ -13329,8 +13342,26 @@ class MeasureAPI {
     this.fontProfile = null;
     this.fontFactor = 1;
     this.cache = new Map();
-    this.stats = { calls: 0, hits: 0, fontFallbacks: 0 };
+    this.stats = { calls: 0, hits: 0, fontFallbacks: 0, evictions: 0 };
     if (this.impl === 'font-metrics') this._bindProfile();
+  }
+
+  /** **ביקורת בטיחות 20.11 (U-14) — חסימת מטמון המחרורות:** מופעי ה-family/fallback
+   * חיים לכל אורך חיי ה-Worker, ומטמון המחרורות היה בלתי-חסום (נמדד: כל מסמך
+   * חדש מוסיף את שלו לנצח). אותה מדיניות החסימה של מטמון הפריטים — תקרה
+   * ‏65,536 + ניפוי-באצווה ‏8,192 (FIFO לפי סדר הכנסה; המדידה היא מֵימוֹ של פונקציה
+   * טהורה — חסימה אטומה לפלט, מוכח בדטרמיניזם ובנעילות ה-cross-check). */
+  _cacheSet(key, px) {
+    if (this.cache.size >= STRING_CACHE_MAX_ENTRIES) {
+      const it = this.cache.keys();
+      for (let i = 0; i < STRING_CACHE_EVICT_BATCH; i++) {
+        const k = it.next().value;
+        if (k === undefined) break;
+        this.cache.delete(k);
+        this.stats.evictions++;
+      }
+    }
+    this.cache.set(key, px);
   }
 
   /** קשירת פרופיל הגופן לפי שם הגופן בהגדרות; fallback שקוף לטבלה אם לא נרשם. */
@@ -13434,7 +13465,7 @@ class MeasureAPI {
       prev = ch;
     }
     const px = Math.max(0, w * size * (96 / 72)); // pt→px
-    this.cache.set(key, px);
+    this._cacheSet(key, px);
     return px;
   }
 
@@ -13599,24 +13630,56 @@ function _canonicalStringify(value, depth = 0) {
   return String(value);
 }
 
-/** **אופטימיזציית מפתח (19.11, הוראת ביצועים §5):** מֵימוֹ של המחרוזת הקנונית
- *  לאובייקטים יציבים בלבד (ctx/ctx.constraints — אותה הפניה לכל אורך ה-typeset).
- *  התוצאה זהה בדיוק (אותה פונקציה על אותו אובייק�) — הפונקציה טהורה והאובייקט
- *  אינו משתנה (חוזה הטוהר של שלב 3); WeakMap — אין החזקה. */
+/** **אופטימיזציית מפתח (19.11, הוראת ביצועים §5):** מֵימוֹ של המחרורת הקנונית
+ *  לאובייקטים — **מודע-מוטציה** (ביקורת בטיחות 20.11, U-12): חוזה הקלט מתיר
+ * שינוי אובייקטי קלט בין מדידות; מֵימוֹ נאיבי לפי זהות היה מחזיר ייצוג ישן
+ * (נמדד: החזרת 158.35 הישן אחרי שינוי availableWidthPx 100→400 באותה הפניה).
+ * כאן: תצלום-ערכים שטוח נשמר עם הייצוג; אי-התאמה ⇒ קנוניזציה מחדש ועדכון
+ * המֵימוֹ. מבנה מקונן/ערך-עצם — בלי מֵימוֹ כלל (קנוניזציה טרייה — נכונות מלאה).
+ * WeakMap — אין החזקה. */
 const _canonicalMemo = new WeakMap();
+function _flatSnapshot(value) {
+  if (value === null || typeof value !== 'object') return null;
+  const snap = new Map();
+  for (const k of Object.keys(value)) {
+    const v = value[k];
+    const t = typeof v;
+    if (v === null || t === 'string' || t === 'number' || t === 'boolean' || t === 'undefined') snap.set(k, v);
+    else return null; // ערך-עצם/מערך — שינוי פנימי בלתי-נראה לתצלום השטוח
+  }
+  return snap;
+}
+function _snapshotMatches(snap, value) {
+  const keys = Object.keys(value);
+  if (keys.length !== snap.size) return false;
+  for (const k of keys) {
+    if (!snap.has(k) || snap.get(k) !== value[k]) return false;
+  }
+  return true;
+}
 function _canonicalStringifyStable(value) {
   if (value === null || typeof value !== 'object') return _canonicalStringify(value);
+  // נתיב מהיר: מֵימוֹ קיים והתצלום עדיין תואם — בלי הקצאת תצלום חדש (הקריאה
+  // הנפוצה: אותה הפניה לאורך כל ה-typeset). התצלום נבנה רק במילוי/חידוש המֵימוֹ.
   let m = _canonicalMemo.get(value);
-  if (m === undefined) { m = _canonicalStringify(value); _canonicalMemo.set(value, m); }
-  return m;
+  if (m !== undefined && _snapshotMatches(m.snap, value)) return m.canon;
+  const snap = _flatSnapshot(value);
+  if (snap === null) return _canonicalStringify(value); // מבנה מקונן — קנוניזציה טרייה בכל קריאה
+  m = { canon: _canonicalStringify(value), snap };
+  _canonicalMemo.set(value, m);
+  return m.canon;
 }
 
 /** **אופטימיזציית מפתח (19.11, הוראת ביצועים §5):** חשיש מפתח מהיר לא-קריפטוגרפי
  *  עבור מטמון הפריטים בתוך התהליך בלבד. מחליף את sha256Hex (Node crypto — יקר
  *  לקריאה: ~3.4µs, נמדד) בשלושה ערוצי 32-bit (FNV-1a, ערוץ מעורבב-מיקום, sdbm)
- *  + אורך, עם finalization של murmur3 — 96 ביטים יעילים: סף birthday ל-10⁷
- *  מחרוזות ≈ 2⁻⁵⁸ — הגנת ההתנגשות של PR #22 נשמרת (אותם רכיבי תוכן בדיוק,
- *  אותה שלמות מפתח; רק פונקציית החשיש שהתה). sha256Hex נשאר לזהויות
+ *  + אורך, עם finalization של murmur3 — 96 ביטים יעילים.
+ *  **ביקורת בטיחות 20.11 (U-11):** ההסתברות אינה עוד מנגנון ההגנה. סף ה-birthday
+ *  ל-10⁷ מחרוזות על 96 ביטים הוא ‎≈6.3×10⁻¹⁶‎ ≈ ‎2⁻⁵⁰·⁵‎ (הערת הקוד הקודם, ‎2⁻⁵⁸‎,
+ *  הייתה שגויה מספרית) — נמוך, אך הסתברות אינה הוכחת נכונות: התנגשות אמיתית הייתה
+ *  מחזירה MeasuredItem של פריט אחר (נמדד בהזרקה מלאה). כעת המטמון מאמת
+ *  **מקור מדויק** בכל קריאה — התנגשות פוגעת בביצועים בלבד, לעולם לא בנכונות.
+ *  sha256Hex נשאר לזהויות
  *  content-addressed (גופנים/נכסים) — שם הוא חלק מהחוזה. המפתח אינו נשמר
  *  בין תהליכים ואינו חוצה את גבול ה-Worker — אין השלכות שחזור. */
 function _fmix32(h) {
@@ -13659,6 +13722,17 @@ function _assetIdentityFp(item, ctx) {
   return 'unresolved(' + cands.join('|') + ')';
 }
 
+/** **U-11 (20.11):** חשיש-ניתוב מֵימוֹז לטביעת הסביבה — מחושב פעם אחת לכל
+ * מחרוזת סביבה (ההפניה יציבה דרך המֵימוֹ של environmentFingerprint). משמש את
+ * קלט החשיש של המפתח בלבד; אימות הקריאה משווה את המחרוזת המלאה עצמה. */
+let _envRouteHashMemo = null;
+function _envRouteHash(env) {
+  if (!_envRouteHashMemo || _envRouteHashMemo.env !== env) {
+    _envRouteHashMemo = { env, h: _fastKeyHash(env) };
+  }
+  return _envRouteHashMemo.h;
+}
+
 /** מפתח מטמון מדידת פריט (§3.1-10) — **קנוני ודטרמיניסטי**.
  * **תיקון שורש (ביקורת PR #22):** הקוד הקודם השתמש ב-item.id לבדו כשקיים מזהה —
  * שני פריטים בעלי אותו מזהה ו-payload שונה (טקסט/תמונה/widthPct/ריצות גופן/
@@ -13673,29 +13747,44 @@ function _assetIdentityFp(item, ctx) {
 function _itemCacheKey(item, style, ctx) {
   // **מקטע ב׳ (זיכרון):** המפתח קומפקטי — חשיש יחיד על שריות הקנוניות המלאות
   // (אותה חד-משמעיות, כולל זהות-תוכן של החלקים) — בספרים גדולים
-  // מיליוני מחרוזות-מפתח משורבות זיכרון משמעותית.
+  // מיליוני מחרוזות-מפתח משורבות זיכרון משמעותי.
   // **אופטימיזציה (19.11, הוראת ביצועים §5):** (א) _fastKeyHash במקום sha256Hex —
   // המפתח משרת מטמון בתהליך בלבד (לא זהות content-addressed); (ב) ctx.constraints
-  // דרך מֵימוֹ קנוני לפי זהות — אותה הפניה לכל אורך ה-typeset, אותה תוצאה בדיוק.
-  // אותם רכיבי תוכן ובאותו סדר — הגנת ההתנגשות של PR #22 נשמרת במלואה.
+  // דרך מֵימוֹ קנוני לפי זהות — אותה הפניה לכל אורך ה-typeset.
+  // **ביקורת בטיחות 20.11 (U-11):** מוחזרים מקור-הפריט הקנוני המלא (sItem),
+  // טביעת הסביבה (env — הפניה משותפת למחרוזת המֵימוֹ של environmentFingerprint)
+  // והחשיש (k) יחד — המטמון מאמת מקור מדויק בכל קריאה; התנגשות hash אמיתית
+  // היא miss (חישוב מחדש), לא החזרת מדידה זרה — הגנת PR #22 מובטחת
+  // דטרמיניסטית, לא הסתברותית.
+  // פרדת רכיבים ב-NUL (\u0000): רכיבי המקור הגולמיים עטופים ב-JSON.stringify
+  // (מבריח תווי בקרה, כולל NUL עצמו) — המפריד חד-משמעי גם לרכיבים חיצוניים
+  // (item.id/resourcePath); אין היווצרות מקור זהה מרכיבים שונים.
+  // **זיכרון (הפרדת ה-env):** טביעת הסביבה (~16KB בקטלוג IMUD המלא) אינה
+  // מוטמעת עוד בכל רשומה — הרשומה מחזיקה הפניה למחרוזת המשותפת; נמדד
+  // לפני ההפרדה: ‏65,536 רשומות × ‏16KB ≈ ‏1.0GB שמור (OOM ב-very_long).
   const it = item || {};
-  return 'ik3:' + _fastKeyHash([
+  const raw = (v) => JSON.stringify(v == null ? '' : String(v));
+  const env = environmentFingerprint();
+  const sItem = [
     'item-key-v3',
     MEASURE_ENGINE_VERSION,
-    environmentFingerprint(),
     (ctx && ctx.environmentFingerprint) || '',
-    it.kind || '',
-    it.id != null ? String(it.id) : '',
+    raw(it.kind),
+    raw(it.id),
     _canonicalStringify(it.payload !== undefined ? it.payload : it),
     _canonicalStringify(it.constraints || null),
     _canonicalStringify(style || null),
-    (ctx && ctx.direction) || '',
-    (ctx && ctx.language) || '',
+    raw(ctx && ctx.direction),
+    raw(ctx && ctx.language),
     _canonicalStringifyStable((ctx && ctx.constraints) || null),
-    (ctx && ctx.constraintsKey) || '',
-    (ctx && ctx.assetId) != null ? String(ctx.assetId) : '',
-    _assetIdentityFp(item, ctx)
-  ].join('~'));
+    raw(ctx && ctx.constraintsKey),
+    raw(ctx && ctx.assetId),
+    raw(_assetIdentityFp(item, ctx))
+  ].join('\u0000');
+  // **זיכרון/מהירות:** ה-env נכנס לחשיש הניתוב דרך חשיש-עזר מֵימוֹז (96 ביט לכל
+  // שינוי סביבה) במקום העתקת ‏16KB לכל קריאה — הניתוב בלבד; האימות ב-get נשאר
+  // השוואת מחרוזות מדויקת של ה-env המלא (דטרמיניסטי).
+  return { k: 'ik3:' + _fastKeyHash(sItem + '\u0000' + _envRouteHash(env)), sItem, env };
 }
 
 /** **תיקון ביקורת PR #22 (immutability אמיתי):** הקפאה עמוקה — כל המבנים
@@ -13754,8 +13843,8 @@ function measureItem(item, style, ctx) {
   const lineHeight = (style && Number.isFinite(style.lineHeight)) ? style.lineHeight : 1.34;
   const dir = (ctx && ctx.direction) || 'rtl';
   const lang = (ctx && ctx.language) || 'he';
-  const key = _itemCacheKey(item, style, ctx);
-  const hit = _itemCacheGet(key);
+  const ck = _itemCacheKey(item, style, ctx);
+  const hit = _itemCacheGet(ck);
   if (hit !== undefined) return hit;
 
   let out;
@@ -13924,7 +14013,7 @@ function measureItem(item, style, ctx) {
     out.environmentFingerprint = environmentFingerprint();
     out.measureEngineVersion = MEASURE_ENGINE_VERSION;
     _deepFreeze(out);
-    _itemCacheSet(key, out);
+    _itemCacheSet(ck, out);
   } else if (out) {
     _deepFreeze(out); // דחייה — גם היא בלתי-ניתנת לשינוי (אותו חוזה)
   }
@@ -13975,15 +14064,21 @@ function _textBreaks(runs) {
 const ITEM_MEASURE_CACHE_MAX_ENTRIES = 65536;
 const ITEM_CACHE_EVICT_BATCH = 8192;
 const _itemMeasureCache = new Map();
-function _itemCacheGet(key) {
-  if (!_itemMeasureCache.has(key)) return undefined;
-  const v = _itemMeasureCache.get(key);
+function _itemCacheGet(ck) {
+  const e = _itemMeasureCache.get(ck.k);
+  if (e === undefined) return undefined;
+  // **ביקורת בטיחות 20.11 (U-11) — אימות מקור מדויק:** החשיש המהיר אינו הוכחת
+  // זהות. הרשומה שומרת את מקור-הפריט הקנוני המלא **ואת טביעת הסביבה** (הפניה
+  // משותפת למחרוזת המֵימוֹ של environmentFingerprint — בלי העתקה לכל רשומה);
+  // מקור שונה תחת אותו חשיש (התנגשות אמיתית — כולל כזו שהוזרקה בבדיקה) היא
+  // **miss**, לא החזרת מדידה זרה. ההשוואה מדויקת (אין חשיש בשרשרת האימות).
+  if (e.sItem !== ck.sItem || e.env !== ck.env) return undefined;
   // LRU: חידוש עדכניות — מחיקה והחזרה לסוף (סדר ה-Map = סדר הכנסה)
-  _itemMeasureCache.delete(key);
-  _itemMeasureCache.set(key, v);
-  return v;
+  _itemMeasureCache.delete(ck.k);
+  _itemMeasureCache.set(ck.k, e);
+  return e.val;
 }
-function _itemCacheSet(key, value) {
+function _itemCacheSet(ck, value) {
   if (_itemMeasureCache.size >= ITEM_MEASURE_CACHE_MAX_ENTRIES) {
     // ניפוי הערכים העתיקים ביותר באצווה אחת (הראשונים שהוכנסו ולא נגעו בהם מאז)
     const it = _itemMeasureCache.keys();
@@ -13992,10 +14087,32 @@ function _itemCacheSet(key, value) {
       _itemMeasureCache.delete(k);
     }
   }
-  _itemMeasureCache.set(key, value);
+  // התנגשות hash (מקור אחר תחת אותו חשיש): הרשומה האחרונה גוברת — ההגנה
+  // היא ב-get (אימות מקור); שני המקורות פשוט יחושבו מחדש לסירוגין.
+  // ה-env הוא הפניה למחרוזת המֵימוֹ המשותפת — אין העתקה לכל רשומה.
+  _itemMeasureCache.set(ck.k, { sItem: ck.sItem, env: ck.env, val: value });
 }
 function itemCacheStats() {
   return { entries: _itemMeasureCache.size, capacity: ITEM_MEASURE_CACHE_MAX_ENTRIES };
+}
+
+/** **ביקורת בטיחות 20.11 (U-14) — אבחון מדידה, לא מנגנון שני:** סקירת מטמוני
+ *  המחרורות של המופעים ארוכי-החיים (family/shared) — למדידת זיכרון בפועל
+ *  ב-Worker חי; ההחזר כולל רשומות, ניפויים ותפוסה לכל מופע. */
+function stringCacheStats() {
+  const perInstance = [];
+  let entries = 0, evictions = 0;
+  const scan = (label, map) => {
+    for (const [k, api] of map) {
+      if (!api || !api.cache) continue;
+      perInstance.push({ label: label + ':' + k, entries: api.cache.size, capacity: STRING_CACHE_MAX_ENTRIES, evictions: api.stats.evictions || 0 });
+      entries += api.cache.size;
+      evictions += api.stats.evictions || 0;
+    }
+  };
+  scan('family', _familyApiCache);
+  scan('shared', _sharedFallbackApis);
+  return { entries, evictions, instances: perInstance.length, perInstance, capacityPerInstance: STRING_CACHE_MAX_ENTRIES };
 }
 function clearItemMeasureCache() { _itemMeasureCache.clear(); }
 
@@ -14021,7 +14138,7 @@ function fontResolverAliasOf(fontId) {
 module.exports = {
   MeasureAPI, registerFont, unregisterFont, clearRegisteredFonts, restoreFontRegistration,
   charWidthEm, registeredFonts, resolveMeasureImpl,
-  measureItem, environmentFingerprint, MEASURE_ENGINE_VERSION, itemCacheStats, clearItemMeasureCache,
+  measureItem, environmentFingerprint, MEASURE_ENGINE_VERSION, itemCacheStats, clearItemMeasureCache, stringCacheStats,
   FONT_WIDTH_PROFILES, familyWidthProfileOf,
   deepFreeze: _deepFreeze, canonicalStringify: _canonicalStringify
 };
@@ -20915,15 +21032,18 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   // והוצבה בטור רגיל ⇒ גלישה אופקית שקטה). הטורים מתחילים מתחת לפס.
   const spanH = (page) => (page && page.spanning ? page.spanning.heightPx : 0);
   // **S5.2 (P-2 — קיבולת מאוחדת):** כל חישובי הקיבולת עוברים דרך colCapacityOf
-  // (column-flow — מקור יחיד). כאן usedHeight כבר כולל את תקציב ההערות על
-  // הטור האחרון (F-17) — ולכן הקיבולת נלקחת בלי התקציב (fnBudget:false;
-  // שקול מתמטית: used+fn ≤ cap ⟺ used ≤ cap−fn). הפס החוצה־טורים נכלל תמיד.
-  const colCapacity = (tpl, page) => colCapacityOf(page, { fnBudget: false }) || (tpl && tpl.contentBox ? tpl.contentBox.height - spanH(page) : 0);
+  // (column-flow — מקור יחיד). **U-8 (19.11):** קיבולת מודעת-תקציב-הערות
+  // ל**כל** הטורים — כמו המרזב המוקרן (רוחב תיבת-התוכן כולה, R3-C2).
+  // בעבר fnBudget:false + הוספת התקציב ל-usedHeight של הטור האחרון בלבד
+  // (planningUsedHeight) ⇒ הטור הימני (RTL) מילא את הקיבולת המלאה וחדר
+  // למרזב ההערות. כעת: used = שורות בלבד, cap כולל את התקציב — אותו
+  // אי-שוויון (שורות ≤ cap−תקציב) לכל טור. הפס החוצה־טורים נכלל תמיד.
+  const colCapacity = (tpl, page) => colCapacityOf(page) || (tpl && tpl.contentBox ? tpl.contentBox.height - spanH(page) : 0);
 
   /**
-   * גובה תפוס = שורות + **יתרת תקציב ההערות של העמוד** — כך ה‑probe וה‑reservation
-   * זהים (F-17). התקציב נרשם פעם אחת בסוף הטור האחרון.
-   * תיקון P1-8: חתימה (col, page) — page חובה; אין עוד עמוד ברירת־מחדל שגוי.
+   * גובה תפוס = שורות בלבד (**U-8 — אמנה אחת**: התקציב חי בקיבולת, לא ב-used).
+   * תיקון P1-8: חתימה (col, page) — page נשמר לתאימות צרכנים; planningUsedHeight
+   * עצמו כבר אינו צורך אותו.
    */
   // **שלב 5 (חילוץ שורש מ-#16):** גובה תפוס בזמן תכנון — מקור יחיד
   // (column-flow.planningUsedHeight); סמנטיקת הרינדור (עם aqStretch) חיה
@@ -20957,6 +21077,21 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     return -1;
   }
 
+  /** **U-8 (ביקורת שלמות 19.11) — הכלה ברמת העמוד:** המרזב פרוש על רוחב
+   *  תיבת-התוכן כולה; כשהערה מתחייבת בעמוד, **כל** טורי העמוד חייבים לעמוד
+   *  מעל המרזב (used ≤ cap−תקציב). בדיקת המחסנית של שורת הסמן לבדה אינה
+   *  מספיקה: הסמן עשוי להיכנס לטור פנוי בעוד טור אחר כבר מלא מעבר למרזב
+   *  (נמדד: no_long ‏p58 — חדירה 44.5px; mid_long ‏26 עמודים כאלה). אם תנאי
+   *  זה נכשל — העמוד נסגר בלי ההערה (הקווים שהוצבו בלעדיה עומדים בקיבולת
+   *  המלאה) וההערה עוברת עם שורת הסמן לעמוד הבא — F-17 נשמר. */
+  function pageFitsNoteBudget() {
+    const cap = colCapacity(cur.template, cur);
+    for (let c = 0; c < cur.columns.length; c++) {
+      if (usedHeight(cur.columns[c], cur) > cap + CM.CAPACITY_EPS) return false;
+    }
+    return true;
+  }
+
   function flushPage() {
     // איזון טורים: Δ≤5px (BRZ-3) — **EXT-8: החלוקה הגלובלית האופטימלית**
     // (פיצול רציף ממזער |lH−rH| בכפוף לקיבולת; סדר קריאה נשמר מבנית — תיקון P0-3
@@ -20965,7 +21100,8 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       const a0 = usedHeight(cur.columns[0], cur), b0 = usedHeight(cur.columns[1], cur);
       if (Math.abs(a0 - b0) > imbMax) {
         const cap = colCapacity(cur.template, cur);
-        const best = optimalSplit(cur.columns, { cap, extraLast: cur.fnReservedHeightPx || 0 });
+        // **U-8:** התקציב כבר בתוך cap (לכל טור) — extraLast היה מכפיל אותו
+        const best = optimalSplit(cur.columns, { cap });
         if (best && best.k !== cur.columns[0].length) {
           const seq = [...cur.columns[0], ...cur.columns[1]];
           cur.columns[0] = seq.slice(0, best.k);
@@ -21214,11 +21350,13 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     if (!snap) return;
     const isFirst = !markerLine;
     const stack = CM.stackHeightPx([markerLine || blk.lines[0]], isFirst ? blockGapPx(settings, lineH) : 0);
-    if (snap.clean && ensureRoomFor(stack) === -1) {
+    // **U-8:** גם התאמת שורת הסמן וגם הכלת כל טורי העמוד מעל המרזב —
+    // אחרת העמוד נסגר בלי ההערה והיא עוברת עם הסמן לעמוד הבא (F-17).
+    if (snap.clean && (ensureRoomFor(stack) === -1 || !pageFitsNoteBudget())) {
       uncommitNotes(cur, snap);
       flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
       reserveNotes(blk);
-      if (ensureRoomFor(stack) === -1) {
+      if (ensureRoomFor(stack) === -1 || !pageFitsNoteBudget()) {
         // מצב פתולוגי (הערה בגודל עמוד): מתועד, לא שקט
         ledger.create('fn-degenerate', blk.tokenId, cur.index, { reservedPx: cur.fnReservedHeightPx }, 'notes-budget');
       }
@@ -21594,7 +21732,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     // (fn-tail-overflow) במקום גלישה שקטה. זהו מצב פתולוגי מבני (המשכים
     // שנצברו בסוף המסמך); לתקנת השורש המלאה נדרש מנגנון עמודי-גלישה להערות
     // — שלב B של התוכנית (דוח 06).
-    const tailCap = colCapacityOf(last, { fnBudget: false });
+    const tailCap = colCapacityOf(last); // **U-8:** מודע-תקציב, כמו ההצבה
     const tailUsed = planningUsedHeight(last.columns[last.columns.length - 1], last);
     if (tailUsed > tailCap + CM.CAPACITY_EPS) {
       const rec = ledger.create('fn-tail-overflow', `tail@p${last.index}`, last.index,
@@ -21692,11 +21830,12 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         }
         target.footnotes.splice(insertAt, 0, n);
         recomputeFnBudget(target);
-        // **קיבולת מצטברת אמיתית:** הטור האחרון של היעד (כולל התקציב המעודכן —
-        // כולל הערות שהועברו קודם לאותו עמוד באותה סריקה) אינו עובר את הקיבולת.
-        const capNoFn = colCapacityOf(target, { fnBudget: false });
+        // **קיבולת מצטברת אמיתית (U-8 — אמנה אחת):** cap מודע-תקציב לכל טור,
+        // used = שורות בלבד — אותו אי-שוויון בדיוק (שורות ≤ cap−תקציב), כולל
+        // הערות שהועברו קודם לאותו עמוד באותה סריקה.
+        const capWithFn = colCapacityOf(target);
         const usedLast = planningUsedHeight(target.columns[target.columns.length - 1], target);
-        if (usedLast <= capNoFn + CM.CAPACITY_EPS) {
+        if (usedLast <= capWithFn + CM.CAPACITY_EPS) {
           changed = true;
           movedCount++;
           movedList.push({ noteId: n.noteId || null, marker: n.marker, from: pg.index, to: target.index });
@@ -21770,21 +21909,24 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
  * **EXT-8 — חלוקה גלובלית אופטימלית** (במקום טיפוס גרידי שורה-שורה):
  * מרחב המצבים החוקי = פיצולים רציפים של רצף הקריאה; המינימום הגלובלי של |lH−rH|
  * נמצא ב-O(n) (הוכחה ב-balancing.optimalSplit). סדר קריאה נשמר מבנית.
- * תיקון P1-8: גובה כולל את תקציב ההערות של **העמוד המאוזן עצמו** (על הטור האחרון). */
+ * **U-8 (19.11):** הקיבולת מודעת-תקציב לכל טור; ה-|Δ| על שורות בלבד — התקציב
+ * משותף לשני הטורים (המרזב פרוש על רוחב תיבת-התוכן כולה). */
 function balancePageSafe(page, settings, ledger) {
   const deltaOf = () => {
-    const hh = (c) => c.reduce((s, ln) => s + (ln.heightPx || 0), 0)
-      + (page.columns[page.columns.length - 1] === c ? (page.fnReservedHeightPx || 0) : 0);
+    // **U-8:** התקציב משותף לשני הטורים (המרזב פרוש על כולם) — הוא אינו
+    // משפיע על הפרש האיזון ואינו נכנס לחישוב ה-|Δ|.
+    const hh = (c) => c.reduce((s, ln) => s + (ln.heightPx || 0), 0);
     return Math.abs(hh(page.columns[0]) - hh(page.columns[1]));
   };
   const maxDelta = settings['imbalance-max-delta-px'];
   if (deltaOf() <= maxDelta) return true; // כבר מאוזן — אין התערבות (יציבות פריסה)
   if (!page.columns || page.columns.length < 2) return false;
   // **S5.2 (P-2 — קיבולת מאוחדת):** colCapacityOf — כולל הפס החוצה־טורים
-  // (בעבר חושב מ-contentBox.height גולמי ⇒ איזון שגלש מתחת לפס בעמודי H2);
-  // תקציב ההערות עובר כ-extraLast (P1-8) — בלי כפילה.
-  const cap = colCapacityOf(page, { fnBudget: false });
-  const best = optimalSplit(page.columns, { cap, extraLast: page.fnReservedHeightPx || 0 });
+  // (בעבר חושב מ-contentBox.height גולמי ⇒ איזון שגלש מתחת לפס בעמודי H2).
+  // **U-8 (19.11):** תקציב ההערות בתוך cap לכל טור — extraLast הוסר (היה
+  // מכפיל את התקציב על הטור האחרון).
+  const cap = colCapacityOf(page);
+  const best = optimalSplit(page.columns, { cap });
   if (!best || best.k === page.columns[0].length) {
     // **EXT-8:** אין פיצול חוקי, או שהנוכחי כבר האופטימלי הגלובלי — הפרש שנותר
     // מעל הסף הוא **פשרה מתועדת**: שלמות פסקה (הימנעות מיתום/ווידוא בגבול
@@ -22190,6 +22332,18 @@ function columnStretchParts(col) {
   return { lines, gaps };
 }
 
+/** **U-10 (20.11 — אמנת פקטור אבסולוטי):** סכום גבהי השורות **הגולמיים** של
+ * טור (בלי מתיחה). כל כותב aqStretch מחשב את המקדם האבסולוטי הסופי מכאן:
+ * f = (target − Σgap) / ΣheightPx, מוחל כהחלפה. בעבר המקדם חושב מהסכום
+ * המתוח שבעמודה (מכפיל מתיחה קיימת) אך הוחל כהחלפה — טור שנכנס
+ * מכווץ (alignColumnBottoms fTall≈0.97) יצא מעל הקיבולת בכל מעבר AQ
+ * נוסף (נמדד: ‏7 עמודות, ‏12.9–31.3px — LINE_BELOW_COLUMN ×8 באודיט). */
+function rawLinesOf(col) {
+  let raw = 0;
+  for (const ln of col) raw += (ln.heightPx || 0);
+  return raw;
+}
+
 /** הערכת "איזון" עמוד: הפרש גובה טורים. */
 function pageImbalance(page) {
   if (!page.columns || page.columns.length < 2) return 0;
@@ -22211,7 +22365,7 @@ function pageImbalance(page) {
  */
 function optimalSplit(cols, opts = {}) {
   const cap = opts.cap != null ? opts.cap : Number.POSITIVE_INFINITY;
-  const extraLast = opts.extraLast || 0; // תקציב הערות של העמוד — על הטור האחרון (P1-8)
+  const extraLast = opts.extraLast || 0; // **U-8:** אין עוד צרכן מנוע — נשמר לבדיקות היחידה של המתמטיקה הגנרית בלבד
   const c0 = cols[0] || [], c1 = cols[1] || [];
   const seq = [...c0, ...c1];
   const n = seq.length;
@@ -22263,10 +22417,13 @@ function balancePage(page, maxDelta) {
   if (before <= maxDelta) return { changed: false, before, after: before, moves: 0 };
   if (!page.columns || page.columns.length < 2) return { changed: false, before, after: before };
   // **S5.2 (P-2 — קיבולת מאוחדת):** colCapacityOf (column-flow) — כולל הפס
-  // החוצה־טורים; תקציב ההערות עובר כ-extraLast של הטור האחרון (כמו ב-dp-planner,
-  // P1-8) — בעבר חושב מ-contentBox.height גולמי והתעלם משניהם.
-  const cap = colCapacityOf(page, { fnBudget: false });
-  const best = optimalSplit(page.columns, { cap, extraLast: page.fnReservedHeightPx || 0 });
+  // החוצה־טורים. **U-8 (19.11 — אמנה אחת):** הקיבולת מודעת-תקציב-הערות
+  // לכל טור (המרזב פרוש על רוחב תיבת-התוכן כולה) — extraLast הוסר; בעבר
+  // הוא הגביל רק את הטור האחרון והשאיר את הראשון חופשי לחדור למרזב
+  // בסוף-פרק (balance-chapter-end), והקיבולת חושבה מ-contentBox.height
+  // גולמי שהתעלם מהפס ומהתקציב גם יחד.
+  const cap = colCapacityOf(page);
+  const best = optimalSplit(page.columns, { cap });
   if (!best || best.k === page.columns[0].length) {
     // אין פיצול חוקי-קיבולת, או שהנוכחי כבר האופטימלי — לא מדווח שינוי
     return { changed: false, before, after: before, rollback_reason: best ? 'at-optimum' : 'capacity' };
@@ -22315,22 +22472,27 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     if (delta <= maxDelta) continue; // כבר מאוזן — אין התערבות
     // תקרת בטיחות בעמודי הערות: הטקסט לא נכנס לאזור ההערות (R3-C2 —
     // האזור חוצה-רוחב); חדירה קיימת (pre-existing containment) — לא לנו,
-    // דילוג מלא כדי לא להחריף
-    const capAll = colCapacityOf(page, { fnBudget: false }); // כולל פס חוצה-טורים
+    // דילוג מלא כדי לא להחריף.
+    // **U-8 (אמנה אחת):** colCapacityOf כבר מפחית את תקציב ההערות
+    // (והפס החוצה־טורים) לכל טור — אין עוד חישוב תקרה מקביל כאן.
+    const capAll = colCapacityOf(page);
     let target = Math.max(h0, h1);
-    if (page.fnReservedHeightPx > 0) {
-      const fnCeil = capAll - page.fnReservedHeightPx;
-      if (Math.max(h0, h1) > fnCeil + 0.5) { skipped++; continue; } // חדירה קיימת
-      target = Math.min(target, fnCeil);
-    } else if (target > capAll + 0.5) { skipped++; continue; } // גלישה קיימת
+    if (target > capAll + 0.5) { skipped++; continue; } // חדירה/גלישה קיימת
+    target = Math.min(target, capAll);
     const shortI = h0 < h1 ? 0 : 1;
     const shortCol = cols[shortI];
     const usedS = Math.min(h0, h1);
     // **FX-6 (פרוסה 2):** מקדם מדויק עם פערים קבועים — הפערים אינם מתמתחים:
-    // factor = (target − Σgap) / Σ(heightPx×stretch). בלי זה, מתיחה שחושבה
+    // factor = (target − Σgap) / ΣheightPx. בלי זה, מתיחה שחושבה
     // מ-used כולל-פערים לא הגיעה ליעדה בפועל (הפערים נשארו בגובהם המקורי).
+    // **U-10 (20.11 — אמנת פקטור אבסולוטי):** הפקטור נגזר מגבהים **גולמיים**
+    // (ΣheightPx בלי מתיחה) ומוחל כהחלפה — aqStretch הוא תמיד המקדם האבסולוטי
+    // של השורה (כך מפרשים אותו usedHeight, optimalSplit, ההקרנה והאודיט).
+    // בעבר חושב מ-Σ(heightPx×stretch הנוכחי) — מכפיל מתיחה קיימת — אך הוחל
+    // כהחלפה ⇒ טור שנכנס מכווץ היה מוחלף במקדם שאינו מתחשב בכיווץ.
     const partsS = columnStretchParts(shortCol);
-    const stretchTo = (target) => partsS.lines > 0.5 ? (target - partsS.gaps) / partsS.lines : 1;
+    const rawS = rawLinesOf(shortCol);
+    const stretchTo = (target) => rawS > 0.5 ? (target - partsS.gaps) / rawS : 1;
     const raw = stretchTo(Math.max(h0, h1));
     if (!(raw > 1 + 1e-4)) continue;
     const lo = settings['aq-word-spacing-min'];
@@ -22342,8 +22504,9 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     // מדווחת באירוע (clamped=true).
     const mid = (Math.max(h0, h1) + usedS) / 2;
     const partsT = columnStretchParts(tallCol);
+    const rawT = rawLinesOf(tallCol);
     const fShort = stretchTo(mid);
-    const fTall = partsT.lines > 0.5 ? (mid - partsT.gaps) / partsT.lines : 1;
+    const fTall = rawT > 0.5 ? (mid - partsT.gaps) / rawT : 1;
     let factor, shared = false;
     if (raw > hi + 1e-9 && fShort <= hi + 1e-9 && fTall >= lo - 1e-9) {
       factor = fShort; shared = true;
@@ -22355,8 +22518,9 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     if (shared) for (const ln of tallCol) ln.aqStretch = fTall;
     aligned++;
     // **FX-6:** דיווח מדויק — הגובה בפועל אחרי מתיחה = Σgap + Σ(heightPx×factor)
-    const afterShort = partsS.gaps + partsS.lines * factor;
-    const afterTall = shared ? (partsT.gaps + partsT.lines * fTall) : Math.max(h0, h1);
+    // **U-10:** מהגבהים הגולמיים — הפקטור אבסולוטי.
+    const afterShort = partsS.gaps + rawS * factor;
+    const afterTall = shared ? (partsT.gaps + rawT * fTall) : Math.max(h0, h1);
     eventLog.emit('balance', 'bottom-align', {
       page: page.index, col: shortI, factor: Number(factor.toFixed(4)),
       factorTall: shared ? Number(fTall.toFixed(4)) : null,
@@ -22424,16 +22588,23 @@ function autoQualityPass(pages, settings, eventLog) {
       const deficit = cap - used;
       if (deficit > 4 && mayStretch) {
         // **S72 (שיפור 4) + FX-6 (פרוסה 2):** מקדם מדויק עם פערים קבועים —
-        // (cap − Σgap)/Σ(heightPx×stretch) — מגיע ליעד בדיוק גם בטורים
-        // מעורבי-גבהים וגם כשפערי בלוקים בטור (הפערים אינם משתתפים במתיחה).
+        // (cap − Σgap)/ΣheightPx — מגיע ליעד בדיוק גם בטורים מעורבי-גבהים
+        // וגם כשפערי בלוקים בטור (הפערים אינם משתתפים במתיחה).
         // בעבר חושב 1+(deficit/n)/h(שורה-ראשונה) — קירוב שהחטיא את היעד.
+        // **U-10 (20.11 — אמנת פקטור אבסולוטי):** המקדם נגזר מהגבהים ה**גולמיים**
+        // ומוחל כהחלפה. בעבר חושב מ-Σ(heightPx×stretch הנוכחי) — כלומר כתיקון
+        // יחסי — אך הוחל כהחלפה: טור שנכנס מכווץ (alignColumnBottoms fTall≈0.97)
+        // יצא מעל הקיבולת (נמדד: ‏7 עמודות 12.9–31.3px — LINE_BELOW_COLUMN
+        // ×8 באודיט very_long). גם בדיקת ה-clamp תוקנה: newUsed המדויק
+        // = Σgap + factor×Σh_גולמי (לא used×factor שניפח את הפערים).
         const parts = columnStretchParts(lines);
-        const rawFactor = parts.lines > 0.5 ? (cap - parts.gaps) / parts.lines : 1;
+        const rawL = rawLinesOf(lines);
+        const rawFactor = rawL > 0.5 ? (cap - parts.gaps) / rawL : 1;
         for (const stage of AQ_STAGES) {
           const [lo, hi] = stageBounds(settings, stage);
           const factor = Math.min(hi, Math.max(lo, rawFactor));
           if (Math.abs(factor - 1) < 1e-4) continue;
-          const newUsed = used * factor;
+          const newUsed = parts.gaps + rawL * factor;
           if (newUsed - cap > clamp) continue; // clamp 20px — class ch3p4/p17/ch72p9 הוכחד
           if (settings['aq-shared-load']) {
             if (stage !== 'word-spacing') continue;
@@ -22446,8 +22617,10 @@ function autoQualityPass(pages, settings, eventLog) {
       } else if (deficit < -4 && compressFirst) {
         // עודף מעל התקרה ⇒ כיווץ עד min (כיווץ לפני מתיחה — compress-first)
         // **S72 (שיפור 4) + FX-6:** מקדם מדויק גם בכיווץ — (cap − Σgap)/Σh.
+        // **U-10:** אותה אמנת פקטור אבסולוטי מגבהים גולמיים.
         const parts = columnStretchParts(lines);
-        const rawFactor = parts.lines > 0.5 ? (cap - parts.gaps) / parts.lines : 1;
+        const rawL = rawLinesOf(lines);
+        const rawFactor = rawL > 0.5 ? (cap - parts.gaps) / rawL : 1;
         for (const stage of AQ_STAGES) {
           const [lo, hi] = stageBounds(settings, stage);
           const factor = Math.max(lo, Math.min(hi, rawFactor));
@@ -22463,7 +22636,7 @@ function autoQualityPass(pages, settings, eventLog) {
   return { applied };
 }
 
-module.exports = { balancePage, optimalSplit, pageImbalance, applyChapterEndMode, autoQualityPass, alignColumnBottoms, usedHeight, columnStretchParts };
+module.exports = { balancePage, optimalSplit, pageImbalance, applyChapterEndMode, autoQualityPass, alignColumnBottoms, usedHeight, columnStretchParts, rawLinesOf };
 
 };
 __modules["src/engine/layout/column-flow.js"] = function (require, module, exports) {
@@ -22536,8 +22709,9 @@ function normalizeColumnGaps(col) {
  * @param {{colIndex?:number, fnBudget?:boolean}} [opts]
  *  - colIndex: הטור שאליו שייכת הקיבולת (ברירת מחדל: האחרון — המחמיר);
  *    שמורות last-column מופחתות ממנו בלבד.
- *  - fnBudget:false — ביטול הפחתת תקציב ההערות (למי שמודד usage כולל
- *    התקציב בעצמו — כמו usedHeight של dp-planner או extraLast של optimalSplit).
+ *  - fnBudget:false — ביטול הפחתת תקציב ההערות. **U-8 (19.11 — אמנה אחת):**
+ *    אף צרכן מנוע כבר אינו משתמש בזה — התקציב חי בקיבולת לכל טור ואינו
+ *    נכנס לשום מדידת usage. האופציה נשמרת לבדיקות יחידה של מכניקת הפחתות.
  */
 function colCapacityOf(page, opts = {}) {
   if (!page || !page.template || !page.template.contentBox) return 0;
@@ -22585,17 +22759,24 @@ function capacityReservationsOf(page, opts = {}) {
 /**
  * **שלב 5 (חילוץ שורש מ-PR #16, S78/D-107 — גובה תפוס בזמן תכנון, מקור יחיד):**
  * Σ גבהי שורות + פערי בלוקים (FX-6: `gapBeforePx` — הפער נצבר כאן בפועל,
- * לא רק בשער הכניסה) + יתרת תקציב ההערות של העמוד — נרשם על הטור האחרון (F-17).
- * זו סמנטיקת ה-**תכנון** (לפני AQ — בלי מקדם מתיחה); סמנטיקת ה-**רינדור**
- * (עם aqStretch) חיה ב-balancing.usedHeight. עד כאן היו שני מימושים מקבילים
- * באותו שם בשני מודולים (dp-planner מקומי מול זה) — כעת צרכן יחיד.
+ * לא רק בשער הכניסה). זו סמנטיקת ה-**תכנון** (לפני AQ — בלי מקדם מתיחה);
+ * סמנטיקת ה-**רינדור** (עם aqStretch) חיה ב-balancing.usedHeight. עד כאן היו
+ * שני מימושים מקבילים באותו שם בשני מודולים (dp-planner מקומי מול זה) — כעת
+ * צרכן יחיד.
+ *
+ * **U-8 (19.11, ביקורת שלמות — אמנה אחת):** מדידת שורות בלבד. תקציב ההערות
+ * אינו נכנס לכאן עוד — הוא נכנס לקיבולת (colCapacityOf) עבור **כל** הטורים,
+ * כמו המרזב המוקרן שפרוש על רוחב תיבת-התוכן כולה (S6.0/R3-C2). בעבר נוסף
+ * רק לטור האחרון ⇒ הטור הימני (RTL) חדר למרזב ההערות (נמדד בענף העבודה
+ * לפני התיקון: no_long ‏2 טורים חודרים — p58:‏ 44.5px, p62:‏ 3.4px; mid_long
+ * ‏27 טורים — עד 520.5px; **כולם** לא-אחרונים, הטור האחרון: אפס — החתימה
+ * הדטרמיניסטית של האמנה החצויה). הצרכנים שהסתמכו על הכפיל הישן הותאמו
+ * באותו תיקון (dp-planner: colCapacity מודע-תקציב, extraLast הוסר;
+ * balancing: אותה אמנה; plan-model: capPx מודע-תקציב).
  */
-function planningUsedHeight(col, page) {
+function planningUsedHeight(col) {
   let h = 0;
   for (const ln of col) h += (ln.heightPx || 0) + (ln.gapBeforePx || 0);
-  if (page && page.fnReservedHeightPx > 0 && page.columns[page.columns.length - 1] === col) {
-    h += page.fnReservedHeightPx; // נשמר פעם אחת — בסוף הטור האחרון
-  }
   return h;
 }
 
