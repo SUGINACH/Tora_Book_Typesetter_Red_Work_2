@@ -51,7 +51,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: d65-worker-bundle-node-${{ matrix.node }}
-          path: red-build/ui/engine-worker.bundle.js
+          path: |
+            red-build/ui/engine-worker.bundle.js
+            red-build/tests/artifacts/d65-worker-build-diagnostic.json
+            red-build/tests/artifacts/d65-worker-after-build.bundle.js
           if-no-files-found: error
           retention-days: 1
 
