@@ -10842,6 +10842,18 @@ function columnStretchParts(col) {
   return { lines, gaps };
 }
 
+/** **U-10 (20.11 — אמנת פקטור אבסולוטי):** סכום גבהי השורות **הגולמיים** של
+ * טור (בלי מתיחה). כל כותב aqStretch מחשב את המקדם האבסולוטי הסופי מכאן:
+ * f = (target − Σgap) / ΣheightPx, מוחל כהחלפה. בעבר המקדם חושב מהסכום
+ * המתוח שבעמודה (מכפיל מתיחה קיימת) אך הוחל כהחלפה — טור שנכנס
+ * מכווץ (alignColumnBottoms fTall≈0.97) יצא מעל הקיבולת בכל מעבר AQ
+ * נוסף (נמדד: ‏7 עמודות, ‏12.9–31.3px — LINE_BELOW_COLUMN ×8 באודיט). */
+function rawLinesOf(col) {
+  let raw = 0;
+  for (const ln of col) raw += (ln.heightPx || 0);
+  return raw;
+}
+
 /** הערכת "איזון" עמוד: הפרש גובה טורים. */
 function pageImbalance(page) {
   if (!page.columns || page.columns.length < 2) return 0;
@@ -10970,7 +10982,7 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     if (delta <= maxDelta) continue; // כבר מאוזן — אין התערבות
     // תקרת בטיחות בעמודי הערות: הטקסט לא נכנס לאזור ההערות (R3-C2 —
     // האזור חוצה-רוחב); חדירה קיימת (pre-existing containment) — לא לנו,
-    // דילוג מלא כדי לא להחריף
+    // דילוג מלא כדי לא להחריף.
     // **U-8 (אמנה אחת):** colCapacityOf כבר מפחית את תקציב ההערות
     // (והפס החוצה־טורים) לכל טור — אין עוד חישוב תקרה מקביל כאן.
     const capAll = colCapacityOf(page);
@@ -10981,10 +10993,16 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     const shortCol = cols[shortI];
     const usedS = Math.min(h0, h1);
     // **FX-6 (פרוסה 2):** מקדם מדויק עם פערים קבועים — הפערים אינם מתמתחים:
-    // factor = (target − Σgap) / Σ(heightPx×stretch). בלי זה, מתיחה שחושבה
+    // factor = (target − Σgap) / ΣheightPx. בלי זה, מתיחה שחושבה
     // מ-used כולל-פערים לא הגיעה ליעדה בפועל (הפערים נשארו בגובהם המקורי).
+    // **U-10 (20.11 — אמנת פקטור אבסולוטי):** הפקטור נגזר מגבהים **גולמיים**
+    // (ΣheightPx בלי מתיחה) ומוחל כהחלפה — aqStretch הוא תמיד המקדם האבסולוטי
+    // של השורה (כך מפרשים אותו usedHeight, optimalSplit, ההקרנה והאודיט).
+    // בעבר חושב מ-Σ(heightPx×stretch הנוכחי) — מכפיל מתיחה קיימת — אך הוחל
+    // כהחלפה ⇒ טור שנכנס מכווץ היה מוחלף במקדם שאינו מתחשב בכיווץ.
     const partsS = columnStretchParts(shortCol);
-    const stretchTo = (target) => partsS.lines > 0.5 ? (target - partsS.gaps) / partsS.lines : 1;
+    const rawS = rawLinesOf(shortCol);
+    const stretchTo = (target) => rawS > 0.5 ? (target - partsS.gaps) / rawS : 1;
     const raw = stretchTo(Math.max(h0, h1));
     if (!(raw > 1 + 1e-4)) continue;
     const lo = settings['aq-word-spacing-min'];
@@ -10996,8 +11014,9 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     // מדווחת באירוע (clamped=true).
     const mid = (Math.max(h0, h1) + usedS) / 2;
     const partsT = columnStretchParts(tallCol);
+    const rawT = rawLinesOf(tallCol);
     const fShort = stretchTo(mid);
-    const fTall = partsT.lines > 0.5 ? (mid - partsT.gaps) / partsT.lines : 1;
+    const fTall = rawT > 0.5 ? (mid - partsT.gaps) / rawT : 1;
     let factor, shared = false;
     if (raw > hi + 1e-9 && fShort <= hi + 1e-9 && fTall >= lo - 1e-9) {
       factor = fShort; shared = true;
@@ -11009,8 +11028,9 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     if (shared) for (const ln of tallCol) ln.aqStretch = fTall;
     aligned++;
     // **FX-6:** דיווח מדויק — הגובה בפועל אחרי מתיחה = Σgap + Σ(heightPx×factor)
-    const afterShort = partsS.gaps + partsS.lines * factor;
-    const afterTall = shared ? (partsT.gaps + partsT.lines * fTall) : Math.max(h0, h1);
+    // **U-10:** מהגבהים הגולמיים — הפקטור אבסולוטי.
+    const afterShort = partsS.gaps + rawS * factor;
+    const afterTall = shared ? (partsT.gaps + rawT * fTall) : Math.max(h0, h1);
     eventLog.emit('balance', 'bottom-align', {
       page: page.index, col: shortI, factor: Number(factor.toFixed(4)),
       factorTall: shared ? Number(fTall.toFixed(4)) : null,
@@ -11078,16 +11098,23 @@ function autoQualityPass(pages, settings, eventLog) {
       const deficit = cap - used;
       if (deficit > 4 && mayStretch) {
         // **S72 (שיפור 4) + FX-6 (פרוסה 2):** מקדם מדויק עם פערים קבועים —
-        // (cap − Σgap)/Σ(heightPx×stretch) — מגיע ליעד בדיוק גם בטורים
-        // מעורבי-גבהים וגם כשפערי בלוקים בטור (הפערים אינם משתתפים במתיחה).
+        // (cap − Σgap)/ΣheightPx — מגיע ליעד בדיוק גם בטורים מעורבי-גבהים
+        // וגם כשפערי בלוקים בטור (הפערים אינם משתתפים במתיחה).
         // בעבר חושב 1+(deficit/n)/h(שורה-ראשונה) — קירוב שהחטיא את היעד.
+        // **U-10 (20.11 — אמנת פקטור אבסולוטי):** המקדם נגזר מהגבהים ה**גולמיים**
+        // ומוחל כהחלפה. בעבר חושב מ-Σ(heightPx×stretch הנוכחי) — כלומר כתיקון
+        // יחסי — אך הוחל כהחלפה: טור שנכנס מכווץ (alignColumnBottoms fTall≈0.97)
+        // יצא מעל הקיבולת (נמדד: ‏7 עמודות 12.9–31.3px — LINE_BELOW_COLUMN
+        // ×8 באודיט very_long). גם בדיקת ה-clamp תוקנה: newUsed המדויק
+        // = Σgap + factor×Σh_גולמי (לא used×factor שניפח את הפערים).
         const parts = columnStretchParts(lines);
-        const rawFactor = parts.lines > 0.5 ? (cap - parts.gaps) / parts.lines : 1;
+        const rawL = rawLinesOf(lines);
+        const rawFactor = rawL > 0.5 ? (cap - parts.gaps) / rawL : 1;
         for (const stage of AQ_STAGES) {
           const [lo, hi] = stageBounds(settings, stage);
           const factor = Math.min(hi, Math.max(lo, rawFactor));
           if (Math.abs(factor - 1) < 1e-4) continue;
-          const newUsed = used * factor;
+          const newUsed = parts.gaps + rawL * factor;
           if (newUsed - cap > clamp) continue; // clamp 20px — class ch3p4/p17/ch72p9 הוכחד
           if (settings['aq-shared-load']) {
             if (stage !== 'word-spacing') continue;
@@ -11100,8 +11127,10 @@ function autoQualityPass(pages, settings, eventLog) {
       } else if (deficit < -4 && compressFirst) {
         // עודף מעל התקרה ⇒ כיווץ עד min (כיווץ לפני מתיחה — compress-first)
         // **S72 (שיפור 4) + FX-6:** מקדם מדויק גם בכיווץ — (cap − Σgap)/Σh.
+        // **U-10:** אותה אמנת פקטור אבסולוטי מגבהים גולמיים.
         const parts = columnStretchParts(lines);
-        const rawFactor = parts.lines > 0.5 ? (cap - parts.gaps) / parts.lines : 1;
+        const rawL = rawLinesOf(lines);
+        const rawFactor = rawL > 0.5 ? (cap - parts.gaps) / rawL : 1;
         for (const stage of AQ_STAGES) {
           const [lo, hi] = stageBounds(settings, stage);
           const factor = Math.max(lo, Math.min(hi, rawFactor));
@@ -11117,7 +11146,7 @@ function autoQualityPass(pages, settings, eventLog) {
   return { applied };
 }
 
-module.exports = { balancePage, optimalSplit, pageImbalance, applyChapterEndMode, autoQualityPass, alignColumnBottoms, usedHeight, columnStretchParts };
+module.exports = { balancePage, optimalSplit, pageImbalance, applyChapterEndMode, autoQualityPass, alignColumnBottoms, usedHeight, columnStretchParts, rawLinesOf };
 
 };
 __modules["src/engine/layout/column-flow.js"] = function (require, module, exports) {
