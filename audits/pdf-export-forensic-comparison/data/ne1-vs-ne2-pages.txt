@@ -1,0 +1,3 @@
+=== NE1 vs NE2 page-level ===
+pages: 882 882
+pages with text/rect diff: [862, 872, 874]

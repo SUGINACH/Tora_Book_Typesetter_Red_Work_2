@@ -1,0 +1,266 @@
+{
+ "OLD": {
+  "size_bytes": 20750562,
+  "sha256": "d6280392c608ca951e3e4003cb9f3563da1b542c34211dcb1e4993e4aa49a2c8",
+  "page_count": 699,
+  "is_encrypted": false,
+  "pdf_version": "PDF 1.4",
+  "metadata": {},
+  "unique_boxes": [
+   [
+    [
+     -8.5,
+     -8.5,
+     603.78,
+     850.39
+    ],
+    [
+     -8.5,
+     0.0,
+     603.78,
+     858.89
+    ]
+   ]
+  ],
+  "fonts": [
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraBook",
+    "pages_referenced": 699
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx1",
+    "pages_referenced": 699
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx2",
+    "pages_referenced": 699
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx3",
+    "pages_referenced": 699
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx4",
+    "pages_referenced": 699
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx5",
+    "pages_referenced": 699
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx6",
+    "pages_referenced": 699
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx7",
+    "pages_referenced": 699
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx8",
+    "pages_referenced": 699
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx9",
+    "pages_referenced": 699
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraMargin",
+    "pages_referenced": 699
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraWin",
+    "pages_referenced": 699
+   }
+  ],
+  "unique_font_xrefs": 12,
+  "total_raw_font_stream_bytes": 0,
+  "text_chars": 1895915,
+  "text_words": 321457,
+  "text_sha256": "d25266d98520f988cf69f64dec69fb9e8e5e7d216405efb51bf578d23545e5de",
+  "text_sorted_sha256": "a31057809ce1b961fed8ec73bc7c4add764b74bc19efea0655a7cf161a01a640"
+ },
+ "NE1": {
+  "size_bytes": 21113222,
+  "sha256": "39e6b47880bbd89fbc4ffe44e94170cccb13701057972de13583cf65ba9d312d",
+  "page_count": 882,
+  "is_encrypted": false,
+  "pdf_version": "PDF 1.4",
+  "metadata": {},
+  "unique_boxes": [
+   [
+    [
+     -8.5,
+     -8.5,
+     603.78,
+     850.39
+    ],
+    [
+     -8.5,
+     0.0,
+     603.78,
+     858.89
+    ]
+   ]
+  ],
+  "fonts": [
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraBook",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx1",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx2",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx3",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx4",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx5",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx6",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx7",
+    "pages_referenced": 882
+   }
+  ],
+  "unique_font_xrefs": 8,
+  "total_raw_font_stream_bytes": 0,
+  "text_chars": 1889883,
+  "text_words": 317618,
+  "text_sha256": "49989b6e7af378a5cf59bcc032f17d30276177ab1b06cd7ba42ba5fadf3f30d1",
+  "text_sorted_sha256": "e164b0198f781a981b25122092b70162ef6d260bb90190dbc8d8d302cb1465df"
+ },
+ "NE2": {
+  "size_bytes": 21113171,
+  "sha256": "7a569e865e2e34c0e684a4874dad2e17936595ad052438abc96bff308e862fb2",
+  "page_count": 882,
+  "is_encrypted": false,
+  "pdf_version": "PDF 1.4",
+  "metadata": {},
+  "unique_boxes": [
+   [
+    [
+     -8.5,
+     -8.5,
+     603.78,
+     850.39
+    ],
+    [
+     -8.5,
+     0.0,
+     603.78,
+     858.89
+    ]
+   ]
+  ],
+  "fonts": [
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraBook",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx1",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx2",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx3",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx4",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx5",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx6",
+    "pages_referenced": 882
+   },
+   {
+    "ext": "ttf",
+    "type": "Type0",
+    "basefont": "ToraEx7",
+    "pages_referenced": 882
+   }
+  ],
+  "unique_font_xrefs": 8,
+  "total_raw_font_stream_bytes": 0,
+  "text_chars": 1889883,
+  "text_words": 317618,
+  "text_sha256": "79f2aec023432dc5cc5e48d146100bc6d788edef9a83b316393b95c1746360df",
+  "text_sorted_sha256": "deb4000f36f4d5656253a8522bd75df593d3cf6a735030e8c2e70951441003c4"
+ }
+}
