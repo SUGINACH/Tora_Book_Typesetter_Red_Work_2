@@ -9249,15 +9249,14 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   // **FWD-1 (S8):** פס כותרת חוצה־טורים (spanning band) — כותרת שנמדדה ברוחב
   // מלא מוצבת בפס עליון חוצה־טורים במקום בטור חצי־רוחב (בעבר: נמדדה ברוחב מלא
   // והוצבה בטור רגיל ⇒ גלישה אופקית שקטה). הטורים מתחילים מתחת לפס.
-  const spanH = (page) => (page && page.spanning ? page.spanning.heightPx : 0);
-  // **S5.2 (P-2 — קיבולת מאוחדת):** כל חישובי הקיבולת עוברים דרך colCapacityOf
-  // (column-flow — מקור יחיד). **U-8 (19.11):** קיבולת מודעת-תקציב-הערות
-  // ל**כל** הטורים — כמו המרזב המוקרן (רוחב תיבת-התוכן כולה, R3-C2).
-  // בעבר fnBudget:false + הוספת התקציב ל-usedHeight של הטור האחרון בלבד
-  // (planningUsedHeight) ⇒ הטור הימני (RTL) מילא את הקיבולת המלאה וחדר
-  // למרזב ההערות. כעת: used = שורות בלבד, cap כולל את התקציב — אותו
-  // אי-שוויון (שורות ≤ cap−תקציב) לכל טור. הפס החוצה־טורים נכלל תמיד.
-  const colCapacity = (tpl, page) => colCapacityOf(page) || (tpl && tpl.contentBox ? tpl.contentBox.height - spanH(page) : 0);
+  // **S5.2 / U-8 (מקור קיבולת יחיד):** כל חישובי ההצבה צורכים את
+  // colCapacityOf(page) בלבד. תבנית תקינה יכולה להניב קיבולת 0 לאחר הפחתת
+  // spanning/notes/reservations; אסור ל-fallback להחזיר שטח גולמי במקרה הזה.
+  // ה-fallback נשמר רק לעמודים ישנים ללא template קנוני (אם יגיעו מנתיב תאימות).
+  const colCapacity = (tpl, page) => {
+    if (page && page.template && page.template.contentBox) return colCapacityOf(page);
+    return tpl && tpl.contentBox ? tpl.contentBox.height - ((page && page.spanning && page.spanning.heightPx) || 0) : 0;
+  };
 
   /**
    * גובה תפוס = שורות בלבד (**U-8 — אמנה אחת**: התקציב חי בקיבולת, לא ב-used).
@@ -22989,7 +22988,12 @@ function projectPage(page, settings, apiOrOpts) {
     const topPad = page.spanning.titleTopPadPx || 0;
     let y = tpl.contentBox.top + topPad;
     for (const ln of page.spanning.lines) {
-      band.lines.push(projectLine(ln, band.x, y, band.w, settings, measure, 'right', production));
+      // **U-15:** אותו מקור סמכות ליישור בפס החוצה־טורים — בעבר 'right' קבוע
+      // לכל שורות הפס (כותרות H2/H3–H6 ו-callouts) ⇒ כותרות צמודות-ימין
+      // (נמדד: אסימטריה 170–222px ממרכז הפס) בניגוד לחוזה המרכוז של המורשת
+      // ושל המקרן הישן. כותרת ⇒ center; שורת callout שאינה-אחרונה ⇒ justify —
+      // בדיוק כמו renderLine הישן שרינדר את שורות הפס באותה החלטה.
+      band.lines.push(projectLine(ln, band.x, y, band.w, settings, measure, lastAlignOf(ln, settings), production));
       y += ln.heightPx || 0;
     }
     out.spanning = band;
@@ -23677,8 +23681,24 @@ function pushRuleDecoration(out, tpl, spec) {
   });
 }
 
-/** יישור שורה אחרונה לפי ההגדרה (ברירת מחדל center — תואם BASE_CSS). */
+/** יישור שורה בודדת — **מקור הסמכות היחיד להחלטת היישור** (U-15, ביקורת שלמות 20.11).
+ * חוזה יישור הכותרות — כל שורות הכותרת ממורכזות, בכל מסלול (טור/פס חוצה־טורים),
+ * בלי תלות ב-isLast. חמש רשויות מסכימות: המקרן הישן (dom-renderer renderLine —
+ * text-align:center לכל kind='heading'), המקרן של המורשת (legacy-projector:407 —
+ * `ln.kind === 'heading' ? 'center'`), הפסים במורשת (legacy-projector:238 — placeWords
+ * 'center'; נמדד h0/h2/h3: Lgap=Rgap בדיוק), BASE_CSS (.line--heading מוחרג
+ * מ-text-align-last:justify — "ממורכזות מטבען") ומפרט האודיט (סעיף 8 — "כותרת:
+ * ממורכזת, לא מתוחה").
+ * **הכשל שנסגר:** לפני U-15 הוחזר 'justify' לכל שורה שאינה-אחרונה גם לכותרות
+ * ⇒ שורות המשך של כותרות מרובות-שורות נמתחו מקצה לקצה בגיאומטריית המילים
+ * (gapW=(colW−sumW)/gaps ב-projectLine) — לא רק ב-CSS. נמדד ב-very_long:
+ * ‏28 ממצאי HEAD_JUSTIFIED ב-Full Math (sign-open 22/preface 5/regular 1),
+ * בכולן הדיו פרוש בדיוק על רוחב התיבה (inkL=x, inkR=x+w). בנוסף נמצא
+ * הכפל שני באותו שורש: שורות הפס החוצה־טורים קיבלו 'right' קבוע (H2/H3 —
+ * ‏340 שורות צמודות-ימין ב-very_long, אסימטריה 170–222px ממרכז הפס) בניגוד
+ * למורשת שממרכזת אותן. שני המסלולים מנותבים כעת דרך פונקציה זו — החלטה אחת. */
 function lastAlignOf(ln, settings) {
+  if (ln.kind === 'heading') return 'center';
   if (!ln.isLast) return 'justify';
   const mode = settings['body-last-line-align'] || 'center';
   return mode === 'stretch' ? 'justify' : mode; // stretch בשורה אחרונה = יישור מלא כמו רגילה
@@ -23846,8 +23866,27 @@ function projectLine(ln, colX, y, colW, settings, measure, align, production) {
     materializeFallbacks.push({ kind: 'materialize-fallback-line-widths', line: ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId) || null });
   }
   if (spaceW == null) spaceW = 0; // חד-מילית: אין רווחים — אפס ללא נפילה
+  // **U-16 (ביקורת שלמות 20.11 — מילים של תווי-כיוון בלבד, בלי רווח פנטום):**
+  // מילה המורכבת מתווי כיוון בלבד (RLM/LRM וכו') היא ברוחב אפס, אבל הרווח
+  // שמפריד אותה משכנתה נכלל בתיבת השורה ומזיז את המרכוז (נמדד באודיט החי:
+  // אסימטריה 4–4.2px בשורות אחרונות ממורכזות, עמ' 723/724 — המקור מסתיים
+  // ב-RLM מילולי לפני שורת הכותרת). חוזה S4.24 של המקרן הישן: הדבקה לשכן —
+  // הרווח הפנטום נעלם, הכיווניות נשמרת (התו חסר-רוחב; אין חשש לגלישה).
+  // כלל ההדבקה: מילת-כיוון נדבקת לשכנתה משמאל אם קיימת מילה גלויה לפניה
+  // (הרווח שלפניה מת); אחרת (מובילה) — לשכנתה מימין (הרווח שאחריה מת).
+  const FORMAT_WORD_RE = /^[\u200e\u200f\u2066-\u2069\u202a-\u202e\u00ad]+$/;
+  const isFmtWord = words.map(w => FORMAT_WORD_RE.test(String(w)));
+  const gapDead = new Array(Math.max(0, words.length - 1)).fill(false);
+  for (let j = 0; j < words.length; j++) {
+    if (!isFmtWord[j]) continue;
+    let hasVisibleBefore = false;
+    for (let k = 0; k < j; k++) if (!isFmtWord[k]) { hasVisibleBefore = true; break; }
+    if (hasVisibleBefore) gapDead[j - 1] = true;
+    else if (j + 1 < words.length) gapDead[j] = true;
+  }
+  const liveGaps = gapDead.reduce((s, d) => s + (d ? 0 : 1), 0);
   const sumW = widths.reduce((s, w) => s + w, 0);
-  const gaps = Math.max(0, words.length - 1);
+  const gaps = liveGaps;
 
   // רוחב רווחים: שורת יישור מלאה מפרשת לרוחב הטור (לפחות רווח בסיס);
   // שורה אחרונה — רווח בסיס.
@@ -23885,26 +23924,60 @@ function projectLine(ln, colX, y, colW, settings, measure, align, production) {
   for (let i = 0; i < words.length; i++) {
     const eff = effSizeOf(i);
     const frags = (lm && lm.wordFrags && lm.wordFrags[i]) || null;
-    const mkFrag = frags && frags.length >= 2 ? frags[frags.length - 1] : null;
-    if (mkFrag && mkFrag.kind === 'noteMarker' && mkFrag.advance > 0 && widths[i] > mkFrag.advance) {
-      // פיצול: [טקסט ..., סמן] — הסמן החלק האחרון (מודבק אחרי המילה)
-      const mkW = mkFrag.advance;
-      const txtW = widths[i] - mkW;
-      const raw = String(words[i]);
-      const sp = raw.lastIndexOf(' ');
-      const mkTxt = sp >= 0 ? raw.slice(sp + 1) : raw;
-      const txtTxt = sp >= 0 ? raw.slice(0, sp) : raw;
-      cursor -= txtW;
-      emitWord(txtTxt, txtW, eff, null);
-      cursor -= mkW;
-      emitWord(mkTxt, mkW, fnSizePt, { mk: true });
-    } else {
-      cursor -= widths[i];
-      // **S68:** סמן גודל פר-מילה רק כשהוא שונה מגודל השורה — שורות רגילות
-      // (ברירת מחדל, בלי סוגריים/סגנון) נשארות בדיוק כפי שהיו (נייטרליות).
-      emitWord(words[i], widths[i], eff, null);
+    // **U-17/U-16 (ביקורת שלמות 20.11 — סמן בכל מוקד במילה):** עד כאן זוהה
+    // הסמן רק כשהיה הפרגמנט ה**אחרון** של מילה מודבקת "מילה+סמן". בפועל
+    // נמדדו ב-very_long שלוש צורות נוספות שבהן זהות הסמן אבדה בהקרנה —
+    // הסמן הוצג כמילת גוף בגודל השורה (12pt במקום 8pt, בלי .w--fnmarker):
+    //   (א) [סמן] בלבד — סמנים עוקבים שלא הוצמדו (עמ' 877: "א״ד","א״ה" נפרדות;
+    //       MARKER_NOTE_MATCH — פתיחת-הערה בלי סמן-גוף);
+    //   (ב) [סמן, סמן] — פסקה שנפתחת בשתי הערות (עמ' 879: "א״ט א״י" — רק
+    //       האחרון סומן; הראשון הוצג כטקסט 12pt ⇒ אסימטריית דיו 7.1px);
+    //   (ג) [סמן, טקסט] — סמן מוביל שהוצמד למילה הבאה (עמ' 77/80: "ג׳ .",
+    //       "ו׳ ." — הנקודה אחרי הסמן ⇒ אסימטריה 6.7–6.9px).
+    // הכלל הכללי: כל פרגמנט noteMarker במילה מוקרן כחלק-סמן בגודל הרישום
+    // (fnSizePt) עם דגל mk — לפי הרוחב שנמדד בפועל לאותו פרגמנט. הפיצול
+    // לפי מספר הפיסות (המודבקות מופרדות ב-NBSP⇒רווח לאחר ה-scrub) עם נפילה
+    // מוגנת להתנהגות הקודמת כשאין התאמת מספרים.
+    const mkFragCount = frags ? frags.reduce((s, f) => s + (f.kind === 'noteMarker' && f.advance > 0 ? 1 : 0), 0) : 0;
+    let handled = false;
+    if (frags && mkFragCount >= 1) {
+      const pieces = String(words[i]).split(' ');
+      if (pieces.length === frags.length && pieces.every(p => p.length > 0)) {
+        for (let j = 0; j < frags.length; j++) {
+          const f = frags[j];
+          cursor -= f.advance;
+          if (f.kind === 'noteMarker' && f.advance > 0) {
+            emitWord(pieces[j], f.advance, fnSizePt, { mk: true });
+          } else {
+            emitWord(pieces[j], f.advance, eff, null);
+          }
+        }
+        handled = true;
+      }
     }
-    cursor -= gapW;
+    if (!handled) {
+      const mkFrag = frags && frags.length >= 2 ? frags[frags.length - 1] : null;
+      if (mkFrag && mkFrag.kind === 'noteMarker' && mkFrag.advance > 0 && widths[i] > mkFrag.advance) {
+        // פיצול: [טקסט ..., סמן] — הסמן החלק האחרון (מודבק אחרי המילה)
+        const mkW = mkFrag.advance;
+        const txtW = widths[i] - mkW;
+        const raw = String(words[i]);
+        const sp = raw.lastIndexOf(' ');
+        const mkTxt = sp >= 0 ? raw.slice(sp + 1) : raw;
+        const txtTxt = sp >= 0 ? raw.slice(0, sp) : raw;
+        cursor -= txtW;
+        emitWord(txtTxt, txtW, eff, null);
+        cursor -= mkW;
+        emitWord(mkTxt, mkW, fnSizePt, { mk: true });
+      } else {
+        cursor -= widths[i];
+        // **S68:** סמן גודל פר-מילה רק כשהוא שונה מגודל השורה — שורות רגילות
+        // (ברירת מחדל, בלי סוגריים/סגנון) נשארות בדיוק כפי שהיו (נייטרליות).
+        emitWord(words[i], widths[i], eff, null);
+      }
+    }
+    // **U-16:** רווח חי רק בין מילים ששתיהן גלויות (מילת-כיוון נבלעה בשכנה)
+    if (i < words.length - 1 && !gapDead[i]) cursor -= gapW;
   }
 
   return {
