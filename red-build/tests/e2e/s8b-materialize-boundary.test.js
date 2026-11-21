@@ -59,7 +59,8 @@ describe('שלב 8 ביקורת (§3.1) — גבולות materialization', () =>
 
   it('מסלול הייצור מקבל הכול ללא fallback: קורפוס קנוני (footnotes) — חוזה הישן נשמר', () => {
     const r = typeset(CORPUS, S());
-    assert(r.layoutHash.startsWith('fdff19d8'), `layoutHash נשמר (${r.layoutHash.slice(0, 8)})`);
+        // **Iteration-001 (legacy parity — 22.11):** נעילה מחודשת fdff19d8→8a6b23bd (פסי H3 באמצע עמוד; 37=37 עמודים). דוח: audits/legacy-parity-iteration/iteration-001/.
+    assert(r.layoutHash.startsWith('8a6b23bd'), `layoutHash נשמר (${r.layoutHash.slice(0, 8)})`);
     assertEq(r.pageModel.meta.materializeFallbacks, 0, 'אפס נפילות במודל');
     assertEq(r.pageModelValidation.violations.length, 0, 'אפס הפרות (מצב footnotes)');
   });
@@ -116,7 +117,9 @@ describe('שלב 8 ביקורת (§3.1) — גבולות materialization', () =>
     // **U-8 (20.11):** ננעל מחדש fa1f06e2→c330970a — תקציב ההערות מופחת מקיבולת
     // כל הטורים (המרזב חוצה-רוחב; R3-C2) ⇒ אריזת עמודים בלבד (1216→1242);
     // 3636/3636 בלוקים זהים ביט-לביט; contentPreserved=true; הקנוני נשמר.
-    assert(r.layoutHash.startsWith('c330970a'), `layoutHash very_long נשמר (${r.layoutHash.slice(0, 8)})`);
+        // **Iteration-001:** נעילה מחודשת c330970a→140a42d9 (1242→1066 עמודים; contentPreserved=true).
+        // **נעילת iteration-001 חודשה שוב לאחר כלל פיצול-נקי בלבד בפלחי-הזנב (אין פיצול unclean — כמקור):** 140a42d9→d2b871cf (1066=1066 עמודים).
+    assert(r.layoutHash.startsWith('d2b871cf'), `layoutHash very_long נשמר (${r.layoutHash.slice(0, 8)})`);
     assertEq(r.pageModel.meta.materializeFallbacks, 0, 'אפס נפילות (בעבר: 852 שווא-נפילות רוחב-רווח)');
     const mfViol = r.pageModelValidation.violations.filter(v => v.code === 'materialize-fallback');
     assertEq(mfViol.length, 0, 'אפס violations');

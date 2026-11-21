@@ -24,6 +24,17 @@ const H3_TOP_PAD_PX = 8;          // padding-top — פעם אחת לפני הש
 const H3_BOTTOM_PAD_PX = 4;       // padding-bottom — פעם אחת אחרי השורה האחרונה
 const H3_MARGIN_BOTTOM_PX = 4;    // margin-bottom — פעם אחת אחרי ריפוד התחתית
 
+/** **Legacy parity (iteration-001):** מקום מינימלי לתוכן עוקב מתחת לפס H3
+ *  בדיקת "האם הפס נשאר באותו עמוד" (span_1col של המקור, S4.13/S4.24;
+ *  S74 בעיה 6: 60−38 הישן — מנע אלמנות כותרת). הסף הכולל:
+ *  max(60, bandHeight + H3_FOLLOW_MIN_PX). מקור אחד לשני המנועים. */
+const H3_FOLLOW_MIN_PX = 22;
+
+/** סף הכניסה של פס H3 באמצע עמוד — נאמן ל-span_1col של המקור. */
+function h3BandRoomThresholdPx(bandHeightPx) {
+  return Math.max(60, bandHeightPx + H3_FOLLOW_MIN_PX);
+}
+
 /** גובה שורת כותרת 3 בפיקסלים (pitch בין-שורתי) לפי גודל הכותרת בנקודות. */
 function h3LineHeightPx(sizePt) {
   return sizePt * (96 / 72) * H3_LINE_HEIGHT;
@@ -39,6 +50,8 @@ module.exports = {
   H3_TOP_PAD_PX,
   H3_BOTTOM_PAD_PX,
   H3_MARGIN_BOTTOM_PX,
+  H3_FOLLOW_MIN_PX,
   h3LineHeightPx,
-  h3BandHeightPx
+  h3BandHeightPx,
+  h3BandRoomThresholdPx
 };

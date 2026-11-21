@@ -88,9 +88,15 @@ describe('שלב 4 מקטע ב׳ — חיבור מלא למסלול המוצר (
       assert(h.lineModel, 'LineModel לכותרת');
       assert(h.tokenId != null, 'tokenId על שורת הכותרת (כמו הנתיב הקודם)');
     }
-    // H1/H2 full-width ⇒ בפס חוצה-טורים (כמקודם)
+    // H1/H2 full-width ⇒ בפס חוצה-טורים (כמקודם).
+    // **Iteration-001 (legacy parity — span_1col):** H3 כבר אינה פותחת עמוד
+    // משלה — היא נשארת באותו עמוד כפס באמצע (רשומות h3Band בטור הימני
+    // + צל בשמאלי), בדיוק כמו המקור. לכן: לפחות פס-עליון אחד של H2, ולצידו
+    // לפחות פס-H3 אחד באמצע עמוד (שניהם נמדדים בפועל בקורפוס הזה).
     const spanningPages = res.pages.filter(pg => pg.spanning && pg.spanning.lines.some(l => l.kind === 'heading'));
-    assert(spanningPages.length >= 2, 'פסי כותרת חוצה-טורים: ' + spanningPages.length);
+    assert(spanningPages.length >= 1, 'פסי כותרת חוצה-טורים: ' + spanningPages.length);
+    const midBandPages = res.pages.filter(pg => pg.columns.some(c => c.some(l => l.h3Band)));
+    assert(midBandPages.length >= 1, 'פסי H3 באמצע עמוד (span_1col): ' + midBandPages.length);
   });
 
   it('3. H3 (D-S2H3): חד-שורתית ורב-שורתית — הסמנטיקה נוסעת, אין רווח כפול ב-DP וב-renderer', () => {

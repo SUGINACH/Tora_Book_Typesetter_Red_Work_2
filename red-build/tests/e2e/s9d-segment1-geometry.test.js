@@ -232,13 +232,15 @@ describe('s9d-segment1 — הקורפוס הקנוני בפרופיל DP הכל�
       // פרופיל: DP כללי (לא IMUD, לא מורשת) — כמו cross-check
       assertEq(res.legacyProfile === true, false, 'not legacy profile');
       // הנעילה המתועדת
-      assertEq(String(res.layoutHash).startsWith('fdff19d8'), true,
+            // **Iteration-001 (legacy parity — 22.11):** נעילה מחודשת fdff19d8→8a6b23bd
+      // (פסי H3 באמצע עמוד כמו המקור; 37=37 עמודים; contentPreserved=true).
+      assertEq(String(res.layoutHash).startsWith('8a6b23bd'), true,
         `layoutHash ${String(res.layoutHash).slice(0, 16)} ≠ lock fdff19d8`);
       assertEq(res.pages.length > 0, true, 'pages exist');
       // שלילה: קלט מוטמע קלות חייב לשנות את ה-digest (הבדיקה מזהה שינוי אמיתי)
       const mutated = text + '\nשורת תוכן נוספת לשינוי ה-digest לצורך בדיקת השלילה';
       const res2 = typeset(mutated, getDefaultSettings(), { noRecommendations: true });
-      assertEq(String(res2.layoutHash).startsWith('fdff19d8'), false,
+      assertEq(String(res2.layoutHash).startsWith('8a6b23bd'), false,
         'negative control failed: mutated input must change the digest');
     } finally {
       unregisterFont('Guttman Rashi');

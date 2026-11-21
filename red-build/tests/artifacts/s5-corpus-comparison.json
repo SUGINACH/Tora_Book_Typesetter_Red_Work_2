@@ -3,16 +3,16 @@
   "basis": "main@dfb4168 (לפני פרוסה 1 של שלב 5) מול המסלול הקנוני עם FX-1..FX-5 + SSOT",
   "pages": {
     "was": 1216,
-    "now": 1242
+    "now": 1066
   },
   "hash": {
     "was": "fa1f06e2fbe39da9",
-    "now": "c330970af9864906"
+    "now": "d2b871cf6f4c2c9a"
   },
   "blocks": {
     "total": 3636,
-    "identical": 3636,
-    "redivision": 0,
+    "identical": 3313,
+    "redivision": 323,
     "marker": 0,
     "orderRestore": 0,
     "unexplained": 0,

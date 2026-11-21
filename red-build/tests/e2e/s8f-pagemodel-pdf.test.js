@@ -163,8 +163,11 @@ describe('S8F-3 פרוסה 5 — גיאומטריה: מיקומי מילים ב�
     // עמוד הגוף העשיר ביותר במודל — נבחר מהמודל עצמו (ההחלטה אינה בכותב)
     let best = 0, bestN = -1;
     model.pages.forEach((mp, i) => {
-      if (mp.type !== 'regular' && mp.type !== 'preface') return; // עמוד גוף — חלוץ מלא
-      const n = mp.lines.filter(l => l.area === 'column').reduce((s, l) => s + l.words.length, 0);
+      // **Iteration-001 (legacy parity):** עמוד פתיחת-סימן (sign-open) הוא עמוד
+      // גוף לכל דבר — ה-H3 שאחרי ה-H2 נשאר בו מעתה (כמו המקור), ובקורפוסים
+      // קטנים הוא עמוד הגוף העשיר היחיד. החלוץ והסבילות — ללא שינוי.
+      if (mp.type !== 'regular' && mp.type !== 'preface' && mp.type !== 'sign-open') return; // עמוד גוף — חלוץ מלא
+      const n = mp.lines.filter(l => l.area === 'column').reduce((s, l) => s + (l.words || []).length, 0);
       if (n > bestN) { bestN = n; best = i; }
     });
     const pdfPageNo = best + 1;

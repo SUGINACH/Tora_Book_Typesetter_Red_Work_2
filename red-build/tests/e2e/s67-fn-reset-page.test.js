@@ -160,7 +160,14 @@ describe('S67-2 — אינטגרציה: הקורפוס הקנוני במדיני
 
   it('נייטרליות ברירת המחדל: מדיניות section (ברירת מחדל) ⇒ הקנוני 80f9ed6c זהה לנעילה', () => {
     const r = typeset(CORPUS, getDefaultSettings());
-    assert(r.layoutHash.startsWith('fdff19d8'), `canonical hash unchanged, got ${r.layoutHash.slice(0, 16)}`);
+    
+    // **Iteration-001 (legacy parity — 22.11, פס H3 באמצע עמוד כמו המקור):**
+    // נעילה מחודשת fdff19d8→8a6b23bd — H3 (mode=full-width) נשארת מעתה באותו
+    // עמוד כפס חוצה-טורים באמצע הזרימה (סף המקור: max(60, גובה-פס+22)); במקום
+    // שטיפת-עמוד בלתי-מותנית בכל כותרת. הקנוני: 37=37 עמודים, contentPreserved=true,
+    // דטרמיניזם OK, אפס הפרות תוכנית (s7 16/16) ואפס חפיפות בהקרנה (s14 53/53).
+    // דוח: audits/legacy-parity-iteration/iteration-001/.
+    assert(r.layoutHash.startsWith('8a6b23bd'), `canonical hash unchanged, got ${r.layoutHash.slice(0, 16)}`);
   });
 
   it('ביקורת שלילה — המדיניות באמת משנה: מסמך חלק-אחד רב-עמודים — page מאפס, section ממשיך', () => {

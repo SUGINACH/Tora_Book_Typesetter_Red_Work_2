@@ -168,6 +168,10 @@ describe('S8D-1 פרוסה 3 — כיסוי מלא: כל העמודים, כל ס
     let expected = 0, dupes = 0, missing = [];
     for (const mp of model.pages) for (const ln of mp.lines) {
       if (ln.id == null) continue;
+      // **Iteration-001 (legacy parity):** רשומת-צל של פס H3 היא רזרבציה
+      // מתוכננת (projected:false) — אין לה ייצוג DOM/PDF מעצם הגדרתה
+      // (אין דיו); היא אינה פריט מרונדר. כל שורה אחרת נשארת תחת החוזה המלא.
+      if (ln.projected === false && (ln.kind === 'h3band-shadow' || ln.kind === 'h3band-tail')) continue;
       expected++;
       const c = seen.get(ln.id) || 0;
       if (c === 0) missing.push(ln.id);

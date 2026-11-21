@@ -160,6 +160,9 @@ describe('S8E-2 פרוסה 4 — זהות תוכן וגיאומטריה עם ה-
     for (const mp of model.pages) {
       for (const ln of mp.lines) {
         if (ln.area !== 'column' || !ln.id) continue;
+        // **Iteration-001 (legacy parity):** רשומת-צל (h3band-shadow) היא
+        // רזרבציה מתוכננת (projected:false) — אין לה ייצוג HTML/PDF (אין דיו).
+        if (ln.projected === false && (ln.kind === 'h3band-shadow' || ln.kind === 'h3band-tail')) continue;
         // השורה מוקרנת עם data-id + סגנון ממוקם — נמצא את החתימה בסטרינג
         assert(html.includes(`data-id="${ln.id}"`), `שורה ${ln.id} חסרה ב-HTML`);
         checked++;

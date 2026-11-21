@@ -140,12 +140,40 @@ function validatePagePlan(page, opts = {}) {
   }
 
   // (2) מונוטוניות seq לאורך סדר הקריאה (סדר הצבה = סדר מסמך; P0-3).
+  // **Iteration-001 (legacy parity):** הליכה מודעת-פלחים — פס H3 באמצע העמוד
+  // מפצל את הטורים לפלחים; סדר הקריאה: פלח-i בטור 0, פלח-i בטור 1, הפס,
+  // פלח-i+1. רשומות-צל נושאות את ה-seq של רשומת-הטקסט שלהן (אינן תוכן
+  // חדש) — ואינן נבדקות בנפרד; רשומת-זנב אינה נושאת seq כלל.
+  const isBandRecPlan = (ln) => Boolean(ln && (ln.h3Band || ln.h3BandShadow || ln.h3BandTail));
+  const hasBandsPlan = page.columns.some(col => col.some(isBandRecPlan));
   let prevSeq = -1;
-  for (const col of page.columns) {
-    for (const ln of col) {
-      if (ln.seq == null) continue;
-      if (ln.seq <= prevSeq) push('seq-not-monotonic', `seq ${ln.seq} ≤ ${prevSeq} בסדר הקריאה`);
-      prevSeq = ln.seq;
+  if (!hasBandsPlan) {
+    for (const col of page.columns) {
+      for (const ln of col) {
+        if (ln.seq == null) continue;
+        if (ln.seq <= prevSeq) push('seq-not-monotonic', `seq ${ln.seq} ≤ ${prevSeq} בסדר הקריאה`);
+        prevSeq = ln.seq;
+      }
+    }
+  } else {
+    const partsOf = (col) => {
+      const parts = [[]];
+      for (const ln of col) {
+        if (isBandRecPlan(ln) && parts[parts.length - 1].length) parts.push([]);
+        parts[parts.length - 1].push(ln);
+      }
+      return parts;
+    };
+    const parts = page.columns.map(partsOf);
+    const nSeg = Math.max(1, ...parts.map(p => p.length));
+    for (let s = 0; s < nSeg; s++) {
+      for (let c = 0; c < page.columns.length; c++) {
+        for (const ln of (parts[c][s] || [])) {
+          if (ln.seq == null || ln.h3BandShadow) continue;
+          if (ln.seq <= prevSeq) push('seq-not-monotonic', `seq ${ln.seq} ≤ ${prevSeq} בסדר הקריאה`);
+          prevSeq = ln.seq;
+        }
+      }
     }
   }
 
@@ -155,6 +183,12 @@ function validatePagePlan(page, opts = {}) {
   // לא רק על הפותחת — אינו מבחין ביניהן; הזהות מבחינה).
   const expectedGap = opts.settings ? blockGapPx(opts.settings, opts.lineH || 0) : null;
   const tokOf = (ln) => ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
+  // **Iteration-001 (legacy parity):** רשומות פס-H3 (פס/צל/זנב) — חוזה גיאומטריית
+  // הפס ממקור יחיד (core/h3-contract): ריפוד-עליון 8px על הרשומה הראשונה (גם
+  // בראש טור מתחת לפס עליון — כמו titleTopPadPx של הפס העליון) וזנב 8px בסוף.
+  // כללי הפערים של בלוקים אינם חלים עליהן; הבלוק שאחרי הפס נפתח ללא פער-כניסה
+  // — הזנב הוא ההפרדה (כמו openBlock של המקור וכמו טור ריק מתחת לפס עליון).
+  const isBandRecGap = (ln) => Boolean(ln && (ln.h3Band || ln.h3BandShadow || ln.h3BandTail));
   for (let ci = 0; ci < page.columns.length; ci++) {
     const col = page.columns[ci];
     for (let li = 0; li < col.length; li++) {
@@ -164,10 +198,12 @@ function validatePagePlan(page, opts = {}) {
         // נתיב המורשת (עד שלב 9) אינו מצרף LineModel — חריגה מתועדת, לא שקטה.
         push('line-model-missing', `שורה ללא LineModel (tokenId=${tokOf(ln)})`, ci);
       }
+      if (isBandRecGap(ln)) continue; // חוזה הפס — לא כללי פערי-בלוקים
       const hasGap = ln.gapBeforePx != null && ln.gapBeforePx > 0;
       const isBlockStart = li > 0 && tokOf(ln) !== tokOf(col[li - 1]);
+      const afterBand = li > 0 && isBandRecGap(col[li - 1]);
       if (li === 0 && hasGap) push('gap-at-column-head', `ראש הטור נושא פער ${ln.gapBeforePx}px — מנוגד ל-${GAP_HEAD_POLICY}`, ci);
-      if (isBlockStart && expectedGap != null && expectedGap > 0 && !hasGap) {
+      if (isBlockStart && !afterBand && expectedGap != null && expectedGap > 0 && !hasGap) {
         push('gap-missing-at-block-start', `פתיחת בלוק באמצע טור ללא חותמת פער (צפוי ${expectedGap}px)`, ci);
       }
       if (hasGap && !isBlockStart && li > 0) push('gap-on-continuation', `שורת המשך נושאת פער ${ln.gapBeforePx}px`, ci);

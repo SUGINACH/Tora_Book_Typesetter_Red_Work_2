@@ -1,0 +1,199 @@
+{
+ "A_page_counts": {
+  "old_baseline": 699,
+  "new_before_fix_same_runner": 1025,
+  "new_after_fix": 860,
+  "delta_fix_same_runner": -165,
+  "delta_fix_pct": -16.1,
+  "app_export_before_fix": 882,
+  "note": "ההשוואה הקנונית היא אותו-רץ (run-ours --unified, אותם קלט/הגדרות): 1025→860. היצוא מה-אפליקציה (882) נעשה בהגדרות שונות של אותו סשן — אינו בסיס מדויק לפני/אחרי."
+ },
+ "B_page_mapping": {
+  "sample": [
+   {
+    "old": 51,
+    "new": 47,
+    "jaccard": 0.657
+   },
+   {
+    "old": 101,
+    "new": 109,
+    "jaccard": 0.506
+   },
+   {
+    "old": 201,
+    "new": 230,
+    "jaccard": 0.77
+   },
+   {
+    "old": 301,
+    "new": 350,
+    "jaccard": 0.6
+   },
+   {
+    "old": 401,
+    "new": 476,
+    "jaccard": 0.704
+   },
+   {
+    "old": 501,
+    "new": 605,
+    "jaccard": 0.576
+   },
+   {
+    "old": 601,
+    "new": 736,
+    "jaccard": 0.606
+   },
+   {
+    "old": 392,
+    "new": 467,
+    "jaccard": 0.693
+   },
+   {
+    "old": 215,
+    "new": 247,
+    "jaccard": 0.615
+   },
+   {
+    "old": 465,
+    "new": 564,
+    "jaccard": 0.96
+   },
+   {
+    "old": 110,
+    "new": 121,
+    "jaccard": 0.552
+   },
+   {
+    "old": 135,
+    "new": 150,
+    "jaccard": 0.695
+   },
+   {
+    "old": 609,
+    "new": 746,
+    "jaccard": 0.728
+   }
+  ],
+  "mean_jaccard": 0.666
+ },
+ "E_content": {
+  "old_words": 359558,
+  "new_words": 359574,
+  "words_fully_missing_in_new": 36,
+  "words_added_in_new": 928,
+  "words_missing_in_new": 538,
+  "note": "word-multiset comparison; running headers/folios differ by design (F11/F05)"
+ },
+ "C_raster": {
+  "pairs": [
+   {
+    "old_page": 51,
+    "new_page": 47,
+    "changed_px_ratio": 0.2007,
+    "ink_old": 0.0654,
+    "ink_new": 0.0558
+   },
+   {
+    "old_page": 101,
+    "new_page": 109,
+    "changed_px_ratio": 0.1657,
+    "ink_old": 0.0643,
+    "ink_new": 0.0396
+   },
+   {
+    "old_page": 201,
+    "new_page": 230,
+    "changed_px_ratio": 0.1886,
+    "ink_old": 0.0596,
+    "ink_new": 0.0502
+   },
+   {
+    "old_page": 301,
+    "new_page": 350,
+    "changed_px_ratio": 0.1625,
+    "ink_old": 0.0646,
+    "ink_new": 0.0378
+   },
+   {
+    "old_page": 401,
+    "new_page": 476,
+    "changed_px_ratio": 0.1725,
+    "ink_old": 0.0624,
+    "ink_new": 0.0407
+   },
+   {
+    "old_page": 501,
+    "new_page": 605,
+    "changed_px_ratio": 0.2066,
+    "ink_old": 0.0688,
+    "ink_new": 0.0567
+   },
+   {
+    "old_page": 601,
+    "new_page": 736,
+    "changed_px_ratio": 0.1312,
+    "ink_old": 0.033,
+    "ink_new": 0.0433
+   },
+   {
+    "old_page": 392,
+    "new_page": 467,
+    "changed_px_ratio": 0.1846,
+    "ink_old": 0.0629,
+    "ink_new": 0.0515
+   }
+  ],
+  "mean_changed_px_ratio": 0.1765,
+  "note": "raster comparison of content-mapped pairs (72dpi, |Δ|>40 gray)"
+ },
+ "D_geometry": {
+  "old_line_pitch_top": [
+   [
+    16.1,
+    442
+   ],
+   [
+    16.0,
+    147
+   ],
+   [
+    15.7,
+    57
+   ]
+  ],
+  "new_line_pitch_top": [
+   [
+    16.9,
+    207
+   ],
+   [
+    13.9,
+    94
+   ],
+   [
+    16.2,
+    68
+   ]
+  ],
+  "note": "dominant baseline pitch; line-height unification is iteration-002 scope"
+ },
+ "hashes": {
+  "old_pdf": "d6280392c608ca951e3e4003cb9f3563da1b542c34211dcb1e4993e4aa49a2c8",
+  "new_pdf": "72eb3f0d1d810f2937155a884a88d8baaef265a0bb5f26ecf5f505b812a837f0"
+ },
+ "verdict": {
+  "pages": "same-runner: 1025 -> 860 (-165, -16.1%); gap to old 699: 161 (was 326)",
+  "h3_page_top": "2179 -> 196 (span count at page top; old engine ~22 real breaks + sign-open pages)",
+  "median_last_body_row": "640.6 -> 727.1 (old: 758.0)",
+  "content": "word-multiset preserved (running headers differ by design)",
+  "remaining_gap_causes": [
+   "line-height 16.88 vs 16.08 (F14)",
+   "paren notes 12pt vs 10pt (F09)",
+   "margin notes 9pt vs 6pt (F10)",
+   "H1 doubled pages (F07)",
+   "split-window/folio (F03-2/F05)"
+  ]
+ }
+}

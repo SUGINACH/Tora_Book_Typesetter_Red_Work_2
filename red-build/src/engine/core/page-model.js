@@ -152,6 +152,15 @@ function buildPageModel(result, opts = {}) {
       let cursor = 0;
       (page.columns || []).forEach((col, ci) => {
         col.forEach((ln) => {
+          // **Iteration-001 (legacy parity):** רשומות-צל/זנב של פס H3 —
+          // רזרבציות בלבד, אין להן הקרנה (אין דיו). מקבלות מציין projected:false
+          // במודל ואינן צורכות משבצת במיפוי שורות-הגוף — ההזחה נשארת מדויקת.
+          if (ln.h3BandShadow || ln.h3BandTail) {
+            const placedShadow = placeLine(null, ln, { page: page.index, area: 'column', col: ci, li: lines.length });
+            lines.push(placedShadow);
+            bodyLineOf.set(ln, placedShadow);
+            return;
+          }
           const pl = bodyProjected[cursor++];
           const placed = placeLine(pl, ln, { page: page.index, area: 'column', col: ci, li: lines.length });
           lines.push(placed);
@@ -461,7 +470,10 @@ function placeLine(pl, srcLine, where) {
     || (pl && pl.tokenId != null ? pl.tokenId : null);
   const id = `p${where.page}.${where.area === 'spanning' ? 'sp' : (where.area === 'endnotes' ? 'en' : 'c' + where.col)}.${where.li}`;
   if (!pl) {
-    return { id, sourceTokenId: tok != null ? String(tok) : null, projected: false, ...where };
+    // **Iteration-001:** רשומת-צל (h3band-shadow) — רזרבציה מתוכננת ללא הקרנה;
+    // ה-kind נשמר כדי שהוולידטור יבחין בה מכשל הקרנה אמיתי. words ריק —
+    // כל צרכן שסופר מילים לא יישבר על שורה בלי הקרנה.
+    return { id, sourceTokenId: tok != null ? String(tok) : null, kind: (srcLine && srcLine.kind) || null, words: [], projected: false, ...where };
   }
   return {
     id,
@@ -469,6 +481,9 @@ function placeLine(pl, srcLine, where) {
     part: srcLine && srcLine.part != null ? srcLine.part : null,
     seq: srcLine && srcLine.seq != null ? srcLine.seq : null,
     kind: pl.kind || 'paragraph',
+    // **Iteration-001 (legacy parity):** דגל פס-H3 באמצע עמוד — גיאומטריית
+    // עמוד (המקרינים מציבים אותו ברמת העמוד, לא בתוך קופסת טור).
+    ...(pl.midBand ? { midBand: true } : {}),
     level: pl.level != null ? pl.level : null,
     isLast: pl.isLast === true,
     align: pl.align || null,
@@ -608,7 +623,12 @@ function validatePageModel(model, ctx = {}) {
   for (const page of model.pages) {
     for (const ln of page.lines) {
       if (ln.projected === false) {
-        violations.push({ code: 'line-not-projected', detail: `${page.index}:${ln.id}` });
+        // **Iteration-001 (legacy parity):** רשומת-צל של פס H3 היא רזרבציה
+        // מתוכננת — אין לה הקרנה מעצם הגדרתה (אין דיו). כל שורה אחרת שלא
+        // הוקרנה נותרת הפרה מלאה.
+        if (ln.kind !== 'h3band-shadow' && ln.kind !== 'h3band-tail') {
+          violations.push({ code: 'line-not-projected', detail: `${page.index}:${ln.id}` });
+        }
       } else if (ln.area !== 'endnotes' && ln.area !== 'structural' && ln.sourceTokenId == null) {
         violations.push({ code: 'line-without-source', detail: `${page.index}:${ln.id}` });
       } else if (ln.sourceTokenId != null && !tokenIds.has(ln.sourceTokenId)) {

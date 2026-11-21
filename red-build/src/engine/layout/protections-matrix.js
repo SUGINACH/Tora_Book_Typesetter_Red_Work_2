@@ -83,7 +83,14 @@ const CHECKS = {
       // חוקי; SRS §5.1.2 דורש שתי שורות לפחות). very_long: 1205 דיווחים, מהם 29
       // אמיתיים (שורת פתיחה בודדת). כעת: הפרה רק בשורה בודדת; orphan-bottom
       // (אותה גיאומטריה) בעדיפות כששני המתגים דלוקים — לא דיווח כפול.
-      if (last.meta && last.meta.part === 'first') {
+      // **Iteration-001 (legacy parity — span_1col):** שורת-פתיחה בודדת מתחת
+      // לפס H3 היא תבנית שהמקור מאשר במפורש — סף הכניסה של הפס
+      // (max(60, גובה+22); 22px ≈ שורת גוף אחת) מתיר במכוון פס+שורה
+      // בודדת בתחתית הטור, והמשך הפסקה זורם בטור הבא (נמדד בייחוס:
+      // 8 פסי-H3 עם <2 שורות מקום מתחת, 4 מתוכם עם <1). הגלאי נשאר
+      // מלא לכל פתיחה שאינה בעקבות פס.
+      const prevRecIsBand = (li) => li > 0 && Boolean(col[li - 1] && (col[li - 1].h3Band || col[li - 1].h3BandShadow || col[li - 1].h3BandTail));
+      if (last.meta && last.meta.part === 'first' && !prevRecIsBand(col.length - 1)) {
         const sameTokenInCol = col.filter(x => x.meta && x.meta.tokenId === last.meta.tokenId).length;
         if (sameTokenInCol === 1) {
           if (settings['prevent-orphans-bottom']) {
@@ -191,17 +198,45 @@ const CHECKS = {
   readingOrder(page, settings, ledger) {
     const violations = [];
     let prev = -1;
-    for (const col of page.columns) {
+    const emit = (ln) => {
+      if (ln.seq == null) return; // שורות שהוצבו לפני התיוג (תאימות לאחור) — לא נבדקות
+      if (ln.seq < prev) {
+        violations.push({
+          kind: 'reading-order-break', target: `page#${page.index}@seq${ln.seq}`, page: page.index,
+          evidence: { lineSeq: ln.seq, prevSeq: prev },
+          ledgerRef: ledger.create('reading-order-break', `p${page.index}@seq${ln.seq}`, page.index, { lineSeq: ln.seq, prevSeq: prev }, 'protections').issue_id
+        });
+      }
+      prev = Math.max(prev, ln.seq);
+    };
+    // **Iteration-001 (legacy parity — פס H3 באמצע עמוד):** פס מפצל את הטורים
+    // לפלחים; סדר הקריאה האמיתי הוא לכל פלח: טור-0 מלמעלה למטה, טור-1, ואז
+    // הפס (ראש הפלח הבא של טור-0) והמשך הזרימה. הליכה שטוחה של "כל טור-0 ואז
+    // כל טור-1" הייתה מדווחת על כל עמוד עם פס; ההליכה כאן מודעת-פלחים.
+    // רשומות-צל (h3BandShadow) הן רזרבציה בלבד — אינן תוכן ואינן נבדקות.
+    const isBand = (ln) => Boolean(ln && (ln.h3Band || ln.h3BandShadow || ln.h3BandTail));
+    const hasBands = (page.columns || []).some(col => col.some(isBand));
+    if (!hasBands) {
+      for (const col of page.columns) for (const ln of col) emit(ln);
+      return violations;
+    }
+    // חלוקה לפלחים: רשומות הפס פותחות את הפלח הבא של הטור שלהן
+    const partsOf = (col) => {
+      const parts = [[]];
       for (const ln of col) {
-        if (ln.seq == null) continue; // שורות שהוצבו לפני התיוג (תאימות לאחור) — לא נבדקות
-        if (ln.seq < prev) {
-          violations.push({
-            kind: 'reading-order-break', target: `page#${page.index}@seq${ln.seq}`, page: page.index,
-            evidence: { lineSeq: ln.seq, prevSeq: prev },
-            ledgerRef: ledger.create('reading-order-break', `p${page.index}@seq${ln.seq}`, page.index, { lineSeq: ln.seq, prevSeq: prev }, 'protections').issue_id
-          });
+        if (isBand(ln) && parts[parts.length - 1].length) parts.push([]);
+        parts[parts.length - 1].push(ln);
+      }
+      return parts;
+    };
+    const parts = page.columns.map(partsOf);
+    const nSeg = Math.max(1, ...parts.map(p => p.length));
+    for (let s = 0; s < nSeg; s++) {
+      for (let c = 0; c < page.columns.length; c++) {
+        for (const ln of (parts[c][s] || [])) {
+          if (ln.h3BandShadow) continue; // רזרבציה — לא תוכן
+          emit(ln);
         }
-        prev = Math.max(prev, ln.seq);
       }
     }
     return violations;

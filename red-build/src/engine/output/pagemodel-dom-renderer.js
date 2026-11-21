@@ -239,6 +239,26 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     root.appendChild(band);
   }
 
+  // **(4.2) Iteration-001 (legacy parity) — פסי H3 באמצע עמוד:** שורות הפס
+  // הן גיאומטריית עמוד (רוחב כל הטורים, ממורכזות) — הן מרונדרות במיכל
+  // עמוד-מוחלט ולא בתוך קופסת טור בודד (בתוך טור היו מקבלות left שלילי
+  // ונחתכות בהקשרי clipping). הקואורדינטות מהמודל — טהור.
+  const midBandLines = mp.lines.filter(l => l.area === 'column' && l.midBand === true && l.projected !== false);
+  if (midBandLines.length) {
+    const mbWrap = doc.createElement('div');
+    mbWrap.className = 'mid-bands';
+    mbWrap.setAttribute('dir', 'rtl');
+    mbWrap.style.position = 'absolute';
+    mbWrap.style.left = '0';
+    mbWrap.style.top = '0';
+    mbWrap.style.width = `${px2(geo.width)}px`;
+    mbWrap.style.height = `${px2(geo.height)}px`;
+    for (const ln of midBandLines) {
+      mbWrap.appendChild(renderModelLine(ln, doc, 0, 0));
+    }
+    root.appendChild(mbWrap);
+  }
+
   // (4.5) עמודי הערות-סיום — שורות area=endnotes בקואורדינטות עמוד מוחלטות
   // מההקרנה (החותמות של buildEndnotePages). הקרנה טהורה — המיקומים סופיים
   // במודל; הקיבוץ לפי kind/sourceTokenId (נתוני זהות מהמודל) מייצר את
@@ -302,7 +322,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     colEl.dataset.modelTop = String(colTops[ci]);
     colEl.dataset.modelHeight = String(colHeight);
     colEl.dataset.modelBottom = String(colTops[ci] + colHeight);
-    for (const ln of mp.lines.filter(l => l.area === 'column' && l.col === ci)) {
+    for (const ln of mp.lines.filter(l => l.area === 'column' && l.col === ci && l.projected !== false && l.midBand !== true)) {
       colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci]));
     }
     colsWrap.appendChild(colEl);

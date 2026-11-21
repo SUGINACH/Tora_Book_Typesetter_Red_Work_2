@@ -288,13 +288,40 @@ describe('S7 — P0-3 reading-order lock (regression)', () => {
     const r = typeset(FIX, getDefaultSettings());
     const ro = [...r.ledger.issues.values()].filter(x => x.kind === 'reading-order-break');
     assertEq(ro.length, 0, 'reading order must never break (P0-3 fix)');
-    // בדיקת האמת: סדר ה‑seq בקריאה אינו יורד בכל עמוד
+    // בדיקת האמת: סדר ה‑seq בקריאה אינו יורד בכל עמוד.
+    // **Iteration-001 (legacy parity):** הליכה מודעת-פלחים — פס H3 באמצע העמוד
+    // מפצל את הטורים לפלחים; סדר הקריאה האמיתי: פלח-i בטור 0, פלח-i בטור 1,
+    // הפס, ואז פלח-i+1. רשומות-צל/זנב (בלי seq) אינן תוכן — נדלגות ממילא.
+    const isBandLn = (ln) => Boolean(ln && (ln.h3Band || ln.h3BandShadow || ln.h3BandTail));
     for (const pg of r.pages) {
       let prev = -1;
-      for (const col of pg.columns) for (const ln of col) {
-        if (ln.seq == null) continue;
-        assert(ln.seq >= prev, `page ${pg.index}: seq regressed (${ln.seq} < ${prev})`);
-        prev = ln.seq;
+      const hasBands = pg.columns.some(col => col.some(isBandLn));
+      if (!hasBands) {
+        for (const col of pg.columns) for (const ln of col) {
+          if (ln.seq == null) continue;
+          assert(ln.seq >= prev, `page ${pg.index}: seq regressed (${ln.seq} < ${prev})`);
+          prev = ln.seq;
+        }
+        continue;
+      }
+      const partsOf = (col) => {
+        const parts = [[]];
+        for (const ln of col) {
+          if (isBandLn(ln) && parts[parts.length - 1].length) parts.push([]);
+          parts[parts.length - 1].push(ln);
+        }
+        return parts;
+      };
+      const parts = pg.columns.map(partsOf);
+      const nSeg = Math.max(1, ...parts.map(p => p.length));
+      for (let s = 0; s < nSeg; s++) {
+        for (let c = 0; c < pg.columns.length; c++) {
+          for (const ln of (parts[c][s] || [])) {
+            if (ln.seq == null) continue;
+            assert(ln.seq >= prev, `page ${pg.index}: seq regressed (${ln.seq} < ${prev})`);
+            prev = ln.seq;
+          }
+        }
       }
     }
   });

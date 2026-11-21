@@ -362,7 +362,12 @@ describe('S70 (R3-M2/M3) — כיול orphan/widow: רק הפרות אמיתיו
     // **U-8 (20.11):** ננעל מחדש fa1f06e2→c330970a — תקציב ההערות מופחת מקיבולת
     // כל הטורים ⇒ אריזת עמודים בלבד (1216→1242); 3636/3636 בלוקים זהים;
     // contentPreserved=true; הקנוני נשמר (fdff19d8); המורשת לא נגעה.
-    assert(r.layoutHash.startsWith('c330970a'), `layout unchanged (got ${r.layoutHash.slice(0, 8)})`);
+        // **Iteration-001 (legacy parity — 22.11):** נעילה מחודשת c330970a→140a42d9 —
+    // פסי H3 באמצע העמוד (span_1col של המקור) במקום שטיפת-עמוד בכל כותרת:
+    // 1242→1066 עמודים; contentPreserved=true; חלוקת שורות פר-בלוק זהה/מסווגת
+    // (s5-corpus: 0 בלתי-מסווגים). דוח: audits/legacy-parity-iteration/iteration-001/.
+        // **נעילת iteration-001 חודשה שוב לאחר כלל פיצול-נקי בלבד בפלחי-הזנב (אין פיצול unclean — כמקור):** 140a42d9→d2b871cf (1066=1066 עמודים; orphan-bottom חזר ל-0; contentPreserved=true).
+    assert(r.layoutHash.startsWith('d2b871cf'), `layout unchanged (got ${r.layoutHash.slice(0, 8)})`);
     const count = (kind) => [...r.ledger.issues.values()].filter(x => x.kind === kind && x.status === 'persists').length;
     assertEq(count('widow-bottom'), 0, 'false widow-bottom flood eliminated (was 1176)');
     assertEq(count('orphan-top'), 0, 'false orphan-top flood eliminated (was 791)');

@@ -176,7 +176,9 @@ describe('S8G-2 parity תלת-יעדי — אותו מודל, אותן עובד�
       if (n > bestN && p.lines.some(l => l.area === 'column' && l.words.length > 3)) { bestN = n; bodyPage = p; }
     }
     let checked = 0;
-    for (const ln of bodyPage.lines.filter(l => l.area === 'column').slice(0, 12)) {
+    // **Iteration-001 (legacy parity):** רשומות-צל/זנב של פס H3 (projected:false)
+    // הן רזרבציות ללא ייצוג HTML/PDF — אינן חלק מהדגימה.
+    for (const ln of bodyPage.lines.filter(l => l.area === 'column' && l.projected !== false).slice(0, 12)) {
       // התכונות בסדר שרירותי בתג — נמצא את התג המכיל את ה-id ונחלץ את ה-style ממנו
       const idx = String(html).indexOf(`data-id="${ln.id}"`);
       assert(idx >= 0, `שורה ${ln.id} ב-HTML`);

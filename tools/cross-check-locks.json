@@ -4,12 +4,14 @@
     {
       "name": "canonical (DP)",
       "file": "red-build/tests/fixtures/canonical_corpus.txt",
-      "lockHash": "fdff19d8"
+      "lockHash": "8a6b23bd",
+      "renewed": "iteration-001 (22.11, legacy parity — H3 mid-page bands; 37=37 pages; contentPreserved=true)"
     },
     {
       "name": "very_long (DP)",
       "file": "audits/very_long_test_text.txt",
-      "lockHash": "c330970a"
+      "lockHash": "d2b871cf",
+      "renewed": "iteration-001 (22.11, legacy parity — H3 mid-page bands + clean-only tail splits; 1242→1066 pages; contentPreserved=true; orphan-bottom=0)"
     },
     {
       "name": "very_long (legacy, run-ours = corpus-invariants CI)",

@@ -141,7 +141,9 @@ describe('U-15 — חוזה יישור כותרות (כל שורות הכותר�
     let spanningHeads = 0;
     for (const pml of r.pageModel.pages) {
       for (const ml of pml.lines) {
-        if (ml.area !== 'spanning' || ml.kind !== 'heading') continue;
+        // **Iteration-001 (legacy parity):** פס H3 באמצע עמוד הוא גם שורת-פס
+        // חוצה-טורים (midBand) — אותו חוזה מרכוז, מרוחב הפס כולו.
+        if (ml.kind !== 'heading' || !(ml.area === 'spanning' || ml.midBand === true)) continue;
         spanningHeads++;
         assertEq(ml.align, 'center', `שורת פס חוצה-טורים (isLast=${!!ml.isLast}) חייבת center — התקבל ${ml.align}`);
         const ws = ml.words || [];
@@ -175,7 +177,9 @@ describe('U-15 — חוזה יישור כותרות (כל שורות הכותר�
         const left = parseFloat(el.style.left);
         const width = parseFloat(el.style.width);
         assert(Number.isFinite(left) && Number.isFinite(width), `${ml.id}: תיבת שורה בעלת left/width`);
-        const relX = ml.area === 'spanning' ? mp.spanning.x : (mp.geometry.columns[ml.col] || {}).x;
+        // **Iteration-001:** פס-H3 באמצע עמוד מעוגן לעמוד (מיכל mid-bands,
+        // קואורדינטות עמוד-מוחלטות) — לא לתיבת הטור.
+        const relX = ml.area === 'spanning' ? mp.spanning.x : (ml.midBand === true ? 0 : (mp.geometry.columns[ml.col] || {}).x);
         assert(relX != null && Number.isFinite(relX), `${ml.id}: תיבת ייחוס (טור/פס) קיימת בגיאומטריה`);
         assert(Math.abs(left - (ml.x - relX)) <= TOL_POS, `${ml.id}: left ב-DOM (${left}) תואם למודל (${(ml.x - relX).toFixed(4)}) בחסם ±0.005`);
         assert(Math.abs(width - ml.w) <= TOL_POS, `${ml.id}: width ב-DOM (${width}) תואם למודל (${ml.w}) בחסם ±0.005`);
@@ -203,6 +207,13 @@ describe('U-15 — חוזה יישור כותרות (כל שורות הכותר�
         let anc = el, inBand = false;
         while (anc) { if (String(anc.className || '').split(/\s+/).includes('spanning-band')) { inBand = true; break; } anc = anc.parentNode; }
         if (ml.area === 'spanning') { assert(inBand, `${ml.id}: שורת פס בתוך spanning-band`); checkedSpan++; }
+        else if (ml.midBand === true) {
+          assert(!inBand, `${ml.id}: שורת פס-אמצע אינה בתוך spanning-band`);
+          let ancM = el, inMid = false;
+          while (ancM) { if (String(ancM.className || '').split(/\s+/).includes('mid-bands')) { inMid = true; break; } ancM = ancM.parentNode; }
+          assert(inMid, `${ml.id}: שורת פס-אמצע בתוך mid-bands`);
+          checkedSpan++;
+        }
         else { assert(!inBand, `${ml.id}: שורת טור אינה בתוך spanning-band`); checkedCol++; }
       }
     }

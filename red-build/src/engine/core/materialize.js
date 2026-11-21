@@ -261,6 +261,27 @@ function projectPage(page, settings, apiOrOpts) {
         // פער הבלוקים מהחותמת שנקבעה בתכנון (gapBeforePx) — בדיוק כמו
         // margin-top ב-DOM. מקור יחיד: אין כאן חישוב פער עצמאי ואין כפילה.
         y += ln.gapBeforePx || 0;
+        // **Iteration-001 (legacy parity — פס H3 באמצע עמוד):** רשומת-צל/זנב —
+        // רזרבציה ללא טקסט בטור המשני וגיאומטריית הזנב של הפס. אינן מוקרנות
+        // כשורות כלל (אין דיו); ה-y מתקדם בגובהן, וה-PageModel מסמן אותן
+        // כ-projected:false (מיפוי 1:1 של שורות-התוכנית נשמר שם — ראה page-model.js).
+        if (ln.h3BandShadow || ln.h3BandTail) {
+          y += (ln.heightPx || 0) * (ln.aqStretch || 1);
+          continue;
+        }
+        // **Iteration-001:** רשומת-פס — שורת כותרת H3 שהוצבה באמצע העמוד.
+        // מוקרנת ברוחב כל הטורים וממורכזת (כמו שורות הפס העליון — אותו
+        // lineAlignOf); הגובה הוא lineHeightPx המקורי (טוהר מדידה — הזנב
+        // הוא רשומה נפרדת), והתקדמות ה-y על גובה הרשומה כמו שהיא.
+        if (ln.h3Band) {
+          const bLeft = Math.min(...tpl.columns.map(c => c.x));
+          const bRight = Math.max(...tpl.columns.map(c => c.x + c.w));
+          const bandProj = projectLine(ln, bLeft, y, bRight - bLeft, settings, measure, lineAlignOf(ln, settings), production);
+          bandProj.midBand = true; // **Iteration-001:** גיאומטריית עמוד (רוחב כל הטורים) — מרונדר ברמת העמוד
+          out.lines.push(bandProj);
+          y += (ln.heightPx || 0) * (ln.aqStretch || 1);
+          continue;
+        }
         out.lines.push(projectLine(ln, col.x, y, col.w, settings, measure, lineAlignOf(ln, settings), production));
         // **EXT-20:** מקדם ה-AQ מיושם על גובה השורה (אנכי) — השורות שאחריה
         // זזות בהתאם; התיבה והבסיס מחושבים מהגובה הנמתח (מודל תיבת שורה).
@@ -1233,7 +1254,11 @@ function projectDocument(result, settings, apiOrOpts) {
       const w = pg.folio.w != null ? pg.folio.w : Math.max(20, pg.folio.text.length * 6);
       const x = pg.folio.x != null ? pg.folio.x : (pg.width - w) / 2;
       const by = pg.folio.baselineY != null ? pg.folio.baselineY : pg.folio.y + 10;
-      acc(x, by - 10, w, 16);
+      // **Iteration-001 (דיוק מדידת דיו):** אותיות הגימטריה יושבות על קו-הבסיס
+      // (אין יורדים) — תחתית הדיו ≈ by; אותיות קטנות (י׳) מרחפות מעליו. ההערכה
+      // הגסה הישנה (by+6) נחשפה כשפסי-H3 באמצע שינו את הפגינציה ועמודים קצרים
+      // (דיו הגיליון בתחתית) נכנסו לדגימת חוזה ה-≤6px.
+      acc(x, by - 10, w, 10);
     }
     if (pg.header) {
       for (const s of pg.header.slots || []) {

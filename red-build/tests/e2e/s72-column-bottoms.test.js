@@ -237,13 +237,18 @@ describe('S72.2 DP — יישור תחתיות ככלל עימוד (שיפורי
     // **U-8 (20.11):** ננעל מחדש 0e657636→ad283e71 — תקציב ההערות מופחת מקיבולת
     // כל הטורים (המרזב חוצה-רוחב; R3-C2) ⇒ אריזת עמודים בלבד; בלוקים זהים
     // ביט-לביט (s5-corpus-comparison); contentPreserved=true; הקנוני נשמר.
-    assert(result.layoutHash.startsWith('ad283e71'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
+        // **Iteration-001 (legacy parity — 22.11):** נעילה מחודשת ad283e71→24f0f5e0 —
+    // פסי H3 באמצע העמוד כמו המקור (span_1col; סף max(60, גובה+22)); אריזת
+    // עמודים בלבד; contentPreserved=true; ה-AQ ממשיך לעבוד (הבדיקות לעיל).
+    // דוח: audits/legacy-parity-iteration/iteration-001/.
+        // **נעילת iteration-001 חודשה שוב לאחר כלל פיצול-נקי בלבד בפלחי-הזנב (אין פיצול unclean — כמקור):** 24f0f5e0→0db2d2f2.
+    assert(result.layoutHash.startsWith('0db2d2f2'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
     const r2 = typeset(corpus, getDefaultSettings(), {});
     assertEq(result.layoutHash, r2.layoutHash, 'דטרמיניזם');
     // הקנוני — נעילת fdff19d8 ממקטע ב׳ (מאומת ב-s13-acceptance)
     const canon = fs.readFileSync(path.join(REPO, 'tests/fixtures/canonical_corpus.txt'), 'utf8');
     const rc = typeset(canon, getDefaultSettings(), {});
-    assert(rc.layoutHash.startsWith('fdff19d8'), `hash קנוני השתנה: ${rc.layoutHash.slice(0, 16)}`);
+        assert(rc.layoutHash.startsWith('8a6b23bd'), `hash קנוני השתנה: ${rc.layoutHash.slice(0, 16)}`); // **Iteration-001:** fdff19d8→8a6b23bd (פסי H3 באמצע עמוד; 37=37 עמודים)
   });
 
   it('אין גלישה חדשה: כל טור מתוח נשאר בתוך הקיבולת (בלי חדירה לאזור ההערות)', () => {

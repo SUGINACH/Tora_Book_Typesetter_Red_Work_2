@@ -11,6 +11,24 @@
 const { colCapacityOf, normalizeColumnGaps } = require('./column-flow'); // **S5.2 (P-2):** קיבולת הטור — מקור יחיד; **פרוסה 2:** נרמול פערים אחרי פיצול מחדש
 const { seamIsClean, escortCleanBoundary } = require('./constraint-matrix'); // **שלב 5:** תפר נקי + תפר מודע-ליווי — מקור יחיד (חילוץ שורש מ-#16/#17)
 
+/** **Iteration-001 (legacy parity):** רשומות פס-H3 באמצע עמוד (פס/צל/זנב) הן
+ *  גיאומטריה קבועה — הן אינן משתתפות במתיחת ה-AQ (כמו הפסים במקור),
+ *  וגובהן אינו נכנס לבסיס המתיחה (הן כמו פערים — קבועות). */
+function isFixedBandLine(ln) {
+  return Boolean(ln && (ln.h3Band || ln.h3BandShadow || ln.h3BandTail));
+}
+
+/** **Iteration-001:** גובה קבוע של רשומות הפס בטור (פס+צל+זנב, כולל הפערים
+ *  שלהן) — אינו משתתף במתיחה ויש לנכות אותו מהיעד בכל חישוב מקדם. */
+function fixedBandPx(col) {
+  let f = 0;
+  for (const ln of col) {
+    if (!isFixedBandLine(ln)) continue;
+    f += (ln.heightPx || 0) * (ln.aqStretch || 1) + (ln.gapBeforePx || 0);
+  }
+  return f;
+}
+
 function usedHeight(col) {
   // **EXT-20:** גובה בפועל — כולל מקדם ה-AQ האנכי (לפני ה-AQ כל המקדמים 1).
   // **FX-6 (פרוסה 2):** פער הבלוקים (gapBeforePx) נכלל — הפער הוא גאומטריה
@@ -24,6 +42,7 @@ function usedHeight(col) {
 function columnStretchParts(col) {
   let lines = 0, gaps = 0;
   for (const ln of col) {
+    if (isFixedBandLine(ln)) continue; // **Iteration-001:** פסים קבועים — אינם נמתחים
     lines += (ln.heightPx || 0) * (ln.aqStretch || 1);
     gaps += ln.gapBeforePx || 0;
   }
@@ -38,7 +57,10 @@ function columnStretchParts(col) {
  * נוסף (נמדד: ‏7 עמודות, ‏12.9–31.3px — LINE_BELOW_COLUMN ×8 באודיט). */
 function rawLinesOf(col) {
   let raw = 0;
-  for (const ln of col) raw += (ln.heightPx || 0);
+  for (const ln of col) {
+    if (isFixedBandLine(ln)) continue; // **Iteration-001:** פסים קבועים — אינם בבסיס המתיחה
+    raw += (ln.heightPx || 0);
+  }
   return raw;
 }
 
@@ -114,6 +136,13 @@ function balancePage(page, maxDelta) {
   const before = pageImbalance(page);
   if (before <= maxDelta) return { changed: false, before, after: before, moves: 0 };
   if (!page.columns || page.columns.length < 2) return { changed: false, before, after: before };
+  // **Iteration-001 (legacy parity):** עמוד עם פסי H3 באמצע — הפסים והצללים
+  // שלהם הם מחסומים סינכרוניים בין הטורים; פיצול רציף של העמוד כולו היה
+  // מזיז צל מראש טור 1 לסוף טור 0 ומנתק את הסנכרון. מצב זה מטופל במקום
+  // אחר (dp-planner.balancePageSafe/resplitTailSegments) על פלחי-הזנב —
+  // כאן אין התערבות (עמוד סוף-פרק עם פסים נשאר כפי שנבנה).
+  const hasBandsBal = (page.columns || []).some(c => (c || []).some(ln => isFixedBandLine(ln)));
+  if (hasBandsBal) return { changed: false, before, after: before, moves: 0, bands: true };
   // **S5.2 (P-2 — קיבולת מאוחדת):** colCapacityOf (column-flow) — כולל הפס
   // החוצה־טורים. **U-8 (19.11 — אמנה אחת):** הקיבולת מודעת-תקציב-הערות
   // לכל טור (המרזב פרוש על רוחב תיבת-התוכן כולה) — extraLast הוסר; בעבר
@@ -190,7 +219,8 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     // כהחלפה ⇒ טור שנכנס מכווץ היה מוחלף במקדם שאינו מתחשב בכיווץ.
     const partsS = columnStretchParts(shortCol);
     const rawS = rawLinesOf(shortCol);
-    const stretchTo = (target) => rawS > 0.5 ? (target - partsS.gaps) / rawS : 1;
+    const fixedS = fixedBandPx(shortCol); // **Iteration-001:** הפסים קבועים — ניכוי מהיעד
+    const stretchTo = (target) => rawS > 0.5 ? (target - partsS.gaps - fixedS) / rawS : 1;
     const raw = stretchTo(Math.max(h0, h1));
     if (!(raw > 1 + 1e-4)) continue;
     const lo = settings['aq-word-spacing-min'];
@@ -203,8 +233,9 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     const mid = (Math.max(h0, h1) + usedS) / 2;
     const partsT = columnStretchParts(tallCol);
     const rawT = rawLinesOf(tallCol);
+    const fixedT = fixedBandPx(tallCol); // **Iteration-001:** הפסים קבועים — ניכוי מהיעד
     const fShort = stretchTo(mid);
-    const fTall = rawT > 0.5 ? (mid - partsT.gaps) / rawT : 1;
+    const fTall = rawT > 0.5 ? (mid - partsT.gaps - fixedT) / rawT : 1;
     let factor, shared = false;
     if (raw > hi + 1e-9 && fShort <= hi + 1e-9 && fTall >= lo - 1e-9) {
       factor = fShort; shared = true;
@@ -212,13 +243,13 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
       factor = Math.min(hi, raw);
       if (!(factor > 1 + 1e-4)) continue;
     }
-    for (const ln of shortCol) ln.aqStretch = factor;
-    if (shared) for (const ln of tallCol) ln.aqStretch = fTall;
+    for (const ln of shortCol) if (!isFixedBandLine(ln)) ln.aqStretch = factor;
+    if (shared) for (const ln of tallCol) if (!isFixedBandLine(ln)) ln.aqStretch = fTall;
     aligned++;
     // **FX-6:** דיווח מדויק — הגובה בפועל אחרי מתיחה = Σgap + Σ(heightPx×factor)
     // **U-10:** מהגבהים הגולמיים — הפקטור אבסולוטי.
-    const afterShort = partsS.gaps + rawS * factor;
-    const afterTall = shared ? (partsT.gaps + rawT * fTall) : Math.max(h0, h1);
+    const afterShort = partsS.gaps + fixedS + rawS * factor;
+    const afterTall = shared ? (partsT.gaps + fixedT + rawT * fTall) : Math.max(h0, h1);
     eventLog.emit('balance', 'bottom-align', {
       page: page.index, col: shortI, factor: Number(factor.toFixed(4)),
       factorTall: shared ? Number(fTall.toFixed(4)) : null,
@@ -297,17 +328,18 @@ function autoQualityPass(pages, settings, eventLog) {
         // = Σgap + factor×Σh_גולמי (לא used×factor שניפח את הפערים).
         const parts = columnStretchParts(lines);
         const rawL = rawLinesOf(lines);
-        const rawFactor = rawL > 0.5 ? (cap - parts.gaps) / rawL : 1;
+        const fixed = fixedBandPx(lines); // **Iteration-001:** הפסים קבועים — ניכוי מהיעד
+        const rawFactor = rawL > 0.5 ? (cap - parts.gaps - fixed) / rawL : 1;
         for (const stage of AQ_STAGES) {
           const [lo, hi] = stageBounds(settings, stage);
           const factor = Math.min(hi, Math.max(lo, rawFactor));
           if (Math.abs(factor - 1) < 1e-4) continue;
-          const newUsed = parts.gaps + rawL * factor;
+          const newUsed = parts.gaps + fixed + rawL * factor;
           if (newUsed - cap > clamp) continue; // clamp 20px — class ch3p4/p17/ch72p9 הוכחד
           if (settings['aq-shared-load']) {
             if (stage !== 'word-spacing') continue;
           } else if (factor >= hi && stage !== 'word-spacing') continue;
-          for (const ln of lines) ln.aqStretch = factor;
+          for (const ln of lines) if (!isFixedBandLine(ln)) ln.aqStretch = factor;
           applied++;
           eventLog.emit('justify', `aq-${stage}`, { page: page.index, col: c, factor: Number(factor.toFixed(4)) }, page.index);
           break;
@@ -318,12 +350,13 @@ function autoQualityPass(pages, settings, eventLog) {
         // **U-10:** אותה אמנת פקטור אבסולוטי מגבהים גולמיים.
         const parts = columnStretchParts(lines);
         const rawL = rawLinesOf(lines);
-        const rawFactor = rawL > 0.5 ? (cap - parts.gaps) / rawL : 1;
+        const fixed = fixedBandPx(lines); // **Iteration-001:** הפסים קבועים — ניכוי מהיעד
+        const rawFactor = rawL > 0.5 ? (cap - parts.gaps - fixed) / rawL : 1;
         for (const stage of AQ_STAGES) {
           const [lo, hi] = stageBounds(settings, stage);
           const factor = Math.max(lo, Math.min(hi, rawFactor));
           if (Math.abs(factor - 1) < 1e-4) continue;
-          for (const ln of lines) ln.aqStretch = factor;
+          for (const ln of lines) if (!isFixedBandLine(ln)) ln.aqStretch = factor;
           applied++;
           eventLog.emit('justify', `aq-${stage}-compress`, { page: page.index, col: c, factor: Number(factor.toFixed(4)) }, page.index);
           break;

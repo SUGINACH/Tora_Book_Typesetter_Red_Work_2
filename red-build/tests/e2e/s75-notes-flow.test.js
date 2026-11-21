@@ -226,7 +226,10 @@ describe('S75 — נייטרליות נתיב DP (המנגנון החדש בנת
   it('קנוני DP: ה-layoutHash לא השתנה (המנגנון אינו נוגע בנתיב DP)', () => {
     const corpus = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'canonical_corpus.txt'), 'utf8');
     const r = typeset(corpus, getDefaultSettings(), { noRecommendations: true });
-    assert(r.layoutHash.startsWith('fdff19d8'), `hash קנוני DP נותר: ${r.layoutHash.slice(0, 16)}`);
+        // **Iteration-001 (legacy parity — 22.11):** נעילה מחודשת fdff19d8→8a6b23bd —
+    // פסי H3 באמצע העמוד (span_1col של המקור); 37=37 עמודים; contentPreserved=true.
+    // דוח: audits/legacy-parity-iteration/iteration-001/.
+    assert(r.layoutHash.startsWith('8a6b23bd'), `hash קנוני DP נותר: ${r.layoutHash.slice(0, 16)}`);
   });
 });
 

@@ -534,7 +534,9 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       width: mp.geometry.width, height: mp.geometry.height,
       type: mp.type,
       spanning: mp.spanning ? { lines: mp.lines.filter(l => l.area === 'spanning') } : null,
-      lines: mp.lines.filter(l => l.area !== 'spanning'),
+      // **Iteration-001 (legacy parity):** רשומות-צל (h3band-shadow) הן רזרבציות
+      // מתוכננות בלי הקרנה — אין להן דיו והן אינן מגיעות לכותב ה-PDF.
+      lines: mp.lines.filter(l => l.area !== 'spanning' && l.projected !== false),
       footnotes: mp.footnotes || [],
       folio: mp.folio || null,
       header: mp.header || null,
