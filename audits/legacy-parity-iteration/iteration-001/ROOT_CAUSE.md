@@ -1,6 +1,6 @@
 # Iteration 001 — Root Cause: H3 headings flush the page (legacy: span_1col mid-page band)
 
-Date: 2026-11-22
+Date: 2026-11-21 (corrected 2026-11-22; commit 78ee6e3 is stamped 2026-11-21 20:42 UTC)
 Branch: `engine/legacy-parity-preview-20261119` (base `695c12a`)
 Baseline (read-only): `audits/PDF Export Page Comparison - Old Engine VS New Engine/PDF File Export - Old Engine.pdf`
 - md5 `7c0fe033b494b2c15c6cde2c95656356`, 699 pages.

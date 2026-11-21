@@ -103,6 +103,26 @@ const DISPOSITIONS = {
   'font-body': { kind: 'mapped', to: 'body-font', transform: resolveStack, reason: 'מחסנית CSS של המקור — נפתרת מול הקטלוג המוטמע כשהוא זמין (EXT-9: גוף המקור "\'Guttman Rashi\', \'Frank Ruhl Libre\'" ⇒ Frank Ruhl Libre המוטמע); בלי קטלוג — המשפחה הראשונה (התנהגות היסטורית). בלי זה המדידה נפלה לטבלה בעוד התצוגה בגופן אמיתי — סחף live↔ייצוא מסוג EXT-13' },
   'size-body': { kind: 'mapped', to: 'body-font-size-pt', transform: parseFloat, reason: 'pt (המקור 12; RED 14 — ההפרש מתועד כהחלטת RED)' },
   'line-height-body': { kind: 'mapped', to: 'body-line-height', transform: parseFloat },
+  // **F09 (parity iteration-002):** גודל הסוגריים של המקור — הגדרת ספר אמיתית
+  // (s-paren-mode='relative', s-paren='-2' ⇒ size-body−2 = 10pt בגוף 12). עד כאן
+  // נפלה תחת כלל המשפחה /^s-/ (ui-state) בטענה "מומש במפתחות RED המקבילים" —
+  // אך שום מיפוי לא הציב ערך, והמנוע המאוחד מדד והדפיס סוגריים בגודל הגוף
+  // המלא (12pt מול 10pt במקור; נמדד: ‎−11 עמודים בספר ההשוואה). ההמרה למנגנון
+  // האחיד הקיים — paren-style-scale (advanceFactor במדידה + סקאלת גודל ברינדור,
+  // מקור אחד) — משחזרת את החוזה: גופן הגוף (f-paren ריק), גודל body+delta.
+  's-paren': {
+    kind: 'mapped', to: 'paren-style-scale',
+    transform: (v, ctx) => {
+      if (!ctx || ctx.parenMode !== 'relative') return undefined; // S77: מצב לא מוכר — אין דריסה
+      const bodyPt = Number(ctx.bodyPt) > 0 ? Number(ctx.bodyPt) : 12;
+      const delta = parseFloat(v);
+      if (!Number.isFinite(delta)) return undefined;
+      const scale = (bodyPt + delta) / bodyPt;
+      return Math.max(0.8, Math.min(1, scale)); // טווח הרישום 0.8–1
+    },
+    reason: 'F09 (parity iter-002): סוגריים יחסיות במקור (‎-2pt על גוף 12 ⇒ 10pt) — מומר ל-scale של מנגנון RED האחיד (מדידה+רינדור יחד); בלי זה הסוגריים בגודל הגוף המלא'
+  },
+  's-paren-mode': { kind: 'ui-state', reason: 'נצרך על ידי מיפוי s-paren (relative=דלתא-pt מגוף הטקסט); נשמר כנתון' },
   'body-last-line-align': { kind: 'mapped', to: 'body-last-line-align' },
 
   // ============ מילה ראשונה ============
@@ -390,7 +410,13 @@ function importImudSettings(legacy, registryKeys, opts = {}) {
   const unmapped = [];
   const report = { mapped: 0, merged: 0, uiState: 0, removed: 0 };
   const valid = registryKeys instanceof Set ? registryKeys : (Array.isArray(registryKeys) ? new Set(registryKeys) : null);
-  const ctx = { contentHeightPx: Number(opts.contentHeightPx) > 0 ? Number(opts.contentHeightPx) : 1040 };
+  // **F09 (parity iter-002):** הקשר גודל-הגוף ומצב הסוגריים לטרנספורם של s-paren —
+  // מקור אחד (size-body/s-paren-mode של אותו קובץ הגדרות), לא קבוע מקומי.
+  const ctx = {
+    contentHeightPx: Number(opts.contentHeightPx) > 0 ? Number(opts.contentHeightPx) : 1040,
+    bodyPt: parseFloat(legacy && legacy['size-body']) || 12,
+    parenMode: String((legacy && legacy['s-paren-mode']) || 'relative')
+  };
   // **03.11(ד):** קטלוג הגופנים הזמין (אם הועבר) — לפתרון מחסניות הגופן של המקור
   // מול מה שבאמת קיים בספרייה המוטמעת (f-h0="'AlphaBlack', 'David Libre', serif"
   // ⇒ David Libre כש-AlphaBlack אינה בספרייה — בדיוק כמו שהדפדפן היה נופל).

@@ -1,0 +1,483 @@
+{
+ "A_page_counts": {
+  "old_baseline": 699,
+  "app_before_fix": 703,
+  "app_after_fix": 692,
+  "runner_before_fix": 860,
+  "runner_after_fix": 840,
+  "delta_app_fix": -11,
+  "gap_to_old": -7
+ },
+ "B_page_mapping": {
+  "sample": [
+   {
+    "old": 51,
+    "new": 46,
+    "jaccard": 0.47
+   },
+   {
+    "old": 101,
+    "new": 95,
+    "jaccard": 0.565
+   },
+   {
+    "old": 201,
+    "new": 192,
+    "jaccard": 0.621
+   },
+   {
+    "old": 301,
+    "new": 286,
+    "jaccard": 0.646
+   },
+   {
+    "old": 401,
+    "new": 386,
+    "jaccard": 0.889
+   },
+   {
+    "old": 501,
+    "new": 487,
+    "jaccard": 0.925
+   },
+   {
+    "old": 601,
+    "new": 591,
+    "jaccard": 0.617
+   },
+   {
+    "old": 392,
+    "new": 378,
+    "jaccard": 0.776
+   },
+   {
+    "old": 215,
+    "new": 205,
+    "jaccard": 0.898
+   },
+   {
+    "old": 465,
+    "new": 453,
+    "jaccard": 0.96
+   },
+   {
+    "old": 110,
+    "new": 103,
+    "jaccard": 0.536
+   },
+   {
+    "old": 135,
+    "new": 128,
+    "jaccard": 0.807
+   },
+   {
+    "old": 609,
+    "new": 599,
+    "jaccard": 0.865
+   },
+   {
+    "old": 157,
+    "new": 150,
+    "jaccard": 0.645
+   },
+   {
+    "old": 435,
+    "new": 423,
+    "jaccard": 0.883
+   },
+   {
+    "old": 657,
+    "new": 648,
+    "jaccard": 0.77
+   }
+  ],
+  "mean_jaccard": 0.742
+ },
+ "C_raster": {
+  "pairs": [
+   {
+    "old_page": 51,
+    "new_page": 46,
+    "changed_px_ratio": 0.1772,
+    "ink_old": 0.0654,
+    "ink_new": 0.0614
+   },
+   {
+    "old_page": 101,
+    "new_page": 95,
+    "changed_px_ratio": 0.1876,
+    "ink_old": 0.0643,
+    "ink_new": 0.069
+   },
+   {
+    "old_page": 201,
+    "new_page": 192,
+    "changed_px_ratio": 0.165,
+    "ink_old": 0.0596,
+    "ink_new": 0.0517
+   },
+   {
+    "old_page": 301,
+    "new_page": 286,
+    "changed_px_ratio": 0.1886,
+    "ink_old": 0.0646,
+    "ink_new": 0.068
+   },
+   {
+    "old_page": 401,
+    "new_page": 386,
+    "changed_px_ratio": 0.1834,
+    "ink_old": 0.0624,
+    "ink_new": 0.0598
+   },
+   {
+    "old_page": 501,
+    "new_page": 487,
+    "changed_px_ratio": 0.2001,
+    "ink_old": 0.0688,
+    "ink_new": 0.0746
+   },
+   {
+    "old_page": 601,
+    "new_page": 591,
+    "changed_px_ratio": 0.1124,
+    "ink_old": 0.033,
+    "ink_new": 0.0439
+   },
+   {
+    "old_page": 392,
+    "new_page": 378,
+    "changed_px_ratio": 0.1766,
+    "ink_old": 0.0629,
+    "ink_new": 0.0614
+   },
+   {
+    "old_page": 215,
+    "new_page": 205,
+    "changed_px_ratio": 0.186,
+    "ink_old": 0.0598,
+    "ink_new": 0.0668
+   },
+   {
+    "old_page": 465,
+    "new_page": 453,
+    "changed_px_ratio": 0.0747,
+    "ink_old": 0.0264,
+    "ink_new": 0.0261
+   }
+  ],
+  "mean_changed_px_ratio": 0.1652
+ },
+ "D_geometry": {
+  "old_line_pitch": [
+   [
+    16.1,
+    442
+   ],
+   [
+    16.0,
+    148
+   ],
+   [
+    15.7,
+    57
+   ],
+   [
+    12.0,
+    56
+   ],
+   [
+    8.3,
+    40
+   ]
+  ],
+  "new_line_pitch": [
+   [
+    16.9,
+    176
+   ],
+   [
+    13.9,
+    148
+   ],
+   [
+    16.2,
+    66
+   ],
+   [
+    16.3,
+    58
+   ],
+   [
+    16.8,
+    51
+   ]
+  ],
+  "old_h3": {
+   "top": 143,
+   "mid": 2043
+  },
+  "new_h3": {
+   "top": 112,
+   "mid": 2068
+  },
+  "pre_h3": {
+   "top": 104,
+   "mid": 2078
+  },
+  "old_median_last_row": 770.5,
+  "new_median_last_row": 770.8,
+  "old_fonts": [
+   [
+    [
+     "ToraBook",
+     12.0
+    ],
+    99869
+   ],
+   [
+    [
+     "ToraBook",
+     10.0
+    ],
+    12308
+   ],
+   [
+    [
+     "ToraMargin",
+     6.0
+    ],
+    5137
+   ],
+   [
+    [
+     "ToraEx8",
+     9.0
+    ],
+    1894
+   ],
+   [
+    [
+     "ToraWin",
+     18.0
+    ],
+    1444
+   ],
+   [
+    [
+     "ToraEx6",
+     15.0
+    ],
+    400
+   ],
+   [
+    [
+     "ToraEx6",
+     11.0
+    ],
+    375
+   ],
+   [
+    [
+     "ToraEx1",
+     12.5
+    ],
+    316
+   ],
+   [
+    [
+     "ToraEx3",
+     11.5
+    ],
+    189
+   ],
+   [
+    [
+     "ToraEx1",
+     13.5
+    ],
+    116
+   ]
+  ],
+  "new_fonts": [
+   [
+    [
+     "ToraBook",
+     12.0
+    ],
+    100971
+   ],
+   [
+    [
+     "ToraBook",
+     10.0
+    ],
+    10460
+   ],
+   [
+    [
+     "ToraBook",
+     9.0
+    ],
+    5885
+   ],
+   [
+    [
+     "ToraBook",
+     9.6
+    ],
+    751
+   ],
+   [
+    [
+     "ToraEx5",
+     12.5
+    ],
+    268
+   ],
+   [
+    [
+     "ToraEx5",
+     13.5
+    ],
+    258
+   ],
+   [
+    [
+     "ToraEx6",
+     11.5
+    ],
+    189
+   ],
+   [
+    [
+     "ToraEx7",
+     10.5
+    ],
+    102
+   ],
+   [
+    [
+     "ToraBook",
+     11.0
+    ],
+    86
+   ],
+   [
+    [
+     "ToraEx4",
+     17.0
+    ],
+    29
+   ]
+  ],
+  "pre_fonts": [
+   [
+    [
+     "ToraBook",
+     12.0
+    ],
+    111564
+   ],
+   [
+    [
+     "ToraBook",
+     9.0
+    ],
+    5936
+   ],
+   [
+    [
+     "ToraBook",
+     9.6
+    ],
+    751
+   ],
+   [
+    [
+     "ToraEx5",
+     12.5
+    ],
+    274
+   ],
+   [
+    [
+     "ToraEx5",
+     13.5
+    ],
+    258
+   ],
+   [
+    [
+     "ToraEx6",
+     11.5
+    ],
+    189
+   ],
+   [
+    [
+     "ToraEx7",
+     10.5
+    ],
+    102
+   ],
+   [
+    [
+     "ToraBook",
+     11.0
+    ],
+    86
+   ],
+   [
+    [
+     "ToraEx4",
+     17.0
+    ],
+    32
+   ],
+   [
+    [
+     "ToraEx1",
+     36.0
+    ],
+    5
+   ]
+  ]
+ },
+ "E_content": {
+  "old_words": 359558,
+  "new_words": 358886,
+  "words_fully_missing_in_new": 69,
+  "deficit_types": 523,
+  "token_deficit": 4541,
+  "token_surplus": 3869
+ },
+ "F_regressions": {
+  "early_pages_old": 120,
+  "early_pages_pre": 180,
+  "early_pages_new": 178,
+  "waste_page_equiv_old": 52.7,
+  "waste_page_equiv_pre": 74.4,
+  "waste_page_equiv_new": 73.1,
+  "h3_mid_pre": 2078,
+  "h3_mid_new": 2068,
+  "content_preserved": true
+ },
+ "hashes": {
+  "old_pdf": "d6280392c608ca951e3e4003cb9f3563da1b542c34211dcb1e4993e4aa49a2c8",
+  "app_after_fix_pdf": "95d501fb1b55974137eeac5f8a8a5228616743971bd8de93838c11ecc0782831",
+  "app_after_fix_html": "d7f62e8fe45223d74e7fc4b7f00369c346f22f1d1bf92876fd1f133772d072c8",
+  "runner_after_fix_pdf": "410f4d487f6dc383485e36cf625dbe023e393ba19e6a86c13b5756ca9d778a0f"
+ },
+ "verdict_pages": "app: 703 -> 692 (fix -11); old 699; gap -7 (was 4)",
+ "export_path_findings": {
+  "runner_vs_app": "run-ours registers fonts via measure-api.registerFont (body-only real metrics; items fall to table approximation) -> 860pp; the app/Worker registers via font-resolver.registerFont (real metrics everywhere) -> 703pp pre-fix. Same text/settings/fonts; only the registration API differs. The app path is the parity reference (old engine = real metrics everywhere).",
+  "line_height_chain": "body-line-height effective 1.34 on BOTH real paths (IMUD import overrides the registry 1.4 default); the 16.88pt pitch measured in iteration-001 is AQ-stretched pitch (16.08x1.05), not the setting. aq-stretch-to-bottom=false counterfactual: 0 page change.",
+  "app_export_verification": "703pp pre-fix / 692pp post-fix via the real Pages route; HTML==PDF pagination page-for-page; layoutHash reproduced in Node and twice in-browser; PDF byte-identical across sessions."
+ },
+ "fix": {
+  "root_cause": "s-paren (-2, relative) from the original default_settings.json was dropped at import (fell under /^s-/ ui-state family rule); unified paren-style-scale stayed 1.0 -> paren words measured+rendered at full body 12pt instead of 10pt.",
+  "change": "legacy-settings-map.js: explicit 's-paren' -> paren-style-scale mapping ((size-body + s-paren)/size-body, relative mode, clamp 0.8-1); ctx.bodyPt/parenMode from the same settings file; s-paren-mode documented as consumed.",
+  "counterfactual": "paren-style-scale=10/12 isolated: 703 -> 692 pages (-11)."
+ }
+}

@@ -76,7 +76,8 @@
     "jaccard": 0.728
    }
   ],
-  "mean_jaccard": 0.666
+  "mean_jaccard": 0.666,
+  "note": "13 pairs (7 fixed + 6 random, seed 7); PDF_COMPARISON.md originally said 14 — corrected in iteration-002 opening audit."
  },
  "E_content": {
   "old_words": 359558,
@@ -84,7 +85,8 @@
   "words_fully_missing_in_new": 36,
   "words_added_in_new": 928,
   "words_missing_in_new": 538,
-  "note": "word-multiset comparison; running headers/folios differ by design (F11/F05)"
+  "note": "word-multiset comparison; running headers/folios differ by design (F11/F05)",
+  "semantics": "words_missing_in_new/added/fully_missing count distinct word TYPES (len>1, whole-page extraction incl. running headers/folios), not tokens. Token deficit=4559, surplus=4575, net +16. Body-zone + nikud-normalized deficit=1335 tokens, dominated by real finding F19 (סימן+siman number omitted from new H2 sign bands, ~88+88 tokens)."
  },
  "C_raster": {
   "pairs": [
