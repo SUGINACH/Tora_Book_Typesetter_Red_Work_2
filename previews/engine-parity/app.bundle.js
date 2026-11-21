@@ -19643,6 +19643,17 @@ const H3_TOP_PAD_PX = 8;          // padding-top — פעם אחת לפני הש
 const H3_BOTTOM_PAD_PX = 4;       // padding-bottom — פעם אחת אחרי השורה האחרונה
 const H3_MARGIN_BOTTOM_PX = 4;    // margin-bottom — פעם אחת אחרי ריפוד התחתית
 
+/** **Legacy parity (iteration-001):** מקום מינימלי לתוכן עוקב מתחת לפס H3
+ *  בדיקת "האם הפס נשאר באותו עמוד" (span_1col של המקור, S4.13/S4.24;
+ *  S74 בעיה 6: 60−38 הישן — מנע אלמנות כותרת). הסף הכולל:
+ *  max(60, bandHeight + H3_FOLLOW_MIN_PX). מקור אחד לשני המנועים. */
+const H3_FOLLOW_MIN_PX = 22;
+
+/** סף הכניסה של פס H3 באמצע עמוד — נאמן ל-span_1col של המקור. */
+function h3BandRoomThresholdPx(bandHeightPx) {
+  return Math.max(60, bandHeightPx + H3_FOLLOW_MIN_PX);
+}
+
 /** גובה שורת כותרת 3 בפיקסלים (pitch בין-שורתי) לפי גודל הכותרת בנקודות. */
 function h3LineHeightPx(sizePt) {
   return sizePt * (96 / 72) * H3_LINE_HEIGHT;
@@ -19658,8 +19669,10 @@ module.exports = {
   H3_TOP_PAD_PX,
   H3_BOTTOM_PAD_PX,
   H3_MARGIN_BOTTOM_PX,
+  H3_FOLLOW_MIN_PX,
   h3LineHeightPx,
-  h3BandHeightPx
+  h3BandHeightPx,
+  h3BandRoomThresholdPx
 };
 
 };
@@ -20027,6 +20040,26 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     root.appendChild(band);
   }
 
+  // **(4.2) Iteration-001 (legacy parity) — פסי H3 באמצע עמוד:** שורות הפס
+  // הן גיאומטריית עמוד (רוחב כל הטורים, ממורכזות) — הן מרונדרות במיכל
+  // עמוד-מוחלט ולא בתוך קופסת טור בודד (בתוך טור היו מקבלות left שלילי
+  // ונחתכות בהקשרי clipping). הקואורדינטות מהמודל — טהור.
+  const midBandLines = mp.lines.filter(l => l.area === 'column' && l.midBand === true && l.projected !== false);
+  if (midBandLines.length) {
+    const mbWrap = doc.createElement('div');
+    mbWrap.className = 'mid-bands';
+    mbWrap.setAttribute('dir', 'rtl');
+    mbWrap.style.position = 'absolute';
+    mbWrap.style.left = '0';
+    mbWrap.style.top = '0';
+    mbWrap.style.width = `${px2(geo.width)}px`;
+    mbWrap.style.height = `${px2(geo.height)}px`;
+    for (const ln of midBandLines) {
+      mbWrap.appendChild(renderModelLine(ln, doc, 0, 0));
+    }
+    root.appendChild(mbWrap);
+  }
+
   // (4.5) עמודי הערות-סיום — שורות area=endnotes בקואורדינטות עמוד מוחלטות
   // מההקרנה (החותמות של buildEndnotePages). הקרנה טהורה — המיקומים סופיים
   // במודל; הקיבוץ לפי kind/sourceTokenId (נתוני זהות מהמודל) מייצר את
@@ -20090,7 +20123,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     colEl.dataset.modelTop = String(colTops[ci]);
     colEl.dataset.modelHeight = String(colHeight);
     colEl.dataset.modelBottom = String(colTops[ci] + colHeight);
-    for (const ln of mp.lines.filter(l => l.area === 'column' && l.col === ci)) {
+    for (const ln of mp.lines.filter(l => l.area === 'column' && l.col === ci && l.projected !== false && l.midBand !== true)) {
       colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci]));
     }
     colsWrap.appendChild(colEl);
@@ -20885,7 +20918,7 @@ __modules["src/engine/layout/dp-planner.js"] = function (require, module, export
 const crypto = require('crypto');
 // **חוזה H3 (D-S2H3/CSS parity):** ריפודי פס כותרת 3 ממקור יחיד —
 // אותו חוזה כמו המנוע המורשת (legacy-imud-flow) ומדידת ה-pipeline.
-const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, h3BandHeightPx } = require('../core/h3-contract');
+const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, H3_FOLLOW_MIN_PX, h3BandHeightPx, h3BandRoomThresholdPx } = require('../core/h3-contract');
 const { PAGE_TYPES, buildPageTemplate } = require('./page-templates');
 const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
@@ -21091,17 +21124,123 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     return true;
   }
 
+  // **Iteration-001 (legacy parity — span_1col):** פס H3 באמצע עמוד. המנגנון:
+  // רשומות-פס בתוך מערכי הטורים עצמם — כל שורת כותרת הופכת רשומה רגילה
+  // (heightPx/gapBeforePx) בטור הימני, ו"צל" שקוף באותו גובה בטור השמאלי
+  // (רזרבציה ללא טקסט). כל החשבונות הקיימים (planningUsedHeight, colCapacityOf,
+  // containment, retreat) עובדים ללא מקרים מיוחדים; הפס מהווה מחסום-פלח
+  // לאיזון/הזזות (האיזון פועל על פלח-הזנב בלבד) ולסדר-קריאה (הליכה מודעת-פלחים
+  // ב-protections). הקרנה: materialize מקרין את שורות הפס ברוחב כל הטורים
+  // וממורכזות; הצל מוקרן כשורה ריקה (מיפוי 1:1 של המודל נשמר).
+  const isBandRec = (ln) => Boolean(ln && (ln.h3Band || ln.h3BandShadow || ln.h3BandTail));
+  /** אינדקס תחילת פלח-הזנב — אחרי רשומת הפס האחרונה בטור (0 אם אין פסים). */
+  function tailStartOf(col) {
+    for (let i = col.length - 1; i >= 0; i--) if (isBandRec(col[i])) return i + 1;
+    return 0;
+  }
+  /** האם לעמוד פסי-H3 באמצע (רשומות פס בתוך הטורים). */
+  function pageHasMidBands(page) {
+    return (page.columns || []).some(c => c.some(isBandRec));
+  }
+  /** פלח-הזנב של טור — עותק (הרשומות עצמן משותפות). */
+  function tailSegmentOf(col) {
+    return col.slice(tailStartOf(col));
+  }
+  /** איזון פלחי-הזנב של עמוד עם פסים — הפסים עצמם לא זזים (אמנת סינכרון
+   *  הגבהים בין הטורים). cap של הפלח = קיבולת העמוד פחות הגובה שלפני הפס. */
+  function resplitTailSegments(page, capAll) {
+    if ((page.columns || []).length !== 2) return false;
+    const s0 = tailStartOf(page.columns[0]), s1 = tailStartOf(page.columns[1]);
+    const t0 = page.columns[0].slice(s0), t1 = page.columns[1].slice(s1);
+    const h0 = planningUsedHeight(t0), h1 = planningUsedHeight(t1);
+    if (Math.abs(h0 - h1) <= imbMax) return false;
+    const pre0 = planningUsedHeight(page.columns[0].slice(0, s0));
+    const pre1 = planningUsedHeight(page.columns[1].slice(0, s1));
+    const preMax = Math.max(pre0, pre1);
+    const cap = (capAll != null ? capAll : colCapacity(page.template, page)) - preMax;
+    const best = optimalSplit([t0, t1], { cap });
+    // **Iteration-001 (legacy parity):** אין פיצול חוקי — או שכל פיצול חוקי-
+    // קיבולית שובר ווידוא/יתום/ליווי (unclean) — המילוי נשמר כמו המקור
+    // (balanceBlock של המקור: מועמדי min-2; בלי מועמדים — הבלוק נשאר
+    // במילויו ואי-האיזון מדווח). פיצול unclean היה יוצר יתומים שהנסיגה
+    // נתקעת עליהם בתנודה (נמדד: very_long p43).
+    if (!best || !best.clean) return false;
+    const seq = [...t0, ...t1];
+    const nt0 = seq.slice(0, best.k), nt1 = seq.slice(best.k);
+    // GAP_HEAD_POLICY לראש כל פלח-זנב חדש (ראש טור לכל דבר — הפס מעליו)
+    if (nt0.length && nt0[0].gapBeforePx) nt0[0] = { ...nt0[0], gapBeforePx: 0 };
+    if (nt1.length && nt1[0].gapBeforePx) nt1[0] = { ...nt1[0], gapBeforePx: 0 };
+    page.columns[0] = page.columns[0].slice(0, s0).concat(nt0);
+    page.columns[1] = page.columns[1].slice(0, s1).concat(nt1);
+    trace.emit(page.index, 'balance-resplit-tail', { k: best.k, delta: Math.round(best.delta), clean: best.clean });
+    return true;
+  }
+  /** הצבת פס H3 באמצע העמוד — רשומות לכל שורות הכותרת בטור 0 (עם טקסט)
+   *  וצל זהה בטור 1 (רזרבציה ללא טקסט; אותו seq של רשומת הטקסט).
+   *  **טוהר מדידה (s5b):** גובה כל רשומת-פס = lineHeightPx המקורי מה-LineModel —
+   *  הזנב של הפס (ריפוד תחתון 4 + שוליים 4) הוא רשומה סינתטית נפרדת
+   *  (h3BandTail, בלי lineModel) — כמו gapBeforePx, גיאומטריה מתוכננת
+   *  ולא שינוי מדידה. הזרימה ממשיכה מטור 0 מתחת לפס (כמו openBlock של המקור). */
+  function pushH3BandRecords(blk, bandTotal) {
+    const n = blk.lines.length;
+    const tailPx = H3_BOTTOM_PAD_PX + H3_MARGIN_BOTTOM_PX;
+    const seqs = blk.lines.map(() => seqCounter++);
+    for (let i = 0; i < n; i++) {
+      const ln = blk.lines[i];
+      cur.columns[0].push({
+        ...ln,
+        h3Band: true,
+        kind: 'heading',
+        gapBeforePx: i === 0 ? H3_TOP_PAD_PX : 0,
+        meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part, h3Band: true },
+        seq: seqs[i]
+      });
+    }
+    for (let c = 0; c < cur.columns.length; c++) {
+      if (c > 0) {
+        for (let i = 0; i < n; i++) {
+          cur.columns[c].push({
+            h3BandShadow: true,
+            kind: 'h3band-shadow',
+            synthetic: true,
+            words: [],
+            heightPx: blk.lines[i].heightPx || 0,
+            gapBeforePx: i === 0 ? H3_TOP_PAD_PX : 0,
+            meta: { tokenId: blk.tokenId, h3BandShadow: true, docPart: blk.part },
+            seq: seqs[i]
+          });
+        }
+      }
+      // הזנב — רשומה סינתטית בלי lineModel (טוהר המדידה נשמר; בלי seq — אינה תוכן)
+      cur.columns[c].push({
+        h3BandTail: true,
+        kind: 'h3band-tail',
+        synthetic: true,
+        words: [],
+        heightPx: tailPx,
+        gapBeforePx: 0,
+        meta: { tokenId: blk.tokenId, h3BandTail: true, docPart: blk.part }
+      });
+    }
+    flowCol = 0; // הבלוק הבא נפתח בטור הימני מתחת לפס (כמו openBlock של המקור)
+    eventLog.emit('page-plan', 'h3-band-midpage', { token: blk.tokenId, page: cur.index, heightPx: Math.round(bandTotal), lines: n }, cur.index);
+    trace.emit(cur.index, 'h3-band-midpage', { token: blk.tokenId, heightPx: Math.round(bandTotal), lines: n });
+  }
+
   function flushPage() {
     // איזון טורים: Δ≤5px (BRZ-3) — **EXT-8: החלוקה הגלובלית האופטימלית**
     // (פיצול רציף ממזער |lH−rH| בכפוף לקיבולת; סדר קריאה נשמר מבנית — תיקון P0-3
     // מובנה בהגדרת מרחב המצבים; הוכחת מינימליות ב-balancing.optimalSplit)
+    // **Iteration-001 (legacy parity):** עמוד עם פסי H3 באמצע — האיזון פועל על
+    // פלחי-הזנב בלבד (אחרי הפס האחרון); הפסים והצללים שלהם לעולם אינם זזים
+    // בין טורים — אחרת שני הטורים מפסיקים להיות מסונכרנים בגובה הפס.
     if (cur.columns.length === 2) {
       const a0 = usedHeight(cur.columns[0], cur), b0 = usedHeight(cur.columns[1], cur);
       if (Math.abs(a0 - b0) > imbMax) {
         const cap = colCapacity(cur.template, cur);
         // **U-8:** התקציב כבר בתוך cap (לכל טור) — extraLast היה מכפיל אותו
         const best = optimalSplit(cur.columns, { cap });
-        if (best && best.k !== cur.columns[0].length) {
+        if (best && best.k !== cur.columns[0].length && !pageHasMidBands(cur)) {
           const seq = [...cur.columns[0], ...cur.columns[1]];
           cur.columns[0] = seq.slice(0, best.k);
           cur.columns[1] = seq.slice(best.k);
@@ -21110,6 +21249,8 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
           normalizeColumnGaps(cur.columns[0]);
           normalizeColumnGaps(cur.columns[1]);
           trace.emit(cur.index, 'balance-resplit', { k: best.k, delta: Math.round(best.delta), clean: best.clean });
+        } else if (pageHasMidBands(cur)) {
+          resplitTailSegments(cur, cap);
         }
       }
       // מילה נופלת בין טורים (פורטר מ‑Gold) — גם שומר סדר (המילה חוצה את הגבול קדימה)
@@ -21118,7 +21259,18 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       // (naturalWidthPx של שורת המילה הבודדת + רווח טבעי מה-glue של השורה
       // המקבלת): אפס מדידה חוזרת בתכנון; מילה שאינה נכנסת נשארת בטור המקורי
       // (בלי גלישה אופקית שקטה — מחלקת D-92).
-      if (fixDropWordInColumns(cur.columns, 3, { colW: cur.template.columns[0].w })) {
+      // **Iteration-001:** בעמוד עם פסים — המיזוג רץ על פלחי-הזנב (קצה טור 0
+      // הוא סמוך-קריאה לראש טור 1 רק בתוך אותו פלח; מעבר לפס אינו סמיכות)
+      // — ואז כתיבה חזרה של הפלחים לטורים (המיזוג משנה את אורכי הפלחים).
+      if (pageHasMidBands(cur)) {
+        const s0 = tailStartOf(cur.columns[0]), s1 = tailStartOf(cur.columns[1]);
+        const t0 = cur.columns[0].slice(s0), t1 = cur.columns[1].slice(s1);
+        if (fixDropWordInColumns([t0, t1], 3, { colW: cur.template.columns[0].w })) {
+          cur.columns[0] = cur.columns[0].slice(0, s0).concat(t0);
+          cur.columns[1] = cur.columns[1].slice(0, s1).concat(t1);
+          eventLog.emit('balance', 'fix-drop-word', { page: cur.index, tail: true }, cur.index);
+        }
+      } else if (fixDropWordInColumns(cur.columns, 3, { colW: cur.template.columns[0].w })) {
         eventLog.emit('balance', 'fix-drop-word', { page: cur.index }, cur.index);
       }
       const a = usedHeight(cur.columns[0], cur), b = usedHeight(cur.columns[1], cur);
@@ -21174,7 +21326,12 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       // שורה אינה חוזרת לטור מוקדם מהזרימה (ראה flowCol לעיל).
       for (let c = Math.max(startCol, flowCol); c < cur.columns.length && !placed; c++) {
         // FX-6: החותמת — רק מתחת לתוכן קיים (דיכוי בראש טור/עמוד/אחרי פס).
-        const gapHere = firstOfCall && gap > 0 && cur.columns[c].length > 0 ? gap : 0;
+        // **Iteration-001:** מתחת לפס H3 אין פער-כניסה נוסף — הזנב של הפס
+        // (4+4px, בתוך heightPx של רשומת הפס) הוא ההפרדה, כמו openBlock של
+        // המקור וכמו הפס העליון (עמוד ריק ⇒ gapHere=0 ממילא).
+        const lastRec = cur.columns[c].length ? cur.columns[c][cur.columns[c].length - 1] : null;
+        const afterBandRec = Boolean(lastRec && (lastRec.h3Band || lastRec.h3BandShadow || lastRec.h3BandTail));
+        const gapHere = firstOfCall && gap > 0 && cur.columns[c].length > 0 && !afterBandRec ? gap : 0;
         const needPx = ln.heightPx + gapHere - CM.CAPACITY_EPS;
         if (colCapacity(cur.template, cur) - usedHeight(cur.columns[c], cur) >= needPx) {
           cur.columns[c].push({ ...ln, meta, seq: seqCounter++, ...(gapHere > 0 ? { gapBeforePx: gapHere } : {}) });
@@ -21557,27 +21714,55 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     // **03.11(ד) — span_1col של המקור ל-H3–H6 (mode=full-width):** עד כאן כותרת
     // שנמדדה ברוחב מלא (674px) הוצבה בטור של 270px — שורה ברוחב 471px בטור
     // חצי-רוחב, נגררת בדפדפן לגלישה/חפיפה ("טקסטים אחד על השני" — דיווח משתמש 3).
-    // עתה היא מוצבת בפס חוצה־טורים כמו H2 (FWD-1) — בלי עמוד חדש (המקור:
-    // כותרת הענף ממשיכה באותו עמוד; עמוד חדש רק אם אין מקום לפס).
+    // עתה היא מוצבת בפס חוצה־טורים כמו H2 (FWD-1).
+    // **Iteration-001 (legacy parity — span_1col אמיתי):** המקור ממשיך את כותרת
+    // הענף **באותו עמוד** ושובר עמוד רק כשאין מקום לפס (legacy-imud-flow:
+    // איזון הטורים לפני ההחלטה; סף max(60, גובה-פס+22)). עד כאן הענף שטף את
+    // העמוד ללא תנאי בכל כותרת — 335 שבירות-עמוד בקורפוס ההשוואה (מול ~22
+    // במקור), 239 מתוכן כשלעמוד הקודם נותר מקום פנוי — הגורם הדומיננטי לפער
+    // 699→882 העמודים (מדידות ב-audits/legacy-parity-iteration/iteration-001).
+    // עתה: איזון פלחי-הזנב → בדיקת מקום לפי סף המקור → הצבת הפס באמצע העמוד
+    // (רשומות-פס בטור הימני + צל בשמאלי); רק אם אין מקום — שטיפה ופס עליון
+    // (הנתיב הקיים, ללא שינוי לעמודים ריקים).
     if (blk.kind === 'heading' && blk.level >= 3 && blk.level <= 6 && blk.fullWidth) {
-      if (cur.spanning || cur.columns.some(c => c.length)) {
-        flushPage();
-        cur = newPage(PAGE_TYPES.REGULAR);
+      const bandH3 = blk.lines.reduce((s, ln) => s + (ln.heightPx || 0), 0);
+      const bandTotal = h3BandHeightPx(bandH3);
+      const roomNeeded = h3BandRoomThresholdPx(bandTotal);
+      const pageHasContent = cur.spanning || cur.columns.some(c => c.length);
+      let placedMidPage = false;
+      if (pageHasContent && cur.template.columns.length >= 2) {
+        // כמו המקור (S4.12): איזון לפני החלטת ה-span — בלוק שמולא חמדנית מנפח
+        // את התחתית ופוסל span שהיה נכנס בקלות אחרי איזון.
+        resplitTailSegments(cur, colCapacity(cur.template, cur));
+        const cap = colCapacity(cur.template, cur);
+        const usedMax = Math.max(...cur.columns.map(c => usedHeight(c, cur)));
+        if (cap - usedMax >= roomNeeded - CM.CAPACITY_EPS) {
+          pushH3BandRecords(blk, bandTotal);
+          placedMidPage = true;
+        }
       }
-      if (!cur.spanning && cur.template.columns.length >= 2) {
-        const bandH3 = blk.lines.reduce((s, ln) => s + (ln.heightPx || 0), 0);
-        // **חוזה H3 (D-S2H3/CSS parity):** הפס נושא ריפוד עליון 8px פעם אחת,
-        // ריפוד תחתון 4px + שוליים 4px פעם אחת אחרי השורה האחרונה — כמו
-        // .block-h3-span ב-CSS המקורי. ה-line-height עצמו (1.22) נקבע במדידה
-        // (core/pipeline.js). מקור יחיד: core/h3-contract.js.
-        cur.spanning = {
-          lines: blk.lines.map((ln, i) => ({ ...ln, meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part }, seq: seqCounter++ })),
-          heightPx: h3BandHeightPx(bandH3),
-          titleTopPadPx: H3_TOP_PAD_PX,
-          orn: null
-        };
-        eventLog.emit('page-plan', 'h3-spanning', { token: blk.tokenId, level: blk.level, heightPx: cur.spanning.heightPx }, cur.index);
-        continue; // הכותרת בפס; הבלוקים הבאים ימלאו את הטורים מתחת
+      if (!placedMidPage) {
+        if (pageHasContent) {
+          flushPage();
+          cur = newPage(PAGE_TYPES.REGULAR);
+        }
+        if (!cur.spanning && cur.template.columns.length >= 2) {
+          // **חוזה H3 (D-S2H3/CSS parity):** הפס נושא ריפוד עליון 8px פעם אחת,
+          // ריפוד תחתון 4px + שוליים 4px פעם אחת אחרי השורה האחרונה — כמו
+          // .block-h3-span ב-CSS המקורי. ה-line-height עצמו (1.22) נקבע במדידה
+          // (core/pipeline.js). מקור יחיד: core/h3-contract.js.
+          cur.spanning = {
+            lines: blk.lines.map((ln, i) => ({ ...ln, meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part }, seq: seqCounter++ })),
+            heightPx: bandTotal,
+            titleTopPadPx: H3_TOP_PAD_PX,
+            orn: null
+          };
+          eventLog.emit('page-plan', 'h3-spanning', { token: blk.tokenId, level: blk.level, heightPx: cur.spanning.heightPx }, cur.index);
+          continue; // הכותרת בפס עליון; הבלוקים הבאים ימלאו את הטורים מתחת
+        }
+        // תבנית חד-טורית — נפילה לנתיב הכותרת הכללי (כמו המקור; הכותרת מוצבת בטור)
+      } else {
+        continue; // הפס הוצב באמצע העמוד; הבלוקים הבאים ימלאו מתחת לפס
       }
     }
 
@@ -21621,7 +21806,16 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         // ותוצאתה מנוצלת להצבה מכוונת (escortLockCol/startCol) — בדיקה שאינה
         // קשורה להצבה יוצרת כותרות יתומות שאין להן תיקון (הוכח: FX-1 בדוח 06).
         const escortN = Math.min(CM.ESCORT_MIN_LINES, following);
-        const escortStack = CM.escortStackHeightPx(blk, next, () => blockGapPx(settings, lineH));
+        let escortStack = CM.escortStackHeightPx(blk, next, () => blockGapPx(settings, lineH));
+        // **Iteration-001 (escort×תקציב-הערות):** פסקת הליווי נושאת לעתים הערות
+        // שיוקצו לתקציד המרזב בהצבה בפועל (FX-3 — reserveAtMarker לפני השורות).
+        // בדיקת הליווי חייבת לראות את הקיבולת שאחרי ההקצאה: בלי זה נמדד
+        // (very_long p43) כותרת-H4 מוצבת בתחתית הטור, התקציד מצטמצם, ושורת
+        // הפתיחה של הפסקה נותרת בודדת (orphan-bottom שנסיגת האיזון נתקעה
+        // עליו בתנודה). הערכה עליונה שמרנית — גובה ההערות החתום של הפסקה.
+        if (settings['footnotes-enabled'] && (next.notes || []).length) {
+          escortStack += next.notes.reduce((s, n) => s + noteHeight(n, settings, null), 0);
+        }
         let pushed = false;
         let room = ensureRoomFor(escortStack);
         if (room === -1) {
@@ -21920,6 +22114,54 @@ function balancePageSafe(page, settings, ledger) {
   const maxDelta = settings['imbalance-max-delta-px'];
   if (deltaOf() <= maxDelta) return true; // כבר מאוזן — אין התערבות (יציבות פריסה)
   if (!page.columns || page.columns.length < 2) return false;
+  // **Iteration-001 (legacy parity):** עמוד עם פסי H3 באמצע — הפסים הם
+  // מחסומים; האיזון פועל על פלחי-הזנב בלבד (רשומות הפס והצללים לא זזים
+  // — אחרת שני הטורים מפסיקים להיות מסונכרנים בגובה הפס). ה-|Δ| של העמוד
+  // כולו נגזר מהפלחים ממילא (הפסים שווים בשני הטורים).
+  const isBandRecMod = (ln) => Boolean(ln && (ln.h3Band || ln.h3BandShadow || ln.h3BandTail));
+  const hasBands = page.columns.some(c => c.some(isBandRecMod));
+  if (hasBands) {
+    const tailStart = (col) => {
+      for (let i = col.length - 1; i >= 0; i--) if (isBandRecMod(col[i])) return i + 1;
+      return 0;
+    };
+    const s0 = tailStart(page.columns[0]), s1 = tailStart(page.columns[1]);
+    const t0 = page.columns[0].slice(s0), t1 = page.columns[1].slice(s1);
+    const th0 = t0.reduce((s, ln) => s + (ln.heightPx || 0), 0);
+    const th1 = t1.reduce((s, ln) => s + (ln.heightPx || 0), 0);
+    if (Math.abs(th0 - th1) <= maxDelta) return true; // פלחי-הזנב כבר מאוזנים
+    const preMax = Math.max(
+      page.columns[0].slice(0, s0).reduce((s, ln) => s + (ln.heightPx || 0), 0),
+      page.columns[1].slice(0, s1).reduce((s, ln) => s + (ln.heightPx || 0), 0)
+    );
+    const capAll = colCapacityOf(page);
+    const bestT = optimalSplit([t0, t1], { cap: capAll - preMax });
+    // **Iteration-001 (legacy parity):** פיצול unclean אינו מוחל — המקור אינו
+    // מפצל בלוק בלי מועמד min-2 חוקי; אי-האיזון נשאר מדווח.
+    if (!bestT || !bestT.clean) {
+      const recT = ledger.create('rollback-compromise', `balance@p${page.index}`, page.index, { reason: bestT ? 'unclean-seam' : 'capacity', tails: true, delta: Math.round(deltaOf()) }, 'balance');
+      ledger.transition(recT.issue_id, 'correction-blocked', 'balance', bestT ? 'only unclean tail splits exist (widow/orphan/escort) — fill preserved like legacy balanceBlock' : 'no capacity-legal tail split exists (band barriers preserved)');
+      return false;
+    }
+    const seqT = [...t0, ...t1];
+    const nt0 = seqT.slice(0, bestT.k), nt1 = seqT.slice(bestT.k);
+    if (nt0.length && nt0[0].gapBeforePx) nt0[0] = { ...nt0[0], gapBeforePx: 0 };
+    if (nt1.length && nt1[0].gapBeforePx) nt1[0] = { ...nt1[0], gapBeforePx: 0 };
+    const snapCols = page.columns.map(c => c.slice());
+    page.columns[0] = page.columns[0].slice(0, s0).concat(nt0);
+    page.columns[1] = page.columns[1].slice(0, s1).concat(nt1);
+    const overflowsT = (c, ci) => {
+      const hh = c.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1) + (ln.gapBeforePx || 0), 0);
+      return hh > colCapacityOf(page, { colIndex: ci }) + 0.5;
+    };
+    if (page.columns.some(overflowsT)) {
+      page.columns = snapCols;
+      const recR = ledger.create('rollback-compromise', `balance@p${page.index}`, page.index, { reason: 'capacity', tails: true }, 'balance');
+      ledger.transition(recR.issue_id, 'correction-reverted', 'balance', 'hard reject: overflow after tail move');
+      return false;
+    }
+    return true;
+  }
   // **S5.2 (P-2 — קיבולת מאוחדת):** colCapacityOf — כולל הפס החוצה־טורים
   // (בעבר חושב מ-contentBox.height גולמי ⇒ איזון שגלש מתחת לפס בעמודי H2).
   // **U-8 (19.11):** תקציב ההערות בתוך cap לכל טור — extraLast הוסר (היה
@@ -22095,7 +22337,14 @@ const CHECKS = {
       // חוקי; SRS §5.1.2 דורש שתי שורות לפחות). very_long: 1205 דיווחים, מהם 29
       // אמיתיים (שורת פתיחה בודדת). כעת: הפרה רק בשורה בודדת; orphan-bottom
       // (אותה גיאומטריה) בעדיפות כששני המתגים דלוקים — לא דיווח כפול.
-      if (last.meta && last.meta.part === 'first') {
+      // **Iteration-001 (legacy parity — span_1col):** שורת-פתיחה בודדת מתחת
+      // לפס H3 היא תבנית שהמקור מאשר במפורש — סף הכניסה של הפס
+      // (max(60, גובה+22); 22px ≈ שורת גוף אחת) מתיר במכוון פס+שורה
+      // בודדת בתחתית הטור, והמשך הפסקה זורם בטור הבא (נמדד בייחוס:
+      // 8 פסי-H3 עם <2 שורות מקום מתחת, 4 מתוכם עם <1). הגלאי נשאר
+      // מלא לכל פתיחה שאינה בעקבות פס.
+      const prevRecIsBand = (li) => li > 0 && Boolean(col[li - 1] && (col[li - 1].h3Band || col[li - 1].h3BandShadow || col[li - 1].h3BandTail));
+      if (last.meta && last.meta.part === 'first' && !prevRecIsBand(col.length - 1)) {
         const sameTokenInCol = col.filter(x => x.meta && x.meta.tokenId === last.meta.tokenId).length;
         if (sameTokenInCol === 1) {
           if (settings['prevent-orphans-bottom']) {
@@ -22203,17 +22452,45 @@ const CHECKS = {
   readingOrder(page, settings, ledger) {
     const violations = [];
     let prev = -1;
-    for (const col of page.columns) {
+    const emit = (ln) => {
+      if (ln.seq == null) return; // שורות שהוצבו לפני התיוג (תאימות לאחור) — לא נבדקות
+      if (ln.seq < prev) {
+        violations.push({
+          kind: 'reading-order-break', target: `page#${page.index}@seq${ln.seq}`, page: page.index,
+          evidence: { lineSeq: ln.seq, prevSeq: prev },
+          ledgerRef: ledger.create('reading-order-break', `p${page.index}@seq${ln.seq}`, page.index, { lineSeq: ln.seq, prevSeq: prev }, 'protections').issue_id
+        });
+      }
+      prev = Math.max(prev, ln.seq);
+    };
+    // **Iteration-001 (legacy parity — פס H3 באמצע עמוד):** פס מפצל את הטורים
+    // לפלחים; סדר הקריאה האמיתי הוא לכל פלח: טור-0 מלמעלה למטה, טור-1, ואז
+    // הפס (ראש הפלח הבא של טור-0) והמשך הזרימה. הליכה שטוחה של "כל טור-0 ואז
+    // כל טור-1" הייתה מדווחת על כל עמוד עם פס; ההליכה כאן מודעת-פלחים.
+    // רשומות-צל (h3BandShadow) הן רזרבציה בלבד — אינן תוכן ואינן נבדקות.
+    const isBand = (ln) => Boolean(ln && (ln.h3Band || ln.h3BandShadow || ln.h3BandTail));
+    const hasBands = (page.columns || []).some(col => col.some(isBand));
+    if (!hasBands) {
+      for (const col of page.columns) for (const ln of col) emit(ln);
+      return violations;
+    }
+    // חלוקה לפלחים: רשומות הפס פותחות את הפלח הבא של הטור שלהן
+    const partsOf = (col) => {
+      const parts = [[]];
       for (const ln of col) {
-        if (ln.seq == null) continue; // שורות שהוצבו לפני התיוג (תאימות לאחור) — לא נבדקות
-        if (ln.seq < prev) {
-          violations.push({
-            kind: 'reading-order-break', target: `page#${page.index}@seq${ln.seq}`, page: page.index,
-            evidence: { lineSeq: ln.seq, prevSeq: prev },
-            ledgerRef: ledger.create('reading-order-break', `p${page.index}@seq${ln.seq}`, page.index, { lineSeq: ln.seq, prevSeq: prev }, 'protections').issue_id
-          });
+        if (isBand(ln) && parts[parts.length - 1].length) parts.push([]);
+        parts[parts.length - 1].push(ln);
+      }
+      return parts;
+    };
+    const parts = page.columns.map(partsOf);
+    const nSeg = Math.max(1, ...parts.map(p => p.length));
+    for (let s = 0; s < nSeg; s++) {
+      for (let c = 0; c < page.columns.length; c++) {
+        for (const ln of (parts[c][s] || [])) {
+          if (ln.h3BandShadow) continue; // רזרבציה — לא תוכן
+          emit(ln);
         }
-        prev = Math.max(prev, ln.seq);
       }
     }
     return violations;
@@ -22312,6 +22589,24 @@ __modules["src/engine/layout/balancing.js"] = function (require, module, exports
 const { colCapacityOf, normalizeColumnGaps } = require('./column-flow'); // **S5.2 (P-2):** קיבולת הטור — מקור יחיד; **פרוסה 2:** נרמול פערים אחרי פיצול מחדש
 const { seamIsClean, escortCleanBoundary } = require('./constraint-matrix'); // **שלב 5:** תפר נקי + תפר מודע-ליווי — מקור יחיד (חילוץ שורש מ-#16/#17)
 
+/** **Iteration-001 (legacy parity):** רשומות פס-H3 באמצע עמוד (פס/צל/זנב) הן
+ *  גיאומטריה קבועה — הן אינן משתתפות במתיחת ה-AQ (כמו הפסים במקור),
+ *  וגובהן אינו נכנס לבסיס המתיחה (הן כמו פערים — קבועות). */
+function isFixedBandLine(ln) {
+  return Boolean(ln && (ln.h3Band || ln.h3BandShadow || ln.h3BandTail));
+}
+
+/** **Iteration-001:** גובה קבוע של רשומות הפס בטור (פס+צל+זנב, כולל הפערים
+ *  שלהן) — אינו משתתף במתיחה ויש לנכות אותו מהיעד בכל חישוב מקדם. */
+function fixedBandPx(col) {
+  let f = 0;
+  for (const ln of col) {
+    if (!isFixedBandLine(ln)) continue;
+    f += (ln.heightPx || 0) * (ln.aqStretch || 1) + (ln.gapBeforePx || 0);
+  }
+  return f;
+}
+
 function usedHeight(col) {
   // **EXT-20:** גובה בפועל — כולל מקדם ה-AQ האנכי (לפני ה-AQ כל המקדמים 1).
   // **FX-6 (פרוסה 2):** פער הבלוקים (gapBeforePx) נכלל — הפער הוא גאומטריה
@@ -22325,6 +22620,7 @@ function usedHeight(col) {
 function columnStretchParts(col) {
   let lines = 0, gaps = 0;
   for (const ln of col) {
+    if (isFixedBandLine(ln)) continue; // **Iteration-001:** פסים קבועים — אינם נמתחים
     lines += (ln.heightPx || 0) * (ln.aqStretch || 1);
     gaps += ln.gapBeforePx || 0;
   }
@@ -22339,7 +22635,10 @@ function columnStretchParts(col) {
  * נוסף (נמדד: ‏7 עמודות, ‏12.9–31.3px — LINE_BELOW_COLUMN ×8 באודיט). */
 function rawLinesOf(col) {
   let raw = 0;
-  for (const ln of col) raw += (ln.heightPx || 0);
+  for (const ln of col) {
+    if (isFixedBandLine(ln)) continue; // **Iteration-001:** פסים קבועים — אינם בבסיס המתיחה
+    raw += (ln.heightPx || 0);
+  }
   return raw;
 }
 
@@ -22415,6 +22714,13 @@ function balancePage(page, maxDelta) {
   const before = pageImbalance(page);
   if (before <= maxDelta) return { changed: false, before, after: before, moves: 0 };
   if (!page.columns || page.columns.length < 2) return { changed: false, before, after: before };
+  // **Iteration-001 (legacy parity):** עמוד עם פסי H3 באמצע — הפסים והצללים
+  // שלהם הם מחסומים סינכרוניים בין הטורים; פיצול רציף של העמוד כולו היה
+  // מזיז צל מראש טור 1 לסוף טור 0 ומנתק את הסנכרון. מצב זה מטופל במקום
+  // אחר (dp-planner.balancePageSafe/resplitTailSegments) על פלחי-הזנב —
+  // כאן אין התערבות (עמוד סוף-פרק עם פסים נשאר כפי שנבנה).
+  const hasBandsBal = (page.columns || []).some(c => (c || []).some(ln => isFixedBandLine(ln)));
+  if (hasBandsBal) return { changed: false, before, after: before, moves: 0, bands: true };
   // **S5.2 (P-2 — קיבולת מאוחדת):** colCapacityOf (column-flow) — כולל הפס
   // החוצה־טורים. **U-8 (19.11 — אמנה אחת):** הקיבולת מודעת-תקציב-הערות
   // לכל טור (המרזב פרוש על רוחב תיבת-התוכן כולה) — extraLast הוסר; בעבר
@@ -22491,7 +22797,8 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     // כהחלפה ⇒ טור שנכנס מכווץ היה מוחלף במקדם שאינו מתחשב בכיווץ.
     const partsS = columnStretchParts(shortCol);
     const rawS = rawLinesOf(shortCol);
-    const stretchTo = (target) => rawS > 0.5 ? (target - partsS.gaps) / rawS : 1;
+    const fixedS = fixedBandPx(shortCol); // **Iteration-001:** הפסים קבועים — ניכוי מהיעד
+    const stretchTo = (target) => rawS > 0.5 ? (target - partsS.gaps - fixedS) / rawS : 1;
     const raw = stretchTo(Math.max(h0, h1));
     if (!(raw > 1 + 1e-4)) continue;
     const lo = settings['aq-word-spacing-min'];
@@ -22504,8 +22811,9 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
     const mid = (Math.max(h0, h1) + usedS) / 2;
     const partsT = columnStretchParts(tallCol);
     const rawT = rawLinesOf(tallCol);
+    const fixedT = fixedBandPx(tallCol); // **Iteration-001:** הפסים קבועים — ניכוי מהיעד
     const fShort = stretchTo(mid);
-    const fTall = rawT > 0.5 ? (mid - partsT.gaps) / rawT : 1;
+    const fTall = rawT > 0.5 ? (mid - partsT.gaps - fixedT) / rawT : 1;
     let factor, shared = false;
     if (raw > hi + 1e-9 && fShort <= hi + 1e-9 && fTall >= lo - 1e-9) {
       factor = fShort; shared = true;
@@ -22513,13 +22821,13 @@ function alignColumnBottoms(pages, settings, eventLog, opts = {}) {
       factor = Math.min(hi, raw);
       if (!(factor > 1 + 1e-4)) continue;
     }
-    for (const ln of shortCol) ln.aqStretch = factor;
-    if (shared) for (const ln of tallCol) ln.aqStretch = fTall;
+    for (const ln of shortCol) if (!isFixedBandLine(ln)) ln.aqStretch = factor;
+    if (shared) for (const ln of tallCol) if (!isFixedBandLine(ln)) ln.aqStretch = fTall;
     aligned++;
     // **FX-6:** דיווח מדויק — הגובה בפועל אחרי מתיחה = Σgap + Σ(heightPx×factor)
     // **U-10:** מהגבהים הגולמיים — הפקטור אבסולוטי.
-    const afterShort = partsS.gaps + rawS * factor;
-    const afterTall = shared ? (partsT.gaps + rawT * fTall) : Math.max(h0, h1);
+    const afterShort = partsS.gaps + fixedS + rawS * factor;
+    const afterTall = shared ? (partsT.gaps + fixedT + rawT * fTall) : Math.max(h0, h1);
     eventLog.emit('balance', 'bottom-align', {
       page: page.index, col: shortI, factor: Number(factor.toFixed(4)),
       factorTall: shared ? Number(fTall.toFixed(4)) : null,
@@ -22598,17 +22906,18 @@ function autoQualityPass(pages, settings, eventLog) {
         // = Σgap + factor×Σh_גולמי (לא used×factor שניפח את הפערים).
         const parts = columnStretchParts(lines);
         const rawL = rawLinesOf(lines);
-        const rawFactor = rawL > 0.5 ? (cap - parts.gaps) / rawL : 1;
+        const fixed = fixedBandPx(lines); // **Iteration-001:** הפסים קבועים — ניכוי מהיעד
+        const rawFactor = rawL > 0.5 ? (cap - parts.gaps - fixed) / rawL : 1;
         for (const stage of AQ_STAGES) {
           const [lo, hi] = stageBounds(settings, stage);
           const factor = Math.min(hi, Math.max(lo, rawFactor));
           if (Math.abs(factor - 1) < 1e-4) continue;
-          const newUsed = parts.gaps + rawL * factor;
+          const newUsed = parts.gaps + fixed + rawL * factor;
           if (newUsed - cap > clamp) continue; // clamp 20px — class ch3p4/p17/ch72p9 הוכחד
           if (settings['aq-shared-load']) {
             if (stage !== 'word-spacing') continue;
           } else if (factor >= hi && stage !== 'word-spacing') continue;
-          for (const ln of lines) ln.aqStretch = factor;
+          for (const ln of lines) if (!isFixedBandLine(ln)) ln.aqStretch = factor;
           applied++;
           eventLog.emit('justify', `aq-${stage}`, { page: page.index, col: c, factor: Number(factor.toFixed(4)) }, page.index);
           break;
@@ -22619,12 +22928,13 @@ function autoQualityPass(pages, settings, eventLog) {
         // **U-10:** אותה אמנת פקטור אבסולוטי מגבהים גולמיים.
         const parts = columnStretchParts(lines);
         const rawL = rawLinesOf(lines);
-        const rawFactor = rawL > 0.5 ? (cap - parts.gaps) / rawL : 1;
+        const fixed = fixedBandPx(lines); // **Iteration-001:** הפסים קבועים — ניכוי מהיעד
+        const rawFactor = rawL > 0.5 ? (cap - parts.gaps - fixed) / rawL : 1;
         for (const stage of AQ_STAGES) {
           const [lo, hi] = stageBounds(settings, stage);
           const factor = Math.max(lo, Math.min(hi, rawFactor));
           if (Math.abs(factor - 1) < 1e-4) continue;
-          for (const ln of lines) ln.aqStretch = factor;
+          for (const ln of lines) if (!isFixedBandLine(ln)) ln.aqStretch = factor;
           applied++;
           eventLog.emit('justify', `aq-${stage}-compress`, { page: page.index, col: c, factor: Number(factor.toFixed(4)) }, page.index);
           break;
@@ -25181,7 +25491,9 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       width: mp.geometry.width, height: mp.geometry.height,
       type: mp.type,
       spanning: mp.spanning ? { lines: mp.lines.filter(l => l.area === 'spanning') } : null,
-      lines: mp.lines.filter(l => l.area !== 'spanning'),
+      // **Iteration-001 (legacy parity):** רשומות-צל (h3band-shadow) הן רזרבציות
+      // מתוכננות בלי הקרנה — אין להן דיו והן אינן מגיעות לכותב ה-PDF.
+      lines: mp.lines.filter(l => l.area !== 'spanning' && l.projected !== false),
       footnotes: mp.footnotes || [],
       folio: mp.folio || null,
       header: mp.header || null,
