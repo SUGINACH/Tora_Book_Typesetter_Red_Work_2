@@ -9443,7 +9443,7 @@ const crypto = require('crypto');
 // אותו חוזה כמו המנוע המורשת (legacy-imud-flow) ומדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, H3_FOLLOW_MIN_PX, h3BandHeightPx, h3BandRoomThresholdPx } = require('../core/h3-contract');
 const { PAGE_TYPES, buildPageTemplate } = require('./page-templates');
-const { H0_TITLE_Y } = require('../core/imud-geometry');
+const { H0_TITLE_Y, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** עוגני פתיחת-הסימן — מקור יחיד (S4.19)
 const { isImudProfile: isImud } = require('./page-templates');
 const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
@@ -10328,7 +10328,19 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       // (freeBand): הוא חי בשטח השמור ואינו מקצץ קיבולת. הסימן נחתם
       // בהטבעה (structural-stamps — h2-siman).
       if (isImud(settings) && cur.template.columns.length >= 2) {
-        const startY = 344.05;
+        // **G3/RC-3 (i004) — הכיל הכפול של המורשת (S4.19, flowSection §1335):**
+        // פתיחת-סימן שהמקטע שלה נפתח בכותרת רוחבית (h3-span —
+        // HEADING_MODES[3]=span_1col היחידי) משתמשת באזור ובעוגנים מורמים: נמדד מהיחוס
+        // (עמ' 11: סימן 284.9 / כותרת 321.1 / אזור 261.3) מול פתיחה רגילה (עמ' 24/38:
+        // 307.88 / 344.05 / 284.25). במנוע המאוחד היה עוגן קבוע 344.05 בלבד — 69 מתוך 88
+        // עמודי היחוס הם פתיחות-עם-span (הדומיננטי).
+        const spanExempt = !!(next && next.kind === 'heading' && next.level === 3 && next.fullWidth);
+        const startY = spanExempt ? H2_TITLE_Y_SPAN : H2_TITLE_Y;
+        cur._h2SpanExempt = spanExempt; // לחותמת פס-הסימן (עוגן דואלי)
+        if (spanExempt !== !!cur.template.h2SpanExempt) {
+          cur.template = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, settings, cur.isRecto !== false, { h2SpanExempt: spanExempt });
+          reAlignColumns(cur);
+        }
         let yy = startY;
         cur.spanning = {
           lines: blk.lines.map((ln) => {
@@ -10902,7 +10914,7 @@ const PAGE_SIZES = {
 // מול מרזב 13.48px במקור; שוליים של 7.5% מול 120.72px (15.2%) במקור.
 // לא ערכי קסם: המקור הוא החוזה המשותף ששני המנועים צורכים.
 const {
-  GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, H2_AREA_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
+  GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, H2_AREA_H, H2_SPAN_AREA_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
 } = require('../core/imud-geometry');
 const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
 
@@ -10911,7 +10923,7 @@ function isImudProfile(settings) {
 }
 
 /** תבנית עמוד מהחוזה המכויל של IMUD — אותה גאומטריה שהמורשת מייצרת. */
-function buildImudPageTemplate(type, settings, isRecto) {
+function buildImudPageTemplate(type, settings, isRecto, opts = {}) {
   const twoCol = !( [PAGE_TYPES.PREFACE, PAGE_TYPES.SHAAR_MAIN, PAGE_TYPES.SHAAR_SUB,
     PAGE_TYPES.SHAAR_BACK, PAGE_TYPES.TOC_GENERAL, PAGE_TYPES.TOC_DETAIL,
     PAGE_TYPES.CUSTOM, PAGE_TYPES.FILLER].includes(type) );
@@ -10928,8 +10940,12 @@ function buildImudPageTemplate(type, settings, isRecto) {
   // שומר את אזור ה-h2 המלא (H2_AREA_H — flowSection של המורשת: הסימן והכותרת
   // חיים בתוכו, הטורים מתחילים מתחתיו); עמוד הקדמה שומר את אזור ה-h0.
   // עד כאן 180px בלבד — הגוף עלה גבוה מדי והכותרת נדחקה לטור.
+  // **G3/RC-3 (i004):** פתיחה עם h3-span ⇒ האזור המוקצץ של המורשת (S4.19: 261.3 מעמ' 11 ביחוס;
+  // 284.25 בפתיחה רגילה — עמ' 24/38) — הטורים מתחילים 22.95px גבוה יותר
+  // ושורת-תוכן נוספת נכנסת בעמודים אלה.
+  const h2Area = (opts && opts.h2SpanExempt) ? H2_SPAN_AREA_H : H2_AREA_H;
   const textTop = type === PAGE_TYPES.SIGN_OPEN
-    ? GEO.FLOW_TOP + H2_AREA_H
+    ? GEO.FLOW_TOP + h2Area
     : (type === PAGE_TYPES.PREFACE ? GEO.FLOW_TOP + H0_AREA_H : GEO.FLOW_TOP);
   return {
     type, isRecto, imud: true,
@@ -10939,7 +10955,8 @@ function buildImudPageTemplate(type, settings, isRecto) {
     headerHeight: GEO.HEADER_BASELINE,   // פס הכותרת: גליפים 42.56–57.56pt (גאומטריית הפס; התוכן — מקטע 3)
     headerTop: GEO.FLOW_TOP - RUNNING_HEAD_TOP_INSET_PX,
     folioHeight: GEO.PAGE_H - GEO.FOLIO_BASELINE,
-    h2TopOffset: type === PAGE_TYPES.SIGN_OPEN ? H2_AREA_H : (type === PAGE_TYPES.PREFACE ? H0_AREA_H : 0),
+    h2TopOffset: type === PAGE_TYPES.SIGN_OPEN ? h2Area : (type === PAGE_TYPES.PREFACE ? H0_AREA_H : 0),
+    h2SpanExempt: type === PAGE_TYPES.SIGN_OPEN ? !!(opts && opts.h2SpanExempt) : false,
     contentBox: { top: textTop, bottom: FLOW_BOTTOM, height: FLOW_BOTTOM - textTop },
     numbered: true,
     counts: true,
@@ -10948,10 +10965,12 @@ function buildImudPageTemplate(type, settings, isRecto) {
   };
 }
 
-function buildPageTemplate(type, settings, isRecto = true) {
+function buildPageTemplate(type, settings, isRecto = true, opts = {}) {
   // **מקטע 1:** פרופיל IMUD ⇒ החוזה המכויל (לא הגריד הגנרי). הנתיב הלא-IMUD
   // (קורפוס ה-DP הכללי) אינו משתנה כלל — אותן נוסחאות אחוזים כמו קודם.
-  if (isImudProfile(settings)) return buildImudPageTemplate(type, settings, isRecto);
+  // **G3/RC-3 (i004):** opts מועבר הלאה — h2SpanExempt של פתיחות-סימן (עד כאן
+  // המעטפת בלעה אותו והתבנית חזרה תמיד לאזור הרגיל).
+  if (isImudProfile(settings)) return buildImudPageTemplate(type, settings, isRecto, opts);
   const size = PAGE_SIZES[settings['page-size']] || PAGE_SIZES.A4;
   const marginSide = size.w * settings['grid-margin-side-pct'] / 100;
   const binding = settings['binding-offset-px'] || 0;
@@ -11053,6 +11072,15 @@ const GEO = {
 // ---------- קבועים אנכיים נגזרים ----------
 const FLOW_BOTTOM = GEO.FLOW_TOP + GEO.FLOW_H; // 1022.2px — תחתית הזרימה האמיתית
 const H2_AREA_H = 284.25;   // אזור h2: מרווח-עליון 22% + סימן + כותרת + שוליים (S4.19)
+// **G3/RC-3 (i004 — S4.19 הכיול הכפול של המורשת, מקור יחיד לשני המנועים החיים):**
+// עמוד פתיחת-סימן שהמקטע שלו נפתח בכותרת-רוחבית (h3-span — HEADING_MODES[3]=
+// span_1col) משתמש באזור מוקצק ובעוגנים מורמים: נמדדו מהייחוס (עמ' 11 מול
+// 24/38). כל הקבועים ב-px מקור.
+const H2_SPAN_AREA_H = 261.3; // אזור h2 בפתיחה עם span — הטורים מתחילים ב-368.5px
+const H2_SIMAN_Y = 307.88;    // עוגן פס הסימן (פתיחה רגילה)
+const H2_SIMAN_Y_SPAN = 284.9; // עוגן פס הסימן (פתיחה עם span — מורם ב-22.98px)
+const H2_TITLE_Y = 344.05;    // עוגן כותרת ה-h2 (פתיחה רגילה)
+const H2_TITLE_Y_SPAN = 321.1; // עוגן כותרת ה-h2 (פתיחה עם span)
 const H0_AREA_H = 249.2;    // זרימת ההקדמה מתחילה ב-356.4px (S4.19)
 const SINGLE_W = 552.3;     // .single-wide-col = 2×269.41+13.48 (grid)
 const TITLE_W_PCT = 0.6;    // תיבת כותרת 2/3 — 60% מרוחב הפס (S74)
@@ -11087,6 +11115,7 @@ const SZ_CORE = {
 module.exports = {
   GEO,
   FLOW_BOTTOM, H2_AREA_H, H0_AREA_H, SINGLE_W, TITLE_W_PCT, H23_TITLE_W,
+  H2_SPAN_AREA_H, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN,
   H0_LINE_H, H0_TITLE_Y,
   TOC_TITLE_BLOCK_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM,
   PAGE_STRETCH_MAX, JUSTIFY_MAX_GAP, JUSTIFY_MAX_LH_EXTRA, ORPHAN_RECLAIM_BUFFER, RECLAIM_BELOW_BASE,
@@ -20052,12 +20081,15 @@ function insertTocPages(pages, tocPages, settings, io = {}) {
   }
   final.forEach((p, i) => { p.index = i; });
   // בניית תבניות מחדש לפי הזוגיות הסופית (D-63) — אותו סוג, אותן הגדרות, זוגיות נכונה
+  // **G3/RC-3 (i004):** פתיחת-סימן spanExempt שומרת על האזור המוקצץ (261.3) גם
+  // בבנייה החוזרת — הדגל חי על העמוד (_h2SpanExempt, מהמתכנן) ומועבר הלאה;
+  // בלי זה הבנייה החוזרת הייתה מחזירה את כל עמודי ה-spanExempt לאזור הרגיל.
   const binding = settings['binding-offset-px'] || 0;
   const parityShifted = [];
   for (const p of final) {
     const newIsRecto = p.index % 2 === 0;
     const shifted = binding !== 0 && p.isRecto !== undefined && p.isRecto !== newIsRecto;
-    if (p.type !== 'blank') p.template = buildPageTemplate(p.type, settings, newIsRecto);
+    if (p.type !== 'blank') p.template = buildPageTemplate(p.type, settings, newIsRecto, { h2SpanExempt: p._h2SpanExempt === true });
     p.isRecto = newIsRecto;
     if (shifted) parityShifted.push(p);
   }
@@ -22563,7 +22595,7 @@ __modules["src/engine/layout/structural-stamps.js"] = function (require, module,
  */
 
 const { buildShaarBlocks, shaarFontOf } = require('../output/shaar-content');
-const { GEO, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM, SZ_CORE } = require('../core/imud-geometry');
+const { GEO, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM, SZ_CORE, H2_SIMAN_Y, H2_SIMAN_Y_SPAN } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** H2_SIMAN_Y* — עוגן דואלי, מקור יחיד
 const { folioGeometry, headerGeometry } = require('../layout/furniture-geometry');
 const { assignFootnoteLanes } = require('../layout/footnote-lanes');
 // **שלב 8 ביקורת §3.1:** המיפוי משפחה→מפתח גופן — מקור יחיד משותף (היה כפול
@@ -22969,8 +23001,12 @@ function stampSimanBands(pages, settings, measure, stamped) {
       text: scrubPUAText(word),
       w: famMeasure.measureTextWidth(scrubPUAText(word), simanSize, 0)
     }));
+    // **G3/RC-3 (i004) — עוגן דואלי כמו המורשת (S4.19):** פתיחה שהמקטע שלה נפתח
+    // בכותרת רוחבית (h3-span — מסומן על-ידי המתכנן ב-_h2SpanExempt) מרימה את
+    // פס הסימן ל-284.9px; פתיחה רגילה — 307.88px. עד כאן עוגן קבוע 307.88 —
+    // נמדד ב-PDF הייחוס: 69/88 פתיחות ב-226.1pt (עם-span) מול 13 ב-243.3 (רגילות).
     page.simanBand = {
-      y: 307.88, h: 36, sizePt: simanSize, fontKey,
+      y: page._h2SpanExempt ? H2_SIMAN_Y_SPAN : H2_SIMAN_Y, h: 36, sizePt: simanSize, fontKey,
       words, spaceW: famMeasure.measureTextWidth(' ', simanSize, 0)
     };
     placed++;
@@ -24209,7 +24245,13 @@ function projectPage(page, settings, apiOrOpts) {
   // שורה ממורכזת בעוגן המכויל, מילים נמדדות בהטבעה (אין מדידה כאן).
   if (page.simanBand && page.simanBand.words && page.simanBand.words.length) {
     const sb = page.simanBand;
-    const tplW2 = Math.min(...tpl.columns.map(c => c.x + c.w)) - Math.max(...tpl.columns.map(c => c.x));
+    // **G3/RC-3 (i004) — איחוד הטורים, לא החיתוך:** עד כאן חושב min(x+w)−max(x) —
+    // חפיפת הטורים — שלילית בגריד דו-טורי (390−404=−14px) ⇒ שורת הסימן
+    // "התמרכזה" על תיבה ברוחב שלילי ונחתה בקצה השמאלי (נמדד ב-PDF: x=67–121
+    // מול 279–333 בייחוס). האיחוד = תיבת הפס החוצה-טורים שכותרת ה-H2 כבר משתמשת
+    // בה (x=120.7 w=552.3 — מרכז 396.85px=306.15pt=מרכז העמוד; בייחוס: כל
+    // 88 היחידות ב-306.2pt בדיוק).
+    const tplW2 = Math.max(...tpl.columns.map(c => c.x + c.w)) - Math.min(...tpl.columns.map(c => c.x));
     out.lines.push(stampedRowLine({
       x: Math.min(...tpl.columns.map(c => c.x)), y: sb.y, w: tplW2, h: sb.h || 36,
       words: sb.words, spaceW: sb.spaceW, align: 'center'
