@@ -104,8 +104,19 @@ function parenSpansOfFlat(flat) {
  * סגנון inline על פני סוגריים (הסגנון תופס ראשון — שניהם לא חופפים בפועל).
  * @returns {{wordStyleOf:(docStart:number,docEnd:number)=>({advanceFactor:number,paren?:boolean,customStyleId?:string}|null), diagnostics:Array}}
  */
-function wordOverlayFactory(blk, settings, customStyles) {
-  const parenScale = Number(settings['paren-style-scale']) || 1;
+function wordOverlayFactory(blk, settings, customStyles, opts) {
+  // **RC-2c (i004): גודל הסוגריים אבסולוטי כמו המורשת** (SZ.body+parenDelta =
+  // 10pt קבוע — גם בהקדמה שגופה 11.5pt; הוכח מה-PDF הישן: ספאני סוגריים
+  // ב-p43 ב-10.0pt ממש כמו בגוף). ה-scale המיובא הוא יחסי לגוף (10/12);
+  // לבלוק שגודל גופו שונה (הקדמה) נגזר מחדש: factor = absParen / contextSize.
+  // ה-DOM כבר מציג אבסולוטי (parenPx = SZ.body+parenDelta) — בלי זה המדידה
+  // וה-PDF (9.58pt) סוטים מהתצוגה (10pt).
+  const rawScale = Number(settings['paren-style-scale']) || 1;
+  const ctxSz = opts && Number(opts.contextSizePt) > 0 ? Number(opts.contextSizePt) : null;
+  const bodySz = Number(settings['body-font-size-pt']);
+  const parenScale = (ctxSz && rawScale !== 1 && Number.isFinite(bodySz) && bodySz > 0)
+    ? (bodySz * rawScale) / ctxSz
+    : rawScale;
   const { flat, segs } = flatTextOf(blk);
   const overlays = []; // {docFrom, docTo, advanceFactor, kind:'paren'|'custom', styleId?}
   const diagnostics = [];
@@ -233,7 +244,8 @@ function layoutModelBlock(blk, spec) {
   if (spec.kind === 'heading') baseStyle.familyOverridesRuns = true;
   const { wordStyleOf } = spec.wordOverlay
     ? { wordStyleOf: spec.wordOverlay }
-    : wordOverlayFactory(blk, settings, spec.customStyles || null);
+    : wordOverlayFactory(blk, settings, spec.customStyles || null,
+        spec.parenContextSizePt ? { contextSizePt: spec.parenContextSizePt } : undefined);
   // סמנטיקת כותרת 3 (D-S2H3, §21/§13 בהוראה): פריט סמנטי אחד — הרווח
   // התחתון שייך לכולו ומופיע פעם אחת אחרי ה-fragment האחרון; ה-pitch נגזר
   // מהחוזה לפי גודל הכותרת בפועל (core/h3-contract — מקור יחיד).

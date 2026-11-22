@@ -368,6 +368,7 @@ const DISPOSITIONS = {
   's-sh-year': { kind: 'mapped', to: 'shaar-year-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shYear)' },
   'f-note-title': { kind: 'mapped', to: 'endnote-title-font', transform: resolveStack, reason: 'S6.3: גופן כותרת ההערות' },
   'f-h0-body': { kind: 'mapped', to: 'heading-0-body-font', transform: resolveStack, reason: 'S6.3: גופן גוף ההקדמה (Frank Ruhl Libre במקור)' },
+  's-h0-body': { kind: 'mapped', to: 'heading-0-body-size-pt', transform: parseFloat, reason: 'RC-2a (i004): גודל גוף ההקדמה (s-h0-body=11.5 במקור) — עד כאן לא מופה ייבוא ⇒ ההקדמה זרמה ב-12pt במקום 11.5 (הוכח מה-PDF הישן: p43 כולו 11.5pt בפיץ׳ 15.5 בקירוב)' },
 
   // ============ כותרות עליונות (25 מפתחות hdr-*) ============
   'hdr-title-split': { kind: 'ui-state', reason: 'פיצול שם הספר לחצאים בכותרת העליונה — מיושם תמידית ב-legacy (hdrR/hdrL) כמו בייחוס — S4.20/EXT-19' },

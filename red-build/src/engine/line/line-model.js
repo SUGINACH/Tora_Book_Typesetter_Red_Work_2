@@ -187,12 +187,14 @@ const res = breakItemSequence(ex.kept, maxWidthPx, {
     // **Iteration-003 (מילת-חלון):** שורה 0 נושאת את מילות החלון ורוחבן;
     // שורות 0–1 מסומנות window (נמדדו ברוחב מוקטן — הרינדרר מזיז את תיבת
     // השורה מעבר לחלון, כמו line--window-wrap ב-DOM וכמו limitOf במורשת).
+    // **RC-2b (i004):** windowW חייב להישאר גם על שורה 1 — ההקרנה
+    // (materialize: winShift) וה-DOM (line--window-wrap) בודקים
+    // Number.isFinite(ln.windowW); בלי זה נמדדה שורה 1 ברוחב מוקטן
+    // אך הוצגה מיושבת לרוחב מלא — רווחים של ~20pt (נמדד p43/p46) במקום
+    // ~5pt, והרכב מילים צר מהייחוס.
     if (windowMark) {
-      if (i < 2) lines[i].window = true;
-      if (i === 0) {
-        lines[i].windowWords = windowMark.words;
-        lines[i].windowW = windowMark.widthPx;
-      }
+      if (i < 2) { lines[i].window = true; lines[i].windowW = windowMark.widthPx; }
+      if (i === 0) lines[i].windowWords = windowMark.words;
     }
     if (sequence.semantic && sequence.semantic.kind === 'heading3') {
       lines[i].semantic = {

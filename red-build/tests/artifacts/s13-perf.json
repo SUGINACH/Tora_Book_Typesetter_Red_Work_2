@@ -1,9 +1,9 @@
 {
   "pages": 1360,
-  "typesetMs": 4986,
-  "pagesPerSec": 273,
-  "heapUsedMB": 514,
-  "rssMB": 824,
+  "typesetMs": 5165,
+  "pagesPerSec": 263,
+  "heapUsedMB": 477,
+  "rssMB": 805,
   "budget": {
     "typesetMaxSec": 45,
     "memoryMaxMB": 1500

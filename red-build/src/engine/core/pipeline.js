@@ -42,6 +42,7 @@ const { applyDropWord } = require('../typography/dropword');
 // נקודות השבירה של ה-pipeline (כותרות/הערות-סיום בגוף/פסקאות-הערה מוסגנות/
 // פסקאות) עוברות כולן דרכו; אין עוד words[] שמחליט שבירה במסלול ה-DP.
 const { layoutModelBlock, flatTextOf } = require('../line/pipeline-bridge');
+const { baseStyleOf } = require('../line/line-items');
 const { planPages, layoutHash, bodyGeometryHash } = require('../layout/dp-planner');
 const { buildPageTemplate, PAGE_TYPES, isImudProfile } = require('../layout/page-templates');
 const { GEO, H23_TITLE_W, H2_AREA_H, H0_AREA_H, H0_TITLE_Y, SZ_CORE } = require('../core/imud-geometry');
@@ -497,6 +498,19 @@ function typeset(rawText, settingsIn, env = {}) {
     const colW = (csBlock && csBlock.style.layoutMode === 'full-width')
       ? fullWidthWidth(settings)
       : (inH0Section ? fullWidthWidth(settings) : columnWidthFor({ kind: 'paragraph' }, settings));
+    // **RC-2a (i004) — מקטע 2, סגנון גוף ההקדמה:** המקור מזרים את גוף ה-h0
+    // ב-Frank Ruhl Libre 11.5pt בפיץ' H0_LINE_H (SZ.h0Body/prefaceApi —
+    // הוכח מה-PDF הישן: p43-45 גוף 11.5pt, פיץ' ~15.5pt, ומילות-החלון 17.25=
+    // 11.5×1.5). עד כאן זרם ההקדמה כגוף 12pt — שורות ארוכות מהייחוס,
+    // פיץ' 16.1 במקום 15.5, ומילות-חלון 18pt. הסגנון נבנה כאן פעם אחת
+    // (מקור יחיד) וזורם: מדידה (baseStyle), פיץ' (lineHeightPx), מילת-חלון
+    // (winSizePt), ורינדור (ln.sizePt/ln.font — נקראים ב-line-font.js S6.3).
+    const h0BodySizePt = Number(settings['heading-0-body-size-pt']) || 11.5;
+    const h0BodyFamily = settings['heading-0-body-font'] || null;
+    const h0BaseStyle = inH0Section
+      ? baseStyleOf({ ...settings, 'body-font-size-pt': h0BodySizePt, 'body-font': h0BodyFamily || settings['body-font'] }, 'paragraph')
+      : null;
+    const paraLineHeightPx = inH0Section ? api.lineHeightPx(h0BodySizePt) : api.lineHeightPx(null);
     const customFactorById = new Map(csInlineSpans.map(s => [s.styleId, s.factor]));
     let csInfo = null; // **S11:** סגנון הבלוק שיוצמד לשורות ולבלוק (מדלג על ערכי איטרציות קודמות)
 
@@ -567,7 +581,10 @@ function typeset(rawText, settingsIn, env = {}) {
       const startsWithParen = txt.startsWith('(');
       const firstHasNote = !!(mBlk.items && mBlk.items[0] && mBlk.items[0].kind === 'noteMarker')
         || firstWord.includes(String(settings['fn-delim-open'] || '['));
-      const estW = txt ? api.measureTextWidth(txt, settings['body-font-size-pt']) : 0;
+      // RC-2a (i004): בסעיף h0 האמדן ומילת-החלון לפי גודל גוף ההקדמה (11.5) —
+      // הייחוס: 'כהקדמה'/'והנה'/'וכן' נמדדו 17.2pt = 11.5×1.5 (לא 18=12×1.5)
+      const bodySzForWin = inH0Section ? h0BodySizePt : settings['body-font-size-pt'];
+      const estW = txt ? api.measureTextWidth(txt, bodySzForWin) : 0;
       // כמו המקור: עיגול כלפי מעלה (נמדע: הפסקה הראשונה 1.96→2 — בלי ceil
       // נפסלה בניגוד לייחוס שמציג לה חלון)
       const estLines = colW > 0 ? Math.max(1, Math.ceil(estW / colW)) : 0;
@@ -575,7 +592,7 @@ function typeset(rawText, settingsIn, env = {}) {
         const winFam = settings['first-word-font'] || null;
         const MeasureAPICls = require('../typography/measure-api').MeasureAPI;
         const wApi = (winFam && MeasureAPICls.forFamily(winFam, settings)) || api;
-        const winSizePt = settings['body-font-size-pt'] * (Number(settings['first-word-size-em']) || 1.5);
+        const winSizePt = bodySzForWin * (Number(settings['first-word-size-em']) || 1.5);
         const wW = wApi.measureTextWidth(firstWord, winSizePt)
           + wApi.measureTextWidth(' ', winSizePt) + 0.5; // D-92: רווח החלון + ביטחון
         if (wW < colW * 0.5) winSpec = { widthPx: wW };
@@ -583,13 +600,23 @@ function typeset(rawText, settingsIn, env = {}) {
     }
     const built = layoutModelBlock(mBlk, {
       settings, kind: 'paragraph', widthPx: colW,
-      lineHeightPx: api.lineHeightPx(null),
+      lineHeightPx: paraLineHeightPx,
+      ...(h0BaseStyle ? { baseStyle: h0BaseStyle, parenContextSizePt: h0BodySizePt } : {}),
       runts: settings['runt-min-width-pct'],
       notesByRef, customStyles,
       measureCtx: { assetResolver: docAssets, measure: api },
       ...(winSpec ? { window: winSpec } : {})
     });
     const lines = built.view;
+    // **RC-2a (i004):** התצוגה נושאת את גודל/גופן גוף ההקדמה — line-font.js
+    // (S6.3) קורא ln.sizePt/ln.font בהקרנת PDF וב-DOM כאחד; בלי זה נפלו
+    // ל-body-font-size-pt/body-font (12pt גוף הספר) בניגוד למדידה.
+    if (inH0Section) {
+      for (const ln of lines) {
+        ln.sizePt = h0BodySizePt;
+        if (h0BodyFamily) ln.font = h0BodyFamily;
+      }
+    }
     for (const d of (built.diagnostics || [])) {
       ledger.create('line-engine', `para:${t.id}`, null, d, 'measure');
     }

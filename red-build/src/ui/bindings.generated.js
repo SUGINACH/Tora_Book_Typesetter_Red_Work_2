@@ -576,6 +576,20 @@ const BINDINGS = [
     "note": "S6.3: גוף ההקדמה — מדידה (prefaceApi) ורינדור באותו גופן"
   },
   {
+    "id": "heading-0-body-size-pt",
+    "control": "rng-h0-body-size",
+    "panel": "טיפוגרפיה וגוף הטקסט",
+    "panelKey": "TYPO",
+    "labelHe": "heading-0-body-size-pt",
+    "type": "number",
+    "def": 11.5,
+    "enum": null,
+    "min": 6,
+    "max": 40,
+    "step": 0.5,
+    "note": "RC-2a (i004): גודל גוף ההקדמה — המקור s-h0-body=11.5; הפיץ׳ 11.5×1.34×4/3 = H0_LINE_H. עד כאן לא מופוה ייבוא ⇒ ההקדמה זרמה ב-12pt"
+  },
+  {
     "id": "endnote-title-font",
     "control": "sel-endnote-title-font",
     "panel": "הערות שוליים וסיום",

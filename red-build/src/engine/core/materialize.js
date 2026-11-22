@@ -990,6 +990,14 @@ function projectLine(ln, colX, y, colW, settings, measure, align, production) {
   // למדוד ולהציג באותם גדלים — אחרת מילות הסוגריים/הסגנון חורגות מה-DOM
   // ומהמודל שנמדד. ה-pdf-writer מכבד w.sizePt פר-מילה ממילא.
   const parenScale = Number(settings['paren-style-scale']) || 1;
+  // **RC-2c (i004): גודל הסוגריים אבסולוטי** — כמו ה-DOM (parenPx =
+  // SZ.body+parenDelta) וכמו המורשת (10pt קבוע גם בהקדמה שגופה 11.5pt;
+  // הוכח מה-PDF הישן: p43 ספאני סוגריים 10.0pt). ה-scale המיובא יחסי לגוף
+  // (10/12) — כאן נגזר הגודל האבסולוטי ומוצב ישירות, כך ששורת הקדמה
+  // (11.5pt) מקבלת 10pt ולא 9.58pt — תצוגה = ייצוא = מדידה.
+  const parenAbsPt = parenScale !== 1
+    ? (Number(settings['body-font-size-pt']) || 12) * parenScale
+    : null;
   const csFactors = (ln.customSpans && ln.customSpans.length) ? customFactorMapOf(settings) : null;
   const parenSet = (ln.parenSpans && ln.parenSpans.length && parenScale !== 1) ? new Set(ln.parenSpans) : null;
   const effSizeOf = (i) => {
@@ -998,7 +1006,7 @@ function projectLine(ln, colX, y, colW, settings, measure, align, production) {
       const cs = ln.customSpans.find((c) => c.wi === i);
       if (cs) { const f = csFactors.get(cs.styleId); if (f != null) s *= f; }
     }
-    if (parenSet && parenSet.has(i)) s *= parenScale;
+    if (parenSet && parenSet.has(i)) s = parenAbsPt != null ? parenAbsPt : s * parenScale;
     return s;
   };
   const words = (ln.words || []).map(w => scrubPUAText(String(w).replace(/\u00A0/g, ' '))).filter(Boolean);
