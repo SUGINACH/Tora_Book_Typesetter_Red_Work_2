@@ -327,6 +327,7 @@ var __paths = {
   "src/engine/core/pipeline.js|../extensions/style-schema": "src/engine/extensions/style-schema.js",
   "src/engine/core/pipeline.js|../extensions/apply-styles": "src/engine/extensions/apply-styles.js",
   "src/engine/core/pipeline.js|../decoration/ornament-fit": "src/engine/decoration/ornament-fit.js",
+  "src/engine/core/pipeline.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/core/pipeline.js|../../audit/stage-snapshots": "src/audit/stage-snapshots.js",
   "src/engine/core/pipeline.js|../notes/markers": "src/engine/notes/markers.js",
   "src/engine/core/pipeline.js|../decoration/shaar-pages": "src/engine/decoration/shaar-pages.js",
@@ -1272,12 +1273,46 @@ function typeset(rawText, settingsIn, env = {}) {
     // LineModel → תצוגה נגזרת. שכבות-על של סוגריים/סגנון inline מוחלות בתוך הגשר בקואורדינטות
     // מקור; אין סנטינלים ואין ניקוי סנטינלים — המידע נוסע על הפרגמנטים
     // (לינאריות הרוחב בלבד — הגובה/הבסיס נשארים של השורה, כמו הנתיב החי).
+    // **Iteration-003 (legacy parity — מילת-חלון):** בפרופיל IMUD, מילת-החלון
+    // של המקור (createDropWord: המילה הראשונה של פסקה רבת-שורות מוצאת
+    // מהזרימה ומוצגת בשפה הימנית ב-1.5× בגופן FrankReal; שתי השורות
+    // הראשונות ברוחב מוקטן). תנאי המקור: estLines ≥ drop-word-min-lines,
+    // לא מתחילה בסוגריים, המילה הראשונה בלי סמן הערה (S4.13/S6.0/F1).
+    // **היקף:** IMUD בלבד — ב-DP מנגנון ה-drop הגיאומטרי-ניטרלי של RED
+    // (applyDropWord) נשאר כפי שננעל.
+    const imudWin = !!(settings['_layout-profile'] === 'imud' || settings._imudRaw)
+      && String(settings['first-word-mode'] || '') === 'drop';
+    let winSpec = null;
+    if (imudWin) {
+      // flatTextOf מחזיר { flat, segs } — הטקסט השטוח בשדה flat
+      const flatPara = flatTextOf(mBlk);
+      const txt = String((flatPara && flatPara.flat) || '').trim();
+      const minLines = Math.max(1, Number(settings['first-word-threshold-lines']) || 2);
+      const firstWord = txt.split(/\s+/)[0] || '';
+      const startsWithParen = txt.startsWith('(');
+      const firstHasNote = !!(mBlk.items && mBlk.items[0] && mBlk.items[0].kind === 'noteMarker')
+        || firstWord.includes(String(settings['fn-delim-open'] || '['));
+      const estW = txt ? api.measureTextWidth(txt, settings['body-font-size-pt']) : 0;
+      // כמו המקור: עיגול כלפי מעלה (נמדע: הפסקה הראשונה 1.96→2 — בלי ceil
+      // נפסלה בניגוד לייחוס שמציג לה חלון)
+      const estLines = colW > 0 ? Math.max(1, Math.ceil(estW / colW)) : 0;
+      if (txt && firstWord && !startsWithParen && !firstHasNote && estLines >= minLines && firstWord.length <= 24) {
+        const winFam = settings['first-word-font'] || null;
+        const MeasureAPICls = require('../typography/measure-api').MeasureAPI;
+        const wApi = (winFam && MeasureAPICls.forFamily(winFam, settings)) || api;
+        const winSizePt = settings['body-font-size-pt'] * (Number(settings['first-word-size-em']) || 1.5);
+        const wW = wApi.measureTextWidth(firstWord, winSizePt)
+          + wApi.measureTextWidth(' ', winSizePt) + 0.5; // D-92: רווח החלון + ביטחון
+        if (wW < colW * 0.5) winSpec = { widthPx: wW };
+      }
+    }
     const built = layoutModelBlock(mBlk, {
       settings, kind: 'paragraph', widthPx: colW,
       lineHeightPx: api.lineHeightPx(null),
       runts: settings['runt-min-width-pct'],
       notesByRef, customStyles,
-      measureCtx: { assetResolver: docAssets, measure: api }
+      measureCtx: { assetResolver: docAssets, measure: api },
+      ...(winSpec ? { window: winSpec } : {})
     });
     const lines = built.view;
     for (const d of (built.diagnostics || [])) {
@@ -1650,10 +1685,24 @@ function typeset(rawText, settingsIn, env = {}) {
       h2 = (pg.toc && (pg.toc.headerTitle || pg.toc.title)) || 'תוכן העניינים';
       pg.headerCtx = { bookName, h1: '', h2 };
     } else {
+      // **Iteration-003 (תיקון המשך — כותרת רבת-שורות):** ההקשר הרץ נקבע מהכותרת
+      // השלמה, לא משורתה האחרונה. עד כאן כל שורת heading דרסה את ההקשר —
+      // כותרת H2 שנעטפה לשתי שורות השאירה במרכז את ההמשך בלבד (נמדד:
+      // 'בעניין מי ששכח...' איבד את 'בעניין'). כאן: קיבוץ שורות הכותרת לפי
+      // tokenId ואיחוי הטקסט המלא של הכותרת האחרונה בעמוד — כמו setHeader
+      // של המורשת שקורא את כותרת הבלוק ולא שורה בודדת.
+      const byTok = new Map();
       for (const ln of pageLines(pg)) {
         if (ln.kind !== 'heading') continue;
-        if (ln.level <= 1) { runningH1 = ln.words.join(' '); }
-        else if (ln.level === 0 || ln.level === 2) { runningH2 = stripSimanPrefix(ln.words.join(' ')); }
+        const key = ln.tokenId != null ? ln.tokenId : `anon-${ln.level}`;
+        if (!byTok.has(key)) byTok.set(key, []);
+        byTok.get(key).push(ln);
+      }
+      for (const [, lns] of byTok) {
+        const lvl = lns[0].level;
+        const full = lns.map(ln => ln.words.join(' ')).join(' ').replace(/\s+/g, ' ').trim();
+        if (lvl <= 1) { runningH1 = full; }
+        else if (lvl === 0 || lvl === 2) { runningH2 = stripSimanPrefix(full); }
       }
       h1 = runningH1; h2 = runningH2;
       pg.headerCtx = { bookName, h1, h2 };
@@ -1795,6 +1844,12 @@ function typeset(rawText, settingsIn, env = {}) {
         for (const w of (ln.words || [])) {
           if (w.includes(ATOMIC)) out.push(...explodePlaceholderWord(w));
           else out.push(...wordSeq(w));
+        }
+        // **Iteration-003 (מילת-חלון):** המילה הראשונה הוצאה מהזרימה אך
+        // היא תוכן מרונדר (בשפה הימנית) — נספרת כאן כדי שחשבונאות השימור
+        // תישאר מדויקת (בלי זה: כל פסקת-חלון הייתה נחשבת כחסרת מילה).
+        if (ln.windowWords && ln.windowWords.length) {
+          for (const w of ln.windowWords) out.push(...wordSeq(w));
         }
       }
       // **Iteration-003 (legacy parity):** תוכן שער-המשנה — ה-h1 נצרך לשער
@@ -6831,7 +6886,7 @@ function leadingGlueWidth(seq, i) {
   return 0;
 }
 
-module.exports = { breakLines, badness, breakItemSequence, STRETCH_RATIO, SHRINK_RATIO, LINE_DEMERIT, RAGGED_END_STRETCH_FACTOR, FIT_EPS };
+module.exports = { breakLines, badness, breakItemSequence, glueWidths, STRETCH_RATIO, SHRINK_RATIO, LINE_DEMERIT, RAGGED_END_STRETCH_FACTOR, FIT_EPS };
 
 };
 __modules["src/engine/line/breaks.js"] = function (require, module, exports) {
@@ -7558,7 +7613,10 @@ function layoutModelBlock(blk, spec) {
     maxWidthPx: spec.widthPx,
     settings,
     runts: spec.runts,
-    lineHeightPx: spec.lineHeightPx
+    lineHeightPx: spec.lineHeightPx,
+    // **Iteration-003 (מילת-חלון):** רוחב החלון מה-pipeline (פרופיל IMUD)
+    // — השורות 0–1 נשברות ברוחב מוקטן והמילה מסומנת על שורה 0.
+    ...(spec.window ? { window: spec.window } : {})
   });
   // **שלב 8 פרוסה 2 (§4.2 — מדידה אחת לטקסט-המקור של צף):** תחביר המקור של
   // תמונה צפה נספר ב-words לחשבונאות התוכן ומוצג כמילה (התנהגות המוצר עד
@@ -7674,6 +7732,12 @@ function legacyViewOfLines(lines, extras = {}) {
       ...(customSpans.length ? { customSpans } : {}),
       // ה-LineModel המלא — מגיע ל-Planner/רנדרר בלי שיטוח (שער §17: "LineModel מלא מגיע ל-Planner")
       lineModel: ln,
+      // **Iteration-003 (מילת-חלון):** דגלי החלון עוברים ל-view — ה-DOM
+      // (line--window-wrap / w--window) והמקרן (הזחת תיבת השורה + פליטת
+      // המילה ב-1.5× בגופן החלון) צורכים אותם.
+      ...(ln.window ? { window: true } : {}),
+      ...(ln.windowW != null ? { windowW: ln.windowW } : {}),
+      ...(ln.windowWords ? { windowWords: ln.windowWords } : {}),
       // סמנטיקה (H3 — D-S2H3): מוצמדת לשורה; שום שלב אינו מוסיף רווח נוסף
       ...(ln.semantic ? { semantic: ln.semantic } : {})
     };
@@ -8418,7 +8482,7 @@ __modules["src/engine/line/line-model.js"] = function (require, module, exports)
  * אין מדידת רוחב כפולה.
  */
 
-const { breakItemSequence, STRETCH_RATIO, SHRINK_RATIO } = require('../typography/kp-linebreak');
+const { breakItemSequence, glueWidths, STRETCH_RATIO, SHRINK_RATIO } = require('../typography/kp-linebreak');
 
 /** גרסת חוזה מודל השורה. */
 const LINE_MODEL_VERSION = 'line-model-v2(floats+justify-policy+gap-chars)';
@@ -8460,6 +8524,11 @@ function layoutSequence(sequence, opts = {}) {
   }
   const diagnostics = [];
   const items = sequence.items;
+  // **Iteration-003 (מילת-חלון):** חד-פעמי לכל הרצף — מקטע הזרימה הראשון
+  // בלבד; windowMark נצבר לסימון השורות לאחר ההרכבה.
+  let windowDone = false;
+  let windowMark = null;
+  let windowPreLines = 0; // כמות שורות החלון שהורכבו מראש (גרידי)
 
   // ── מדיניות יישור (§3.7): מפורש מ-opts.justify, או מופק מהגדרות המסמך,
   //    או ברירת המחדל האפקטיבית של המוצר. לעולם לא הנחת ragged שקטה.
@@ -8504,10 +8573,64 @@ function layoutSequence(sequence, opts = {}) {
     const ex = extractFloats(seg.items);
     for (const f of ex.floats) floats.push(f);
     if (!ex.kept.length) continue;
-    // ── אילוץ אזור לתמונה הצפה (§4.1-7): wrap-start/wrap-end מקטינים את
-    // הרוחב האפקטיבי של השורות שבגובה התמונה — אותו DP, אילוץ אחד.
-    const wrap = wrapConstraintOf(ex.floats, maxWidthPx, opts);
-    const res = breakItemSequence(ex.kept, maxWidthPx, {
+    // **Iteration-003 (legacy parity — מילת-חלון):** בפרופיל IMUD המילה
+    // הראשונה של הפסקה מוצאת מהזרימה (כמו createDropWord/window של
+    // המקור) ושתי השורות הראשונות נשברות ברוחב מוקטן (limitOf של המורשת).
+    // החילוץ: רצף התיבות המוביל המחובר ב-glue פנימי (מילה אחת) + השמטת
+    // ה-glue החיצוני שאחריו.
+    if (opts.window && !windowDone && ex.kept.length && ex.kept[0].role === 'box') {
+      let wEnd = 1;
+      while (wEnd + 1 < ex.kept.length && ex.kept[wEnd].role === 'glue' && ex.kept[wEnd].internal && ex.kept[wEnd + 1].role === 'box') wEnd += 2;
+      const winBoxes = ex.kept.slice(0, wEnd);
+      const winText = winBoxes.map(b => (b.fragments || []).map(f => f.text).join('')).join('');
+      let after = wEnd;
+      if (ex.kept[after] && ex.kept[after].role === 'glue' && !ex.kept[after].internal) after++;
+      ex.kept.splice(0, after);
+      windowDone = true;
+      windowMark = { words: [winText], widthPx: opts.window.widthPx };
+      if (!ex.kept.length) continue;
+      // **Iteration-003 (מילוי גרידי כמו limitOf של המורשת):** שורות 0–1
+      // ממולאות גרידית ברוחב המוקטן (colW−חלון) — לא ע"י ה-DP. ה-DP ממטב
+      // את כל השורות יחד ובפסקאות-חלון בחר לפעמים שורת-מילה-אחת (badness 0
+      // בלי glue-stretch; נמדד: 'גם' בודדת בשורה 0) — ואז fixDropWordInColumns
+      // מזג אותה קדימה והשמיט את שורת החלון כולה. הגרידי של המקור ממלא עד
+      // גבול הרוחב — שורות 0–1 מלאות תמיד (אותה אריתמטיקה של limitOf).
+      const narrowW = Math.max(40, maxWidthPx - opts.window.widthPx);
+      const winWrap = { widthAt: (li) => (li < 2 ? narrowW : maxWidthPx) };
+      let fillFrom = 0;
+      let preCount = 0;
+      for (let wLine = 0; wLine < 2; wLine++) {
+        let wAcc = 0, lastBox = -1;
+        for (let j = fillFrom; j < ex.kept.length; j++) {
+          const it = ex.kept[j];
+          const add = it.role === 'box' ? it.measuredAdvance : glueWidths(it).width;
+          if (lastBox >= fillFrom && wAcc + add > narrowW - 0.75) break;
+          wAcc += add;
+          if (it.role === 'box') lastBox = j;
+        }
+        if (lastBox < fillFrom) break;
+        const cut = { from: fillFrom, to: lastBox + 1, badness: 0, reason: 'window-greedy' };
+        const lm = assembleLine(ex.kept, cut, maxWidthPx, winWrap, opts, policy, sequence, wLine, ex.floats);
+        if (lm) { lines.push(lm); preCount++; }
+        fillFrom = lastBox + 1;
+        while (fillFrom < ex.kept.length && ex.kept[fillFrom].role === 'glue' && !ex.kept[fillFrom].internal) fillFrom++;
+      }
+      windowPreLines = preCount;
+      if (fillFrom >= ex.kept.length) continue;
+      ex.kept.splice(0, fillFrom);
+    }
+    // **Iteration-003:** אילוץ החלון משולב במנגנון האילוץ הפר-שורה של הצפות
+    // (מינימום פר-שורה) — מקור אחד לאילוץ רוחב בשבירה ובהרכבה.
+    const floatWrap = wrapConstraintOf(ex.floats, maxWidthPx, opts);
+    // **Iteration-003:** אילוץ החלון חל רק כששורות החלון לא הורכבו כבר
+    // בגרידי (windowPreLines) — השארית נשברת ברוחב מלא.
+    const windowWrap = opts.window && !windowPreLines ? {
+      widthAt: (li) => (li < 2 ? Math.max(40, maxWidthPx - opts.window.widthPx) : maxWidthPx)
+    } : null;
+    const wrap = floatWrap && windowWrap
+      ? { widthAt: (li) => Math.min(floatWrap.widthAt(li), windowWrap.widthAt(li)) }
+      : (floatWrap || windowWrap);
+const res = breakItemSequence(ex.kept, maxWidthPx, {
       runts: opts.runts,
       raggedEnd: opts.raggedEnd,
       lineWidthAt: wrap ? (li) => wrap.widthAt(li) : null
@@ -8523,6 +8646,16 @@ function layoutSequence(sequence, opts = {}) {
   for (let i = 0; i < lines.length; i++) {
     lines[i].index = i;
     lines[i].isLast = i === lines.length - 1;
+    // **Iteration-003 (מילת-חלון):** שורה 0 נושאת את מילות החלון ורוחבן;
+    // שורות 0–1 מסומנות window (נמדדו ברוחב מוקטן — הרינדרר מזיז את תיבת
+    // השורה מעבר לחלון, כמו line--window-wrap ב-DOM וכמו limitOf במורשת).
+    if (windowMark) {
+      if (i < 2) lines[i].window = true;
+      if (i === 0) {
+        lines[i].windowWords = windowMark.words;
+        lines[i].windowW = windowMark.widthPx;
+      }
+    }
     if (sequence.semantic && sequence.semantic.kind === 'heading3') {
       lines[i].semantic = {
         kind: 'heading3', itemId: sequence.semantic.itemId,
@@ -11675,6 +11808,84 @@ function autoQualityPass(pages, settings, eventLog) {
       // ההערות (על הטור האחרון). המתיחה עד לתחתית האמיתית של הטור.
       const cap = colCapacityOf(page, { colIndex: c });
       const deficit = cap - used;
+      // **Iteration-003 (legacy parity — מתיחת הבלוק האחרון בלבד):** בפרופיל
+      // IMUD המקור (v21 stretchLastBlockToBottom) מותח את **הבלוק האחרון**
+      // של הטור עד התחתית — בריווח-פסקה עד JUSTIFY_MAX_GAP(9px) ותוספת
+      // גובה-שורה עד JUSTIFY_MAX_LH_EXTRA(3px), בתקרת עמוד
+      // PAGE_STRETCH_MAX(48px). עד כאן ה-AQ המאוחד מתח את **כל** שורות
+      // הטור עד +5% — ה"שורות הדלילות" שדווחו (נמדד: פיץ' דומיננטי 17.0pt
+      // מול 16.08 הקבוע בייחוס; היסטוגרמת הייחוס: 16.0 דומיננטי, המתיחה
+      // מרוכזת בזנב). ב-DP — מנגנון ה-AQ המלא נשאר כפי שננעל בקורפוסים.
+      const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+      if (imudProf) {
+        if (deficit > 4 && deficit <= 48 && mayStretch) {
+          // זנב הבלוק האחרון — רצף שורות מהסוף באותו tokenId (לא פס קבוע)
+          let start = lines.length;
+          const lastIdx = lines.length - 1;
+          const tokOf = (ln) => (ln.tokenId != null ? ln.tokenId : null);
+          const lastTok = tokOf(lines[lastIdx]);
+          while (start > 0) {
+            const ln = lines[start - 1];
+            if (isFixedBandLine(ln)) break;
+            if (tokOf(ln) !== lastTok) break;
+            start--;
+          }
+          const run = lines.slice(start);
+          const n = run.length;
+          if (n > 0) {
+            // קיבולת המתיחה: תוספת ריווח (עד 9px לגבול שמעל הרצף) + תוספת
+            // גובה-שורה (עד 3px לשורה) — כמו justifyColUnits במורשת.
+            let gapRoom = 0;
+            const g0 = run[0].gapBeforePx || 0;
+            if (g0 > 0) gapRoom = Math.max(0, 9 - g0);
+            const lhRoom = n * 3;
+            const room = Math.min(deficit - 2, gapRoom + lhRoom);
+            if (room > 0.5) {
+              const gapTake = Math.min(gapRoom, room);
+              const lhTake = room - gapTake;
+              if (gapTake > 0) run[0].gapBeforePx = g0 + gapTake;
+              if (lhTake > 0) {
+                const rawRun = run.reduce((s2, ln) => s2 + (ln.heightPx || 0), 0);
+                if (rawRun > 0.5) {
+                  // **U-10 (אמנת פקטור אבסולוטי):** הפקטור מוחל כהחלפה —
+                  // הוא חייב לכסות גם את ביטול כיווץ align קודם (0.975) שעל
+                  // שורות הרצף. הנוסחה האבסולוטית: otherUsed + gapsNew +
+                  // rawRun×factor = used + room — נוחת בדיוק על היעד.
+                  // גבהים מתוחים נוכחיים (בלי פערים — הפערים אינם מוכפלים
+                  // בפקטור): factor = (Σh×s + lhTake) / Σh
+                  const stretchedH = run.reduce((s2, ln) => s2 + (ln.heightPx || 0) * (ln.aqStretch || 1), 0);
+                  const factor = (stretchedH + lhTake) / rawRun;
+                  for (const ln of run) ln.aqStretch = factor;
+                  applied++;
+                  eventLog.emit('justify', 'aq-last-block', { page: page.index, col: c, factor: Number(factor.toFixed(4)), lines: n }, page.index);
+                }
+              } else {
+                applied++;
+                eventLog.emit('justify', 'aq-last-block-gaps', { page: page.index, col: c, gapTake: Number(gapTake.toFixed(2)) }, page.index);
+              }
+            }
+          }
+        }
+        if (deficit < -4 && compressFirst) {
+          // **Iteration-003 (כיווץ בטיחות):** עודף מעל התקרה — בדרך כלל
+          // תקציב הערות שהוזמן אחרי מילוי הטור (FX-3) שצימצם את הקיבולת
+          // בדיעבד. כמו המסלול הכללי — כיווץ עד המינימום; זה מנגנון הכלה
+          // (containment), לא המתיחה האסתטית שביטלנו לעיל.
+          const parts = columnStretchParts(lines);
+          const rawL = rawLinesOf(lines);
+          const fixed = fixedBandPx(lines);
+          const rawFactor = rawL > 0.5 ? (cap - parts.gaps - fixed) / rawL : 1;
+          const [lo] = stageBounds(settings, 'word-spacing');
+          const hi = 1;
+          const factor = Math.max(lo, Math.min(hi, rawFactor));
+          if (Math.abs(factor - 1) > 1e-4) {
+            for (const ln of lines) if (!isFixedBandLine(ln)) ln.aqStretch = factor;
+            applied++;
+            eventLog.emit('justify', 'aq-imud-compress', { page: page.index, col: c, factor: Number(factor.toFixed(4)) }, page.index);
+          }
+        }
+        continue; // ב-IMUD אין מתיחת כל-השורות — הבלוק האחרון בלבד (וכיווץ בטיחות)
+      }
       if (deficit > 4 && mayStretch) {
         // **S72 (שיפור 4) + FX-6 (פרוסה 2):** מקדם מדויק עם פערים קבועים —
         // (cap − Σgap)/ΣheightPx — מגיע ליעד בדיוק גם בטורים מעורבי-גבהים
@@ -24055,7 +24266,28 @@ function projectPage(page, settings, apiOrOpts) {
           y += (ln.heightPx || 0) * (ln.aqStretch || 1);
           continue;
         }
-        out.lines.push(projectLine(ln, col.x, y, col.w, settings, measure, lineAlignOf(ln, settings), production));
+        // **Iteration-003 (מילת-חלון):** שורות 0–1 של פסקת-חלון נמדדו ברוחב
+        // מוקטן — התיבה מוזזת מעבר לחלון בצד ימין (RTL) ומילת החלון
+        // נפלטת בשפה בגודל 1.5× בגופן החלון (window — FrankReal-Bold),
+        // בסיס +2px מתחת לבסיס השורה (כמו winBase במקרן המורשת וב-DOM).
+        const winShift = ln.window && Number.isFinite(ln.windowW) ? ln.windowW : 0;
+        // **RTL:** השפה הימנית של תיבת השורה זזה שמאלה מעבר לחלון (כמו
+        // right=windowW ב-DOM) — השפה השמאלית נשארת בשפת הטור.
+        const lnProj = projectLine(ln, col.x, y, col.w - winShift, settings, measure, lineAlignOf(ln, settings), production);
+        if (ln.windowWords && ln.windowWords.length) {
+          const winText = ln.windowWords.join(' ');
+          const winSizePt = (ln.sizePt || settings['body-font-size-pt']) * (Number(settings['first-word-size-em']) || 1.5);
+          const winW = Math.max(4, ln.windowW - 2);
+          lnProj.words = lnProj.words || [];
+          lnProj.words.push({
+            text: winText, x: col.x + col.w - winW, w: winW,
+            baselineY: null, __window: true, // נקבע במעבר התיקון אחרי attachBaselines
+            sizePt: winSizePt, fontKey: 'window',
+            ...(settings['first-word-color'] && settings['first-word-color'] !== '#000000'
+              ? { color: hexColorToRgb(settings['first-word-color']) } : {})
+          });
+        }
+        out.lines.push(lnProj);
         // **EXT-20:** מקדם ה-AQ מיושם על גובה השורה (אנכי) — השורות שאחריה
         // זזות בהתאם; התיבה והבסיס מחושבים מהגובה הנמתח (מודל תיבת שורה).
         // **FX-6:** הפער קבוע — אינו מתמתח עם השורות.
@@ -24199,6 +24431,15 @@ function projectPage(page, settings, apiOrOpts) {
 
   // **S12 (parity):** בסיסי שורות/מרזב/גיליון/כותרת — מודל תיבת שורה אחיד
   attachBaselines(out, settings, measure);
+  // **Iteration-003 (מילת-חלון):** בסיס מילת החלון — 2px מתחת לבסיס שורת
+  // הטקסט (כמו winBase=baseY+2 במקרן המורשת; נמדע בייחוס: חלון 155.25
+  // מול שורה 153.75). נקבע כאן — אחרי שבסיסי השורות חושבו.
+  for (const ln of (out.lines || [])) {
+    if (!ln.words) continue;
+    for (const w of ln.words) {
+      if (w.__window && ln.baselineY != null) w.baselineY = ln.baselineY + 2;
+    }
+  }
 
   return out;
 }
@@ -26771,6 +27012,31 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       if (!wordsByRole.has(w.fontKey)) wordsByRole.set(w.fontKey, []);
       wordsByRole.get(w.fontKey).push(w.text);
     }
+    // **Iteration-003 (תצוגה=ייצוא — סלוטי כותרת וגיליון):** טקסטים שאינם
+    // בשורות/הערות — סלוטי הכותרת העליונה (fontKey = המשפחה מההגדרות,
+    // למשל Livorna) והגיליון. בלי האיסוף הזה תת-הגופן של המשפחה נבנה ממלאי
+    // חלקי (מקורות אחרים) ואותיות בודדות נפלו ל-/F1 — גופן מעורב בכותרת
+    // (נמדע: 'בעניין' הוצג 'בע'+F1+'נ'+F2+'יין'). אוספים גם מילים ממוקמות
+    // (legacy) וגם סלוט טקסטואלי מוטבע.
+    for (const pg of pages) {
+      if (pg.header) for (const s of (pg.header.slots || [])) {
+        if (!s) continue;
+        for (const w of (s.words || [])) {
+          const k = w.fontKey != null ? w.fontKey : s.fontKey;
+          if (k == null) continue;
+          if (!wordsByRole.has(k)) wordsByRole.set(k, []);
+          wordsByRole.get(k).push(w.text);
+        }
+        if ((!s.words || !s.words.length) && s.text && s.fontKey != null) {
+          if (!wordsByRole.has(s.fontKey)) wordsByRole.set(s.fontKey, []);
+          wordsByRole.get(s.fontKey).push(s.text);
+        }
+      }
+      if (pg.folio && pg.folio.text && pg.folio.fontKey != null) {
+        if (!wordsByRole.has(pg.folio.fontKey)) wordsByRole.set(pg.folio.fontKey, []);
+        wordsByRole.get(pg.folio.fontKey).push(pg.folio.text);
+      }
+    }
     const mkRoleFont = (roleKey, family) => {
       const prof = registeredFontsRef.get(family);
       if (!prof) return null;
@@ -26779,7 +27045,10 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       const sub = buildSubset(prof, charInventory(parts.join(' ')));
       return sub.ok ? mkFont(sub) : null;
     };
-    const fontForWriter2 = mkRoleFont('window', 'FrankReal-Bold');
+    // **Iteration-003 (מילת-חלון):** משפחת החלון — FrankReal-Bold כשרשומה
+    // תחת שמה, ואם לא — המשפחה 'FrankReal' (הקטלוג רושם את FrankReal-Bold.ttf
+    // תחת 'FrankReal'; בלי הנפילה מילות החלון נפלו ל-/F1 גוף).
+    const fontForWriter2 = mkRoleFont('window', 'FrankReal-Bold') || mkRoleFont('window', 'FrankReal');
     const fontForWriter3 = mkRoleFont('heading', 'DavidLibre-Bold');
     // **Iteration-003:** משפחת גוף ההערה מההגדרות (f-note-body-font — אסיסטנט
     // קל מאוד בפרוביל IMUD, כמו fnApi של המורשת); נפילה היסטורית ל-FRL.
