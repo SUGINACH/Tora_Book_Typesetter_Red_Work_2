@@ -75,7 +75,13 @@ function docToFlat(segs, at) {
 }
 
 /** **D-42 (P1-2):** קדם-פאס סוגריים עגולים על הטקסט השטוח (בלי הערות) —
- * עבר הנה מה-pipeline (אותה לוגיקה בדיוק; ה-pipeline כבר אינו מודד בעצמו). */
+ * עבר הנה מה-pipeline (אותה לוגיקה בדיוק; ה-pipeline כבר אינו מודד בעצמו).
+ *
+ * **RC-1b (i004):** סוגר פותח שלא נסגר בפסקה — המורשת סופרת עומק תו-אחר-תו
+ * (legacy-imud-flow S4.13), ולכן כל הטקסט מה-'(' ועד סוף הפסקה נחשב בתוך
+ * הסוגריים (הוכח מה-PDF הישן: '(ובעיקר סוגיא דהתם…' נצבע ב-10pt עד סוף
+ * הפסקה למרות שה-')' היחיד סוגר סוגריים פנימיים). ספאן בלתי-מאוזן נמתח
+ * עד סוף ה-flat, כמו עומק המורשת שנשאר >0 עד סוף הפסקה. */
 function parenSpansOfFlat(flat) {
   const spans = [];
   const stack = [];
@@ -85,13 +91,16 @@ function parenSpansOfFlat(flat) {
       if (stack.length) { spans.push({ from: stack.pop(), to: i }); }
     }
   }
+  for (const from of stack) spans.push({ from, to: flat.length - 1 });
   return spans;
 }
 
 /**
  * שכבות-על פר-מילה בקואורדינטות מסמך: סוגריים (parenScale) וסגנונות inline
- * מותאמים (factor לפי styleId). הסיווג זהה לנתיב החי: סוגריים — תחילת המילה
- * בתוך הטווח (strictly inside); סגנון inline — חפיפת טווח המילה. עדיפות
+ * מותאמים (factor לפי styleId). הסיווג זהה לנתיב החי: סוגריים — חפיפת טווח
+ * המילה עם טווח הסוגריים (RC-1c i004 = anyParen של המורשת: מילה שנוגעת
+ * בסוגר כלשהו בעומק>0 נצבעת כולה, כולל פיסוק עוקב — הוכח מה-PDF הישן:
+ * 'מחשבת).' ו-'זה(דשימוש' שלמות ב-10pt); סגנון inline — חפיפת טווח המילה. עדיפות
  * סגנון inline על פני סוגריים (הסגנון תופס ראשון — שניהם לא חופפים בפועל).
  * @returns {{wordStyleOf:(docStart:number,docEnd:number)=>({advanceFactor:number,paren?:boolean,customStyleId?:string}|null), diagnostics:Array}}
  */
@@ -136,10 +145,19 @@ function wordOverlayFactory(blk, settings, customStyles) {
         return { advanceFactor: ov.advanceFactor, customStyleId: ov.styleId };
       }
     }
-    // סוגריים — תחילת המילה בתוך הטווח (strictly inside)
+    // סוגריים — חפיפת טווח המילה עם טווח הסוגריים (RC-1c, i004 = anyParen של
+    // המורשת): מילה שנוגעת בסוגריים כלשהם — שמתחילה ב-'(' עצמה, שמתחילה לפני
+    // '(' אך מכילה אותו ('זה(דשימוש'), או שמסתיימת אחרי ')' עם פיסוק עוקב
+    // ('מחשבת).') — כולה ב-span, כמו ספירת העומק תו-אחר-תו של המקור
+    // (legacy-imud-flow S4.13: wordParen=anyParen — הוכח מה-PDF הישן שהמילה
+    // כולה נצבעת ב-10pt). הכללים הקודמים (strictly inside, ואחר-כך start-in-span)
+    // החריגו מילים והשאירו 1,782+13 גליפי סוגריים בגודל הגוף (12pt) במקום 10pt,
+    // ושורות נשברו במקומות שונים. שריד מתועד: המדידה כאן אחידה-פר-מילה
+    // (advanceFactor), המורשת מודדת פר-תו (S4.16) — הפרש של ~0.5px במילים
+    // מעורבות, יימדד בנפרד.
     for (const ov of overlays) {
       if (ov.kind !== 'paren') continue;
-      if (flatStart > ovFlatFrom(ov, segs) && flatStart < ovFlatTo(ov, segs)) {
+      if (flatStart <= ovFlatTo(ov, segs) && flatStart + (docEnd - docStart) > ovFlatFrom(ov, segs)) {
         return { advanceFactor: ov.advanceFactor, paren: true };
       }
     }
