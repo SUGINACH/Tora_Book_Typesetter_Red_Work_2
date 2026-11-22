@@ -1,0 +1,29 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Comparison**\n\n1. **Column layout**: Both engines render the TOC as a single column — entry titles right-aligned (RTL), page numbers at the left margin. No two-column split in either. ✔ Match.\n\n2. **Page boundaries**: All content stays within the page frame on both sides. No overflow, clipping, or collisions. The right (new) engine places content ~5–8px lower vertically (title and rows), a minor baseline shift only.\n\n3. **Row typography**: Dot leaders are absent in both (plain space between title and number), and this matches on both sides. Page numbers (כז, כח, טו, יז, יח, כ, כא, etc.) align consistently at the left margin with correct bold/regular weight matching per row. Bold subsection header \"קיצורים והמה הארוכים\" is bold in both. ✔ Match.\n\n4. **Title styling**: \"מבוא שניתן לפלוני\" is centered and bold in both. The new engine's title appears slightly larger/heavier with the whole block shifted down a few pixels — cosmetically near-identical.\n\n5. **Overall parity**: Header running titles (ברוך / חזון עובדיה / כלבוש) match in order and placement; the horizontal rule under the header appears in both. Row order, text content, spacing rhythm, and the page-number footer (א) all correspond. The only deviations are a small vertical offset of the body block on the new engine and a marginally bolder title.\n\n**Verdict: PARITY OK** (minor: slight downward shift of body content and slightly heavier title weight in the new engine — cosmetic only).",
+        "reasoning_content": "Compare: both single column? Actually entries right-aligned with page numbers left — single column layout in both. Differences: header positions mirrored? Left header: ברוך left, כלבוש right? Left side shows ברוך (left), חזון עובדיה center, כלבוש right; right side shows ברוך left... wait right side: ברוך at left, חזון עובדיה center, כלבוש right — same. Actually left: ברוך appears left? Left image: \"ברוך\" near left? It shows ברוך at ~x150, כלבוש at ~x360 — both on left half (RTL page so odd). Right: ברוך ~600, כלבוך ~980. Header layout differs slightly but likely same RTL ordering. Vertical position: right page content shifted down slightly (title at ~165 vs 172). Title font slightly bolder/larger on right? Right title \"מבוא שניתן לפלוני\" appears bolder. Row page numbers: left some show bold \"כז\" etc; numbers align similarly. Minor vertical offset. Also last page footer א position differs slightly. Overall parity good.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1795362582,
+  "id": "2026112223492756466edfb4ae4e6e",
+  "model": "glm-5.3-flash",
+  "object": "chat.completion",
+  "request_id": "2026112223492756466edfb4ae4e6e",
+  "usage": {
+    "completion_tokens": 688,
+    "completion_tokens_details": {
+      "reasoning_tokens": 295
+    },
+    "prompt_tokens": 1076,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1764
+  }
+}

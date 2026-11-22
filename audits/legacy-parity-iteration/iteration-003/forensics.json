@@ -1,0 +1,322 @@
+{
+ "p100": {
+  "old_fontsizes": {
+   "ToraBook@12.0": 2029,
+   "ToraBook@10.0": 563,
+   "ToraMargin@6.0": 153,
+   "ToraEx3@11.5": 40,
+   "ToraWin@18.0": 16,
+   "ToraEx6@15.0": 8,
+   "ToraEx6@11.0": 6,
+   "ToraEx9@11.0": 2
+  },
+  "new_fontsizes": {
+   "ToraBook@12.0": 1841,
+   "ToraBook@10.0": 607,
+   "ToraMargin@6.0": 153,
+   "ToraEx7@11.5": 54,
+   "ToraWin@18.0": 22,
+   "ToraEx2@15.0": 8,
+   "ToraEx2@11.0": 6,
+   "ToraEx9@11.0": 2
+  },
+  "old_headers": [
+   {
+    "text": "מקום",
+    "font": "ToraEx6",
+    "size": 15.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "רשויות",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "בינה",
+    "font": "ToraEx6",
+    "size": 15.0,
+    "baseline": 62.4
+   }
+  ],
+  "new_headers": [
+   {
+    "text": "מקום",
+    "font": "ToraEx2",
+    "size": 15.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "רשויות",
+    "font": "ToraEx2",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "בינה",
+    "font": "ToraEx2",
+    "size": 15.0,
+    "baseline": 62.4
+   }
+  ],
+  "old_geresh_chars": 0,
+  "new_geresh_chars": 0
+ },
+ "p300": {
+  "old_fontsizes": {
+   "ToraBook@12.0": 1883,
+   "ToraBook@10.0": 525,
+   "ToraMargin@6.0": 173,
+   "ToraWin@18.0": 22,
+   "ToraEx1@13.5": 12,
+   "ToraEx6@11.0": 10,
+   "ToraEx6@15.0": 8,
+   "ToraEx9@11.0": 3
+  },
+  "new_fontsizes": {
+   "ToraBook@12.0": 1607,
+   "ToraBook@10.0": 406,
+   "ToraMargin@6.0": 116,
+   "ToraWin@18.0": 17,
+   "ToraEx6@13.5": 12,
+   "ToraEx2@11.0": 12,
+   "ToraEx2@15.0": 8,
+   "ToraEx9@11.0": 3
+  },
+  "old_headers": [
+   {
+    "text": "מקום",
+    "font": "ToraEx6",
+    "size": 15.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "משך",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "חקק(.)ה",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "בינה",
+    "font": "ToraEx6",
+    "size": 15.0,
+    "baseline": 62.4
+   }
+  ],
+  "new_headers": [
+   {
+    "text": "מקום",
+    "font": "ToraEx2",
+    "size": 15.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "(.משך חקק )ה",
+    "font": "ToraEx2",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "בינה",
+    "font": "ToraEx2",
+    "size": 15.0,
+    "baseline": 62.4
+   }
+  ],
+  "old_geresh_chars": 0,
+  "new_geresh_chars": 0
+ },
+ "p500": {
+  "old_fontsizes": {
+   "ToraBook@12.0": 2118,
+   "ToraBook@10.0": 356,
+   "ToraMargin@6.0": 328,
+   "ToraWin@18.0": 28,
+   "ToraEx6@11.0": 9,
+   "ToraEx6@15.0": 8,
+   "ToraEx9@11.0": 3
+  },
+  "new_fontsizes": {
+   "ToraBook@12.0": 2174,
+   "ToraBook@10.0": 348,
+   "ToraMargin@6.0": 216,
+   "ToraWin@18.0": 21,
+   "ToraEx2@11.0": 10,
+   "ToraEx2@15.0": 8,
+   "ToraEx9@11.0": 3
+  },
+  "old_headers": [
+   {
+    "text": "מקום",
+    "font": "ToraEx6",
+    "size": 15.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "ביטול",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "רשות",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "בינה",
+    "font": "ToraEx6",
+    "size": 15.0,
+    "baseline": 62.4
+   }
+  ],
+  "new_headers": [
+   {
+    "text": "מקום",
+    "font": "ToraEx2",
+    "size": 15.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "ביטול רשות",
+    "font": "ToraEx2",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "בינה",
+    "font": "ToraEx2",
+    "size": 15.0,
+    "baseline": 62.4
+   }
+  ],
+  "old_geresh_chars": 0,
+  "new_geresh_chars": 0
+ },
+ "p650": {
+  "old_fontsizes": {
+   "ToraEx8@9.0": 1454,
+   "ToraBook@12.0": 1366,
+   "ToraMargin@6.0": 248,
+   "ToraEx1@13.5": 53,
+   "ToraEx6@11.0": 48,
+   "ToraWin@18.0": 26,
+   "ToraBook@10.0": 8,
+   "ToraEx6@15.0": 8,
+   "ToraBook@8.0": 4,
+   "ToraEx9@11.0": 4
+  },
+  "new_fontsizes": {
+   "ToraBook@12.0": 1063,
+   "ToraMargin@6.0": 147,
+   "ToraEx2@11.0": 58,
+   "ToraWin@18.0": 15,
+   "ToraEx2@15.0": 8,
+   "ToraEx9@11.0": 3
+  },
+  "old_headers": [
+   {
+    "text": "מקום",
+    "font": "ToraEx6",
+    "size": 15.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "בענין",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "הזכרת",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "שבת",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "ור\"ח",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "בברהמ\"ז",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "של",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "סע\"ש",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "בשבת",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "שחל",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "להיות.בער\"ח",
+    "font": "ToraEx6",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "בינה",
+    "font": "ToraEx6",
+    "size": 15.0,
+    "baseline": 62.4
+   }
+  ],
+  "new_headers": [
+   {
+    "text": "מקום",
+    "font": "ToraEx2",
+    "size": 15.0,
+    "baseline": 62.4
+   },
+   {
+    "text": ".בענין הזכרת שבת ור\"ח בברהמ\"ז של סע\"ש בש",
+    "font": "ToraEx2",
+    "size": 11.0,
+    "baseline": 62.4
+   },
+   {
+    "text": "בינה",
+    "font": "ToraEx2",
+    "size": 15.0,
+    "baseline": 62.4
+   }
+  ],
+  "old_geresh_chars": 0,
+  "new_geresh_chars": 0
+ }
+}

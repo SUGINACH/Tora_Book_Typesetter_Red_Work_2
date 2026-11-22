@@ -1,0 +1,10 @@
+metric,scope,iteration_002,iteration_003,unit
+page_count,old=699 baseline,692,715,pages
+page_gap_to_old,0 = parity,-7,16,pages
+mean_text_jaccard_sample,same 10 old pages,0.742,0.7399,mean J
+raster_mean_sample10,same 10 old pages,16.52,16.86,% changed px
+raster_pairs_compared,full book,"[{'old_page': 51, 'new_page': 46, 'changed_px_ratio': 0.1772, 'ink_old': 0.0654, 'ink_new': 0.0614}, {'old_page': 101, 'new_page': 95, 'changed_px_ratio': 0.1876, 'ink_old': 0.0643, 'ink_new': 0.069}, {'old_page': 201, 'new_page': 192, 'changed_px_ratio': 0.165, 'ink_old': 0.0596, 'ink_new': 0.0517}, {'old_page': 301, 'new_page': 286, 'changed_px_ratio': 0.1886, 'ink_old': 0.0646, 'ink_new': 0.068}, {'old_page': 401, 'new_page': 386, 'changed_px_ratio': 0.1834, 'ink_old': 0.0624, 'ink_new': 0.0598}, {'old_page': 501, 'new_page': 487, 'changed_px_ratio': 0.2001, 'ink_old': 0.0688, 'ink_new': 0.0746}, {'old_page': 601, 'new_page': 591, 'changed_px_ratio': 0.1124, 'ink_old': 0.033, 'ink_new': 0.0439}, {'old_page': 392, 'new_page': 378, 'changed_px_ratio': 0.1766, 'ink_old': 0.0629, 'ink_new': 0.0614}, {'old_page': 215, 'new_page': 205, 'changed_px_ratio': 0.186, 'ink_old': 0.0598, 'ink_new': 0.0668}, {'old_page': 465, 'new_page': 453, 'changed_px_ratio': 0.0747, 'ink_old': 0.0264, 'ink_new': 0.0261}]",691,pairs
+missing_word_types,nikud-stripped,523,271,types
+missing_tokens,nikud-stripped,4541,718,tokens
+surplus_tokens,nikud-stripped,3869,767,tokens
+content_preserved_engine,token-multiset accounting (model level),true,true (mismatchKinds=0),

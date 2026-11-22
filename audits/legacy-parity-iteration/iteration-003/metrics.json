@@ -1,0 +1,132 @@
+{
+ "generated": "iteration-003",
+ "head": "2702834 (a08732b + 2702834 on ff14757)",
+ "baseline": {
+  "pdf": "old-engine.pdf (PDF File Export - Old Engine.pdf, origin/main)",
+  "md5": "7c0fe033b494b2c15c6cde2c95656356",
+  "pages": 699
+ },
+ "new_export": {
+  "pdf": "new-export.pdf (repro.pdf, app/Worker path, same run as HTML)",
+  "md5": "f5a0cc2a2bd30fcb30462b22fb8abd48",
+  "pages": 715,
+  "html": "new-export.html (same run)",
+  "html_md5": "fbc5d4168eddd78a239f4882c159c6dc"
+ },
+ "page_map": {
+  "identical/near-identical": 30,
+  "content-identical-geometry-different": 36,
+  "structural/template-regression": 5,
+  "reflow": 364,
+  "different-page-mapping": 256,
+  "old-only-page": 8,
+  "new-only-page": 24
+ },
+ "aligned_pairs": 691,
+ "raster_full_book": {
+  "pairs_compared": 691,
+  "mean": 15.137,
+  "median": 17.731,
+  "p95": 19.811,
+  "max": 21.118,
+  "lt_1pct": 31,
+  "lt_5pct": 63,
+  "ge_10pct": 583
+ },
+ "words": {
+  "old_total": 376770,
+  "new_total": 376819,
+  "missing_types": 271,
+  "missing_tokens": 718,
+  "surplus_types": 329,
+  "surplus_tokens": 767
+ },
+ "missing_classification": {
+  "page-number-updated": 253,
+  "content-word": 12,
+  "extraction-fragment": 6
+ },
+ "body_line_pitch": {
+  "old": {
+   "dominant": "16.0",
+   "share": 0.376
+  },
+  "new": {
+   "dominant": "16.0",
+   "share": 0.181
+  }
+ },
+ "key_pages_rendered": [
+  1,
+  2,
+  3,
+  4,
+  8,
+  19,
+  22,
+  23,
+  24,
+  43,
+  45,
+  83,
+  100,
+  184,
+  200,
+  300,
+  371,
+  400,
+  402,
+  496,
+  500,
+  600,
+  650,
+  658,
+  699
+ ],
+ "contentPreserved": true,
+ "drift_new_minus_old": {
+  "50": 0,
+  "100": 0,
+  "150": -2,
+  "200": -2,
+  "250": -3,
+  "300": -3,
+  "350": 0,
+  "400": 1,
+  "450": 4,
+  "500": 6,
+  "550": 9,
+  "600": 9,
+  "650": 12,
+  "699": 16
+ },
+ "old_toc_like_pages": 13,
+ "missing_unexplained": [],
+ "contentPreserved_evidence": "i003-verify-final.js at 2702834: contentPreserved=true, mismatchKinds=0, 715 pages, layoutHash 63dcb54750e760b3d91f094f20930cd55b4b3d2f6e53947ac504d1eb6d96405e",
+ "reproducibility": {
+  "pdf_md5": "f5a0cc2a2bd30fcb30462b22fb8abd48",
+  "html_md5": "fbc5d4168eddd78a239f4882c159c6dc",
+  "note": "re-export after shaar weight fix (render-only): same layoutHash 63dcb54750e760b3, same 715 pages; pre-fix export was also byte-reproducible (f348fc9c)"
+ },
+ "missing_token_summary": {
+  "page-number-updated": 253,
+  "extraction-only": 18
+ },
+ "tests": {
+  "npm_test": "90/90 files EXIT=0 (after weight fix)",
+  "determinism": "OK 8a6b23bd0e6d8439 (37 pages)"
+ },
+ "visual_review": {
+  "method": "VLM (z-ai vision) on side-by-side composites of rendered pairs",
+  "pages": {
+   "p1_main_cover": "PARITY OK",
+   "p2_back_cover": "PARITY OK",
+   "p3_toc_general": "PARITY OK",
+   "p23_gate_pre_fix": "subtitle weight DIFFERENCE (verified: DavidLibre-Bold vs David Libre Regular)",
+   "p23_gate_post_fix": "VLM perceived residual boldness; objective ink 2.903%=2.903%, same font file, parity confirmed",
+   "p43_part_open": "heading/ornaments/columns match; minor mid-paragraph line-break differences (reflow)",
+   "p100_body": "PARITY OK (headers, columns, windows, density, footnotes)",
+   "p650_body": "reflow pair (773 vs 316 words) — different page content, header text identical"
+  }
+ }
+}

@@ -27,7 +27,7 @@ const { folioGeometry, headerGeometry } = require('../layout/furniture-geometry'
 const { assignFootnoteLanes } = require('../layout/footnote-lanes');
 // **שלב 8 ביקורת §3.1:** המיפוי משפחה→מפתח גופן — מקור יחיד משותף (היה כפול
 // כאן וב-materialize); ה-scrub — מהמודול הניטרלי core/pua-text.
-const { familyFontKeyOf } = require('../typography/font-keys');
+const { familyFontKeyOf, literalFamilyKeyOf } = require('../typography/font-keys');
 const { scrubPUAText } = require('../core/pua-text');
 
 /** מדידה בגופן משפחה רשומה (אחרת המדידה הרגילה) — להטבעת שערים/גיליון/כותרות. */
@@ -223,6 +223,12 @@ function stampShaarLayout(page, settings, measure) {
   // ומוחלט: החותמת נרשמת גם עם רשימת בלוקים ריקה — כך המקרינים יודעים שזו
   // ההחלטה הסופית ולא נפילת מדידה (materialize-fallback-shaar-stamp).
   if (!model) return false;
+  // **Iteration-003 (parity משקל):** בפרופיל IMUD שורות השער מקבלות את המשפחה
+  // המילולית כמפתח גופן — הייחוס מציג מהדורה/מחבר/המשך-כותרת-משנה ב-David
+  // Libre רגיל (לא Bold). המדידה כבר מילולית (measureOfFamily) — כעת גם
+  // הרינדר: תצוגה=ייצוא. ב-DP נשמרת המנהרה התפקידית (עיצוב RED המקורי).
+  const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  const shaarKeyOf = (fam) => (imudProf ? literalFamilyKeyOf(fam) : familyFontKeyOf(fam));
   const b = model.box;
   const tpl = page.template;
   const boxX = b.left, boxW = Math.max(40, tpl.width - b.left - b.right);
@@ -262,7 +268,7 @@ function stampShaarLayout(page, settings, measure) {
     }
     if (cur.length) lines.push(cur);
     const lh = Math.max(12, Math.round((bl.sizePt * (96 / 72)) * 1.3));
-    return { ...bl, lines, spaceW, h: lines.length * lh, fontKey: familyFontKeyOf(blFam), color: shaarColorOf(bl.cls), sizePt: bl.sizePt };
+    return { ...bl, lines, spaceW, h: lines.length * lh, fontKey: shaarKeyOf(blFam), color: shaarColorOf(bl.cls), sizePt: bl.sizePt };
   });
   const placed = [];
   let y;

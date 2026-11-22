@@ -708,7 +708,12 @@ function renderShaarContent(page, settings, doc, metadata) {
     const el = doc.createElement('div');
     el.className = b.cls;
     el.dir = 'rtl';
-    const fam = shaarFontOf(b.cls, settings);
+    // **Iteration-003 (parity משקל):** משפחה מפורשת מהבלוק (fontFamily — בקשה
+    // מילולית, כמו המשך כותרת שער-משנה ב-David Libre) גוברת על הנגזרת
+    // מההגדרות לפי מחלקה — אותו חוזה כמו החותמת (stampShaarLayout).
+    const fam = (b.fontFamily != null && String(b.fontFamily) !== '')
+      ? String(b.fontFamily)
+      : shaarFontOf(b.cls, settings);
     if (fam) el.style.fontFamily = fontStack(fam);
     if (b.sizePt > 0) el.style.fontSize = px(b.sizePt);
     if (b.bold) el.style.fontWeight = '700';

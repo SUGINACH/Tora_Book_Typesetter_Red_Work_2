@@ -144,16 +144,19 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
 /* **03.11(ד) — תוכן מובנה של עמודי השער (פורט CSS המקור):** */
 .shaar-content{position:absolute;display:flex;flex-direction:column;justify-content:space-between;align-items:center;text-align:center;z-index:20}
 .shaar-content--sub,.shaar-content--back{justify-content:center}
-.bsd-header{font-family:'David Libre',serif;font-size:15pt;letter-spacing:5px;font-weight:700;margin-bottom:40px}
+.bsd-header{font-family:'David Libre',serif;font-size:15pt;letter-spacing:5px;margin-bottom:40px}
 .book-title-main{line-height:1.1;margin:10px 0 40px 0;font-weight:400}
 .shaar-content--sub .book-title-main,.shaar-content--back .book-title-main{margin:10px 0 15px 0}
-.book-subtitle{font-weight:700;line-height:1.25}
+/* **Iteration-003 (parity משקל):** המשקל בא מדגל ה-bold של הבלוק (מוטבע
+   inline) — לא מה-CSS; כך IMUD (רגיל בייחוס) ו-DP (מודגש) חולקים כלל
+   אחד בלי סתירת פרופילים. */
+.book-subtitle{line-height:1.25}
 .shaar-crown{width:180px;height:24px;margin:12px auto}
 .shaar-crown svg{width:100%;height:100%;display:block}
 .book-description{line-height:1.5;max-width:65%;margin:10px auto}
-.book-sections-summary{line-height:1.5;border-top:1px solid #ccc;border-bottom:1px solid #ccc;padding:6px 12px;margin:8px 0;font-weight:700}
+.book-sections-summary{line-height:1.5;border-top:1px solid #ccc;border-bottom:1px solid #ccc;padding:6px 12px;margin:8px 0}
 .author-block{line-height:1.3}
-.publication-footer{font-weight:700;letter-spacing:1px}
+.publication-footer{letter-spacing:1px}
 .back-shaar-text-line{font-size:10.5pt;line-height:1.6;max-width:90%;margin:10px auto;color:#333}
 .book-title-main--back{font-size:36pt}
 .cs-counter{display:inline-block;min-width:1.4em;margin-inline-end:6px;font-weight:700;opacity:.7;font-size:.85em}

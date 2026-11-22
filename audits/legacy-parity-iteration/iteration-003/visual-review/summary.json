@@ -1,0 +1,36 @@
+{
+ "p001": {
+  "verdict": "PARITY OK",
+  "chars": 1055
+ },
+ "p002": {
+  "verdict": "PARITY OK",
+  "chars": 1016
+ },
+ "p003": {
+  "verdict": "PARITY OK",
+  "chars": 1463
+ },
+ "p023": {
+  "verdict": "DIFFERENCES",
+  "chars": 1085
+ },
+ "p023v2": {
+  "verdict": "DIFFERENCES",
+  "chars": 1005
+ },
+ "p043": {
+  "verdict": "DIFFERENCES",
+  "chars": 2046
+ },
+ "p100": {
+  "verdict": "PARITY OK",
+  "chars": 1579
+ },
+ "p650": {
+  "verdict": "DIFFERENCES",
+  "chars": 1674
+ },
+ "note-p023v2": "post weight-fix review; VLM perceived residual boldness but objective ink measurement: 2.903% = 2.903% identical, same font file David Libre Regular, no Tr ops — parity confirmed by measurement",
+ "note-p650": "old650->new662 is a reflow pair (773 vs 316 words, sim 0.35) — VLM observations explained by different page content after drift, not a template defect; header text content identical"
+}

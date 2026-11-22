@@ -84,12 +84,16 @@ function buildShaarBlocks(page, settings, metadata) {
       B.push({ cls: 'bsd-header', text: 'בס״ד', sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 5 });
     }
     B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']), ...(imudProf ? { yTop: PT(128.1) } : {}) });
-    B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true, ...(imudProf ? { yTop: PT(225.2), followGap: 25 } : {}) });
+    // **Iteration-003 (parity משקל):** בייחוס IMUD כותרת-המשנה ב-Livorna רגיל
+    // (ToraEx6="Livorna", לא Bold) — ההדגשה נשארת לעיצוב DP בלבד.
+    B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: !imudProf, ...(imudProf ? { yTop: PT(225.2), followGap: 25 } : {}) });
     if (!imudProf) {
       B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-main' });
     }
     B.push({ cls: 'book-description', text: desc, sizePt: num(settings['shaar-desc-size-pt']), ...(imudProf ? { yTop: PT(410.3) } : {}) });
-    B.push({ cls: 'book-sections-summary', text: sections, sizePt: num(settings['shaar-sections-size-pt']), bold: true, ...(imudProf ? { yTop: PT(558.0) } : {}) });
+    // **Iteration-003 (parity משקל):** שורת פרטי-המהדורא בייחוס ב-David Libre
+    // רגיל (נמדד: ToraEx4="David Libre Regular", 11.5pt) — לא מודגש.
+    B.push({ cls: 'book-sections-summary', text: sections, sizePt: num(settings['shaar-sections-size-pt']), bold: !imudProf, ...(imudProf ? { yTop: PT(558.0) } : {}) });
     B.push({ cls: 'author-block', text: author, sizePt: num(settings['shaar-author-size-pt']), ...(imudProf ? { yTop: PT(713.5) } : {}) });
     if (!imudProf) {
       const year = settings['imud-book-year'] || meta['מקום ושנת הוצאה'] || '';
@@ -103,8 +107,10 @@ function buildShaarBlocks(page, settings, metadata) {
       const h1Size = num(settings['heading-1-size-pt']);
       B.push({ cls: 'book-title-main', text: titleMain, sizePt: h1Size, yTop: PT(345.7) });
       if (titleSub) {
-        // ההמשך ב-David Libre המכויל (כמו ההקשחה במורשת — הייחוס בגופן זה)
-        B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true, yTop: PT(469.7), followGap: 40.8, fontFamily: 'David Libre' });
+        // ההמשך ב-David Libre המכויל (כמו ההקשחה במורשת — הייחוס בגופן זה);
+        // **Iteration-003 (parity משקל):** בייחוס רגיל (ToraEx4="David Libre
+        // Regular"), לא מודגש — המפתח המילולי בחותמת מביא את הקובץ הרגיל.
+        B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: false, yTop: PT(469.7), followGap: 40.8, fontFamily: 'David Libre' });
       }
     } else {
       B.push({ cls: 'book-title-main', text: titleMain, sizePt: 36 });
@@ -127,7 +133,7 @@ function buildShaarBlocks(page, settings, metadata) {
       String(value).split('\n').map(l => l.trim()).filter(Boolean)
         .forEach(l => B.push({ cls: 'back-shaar-text-line', text: l, sizePt, ...(imudProf && yTop != null ? { yTop } : {}) }));
     };
-    if (copyright) B.push({ cls: 'back-shaar-copyright-header', text: 'כל הזכויות שמורות', sizePt: 13.5, bold: true, ...(imudProf ? { yTop: PT(191.8) } : {}) });
+    if (copyright) B.push({ cls: 'back-shaar-copyright-header', text: 'כל הזכויות שמורות', sizePt: 13.5, bold: !imudProf, ...(imudProf ? { yTop: PT(191.8) } : {}) });
     pushSection(copyright, 10, PT(216.4));
     pushSection(publisher, 11, PT(357.3));
     pushSection(contact, 10, PT(500.9));

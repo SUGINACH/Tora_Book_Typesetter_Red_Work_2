@@ -24,6 +24,18 @@ function familyFontKeyOf(fam) {
   return fam;
 }
 
+/** **Iteration-003 (parity משקל בשערים):** בקשת משפחה מילולית — המשפחה הרשומה
+ * עצמה היא המפתח, בלי המנהרות התפקידיות. למשל 'David Libre' ⇒ תת-הגופן
+ * הרגיל (DavidLibre-Regular) ולא מפתח ה-heading (DavidLibre-Bold).
+ * משמש את חותמת השערים בפרופיל IMUD: שורות המהדורה/המחבר/המשך-כותרת-
+ * המשנה מופיעות בייחוס ב-David Libre רגיל (נמדד ב-PDF הייחוס:
+ * ToraEx4 = "David Libre Regular"), בעוד כותרות ההערות/ה-TOC — שם
+ * המנהרה ל-heading נכונה — נשארות ב-familyFontKeyOf. */
+function literalFamilyKeyOf(fam) {
+  if (!fam || !registeredFonts.has(fam)) return null;
+  return fam;
+}
+
 /** **פרוסה 3 (§2.2 — זהות גופן מהמודל):** היפוך המיפוי לצורך הקרנה —
  * מפתח גופן (על שורות/מילים ב-PageModel) ⇒ שם משפחה לתצוגה. משפחה רשומה
  * היא המפתח עצמו; המפתחות הפונקציונליים ממופים למשפחה הקנונית שיצרה אותם
@@ -42,4 +54,4 @@ function familyOfFontKey(key) {
   return KEY_FAMILY[key] || key;
 }
 
-module.exports = { familyFontKeyOf, familyOfFontKey };
+module.exports = { familyFontKeyOf, literalFamilyKeyOf, familyOfFontKey };
