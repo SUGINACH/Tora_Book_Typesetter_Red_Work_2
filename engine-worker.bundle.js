@@ -1,6 +1,6 @@
 // ui/engine-worker.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת ה־Worker (המנוע המלא — אין לטעון בחוט ה־UI)
-// מודולים: 95 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 96 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -310,6 +310,7 @@ var __paths = {
   "src/engine/core/pipeline.js|../line/pipeline-bridge": "src/engine/line/pipeline-bridge.js",
   "src/engine/core/pipeline.js|../layout/dp-planner": "src/engine/layout/dp-planner.js",
   "src/engine/core/pipeline.js|../layout/page-templates": "src/engine/layout/page-templates.js",
+  "src/engine/core/pipeline.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/core/pipeline.js|../layout/footnote-budget": "src/engine/layout/footnote-budget.js",
   "src/engine/core/pipeline.js|../layout/notes-model": "src/engine/layout/notes-model.js",
   "src/engine/core/pipeline.js|../layout/plan-model": "src/engine/layout/plan-model.js",
@@ -331,6 +332,8 @@ var __paths = {
   "src/engine/core/pipeline.js|../decoration/shaar-pages": "src/engine/decoration/shaar-pages.js",
   "src/engine/core/pipeline.js|../decoration/custom-pages": "src/engine/decoration/custom-pages.js",
   "src/engine/core/pipeline.js|../decoration/toc-builder": "src/engine/decoration/toc-builder.js",
+  "src/engine/core/pipeline.js|../typography/measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/core/pipeline.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/core/pipeline.js|../layout/side-notes": "src/engine/layout/side-notes.js",
   "src/engine/core/pipeline.js|../decoration/ornament-plan": "src/engine/decoration/ornament-plan.js",
   "src/engine/core/pipeline.js|../layout/endnote-pages": "src/engine/layout/endnote-pages.js",
@@ -379,6 +382,8 @@ var __paths = {
   "src/engine/extensions/apply-styles.js|../notes/markers": "src/engine/notes/markers.js",
   "src/engine/layout/dp-planner.js|../core/h3-contract": "src/engine/core/h3-contract.js",
   "src/engine/layout/dp-planner.js|./page-templates": "src/engine/layout/page-templates.js",
+  "src/engine/layout/dp-planner.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
+  "src/engine/layout/dp-planner.js|./page-templates": "src/engine/layout/page-templates.js",
   "src/engine/layout/dp-planner.js|../core/ledger": "src/engine/core/ledger.js",
   "src/engine/layout/dp-planner.js|./protections-matrix": "src/engine/layout/protections-matrix.js",
   "src/engine/layout/dp-planner.js|./retreat-loop": "src/engine/layout/retreat-loop.js",
@@ -407,6 +412,7 @@ var __paths = {
   "src/engine/layout/ordering.js|./column-flow": "src/engine/layout/column-flow.js",
   "src/engine/layout/footnote-budget.js|./footnote-lanes": "src/engine/layout/footnote-lanes.js",
   "src/engine/layout/footnote-budget.js|./notes-model": "src/engine/layout/notes-model.js",
+  "src/engine/layout/notes-model.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/layout/plan-model.js|./column-flow": "src/engine/layout/column-flow.js",
   "src/engine/layout/plan-model.js|./constraint-matrix": "src/engine/layout/constraint-matrix.js",
   "src/engine/audit/editing-recommendations.js|../core/pipeline": "src/engine/core/pipeline.js",
@@ -449,7 +455,11 @@ var __paths = {
   "src/engine/layout/structural-stamps.js|../typography/font-keys": "src/engine/typography/font-keys.js",
   "src/engine/layout/structural-stamps.js|../core/pua-text": "src/engine/core/pua-text.js",
   "src/engine/layout/structural-stamps.js|../typography/measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/layout/structural-stamps.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
+  "src/engine/layout/structural-stamps.js|../decoration/folio": "src/engine/decoration/folio.js",
+  "src/engine/layout/structural-stamps.js|../decoration/gate-design": "src/engine/decoration/gate-design.js",
   "src/engine/typography/font-keys.js|./measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/decoration/gate-design.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/core/page-model.js|./materialize": "src/engine/core/materialize.js",
   "src/engine/core/page-model.js|../layout/notes-model": "src/engine/layout/notes-model.js",
   "src/engine/core/materialize.js|./pua-text": "src/engine/core/pua-text.js",
@@ -758,6 +768,7 @@ const { applyDropWord } = require('../typography/dropword');
 const { layoutModelBlock, flatTextOf } = require('../line/pipeline-bridge');
 const { planPages, layoutHash, bodyGeometryHash } = require('../layout/dp-planner');
 const { buildPageTemplate, PAGE_TYPES, isImudProfile } = require('../layout/page-templates');
+const { GEO, H23_TITLE_W, H2_AREA_H, H0_AREA_H, H0_TITLE_Y, SZ_CORE } = require('../core/imud-geometry');
 // **שלב 5 פרוסה 2 (§§2.3/2.5/2.7 בביקורת):** מדדי הערה חד-פעמיים (חותמת CP2),
 // חוזי ColumnModel/PagePlan + validation + immutability, ורשם ה-trace.
 const { stampNoteMetrics } = require('../layout/footnote-budget');
@@ -770,7 +781,7 @@ const { autoQualityPass, applyChapterEndMode, alignColumnBottoms } = require('..
 const { applyHeadingModes } = require('../layout/headings-escort');
 // **S5.2 (תיקון 11):** splitPlaceholder הוסר מ-markers — קוד מת מלכודתי
 // (פיצול על ':' היה מבתק שעות כמו 12:30; ה-placeholder האמיתי משתמש ב-U+E000).
-const { markerFor, makeCounter, MARK_TAG } = require('../notes/markers');
+const { markerFor, markerForSettings, makeCounter, MARK_TAG } = require('../notes/markers');
 // **מקטע ב׳:** רווח אטומי (E000) — מפריד placeholder סמן טקסט בחשבונאות שימור התוכן (D-30). במנוע השורות הקינוני ה-placeholder
 // סונזז בגשר עם אותו מפריד — התוכן זהה לביט.
 const ATOMIC = '\uE000';
@@ -959,10 +970,17 @@ function typeset(rawText, settingsIn, env = {}) {
   // (A4: תיבת ההערה [8.93,68.93] חפפה את טור הגוף ב-9.4px). כעת הרוחב
   // נתפס לשטח הפנוי בפועל בשוליים (side − 15% עוגן − 2px ביטחון).
   const snSideM = regTpl.margins && regTpl.margins.side != null ? regTpl.margins.side : (settings._outerMarginPx || 120);
-  settings._sideNoteColWidthPx = Math.max(24, Math.min(
-    Math.round(settings._outerMarginPx) - 12,
-    Math.round(snSideM * 0.85) - 2
-  ));
+  // **Iteration-003 (legacy parity):** בפרופיל IMUD טור השוליים המכויל —
+  // GEO.MARGIN_W (50.5px, margin-col של המקור). עד כאן ~101px — חרג מהשטח
+  // הזמין ודרס את שולי העמוד (נמדד: אזור 76pt מול 37pt בייחוס).
+  if (settings['_layout-profile'] === 'imud' || settings._imudRaw) {
+    settings._sideNoteColWidthPx = Math.round(GEO.MARGIN_W);
+  } else {
+    settings._sideNoteColWidthPx = Math.max(24, Math.min(
+      Math.round(settings._outerMarginPx) - 12,
+      Math.round(snSideM * 0.85) - 2
+    ));
+  }
   // **S5.2 (P-3/P-4):** רוחב **טור בודד** בעמודי ההערות — מתבנית PT-07 עצמה
   // (עמוד דו-טורי; 269.96px בברירת המחדל). הצרכן (endnote-pages) קורא אותו
   // ישירות כרוחב טור כשendnote-columns=2; במצב טור-אחד הוא משתמש ברוחב
@@ -1015,9 +1033,16 @@ function typeset(rawText, settingsIn, env = {}) {
       const hSize = settings[`heading-${t.level}-size-pt`];
       const hFont = settings[`heading-${t.level}-font`];
       const hMode = settings[`heading-${t.level}-mode`];
-      const wLimit = (t.level <= 1 || hMode === 'full-width')
-        ? fullWidthWidth(settings)
-        : columnWidthFor({ kind: 'heading', level: t.level }, settings);
+      // **Iteration-003 (legacy parity — H2 בעמוד פתיחת סימן):** כותרת ה-H2
+      // נמדדת ברוחב תיבת הכותרת של המקור (H23_TITLE_W — 60% מרוחב הפס;
+      // wrapText במורשת §1350) ומוצגת כפס ממורכז — לא ברוחב טור/עמוד.
+      const h2TitleW = (settings['_layout-profile'] === 'imud' || settings._imudRaw) && t.level === 2
+        ? H23_TITLE_W
+        : null;
+      const wLimit = h2TitleW != null ? h2TitleW
+        : (t.level <= 1 || hMode === 'full-width')
+          ? fullWidthWidth(settings)
+          : columnWidthFor({ kind: 'heading', level: t.level }, settings);
       // **שלב 4 מקטע ב׳:** שבירה קנונית — פריטי המודל → מדידה יחידה → LineModel →
       // תצוגה נגזרת. הסגנון: גוף/גודל/משפחה לפי רמת הכותרת (הוראה §7) בגופן
       // הרמה שלה — כמו שהמוצר מציג ומודד את שורת הכותרת כולה (S4.26).
@@ -1153,7 +1178,7 @@ function typeset(rawText, settingsIn, env = {}) {
     // נתיב זה דורש מרזב פעיל; בלי מרזב — הסגנון חוזר להיות חזותי בלבד (BRZ-15: לא מאבדים תוכן).
     if (csBlock && csBlock.style.layoutMode === 'footnote' && notesMode === 'footnotes' && settings['footnotes-enabled']) {
       const mark = counters.nextMark(csBlock.style, { part: currentPart || 1, page: null });
-      const fnMark = mark || markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
+      const fnMark = mark || markerForSettings(nextMarkerNum({ page: null, part: currentPart || 1 }), settings);
       const fnNotes = [{ text: flatBody, marker: fnMark, tokenId: t.id, part: currentPart || 1, customStyle: csBlock.style.id }];
       const fnBodyMarkers = [fnMark];
       // הסמן בגוף מתויג (D-53) — תיבת סמן של מנוע השורות הקנוני (מקטע ב׳)
@@ -1209,7 +1234,7 @@ function typeset(rawText, settingsIn, env = {}) {
     for (const p of t.parts) {
       if (p.kind !== 'note-ref') continue;
       const noteRaw = t.notes[p.noteIndex];
-      const marker = markerFor(nextMarkerNum({ page: null, part: currentPart || 1 }), markerStyle);
+      const marker = markerForSettings(nextMarkerNum({ page: null, part: currentPart || 1 }), settings);
       noteAssignments.push({ noteIndex: p.noteIndex, marker });
       const mItem = markerItems[markerItemIdx++];
       if (mItem && mItem.payload && mItem.payload.noteRef) {
@@ -1338,7 +1363,8 @@ function typeset(rawText, settingsIn, env = {}) {
   if (resetPolicy === 'page' && notesMode === 'footnotes') {
     const customMarks = new Set(customFootnoteMarkers.values());
     const { renumbered, skipped } = require('../notes/markers').renumberPageScopedMarkers(pages, {
-      markerStyle, markersByToken, customMarks, blocks, eventLog,
+      markerStyle, markerSeparator: settings['note-num-separator'] != null ? settings['note-num-separator']
+        : (settings._imudRaw && settings._imudRaw['note-num-separator'] != null ? settings._imudRaw['note-num-separator'] : '.'), markersByToken, customMarks, blocks, eventLog,
     });
     if (renumbered > 0) {
       eventLog.emit('notes', 'fn-reset-page-applied', { renumbered, skipped: skipped || null });
@@ -1422,6 +1448,11 @@ function typeset(rawText, settingsIn, env = {}) {
         const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
         if (tok != null && !firstPageByToken.has(tok)) firstPageByToken.set(tok, pg);
       }
+      // **Iteration-003:** h1 שנצרך לשער-משנה — עמוד השער הוא מקום הופעתו
+      // (בלי זה שורות ה-TOC של החלקים נעלמו אחרי צריכת הכותרת).
+      for (const tok of (pg._consumedH1Tokens || [])) {
+        if (!firstPageByToken.has(tok)) firstPageByToken.set(tok, pg);
+      }
     }
     const headingsAll = [];
     for (const b of blocks) {
@@ -1438,20 +1469,38 @@ function typeset(rawText, settingsIn, env = {}) {
 
     const measureToc = (t, sz) => api.measureTextWidth(t, sz);
     const lineHToc = (sz) => api.lineHeightPx(sz);
+    // **Iteration-003 (מדידה=רינדור):** מודד לפי משפחה רשומה — שורות ה-TOC
+    // נמדדות בגופן הרמה (כמו rApi במורשת); נפילה שקופה למדידת הגוף.
+    const { MeasureAPI: MeasureAPIToc } = require('../typography/measure-api');
+    const { registeredFonts: registeredFontsToc } = require('../typography/measure-api');
+    const famMeasureCache = new Map();
+    const measureOfFamilyToc = (fam) => {
+      if (!fam || !registeredFontsToc.has(fam)) return null;
+      if (!famMeasureCache.has(fam)) {
+        famMeasureCache.set(fam, (t, sz) => new MeasureAPIToc({ ...settings, 'body-font': fam }, 'font-metrics').measureTextWidth(t, sz));
+      }
+      return famMeasureCache.get(fam);
+    };
     // **D-107 (9b.2):** תוכן כללי — רמות 1–6; תוכן מפורט — רמות 2–6; רמה 7 מוסתרת
     // בשניהם; שניהם פעילים בברירת המחדל. הסינון הקודם (כללי ≤2, מפורט = הכול)
     // סתר את החלטת המשתמש — במקומו טווח מפורש לכל תוכן; דגלי toc-level-N-show
     // נותרים הסינון העדין מעל הטווח (ברירת המחדל הנגזרת מהייבוא: [1..6]/[2..6]).
+    // **Iteration-003 (legacy parity):** כותרות התוכן כמו במקור; מספור סידורי
+    // לשורות — כבוי (המקור מציג תווית גימטריה בלבד; המפתחות הכלליים
+    // general/detailed-toc-count-numbering פירושם מניית עמודי התוכן בפוליו —
+    // לא מספרי שורות. נצרך ב-legacy-settings-map ל-count-toc-pages).
     if (settings['toc-general-enabled'] !== false) {
       const model = buildTocModel(headingsAll.filter(h => h.level >= 1 && h.level <= 6), settings);
-      numberRows(model.rows, settings['general-toc-count-numbering'] !== false);
-      const built = buildTocPages(model, 'toc-general', 'תוכן העניינים', settings, measureToc, lineHToc, { ledger, eventLog });
+      const imudTocProf = !!(settings['_layout-profile'] === 'imud' || settings._imudRaw);
+      numberRows(model.rows, imudTocProf ? (settings['toc-count-row-numbers'] === true) : (settings['general-toc-count-numbering'] !== false));
+      const built = buildTocPages(model, 'toc-general', imudTocProf ? 'תוכן עניינים כללי' : 'תוכן העניינים', settings, measureToc, lineHToc, { ledger, eventLog, measureOfFamily: measureOfFamilyToc });
       tocPagesAll = tocPagesAll.concat(built.pages);
     }
     if (settings['toc-detail-enabled'] !== false) {
       const model = buildTocModel(headingsAll.filter(h => h.level >= 2 && h.level <= 6), settings);
-      numberRows(model.rows, settings['detailed-toc-count-numbering'] !== false);
-      const built = buildTocPages(model, 'toc-detail', 'תוכן העניינים המפורט', settings, measureToc, lineHToc, { ledger, eventLog });
+      const imudTocProf2 = !!(settings['_layout-profile'] === 'imud' || settings._imudRaw);
+      numberRows(model.rows, imudTocProf2 ? (settings['toc-count-row-numbers'] === true) : (settings['detailed-toc-count-numbering'] !== false));
+      const built = buildTocPages(model, 'toc-detail', imudTocProf2 ? 'תוכן עניינים מפורט' : 'תוכן העניינים המפורט', settings, measureToc, lineHToc, { ledger, eventLog, measureOfFamily: measureOfFamilyToc });
       tocPagesAll = tocPagesAll.concat(built.pages);
     }
     if (tocPagesAll.length) {
@@ -1574,25 +1623,44 @@ function typeset(rawText, settingsIn, env = {}) {
   }
 
   // ---- headers ----
-  // **S4.5:** שם הספר — גם המזהה הארוך של המקור (שם הספר) וגם הקצר (ספר) ו-title;
-  // וכיסוי הגדרת-על של השער (imud-book-title) גוברת על כולם (החלטה מפורשת של המשתמש).
-  const bookName = settings['imud-book-title'] || metadata['שם הספר'] || metadata['ספר'] || metadata['title'] || '';
+  // **S4.5 / Iteration-003 (legacy parity — מקור השם):** המורשת (legacy-imud-flow
+  // §1042) גוזרת את שם הספר לכותרת מ**המטא-דאטה של המסמך** (meta.bookTitle) —
+  // לא מהגדרת השער. הגדרת imud-book-title היא שדה טופס בתוכנה המקורית שברירת
+  // המחדל שלו (default_settings.json) היא שם מקום ("ספר מלכי המלוכה"); כשלמסמך
+  // יש מטא-דאטה אמיתי — המקור מציג אותו. עדכני כאן: מטא קודם, הגדרה כגיבוי.
+  const bookName = metadata['שם הספר'] || metadata['ספר'] || metadata['title'] || settings['imud-book-title'] || '';
   const { trimEdgePunctuation } = require('../decoration/headers-builder');
   // **FWD-1:** הפס חוצה־טורים נסרק גם הוא — כותרת H2 חיה שם עכשיו (S8)
   const pageLines = (pg) => [
     ...(pg.spanning ? pg.spanning.lines : []),
     ...pg.columns.flatMap(c => c)
   ];
+  // **Iteration-003 (legacy parity — הקשר רץ):** המורשת מנהלת currentH1/currentH2
+  // לאורך הספר (setHeader בזמן יצירת העמוד) — המרכז מציג את הפרק/ההקדמה
+  // הנוכחיים גם בעמודים בלי כותרת על העמוד עצמו. כאן: סריקה אחת בסדר העמודים;
+  // h0/h2 מעדכנים את currentH2 (כמו המורשת — h3 אינו משנה את המרכז), h1 מעדכן
+  // את currentH1 בלבד. עמודי TOC — מרכזם כותרת התוכן (S77 במורשת).
+  const stripSimanPrefix = (t) => String(t || '').replace(/^סימן\s+[א-ת]+[:\-–—\s]*/i, '').trim();
+  let runningH1 = '', runningH2 = '';
   pages.forEach((pg, i) => {
     let h1 = '', h2 = '';
     pg._metadata = metadata; // S8: תיבות שער ראשי קוראות שם ספר/נושא (REQ-ORN-05)
-    for (const ln of pageLines(pg)) {
-      if (ln.kind === 'heading') { if (ln.level <= 1) h1 = ln.words.join(' '); else if (ln.level === 2) h2 = ln.words.join(' '); }
+    if (pg.type === 'toc-general' || pg.type === 'toc-detail') {
+      // **S77 (כמו המורשת):** עמוד תוכן-עניינים — מרכזו הענייני = כותרת התוכן
+      h2 = (pg.toc && (pg.toc.headerTitle || pg.toc.title)) || 'תוכן העניינים';
+      pg.headerCtx = { bookName, h1: '', h2 };
+    } else {
+      for (const ln of pageLines(pg)) {
+        if (ln.kind !== 'heading') continue;
+        if (ln.level <= 1) { runningH1 = ln.words.join(' '); }
+        else if (ln.level === 0 || ln.level === 2) { runningH2 = stripSimanPrefix(ln.words.join(' ')); }
+      }
+      h1 = runningH1; h2 = runningH2;
+      pg.headerCtx = { bookName, h1, h2 };
     }
     const firstCol = pg.columns[0] && pg.columns[0][0];
     const lastCol = pg.columns[pg.columns.length - 1];
     const lastLine = lastCol && lastCol[lastCol.length - 1];
-    pg.headerCtx = { bookName, h1, h2 };
     // **S9 (פורט IMUD fillHeaderFirstLastWords):** מילה ראשונה/אחרונה — בלי פיסוק קצה
     // (הכותרת עצמה לא נחשבת כתוכן העמוד לעניין זה; מילים מנוקות מסימני פיסוק בקצוות).
     const bodyLines = pageLines(pg).filter(ln => ln.kind !== 'heading');
@@ -1668,7 +1736,19 @@ function typeset(rawText, settingsIn, env = {}) {
   }
 
   function srcWordsOf(t) {
-    if (t.type === 'heading' || t.type === 'side-note') return wordSeq(t.text);
+    if (t.type === 'heading' || t.type === 'side-note') {
+      // **Iteration-003 (legacy parity — סימטריית ההשוואה):** ה-h1 נצרך לשער-המשנה
+      // ומפוצל במקף (splitPartTitle: main + ' - ' + rest) — אותה טרנספורמציה
+      // בצד המקור (כמו F11 במורשת §3561) כדי שהשוואת הרב-קבוצה תהיה הוגנת.
+      // **היקף (Iteration-003):** טרנספורמציית הפיצול רלוונטית רק כשה-h1 נצרך
+      // לשער (פרופיל IMUD); ב-DP הכותרת זורמת כמות שהיא ושני הצדדים זהים.
+      const imudSrc = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+      if (imudSrc && t.type === 'heading' && Number(t.level) === 1) {
+        const parts = String(t.text || '').split(/[-–—]/).map(x => x.trim()).filter(Boolean);
+        if (parts.length >= 2) return wordSeq(parts[0] + ' ' + parts.slice(1).join(' - '));
+      }
+      return wordSeq(t.text);
+    }
     if (t.type === 'endnote-class') return []; // directive (D-40) — לא תוכן
     if (t.type === 'editorial') return [];
     if (t.type === 'endnote') {
@@ -1716,6 +1796,15 @@ function typeset(rawText, settingsIn, env = {}) {
           if (w.includes(ATOMIC)) out.push(...explodePlaceholderWord(w));
           else out.push(...wordSeq(w));
         }
+      }
+      // **Iteration-003 (legacy parity):** תוכן שער-המשנה — ה-h1 נצרך לשער
+      // (חוזה sub_shaar) ונרנדר מהחותמת (shaarLayout; בשלב הבדיקה היא עוד
+      // לא הוטבעה — המקור הוא shaarInfo.title, אותה טרנספורמציית פיצול
+      // כמו בצד המקור). שער ראשי/אחורי — תוכן מטא (לא טוקני מקור) ואינו
+      // נספר, כמו תוכן-העניינים והגיליון (העתקות/מספור של המנוע).
+      if (pg.type === 'shaar-sub' && Array.isArray(pg._consumedH1Tokens) && pg._consumedH1Tokens.length && pg.shaarInfo && pg.shaarInfo.title) {
+        const parts = String(pg.shaarInfo.title).split(/[-–—]/).map(x => x.trim()).filter(Boolean);
+        out.push(...wordSeq(parts.length >= 2 ? parts[0] + ' ' + parts.slice(1).join(' - ') : String(pg.shaarInfo.title)));
       }
     }
     // 2) מרזב footnotes — טקסט בלבד (הסמן נספר פעם אחת בגוף — D-30)
@@ -1870,6 +1959,12 @@ function typeset(rawText, settingsIn, env = {}) {
   if (!contentPreserved) {
     const rec = ledger.create('text-completeness', 'document', null, { hashIn, mismatches: mismatchDetail }, 'render');
     ledger.transition(rec.issue_id, 'persists', 'render', 'word-multiset mismatch \u2014 token loss/duplication detected');
+    // **Iteration-003 (אבחון):** פירוט הפער גם ביומן האירועים — ה-ledger מציג
+    // את הרשומה אך לא את ה-diff; בלי זה אין דרך לראות מה חסר/עודף בלי דיבאגר.
+    eventLog.emit('render', 'content-preservation-failed', {
+      mismatches: mismatchDetail.slice(0, 6),
+      total: mismatchDetail.length
+    });
   }
 
   // **P1-2: \u05d0\u05db\u05dc\u05d5\u05e1 parenRanges \u05de\u05de\u05e4\u05ea \u05d4\u05d4\u05d9\u05e7\u05e3** \u2014 \u05d4\u05d2\u05e0\u05ea paren-cross-boundary \u05d7\u05d9\u05d4
@@ -2119,6 +2214,7 @@ const registry = [
   // הזה ואילך; הערך האפקטיבי = סוד − start‑idx + initial‑value (נוסחת V1 formatPageNumberDisplay).
   K('page-num-start-idx', 'number', 1, P.GRID, 'inp-page-num-start-idx', ['decoration/folio'], 'fx:folio-start-idx', { min: 1, max: 999, note: 'שוחזר מ‑V1 (REQ-HDR-03): סוד העמוד הנספר שממנו מתחיל התצוגה' }),
   K('count-shaar-pages', 'bool', false, P.GRID, 'chk-count-shaar', ['decoration/folio'], 'fx:count-shaar'),
+  K('count-shaar-sub-pages', 'bool', false, P.GRID, 'chk-count-shaar-sub', ['decoration/folio'], 'fx:count-shaar-sub', { note: 'Iteration-003: המקור מונה שערי-משנה בפוליו אך לא את השערים הראשי/אחורי (sub-shaar-count-numbering=true, main/back=false) — בקרה פר-סוג' }),
   K('count-toc-pages', 'bool', false, P.GRID, 'chk-count-toc', ['decoration/folio'], 'fx:count-toc'),
   K('count-endnote-pages', 'bool', false, P.GRID, 'chk-count-endnotes', ['decoration/folio', 'core/pipeline'], 'fx:count-endnotes', { note: 'S7.1.1: אם true — עמודי הערות נספרים במספור ומקבלים גיליון' }),
 
@@ -2201,7 +2297,7 @@ const registry = [
   // ---- הערות (NOTES) ----
   K('note-placement-mode', 'enum', 'footnotes', P.NOTES, 'sel-note-mode', ['core/pipeline', 'layout/dp-planner', 'layout/endnote-pages'], 'fx:note-mode', { enum: ['footnotes', 'endnotes', 'inline'] }),
   K('footnotes-enabled', 'bool', true, P.NOTES, 'chk-fn-enabled', ['layout/footnote-budget', 'core/pipeline'], 'fx:fn-on', { note: 'D-39: קלט משתמש מפורש גובר על נגזרות; mode=footnotes + false ⇒ ההערות בגוף כplaceholder' }),
-  K('footnote-marker-style', 'enum', 'hebrew-geresh', P.NOTES, 'sel-fn-marker', ['notes/markers'], 'fx:fn-marker', { enum: ['hebrew-geresh', 'parenthesis', 'asterisk', 'decimal'] }),
+  K('footnote-marker-style', 'enum', 'hebrew-geresh', P.NOTES, 'sel-fn-marker', ['notes/markers'], 'fx:fn-marker', { enum: ['hebrew', 'hebrew-geresh', 'parenthesis', 'asterisk', 'decimal'], note: "Iteration-003: 'hebrew' = גימטריה+מפריד (כמו המקור — markerWord); 'hebrew-geresh' = מוסכמת הגיליון (בחירה מפורשת)" }),
   K('footnote-reset-policy', 'enum', 'section', P.NOTES, 'sel-fn-reset', ['notes/markers'], 'fx:fn-reset', { enum: ['continuous', 'page', 'section', 'part'], note: 'S4.26 (דיווח משתמש 05.11): ברירת המחדל איפוס פר-פרק (section/siman) — לא פר-עמוד' }),
   K('footnote-columns', 'number', 1, P.NOTES, 'sel-fn-cols', ['layout/footnote-budget'], 'fx:fn-cols', { enum: [1, 2] }),
   K('footnote-separator-rule', 'enum', 'regular', P.NOTES, 'sel-fn-rule', ['output/dom-renderer'], 'fx:fn-rule', { enum: ['none', 'regular', 'circles', 'sparkle', 'star', 'diamond'] }),
@@ -2273,6 +2369,7 @@ const registry = [
   K('general-toc-count-numbering', 'bool', true, P.TOC, 'chk-toc-count', ['decoration/toc-builder'], 'fx:toc-count', { note: 'שוחזר מ‑V1/V2 (REQ-HDR-03/HDR-05)' }),
   K('detailed-toc-count-numbering', 'bool', true, P.TOC, 'chk-dtoc-count', ['decoration/toc-builder'], 'fx:dtoc-count', { note: 'S9: מספור שורות בתוכן־עניינים המפורט (Orange eb21383 — הושלם)' }),
   K('general-toc-show-numbering', 'bool', true, P.TOC, 'chk-gtoc-show', ['decoration/toc-builder'], 'fx:gtoc-show', { note: 'S9: עמודי תוכן־עניינים כלליים מציגים גיליון כשהם נספרים (count-toc-pages=true)' }),
+  K('toc-count-row-numbers', 'bool', false, P.TOC, 'chk-toc-row-nums', ['decoration/toc-builder'], 'fx:toc-row-nums', { note: 'Iteration-003: מספור סידורי לשורות התוכן — כבוי כמו המקור (המקור מציג תווית גימטריה בלבד; count-numbering של המקור = מניית עמודים)' }),
   K('detailed-toc-show-numbering', 'bool', true, P.TOC, 'chk-dtoc-show', ['decoration/toc-builder'], 'fx:dtoc-show', { note: 'S9: עמודי תוכן־עניינים מפורטים מציגים גיליון כשהם נספרים' }),
   ...[1, 2, 3, 4, 5, 6, 7].flatMap(lvl => [
     K(`toc-level-${lvl}-show`, 'bool', lvl <= 6, P.TOC, `chk-toc-l${lvl}`, ['decoration/toc-builder'], `fx:toc-l${lvl}`),
@@ -8774,8 +8871,29 @@ function hebrewMarkFinish(letters) {
   return letters.slice(0, -1) + '\u05F4' + letters.slice(-1);   // כ״ג — גרשיים לפני האחרונה
 }
 
-/** סמן בודד לפי סגנון הרישום (footnote-marker-style). */
-function markerFor(index1Based, style) {
+/** גימטריה בלבד (בלי סיומת) — על בסיס אותיות 22; מעל 999 — חלק אלפים בגרש
+ *  (כמו toGematria של המורשת — הגבול המפורש של D-108 לשדות שאינם פוליו). */
+function hebrewBare(index1Based) {
+  let i = index1Based - 1, s = '';
+  if (i < 0) return 'א';
+  do { s = HEB_LETTERS[i % 22] + s; i = Math.floor(i / 22) - 1; } while (i >= 0);
+  if (index1Based >= 1000) {
+    const th = Math.floor(index1Based / 1000);
+    let j = th - 1, ts = '';
+    do { ts = HEB_LETTERS[j % 22] + ts; j = Math.floor(j / 22) - 1; } while (j >= 0);
+    s = ts + '\u05F3' + hebrewBare(index1Based % 1000 || 1);
+  }
+  return s;
+}
+
+/** סמן בודד לפי סגנון הרישום (footnote-marker-style).
+ *  **Iteration-003 (legacy parity):** סגנון 'hebrew' — גימטריה + מפריד הרישום
+ *  (note-num-separator, ברירת מחדל '.') — בדיוק כמו markerWord של המורשת
+ *  (toGematria(n) + sep). הגרש מהמוסכמת של הגיליון (S5.2 תיקון 10) אינו
+ *  חל על סמני הערות — גבול D-108 עצמו ("אין להסיק מכלל זה דבר על ... גרש
+ *  בהערות"); 'hebrew-geresh' נשמר כבחירה מפורשת בלבד. */
+function markerFor(index1Based, style, opts) {
+  const separator = opts && opts.separator != null ? String(opts.separator) : '.';
   switch (style) {
     case 'decimal': return String(index1Based);
     case 'parenthesis': return `(${index1Based})`;
@@ -8783,6 +8901,8 @@ function markerFor(index1Based, style) {
       const n = ((index1Based - 1) % 3) + 1; // *,**,*** ואז חוזר — policy מקובלת
       return '*'.repeat(n) + (index1Based > 3 ? String(Math.ceil(index1Based / 3)) : '');
     }
+    case 'hebrew':
+      return hebrewBare(index1Based) + separator;
     case 'hebrew-geresh':
     default: {
       let i = index1Based - 1, s = '';
@@ -8848,7 +8968,7 @@ function makeCounter(policy, start = 0) {
  * @returns {{renumbered:number, skipped:string|null}} — כמה סמנים הוחלפו; אם דילוג — סיבתו.
  */
 function renumberPageScopedMarkers(pages, opts) {
-  const { markerStyle, markersByToken, customMarks, blocks, eventLog } = opts || {};
+  const { markerStyle, markerSeparator, markersByToken, customMarks, blocks, eventLog } = opts || {};
   const tokenMark = new Map(); // tokenId → סמן חדש (מופע ראשון)
 
   // שלב א (תכנון בלבד — בלי מוטציה): מספור פר-עמוד לפי סדר הופעה ראשון
@@ -8859,7 +8979,7 @@ function renumberPageScopedMarkers(pages, opts) {
       if (!n || n.tokenId == null) continue;
       if (!tokenMark.has(n.tokenId)) {
         seq += 1;
-        tokenMark.set(n.tokenId, markerFor(seq, markerStyle));
+        tokenMark.set(n.tokenId, markerFor(seq, markerStyle, { separator: markerSeparator != null ? markerSeparator : '.' }));
       }
       if (n.marker !== tokenMark.get(n.tokenId)) anyChange = true;
     }
@@ -8958,7 +9078,17 @@ function markerFragmentOf(word) {
   return frag || null;
 }
 
-module.exports = { markerFor, makeCounter, hebrewMarkFinish, HEB_LETTERS, renumberPageScopedMarkers, markerFragmentOf, MARK_TAG: '\uE102' };
+/** **Iteration-003:** סמן לפי ההגדרות המלאות — סגנון + מפריד (note-num-separator
+ *  מה-raw של IMUD כשקיים; ברירת מחדל '.') — מקור אחד לכל הצרכנים עם settings. */
+function markerForSettings(index1Based, settings) {
+  const s = settings || {};
+  const style = s['footnote-marker-style'];
+  const sep = s['note-num-separator'] != null ? s['note-num-separator']
+    : (s._imudRaw && s._imudRaw['note-num-separator'] != null ? s._imudRaw['note-num-separator'] : '.');
+  return markerFor(index1Based, style, { separator: sep });
+}
+
+module.exports = { markerFor, markerForSettings, makeCounter, hebrewMarkFinish, hebrewBare, HEB_LETTERS, renumberPageScopedMarkers, markerFragmentOf, MARK_TAG: '\uE102' };
 
 };
 __modules["src/engine/extensions/apply-styles.js"] = function (require, module, exports) {
@@ -9119,6 +9249,8 @@ const crypto = require('crypto');
 // אותו חוזה כמו המנוע המורשת (legacy-imud-flow) ומדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, H3_FOLLOW_MIN_PX, h3BandHeightPx, h3BandRoomThresholdPx } = require('../core/h3-contract');
 const { PAGE_TYPES, buildPageTemplate } = require('./page-templates');
+const { H0_TITLE_Y } = require('../core/imud-geometry');
+const { isImudProfile: isImud } = require('./page-templates');
 const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
 const { runRetreatLoop } = require('./retreat-loop');
@@ -9817,6 +9949,25 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       cur.template = buildPageTemplate(PAGE_TYPES.PREFACE, settings, cur.isRecto !== false);
       reAlignColumns(cur);
       eventLog.emit('page-plan', 'part-opening', { token: blk.tokenId, level: blk.level }, cur.index);
+      // **Iteration-003 (legacy parity — כותרת ההקדמה):** ה-h0 נצרך לפס
+      // ממורכז בעוגן המכויל (H0_TITLE_Y=309) בתוך השטח השמור של התבנית
+      // (H0_AREA_H) — כמו bands.push(kind:'h0-title') במורשת §1326. הזרימה
+      // מתחילה מתחת לאזור; עד כאן הכותרת זרמה כשורה ראשונה בראש העמוד.
+      if (blk.level === 0 && isImud(settings) && cur.template.columns.length >= 1) {
+        const startY = H0_TITLE_Y;
+        let yy = startY;
+        cur.spanning = {
+          lines: blk.lines.map((ln) => {
+            const rec = { ...ln, yPx: yy, meta: { tokenId: blk.tokenId, firstOfBlock: true, docPart: blk.part }, seq: seqCounter++ };
+            yy += ln.heightPx || 0;
+            return rec;
+          }),
+          heightPx: 0, // free band — חי בשטח השמור; אינו מקצץ את קיבולת הטורים
+          freeBand: true, bandTopPx: startY, titleTopPadPx: 0, orn: null
+        };
+        eventLog.emit('page-plan', 'h0-title-band', { token: blk.tokenId, y: startY }, cur.index);
+        continue; // הכותרת הוצבה בפס; הפסקאות ימלאו מתחת לאזור השמור
+      }
     }
 
     // REQ-FN-05/06: heading mode=side-note → הערת שוליים בטור מקביל (H7 doctrine)
@@ -9977,6 +10128,26 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       }
       cur.chapterOpening = true;
       eventLog.emit('page-plan', 'h2-new-page', { token: blk.tokenId }, cur.index);
+      // **Iteration-003 (legacy parity — חוזה פתיחת הסימן):** בפרופיל IMUD
+      // כותרת ה-H2 היא פס ממורכז בעוגן המכויל (344.05px — bands של המורשת
+      // §1351) בתוך אזור ה-h2 השמור של התבנית — לא שורה בטור. הפס חופשי
+      // (freeBand): הוא חי בשטח השמור ואינו מקצץ קיבולת. הסימן נחתם
+      // בהטבעה (structural-stamps — h2-siman).
+      if (isImud(settings) && cur.template.columns.length >= 2) {
+        const startY = 344.05;
+        let yy = startY;
+        cur.spanning = {
+          lines: blk.lines.map((ln) => {
+            const rec = { ...ln, yPx: yy, meta: { tokenId: blk.tokenId, firstOfBlock: true, docPart: blk.part }, seq: seqCounter++ };
+            yy += ln.heightPx || 0;
+            return rec;
+          }),
+          heightPx: 0, // free band — חי בשטח השמור; אינו מקצץ את קיבולת הטורים
+          freeBand: true, bandTopPx: startY, titleTopPadPx: 0, orn: null
+        };
+        eventLog.emit('page-plan', 'h2-spanning', { token: blk.tokenId, heightPx: 0, freeBand: true, y: startY }, cur.index);
+        continue; // הכותרת הוצבה בפס; הבלוקים הבאים ימלאו את הטורים מתחת לאזור
+      }
       // **FWD-1:** H2 שנמדדה ברוחב מלא (mode=full-width, ברירת המחדל) ⇒ פס
       // חוצה־טורים — לא טור חצי־רוחב. הטורים נמדדים מתחת לפס (colCapacity מותאם).
       if (blk.fullWidth && cur.template.columns.length >= 2) {
@@ -10499,7 +10670,7 @@ const PAGE_SIZES = {
 // מול מרזב 13.48px במקור; שוליים של 7.5% מול 120.72px (15.2%) במקור.
 // לא ערכי קסם: המקור הוא החוזה המשותף ששני המנועים צורכים.
 const {
-  GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
+  GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, H2_AREA_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
 } = require('../core/imud-geometry');
 const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
 
@@ -10521,9 +10692,13 @@ function buildImudPageTemplate(type, settings, isRecto) {
     : [ { x: GEO.COL_L_X, w: SINGLE_W } ]; // טור רחב — 2×269.41+13.48 (grid)
   const gutter = GEO.COL_R_X - (GEO.COL_L_X + GEO.COL_W); // 13.48
   // תחתית הזרימה קבועה מהחוזה; הפוליו מתחתיה (baseline 1054.5 — מקטע 3)
+  // **Iteration-003 (legacy parity — שטח הכותרות המכויל):** עמוד פתיחת-סימן
+  // שומר את אזור ה-h2 המלא (H2_AREA_H — flowSection של המורשת: הסימן והכותרת
+  // חיים בתוכו, הטורים מתחילים מתחתיו); עמוד הקדמה שומר את אזור ה-h0.
+  // עד כאן 180px בלבד — הגוף עלה גבוה מדי והכותרת נדחקה לטור.
   const textTop = type === PAGE_TYPES.SIGN_OPEN
-    ? GEO.FLOW_TOP + 180 // h2-spacer (GEO.H2_SPACER) לפני סימן+כותרת — כמו flowSection של המורשת
-    : GEO.FLOW_TOP;
+    ? GEO.FLOW_TOP + H2_AREA_H
+    : (type === PAGE_TYPES.PREFACE ? GEO.FLOW_TOP + H0_AREA_H : GEO.FLOW_TOP);
   return {
     type, isRecto, imud: true,
     width: GEO.PAGE_W, height: GEO.PAGE_H,
@@ -10532,7 +10707,7 @@ function buildImudPageTemplate(type, settings, isRecto) {
     headerHeight: GEO.HEADER_BASELINE,   // פס הכותרת: גליפים 42.56–57.56pt (גאומטריית הפס; התוכן — מקטע 3)
     headerTop: GEO.FLOW_TOP - RUNNING_HEAD_TOP_INSET_PX,
     folioHeight: GEO.PAGE_H - GEO.FOLIO_BASELINE,
-    h2TopOffset: type === PAGE_TYPES.SIGN_OPEN ? 180 : 0,
+    h2TopOffset: type === PAGE_TYPES.SIGN_OPEN ? H2_AREA_H : (type === PAGE_TYPES.PREFACE ? H0_AREA_H : 0),
     contentBox: { top: textTop, bottom: FLOW_BOTTOM, height: FLOW_BOTTOM - textTop },
     numbered: true,
     counts: true,
@@ -12597,6 +12772,7 @@ __modules["src/engine/layout/notes-model.js"] = function (require, module, expor
  * הפקטור מתקן את טבלת impl A בלבד; ב-impl B (font-metrics — ייצוא PDF)
  * המטריקות מדויקות והכפלה מנפחת (S70/R7-M4) — measureContextFor מכבה אותו שם.
  */
+const { SZ_CORE } = require('../core/imud-geometry');
 const NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
 const SIDE_NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
 
@@ -12645,7 +12821,12 @@ function measureContextFor(kind, settings, opts = {}, measure = null) {
   }
   if (kind === NOTE_KINDS.SIDE_NOTE || kind === NOTE_KINDS.INFO_BOX) {
     // היסטורי (estimateSideNoteHeight): 0.75× הגוף, פיץ' 1.15 — כמו .side-note.
-    const sizePt = Number(opts.sizePt) > 0 ? Number(opts.sizePt) : bodyPt * 0.75;
+    // **Iteration-003 (legacy parity):** בפרופיל IMUD הערת-הצד ב-6pt המכויל
+    // (SZ_CORE.marginNote — נמדד בייחוס: ToraMargin 6pt; s-note-body=9 של
+    // המקור אינו נצרך שם, כמו f-gtoc).
+    const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+    const sizePt = Number(opts.sizePt) > 0 ? Number(opts.sizePt)
+      : (imudProf ? (Number(SZ_CORE.marginNote) || 6) : bodyPt * 0.75);
     const fontName = opts.fontName || settings['s-note-body-font'];
     const fallbackW = Math.max(60, Math.round(settings._outerMarginPx || 120) - 12);
     return {
@@ -13394,7 +13575,14 @@ function assignNumbers(pages, settings) {
   return pages.map(p => {
     const tpl = p.template;
     let counted = !!tpl.counts;
-    if (p.type === 'shaar-main' || p.type === 'shaar-sub' || p.type === 'shaar-back') counted = counted && settings['count-shaar-pages'];
+    // **Iteration-003 (legacy parity):** המקור מונה שער-משנה בפוליו אך לא ראשי/אחורי —
+    // בקרה פר-סוג (sub-shaar-count-numbering=true, main/back=false ברירת המקור).
+    if (p.type === 'shaar-main' || p.type === 'shaar-back') counted = counted && settings['count-shaar-pages'];
+    if (p.type === 'shaar-sub') counted = counted && (settings['count-shaar-sub-pages'] === true || settings['count-shaar-pages']);
+    // עמודי התוכן — מקור יחיד: count-toc-pages. דגלי המקור
+    // (general/detailed-toc-count-numbering=true) ממופים אליו בייבוא
+    // (legacy-settings-map — לאחר תיקון הכפילות); עד כאן נקראו גם כאן
+    // ישירות והמנייה דלפה גם לפרופיל DP (ברירת המחדל ברגיסטרי true).
     if (p.type === 'toc-general') counted = counted && settings['count-toc-pages'];
     if (p.type === 'toc-detail') counted = counted && settings['count-toc-pages'];
     if (p.type === 'endnotes') counted = counted && (settings['count-endnote-pages'] === true);
@@ -13541,6 +13729,10 @@ function pageOpensWithH2H3(page) {
  */
 function buildHeader(page, settings, ctx) {
   if (!settings['header-enabled'] || !page.template.hasRunningHead) return null;
+  // **Iteration-003 (legacy parity):** עמוד ריק (מרווח אי-זוגיות לפני פתיחת
+  // חלק) — ללא ריהוט כלל, כמו blankPageObj של המורשת (נמדד בייחוס: עמוד
+  // הרווח לפני שער-המשנה ריק לחלוטין; עד כאן ירש תבנית רגילה וקיבל כותרת).
+  if (page.type === 'blank') return null;
   const physical = page.isRecto ? 'recto' : 'verso';
   // REQ-HDR-02: עמוד הנפתח ב‑H2/H3 + header-opening-dedicated ⇒ סלוטי מקור ייעודיים
   const dedicated = settings['header-opening-dedicated'] === true && pageOpensWithH2H3(page);
@@ -18791,6 +18983,7 @@ function insertShaarPages(pages, blocks, settings, customDefs) {
 
   // גוף המסמך — עם שערי־משנה לפני פתיחות חלקים ועמודים מותאמים סביב חלקים
   let lastPart = 0;
+  const consumedPages = [];
   for (const pg of pages) {
     let openingPart = null;
     if (pg.chapterOpening && pg.type === 'preface') {
@@ -18813,15 +19006,46 @@ function insertShaarPages(pages, blocks, settings, customDefs) {
         // במקף: titleMain=לפני, titleSub=אחרי). הכותרת נלקחת מהבלוק עצמו (מקור יחיד).
         const partBlock = blocks.find(b => b.kind === 'heading' && b.level === 1 && b.part === openingPart);
         const partTitle = partBlock ? partBlock.lines.map(l => l.words.join(' ')).join(' ').trim() : '';
-        push(makeShaarPage(PAGE_TYPES.SHAAR_SUB, settings, out.length, { part: openingPart, title: partTitle }), `shaar-sub:part${openingPart}`);
+        // **Iteration-003 (legacy parity — חוזה sub_shaar):** במקור ה-h1 נצרך
+        // כולו לשער-המשנה (HEADING_MODES[1]='sub_shaar' — הטוקן אינו זורם לגוף).
+        // עד כאן שורות ה-heading:1 נשארו גם על עמוד הפתיחה ⇒ כפילות H1 (השער
+        // וגם עמוד נפרד). כאן השורות מוסרות מהעמוד; התוכן עצמו אינו אובד — הוא
+        // מוצג בשער (shaarInfo → shaarLayout). עמוד שהתרוקן כליל מוסר.
+        // **היקף:** פרופיל IMUD בלבד — חוזה המקור. בפרופיל DP הכותרת זורמת
+        // בעמוד הפתיחה כפי שננעל בקורפוסים.
+        const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+        const h1Lines = [];
+        if (imudProf) {
+          for (const col of pg.columns) {
+            for (let ci = col.length - 1; ci >= 0; ci--) {
+              if (col[ci].kind === 'heading' && col[ci].level === 1) h1Lines.unshift(col[ci]), col.splice(ci, 1);
+            }
+          }
+          if (pg.spanning && pg.spanning.lines) {
+            pg.spanning.lines = pg.spanning.lines.filter(ln => !(ln.kind === 'heading' && ln.level === 1));
+            if (!pg.spanning.lines.length) pg.spanning = null;
+          }
+        }
+        const pageEmpty = imudProf && !pg.spanning && pg.columns.every(c => !c.length);
+        const gatePage = makeShaarPage(PAGE_TYPES.SHAAR_SUB, settings, out.length, { part: openingPart, title: partTitle });
+        // **Iteration-003:** רישום ה-h1 שנצרך לשער — ה-TOC והעוגנים מפנים אליו
+        // (ההופעה "הראשונה" של הכותרת היא עמוד השער, כמו שערי-המשנה במורשת).
+        if (imudProf && partBlock) gatePage._consumedH1Tokens = [partBlock.tokenId];
+        push(gatePage, `shaar-sub:part${openingPart}`);
+        if (!pageEmpty) push(pg, 'part-opening-after-gate');
+        else consumedPages.push(pg.index);
+      } else {
+        push(pg);
       }
       lastPart = openingPart;
+    } else {
+      push(pg);
     }
-    push(pg);
     if (openingPart != null && customPlan) for (const d of (customPlan.afterPart.get(openingPart) || [])) {
       customPlaced.push(d.id); push(makeCustomPage(d, settings, out.length), `custom:${d.id}`);
     }
   }
+  void consumedPages;
 
   // custom:end — עמודים מותאמים בסוף המסמך (PT-09); השער האחורי כבר הוכנס אחרי
   // הראשי (סדר המקור — 03.11(ד)).
@@ -19293,10 +19517,17 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
     const coreSize = SZ_CORE.tocLevel[level];
     return imud && Number.isFinite(coreSize) ? coreSize : levelSizePt(level);
   };
+  // **Iteration-003 (legacy parity — גופן שורות ה-TOC):** המקור (legacy-projector
+  // §599) מצייר ומודד שורת TOC ב-heading-N-font של הרמה (נפילה ל-DavidLibre-
+  // Bold כשאינה רשומה) — לא ב-f-gtoc-N (מת במקור). הייחוס: רמה 1 ⇒ Lia Sgula,
+  // רמה 2 ⇒ AlphaBlack, רמה 3+ ⇒ Alpha — כגופני הכותרות.
   const familyOf = (level, imud) => {
     if (!imud) return null;
-    const stack = String(raw[`f-${prefix}-${level}`] || '').split(',')[0].trim();
-    return stack.replace(/^['"]|['"]$/g, '') || null;
+    const stack = String(settings[`heading-${level}-font`] || '').split(',')[0].trim();
+    const fam = stack.replace(/^['"]|['"]$/g, '') || null;
+    if (fam) return fam;
+    const rawStack = String(raw[`f-${prefix}-${level}`] || '').split(',')[0].trim();
+    return rawStack.replace(/^['"]|['"]$/g, '') || null;
   };
   const mkPage = (isFirst) => {
     const tpl = buildPageTemplate(pageType, settings, (pages.length % 2) === 0);
@@ -19305,7 +19536,9 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
       columns: Array.from({ length: tpl.columns.length }, () => []),
       footnotes: [], sideNotes: [], headingsOnPage: [], balanceInfo: null,
       fnReservedHeightPx: 0, chapterOpening: false,
-      toc: { title: isFirst ? title : '', rows: [], isFirst, isLast: false },
+      // **Iteration-003:** headerTitle בכל עמודי התוכן — המרכז של הכותרת העליונה
+      // הוא כותרת התוכן (כמו setHeader של המורשת בכל עמודי ה-TOC, לא רק בראשון)
+      toc: { title: isFirst ? title : '', headerTitle: title, rows: [], isFirst, isLast: false },
     };
     pages.push(pg);
     return pg;
@@ -19342,7 +19575,10 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
     const text = r.kind === 'group'
       ? r.items.map(it => it.text).join(' | ')
       : r.text;
-    const wrapped = wrapTitle(text, avail, size, measure);
+    // **Iteration-003 (מדידה=רינדור):** העטיפה נמדדת בגופן הרמה (כמו rApi
+    // במורשת) — החותמת מציירת באותו גופן; מדידת גוף היתה עוטפת אחרת.
+    const famMeasure = (family && io.measureOfFamily && io.measureOfFamily(family)) || measure;
+    const wrapped = wrapTitle(text, avail, size, famMeasure);
     r.wrapped = wrapped.lines;
     r.sizePt = size;
     if (family) r.fontFamily = family;
@@ -19366,6 +19602,25 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
   let availH = capacityOf(true, cur.template);
   let usedH = 0;
 
+  // **Iteration-003 (legacy parity — יחידות אטומיות, S4.9 של המקור):**
+  // הפריסה לעמודים היא ביחידות אטומיות — שורת h1 בודדת; שורת h2 + כל
+  // תתי-הכותרות שאחריה (break-inside: avoid במקור). יחידה שלא נכנסת עוברת
+  // שלמה לעמוד הבא; יחידה גדולה מעמוד שלם נחלקת בגבולות שורות. בלי זה —
+  // דחיסה חופשית (34 שורות/עמוד מול 28 במקור) והמתיחה מתבטלת.
+  // **היקף:** יחידות אטומיות בפרופיל IMUD (חוזה ה-TOC של המקור); ב-DP —
+  // זרימת שורות חופשית כפי שננעל בקורפוסים (כל שורה יחידה בפני עצמה).
+  const levelOf = (r) => r.kind === 'group' ? Math.max(...r.items.map(it => it.level)) : r.level;
+  const useUnits = imudToc;
+  const units = [];
+  for (const r of model.rows) {
+    if (!useUnits || levelOf(r) <= 2 || !units.length) units.push([r]);
+    else units[units.length - 1].push(r);
+  }
+  const pushRow = (r) => {
+    cur.toc.rows.push(r);
+    usedH += Math.min(rowHeightCache.get(r), availH);
+  };
+  const rowHeightCache = new Map();
   for (const r of model.rows) {
     if (budgetExceeded) break;
     rowsConsumed++;
@@ -19373,19 +19628,36 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
       budgetExceeded = true;
       break;
     }
-    const { h } = rowHeightOf(r);
-    if (usedH + h > availH && cur.toc.rows.length) {
+    rowHeightCache.set(r, rowHeightOf(r).h);
+  }
+  for (const u of units) {
+    if (budgetExceeded) break;
+    const uH = u.reduce((a, r) => a + (rowHeightCache.get(r) || 0), 0);
+    if (usedH + uH > availH && cur.toc.rows.length) {
       if (pages.length >= TOC_MAX_PAGES) { budgetExceeded = true; break; }
       cur = mkPage(false);
       availH = capacityOf(false, cur.template);
       usedH = 0;
     }
-    // שורה בודדת גבוהה מעמוד שלם ⇒ אל תיתלה: הנח אותה ותעד.
-    if (h > availH) {
-      overflowFindings.push({ why: 'row-taller-than-page', level: r.level || (r.items && r.items[0].level) });
+    if (uH > availH && !cur.toc.rows.length) {
+      // אצווה אטומית גדולה מעמוד שלם — פיצול בגבולות שורות (כמו S5.2/F1 במורשת)
+      for (const r of u) {
+        const h = rowHeightCache.get(r) || 0;
+        if (usedH + h > availH && cur.toc.rows.length) {
+          cur = mkPage(false);
+          availH = capacityOf(false, cur.template);
+          usedH = 0;
+        }
+        if (h > availH) overflowFindings.push({ why: 'row-taller-than-page', level: r.level || (r.items && r.items[0].level) });
+        pushRow(r);
+      }
+      continue;
     }
-    cur.toc.rows.push(r);
-    usedH += Math.min(h, availH);
+    for (const r of u) {
+      const h = rowHeightCache.get(r) || 0;
+      if (h > availH) overflowFindings.push({ why: 'row-taller-than-page', level: r.level || (r.items && r.items[0].level) });
+      pushRow(r);
+    }
   }
 
   pages.forEach((p, i) => { p.toc.isLast = i === pages.length - 1; });
@@ -19417,21 +19689,50 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
  */
 function insertTocPages(pages, tocPages, settings, io = {}) {
   if (!tocPages.length) return { pages, inserted: 0, at: 0 };
-  // רצף פותח מבני: עמודי front-matter אמיתיים בלבד (שער ראשי/אחורי/פתיחה מותאמת).
-  // **03.11(ד):** שערי־משנה (shaar-sub) שייכים לזרימת הגוף — הם באים אחרי
-  // תוכן־העניינים (לפני החלק שלהם), לא לפניו. בעבר כל isShaar דולג — ושער־המשנה
-  // של החלק הראשון נדחק לפני התוכן־עניינים.
+  // **Iteration-003 (legacy parity — סדר ההרכבה של המקור, §3343):**
+  // שערים (ראשי+אחורי) → תוכן כללי → גוף עד שער-המשנה הראשון (כולל) →
+  // תוכן מפורט → שאר הגוף. עד כאן שני התכנים הוכנסו יחד לפני כל הגוף —
+  // המפורט נדחק לפני שער-המשנה בניגוד למקור.
+  // **היקף ההרכבה (Iteration-003):** סדר המקור והרווחים — פרופיל IMUD בלבד.
+  const imudAssembly = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  const gtoc = tocPages.filter(p => p.type === 'toc-general');
+  const dtoc = tocPages.filter(p => p.type === 'toc-detail');
   let at = 0;
   while (at < pages.length && (pages[at]._frontMatter === true)) at++;
-  const out = pages.slice(0, at).concat(tocPages, pages.slice(at));
-  out.forEach((p, i) => { p.index = i; });
+  // **היקף:** סדר "המפורט אחרי שער-המשנה הראשון" — חוזה המקור (IMUD);
+  // ב-DP שני התכנים בראש הספר כפי שננעל.
+  const firstSub = imudAssembly ? pages.findIndex(p => p.type === 'shaar-sub') : -1;
+  const atDet = firstSub >= 0 ? firstSub + 1 : at;
+  const out = []
+    .concat(pages.slice(0, at), gtoc, pages.slice(at, atDet), dtoc, pages.slice(atDet));
+  const rawOdd = (settings && settings._imudRaw) || {};
+  const oddH0 = rawOdd['odd-h0'] !== undefined ? rawOdd['odd-h0'] !== false && rawOdd['odd-h0'] !== 'false' : true;
+  const oddH1 = rawOdd['odd-h1'] !== undefined ? rawOdd['odd-h1'] !== false && rawOdd['odd-h1'] !== 'false' : true;
+  const final = [];
+  const mkBlank = () => {
+    const tpl = buildPageTemplate(PAGE_TYPES.REGULAR, settings, final.length % 2 === 0);
+    return {
+      index: -1, type: 'blank', template: tpl,
+      columns: Array.from({ length: tpl.columns.length }, () => []),
+      footnotes: [], sideNotes: [], headingsOnPage: [], balanceInfo: null,
+      fnReservedHeightPx: 0, chapterOpening: true, decorations: []
+    };
+  };
+  for (const p of out) {
+    const lvl = p._secStartLevel != null ? p._secStartLevel
+      : (p.type === 'shaar-sub' ? 1 : (p.type === 'preface' && p.columns.some(c => c.some(ln => ln.kind === 'heading' && ln.level === 0))) ? 0 : null);
+    const need = imudAssembly && (lvl === 0 ? oddH0 : (lvl === 1 ? oddH1 : false));
+    if (need && final.length % 2 === 1) final.push(mkBlank());
+    final.push(p);
+  }
+  final.forEach((p, i) => { p.index = i; });
   // בניית תבניות מחדש לפי הזוגיות הסופית (D-63) — אותו סוג, אותן הגדרות, זוגיות נכונה
   const binding = settings['binding-offset-px'] || 0;
   const parityShifted = [];
-  for (const p of out) {
+  for (const p of final) {
     const newIsRecto = p.index % 2 === 0;
     const shifted = binding !== 0 && p.isRecto !== undefined && p.isRecto !== newIsRecto;
-    p.template = buildPageTemplate(p.type, settings, newIsRecto);
+    if (p.type !== 'blank') p.template = buildPageTemplate(p.type, settings, newIsRecto);
     p.isRecto = newIsRecto;
     if (shifted) parityShifted.push(p);
   }
@@ -19454,10 +19755,13 @@ function insertTocPages(pages, tocPages, settings, io = {}) {
     }
     if (io.eventLog) io.eventLog.emit('toc', 'binding-parity-rebuild', { pages: parityShifted.length, overflowLines: overflowCount });
   }
-  return { pages: out, inserted: tocPages.length, at };
+  const blanks = final.length - out.length;
+  if (io.eventLog) io.eventLog.emit('toc', 'toc-order-assembled', {
+    gtoc: gtoc.length, dtoc: dtoc.length, dtocAfterFirstSub: firstSub >= 0, blanksInserted: blanks
+  });
+  return { pages: final, inserted: tocPages.length, at };
 }
 
-/** פענוח עוגנים + תוויות לפי המספור הסופי (מופעל אחרי assignNumbers). */
 function resolveTocTargets(pages, tocPages, numbers, settings, { formatLabel }) {
   let resolved = 0;
   for (const tp of tocPages) {
@@ -21988,8 +22292,15 @@ function stampTocLayout(page, settings, measure) {
       if (Number.isFinite(rawSize) && rawSize > 0) return rawSize;
       return Number(SZ_CORE.tocLevel[level]) || 10.5;
     };
+    // **Iteration-003 (legacy parity — גופן שורות ה-TOC):** כמו legacy-projector
+    // §599 — גופן הרמה מההגדרות (heading-N-font; נפילה ל-raw f-gtoc-N המת
+    // במקור, ואז ל-fontFamily שהבונה קבע). הייחוס: רמה 1 ⇒ Lia Sgula,
+    // רמה 2 ⇒ AlphaBlack, רמה 3+ ⇒ Alpha.
     const familyOf = row => {
-      const stack = String(raw[`f-${prefix}-${levelOf(row)}`] || row.fontFamily || '').split(',')[0].trim();
+      const lvl = levelOf(row);
+      const fromSettings = String(settings[`heading-${lvl}-font`] || '').split(',')[0].trim().replace(/^['"]|['"]$/g, '');
+      if (fromSettings) return fromSettings;
+      const stack = String(raw[`f-${prefix}-${lvl}`] || row.fontFamily || '').split(',')[0].trim();
       return stack.replace(/^['"]|['"]$/g, '') || null;
     };
     const rowHeightOf = row => {
@@ -22070,12 +22381,13 @@ function stampTocLayout(page, settings, measure) {
     let title = null;
     if (first && String(page.toc.title || '').trim()) {
       const titleSize = Number(SZ_CORE.tocTitle) || 17;
-      const family = familyOf({ level: 1, kind: 'entry' });
-      const measured = makeWords(page.toc.title, titleSize, family);
+      // **Iteration-003 (legacy parity):** כותרת התוכן בגוף הטקסט (ToraBook
+      // בייחוס, 17pt) — לא בגופן הרמה; ללא fontKey ⇒ /F1 בייצוא.
+      const measured = makeWords(page.toc.title, titleSize, null);
       title = {
         x: GEO.COL_L_X, y: GEO.FLOW_TOP + 136, w: 552.3, h: 30,
         words: measured.words, spaceW: measured.spaceW, align: 'center',
-        sizePt: titleSize, fontKey: measured.fontKey, bold: true, kind: 'toc-title'
+        sizePt: titleSize, fontKey: null, bold: true, kind: 'toc-title'
       };
     }
     page.tocLayout = {
@@ -22143,9 +22455,16 @@ function stampShaarLayout(page, settings, measure) {
   };
   // גובה כל בלוק: שבירת שורות לרוחב התיבה במדידת הגופן שלו + גובה שורה לפי הגודל.
   // **רוחבי המילים נצברים בהטבעה** — ההקרנה מקבלת מילים ממוקמות, לא טקסט למדידה.
+  // **Iteration-003 (legacy parity):** פיץ' שורות שער = גודל×1.3 (כמו wrapGate
+  // של המורשת) — לא 1.25.
   const blocks = model.blocks.map(bl => {
+    // **Iteration-003 (היקף DP):** בלוק גרפי (כתר השער של פרופיל DP) — אין
+    // טקסט למדידה; גובה קבוע כמו החוזה המקורי. ב-IMUD אין בלוקים גרפיים
+    // (עיצוב השער בא מ-gate-design).
     if (bl.graphic) return { ...bl, lines: [], h: 24, fontKey: null, color: null, sizePt: bl.sizePt };
-    const blFam = shaarFontOf(bl.cls, settings) || null;
+    const blFam = (bl.fontFamily != null && String(bl.fontFamily) !== '')
+      ? String(bl.fontFamily)
+      : (shaarFontOf(bl.cls, settings) || null);
     const blMeasure = measureOfFamily(measure, blFam, settings);
     const words = String(bl.text || '').split(/\s+/).filter(Boolean);
     const spaceW = blMeasure.measureTextWidth(' ', bl.sizePt, 0);
@@ -22158,7 +22477,7 @@ function stampShaarLayout(page, settings, measure) {
       else { cur.push({ text: w, w: ww }); curW += add; }
     }
     if (cur.length) lines.push(cur);
-    const lh = Math.max(12, Math.round((bl.sizePt * (96 / 72)) * 1.25));
+    const lh = Math.max(12, Math.round((bl.sizePt * (96 / 72)) * 1.3));
     return { ...bl, lines, spaceW, h: lines.length * lh, fontKey: familyFontKeyOf(blFam), color: shaarColorOf(bl.cls), sizePt: bl.sizePt };
   });
   const placed = [];
@@ -22169,10 +22488,21 @@ function stampShaarLayout(page, settings, measure) {
     const gap = gaps ? Math.max(0, (boxH - total) / gaps) : 0;
     y = boxY;
     for (const bl of blocks) { placed.push({ ...bl, yTop: y }); y += bl.h + gap; }
-  } else {
+  } else if (model.mode === 'center') {
     const total = blocks.reduce((a2, b2) => a2 + b2.h, 0);
     y = boxY + Math.max(0, (boxH - total) / 2);
     for (const bl of blocks) { placed.push({ ...bl, yTop: y }); y += bl.h; }
+  } else {
+    // **Iteration-003 (legacy parity — מיקומים קבועים):** כל בלוק נעוץ
+    // ב-yTop המכויל שלו; בלוק עם followGap לא עולה מעל תחתית הקודם+המרווח
+    // (עטיפת כותרת דוחפת את ההמשך — כמו ה-S6.3/S74 של המורשת).
+    let prevBottom = -Infinity;
+    for (const bl of blocks) {
+      const gap = Number.isFinite(bl.followGap) ? bl.followGap : 0;
+      const yTop = Math.max(Number.isFinite(bl.yTop) ? bl.yTop : boxY, prevBottom + gap);
+      placed.push({ ...bl, yTop });
+      prevBottom = yTop + bl.h;
+    }
   }
   page.shaarLayout = { schema: 'shaar-layout-v1', box: { x: boxX, y: boxY, w: boxW, h: boxH }, blocks: placed };
   return true;
@@ -22194,10 +22524,19 @@ function stampHeaderSlots(page, settings, measure) {
     const sKey = familyFontKeyOf(s.font);
     const sMeasure = (sKey && sKey !== 'heading' && sKey !== 'fnbody' && sKey !== 'margin' && sKey !== 'window')
       ? measureOfFamily(measure, s.font, settings) : measure;
-    const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, 9)));
-    return { pos: s.pos, align: s.align, text: t, w, sizePt: 9, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
+    // **Iteration-003 (legacy parity):** מדידה ורישום בגודל האמיתי של הסלוט
+    // מההגדרות (15pt צדדים / 11pt מרכז — כמו הייחוס) — עד כאן 9pt קבוע
+    // גם לרינדור, והכותרת הודפסה זעירה.
+    const slotSize = Number(s.sizePt) > 0 ? Number(s.sizePt) : 9;
+    const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, slotSize)));
+    return { pos: s.pos, align: s.align, text: t, w, sizePt: slotSize, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
   });
-  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y, slots: stamped };
+  // **Iteration-003 (legacy parity):** בסיס הכותרת המכויל (GEO.HEADER_BASELINE
+  // — כמו legacy-projector) בפרופיל IMUD; בלי זה הנוסחה הגנרית הדפיסה
+  // את הכותרת ~20pt נמוך מדי.
+  const imudHdr = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  const { GEO } = require('../core/imud-geometry');
+  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y, ...(imudHdr ? { baselineY: GEO.HEADER_BASELINE } : {}), slots: stamped };
   return true;
 }
 
@@ -22264,11 +22603,67 @@ function stampEndnoteHeading(page, settings, measure) {
  * @param {object} measure — MeasureAPI פעיל
  * @returns {{stamped: Object<string, number>, pagesStamped: number}}
  */
+/**
+ * **Iteration-003 (legacy parity — פס הסימן):** כמו bands.push(kind:'h2-siman')
+ * של המורשת (§1341): בכל עמוד פתיחת-סימן נחתם פס "סימן <גימטריה>" מעל כותרת
+ * ה-H2 (עוגן מכויל 307.88px, 20pt, גופן f-siman). המונה מתאפס בכל חלק
+ * (h2-reset-siman של המקור, ברירת מחדל true). המילים נמדדות כאן פעם אחת.
+ */
+function stampSimanBands(pages, settings, measure, stamped) {
+  // **היקף:** פרופיל IMUD בלבד — פס הסימן הוא חוזה המקור (h2-auto-siman);
+  // ב-DP אין פסי סימן והחותמת אינה רצה.
+  const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  if (!imudProf) return 0;
+  const raw = (settings && settings._imudRaw) || {};
+  const autoSiman = raw['h2-auto-siman'] !== false && raw['h2-auto-siman'] !== 'false';
+  const resetSiman = raw['h2-reset-siman'] !== false && raw['h2-reset-siman'] !== 'false';
+  if (!autoSiman) return 0;
+  const { toBareGematria } = require('../decoration/folio');
+  const simanSize = Number(raw['s-siman']) > 0 ? Number(raw['s-siman']) : (Number(SZ_CORE.siman) || 20);
+  const stack = String(raw['f-siman'] || '').split(',')[0].trim().replace(/^['"]|['"]$/g, '');
+  const fam = stack || 'AlphaBlack';
+  const famMeasure = measureOfFamily(measure, fam, settings);
+  const fontKey = familyFontKeyOf(fam);
+  let simanCounter = 0;
+  let placed = 0;
+  for (const page of pages) {
+    if (page.type === 'shaar-sub') { if (resetSiman) simanCounter = 0; continue; }
+    if (page.type !== 'sign-open') continue;
+    if (!page.spanning || !page.spanning.lines || !page.spanning.lines.length) continue;
+    const hasH2 = page.spanning.lines.some(ln => ln.kind === 'heading' && ln.level === 2);
+    if (!hasH2) continue;
+    simanCounter++;
+    const text = 'סימן ' + toBareGematria(simanCounter);
+    const words = text.split(/\s+/).filter(Boolean).map(word => ({
+      text: scrubPUAText(word),
+      w: famMeasure.measureTextWidth(scrubPUAText(word), simanSize, 0)
+    }));
+    page.simanBand = {
+      y: 307.88, h: 36, sizePt: simanSize, fontKey,
+      words, spaceW: famMeasure.measureTextWidth(' ', simanSize, 0)
+    };
+    placed++;
+  }
+  if (stamped) stamped.siman = placed;
+  return placed;
+}
+
 function stampStructuralGeometry(pages, settings, measure) {
-  const stamped = { toc: 0, shaar: 0, header: 0, folio: 0, lanes: 0, endnoteTitle: 0 };
+  const stamped = { toc: 0, shaar: 0, header: 0, folio: 0, lanes: 0, endnoteTitle: 0, gateDesign: 0, siman: 0 };
+  const { planGateDesign } = require('../decoration/gate-design');
+  stampSimanBands(pages, settings, measure, stamped);
   for (const page of pages) {
     if (stampTocLayout(page, settings, measure)) stamped.toc++;
     if (stampShaarLayout(page, settings, measure)) stamped.shaar++;
+    // **Iteration-003 (legacy parity):** עיצוב השערים המכויל + כלל הכותרת —
+    // אחרי חותמת השער (עוגן הגל נקרא ממנה) ואחרי buildHeader של ה-pipeline
+    // (הכלל מתנה בקיום סלוטים). overlay גיאומטרי נייטרלי בלבד.
+    const gateDeco = planGateDesign(page, settings);
+    if (gateDeco.length) {
+      page.decorations = Array.isArray(page.decorations) ? page.decorations : [];
+      page.decorations.push(...gateDeco);
+      stamped.gateDesign += gateDeco.length;
+    }
     if (stampHeaderSlots(page, settings, measure)) stamped.header++;
     if (stampFolioGeometry(page, settings, measure)) stamped.folio++;
     if (stampFootnoteLanes(page)) stamped.lanes++;
@@ -22294,25 +22689,39 @@ __modules["src/engine/output/shaar-content.js"] = function (require, module, exp
  * כך שהשער נראה אותו דבר בכל הפלטים (עד כאן ההיטל לא כלל את תוכן השער
  * וה־PDF הראה עמודים ריקים).
  *
- * המודל: תיבה (מ"מ של המקור) + רשימת בלוקים (טקסט/גודל/משקל) + אופן פריסה:
- * 'between' = flex space-between (שער ראשי: בס״ד למעלה, שנה למטה), 'center'
- * = flex ממורכז (שער־משנה/אחורי). העיטור (כתר) הוא בלוק גרפי ללא טקסט —
- * ה-DOM מצייר אותו; ההיטל מדלג (במקור לא היה ייצוא PDF כלל).
+ * **Iteration-003 (legacy parity — חוזה השערים של המקור):**
+ *  - מקור התוכן של השער הראשי = המטא-דאטה של המסמך (כמו gateLinesFor במורשת:
+ *    meta.bookTitle/subject/desc/edition/author). הגדרות imud-book-* הן שדות
+ *    טופס שברירת המחדל שלהן ב-default_settings.json היא שמות מקום — הן
+ *    גיבוי בלבד כשאין מטא. השער האחורי — להפך (שדות הפאנל קודם, מטא ממלא —
+ *    כמו cfg.backCopyright || meta.copyright במורשת).
+ *  - מיקומים אנכיים מכוילים מהייחוס (px@96dpi; המקור במ"מ — pt(v)=v×4/3):
+ *    ראשי — כותרת 170.8, משנה 300.3, תיאור 547.1, מהדורה 744.0, מחבר 951.3;
+ *    אחורי — כותרת-זכויות 255.7, זכויות 288.5, הוצאה 476.4, קשר 667.9,
+ *    נוספים 859.1; משנה — כותרת 460.9, המשך 626.3.
+ *  - גודל כותרת שער-המשנה = s-h1 (heading-1-size-pt, 50pt במקור) — לא 36
+ *    קבוע. גופן ההמשך של שער-המשנה = David Libre (כמו ההקשחה המכוילת
+ *    במורשת — הייחוס מציג אותו, לא את f-sh-sub).
+ *  - אין בס״ד/שנה בשער הראשי ואין כתרים גרפיים — העיטורים הם רקע השער
+ *    המכויל (decoration/gate-design.js) כמו במקור.
  */
 
 const MM_TO_PX = 96 / 25.4;
+const PT = (v) => v * (96 / 72); // "mm-ish" units of the legacy calibration → px
 
 /** תיבת השער לפי הסוג — מיקומי המקור (מ"מ → פיקסלים). */
-function shaarBoxOf(type) {
+function shaarBoxOf(type, settings) {
+  const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  const mode = imudProf ? 'fixed' : null;
   const mm = (v) => Math.round(v * MM_TO_PX);
   if (type === 'shaar-main') {
-    return { top: mm(20), bottom: mm(16), right: mm(15), left: mm(15), mode: 'between' };
+    return { top: mm(20), bottom: mm(16), right: mm(15), left: mm(15), mode: mode || 'between' };
   }
   if (type === 'shaar-sub') {
-    return { top: mm(20), bottom: mm(20), right: mm(95), left: mm(15), mode: 'center' };
+    return { top: mm(20), bottom: mm(20), right: mm(95), left: mm(15), mode: mode || 'center' };
   }
   // shaar-back
-  return { top: mm(22), bottom: mm(18), right: mm(15), left: mm(95), mode: 'center' };
+  return { top: mm(22), bottom: mm(18), right: mm(15), left: mm(95), mode: mode || 'center' };
 }
 
 /** פיצול מקף של כותרת חלק (renderSubShaar המקורי): main=לפני, sub=אחרי. */
@@ -22332,61 +22741,80 @@ function splitPartTitle(text) {
  * @param {object} page - עמוד CP5 (shaarInfo.title לשער־משנה, _metadata למטא)
  * @param {object} settings
  * @param {object} [metadata] - מטא המסמך (גובר _metadata)
- * @returns {{mode:string, box:object, blocks:Array<{cls,text,sizePt,bold,graphic}>}|null}
+ * @returns {{mode:string, box:object, blocks:Array<{cls,text,sizePt,bold,yTop,followGap?,fontFamily?}>}|null}
  */
 function buildShaarBlocks(page, settings, metadata) {
   if (!page || !page.type || !/^shaar-/.test(page.type)) return null;
   const meta = metadata || page._metadata || {};
-  const bookTitle = settings['imud-book-title'] || meta['שם הספר'] || meta['ספר'] || meta['title'] || 'שם הספר';
-  const subtitle = settings['imud-book-subtitle'] || meta['נושא'] || '';
-  const desc = settings['imud-book-desc'] || meta['נושא מפורט'] || '';
-  const sections = settings['imud-book-sections'] || meta['פרטי מהדורא'] || '';
-  const author = settings['imud-book-author'] || meta['שם המחבר'] || '';
-  const year = settings['imud-book-year'] || meta['מקום ושנת הוצאה'] || '';
-
   const num = (v) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : 12; };
-  const box = shaarBoxOf(page.type);
+  const box = shaarBoxOf(page.type, settings);
   const B = [];
 
   if (page.type === 'shaar-main') {
-    B.push({ cls: 'bsd-header', text: 'בס״ד', sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 5 });
-    B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']) });
-    B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true });
-    B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-main' });
-    B.push({ cls: 'book-description', text: desc, sizePt: num(settings['shaar-desc-size-pt']) });
-    B.push({ cls: 'book-sections-summary', text: sections, sizePt: num(settings['shaar-sections-size-pt']), bold: true });
-    B.push({ cls: 'author-block', text: author, sizePt: num(settings['shaar-author-size-pt']) });
-    B.push({ cls: 'publication-footer', text: year, sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 1 });
+    // **Iteration-003:** מקור התוכן = המטא של המסמך (כמו המורשת); ההגדרות גיבוי.
+    const bookTitle = meta['שם הספר'] || meta['ספר'] || meta['title'] || settings['imud-book-title'] || 'שם הספר';
+    const subtitle = meta['נושא'] || settings['imud-book-subtitle'] || '';
+    const desc = meta['נושא מפורט'] || settings['imud-book-desc'] || '';
+    const sections = meta['פרטי מהדורא'] || settings['imud-book-sections'] || '';
+    const author = meta['שם המחבר'] || settings['imud-book-author'] || '';
+    // **Iteration-003 (legacy parity):** בס״ד/שורת-שנה — תכונת פרופיל DP בלבד.
+    // שער ה-IMUD של המקור אינו מציג אף אחד מהם (נמדד בייחוס עמ' 1: חמש
+    // שורות בלבד — כותרת/נושא/תיאור/מהדורה/מחבר).
+    const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+    if (!imudProf) {
+      B.push({ cls: 'bsd-header', text: 'בס״ד', sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 5 });
+    }
+    B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']), ...(imudProf ? { yTop: PT(128.1) } : {}) });
+    B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true, ...(imudProf ? { yTop: PT(225.2), followGap: 25 } : {}) });
+    if (!imudProf) {
+      B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-main' });
+    }
+    B.push({ cls: 'book-description', text: desc, sizePt: num(settings['shaar-desc-size-pt']), ...(imudProf ? { yTop: PT(410.3) } : {}) });
+    B.push({ cls: 'book-sections-summary', text: sections, sizePt: num(settings['shaar-sections-size-pt']), bold: true, ...(imudProf ? { yTop: PT(558.0) } : {}) });
+    B.push({ cls: 'author-block', text: author, sizePt: num(settings['shaar-author-size-pt']), ...(imudProf ? { yTop: PT(713.5) } : {}) });
+    if (!imudProf) {
+      const year = settings['imud-book-year'] || meta['מקום ושנת הוצאה'] || '';
+      if (year) B.push({ cls: 'publication-footer', text: year, sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 1 });
+    }
   } else if (page.type === 'shaar-sub') {
     const { titleMain, titleSub } = splitPartTitle(page.shaarInfo && page.shaarInfo.title);
-    B.push({ cls: 'book-title-main', text: titleMain, sizePt: 36 });
-    if (titleSub) {
-      B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-sub' });
-      B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true });
+    const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+    if (imudProf) {
+      // **Iteration-003:** גודל הכותרת מההגדרות (s-h1 ⇒ heading-1-size-pt; 50 במקור)
+      const h1Size = num(settings['heading-1-size-pt']);
+      B.push({ cls: 'book-title-main', text: titleMain, sizePt: h1Size, yTop: PT(345.7) });
+      if (titleSub) {
+        // ההמשך ב-David Libre המכויל (כמו ההקשחה במורשת — הייחוס בגופן זה)
+        B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true, yTop: PT(469.7), followGap: 40.8, fontFamily: 'David Libre' });
+      }
+    } else {
+      B.push({ cls: 'book-title-main', text: titleMain, sizePt: 36 });
+      if (titleSub) {
+        B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-sub' });
+        B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true });
+      }
     }
   } else {
     // **9b.5 (D-107 + F-9a-8):** ארבעת מקטעי השער האחורי — פורט renderBackShaar
-    // של המקור: כותרת «כל הזכויות שמורות» (13.5pt) + זכויות יוצרים (10pt) +
-    // הוצאה/פרסום (11pt) + קשר (10pt) + פרטים נוספים (9.5pt). מקור הערך:
-    // שדה ההגדרה גובר (ייבוא inp-book-back-*; shaar-back-text ההיסטורי לזכויות);
-    // נפילה למטא המסמך. **אין כותרת-ספר/מחבר/שנה בשער האחורי** (כמו במקור
-    // שהופורט — עד כאן הוצגו שם בטעות), ו**אין ערכים מומצאים** — בלי ערך
-    // אין מקטע (§6.2 בהוראת 9b).
+    // של המקור. מקור הערך: שדה ההגדרה גובר (ייבוא inp-book-back-*;
+    // shaar-back-text ההיסטורי לזכויות); נפילה למטא המסמך (כמו המורשת).
+    // **אין כותרת-ספר/מחבר/שנה בשער האחורי** ו**אין ערכים מומצאים**.
     const copyright = settings['imud-book-back-copyright'] || settings['shaar-back-text'] || meta['שמירת זכויות'] || '';
     const publisher = settings['imud-book-back-publishing'] || meta['פרטי הוצאה לאור'] || '';
     const contact = settings['imud-book-back-contact'] || meta['פרטי קשר'] || '';
     const extra = settings['imud-book-back-extra'] || meta['פרטים נוספים'] || '';
-    const pushSection = (value, sizePt) => {
+    const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+    const pushSection = (value, sizePt, yTop) => {
       String(value).split('\n').map(l => l.trim()).filter(Boolean)
-        .forEach(l => B.push({ cls: 'back-shaar-text-line', text: l, sizePt }));
+        .forEach(l => B.push({ cls: 'back-shaar-text-line', text: l, sizePt, ...(imudProf && yTop != null ? { yTop } : {}) }));
     };
-    if (copyright) B.push({ cls: 'back-shaar-copyright-header', text: 'כל הזכויות שמורות', sizePt: 13.5, bold: true });
-    pushSection(copyright, 10);
-    pushSection(publisher, 11);
-    pushSection(contact, 10);
-    pushSection(extra, 9.5);
+    if (copyright) B.push({ cls: 'back-shaar-copyright-header', text: 'כל הזכויות שמורות', sizePt: 13.5, bold: true, ...(imudProf ? { yTop: PT(191.8) } : {}) });
+    pushSection(copyright, 10, PT(216.4));
+    pushSection(publisher, 11, PT(357.3));
+    pushSection(contact, 10, PT(500.9));
+    pushSection(extra, 9.5, PT(644.3));
   }
-  return { mode: box.mode, box, blocks: B.filter(b => b.graphic || String(b.text || '').length) };
+  return { mode: box.mode, box, blocks: B.filter(b => String(b.text || '').length || b.graphic) };
 }
 
 /** משפחות הגופן של הבלוקים — לפי ההגדרות (גישה מילולית לסורק). */
@@ -22406,9 +22834,9 @@ function shaarFontOf(cls, settings) {
 }
 
 /** **פרוסה 3 (§2.2 — הדיו מגיע מהמודל):** SVG הכתרים של השערים — מקור יחיד.
- * עד כאן היו מוטמעים בתוך dom-renderer.renderShaarContent (innerHTML) —
- * המקרין של ה-PageModel חייב את אותו דיו בדיוק; ההטבעה עוברת לכאן ושני
- * המקרינים צורכים ממקור אחד (אין עותק שני של הנתיבים). */
+ * הוסרו מהתוכן ב-Iteration-003: עיטורי השער באים מעיצוב השער המכויל
+ * (decoration/gate-design.js) כמו במקור — לא כבלוק גרפי בזרימת התוכן.
+ * נשמר לצרכנים חיצוניים קיימים (בדיקות/תאימות). */
 function crownSvgOf(graphic) {
   if (graphic === 'crown-sub') {
     return '<svg viewBox="0 0 300 30" xmlns="http://www.w3.org/2000/svg"><path d="M10,15 Q75,5 140,15 Q145,10 150,5 Q155,10 160,15 Q225,5 290,15 Q225,25 160,15 Q155,20 150,25 Q145,20 140,15 Q75,25 10,15 Z" fill="#222"/></svg>';
@@ -22492,6 +22920,85 @@ function scrubPUAText(s) {
 }
 
 module.exports = { ATOMIC_SPACE, PAREN_MARK, MARK_TAG, scrubPUAText };
+
+};
+__modules["src/engine/decoration/gate-design.js"] = function (require, module, exports) {
+// src/engine/decoration/gate-design.js — עיצוב שערים מכויל + כלל כותרת עליונה
+'use strict';
+
+/**
+ * **Iteration-003 (legacy parity — D-89 "אין שערים"):** פורט ברירות-המחדל
+ * של המקור (decorations.js/style.css של IMUD_TORANI), מכויל מהייחוס —
+ * אותם ה-rectים שהמורשת פולטת בסוף ההרצה (legacy-imud-flow §3658-3704):
+ *  - שער-משנה: פאנל #F4F4F4 מ-55% עד קצה ימין + גל עיטור בין הכותרת
+ *    לכותרת-המשנה (עוגן subTop−40.8 — יחס מכויל; במרכז תיבת התוכן).
+ *  - שער אחורי: פאנל #F4F4F4 משמאל עד 45%.
+ *  - שער ראשי: שלד המסגרת — קווים אנכיים #CCCCCC, פסים #FAFAFA, שרשרת
+ *    עלים בשולי הפאנלים, כללים אופקיים בשוליים בלבד, עיטור העיגול+כנפיים
+ *    מתחת לנושא ושני כללי מהדורה.
+ *  - כלל כותרה תחתון בכל עמוד עם כותרת עליונה (חוץ משערים): מלבן
+ *    #F0F0F0 (hdr-divider-style='gray' — ברירת המחדל של המקור).
+ *
+ * טוהר: overlay בלבד — לא נוגע בשורות גוף (גיאומטריה נייטרלית, דפוס D-47).
+ * מיקום הגל נקרא מהחותמת (page.shaarLayout) — מקור יחיד לגיאומטריית השער.
+ */
+
+const { GEO } = require('../core/imud-geometry');
+
+/** עיצוב השערים לעמוד בודד — מחזיר מערך decorations (אפס אם לא רלוונטי).
+ * **היקף:** פרופיל IMUD בלבד — חוזה העיטורים של התוכנה המקורית (D-89);
+ * בפרופיל DP אין עיצוב שערים ואין כלל כותרת (כפי שננעל בקורפוסים). */
+function planGateDesign(page, settings) {
+  if (!page || !page.type) return [];
+  if (!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw))) return [];
+  const out = [];
+  const dec = (o) => out.push(o);
+  const raw = (settings && settings._imudRaw) || {};
+  const hdrDivider = settings && settings['hdr-divider-style'] != null
+    ? settings['hdr-divider-style'] : (raw['hdr-divider-style'] != null ? raw['hdr-divider-style'] : 'gray');
+
+  if (page.type === 'shaar-sub') {
+    dec({ x: 0.55 * GEO.PAGE_W, y: 0, w: 0.45 * GEO.PAGE_W, h: GEO.PAGE_H, kind: 'shaar-panel', kindStyle: 'rect:#F4F4F4' });
+    // הגל בין שני חלקי הכותרת — מעוגן לראש כותרת-המשנה בפועל (subTop−40.8),
+    // ממורכז בתיבת התוכן (175.7px — מרכז 245.7−140/2 בכיול הייחוס).
+    const subBlock = page.shaarLayout
+      && page.shaarLayout.blocks.find(b => String(b.cls || '').includes('book-subtitle'));
+    if (subBlock) {
+      const style = raw['shaar-sub-divider'] && raw['shaar-sub-divider'] !== 'none'
+        ? (String(raw['shaar-sub-divider']).startsWith('ext_') || String(raw['shaar-sub-divider']).endsWith('.svg')
+          ? 'imud:divider:' + raw['shaar-sub-divider'] : raw['shaar-sub-divider'])
+        : 'shaar-wave';
+      dec({ x: 175.7, y: subBlock.yTop - 40.8, w: 140, h: 25, kind: 'shaar-divider', kindStyle: style });
+    }
+  } else if (page.type === 'shaar-back') {
+    dec({ x: 0, y: 0, w: 0.45 * GEO.PAGE_W, h: GEO.PAGE_H, kind: 'shaar-panel', kindStyle: 'rect:#F4F4F4' });
+  } else if (page.type === 'shaar-main') {
+    dec({ x: 96, y: 0, w: 1.33, h: GEO.PAGE_H, kind: 'frame-v', kindStyle: 'rect:#CCCCCC' });
+    dec({ x: 697.33, y: 0, w: 1.33, h: GEO.PAGE_H, kind: 'frame-v', kindStyle: 'rect:#CCCCCC' });
+    dec({ x: 97.33, y: 0, w: 29.33, h: GEO.PAGE_H, kind: 'frame-band', kindStyle: 'rect:#FAFAFA' });
+    dec({ x: 668, y: 0, w: 29.33, h: GEO.PAGE_H, kind: 'frame-band', kindStyle: 'rect:#FAFAFA' });
+    dec({ x: 97.33, y: 0, w: 29.33, h: GEO.PAGE_H, kind: 'frame-chain', kindStyle: 'shaar-frame-chain' });
+    dec({ x: 668, y: 0, w: 29.33, h: GEO.PAGE_H, kind: 'frame-chain', kindStyle: 'shaar-frame-chain' });
+    // כללים אופקיים בשוליים בלבד (מלבן לבן מכסה את המרכז במקור — קטעים)
+    dec({ x: 0, y: 224, w: 96, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
+    dec({ x: 697.33, y: 224, w: GEO.PAGE_W - 697.33, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
+    dec({ x: 0, y: 898.67, w: 96, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
+    dec({ x: 697.33, y: 898.67, w: GEO.PAGE_W - 697.33, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
+    // עיטור השער הראשי המובנה (עיגול+כנפיים) מתחת לנושא
+    dec({ x: 306.6, y: 346, w: 180, h: 24, kind: 'shaar-ornament', kindStyle: 'shaar-main-orn' });
+    // שני כללים אפורים קטנים סביב שורת המהדורה
+    dec({ x: 308.7, y: 734, w: 176, h: 0.93, kind: 'edition-rule', kindStyle: 'rect:#CCCCCC' });
+    dec({ x: 308.7, y: 770, w: 176, h: 0.93, kind: 'edition-rule', kindStyle: 'rect:#CCCCCC' });
+  } else if (hdrDivider !== 'none' && page.header && page.header.slots
+    && (page.header.slots.right || page.header.slots.center || page.header.slots.left)) {
+    // כלל הכותרת — צבע לפי hdrDividerColorMap של המקור: gray ⇒ #F0F0F0
+    const hdrRuleStyle = hdrDivider === 'gray' ? 'rect:#F0F0F0' : 'rect:#000000';
+    dec({ x: 57.33, y: 82.67, w: 680, h: 1.33, kind: 'hdr-rule', kindStyle: hdrRuleStyle });
+  }
+  return out;
+}
+
+module.exports = { planGateDesign };
 
 };
 __modules["src/engine/core/page-model.js"] = function (require, module, exports) {
@@ -23269,7 +23776,7 @@ const { MeasureAPI } = require('../typography/measure-api'); // פרופיל ג�
 const { familyFontKeyOf } = require('../typography/font-keys'); // **ביקורת §3.1:** מקור יחיד למיפוי משפחה→מפתח (היה כפול בין כאן ל-structural-stamps)
 const { folioGeometry: folioGeoOf, headerGeometry: headerGeoOf } = require('../layout/furniture-geometry'); // **שלב 6:** גיאומטריית ריהוט — מקור יחיד ל-DOM ול-PDF
 const NM = require('../layout/notes-model'); // **שלב 6 פרוסה 2 (§9):** חותמות ההערות — המקרינים צורכים ואינם מודדים
-const { markerFor } = require('../notes/markers');
+const { markerForSettings } = require('../notes/markers');
 const { lineFontSizePt, hexColorToRgb } = require('../output/line-font'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
 // **S73:** גופן השערים לפי מחלקת בלוק — מקור יחיד לשני הנתיבים (DOM+PDF)
 const { buildShaarBlocks, shaarFontOf } = require('../output/shaar-content');
@@ -23332,8 +23839,12 @@ function projectPage(page, settings, apiOrOpts) {
     // או הזמנת עיטור-H2). ornament-plan כבר מניח הנחה זו (titleTop); עד כאן
     // ההקרנה התעלמה ממנה ושורות הפס עלו על שטח ההזמנה.
     const topPad = page.spanning.titleTopPadPx || 0;
-    let y = tpl.contentBox.top + topPad;
+    // **Iteration-003 (legacy parity — פסים ממוקמים בעוגן מכויל):** לפסי
+    // פתיחת-הסימן/ההקדמה יש עוגן אנכי מכויל (bandTopPx) בתוך השטח השמור
+    // של התבנית — לא בראש תיבת התוכן; שורה עם yPx משלה נעוצה בו.
+    let y = (page.spanning.bandTopPx != null ? page.spanning.bandTopPx : tpl.contentBox.top) + topPad;
     for (const ln of page.spanning.lines) {
+      if (ln.yPx != null) y = ln.yPx;
       // **U-15:** אותו מקור סמכות ליישור בפס החוצה־טורים — בעבר 'right' קבוע
       // לכל שורות הפס (כותרות H2/H3–H6 ו-callouts) ⇒ כותרות צמודות-ימין
       // (נמדד: אסימטריה 170–222px ממרכז הפס) בניגוד לחוזה המרכוז של המורשת
@@ -23343,6 +23854,17 @@ function projectPage(page, settings, apiOrOpts) {
       y += ln.heightPx || 0;
     }
     out.spanning = band;
+  }
+
+  // **Iteration-003 (legacy parity — פס הסימן):** חותמת h2-siman מהתכנון —
+  // שורה ממורכזת בעוגן המכויל, מילים נמדדות בהטבעה (אין מדידה כאן).
+  if (page.simanBand && page.simanBand.words && page.simanBand.words.length) {
+    const sb = page.simanBand;
+    const tplW2 = Math.min(...tpl.columns.map(c => c.x + c.w)) - Math.max(...tpl.columns.map(c => c.x));
+    out.lines.push(stampedRowLine({
+      x: Math.min(...tpl.columns.map(c => c.x)), y: sb.y, w: tplW2, h: sb.h || 36,
+      words: sb.words, spaceW: sb.spaceW, align: 'center'
+    }, sb.sizePt || 20, 'h2-siman', sb.fontKey || null));
   }
 
   // **פרוסה 3 (§2.4 — כיסוי מלא):** עמודים מותאמים — התיבות והתמונות בגיאומטריה
@@ -23584,6 +24106,7 @@ function projectPage(page, settings, apiOrOpts) {
     if (page.headerSlotGeo && page.headerSlotGeo.slots) {
       out.header = {
         y: page.headerSlotGeo.y,
+        ...(page.headerSlotGeo.baselineY != null ? { baselineY: page.headerSlotGeo.baselineY } : {}),
         slots: page.headerSlotGeo.slots.map(s => {
           const x = s.pos === 'right' ? tpl.width - 60 - s.w : s.pos === 'center' ? Math.round((tpl.width - s.w) / 2) : 60;
           return { ...s, x };
@@ -23620,7 +24143,11 @@ function projectPage(page, settings, apiOrOpts) {
     const hPt = out.height * (72 / 96);
     const PX_TO_PT = 72 / 96;
     const r2 = (v) => Math.round(v * 100) / 100;
-    out.decorations = page.decorations.map((d) => {
+    // **Iteration-003 (תיקון שורח חבוי):** ההקרנה מוסיפה לרשימה — אינה מחליפה
+    // אותה. עדכני out.decorations כבר הכיל את העיטורים של הערות-הצד/תיבות
+    // המידע (מוקרנים לפני כן), והמיפוי מעל תוכנית העמוד מחק אותם בכל עמוד
+    // שיש לו עיטורי תוכנית (למשל כלל כותרת) — תיבת המידע נעלמה מה-PDF.
+    out.decorations = [...(out.decorations || []), ...page.decorations.map((d) => {
       const ink = d.image ? { type: 'image', uri: d.image } : ornamentInk(d.kindStyle);
       let paint = null;
       let pdfOps = null;
@@ -23629,6 +24156,14 @@ function projectPage(page, settings, apiOrOpts) {
         // **EXT-4:** פעולות הציור נחשבות כאן — ה-pdf-writer חף-תלויות
         // (אוסף אובייקטים טהור) ורק מקבל את הפעולות מוכנות (מקור יחיד).
         if (paint) pdfOps = svgToPdfOps(paint, d, hPt, PX_TO_PT);
+      } else if (ink && ink.type === 'rect') {
+        // **Iteration-003 (legacy parity — D-89):** מלבן בצבע אחיד (פאנלי שער,
+        // מסגרות, כלל כותרת) — אותו דיו כמו legacy-projector (§713): צבע
+        // ה-rect מה-kindStyle, לא שחור קבוע. **תיקון המשך:** parseColor מחזיר
+        // ערכים מנורמלים 0–1 — החלוקה ב-255 כאן איפסה את הצבע (0.957/255≈0)
+        // וכל הרקעים נצבעו שחור ב-PDF.
+        const yTopR = hPt - (d.y + d.h) * PX_TO_PT;
+        pdfOps = [`${r2(ink.color[0])} ${r2(ink.color[1])} ${r2(ink.color[2])} rg ${r2(d.x * PX_TO_PT)} ${r2(yTopR)} ${r2(d.w * PX_TO_PT)} ${r2(d.h * PX_TO_PT)} re f`];
       } else if (ink && ink.type === 'rule') {
         const yTop = hPt - (d.y + d.h) * PX_TO_PT;
         pdfOps = [`0 0 0 rg ${r2(d.x * PX_TO_PT)} ${r2(yTop)} ${r2(d.w * PX_TO_PT)} ${Math.max(0.5, r2(d.h * PX_TO_PT))} re f`];
@@ -23659,7 +24194,7 @@ function projectPage(page, settings, apiOrOpts) {
         ...(d.constraints ? { constraints: { ...d.constraints } } : {}),
         ...(d.cssClass ? { cssClass: d.cssClass } : {})
       };
-    });
+    })];
   }
 
   // **S12 (parity):** בסיסי שורות/מרזב/גיליון/כותרת — מודל תיבת שורה אחיד
@@ -23682,7 +24217,15 @@ function colWidthOf(tpl) {
 // חותמת חסרה/פגומה ⇒ diagnostic מפורש (out.diagnostics) — לא מדידה חלופית שקטה.
 
 /** גודל גוף הערה — 0.8× הגוף (כמו .footnotes{font-size:.8em} ו-noteHeight בתקציב). */
-function fnNoteSizePt(settings) { return settings['body-font-size-pt'] * 0.8; }
+function fnNoteSizePt(settings) {
+  // **Iteration-003 (legacy parity):** בפרופיל IMUD גודל גוף ההערה מהמקור
+  // (s-note-body=9 — SZ.fnBody של המורשת); מחוץ ל-IMUD — 0.8× הגוף כמקודם.
+  if (settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw)) {
+    const rawFn = Number(settings._imudRaw && settings._imudRaw['s-note-body']);
+    if (Number.isFinite(rawFn) && rawFn > 0) return rawFn;
+  }
+  return settings['body-font-size-pt'] * 0.8;
+}
 
 /** רישום diagnostic של חותמת חסרה/פגומה (§9.8) — מקור וסיבתיות, לא החלפה שקטה. */
 function pushStampDiagnostic(out, area, page, n) {
@@ -23763,7 +24306,7 @@ function projectStampedRows(n, x, w, yTop, opts) {
 function noteMarkerOf(n, settings) {
   if (n.marker != null && String(n.marker) !== '') return String(n.marker);
   if (Number.isInteger(n.docIndex) || Number.isInteger(n.markerNum)) {
-    return markerFor(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings['footnote-marker-style']);
+    return markerForSettings(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings);
   }
   return '';
 }
@@ -24381,7 +24924,11 @@ function attachBaselines(page, settings, measure) {
     for (const fn of page.footnotes) { if (!fn.words || !fn.words.length) fn.baselineY = fn.y + ascent * 11 * (96 / 72); }
   }
   if (page.folio) page.folio.baselineY = page.folio.baselineY != null ? page.folio.baselineY : page.folio.y + 10; // **S69:** נוסחת הנפילה רק אם לא חושב בקרן
-  if (page.header) page.header.baselineY = page.header.y + 10;
+  // **Iteration-003 (legacy parity):** כמו הפוליו — הבסיס המכויל מהחותמת
+  // (headerSlotGeo.baselineY — GEO.HEADER_BASELINE בפרופיל IMUD) גובר;
+  // הנוסחה y+10 היא נפילה בלבד. עד כאן הדריסה הזיזה את הכותרת ~20pt מדי
+  // נמוך מהייחוס (נמדד: בסיס 99.2px מול 71.9 המכויל).
+  if (page.header) page.header.baselineY = page.header.baselineY != null ? page.header.baselineY : page.header.y + 10;
 }
 
 /** שורה מלאכותית (TOC/עזר) — מילה אחת מימין לשמאל; מיקום מפורש. */
@@ -26068,7 +26615,11 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         if (fn.marker) collectFam(fn.marker, 'fnbody');
       }
       if (pg.folio && pg.folio.text && pg.folio.fontKey) collectFam(pg.folio.text, pg.folio.fontKey);
-      if (pg.header) for (const s of (pg.header.slots || [])) for (const w of (s.words || [])) collectFam(w.text, w.fontKey);
+      // **Iteration-003:** סלוטי כותרת בנתיב המודל — מילים לפי הטקסט וה-fontKey המוטבע
+      if (pg.header) for (const s of (pg.header.slots || [])) {
+        for (const w of (s.words || [])) collectFam(w.text, w.fontKey);
+        if ((!s.words || !s.words.length) && s.text) collectFam(s.text, s.fontKey);
+      }
     }
     const extraFonts = [];
     for (const fam of [...famWords.keys()].sort()) {
@@ -26199,6 +26750,14 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
     };
     const fontForWriter = mkFont(subset);
     // ---- גופני-תפקידים מהמודל (window/heading/fnbody/margin) + משפחות רשודות ----
+    // **Iteration-003 (תיקון שורש — תצוגה=ייצוא):** מילות המודל נושאות את
+    // **מפתח התפקיד** ('heading'/'window'/'fnbody'/'margin' — כך מטביעים
+    // structural-stamps/projectLine), לא את שם המשפחה. עד כאן החיפוש נעשה
+    // לפי שם המשפחה בלבד ('DavidLibre-Bold' וכו') ⇒ אפס מילים נמצאו ⇒ כל
+    // גופני התפקידים היו null וכל הטקסט נפל ל-/F1 (גוף הטקסט) — ההערות,
+    // הערות-הצד, מילות-החלון ושורות ה-TOC נצבעו בגופן הגוף במקום בגופניהן.
+    // כעת: איסוף לפי מפתח-התפקיד ומיפוי מפתח→משפחה (אותה טבלה הפוכה של
+    // familyFontKeyOf — מקור יחיד ב-font-keys).
     const wordsByRole = new Map();
     const allLines = [];
     for (const pg of pages) { allLines.push(...(pg.spanning ? pg.spanning.lines : []), ...pg.lines); }
@@ -26212,19 +26771,51 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       if (!wordsByRole.has(w.fontKey)) wordsByRole.set(w.fontKey, []);
       wordsByRole.get(w.fontKey).push(w.text);
     }
-    const mkRoleFont = (family) => {
+    const mkRoleFont = (roleKey, family) => {
       const prof = registeredFontsRef.get(family);
       if (!prof) return null;
-      const parts = wordsByRole.get(family) || [];
+      const parts = wordsByRole.get(roleKey) || [];
       if (!parts.length) return null;
       const sub = buildSubset(prof, charInventory(parts.join(' ')));
       return sub.ok ? mkFont(sub) : null;
     };
-    const fontForWriter2 = mkRoleFont('FrankReal-Bold');
-    const fontForWriter3 = mkRoleFont('DavidLibre-Bold');
-    const fontForWriter4 = mkRoleFont('David Libre');
-    const fontForWriter5 = mkRoleFont('Frank Ruhl Libre');
-    const fontForWriter6 = mkRoleFont('Hadassah Friedlaender');
+    const fontForWriter2 = mkRoleFont('window', 'FrankReal-Bold');
+    const fontForWriter3 = mkRoleFont('heading', 'DavidLibre-Bold');
+    // **Iteration-003:** משפחת גוף ההערה מההגדרות (f-note-body-font — אסיסטנט
+    // קל מאוד בפרוביל IMUD, כמו fnApi של המורשת); נפילה היסטורית ל-FRL.
+    const fnBodyFamilyForRole = (settings && settings['f-note-body-font']) || 'Frank Ruhl Libre';
+    const fontForWriter5 = mkRoleFont('fnbody', fnBodyFamilyForRole) || mkRoleFont('fnbody', 'Frank Ruhl Libre');
+    const fontForWriter6 = mkRoleFont('margin', 'Hadassah Friedlaender');
+    // **S4.26 (כמו נתיב הטקסט):** הגופן הרביעי — Frank Ruhl Libre כ-fallback
+    // לפיסוק שחסר בגוף הראשי (בנתיב המודל היה מת תמיד — חיפוש מילים במפתח
+    // 'David Libre' שאינו קיים אף פעם). תווים חסרים ב-/F1 שקיימים ב-FRL.
+    let fontForWriter4 = null;
+    {
+      const frlProfile = registeredFontsRef.get('Frank Ruhl Libre');
+      if (frlProfile && fontForWriter) {
+        const missingChars = new Set();
+        const scan = (lines) => {
+          for (const ln of lines) {
+            for (const w of (ln.words || [])) {
+              for (const ch of String(w.text || '')) {
+                if (fontForWriter.cidOf(ch) === 0 && glyphIdOf(frlProfile, ch) !== 0) missingChars.add(ch);
+              }
+            }
+          }
+        };
+        for (const pg of pages) {
+          scan(pg.spanning ? pg.spanning.lines : []);
+          scan(pg.lines || []);
+          for (const fn of (pg.footnotes || [])) scan([{ words: fn.words || [] }]);
+          if (pg.folio && pg.folio.text) scan([{ words: [{ text: pg.folio.text }] }]);
+          if (pg.header) for (const s of (pg.header.slots || [])) if (s && s.text) scan([{ words: [{ text: s.text }] }]);
+        }
+        if (missingChars.size) {
+          const punctSubset = buildSubset(frlProfile, charInventory([...missingChars].join('')));
+          if (punctSubset.ok) fontForWriter4 = mkFont(punctSubset);
+        }
+      }
+    }
     // משפחות רשודות נוספות (מפתחות שאינם תפקידים) — כמו הנתיב הקיים
     const ROLE_KEYS = new Set(['window', 'heading', 'fnbody', 'margin']);
     const extraFonts = [];
@@ -26439,7 +27030,7 @@ function bgRgba(color, opacity) {
  * S7 — צריכת footnote-marker-style (enum) דרך מקור אחיד: notes/markers.
  * (בעבר היה כאן ממיר מקומי שני — אי־עקביות מספור, P1-3.)
  */
-const { markerFor } = require('../notes/markers');
+const { markerForSettings } = require('../notes/markers');
 const { planDecorations } = require('../decoration/page-decorations');
 const { resolveShaarBox } = require('../decoration/shaar-boxes');
 const { columnDividerHeightPx } = require('../decoration/ornament-fit');const { folioGeometry } = require('../layout/furniture-geometry'); // **שלב 6:** גיאומטריית הגיליון — מקור יחיד עם הפרויקטור ל-PDF
@@ -26650,7 +27241,7 @@ function renderFootnoteArea(page, settings, doc) {
   const hasStamp = (n) => Array.isArray(n.noteRows) && n.noteRows.length > 0 && Array.isArray(n.noteWords) && Number(n.lineH) > 0;
   // סמן אחיד (notes/markers) + סימון המשך למקטעי פיצול (S7.1.3 long-note policy)
   const mkNote = (n) => {
-    const marker = n.marker || markerFor(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings['footnote-marker-style']);
+    const marker = n.marker || markerForSettings(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings);
     const el = doc.createElement('div');
     const cont = n.isContinuation || n.mode === 'split-rest';
     el.className = 'footnote' + (cont ? ' fn--continuation' : '') + (n.customStyle ? ' footnote--custom' : '');
@@ -26671,7 +27262,7 @@ function renderFootnoteArea(page, settings, doc) {
   // תקרה פר-הערה (D-34); התצוגה משלימה את החזות בלבד — הגיאומטריה לא זזה.
   // **פרוסה 2:** פיץ' השורה גם כאן מהחותמת (px מפורש) — אותו פיץ' של ה-PDF.
   const mkNoteInline = (n) => {
-    const marker = n.marker || markerFor(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings['footnote-marker-style']);
+    const marker = n.marker || markerForSettings(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings);
     const el = doc.createElement('span');
     const cont = n.isContinuation || n.mode === 'split-rest';
     el.className = 'footnote fn--inline' + (cont ? ' fn--continuation' : '') + (n.customStyle ? ' footnote--custom' : '');
@@ -29899,7 +30490,9 @@ function writePdf(opts) {
           for (const w of s.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : y, w.sizePt || s.sizePt || 9, w.fontKey, w.color);
           continue;
         }
-        emitWord(s.text, x, y, s.sizePt || 9, null, s.color);
+        // **Iteration-003 (תצוגה=ייצוא):** הסלוט המוטבע נושא fontKey (גופן
+        // הסלוט מההגדרות — Livorna בייחוס) — עד כאן null קבוע ⇒ /F1 (גוף).
+        emitWord(s.text, x, y, s.sizePt || 9, s.fontKey || null, s.color);
       }
     }
     // **EXT-4 (ציור עיטורים):** פעולות הציור מגיעות מוכנות מהפרויקטור
