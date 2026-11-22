@@ -22,7 +22,7 @@
  */
 
 const { buildShaarBlocks, shaarFontOf } = require('../output/shaar-content');
-const { GEO, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM, SZ_CORE } = require('../core/imud-geometry');
+const { GEO, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM, SZ_CORE, H2_SIMAN_Y, H2_SIMAN_Y_SPAN } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** H2_SIMAN_Y* — עוגן דואלי, מקור יחיד
 const { folioGeometry, headerGeometry } = require('../layout/furniture-geometry');
 const { assignFootnoteLanes } = require('../layout/footnote-lanes');
 // **שלב 8 ביקורת §3.1:** המיפוי משפחה→מפתח גופן — מקור יחיד משותף (היה כפול
@@ -428,8 +428,12 @@ function stampSimanBands(pages, settings, measure, stamped) {
       text: scrubPUAText(word),
       w: famMeasure.measureTextWidth(scrubPUAText(word), simanSize, 0)
     }));
+    // **G3/RC-3 (i004) — עוגן דואלי כמו המורשת (S4.19):** פתיחה שהמקטע שלה נפתח
+    // בכותרת רוחבית (h3-span — מסומן על-ידי המתכנן ב-_h2SpanExempt) מרימה את
+    // פס הסימן ל-284.9px; פתיחה רגילה — 307.88px. עד כאן עוגן קבוע 307.88 —
+    // נמדד ב-PDF הייחוס: 69/88 פתיחות ב-226.1pt (עם-span) מול 13 ב-243.3 (רגילות).
     page.simanBand = {
-      y: 307.88, h: 36, sizePt: simanSize, fontKey,
+      y: page._h2SpanExempt ? H2_SIMAN_Y_SPAN : H2_SIMAN_Y, h: 36, sizePt: simanSize, fontKey,
       words, spaceW: famMeasure.measureTextWidth(' ', simanSize, 0)
     };
     placed++;

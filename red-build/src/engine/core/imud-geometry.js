@@ -44,6 +44,15 @@ const GEO = {
 // ---------- קבועים אנכיים נגזרים ----------
 const FLOW_BOTTOM = GEO.FLOW_TOP + GEO.FLOW_H; // 1022.2px — תחתית הזרימה האמיתית
 const H2_AREA_H = 284.25;   // אזור h2: מרווח-עליון 22% + סימן + כותרת + שוליים (S4.19)
+// **G3/RC-3 (i004 — S4.19 הכיול הכפול של המורשת, מקור יחיד לשני המנועים החיים):**
+// עמוד פתיחת-סימן שהמקטע שלו נפתח בכותרת-רוחבית (h3-span — HEADING_MODES[3]=
+// span_1col) משתמש באזור מוקצק ובעוגנים מורמים: נמדדו מהייחוס (עמ' 11 מול
+// 24/38). כל הקבועים ב-px מקור.
+const H2_SPAN_AREA_H = 261.3; // אזור h2 בפתיחה עם span — הטורים מתחילים ב-368.5px
+const H2_SIMAN_Y = 307.88;    // עוגן פס הסימן (פתיחה רגילה)
+const H2_SIMAN_Y_SPAN = 284.9; // עוגן פס הסימן (פתיחה עם span — מורם ב-22.98px)
+const H2_TITLE_Y = 344.05;    // עוגן כותרת ה-h2 (פתיחה רגילה)
+const H2_TITLE_Y_SPAN = 321.1; // עוגן כותרת ה-h2 (פתיחה עם span)
 const H0_AREA_H = 249.2;    // זרימת ההקדמה מתחילה ב-356.4px (S4.19)
 const SINGLE_W = 552.3;     // .single-wide-col = 2×269.41+13.48 (grid)
 const TITLE_W_PCT = 0.6;    // תיבת כותרת 2/3 — 60% מרוחב הפס (S74)
@@ -78,6 +87,7 @@ const SZ_CORE = {
 module.exports = {
   GEO,
   FLOW_BOTTOM, H2_AREA_H, H0_AREA_H, SINGLE_W, TITLE_W_PCT, H23_TITLE_W,
+  H2_SPAN_AREA_H, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN,
   H0_LINE_H, H0_TITLE_Y,
   TOC_TITLE_BLOCK_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM,
   PAGE_STRETCH_MAX, JUSTIFY_MAX_GAP, JUSTIFY_MAX_LH_EXTRA, ORPHAN_RECLAIM_BUFFER, RECLAIM_BELOW_BASE,

@@ -354,12 +354,15 @@ function insertTocPages(pages, tocPages, settings, io = {}) {
   }
   final.forEach((p, i) => { p.index = i; });
   // בניית תבניות מחדש לפי הזוגיות הסופית (D-63) — אותו סוג, אותן הגדרות, זוגיות נכונה
+  // **G3/RC-3 (i004):** פתיחת-סימן spanExempt שומרת על האזור המוקצץ (261.3) גם
+  // בבנייה החוזרת — הדגל חי על העמוד (_h2SpanExempt, מהמתכנן) ומועבר הלאה;
+  // בלי זה הבנייה החוזרת הייתה מחזירה את כל עמודי ה-spanExempt לאזור הרגיל.
   const binding = settings['binding-offset-px'] || 0;
   const parityShifted = [];
   for (const p of final) {
     const newIsRecto = p.index % 2 === 0;
     const shifted = binding !== 0 && p.isRecto !== undefined && p.isRecto !== newIsRecto;
-    if (p.type !== 'blank') p.template = buildPageTemplate(p.type, settings, newIsRecto);
+    if (p.type !== 'blank') p.template = buildPageTemplate(p.type, settings, newIsRecto, { h2SpanExempt: p._h2SpanExempt === true });
     p.isRecto = newIsRecto;
     if (shifted) parityShifted.push(p);
   }

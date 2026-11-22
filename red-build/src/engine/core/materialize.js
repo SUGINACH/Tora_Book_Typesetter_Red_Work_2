@@ -102,7 +102,13 @@ function projectPage(page, settings, apiOrOpts) {
   // שורה ממורכזת בעוגן המכויל, מילים נמדדות בהטבעה (אין מדידה כאן).
   if (page.simanBand && page.simanBand.words && page.simanBand.words.length) {
     const sb = page.simanBand;
-    const tplW2 = Math.min(...tpl.columns.map(c => c.x + c.w)) - Math.max(...tpl.columns.map(c => c.x));
+    // **G3/RC-3 (i004) — איחוד הטורים, לא החיתוך:** עד כאן חושב min(x+w)−max(x) —
+    // חפיפת הטורים — שלילית בגריד דו-טורי (390−404=−14px) ⇒ שורת הסימן
+    // "התמרכזה" על תיבה ברוחב שלילי ונחתה בקצה השמאלי (נמדד ב-PDF: x=67–121
+    // מול 279–333 בייחוס). האיחוד = תיבת הפס החוצה-טורים שכותרת ה-H2 כבר משתמשת
+    // בה (x=120.7 w=552.3 — מרכז 396.85px=306.15pt=מרכז העמוד; בייחוס: כל
+    // 88 היחידות ב-306.2pt בדיוק).
+    const tplW2 = Math.max(...tpl.columns.map(c => c.x + c.w)) - Math.min(...tpl.columns.map(c => c.x));
     out.lines.push(stampedRowLine({
       x: Math.min(...tpl.columns.map(c => c.x)), y: sb.y, w: tplW2, h: sb.h || 36,
       words: sb.words, spaceW: sb.spaceW, align: 'center'

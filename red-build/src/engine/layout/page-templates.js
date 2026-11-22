@@ -46,7 +46,7 @@ const PAGE_SIZES = {
 // מול מרזב 13.48px במקור; שוליים של 7.5% מול 120.72px (15.2%) במקור.
 // לא ערכי קסם: המקור הוא החוזה המשותף ששני המנועים צורכים.
 const {
-  GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, H2_AREA_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
+  GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, H2_AREA_H, H2_SPAN_AREA_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
 } = require('../core/imud-geometry');
 const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
 
@@ -55,7 +55,7 @@ function isImudProfile(settings) {
 }
 
 /** תבנית עמוד מהחוזה המכויל של IMUD — אותה גאומטריה שהמורשת מייצרת. */
-function buildImudPageTemplate(type, settings, isRecto) {
+function buildImudPageTemplate(type, settings, isRecto, opts = {}) {
   const twoCol = !( [PAGE_TYPES.PREFACE, PAGE_TYPES.SHAAR_MAIN, PAGE_TYPES.SHAAR_SUB,
     PAGE_TYPES.SHAAR_BACK, PAGE_TYPES.TOC_GENERAL, PAGE_TYPES.TOC_DETAIL,
     PAGE_TYPES.CUSTOM, PAGE_TYPES.FILLER].includes(type) );
@@ -72,8 +72,12 @@ function buildImudPageTemplate(type, settings, isRecto) {
   // שומר את אזור ה-h2 המלא (H2_AREA_H — flowSection של המורשת: הסימן והכותרת
   // חיים בתוכו, הטורים מתחילים מתחתיו); עמוד הקדמה שומר את אזור ה-h0.
   // עד כאן 180px בלבד — הגוף עלה גבוה מדי והכותרת נדחקה לטור.
+  // **G3/RC-3 (i004):** פתיחה עם h3-span ⇒ האזור המוקצץ של המורשת (S4.19: 261.3 מעמ' 11 ביחוס;
+  // 284.25 בפתיחה רגילה — עמ' 24/38) — הטורים מתחילים 22.95px גבוה יותר
+  // ושורת-תוכן נוספת נכנסת בעמודים אלה.
+  const h2Area = (opts && opts.h2SpanExempt) ? H2_SPAN_AREA_H : H2_AREA_H;
   const textTop = type === PAGE_TYPES.SIGN_OPEN
-    ? GEO.FLOW_TOP + H2_AREA_H
+    ? GEO.FLOW_TOP + h2Area
     : (type === PAGE_TYPES.PREFACE ? GEO.FLOW_TOP + H0_AREA_H : GEO.FLOW_TOP);
   return {
     type, isRecto, imud: true,
@@ -83,7 +87,8 @@ function buildImudPageTemplate(type, settings, isRecto) {
     headerHeight: GEO.HEADER_BASELINE,   // פס הכותרת: גליפים 42.56–57.56pt (גאומטריית הפס; התוכן — מקטע 3)
     headerTop: GEO.FLOW_TOP - RUNNING_HEAD_TOP_INSET_PX,
     folioHeight: GEO.PAGE_H - GEO.FOLIO_BASELINE,
-    h2TopOffset: type === PAGE_TYPES.SIGN_OPEN ? H2_AREA_H : (type === PAGE_TYPES.PREFACE ? H0_AREA_H : 0),
+    h2TopOffset: type === PAGE_TYPES.SIGN_OPEN ? h2Area : (type === PAGE_TYPES.PREFACE ? H0_AREA_H : 0),
+    h2SpanExempt: type === PAGE_TYPES.SIGN_OPEN ? !!(opts && opts.h2SpanExempt) : false,
     contentBox: { top: textTop, bottom: FLOW_BOTTOM, height: FLOW_BOTTOM - textTop },
     numbered: true,
     counts: true,
@@ -92,10 +97,12 @@ function buildImudPageTemplate(type, settings, isRecto) {
   };
 }
 
-function buildPageTemplate(type, settings, isRecto = true) {
+function buildPageTemplate(type, settings, isRecto = true, opts = {}) {
   // **מקטע 1:** פרופיל IMUD ⇒ החוזה המכויל (לא הגריד הגנרי). הנתיב הלא-IMUD
   // (קורפוס ה-DP הכללי) אינו משתנה כלל — אותן נוסחאות אחוזים כמו קודם.
-  if (isImudProfile(settings)) return buildImudPageTemplate(type, settings, isRecto);
+  // **G3/RC-3 (i004):** opts מועבר הלאה — h2SpanExempt של פתיחות-סימן (עד כאן
+  // המעטפת בלעה אותו והתבנית חזרה תמיד לאזור הרגיל).
+  if (isImudProfile(settings)) return buildImudPageTemplate(type, settings, isRecto, opts);
   const size = PAGE_SIZES[settings['page-size']] || PAGE_SIZES.A4;
   const marginSide = size.w * settings['grid-margin-side-pct'] / 100;
   const binding = settings['binding-offset-px'] || 0;

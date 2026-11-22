@@ -6,7 +6,7 @@ const crypto = require('crypto');
 // אותו חוזה כמו המנוע המורשת (legacy-imud-flow) ומדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, H3_FOLLOW_MIN_PX, h3BandHeightPx, h3BandRoomThresholdPx } = require('../core/h3-contract');
 const { PAGE_TYPES, buildPageTemplate } = require('./page-templates');
-const { H0_TITLE_Y } = require('../core/imud-geometry');
+const { H0_TITLE_Y, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** עוגני פתיחת-הסימן — מקור יחיד (S4.19)
 const { isImudProfile: isImud } = require('./page-templates');
 const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
@@ -891,7 +891,19 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       // (freeBand): הוא חי בשטח השמור ואינו מקצץ קיבולת. הסימן נחתם
       // בהטבעה (structural-stamps — h2-siman).
       if (isImud(settings) && cur.template.columns.length >= 2) {
-        const startY = 344.05;
+        // **G3/RC-3 (i004) — הכיל הכפול של המורשת (S4.19, flowSection §1335):**
+        // פתיחת-סימן שהמקטע שלה נפתח בכותרת רוחבית (h3-span —
+        // HEADING_MODES[3]=span_1col היחידי) משתמשת באזור ובעוגנים מורמים: נמדד מהיחוס
+        // (עמ' 11: סימן 284.9 / כותרת 321.1 / אזור 261.3) מול פתיחה רגילה (עמ' 24/38:
+        // 307.88 / 344.05 / 284.25). במנוע המאוחד היה עוגן קבוע 344.05 בלבד — 69 מתוך 88
+        // עמודי היחוס הם פתיחות-עם-span (הדומיננטי).
+        const spanExempt = !!(next && next.kind === 'heading' && next.level === 3 && next.fullWidth);
+        const startY = spanExempt ? H2_TITLE_Y_SPAN : H2_TITLE_Y;
+        cur._h2SpanExempt = spanExempt; // לחותמת פס-הסימן (עוגן דואלי)
+        if (spanExempt !== !!cur.template.h2SpanExempt) {
+          cur.template = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, settings, cur.isRecto !== false, { h2SpanExempt: spanExempt });
+          reAlignColumns(cur);
+        }
         let yy = startY;
         cur.spanning = {
           lines: blk.lines.map((ln) => {
