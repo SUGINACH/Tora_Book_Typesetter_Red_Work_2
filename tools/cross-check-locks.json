@@ -10,8 +10,8 @@
     {
       "name": "very_long (DP)",
       "file": "audits/very_long_test_text.txt",
-      "lockHash": "d2b871cf",
-      "renewed": "iteration-001 (22.11, legacy parity — H3 mid-page bands + clean-only tail splits; 1242→1066 pages; contentPreserved=true; orphan-bottom=0)"
+      "lockHash": "4288bb4f",
+      "renewed": "iteration-004 (23.11, RC-5 — מילוי גרידי בגבול העמוד כמו המורשת; שרשרת מלאה: d2b871cf→6d1858a3 (1066→1031, RC-5a ניקוד מזעור-שארית)→89063eb8 (1031→1021, RC-5b minPerSide=1 בגבול העמוד)→4288bb4f (1021→996, RC-5c מקום-פנוי בכל הטורים + RC-5d זרימת בלוק-כמכלות דרך pushLines). contentPreserved=true; mf=0; widow-bottom=0; orphan-top=0; orphan-bottom=84 (legacy-faithful, 84/996≈8.4% — הייחוס 43/604≈7.1%); דטרמיניזם מאומת ב-s72; הקנוני לא השתנה (8a6b23bd). דוח: audits/legacy-parity-iteration/iteration-004/)"
     },
     {
       "name": "very_long (legacy, run-ours = corpus-invariants CI)",

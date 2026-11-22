@@ -367,7 +367,26 @@ describe('S70 (R3-M2/M3) — כיול orphan/widow: רק הפרות אמיתיו
     // 1242→1066 עמודים; contentPreserved=true; חלוקת שורות פר-בלוק זהה/מסווגת
     // (s5-corpus: 0 בלתי-מסווגים). דוח: audits/legacy-parity-iteration/iteration-001/.
         // **נעילת iteration-001 חודשה שוב לאחר כלל פיצול-נקי בלבד בפלחי-הזנב (אין פיצול unclean — כמקור):** 140a42d9→d2b871cf (1066=1066 עמודים; orphan-bottom חזר ל-0; contentPreserved=true).
-    assert(r.layoutHash.startsWith('d2b871cf'), `layout unchanged (got ${r.layoutHash.slice(0, 8)})`);
+        // **RC-5a (i004, 23.11) — מילוי גרידי בגבול העמוד כמו המורשת:** נעילה מחודשת
+        // d2b871cf→6d1858a3 (1066→1031 עמודים; שורש +16 העמודים בספר הייחוס — ניקוד
+        // חצי-חצי ב-findSplit הוחלף במזעור שארית-הטור). הוכחות: widow-bottom=0,
+        // orphan-top=0, orphan-bottom=0 (נשמרו); contentPreserved=true;
+        // materializeFallbacks=0. דוח: audits/legacy-parity-iteration/iteration-004/.
+        // **RC-5b (i004):** נעילה מחודשת 6d1858a3→89063eb8 (1031→1021 עמודים) —
+        // גבול העמוד בזרימה גרידית עם minPerSide=1 (זנבות 1-2 שורות בראש העמוד
+        // הבא כמו הייחוס — S4.18). הוכחות: contentPreserved=true; mf=0;
+        // widow-bottom=0; orphan-top=0; orphan-bottom=31 (legacy-faithful,
+        // הייחוס: 43/604 עמודים).
+        // **RC-5c+RC-5d (i004, 23.11 — השלמת המילוי הגרידי):** נעילה מחודשת
+        // 89063eb8→4288bb4f (1021→996 עמודים). שני שורשים: (1) RC-5c — המקום
+        // הפנוי ב-findSplit נספר על כל הטורים הפתוחים לזרימה (עד כאן נספר
+        // הטור האחרון בלבד ⇒ part1 נמדד לשטח טור אחד אך הוצב מהטור הראשון
+        // ⇒ הטור השני לא מולא מעולם); (2) RC-5d — בלוק שנכנס לסך השארית
+        // של העמוד זורם דרך pushLines (breakPara חוצה-טורים של המורשת)
+        // במקום הזזה מלאה. הוכחות: contentPreserved=true; mf=0; widow-bottom=0;
+        // orphan-top=0; orphan-bottom=84 (זנבות עמוד נאמני-מורשת, 84/996≈8.4%
+        // — הייחוס: 43/604≈7.1%). דוח: iteration-004.
+    assert(r.layoutHash.startsWith('4288bb4f'), `layout unchanged (got ${r.layoutHash.slice(0, 8)})`);
     const count = (kind) => [...r.ledger.issues.values()].filter(x => x.kind === kind && x.status === 'persists').length;
     assertEq(count('widow-bottom'), 0, 'false widow-bottom flood eliminated (was 1176)');
     assertEq(count('orphan-top'), 0, 'false orphan-top flood eliminated (was 791)');
@@ -376,7 +395,17 @@ describe('S70 (R3-M2/M3) — כיול orphan/widow: רק הפרות אמיתיו
     // מונעים יצירת שורת-פתיחה בודדת בתחתית טור מלכתחילה. הגלאי עדיין חי:
     // הבדיקות הסינתטיות לעיל (widow-top/orphan-top MUST be flagged) מוכיחות
     // זיהוי על קלט מלאכותי, ו-widow-top=1 אמיתי עדיין מדווח בקורפוס.
-    assertEq(count('orphan-bottom'), 0, 'REAL single-line violations eliminated at root (was 29; detector alive via synthetic tests)');
+    // **RC-5b (i004, 23.11) — parity המורשת:** זנבות 1-2 שורות בראש העמוד הבא
+    // הם **התנהגות הייחוס** (43 עמודים עם ריצה ≤2 בראש הטור הימני ב-PDF
+    // הישן; 'ודיקא נמי' חד-שורתי — S4.18). גבול העמוד כעת זורם גרידית
+    // (minPerSide=1) ולכן orphan-bottom מדווח שוב — נאמן למקור, לא כשל;
+    // מינימום 2-לכל-צד נשמר בפיצולים הפנימיים בין טורים (כמו balanceBlock
+    // במורשת). החוזה: מדווחים בכמות סדר-גודל של הייחוס, לא מבול (29→0→31→84
+    // לאורך RC-5a→5b→5c/5d ב-very_long; הייחוס: 43/604 עמודים; 84/996 כעת
+    // — אותו יחס, והגידול היחסי משקף את הזרימה הגרידית המלאה).
+    const ob = count('orphan-bottom');
+    assert(ob > 0 && ob < 200, `orphan-bottom = legacy-faithful page-top tails (got ${ob}; reference has ~43/604 pages) — not a flood`);
+    assert(count('widow-bottom') === 0 && count('orphan-top') === 0, 'intra-column protections unchanged (min-2 per side)');
     assert(count('column-imbalance') > 0, 'documented imbalance residuals unchanged (D-95)');
     assert(r.contentPreserved === true, 'content preserved');
   });

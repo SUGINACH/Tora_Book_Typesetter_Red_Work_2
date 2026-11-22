@@ -219,7 +219,7 @@ describe('S72.2 DP — יישור תחתיות ככלל עימוד (שיפורי
     assert(min >= 0.95 - 1e-9 && max <= 1.05 + 1e-9, `מקדם מחוץ לגבולות: [${min}, ${max}]`);
   });
 
-  it('נייטרליות: hash הקורפוס זהה לנעילה (ad283e71) — aqStretch אינו משנה תוכן', () => {
+  it('נייטרליות: hash הקורפוס זהה לנעילה — aqStretch אינו משנה תוכן', () => {
     // ננעל מחדש 16.11 (שלב 5 פרוסה 1 — תיקוני FX במתכנן): bef8ebbed977→89108321.
     // הפער מסווג בשיטת s5-corpus-comparison: חלוקת השורות של כל הבלוקים זהה
     // לבסיס (0 redivision/0 marker/0 content-diff) — השינוי הוא אריזת עמודים
@@ -242,7 +242,23 @@ describe('S72.2 DP — יישור תחתיות ככלל עימוד (שיפורי
     // עמודים בלבד; contentPreserved=true; ה-AQ ממשיך לעבוד (הבדיקות לעיל).
     // דוח: audits/legacy-parity-iteration/iteration-001/.
         // **נעילת iteration-001 חודשה שוב לאחר כלל פיצול-נקי בלבד בפלחי-הזנב (אין פיצול unclean — כמקור):** 24f0f5e0→0db2d2f2.
-    assert(result.layoutHash.startsWith('0db2d2f2'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
+        // **RC-5a (i004, 23.11) — מילוי גרידי בגבול העמוד כמו המורשת:** נעילה מחודשת
+        // 0db2d2f2→587d8978 (815 עמודים). שורש: ניקוד findSplit איזן חצי-חצי במקום
+        // מילוי-הטור (מקור +16 עמודים בספר הייחוס). הוכחות סיווג (s5-corpus-comparison,
+        // ירוק): very_long identical=3315/3636, redivision=321 (העמקת פיצולים),
+        // marker=0, order-restore=0; contentPreserved=true; דטרמיניזם מאומת;
+        // הקנוני לא השתנה (8a6b23bd, 37 עמ'). דוח: audits/legacy-parity-iteration/iteration-004/.
+        // **RC-5b (i004):** נעילה מחודשת 587d8978→690421e9 (815→807 עמודים) —
+        // גבול העמוד בזרימה גרידית עם minPerSide=1 (זנבות 1-2 שורות בראש העמוד
+        // הבא כמו הייחוס — S4.18). contentPreserved=true; הקנוני לא השתנה
+        // (8a6b23bd). דוח: audits/legacy-parity-iteration/iteration-004/.
+        // **RC-5c+RC-5d (i004, 23.11 — השלמת המילוי הגרידי):** נעילה מחודשת
+        // 690421e9→2b43da81 (807→785 עמודים). RC-5c: המקום הפנוי ב-findSplit
+        // נספר על כל הטורים הפתוחים לזרימה (בעבר הטור האחרון בלבד — הטור
+        // השני לא מולא מעולם). RC-5d: בלוק שנכנס לסך השארית זורם דרך pushLines
+        // (breakPara חוצה-טורים) במקום הזזה מלאה. contentPreserved=true;
+        // דטרמיניזם מאומת בהמשך; הקנוני לא השתנה (8a6b23bd).
+    assert(result.layoutHash.startsWith('2b43da81'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
     const r2 = typeset(corpus, getDefaultSettings(), {});
     assertEq(result.layoutHash, r2.layoutHash, 'דטרמיניזם');
     // הקנוני — נעילת fdff19d8 ממקטע ב׳ (מאומת ב-s13-acceptance)

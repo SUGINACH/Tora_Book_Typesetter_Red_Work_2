@@ -37,14 +37,15 @@ const {
  * @returns {Array<{cut, before, after, capacityBefore, capacityAfter, score}>} —
  *   ממוין לפי score עולה; `out.rejections` — דחיות קומפקטיות ל-trace.
  */
-function generateCandidates(blk, cur, colCapacityPx, settings, ledger) {
+function generateCandidates(blk, cur, colCapacityPx, settings, ledger, opts = {}) {
   const maxFit = Number(cur) || 0;
   const out = [];
   out.rejections = [];
   const lineH = blk.lineHeightPx || 20;
   const gap = blockGapPx(settings, lineH);
   // **פרוסה 2:** החלון החוקי — מקור יחיד. null ⇒ אין פיצול חוקי כלל.
-  const win = legalSplitWindow(blk.lines.length, maxFit);
+  // **RC-5b (i004):** גבול עמוד מעביר minPerSide=1 (זרימה גרידית כמו המורשת).
+  const win = legalSplitWindow(blk.lines.length, maxFit, opts);
   if (!win) {
     if (ledger) ledger.create('candidate-rejected', `${blk.tokenId}@window`, null, { why: 'no-legal-window', lines: blk.lines.length, maxFit }, 'candidate-gen');
     out.rejections.push({ why: 'no-legal-window', lines: blk.lines.length, maxFit });
@@ -61,12 +62,19 @@ function generateCandidates(blk, cur, colCapacityPx, settings, ledger) {
       out.rejections.push({ cut, why: 'overflow-before', before: Math.round(before), cap: Math.round(colCapacityPx) });
       continue;
     }
-    // justify capability: האם הטור שלפני יכול להצדיק (להגיע לקצה) — p376-class reasoning
-    const capacityBefore = colCapacityPx - before;
-    // **strict (מדיניות רכה, מוכרזת):** עונש על הסתפקות במינימום החוקי ביעד.
-    const score = Math.abs(capacityBefore - (colCapacityPx - after))
+    // **RC-5a (i004) — מילוי גרידי כמו המורשת:** המורשת ממלאת את הטור הנוכחי
+    // עד תחתיתו (breakPara זורם שורה-שורה עד סוף הקיבולת) ורק השארית עוברת
+    // לעמוד הבא. הניקוד הקודם איזן את **גובה שני חלקי הבלוק** (|before−after|
+    // דרך שני איברי קיבולת מלאה שהתעלמו מהגובה התפוס בפועל) — חיתוך
+    // "חצי-חצי" ניצח את המילוי המלא, ונמדרו עמודים שלמים עם ~5 שורות
+    // ריקות בתחתית (299 עמודי גוף בלי הערות: חציון עצירה 679.7pt מול
+    // 767.5 בייחוס — מקור +16 העמודים). הניקוד כעת: שארית-הטור הנוכחי
+    // אחרי החיתוך (colCapacityPx הוא המקום הפנוי בפועל שמעביר findSplit) —
+    // מועמד עמוק יותר משאיר פחות רווח ומנצח, בכפוף לחלון ההגנות
+    // (≥2 בכל צד) ולעונש ה-strict.
+    const score = (colCapacityPx - before)
       + (strict && orphanAtDestination(blk.lines.length, cut) ? strictPenalty : 0);
-    out.push({ cut, before, after, capacityBefore, capacityAfter: colCapacityPx - after, score });
+    out.push({ cut, before, after, capacityBefore: colCapacityPx - before, capacityAfter: colCapacityPx - after, score });
   }
   out.sort((a, b) => a.score - b.score);
   return out;

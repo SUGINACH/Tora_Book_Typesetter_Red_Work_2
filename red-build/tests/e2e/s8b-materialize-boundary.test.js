@@ -89,9 +89,11 @@ describe('שלב 8 ביקורת (§3.1) — גבולות materialization', () =>
     assert(!codes.has('materialize-fallback'), 'אין נפילות materialization');
   });
 
-  it('very_long (1108 עמודים): אפס נפילות — שורש נפילת-השווא (חד-מיליות בלי דבק) תוקן', () => {
+  it('very_long (996 עמודים): אפס נפילות — שורש נפילת-השווא (חד-מיליות בלי דבק) תוקן', () => {
     const r = typeset(VERY_LONG, S());
-    assert(r.pages.length > 1000, `מסמך ענק (${r.pages.length} עמודים)`);
+    // **RC-5c/d (i004):** סף ה"מסמך ענק" הותאם — המילוי הגרידי צמצם את very_long
+    // מ-1066 ל-996 עמודים; הסף נועד להוכיח מסמך רב-עמודים, לא לנעול ספירה מדויקת.
+    assert(r.pages.length > 900, `מסמך ענק (${r.pages.length} עמודים)`);
     // **H3-CSS (17.11, חוזה ה-CSS המקורי גם במסלול המאוחד):** נעילה מחודשת
     // d2a18112→e68e1f0b — פסי H3 במסלול המאוחד נשאו עד כה אפס ריפודים ו-line-height
     // 1.4; כעת לפי החוזה (ריפוד עליון 8 + שורות ב-1.22 + תחתון 4+שוליים 4).
@@ -119,7 +121,26 @@ describe('שלב 8 ביקורת (§3.1) — גבולות materialization', () =>
     // 3636/3636 בלוקים זהים ביט-לביט; contentPreserved=true; הקנוני נשמר.
         // **Iteration-001:** נעילה מחודשת c330970a→140a42d9 (1242→1066 עמודים; contentPreserved=true).
         // **נעילת iteration-001 חודשה שוב לאחר כלל פיצול-נקי בלבד בפלחי-הזנב (אין פיצול unclean — כמקור):** 140a42d9→d2b871cf (1066=1066 עמודים).
-    assert(r.layoutHash.startsWith('d2b871cf'), `layoutHash very_long נשמר (${r.layoutHash.slice(0, 8)})`);
+        // **RC-5a (i004, 23.11) — מילוי גרידי בגבול העמוד כמו המורשת:** נעילה מחודשת
+        // d2b871cf→6d1858a3 (1066→1031 עמודים). שורש: ניקוד המועמדים ב-findSplit
+        // איזן את גובה שני חלקי הבלוק (חצי-חצי) במקום למלא את הטור הנוכחי עד
+        // תחתיתו — מקור +16 העמודים בספר הייחוס (299 עמודי גוף בלי הערות:
+        // חציון עצירה 679.7pt מול 767.5 בייחוס). הוכחות שימור: contentPreserved=true;
+        // materializeFallbacks=0; אפס violations; regular 895; sign-open 88; הערות זהות.
+        // **RC-5b (i004):** נעילה מחודשת 6d1858a3→89063eb8 (1031→1021 עמודים) —
+        // גבול העמוד בזרימה גרידית עם minPerSide=1 (זנבות 1-2 שורות בראש העמוד
+        // הבא כמו הייחוס — S4.18; 43 עמודים כאלה ב-PDF הישן). הוכחות:
+        // contentPreserved=true; mf=0; orphan-bottom=31 (legacy-faithful).
+        // **RC-5c+RC-5d (i004, 23.11):** נעילה מחודשת 89063eb8→4288bb4f
+        // (1021→996 עמודים). RC-5c: המקום הפנוי ב-findSplit נספר על כל הטורים
+        // הפתוחים לזרימה (בעבר: הטור האחרון בלבד ⇒ הטור השני לא מולא — עמודים
+        // שלמים עצרו ~5 שורות מעל התחתית; נמדד NEW p136 y649 מול OLD p140
+        // y769 באותו תוכן). RC-5d: בלוק שנכנס לסך השארית זורם דרך pushLines
+        // (breakPara של המורשת) במקום הזזה מלאה — תיקון שגיאת הביניים בה
+        // fitsPageTotal נפל בטעות לענף ההזזה (1021→1111). הוכחות:
+        // contentPreserved=true; mf=0; widow-bottom=0; orphan-top=0;
+        // orphan-bottom=84 (legacy-faithful, 84/996≈8.4% — הייחוס 43/604≈7.1%).
+    assert(r.layoutHash.startsWith('4288bb4f'), `layoutHash very_long נשמר (${r.layoutHash.slice(0, 8)})`);
     assertEq(r.pageModel.meta.materializeFallbacks, 0, 'אפס נפילות (בעבר: 852 שווא-נפילות רוחב-רווח)');
     const mfViol = r.pageModelValidation.violations.filter(v => v.code === 'materialize-fallback');
     assertEq(mfViol.length, 0, 'אפס violations');

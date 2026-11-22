@@ -74,11 +74,18 @@ const CAPACITY_EPS = 0.5;
  * @returns {{lo:number, hi:number}|null} — null אם אין חלון חוקי כלל
  *   (הבלוק קצר מדי או שהמקום הפנוי קטן מדי ⇒ ההזזה מלאה, לא פיצול).
  */
-function legalSplitWindow(linesCount, maxFit) {
-  if (maxFit < MIN_LINES_PER_SIDE) return null;
-  if (linesCount - maxFit < MIN_LINES_PER_SIDE) return null;
-  const lo = MIN_LINES_PER_SIDE;
-  const hi = Math.min(linesCount - MIN_LINES_PER_SIDE, maxFit);
+function legalSplitWindow(linesCount, maxFit, opts = {}) {
+  // **RC-5b (i004) — גבול עמוד הוא זרימה גרידית במורשת:** בפרוסת העמוד
+  // (findSplit) המקור ממלא את הטור עד תחתיתו ומשאיר זנב של 1-2 שורות בראש
+  // העמוד הבא (הוכח מה-PDF הישן: 43 עמודים עם ריצה ≤2 שורות בראש הטור
+  // הימני, כולל 'ודיקא נמי' חד-שורתי בעמ' 93/14 — S4.18). מינימום 2-לכל-צד
+  // נשאר כברירת המחדל לפיצולים פנימיים (כמו balanceBlock במורשת —
+  // getSplitRules minFirst=minLast=2); גבול העמוד מעביר minPerSide=1.
+  const minSide = (opts && Number(opts.minPerSide) >= 1) ? Number(opts.minPerSide) : MIN_LINES_PER_SIDE;
+  if (maxFit < minSide) return null;
+  if (linesCount - maxFit < minSide) return null;
+  const lo = minSide;
+  const hi = Math.min(linesCount - minSide, maxFit);
   return hi >= lo ? { lo, hi } : null;
 }
 

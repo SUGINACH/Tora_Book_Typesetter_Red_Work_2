@@ -968,30 +968,52 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     const needStack = CM.stackHeightPx(blk.lines, blockGapPx(settings, lineH));
     let chosenCol = ensureRoomFor(needStack);
     if (chosenCol === -1) {
-      const splitAt = findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, settings, generateCandidates, trace);
-      if (splitAt > 0) {
-        // **FX-3:** ההערות מחויבות לעמוד של החלק שבו שורת הסמן:
-        // הסמן בחלק הראשון ⇒ כאן; הסמן בהמשך ⇒ בעמוד החדש (לאחר ה-flush).
-        const splitMIdx = (blk.kind === 'paragraph' && (blk.notes || []).length && settings['footnotes-enabled'])
-          ? firstMarkerLineOf(blk) : -1;
-        if (blk.kind === 'paragraph' && splitMIdx < splitAt) reserveNotes(blk);
-        // **FX-6 (פרוסה 2):** החלק הראשון של הפיצול הוא פתיחת בלוק בפועל
-        // בטור שמתחתיו תוכן קיים — חותמת פער כמו כל פתיחת בלוק (בעבר חלק
-        // הפיצול לא סומן כלל כ-firstOfBlock ⇒ הפער לא נגבה גם כשער כניסה).
-        pushLines(blk.lines.slice(0, splitAt - 1), { tokenId: blk.tokenId, part: 'first', firstOfBlock: true, docPart: blk.part });
-        pushLines([blk.lines[splitAt - 1]], { tokenId: blk.tokenId, part: 'first', isLast: true });
-        flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
-        cur.openedBy = blk.tokenId; // מעבר עמוד בפיצול — הבלוק פתח את העמוד החדש
-        if (blk.kind === 'paragraph' && splitMIdx >= splitAt) reserveNotes(blk);
-        pushLines(blk.lines.slice(splitAt), { tokenId: blk.tokenId, part: 'rest', docPart: blk.part });
-        continue;
+      // **RC-5d (i004) — בלוק שנכנס לעמוד כמכלול זורם, לא מוזז:** ensureRoomFor
+      // בודק טור בודד; בלוק שאינו נכנס לאף טור בנפרד אך נכנס לסך השארית של כל
+      // הטורים הפתוחים לזרימה — המורשת מזרימה אותו (breakPara חוצה-טורים,
+      // טור-אחר-טור). הזרמה = נפילה לנתיב הרגיל למטה: pushLines ממלא את הטורים
+      // הפתוחים זה אחר זה, ורק שארית שאינה נכנסת פותחת עמוד חדש מתוך pushLines
+      // עצמו. נמדד לפני התיקון: מסלול זה הגיע ל-findSplit שם maxFit=linesCount ⇒
+      // החלון דורש ≥1 ליעד ⇒ null ⇒ הזזה מלאה של הבלוק ושארית-העמוד כולה נשארת
+      // ריקה (split-none free=530 עם 18/18 שורות — מקור הספירה לאחור של RC-5c).
+      // גרסת הביניים הראשונה של התיקון דילגה ל-splitAt=0 ונפלה בטעות לענף
+      // "אין פיצול חוקי" (flush+הזזה מלאה) — ההפך מכוונת התיקון; נמדד:
+      // very_long 1021→1111 עמודים. המבנה כאן מבטיח ש-fitsPageTotal אינו
+      // עובר כלל דרך ענף ההזזה.
+      let totalFree = 0;
+      for (let c = Math.max(0, flowCol); c < cur.columns.length; c++) {
+        totalFree += Math.max(0, colCapacity(cur.template, cur) - usedHeight(cur.columns[c], cur));
       }
-      // **FX-5/#16 — שמירת עמוד ריק:** אם העמוד ריק משורות גוף — אין טעם לאטום
-      // אותו; הבלוק נכנס לכאן (בעבר נאטם עמוד ריק עם הערות יתומות).
-      if (cur.columns.some(c => c.length)) {
-        flushPage();
-        cur = newPage(PAGE_TYPES.REGULAR);
+      const fitsPageTotal = needStack <= totalFree + CM.CAPACITY_EPS;
+      if (!fitsPageTotal) {
+        const splitAt = findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, settings, generateCandidates, trace, flowCol);
+        if (splitAt > 0) {
+          // **FX-3:** ההערות מחויבות לעמוד של החלק שבו שורת הסמן:
+          // הסמן בחלק הראשון ⇒ כאן; הסמן בהמשך ⇒ בעמוד החדש (לאחר ה-flush).
+          const splitMIdx = (blk.kind === 'paragraph' && (blk.notes || []).length && settings['footnotes-enabled'])
+            ? firstMarkerLineOf(blk) : -1;
+          if (blk.kind === 'paragraph' && splitMIdx < splitAt) reserveNotes(blk);
+          // **FX-6 (פרוסה 2):** החלק הראשון של הפיצול הוא פתיחת בלוק בפועל
+          // בטור שמתחתיו תוכן קיים — חותמת פער כמו כל פתיחת בלוק (בעבר חלק
+          // הפיצול לא סומן כלל כ-firstOfBlock ⇒ הפער לא נגבה גם כשער כניסה).
+          pushLines(blk.lines.slice(0, splitAt - 1), { tokenId: blk.tokenId, part: 'first', firstOfBlock: true, docPart: blk.part });
+          pushLines([blk.lines[splitAt - 1]], { tokenId: blk.tokenId, part: 'first', isLast: true });
+          flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
+          cur.openedBy = blk.tokenId; // מעבר עמוד בפיצול — הבלוק פתח את העמוד החדש
+          if (blk.kind === 'paragraph' && splitMIdx >= splitAt) reserveNotes(blk);
+          pushLines(blk.lines.slice(splitAt), { tokenId: blk.tokenId, part: 'rest', docPart: blk.part });
+          continue;
+        }
+        // **FX-5/#16 — שמירת עמוד ריק:** אם העמוד ריק משורות גוף — אין טעם לאטום
+        // אותו; הבלוק נכנס לכאן (בעבר נאטם עמוד ריק עם הערות יתומות).
+        if (cur.columns.some(c => c.length)) {
+          flushPage();
+          cur = newPage(PAGE_TYPES.REGULAR);
+        }
       }
+      // fitsPageTotal=true: הבלוק זורם בנתיב הרגיל למטה (pushLines ממלא
+      // את הטורים הפתוחים טור-אחר-טור — breakPara של המורשת). chosenCol
+      // אינו בשימוש בהמשך; האיפוס לצורך קריאות בלבד.
       chosenCol = 0;
     }
     // **FX-3 (דוח 06, שלב 5):** התחייבות ההערות בעמוד שבו שורת הסמן נוחתת
@@ -1333,9 +1355,19 @@ function balancePageSafe(page, settings, ledger) {
 }
 
 /** בחירת נקודת פיצול עם הגנות widow/orphan (≥2 שורות לכל צד). */
-function findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, settings = {}, candidatesFn = null, trace = null) {
+function findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, settings = {}, candidatesFn = null, trace = null, fromCol = 0) {
   const cap = colCapacity(cur.template, cur);
-  const free = cap - usedHeight(cur.columns[cur.columns.length - 1], cur);
+  // **RC-5c (i004) — המקום הפנוי הוא של כל הטורים שהזרימה עוד יכולה למלא:**
+  // עד כאן נספר רק הטור האחרון — part1 נמדד לשטח של טור אחד אך pushLines
+  // הציב אותו מהטור הראשון של הזרימה ⇒ הטור השני לא מולא מעולם, ואיזון
+  // ה-flush משך את העמוק לחצי הסך — עמודים שלמים עצרו ~5 שורות מעל התחתית
+  // (הוכח: NEW p136 עוצר ב-y649 מול OLD p140 שממלא שני טוריו עד y769
+  // באותו תוכן; מקור הדומיננטי של עמודי גוף שאינם מגיעים לתחתית). המורשת
+  // ממלאת את שארית שני הטורים בטרם עוברת עמוד (breakPara זורם טור-אחר-טור).
+  let free = 0;
+  for (let c = Math.max(0, fromCol); c < cur.columns.length; c++) {
+    free += Math.max(0, cap - usedHeight(cur.columns[c], cur));
+  }
   // **FX-5 (פרוסה 2 — השלמת תיקון השורש):** maxFit נספר מהגבהים האמיתיים
   // (heightPx מצטבר + פער הכניסה של הבלוק) מול המקום הפנוי — לא מהמרת
   // lineH. ההמרה ההיסטורית (floor(free/lineH)) פסלה פיצולים חוקיים בכל בלוק
@@ -1349,16 +1381,22 @@ function findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, s
     acc += add; maxFit = i + 1;
   }
   // **שלב 5 (#16) + פרוסה 2 (מקור יחיד):** חלון הפיצול החוקי —
-  // constraint-matrix.legalSplitWindow: ≥2 שורות לכל צד **והחלק הראשון
-  // נכנס פיזית** (maxFit). null ⇒ אין פיצול חוקי → הזזה מלאה.
-  const win = CM.legalSplitWindow(blk.lines.length, maxFit);
+  // constraint-matrix.legalSplitWindow: **RC-5b (i004):** בגבול העמוד המינימום
+  // הוא שורה אחת לכל צד (זרימה גרידית כמו המורשת — זנבות 1-2 שורות בראש
+  // העמוד הבא קיימים בייחוס, 43 עמודים; S4.18). המינימום 2-לכל-צד נשאר
+  // לפיצולים הפנימיים בין טורים. null ⇒ אין פיצול חוקי → הזזה מלאה.
+  const win = CM.legalSplitWindow(blk.lines.length, maxFit, { minPerSide: 1 });
   if (!win) {
     if (trace) trace.emit(cur.index, 'split-none', { token: blk.tokenId, lines: blk.lines.length, maxFit, free: Math.round(free) });
     return 0; // אין פיצול חוקי → הזזה מלאה
   }
 
   if (candidatesFn) {
-    const cands = candidatesFn(blk, maxFit, cap, settings, ledger);
+    // **RC-5a (i004):** המועמדים מקבלים את **המקום הפנוי בפועל** של הטור
+    // היעד (cap−used) — לא את הקיבולת המלאה. הניקוד ממזער את השארית
+    // בטור הנוכחי (מילוי גרידי כמו המורשת); עם הקיבולת המלאה הוא
+    // התנהג כאילו הטור ריק ואיזן את גובה שני חלקי הבלוק (חצי-חצי).
+    const cands = candidatesFn(blk, maxFit, free, settings, ledger, { minPerSide: 1 });
     if (cands.length) {
       eventLog.emit('protections', 'candidate-split', { token: blk.tokenId, at: cands[0].cut, score: cands[0].score });
       if (trace) trace.emit(cur.index, 'split-candidate', {
