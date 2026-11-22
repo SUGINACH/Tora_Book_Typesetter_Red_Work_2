@@ -308,6 +308,7 @@ var __paths = {
   "src/engine/core/pipeline.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/core/pipeline.js|../typography/dropword": "src/engine/typography/dropword.js",
   "src/engine/core/pipeline.js|../line/pipeline-bridge": "src/engine/line/pipeline-bridge.js",
+  "src/engine/core/pipeline.js|../line/line-items": "src/engine/line/line-items.js",
   "src/engine/core/pipeline.js|../layout/dp-planner": "src/engine/layout/dp-planner.js",
   "src/engine/core/pipeline.js|../layout/page-templates": "src/engine/layout/page-templates.js",
   "src/engine/core/pipeline.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
@@ -767,6 +768,7 @@ const { applyDropWord } = require('../typography/dropword');
 // נקודות השבירה של ה-pipeline (כותרות/הערות-סיום בגוף/פסקאות-הערה מוסגנות/
 // פסקאות) עוברות כולן דרכו; אין עוד words[] שמחליט שבירה במסלול ה-DP.
 const { layoutModelBlock, flatTextOf } = require('../line/pipeline-bridge');
+const { baseStyleOf } = require('../line/line-items');
 const { planPages, layoutHash, bodyGeometryHash } = require('../layout/dp-planner');
 const { buildPageTemplate, PAGE_TYPES, isImudProfile } = require('../layout/page-templates');
 const { GEO, H23_TITLE_W, H2_AREA_H, H0_AREA_H, H0_TITLE_Y, SZ_CORE } = require('../core/imud-geometry');
@@ -1222,6 +1224,19 @@ function typeset(rawText, settingsIn, env = {}) {
     const colW = (csBlock && csBlock.style.layoutMode === 'full-width')
       ? fullWidthWidth(settings)
       : (inH0Section ? fullWidthWidth(settings) : columnWidthFor({ kind: 'paragraph' }, settings));
+    // **RC-2a (i004) — מקטע 2, סגנון גוף ההקדמה:** המקור מזרים את גוף ה-h0
+    // ב-Frank Ruhl Libre 11.5pt בפיץ' H0_LINE_H (SZ.h0Body/prefaceApi —
+    // הוכח מה-PDF הישן: p43-45 גוף 11.5pt, פיץ' ~15.5pt, ומילות-החלון 17.25=
+    // 11.5×1.5). עד כאן זרם ההקדמה כגוף 12pt — שורות ארוכות מהייחוס,
+    // פיץ' 16.1 במקום 15.5, ומילות-חלון 18pt. הסגנון נבנה כאן פעם אחת
+    // (מקור יחיד) וזורם: מדידה (baseStyle), פיץ' (lineHeightPx), מילת-חלון
+    // (winSizePt), ורינדור (ln.sizePt/ln.font — נקראים ב-line-font.js S6.3).
+    const h0BodySizePt = Number(settings['heading-0-body-size-pt']) || 11.5;
+    const h0BodyFamily = settings['heading-0-body-font'] || null;
+    const h0BaseStyle = inH0Section
+      ? baseStyleOf({ ...settings, 'body-font-size-pt': h0BodySizePt, 'body-font': h0BodyFamily || settings['body-font'] }, 'paragraph')
+      : null;
+    const paraLineHeightPx = inH0Section ? api.lineHeightPx(h0BodySizePt) : api.lineHeightPx(null);
     const customFactorById = new Map(csInlineSpans.map(s => [s.styleId, s.factor]));
     let csInfo = null; // **S11:** סגנון הבלוק שיוצמד לשורות ולבלוק (מדלג על ערכי איטרציות קודמות)
 
@@ -1292,7 +1307,10 @@ function typeset(rawText, settingsIn, env = {}) {
       const startsWithParen = txt.startsWith('(');
       const firstHasNote = !!(mBlk.items && mBlk.items[0] && mBlk.items[0].kind === 'noteMarker')
         || firstWord.includes(String(settings['fn-delim-open'] || '['));
-      const estW = txt ? api.measureTextWidth(txt, settings['body-font-size-pt']) : 0;
+      // RC-2a (i004): בסעיף h0 האמדן ומילת-החלון לפי גודל גוף ההקדמה (11.5) —
+      // הייחוס: 'כהקדמה'/'והנה'/'וכן' נמדדו 17.2pt = 11.5×1.5 (לא 18=12×1.5)
+      const bodySzForWin = inH0Section ? h0BodySizePt : settings['body-font-size-pt'];
+      const estW = txt ? api.measureTextWidth(txt, bodySzForWin) : 0;
       // כמו המקור: עיגול כלפי מעלה (נמדע: הפסקה הראשונה 1.96→2 — בלי ceil
       // נפסלה בניגוד לייחוס שמציג לה חלון)
       const estLines = colW > 0 ? Math.max(1, Math.ceil(estW / colW)) : 0;
@@ -1300,7 +1318,7 @@ function typeset(rawText, settingsIn, env = {}) {
         const winFam = settings['first-word-font'] || null;
         const MeasureAPICls = require('../typography/measure-api').MeasureAPI;
         const wApi = (winFam && MeasureAPICls.forFamily(winFam, settings)) || api;
-        const winSizePt = settings['body-font-size-pt'] * (Number(settings['first-word-size-em']) || 1.5);
+        const winSizePt = bodySzForWin * (Number(settings['first-word-size-em']) || 1.5);
         const wW = wApi.measureTextWidth(firstWord, winSizePt)
           + wApi.measureTextWidth(' ', winSizePt) + 0.5; // D-92: רווח החלון + ביטחון
         if (wW < colW * 0.5) winSpec = { widthPx: wW };
@@ -1308,13 +1326,23 @@ function typeset(rawText, settingsIn, env = {}) {
     }
     const built = layoutModelBlock(mBlk, {
       settings, kind: 'paragraph', widthPx: colW,
-      lineHeightPx: api.lineHeightPx(null),
+      lineHeightPx: paraLineHeightPx,
+      ...(h0BaseStyle ? { baseStyle: h0BaseStyle, parenContextSizePt: h0BodySizePt } : {}),
       runts: settings['runt-min-width-pct'],
       notesByRef, customStyles,
       measureCtx: { assetResolver: docAssets, measure: api },
       ...(winSpec ? { window: winSpec } : {})
     });
     const lines = built.view;
+    // **RC-2a (i004):** התצוגה נושאת את גודל/גופן גוף ההקדמה — line-font.js
+    // (S6.3) קורא ln.sizePt/ln.font בהקרנת PDF וב-DOM כאחד; בלי זה נפלו
+    // ל-body-font-size-pt/body-font (12pt גוף הספר) בניגוד למדידה.
+    if (inH0Section) {
+      for (const ln of lines) {
+        ln.sizePt = h0BodySizePt;
+        if (h0BodyFamily) ln.font = h0BodyFamily;
+      }
+    }
     for (const d of (built.diagnostics || [])) {
       ledger.create('line-engine', `para:${t.id}`, null, d, 'measure');
     }
@@ -2296,6 +2324,7 @@ const registry = [
   // **S6.3 (חיבור הגדרות):** גוף ההקדמה (f-h0-body במקור — Frank Ruhl
   // Libre 11.5pt) וכותרת עמודי ההערות (f-note-title — David Libre).
   K('heading-0-body-font', 'font', 'Frank Ruhl Libre', P.TYPO, 'sel-h0-body-font', ['layout/legacy-imud-flow'], 'fx:h0-body-font', { note: 'S6.3: גוף ההקדמה — מדידה (prefaceApi) ורינדור באותו גופן' }),
+  K('heading-0-body-size-pt', 'number', 11.5, P.TYPO, 'rng-h0-body-size', ['core/pipeline', 'layout/legacy-imud-flow'], 'fx:h0-body-size', { min: 6, max: 40, step: 0.5, note: 'RC-2a (i004): גודל גוף ההקדמה — המקור s-h0-body=11.5; הפיץ׳ 11.5×1.34×4/3 = H0_LINE_H. עד כאן לא מופוה ייבוא ⇒ ההקדמה זרמה ב-12pt' }),
   K('endnote-title-font', 'font', 'David Libre', P.NOTES, 'sel-endnote-title-font', ['layout/legacy-imud-flow'], 'fx:endnote-title-font', { note: 'S6.3: גופן כותרת עמודי הערות' }),
   K('body-last-line-align', 'enum', 'center', P.TYPO, 'sel-last-line-align', ['output/dom-renderer'], 'fx:last-line-align', { enum: ['center', 'right', 'stretch'], note: 'wiring מ‑Orange ✓' }),
 
@@ -7474,8 +7503,19 @@ function parenSpansOfFlat(flat) {
  * סגנון inline על פני סוגריים (הסגנון תופס ראשון — שניהם לא חופפים בפועל).
  * @returns {{wordStyleOf:(docStart:number,docEnd:number)=>({advanceFactor:number,paren?:boolean,customStyleId?:string}|null), diagnostics:Array}}
  */
-function wordOverlayFactory(blk, settings, customStyles) {
-  const parenScale = Number(settings['paren-style-scale']) || 1;
+function wordOverlayFactory(blk, settings, customStyles, opts) {
+  // **RC-2c (i004): גודל הסוגריים אבסולוטי כמו המורשת** (SZ.body+parenDelta =
+  // 10pt קבוע — גם בהקדמה שגופה 11.5pt; הוכח מה-PDF הישן: ספאני סוגריים
+  // ב-p43 ב-10.0pt ממש כמו בגוף). ה-scale המיובא הוא יחסי לגוף (10/12);
+  // לבלוק שגודל גופו שונה (הקדמה) נגזר מחדש: factor = absParen / contextSize.
+  // ה-DOM כבר מציג אבסולוטי (parenPx = SZ.body+parenDelta) — בלי זה המדידה
+  // וה-PDF (9.58pt) סוטים מהתצוגה (10pt).
+  const rawScale = Number(settings['paren-style-scale']) || 1;
+  const ctxSz = opts && Number(opts.contextSizePt) > 0 ? Number(opts.contextSizePt) : null;
+  const bodySz = Number(settings['body-font-size-pt']);
+  const parenScale = (ctxSz && rawScale !== 1 && Number.isFinite(bodySz) && bodySz > 0)
+    ? (bodySz * rawScale) / ctxSz
+    : rawScale;
   const { flat, segs } = flatTextOf(blk);
   const overlays = []; // {docFrom, docTo, advanceFactor, kind:'paren'|'custom', styleId?}
   const diagnostics = [];
@@ -7603,7 +7643,8 @@ function layoutModelBlock(blk, spec) {
   if (spec.kind === 'heading') baseStyle.familyOverridesRuns = true;
   const { wordStyleOf } = spec.wordOverlay
     ? { wordStyleOf: spec.wordOverlay }
-    : wordOverlayFactory(blk, settings, spec.customStyles || null);
+    : wordOverlayFactory(blk, settings, spec.customStyles || null,
+        spec.parenContextSizePt ? { contextSizePt: spec.parenContextSizePt } : undefined);
   // סמנטיקת כותרת 3 (D-S2H3, §21/§13 בהוראה): פריט סמנטי אחד — הרווח
   // התחתון שייך לכולו ומופיע פעם אחת אחרי ה-fragment האחרון; ה-pitch נגזר
   // מהחוזה לפי גודל הכותרת בפועל (core/h3-contract — מקור יחיד).
@@ -8667,12 +8708,14 @@ const res = breakItemSequence(ex.kept, maxWidthPx, {
     // **Iteration-003 (מילת-חלון):** שורה 0 נושאת את מילות החלון ורוחבן;
     // שורות 0–1 מסומנות window (נמדדו ברוחב מוקטן — הרינדרר מזיז את תיבת
     // השורה מעבר לחלון, כמו line--window-wrap ב-DOM וכמו limitOf במורשת).
+    // **RC-2b (i004):** windowW חייב להישאר גם על שורה 1 — ההקרנה
+    // (materialize: winShift) וה-DOM (line--window-wrap) בודקים
+    // Number.isFinite(ln.windowW); בלי זה נמדדה שורה 1 ברוחב מוקטן
+    // אך הוצגה מיושבת לרוחב מלא — רווחים של ~20pt (נמדד p43/p46) במקום
+    // ~5pt, והרכב מילים צר מהייחוס.
     if (windowMark) {
-      if (i < 2) lines[i].window = true;
-      if (i === 0) {
-        lines[i].windowWords = windowMark.words;
-        lines[i].windowW = windowMark.widthPx;
-      }
+      if (i < 2) { lines[i].window = true; lines[i].windowW = windowMark.widthPx; }
+      if (i === 0) lines[i].windowWords = windowMark.words;
     }
     if (sequence.semantic && sequence.semantic.kind === 'heading3') {
       lines[i].semantic = {
@@ -25001,6 +25044,14 @@ function projectLine(ln, colX, y, colW, settings, measure, align, production) {
   // למדוד ולהציג באותם גדלים — אחרת מילות הסוגריים/הסגנון חורגות מה-DOM
   // ומהמודל שנמדד. ה-pdf-writer מכבד w.sizePt פר-מילה ממילא.
   const parenScale = Number(settings['paren-style-scale']) || 1;
+  // **RC-2c (i004): גודל הסוגריים אבסולוטי** — כמו ה-DOM (parenPx =
+  // SZ.body+parenDelta) וכמו המורשת (10pt קבוע גם בהקדמה שגופה 11.5pt;
+  // הוכח מה-PDF הישן: p43 ספאני סוגריים 10.0pt). ה-scale המיובא יחסי לגוף
+  // (10/12) — כאן נגזר הגודל האבסולוטי ומוצב ישירות, כך ששורת הקדמה
+  // (11.5pt) מקבלת 10pt ולא 9.58pt — תצוגה = ייצוא = מדידה.
+  const parenAbsPt = parenScale !== 1
+    ? (Number(settings['body-font-size-pt']) || 12) * parenScale
+    : null;
   const csFactors = (ln.customSpans && ln.customSpans.length) ? customFactorMapOf(settings) : null;
   const parenSet = (ln.parenSpans && ln.parenSpans.length && parenScale !== 1) ? new Set(ln.parenSpans) : null;
   const effSizeOf = (i) => {
@@ -25009,7 +25060,7 @@ function projectLine(ln, colX, y, colW, settings, measure, align, production) {
       const cs = ln.customSpans.find((c) => c.wi === i);
       if (cs) { const f = csFactors.get(cs.styleId); if (f != null) s *= f; }
     }
-    if (parenSet && parenSet.has(i)) s *= parenScale;
+    if (parenSet && parenSet.has(i)) s = parenAbsPt != null ? parenAbsPt : s * parenScale;
     return s;
   };
   const words = (ln.words || []).map(w => scrubPUAText(String(w).replace(/\u00A0/g, ' '))).filter(Boolean);
