@@ -20,7 +20,7 @@
  * אין מדידת רוחב כפולה.
  */
 
-const { breakItemSequence, STRETCH_RATIO, SHRINK_RATIO } = require('../typography/kp-linebreak');
+const { breakItemSequence, glueWidths, STRETCH_RATIO, SHRINK_RATIO } = require('../typography/kp-linebreak');
 
 /** גרסת חוזה מודל השורה. */
 const LINE_MODEL_VERSION = 'line-model-v2(floats+justify-policy+gap-chars)';
@@ -62,6 +62,11 @@ function layoutSequence(sequence, opts = {}) {
   }
   const diagnostics = [];
   const items = sequence.items;
+  // **Iteration-003 (מילת-חלון):** חד-פעמי לכל הרצף — מקטע הזרימה הראשון
+  // בלבד; windowMark נצבר לסימון השורות לאחר ההרכבה.
+  let windowDone = false;
+  let windowMark = null;
+  let windowPreLines = 0; // כמות שורות החלון שהורכבו מראש (גרידי)
 
   // ── מדיניות יישור (§3.7): מפורש מ-opts.justify, או מופק מהגדרות המסמך,
   //    או ברירת המחדל האפקטיבית של המוצר. לעולם לא הנחת ragged שקטה.
@@ -106,10 +111,64 @@ function layoutSequence(sequence, opts = {}) {
     const ex = extractFloats(seg.items);
     for (const f of ex.floats) floats.push(f);
     if (!ex.kept.length) continue;
-    // ── אילוץ אזור לתמונה הצפה (§4.1-7): wrap-start/wrap-end מקטינים את
-    // הרוחב האפקטיבי של השורות שבגובה התמונה — אותו DP, אילוץ אחד.
-    const wrap = wrapConstraintOf(ex.floats, maxWidthPx, opts);
-    const res = breakItemSequence(ex.kept, maxWidthPx, {
+    // **Iteration-003 (legacy parity — מילת-חלון):** בפרופיל IMUD המילה
+    // הראשונה של הפסקה מוצאת מהזרימה (כמו createDropWord/window של
+    // המקור) ושתי השורות הראשונות נשברות ברוחב מוקטן (limitOf של המורשת).
+    // החילוץ: רצף התיבות המוביל המחובר ב-glue פנימי (מילה אחת) + השמטת
+    // ה-glue החיצוני שאחריו.
+    if (opts.window && !windowDone && ex.kept.length && ex.kept[0].role === 'box') {
+      let wEnd = 1;
+      while (wEnd + 1 < ex.kept.length && ex.kept[wEnd].role === 'glue' && ex.kept[wEnd].internal && ex.kept[wEnd + 1].role === 'box') wEnd += 2;
+      const winBoxes = ex.kept.slice(0, wEnd);
+      const winText = winBoxes.map(b => (b.fragments || []).map(f => f.text).join('')).join('');
+      let after = wEnd;
+      if (ex.kept[after] && ex.kept[after].role === 'glue' && !ex.kept[after].internal) after++;
+      ex.kept.splice(0, after);
+      windowDone = true;
+      windowMark = { words: [winText], widthPx: opts.window.widthPx };
+      if (!ex.kept.length) continue;
+      // **Iteration-003 (מילוי גרידי כמו limitOf של המורשת):** שורות 0–1
+      // ממולאות גרידית ברוחב המוקטן (colW−חלון) — לא ע"י ה-DP. ה-DP ממטב
+      // את כל השורות יחד ובפסקאות-חלון בחר לפעמים שורת-מילה-אחת (badness 0
+      // בלי glue-stretch; נמדד: 'גם' בודדת בשורה 0) — ואז fixDropWordInColumns
+      // מזג אותה קדימה והשמיט את שורת החלון כולה. הגרידי של המקור ממלא עד
+      // גבול הרוחב — שורות 0–1 מלאות תמיד (אותה אריתמטיקה של limitOf).
+      const narrowW = Math.max(40, maxWidthPx - opts.window.widthPx);
+      const winWrap = { widthAt: (li) => (li < 2 ? narrowW : maxWidthPx) };
+      let fillFrom = 0;
+      let preCount = 0;
+      for (let wLine = 0; wLine < 2; wLine++) {
+        let wAcc = 0, lastBox = -1;
+        for (let j = fillFrom; j < ex.kept.length; j++) {
+          const it = ex.kept[j];
+          const add = it.role === 'box' ? it.measuredAdvance : glueWidths(it).width;
+          if (lastBox >= fillFrom && wAcc + add > narrowW - 0.75) break;
+          wAcc += add;
+          if (it.role === 'box') lastBox = j;
+        }
+        if (lastBox < fillFrom) break;
+        const cut = { from: fillFrom, to: lastBox + 1, badness: 0, reason: 'window-greedy' };
+        const lm = assembleLine(ex.kept, cut, maxWidthPx, winWrap, opts, policy, sequence, wLine, ex.floats);
+        if (lm) { lines.push(lm); preCount++; }
+        fillFrom = lastBox + 1;
+        while (fillFrom < ex.kept.length && ex.kept[fillFrom].role === 'glue' && !ex.kept[fillFrom].internal) fillFrom++;
+      }
+      windowPreLines = preCount;
+      if (fillFrom >= ex.kept.length) continue;
+      ex.kept.splice(0, fillFrom);
+    }
+    // **Iteration-003:** אילוץ החלון משולב במנגנון האילוץ הפר-שורה של הצפות
+    // (מינימום פר-שורה) — מקור אחד לאילוץ רוחב בשבירה ובהרכבה.
+    const floatWrap = wrapConstraintOf(ex.floats, maxWidthPx, opts);
+    // **Iteration-003:** אילוץ החלון חל רק כששורות החלון לא הורכבו כבר
+    // בגרידי (windowPreLines) — השארית נשברת ברוחב מלא.
+    const windowWrap = opts.window && !windowPreLines ? {
+      widthAt: (li) => (li < 2 ? Math.max(40, maxWidthPx - opts.window.widthPx) : maxWidthPx)
+    } : null;
+    const wrap = floatWrap && windowWrap
+      ? { widthAt: (li) => Math.min(floatWrap.widthAt(li), windowWrap.widthAt(li)) }
+      : (floatWrap || windowWrap);
+const res = breakItemSequence(ex.kept, maxWidthPx, {
       runts: opts.runts,
       raggedEnd: opts.raggedEnd,
       lineWidthAt: wrap ? (li) => wrap.widthAt(li) : null
@@ -125,6 +184,16 @@ function layoutSequence(sequence, opts = {}) {
   for (let i = 0; i < lines.length; i++) {
     lines[i].index = i;
     lines[i].isLast = i === lines.length - 1;
+    // **Iteration-003 (מילת-חלון):** שורה 0 נושאת את מילות החלון ורוחבן;
+    // שורות 0–1 מסומנות window (נמדדו ברוחב מוקטן — הרינדרר מזיז את תיבת
+    // השורה מעבר לחלון, כמו line--window-wrap ב-DOM וכמו limitOf במורשת).
+    if (windowMark) {
+      if (i < 2) lines[i].window = true;
+      if (i === 0) {
+        lines[i].windowWords = windowMark.words;
+        lines[i].windowW = windowMark.widthPx;
+      }
+    }
     if (sequence.semantic && sequence.semantic.kind === 'heading3') {
       lines[i].semantic = {
         kind: 'heading3', itemId: sequence.semantic.itemId,

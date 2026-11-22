@@ -297,7 +297,28 @@ function projectPage(page, settings, apiOrOpts) {
           y += (ln.heightPx || 0) * (ln.aqStretch || 1);
           continue;
         }
-        out.lines.push(projectLine(ln, col.x, y, col.w, settings, measure, lineAlignOf(ln, settings), production));
+        // **Iteration-003 (מילת-חלון):** שורות 0–1 של פסקת-חלון נמדדו ברוחב
+        // מוקטן — התיבה מוזזת מעבר לחלון בצד ימין (RTL) ומילת החלון
+        // נפלטת בשפה בגודל 1.5× בגופן החלון (window — FrankReal-Bold),
+        // בסיס +2px מתחת לבסיס השורה (כמו winBase במקרן המורשת וב-DOM).
+        const winShift = ln.window && Number.isFinite(ln.windowW) ? ln.windowW : 0;
+        // **RTL:** השפה הימנית של תיבת השורה זזה שמאלה מעבר לחלון (כמו
+        // right=windowW ב-DOM) — השפה השמאלית נשארת בשפת הטור.
+        const lnProj = projectLine(ln, col.x, y, col.w - winShift, settings, measure, lineAlignOf(ln, settings), production);
+        if (ln.windowWords && ln.windowWords.length) {
+          const winText = ln.windowWords.join(' ');
+          const winSizePt = (ln.sizePt || settings['body-font-size-pt']) * (Number(settings['first-word-size-em']) || 1.5);
+          const winW = Math.max(4, ln.windowW - 2);
+          lnProj.words = lnProj.words || [];
+          lnProj.words.push({
+            text: winText, x: col.x + col.w - winW, w: winW,
+            baselineY: null, __window: true, // נקבע במעבר התיקון אחרי attachBaselines
+            sizePt: winSizePt, fontKey: 'window',
+            ...(settings['first-word-color'] && settings['first-word-color'] !== '#000000'
+              ? { color: hexColorToRgb(settings['first-word-color']) } : {})
+          });
+        }
+        out.lines.push(lnProj);
         // **EXT-20:** מקדם ה-AQ מיושם על גובה השורה (אנכי) — השורות שאחריה
         // זזות בהתאם; התיבה והבסיס מחושבים מהגובה הנמתח (מודל תיבת שורה).
         // **FX-6:** הפער קבוע — אינו מתמתח עם השורות.
@@ -441,6 +462,15 @@ function projectPage(page, settings, apiOrOpts) {
 
   // **S12 (parity):** בסיסי שורות/מרזב/גיליון/כותרת — מודל תיבת שורה אחיד
   attachBaselines(out, settings, measure);
+  // **Iteration-003 (מילת-חלון):** בסיס מילת החלון — 2px מתחת לבסיס שורת
+  // הטקסט (כמו winBase=baseY+2 במקרן המורשת; נמדע בייחוס: חלון 155.25
+  // מול שורה 153.75). נקבע כאן — אחרי שבסיסי השורות חושבו.
+  for (const ln of (out.lines || [])) {
+    if (!ln.words) continue;
+    for (const w of ln.words) {
+      if (w.__window && ln.baselineY != null) w.baselineY = ln.baselineY + 2;
+    }
+  }
 
   return out;
 }

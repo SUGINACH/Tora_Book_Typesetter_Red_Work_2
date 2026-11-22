@@ -315,6 +315,84 @@ function autoQualityPass(pages, settings, eventLog) {
       // ההערות (על הטור האחרון). המתיחה עד לתחתית האמיתית של הטור.
       const cap = colCapacityOf(page, { colIndex: c });
       const deficit = cap - used;
+      // **Iteration-003 (legacy parity — מתיחת הבלוק האחרון בלבד):** בפרופיל
+      // IMUD המקור (v21 stretchLastBlockToBottom) מותח את **הבלוק האחרון**
+      // של הטור עד התחתית — בריווח-פסקה עד JUSTIFY_MAX_GAP(9px) ותוספת
+      // גובה-שורה עד JUSTIFY_MAX_LH_EXTRA(3px), בתקרת עמוד
+      // PAGE_STRETCH_MAX(48px). עד כאן ה-AQ המאוחד מתח את **כל** שורות
+      // הטור עד +5% — ה"שורות הדלילות" שדווחו (נמדד: פיץ' דומיננטי 17.0pt
+      // מול 16.08 הקבוע בייחוס; היסטוגרמת הייחוס: 16.0 דומיננטי, המתיחה
+      // מרוכזת בזנב). ב-DP — מנגנון ה-AQ המלא נשאר כפי שננעל בקורפוסים.
+      const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+      if (imudProf) {
+        if (deficit > 4 && deficit <= 48 && mayStretch) {
+          // זנב הבלוק האחרון — רצף שורות מהסוף באותו tokenId (לא פס קבוע)
+          let start = lines.length;
+          const lastIdx = lines.length - 1;
+          const tokOf = (ln) => (ln.tokenId != null ? ln.tokenId : null);
+          const lastTok = tokOf(lines[lastIdx]);
+          while (start > 0) {
+            const ln = lines[start - 1];
+            if (isFixedBandLine(ln)) break;
+            if (tokOf(ln) !== lastTok) break;
+            start--;
+          }
+          const run = lines.slice(start);
+          const n = run.length;
+          if (n > 0) {
+            // קיבולת המתיחה: תוספת ריווח (עד 9px לגבול שמעל הרצף) + תוספת
+            // גובה-שורה (עד 3px לשורה) — כמו justifyColUnits במורשת.
+            let gapRoom = 0;
+            const g0 = run[0].gapBeforePx || 0;
+            if (g0 > 0) gapRoom = Math.max(0, 9 - g0);
+            const lhRoom = n * 3;
+            const room = Math.min(deficit - 2, gapRoom + lhRoom);
+            if (room > 0.5) {
+              const gapTake = Math.min(gapRoom, room);
+              const lhTake = room - gapTake;
+              if (gapTake > 0) run[0].gapBeforePx = g0 + gapTake;
+              if (lhTake > 0) {
+                const rawRun = run.reduce((s2, ln) => s2 + (ln.heightPx || 0), 0);
+                if (rawRun > 0.5) {
+                  // **U-10 (אמנת פקטור אבסולוטי):** הפקטור מוחל כהחלפה —
+                  // הוא חייב לכסות גם את ביטול כיווץ align קודם (0.975) שעל
+                  // שורות הרצף. הנוסחה האבסולוטית: otherUsed + gapsNew +
+                  // rawRun×factor = used + room — נוחת בדיוק על היעד.
+                  // גבהים מתוחים נוכחיים (בלי פערים — הפערים אינם מוכפלים
+                  // בפקטור): factor = (Σh×s + lhTake) / Σh
+                  const stretchedH = run.reduce((s2, ln) => s2 + (ln.heightPx || 0) * (ln.aqStretch || 1), 0);
+                  const factor = (stretchedH + lhTake) / rawRun;
+                  for (const ln of run) ln.aqStretch = factor;
+                  applied++;
+                  eventLog.emit('justify', 'aq-last-block', { page: page.index, col: c, factor: Number(factor.toFixed(4)), lines: n }, page.index);
+                }
+              } else {
+                applied++;
+                eventLog.emit('justify', 'aq-last-block-gaps', { page: page.index, col: c, gapTake: Number(gapTake.toFixed(2)) }, page.index);
+              }
+            }
+          }
+        }
+        if (deficit < -4 && compressFirst) {
+          // **Iteration-003 (כיווץ בטיחות):** עודף מעל התקרה — בדרך כלל
+          // תקציב הערות שהוזמן אחרי מילוי הטור (FX-3) שצימצם את הקיבולת
+          // בדיעבד. כמו המסלול הכללי — כיווץ עד המינימום; זה מנגנון הכלה
+          // (containment), לא המתיחה האסתטית שביטלנו לעיל.
+          const parts = columnStretchParts(lines);
+          const rawL = rawLinesOf(lines);
+          const fixed = fixedBandPx(lines);
+          const rawFactor = rawL > 0.5 ? (cap - parts.gaps - fixed) / rawL : 1;
+          const [lo] = stageBounds(settings, 'word-spacing');
+          const hi = 1;
+          const factor = Math.max(lo, Math.min(hi, rawFactor));
+          if (Math.abs(factor - 1) > 1e-4) {
+            for (const ln of lines) if (!isFixedBandLine(ln)) ln.aqStretch = factor;
+            applied++;
+            eventLog.emit('justify', 'aq-imud-compress', { page: page.index, col: c, factor: Number(factor.toFixed(4)) }, page.index);
+          }
+        }
+        continue; // ב-IMUD אין מתיחת כל-השורות — הבלוק האחרון בלבד (וכיווץ בטיחות)
+      }
       if (deficit > 4 && mayStretch) {
         // **S72 (שיפור 4) + FX-6 (פרוסה 2):** מקדם מדויק עם פערים קבועים —
         // (cap − Σgap)/ΣheightPx — מגיע ליעד בדיוק גם בטורים מעורבי-גבהים

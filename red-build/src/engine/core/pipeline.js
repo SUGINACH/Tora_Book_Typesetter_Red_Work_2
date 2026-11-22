@@ -548,12 +548,46 @@ function typeset(rawText, settingsIn, env = {}) {
     // LineModel → תצוגה נגזרת. שכבות-על של סוגריים/סגנון inline מוחלות בתוך הגשר בקואורדינטות
     // מקור; אין סנטינלים ואין ניקוי סנטינלים — המידע נוסע על הפרגמנטים
     // (לינאריות הרוחב בלבד — הגובה/הבסיס נשארים של השורה, כמו הנתיב החי).
+    // **Iteration-003 (legacy parity — מילת-חלון):** בפרופיל IMUD, מילת-החלון
+    // של המקור (createDropWord: המילה הראשונה של פסקה רבת-שורות מוצאת
+    // מהזרימה ומוצגת בשפה הימנית ב-1.5× בגופן FrankReal; שתי השורות
+    // הראשונות ברוחב מוקטן). תנאי המקור: estLines ≥ drop-word-min-lines,
+    // לא מתחילה בסוגריים, המילה הראשונה בלי סמן הערה (S4.13/S6.0/F1).
+    // **היקף:** IMUD בלבד — ב-DP מנגנון ה-drop הגיאומטרי-ניטרלי של RED
+    // (applyDropWord) נשאר כפי שננעל.
+    const imudWin = !!(settings['_layout-profile'] === 'imud' || settings._imudRaw)
+      && String(settings['first-word-mode'] || '') === 'drop';
+    let winSpec = null;
+    if (imudWin) {
+      // flatTextOf מחזיר { flat, segs } — הטקסט השטוח בשדה flat
+      const flatPara = flatTextOf(mBlk);
+      const txt = String((flatPara && flatPara.flat) || '').trim();
+      const minLines = Math.max(1, Number(settings['first-word-threshold-lines']) || 2);
+      const firstWord = txt.split(/\s+/)[0] || '';
+      const startsWithParen = txt.startsWith('(');
+      const firstHasNote = !!(mBlk.items && mBlk.items[0] && mBlk.items[0].kind === 'noteMarker')
+        || firstWord.includes(String(settings['fn-delim-open'] || '['));
+      const estW = txt ? api.measureTextWidth(txt, settings['body-font-size-pt']) : 0;
+      // כמו המקור: עיגול כלפי מעלה (נמדע: הפסקה הראשונה 1.96→2 — בלי ceil
+      // נפסלה בניגוד לייחוס שמציג לה חלון)
+      const estLines = colW > 0 ? Math.max(1, Math.ceil(estW / colW)) : 0;
+      if (txt && firstWord && !startsWithParen && !firstHasNote && estLines >= minLines && firstWord.length <= 24) {
+        const winFam = settings['first-word-font'] || null;
+        const MeasureAPICls = require('../typography/measure-api').MeasureAPI;
+        const wApi = (winFam && MeasureAPICls.forFamily(winFam, settings)) || api;
+        const winSizePt = settings['body-font-size-pt'] * (Number(settings['first-word-size-em']) || 1.5);
+        const wW = wApi.measureTextWidth(firstWord, winSizePt)
+          + wApi.measureTextWidth(' ', winSizePt) + 0.5; // D-92: רווח החלון + ביטחון
+        if (wW < colW * 0.5) winSpec = { widthPx: wW };
+      }
+    }
     const built = layoutModelBlock(mBlk, {
       settings, kind: 'paragraph', widthPx: colW,
       lineHeightPx: api.lineHeightPx(null),
       runts: settings['runt-min-width-pct'],
       notesByRef, customStyles,
-      measureCtx: { assetResolver: docAssets, measure: api }
+      measureCtx: { assetResolver: docAssets, measure: api },
+      ...(winSpec ? { window: winSpec } : {})
     });
     const lines = built.view;
     for (const d of (built.diagnostics || [])) {
@@ -926,10 +960,24 @@ function typeset(rawText, settingsIn, env = {}) {
       h2 = (pg.toc && (pg.toc.headerTitle || pg.toc.title)) || 'תוכן העניינים';
       pg.headerCtx = { bookName, h1: '', h2 };
     } else {
+      // **Iteration-003 (תיקון המשך — כותרת רבת-שורות):** ההקשר הרץ נקבע מהכותרת
+      // השלמה, לא משורתה האחרונה. עד כאן כל שורת heading דרסה את ההקשר —
+      // כותרת H2 שנעטפה לשתי שורות השאירה במרכז את ההמשך בלבד (נמדד:
+      // 'בעניין מי ששכח...' איבד את 'בעניין'). כאן: קיבוץ שורות הכותרת לפי
+      // tokenId ואיחוי הטקסט המלא של הכותרת האחרונה בעמוד — כמו setHeader
+      // של המורשת שקורא את כותרת הבלוק ולא שורה בודדת.
+      const byTok = new Map();
       for (const ln of pageLines(pg)) {
         if (ln.kind !== 'heading') continue;
-        if (ln.level <= 1) { runningH1 = ln.words.join(' '); }
-        else if (ln.level === 0 || ln.level === 2) { runningH2 = stripSimanPrefix(ln.words.join(' ')); }
+        const key = ln.tokenId != null ? ln.tokenId : `anon-${ln.level}`;
+        if (!byTok.has(key)) byTok.set(key, []);
+        byTok.get(key).push(ln);
+      }
+      for (const [, lns] of byTok) {
+        const lvl = lns[0].level;
+        const full = lns.map(ln => ln.words.join(' ')).join(' ').replace(/\s+/g, ' ').trim();
+        if (lvl <= 1) { runningH1 = full; }
+        else if (lvl === 0 || lvl === 2) { runningH2 = stripSimanPrefix(full); }
       }
       h1 = runningH1; h2 = runningH2;
       pg.headerCtx = { bookName, h1, h2 };
@@ -1071,6 +1119,12 @@ function typeset(rawText, settingsIn, env = {}) {
         for (const w of (ln.words || [])) {
           if (w.includes(ATOMIC)) out.push(...explodePlaceholderWord(w));
           else out.push(...wordSeq(w));
+        }
+        // **Iteration-003 (מילת-חלון):** המילה הראשונה הוצאה מהזרימה אך
+        // היא תוכן מרונדר (בשפה הימנית) — נספרת כאן כדי שחשבונאות השימור
+        // תישאר מדויקת (בלי זה: כל פסקת-חלון הייתה נחשבת כחסרת מילה).
+        if (ln.windowWords && ln.windowWords.length) {
+          for (const w of ln.windowWords) out.push(...wordSeq(w));
         }
       }
       // **Iteration-003 (legacy parity):** תוכן שער-המשנה — ה-h1 נצרך לשער

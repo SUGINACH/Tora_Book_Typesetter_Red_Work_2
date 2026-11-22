@@ -590,6 +590,31 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       if (!wordsByRole.has(w.fontKey)) wordsByRole.set(w.fontKey, []);
       wordsByRole.get(w.fontKey).push(w.text);
     }
+    // **Iteration-003 (תצוגה=ייצוא — סלוטי כותרת וגיליון):** טקסטים שאינם
+    // בשורות/הערות — סלוטי הכותרת העליונה (fontKey = המשפחה מההגדרות,
+    // למשל Livorna) והגיליון. בלי האיסוף הזה תת-הגופן של המשפחה נבנה ממלאי
+    // חלקי (מקורות אחרים) ואותיות בודדות נפלו ל-/F1 — גופן מעורב בכותרת
+    // (נמדע: 'בעניין' הוצג 'בע'+F1+'נ'+F2+'יין'). אוספים גם מילים ממוקמות
+    // (legacy) וגם סלוט טקסטואלי מוטבע.
+    for (const pg of pages) {
+      if (pg.header) for (const s of (pg.header.slots || [])) {
+        if (!s) continue;
+        for (const w of (s.words || [])) {
+          const k = w.fontKey != null ? w.fontKey : s.fontKey;
+          if (k == null) continue;
+          if (!wordsByRole.has(k)) wordsByRole.set(k, []);
+          wordsByRole.get(k).push(w.text);
+        }
+        if ((!s.words || !s.words.length) && s.text && s.fontKey != null) {
+          if (!wordsByRole.has(s.fontKey)) wordsByRole.set(s.fontKey, []);
+          wordsByRole.get(s.fontKey).push(s.text);
+        }
+      }
+      if (pg.folio && pg.folio.text && pg.folio.fontKey != null) {
+        if (!wordsByRole.has(pg.folio.fontKey)) wordsByRole.set(pg.folio.fontKey, []);
+        wordsByRole.get(pg.folio.fontKey).push(pg.folio.text);
+      }
+    }
     const mkRoleFont = (roleKey, family) => {
       const prof = registeredFontsRef.get(family);
       if (!prof) return null;
@@ -598,7 +623,10 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       const sub = buildSubset(prof, charInventory(parts.join(' ')));
       return sub.ok ? mkFont(sub) : null;
     };
-    const fontForWriter2 = mkRoleFont('window', 'FrankReal-Bold');
+    // **Iteration-003 (מילת-חלון):** משפחת החלון — FrankReal-Bold כשרשומה
+    // תחת שמה, ואם לא — המשפחה 'FrankReal' (הקטלוג רושם את FrankReal-Bold.ttf
+    // תחת 'FrankReal'; בלי הנפילה מילות החלון נפלו ל-/F1 גוף).
+    const fontForWriter2 = mkRoleFont('window', 'FrankReal-Bold') || mkRoleFont('window', 'FrankReal');
     const fontForWriter3 = mkRoleFont('heading', 'DavidLibre-Bold');
     // **Iteration-003:** משפחת גוף ההערה מההגדרות (f-note-body-font — אסיסטנט
     // קל מאוד בפרוביל IMUD, כמו fnApi של המורשת); נפילה היסטורית ל-FRL.

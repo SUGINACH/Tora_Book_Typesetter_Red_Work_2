@@ -498,4 +498,4 @@ function leadingGlueWidth(seq, i) {
   return 0;
 }
 
-module.exports = { breakLines, badness, breakItemSequence, STRETCH_RATIO, SHRINK_RATIO, LINE_DEMERIT, RAGGED_END_STRETCH_FACTOR, FIT_EPS };
+module.exports = { breakLines, badness, breakItemSequence, glueWidths, STRETCH_RATIO, SHRINK_RATIO, LINE_DEMERIT, RAGGED_END_STRETCH_FACTOR, FIT_EPS };

@@ -243,7 +243,10 @@ function layoutModelBlock(blk, spec) {
     maxWidthPx: spec.widthPx,
     settings,
     runts: spec.runts,
-    lineHeightPx: spec.lineHeightPx
+    lineHeightPx: spec.lineHeightPx,
+    // **Iteration-003 (מילת-חלון):** רוחב החלון מה-pipeline (פרופיל IMUD)
+    // — השורות 0–1 נשברות ברוחב מוקטן והמילה מסומנת על שורה 0.
+    ...(spec.window ? { window: spec.window } : {})
   });
   // **שלב 8 פרוסה 2 (§4.2 — מדידה אחת לטקסט-המקור של צף):** תחביר המקור של
   // תמונה צפה נספר ב-words לחשבונאות התוכן ומוצג כמילה (התנהגות המוצר עד
@@ -359,6 +362,12 @@ function legacyViewOfLines(lines, extras = {}) {
       ...(customSpans.length ? { customSpans } : {}),
       // ה-LineModel המלא — מגיע ל-Planner/רנדרר בלי שיטוח (שער §17: "LineModel מלא מגיע ל-Planner")
       lineModel: ln,
+      // **Iteration-003 (מילת-חלון):** דגלי החלון עוברים ל-view — ה-DOM
+      // (line--window-wrap / w--window) והמקרן (הזחת תיבת השורה + פליטת
+      // המילה ב-1.5× בגופן החלון) צורכים אותם.
+      ...(ln.window ? { window: true } : {}),
+      ...(ln.windowW != null ? { windowW: ln.windowW } : {}),
+      ...(ln.windowWords ? { windowWords: ln.windowWords } : {}),
       // סמנטיקה (H3 — D-S2H3): מוצמדת לשורה; שום שלב אינו מוסיף רווח נוסף
       ...(ln.semantic ? { semantic: ln.semantic } : {})
     };
