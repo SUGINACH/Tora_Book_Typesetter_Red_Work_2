@@ -259,7 +259,7 @@ const DISPOSITIONS = {
   // RED (הenum: continuous/page/section/part) והפאנל הציג ערך שבור.
   'fn-reset-mode': { kind: 'mapped', to: 'footnote-reset-policy', transform: (v) => ({ 'siman': 'section', 'chapter': 'section', 'page': 'page', 'continuous': 'continuous', 'part': 'part' }[v] || 'page') },
   'fn-title-text': { kind: 'mapped', to: 'endnote-title-text' },
-  'note-numbering-style': { kind: 'mapped', to: 'footnote-marker-style', transform: (v) => ({ 'gematria': 'hebrew-geresh', 'hebrew': 'hebrew-geresh', 'decimal': 'decimal', 'asterisk': 'asterisk', 'parenthesis': 'parenthesis' }[v] || 'hebrew-geresh') },
+  'note-numbering-style': { kind: 'mapped', to: 'footnote-marker-style', transform: (v) => ({ 'gematria': 'hebrew', 'hebrew': 'hebrew', 'decimal': 'decimal', 'asterisk': 'asterisk', 'parenthesis': 'parenthesis' }[v] || 'hebrew') },
   // **S5.2 (S2):** note-marker-type ('super') אינו סגנון סמן — הוא העלאת
   // בסיס (עניין רינדור). בעבר מופה merged ל-footnote-marker-style בלי
   // transform והערך הגולמי 'super' דרס את הסגנון החוקי (ערך מחוץ ל-enum;
@@ -268,8 +268,11 @@ const DISPOSITIONS = {
   'note-marker-type': { kind: 'ui-state', reason: 'סוג הסמן (super) — עניין העלאת-בסיס ברינדור, לא סגנון מספור; הסגנון מגיע מ-note-numbering-style' },
   'note-marker-size': { kind: 'ui-state', reason: 'גודל מילת-הסמן בגוף (ברירת מחדל 8) — מיושם בפרויקטור ה-legacy (S4.20/EXT-17)', issue: 'EXT-17' },
   'note-listing-num-size': { kind: 'ui-state', reason: 'גודל סמן הרישום ברשימת ההערות — מיושם בפרויקטור ה-legacy — S4.20/EXT-17' },
-  'note-num-separator': { kind: 'ui-state', reason: 'המפריד אחרי מספר ההערה (ברירת מחדל .) — מיושם ב-markerWord — S4.20/EXT-17' },
-  'note-rule-style': { kind: 'mapped', to: 'footnote-separator-rule', reason: 'star ⇒ star (enum זהה ב-RED)' },
+  'note-num-separator': { kind: 'ui-state', reason: 'המפריד אחרי מספר ההערה (ברירת מחדל .) — מיושם ב-markerWord — S4.20/EXT-17; Iteration-003: נצרך גם ב-markerFor(hebrew) של המאוחד' },
+  // **Iteration-003 (legacy parity — נמדד בייחוס):** המנוע הישן אינו מצייר חוט
+  // מפריד מעל מרזב ההערות (עמודי ההערות ב-PDF הייחוס נפתחים ישירות בסמן,
+  // ללא כל קו/כוכב). ערך המקור נשמר ב-_imudRaw; הייבוא מכבה את הציור.
+  'note-rule-style': { kind: 'mapped', to: 'footnote-separator-rule', transform: () => 'none', reason: 'Iteration-003: הייחוס ללא חוט מפריד — הערך הגולמי נשמר ב-_imudRaw בלבד' },
   'note-header-orn-r': { kind: 'removed', reason: 'עיטור בצד ימין של כותרת עמודי-ההערות — טרם ממומש ב-RED', issue: 'EXT-4' },
   'note-header-orn-l': { kind: 'removed', reason: 'עיטור בצד שמאל של כותרת עמודי-ההערות — טרם ממומש ב-RED', issue: 'EXT-4' },
 
@@ -303,14 +306,25 @@ const DISPOSITIONS = {
   'page-num-start-idx': { kind: 'mapped', to: 'page-num-start-idx', transform: parseInt },
   'page-num-initial-value': { kind: 'mapped', to: 'page-num-initial-value', transform: parseInt },
   'main-shaar-count-numbering': { kind: 'merged', to: 'count-shaar-pages', reason: 'RED מונה עמודי שער גלובלית (count-shaar-pages); בקרה פר-סוג טרם נפרדה', issue: 'EXT-18' },
-  'main-shaar-show-number': { kind: 'merged', to: 'count-shaar-pages', reason: 'הצגת מספר בשער ראשי — בקרה פר-סוג במעקב', issue: 'EXT-18' },
+  // **Iteration-003 (legacy parity — מניית הפוליו):** המקור מונה שערי-משנה
+  // (sub=true) אך לא את הראשי/אחורי (main/back=false) — המורשת מונה את
+  // השער-משנה בלבד. עד כאן המיפוי המאוחד לא מיפה כלום ⇒ הפוליו נדחק.
+  // **תיקון המשך (כפילות מפתח):** עד כאן הופיעו כאן גם הערכים הישנים
+  // (merged→count-shaar-pages ל-sub-count, identity ל-toc-count) בשנית —
+  // במפת עצם JS האחרון מנצח, והם דרסו את המיפויים החדשים (בדוק: ייבוא
+  // הניח count-toc-pages=false מול raw=true). הוסרו — מקור אחד לכל מפתח.
+  'sub-shaar-count-numbering': { kind: 'mapped', to: 'count-shaar-sub-pages', transform: (v) => v !== false && v !== 'false', reason: 'מניית שער-משנה בפוליו — כמו המקור' },
+  'general-toc-count-numbering': { kind: 'mapped', to: 'count-toc-pages', transform: (v) => v !== false && v !== 'false', reason: 'Iteration-003: במקור = מניית עמודי התוכן בפוליו (לא מספרי שורות — המורשת לא מציגה אותם מעולם)' },
+  'detailed-toc-count-numbering': { kind: 'mapped', to: 'count-toc-pages', transform: (v) => v !== false && v !== 'false', reason: 'Iteration-003: מניית עמודי התוכן המפורט בפוליו' },
+  // **Iteration-003 (הפרדת סמנטיקה):** מפתחות ה-show כותבים עד כאן אל
+  // count-shaar-pages (דגל מנייה!) — הצגה ומנייה הן שתי סמנטיקות שונות;
+  // במנוע המאוחד השערים אינם מציגים גיליון ממילא (chapterOpening ⇒ דיכוי
+  // תצוגה). הערכים נשמרים כ-ui-state (EXT-18) ואינם משחיתים את דגל המנייה.
+  'main-shaar-show-number': { kind: 'ui-state', reason: 'הצגת מספר בשער ראשי — השערים אינם מציגים גיליון במנוע המאוחד (chapterOpening); Iteration-003: הוסר הכתיב אל count-shaar-pages (הפרדת show מ-count)', issue: 'EXT-18' },
   'back-shaar-count-numbering': { kind: 'merged', to: 'count-shaar-pages', reason: 'מניית שער אחורי — RED מונה עמודי שער גלובלית', issue: 'EXT-18' },
-  'back-shaar-show-number': { kind: 'merged', to: 'count-shaar-pages', reason: 'הצגת מספר בשער אחורי — בקרה פר-סוג במעקב', issue: 'EXT-18' },
-  'sub-shaar-count-numbering': { kind: 'merged', to: 'count-shaar-pages', reason: 'מניית שער משנה — RED מונה עמודי שער גלובלית', issue: 'EXT-18' },
-  'sub-shaar-show-number': { kind: 'merged', to: 'count-shaar-pages', reason: 'הצגת מספר בשער משנה — בקרה פר-סוג במעקב', issue: 'EXT-18' },
-  'general-toc-count-numbering': { kind: 'mapped', to: 'general-toc-count-numbering' },
+  'back-shaar-show-number': { kind: 'ui-state', reason: 'הצגת מספר בשער אחורי — כנ"ל main-shaar-show-number; Iteration-003: הוסר הכתיב אל count-shaar-pages', issue: 'EXT-18' },
+  'sub-shaar-show-number': { kind: 'ui-state', reason: 'הצגת מספר בשער-משנה — השער נספר (count-shaar-sub-pages) אך אינו מציג (chapterOpening); Iteration-003: הוסר הכתיב אל count-shaar-pages', issue: 'EXT-18' },
   'general-toc-show-numbering': { kind: 'mapped', to: 'general-toc-show-numbering' },
-  'detailed-toc-count-numbering': { kind: 'mapped', to: 'detailed-toc-count-numbering' },
   'detailed-toc-show-numbering': { kind: 'mapped', to: 'detailed-toc-show-numbering' },
   // **S77 (בקשה 3 — הגשר החי):** מתגי הפעלת התכנים — עד כאן ui-state (לא
   // הגיעו למנוע); כעת ממופים למפתחות הרישום שהגשר קורא (ברירת המחדל

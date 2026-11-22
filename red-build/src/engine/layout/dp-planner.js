@@ -6,6 +6,8 @@ const crypto = require('crypto');
 // אותו חוזה כמו המנוע המורשת (legacy-imud-flow) ומדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, H3_FOLLOW_MIN_PX, h3BandHeightPx, h3BandRoomThresholdPx } = require('../core/h3-contract');
 const { PAGE_TYPES, buildPageTemplate } = require('./page-templates');
+const { H0_TITLE_Y } = require('../core/imud-geometry');
+const { isImudProfile: isImud } = require('./page-templates');
 const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
 const { runRetreatLoop } = require('./retreat-loop');
@@ -704,6 +706,25 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       cur.template = buildPageTemplate(PAGE_TYPES.PREFACE, settings, cur.isRecto !== false);
       reAlignColumns(cur);
       eventLog.emit('page-plan', 'part-opening', { token: blk.tokenId, level: blk.level }, cur.index);
+      // **Iteration-003 (legacy parity — כותרת ההקדמה):** ה-h0 נצרך לפס
+      // ממורכז בעוגן המכויל (H0_TITLE_Y=309) בתוך השטח השמור של התבנית
+      // (H0_AREA_H) — כמו bands.push(kind:'h0-title') במורשת §1326. הזרימה
+      // מתחילה מתחת לאזור; עד כאן הכותרת זרמה כשורה ראשונה בראש העמוד.
+      if (blk.level === 0 && isImud(settings) && cur.template.columns.length >= 1) {
+        const startY = H0_TITLE_Y;
+        let yy = startY;
+        cur.spanning = {
+          lines: blk.lines.map((ln) => {
+            const rec = { ...ln, yPx: yy, meta: { tokenId: blk.tokenId, firstOfBlock: true, docPart: blk.part }, seq: seqCounter++ };
+            yy += ln.heightPx || 0;
+            return rec;
+          }),
+          heightPx: 0, // free band — חי בשטח השמור; אינו מקצץ את קיבולת הטורים
+          freeBand: true, bandTopPx: startY, titleTopPadPx: 0, orn: null
+        };
+        eventLog.emit('page-plan', 'h0-title-band', { token: blk.tokenId, y: startY }, cur.index);
+        continue; // הכותרת הוצבה בפס; הפסקאות ימלאו מתחת לאזור השמור
+      }
     }
 
     // REQ-FN-05/06: heading mode=side-note → הערת שוליים בטור מקביל (H7 doctrine)
@@ -864,6 +885,26 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       }
       cur.chapterOpening = true;
       eventLog.emit('page-plan', 'h2-new-page', { token: blk.tokenId }, cur.index);
+      // **Iteration-003 (legacy parity — חוזה פתיחת הסימן):** בפרופיל IMUD
+      // כותרת ה-H2 היא פס ממורכז בעוגן המכויל (344.05px — bands של המורשת
+      // §1351) בתוך אזור ה-h2 השמור של התבנית — לא שורה בטור. הפס חופשי
+      // (freeBand): הוא חי בשטח השמור ואינו מקצץ קיבולת. הסימן נחתם
+      // בהטבעה (structural-stamps — h2-siman).
+      if (isImud(settings) && cur.template.columns.length >= 2) {
+        const startY = 344.05;
+        let yy = startY;
+        cur.spanning = {
+          lines: blk.lines.map((ln) => {
+            const rec = { ...ln, yPx: yy, meta: { tokenId: blk.tokenId, firstOfBlock: true, docPart: blk.part }, seq: seqCounter++ };
+            yy += ln.heightPx || 0;
+            return rec;
+          }),
+          heightPx: 0, // free band — חי בשטח השמור; אינו מקצץ את קיבולת הטורים
+          freeBand: true, bandTopPx: startY, titleTopPadPx: 0, orn: null
+        };
+        eventLog.emit('page-plan', 'h2-spanning', { token: blk.tokenId, heightPx: 0, freeBand: true, y: startY }, cur.index);
+        continue; // הכותרת הוצבה בפס; הבלוקים הבאים ימלאו את הטורים מתחת לאזור
+      }
       // **FWD-1:** H2 שנמדדה ברוחב מלא (mode=full-width, ברירת המחדל) ⇒ פס
       // חוצה־טורים — לא טור חצי־רוחב. הטורים נמדדים מתחת לפס (colCapacity מותאם).
       if (blk.fullWidth && cur.template.columns.length >= 2) {

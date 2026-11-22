@@ -18,7 +18,7 @@ const { MeasureAPI } = require('../typography/measure-api'); // פרופיל ג�
 const { familyFontKeyOf } = require('../typography/font-keys'); // **ביקורת §3.1:** מקור יחיד למיפוי משפחה→מפתח (היה כפול בין כאן ל-structural-stamps)
 const { folioGeometry: folioGeoOf, headerGeometry: headerGeoOf } = require('../layout/furniture-geometry'); // **שלב 6:** גיאומטריית ריהוט — מקור יחיד ל-DOM ול-PDF
 const NM = require('../layout/notes-model'); // **שלב 6 פרוסה 2 (§9):** חותמות ההערות — המקרינים צורכים ואינם מודדים
-const { markerFor } = require('../notes/markers');
+const { markerForSettings } = require('../notes/markers');
 const { lineFontSizePt, hexColorToRgb } = require('../output/line-font'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
 // **S73:** גופן השערים לפי מחלקת בלוק — מקור יחיד לשני הנתיבים (DOM+PDF)
 const { buildShaarBlocks, shaarFontOf } = require('../output/shaar-content');
@@ -81,8 +81,12 @@ function projectPage(page, settings, apiOrOpts) {
     // או הזמנת עיטור-H2). ornament-plan כבר מניח הנחה זו (titleTop); עד כאן
     // ההקרנה התעלמה ממנה ושורות הפס עלו על שטח ההזמנה.
     const topPad = page.spanning.titleTopPadPx || 0;
-    let y = tpl.contentBox.top + topPad;
+    // **Iteration-003 (legacy parity — פסים ממוקמים בעוגן מכויל):** לפסי
+    // פתיחת-הסימן/ההקדמה יש עוגן אנכי מכויל (bandTopPx) בתוך השטח השמור
+    // של התבנית — לא בראש תיבת התוכן; שורה עם yPx משלה נעוצה בו.
+    let y = (page.spanning.bandTopPx != null ? page.spanning.bandTopPx : tpl.contentBox.top) + topPad;
     for (const ln of page.spanning.lines) {
+      if (ln.yPx != null) y = ln.yPx;
       // **U-15:** אותו מקור סמכות ליישור בפס החוצה־טורים — בעבר 'right' קבוע
       // לכל שורות הפס (כותרות H2/H3–H6 ו-callouts) ⇒ כותרות צמודות-ימין
       // (נמדד: אסימטריה 170–222px ממרכז הפס) בניגוד לחוזה המרכוז של המורשת
@@ -92,6 +96,17 @@ function projectPage(page, settings, apiOrOpts) {
       y += ln.heightPx || 0;
     }
     out.spanning = band;
+  }
+
+  // **Iteration-003 (legacy parity — פס הסימן):** חותמת h2-siman מהתכנון —
+  // שורה ממורכזת בעוגן המכויל, מילים נמדדות בהטבעה (אין מדידה כאן).
+  if (page.simanBand && page.simanBand.words && page.simanBand.words.length) {
+    const sb = page.simanBand;
+    const tplW2 = Math.min(...tpl.columns.map(c => c.x + c.w)) - Math.max(...tpl.columns.map(c => c.x));
+    out.lines.push(stampedRowLine({
+      x: Math.min(...tpl.columns.map(c => c.x)), y: sb.y, w: tplW2, h: sb.h || 36,
+      words: sb.words, spaceW: sb.spaceW, align: 'center'
+    }, sb.sizePt || 20, 'h2-siman', sb.fontKey || null));
   }
 
   // **פרוסה 3 (§2.4 — כיסוי מלא):** עמודים מותאמים — התיבות והתמונות בגיאומטריה
@@ -333,6 +348,7 @@ function projectPage(page, settings, apiOrOpts) {
     if (page.headerSlotGeo && page.headerSlotGeo.slots) {
       out.header = {
         y: page.headerSlotGeo.y,
+        ...(page.headerSlotGeo.baselineY != null ? { baselineY: page.headerSlotGeo.baselineY } : {}),
         slots: page.headerSlotGeo.slots.map(s => {
           const x = s.pos === 'right' ? tpl.width - 60 - s.w : s.pos === 'center' ? Math.round((tpl.width - s.w) / 2) : 60;
           return { ...s, x };
@@ -369,7 +385,11 @@ function projectPage(page, settings, apiOrOpts) {
     const hPt = out.height * (72 / 96);
     const PX_TO_PT = 72 / 96;
     const r2 = (v) => Math.round(v * 100) / 100;
-    out.decorations = page.decorations.map((d) => {
+    // **Iteration-003 (תיקון שורח חבוי):** ההקרנה מוסיפה לרשימה — אינה מחליפה
+    // אותה. עדכני out.decorations כבר הכיל את העיטורים של הערות-הצד/תיבות
+    // המידע (מוקרנים לפני כן), והמיפוי מעל תוכנית העמוד מחק אותם בכל עמוד
+    // שיש לו עיטורי תוכנית (למשל כלל כותרת) — תיבת המידע נעלמה מה-PDF.
+    out.decorations = [...(out.decorations || []), ...page.decorations.map((d) => {
       const ink = d.image ? { type: 'image', uri: d.image } : ornamentInk(d.kindStyle);
       let paint = null;
       let pdfOps = null;
@@ -378,6 +398,14 @@ function projectPage(page, settings, apiOrOpts) {
         // **EXT-4:** פעולות הציור נחשבות כאן — ה-pdf-writer חף-תלויות
         // (אוסף אובייקטים טהור) ורק מקבל את הפעולות מוכנות (מקור יחיד).
         if (paint) pdfOps = svgToPdfOps(paint, d, hPt, PX_TO_PT);
+      } else if (ink && ink.type === 'rect') {
+        // **Iteration-003 (legacy parity — D-89):** מלבן בצבע אחיד (פאנלי שער,
+        // מסגרות, כלל כותרת) — אותו דיו כמו legacy-projector (§713): צבע
+        // ה-rect מה-kindStyle, לא שחור קבוע. **תיקון המשך:** parseColor מחזיר
+        // ערכים מנורמלים 0–1 — החלוקה ב-255 כאן איפסה את הצבע (0.957/255≈0)
+        // וכל הרקעים נצבעו שחור ב-PDF.
+        const yTopR = hPt - (d.y + d.h) * PX_TO_PT;
+        pdfOps = [`${r2(ink.color[0])} ${r2(ink.color[1])} ${r2(ink.color[2])} rg ${r2(d.x * PX_TO_PT)} ${r2(yTopR)} ${r2(d.w * PX_TO_PT)} ${r2(d.h * PX_TO_PT)} re f`];
       } else if (ink && ink.type === 'rule') {
         const yTop = hPt - (d.y + d.h) * PX_TO_PT;
         pdfOps = [`0 0 0 rg ${r2(d.x * PX_TO_PT)} ${r2(yTop)} ${r2(d.w * PX_TO_PT)} ${Math.max(0.5, r2(d.h * PX_TO_PT))} re f`];
@@ -408,7 +436,7 @@ function projectPage(page, settings, apiOrOpts) {
         ...(d.constraints ? { constraints: { ...d.constraints } } : {}),
         ...(d.cssClass ? { cssClass: d.cssClass } : {})
       };
-    });
+    })];
   }
 
   // **S12 (parity):** בסיסי שורות/מרזב/גיליון/כותרת — מודל תיבת שורה אחיד
@@ -431,7 +459,15 @@ function colWidthOf(tpl) {
 // חותמת חסרה/פגומה ⇒ diagnostic מפורש (out.diagnostics) — לא מדידה חלופית שקטה.
 
 /** גודל גוף הערה — 0.8× הגוף (כמו .footnotes{font-size:.8em} ו-noteHeight בתקציב). */
-function fnNoteSizePt(settings) { return settings['body-font-size-pt'] * 0.8; }
+function fnNoteSizePt(settings) {
+  // **Iteration-003 (legacy parity):** בפרופיל IMUD גודל גוף ההערה מהמקור
+  // (s-note-body=9 — SZ.fnBody של המורשת); מחוץ ל-IMUD — 0.8× הגוף כמקודם.
+  if (settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw)) {
+    const rawFn = Number(settings._imudRaw && settings._imudRaw['s-note-body']);
+    if (Number.isFinite(rawFn) && rawFn > 0) return rawFn;
+  }
+  return settings['body-font-size-pt'] * 0.8;
+}
 
 /** רישום diagnostic של חותמת חסרה/פגומה (§9.8) — מקור וסיבתיות, לא החלפה שקטה. */
 function pushStampDiagnostic(out, area, page, n) {
@@ -512,7 +548,7 @@ function projectStampedRows(n, x, w, yTop, opts) {
 function noteMarkerOf(n, settings) {
   if (n.marker != null && String(n.marker) !== '') return String(n.marker);
   if (Number.isInteger(n.docIndex) || Number.isInteger(n.markerNum)) {
-    return markerFor(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings['footnote-marker-style']);
+    return markerForSettings(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings);
   }
   return '';
 }
@@ -1130,7 +1166,11 @@ function attachBaselines(page, settings, measure) {
     for (const fn of page.footnotes) { if (!fn.words || !fn.words.length) fn.baselineY = fn.y + ascent * 11 * (96 / 72); }
   }
   if (page.folio) page.folio.baselineY = page.folio.baselineY != null ? page.folio.baselineY : page.folio.y + 10; // **S69:** נוסחת הנפילה רק אם לא חושב בקרן
-  if (page.header) page.header.baselineY = page.header.y + 10;
+  // **Iteration-003 (legacy parity):** כמו הפוליו — הבסיס המכויל מהחותמת
+  // (headerSlotGeo.baselineY — GEO.HEADER_BASELINE בפרופיל IMUD) גובר;
+  // הנוסחה y+10 היא נפילה בלבד. עד כאן הדריסה הזיזה את הכותרת ~20pt מדי
+  // נמוך מהייחוס (נמדד: בסיס 99.2px מול 71.9 המכויל).
+  if (page.header) page.header.baselineY = page.header.baselineY != null ? page.header.baselineY : page.header.y + 10;
 }
 
 /** שורה מלאכותית (TOC/עזר) — מילה אחת מימין לשמאל; מיקום מפורש. */

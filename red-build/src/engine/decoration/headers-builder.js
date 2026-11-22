@@ -112,6 +112,10 @@ function pageOpensWithH2H3(page) {
  */
 function buildHeader(page, settings, ctx) {
   if (!settings['header-enabled'] || !page.template.hasRunningHead) return null;
+  // **Iteration-003 (legacy parity):** עמוד ריק (מרווח אי-זוגיות לפני פתיחת
+  // חלק) — ללא ריהוט כלל, כמו blankPageObj של המורשת (נמדד בייחוס: עמוד
+  // הרווח לפני שער-המשנה ריק לחלוטין; עד כאן ירש תבנית רגילה וקיבל כותרת).
+  if (page.type === 'blank') return null;
   const physical = page.isRecto ? 'recto' : 'verso';
   // REQ-HDR-02: עמוד הנפתח ב‑H2/H3 + header-opening-dedicated ⇒ סלוטי מקור ייעודיים
   const dedicated = settings['header-opening-dedicated'] === true && pageOpensWithH2H3(page);

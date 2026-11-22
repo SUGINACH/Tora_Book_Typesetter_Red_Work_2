@@ -144,10 +144,17 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
     const coreSize = SZ_CORE.tocLevel[level];
     return imud && Number.isFinite(coreSize) ? coreSize : levelSizePt(level);
   };
+  // **Iteration-003 (legacy parity — גופן שורות ה-TOC):** המקור (legacy-projector
+  // §599) מצייר ומודד שורת TOC ב-heading-N-font של הרמה (נפילה ל-DavidLibre-
+  // Bold כשאינה רשומה) — לא ב-f-gtoc-N (מת במקור). הייחוס: רמה 1 ⇒ Lia Sgula,
+  // רמה 2 ⇒ AlphaBlack, רמה 3+ ⇒ Alpha — כגופני הכותרות.
   const familyOf = (level, imud) => {
     if (!imud) return null;
-    const stack = String(raw[`f-${prefix}-${level}`] || '').split(',')[0].trim();
-    return stack.replace(/^['"]|['"]$/g, '') || null;
+    const stack = String(settings[`heading-${level}-font`] || '').split(',')[0].trim();
+    const fam = stack.replace(/^['"]|['"]$/g, '') || null;
+    if (fam) return fam;
+    const rawStack = String(raw[`f-${prefix}-${level}`] || '').split(',')[0].trim();
+    return rawStack.replace(/^['"]|['"]$/g, '') || null;
   };
   const mkPage = (isFirst) => {
     const tpl = buildPageTemplate(pageType, settings, (pages.length % 2) === 0);
@@ -156,7 +163,9 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
       columns: Array.from({ length: tpl.columns.length }, () => []),
       footnotes: [], sideNotes: [], headingsOnPage: [], balanceInfo: null,
       fnReservedHeightPx: 0, chapterOpening: false,
-      toc: { title: isFirst ? title : '', rows: [], isFirst, isLast: false },
+      // **Iteration-003:** headerTitle בכל עמודי התוכן — המרכז של הכותרת העליונה
+      // הוא כותרת התוכן (כמו setHeader של המורשת בכל עמודי ה-TOC, לא רק בראשון)
+      toc: { title: isFirst ? title : '', headerTitle: title, rows: [], isFirst, isLast: false },
     };
     pages.push(pg);
     return pg;
@@ -193,7 +202,10 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
     const text = r.kind === 'group'
       ? r.items.map(it => it.text).join(' | ')
       : r.text;
-    const wrapped = wrapTitle(text, avail, size, measure);
+    // **Iteration-003 (מדידה=רינדור):** העטיפה נמדדת בגופן הרמה (כמו rApi
+    // במורשת) — החותמת מציירת באותו גופן; מדידת גוף היתה עוטפת אחרת.
+    const famMeasure = (family && io.measureOfFamily && io.measureOfFamily(family)) || measure;
+    const wrapped = wrapTitle(text, avail, size, famMeasure);
     r.wrapped = wrapped.lines;
     r.sizePt = size;
     if (family) r.fontFamily = family;
@@ -217,6 +229,25 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
   let availH = capacityOf(true, cur.template);
   let usedH = 0;
 
+  // **Iteration-003 (legacy parity — יחידות אטומיות, S4.9 של המקור):**
+  // הפריסה לעמודים היא ביחידות אטומיות — שורת h1 בודדת; שורת h2 + כל
+  // תתי-הכותרות שאחריה (break-inside: avoid במקור). יחידה שלא נכנסת עוברת
+  // שלמה לעמוד הבא; יחידה גדולה מעמוד שלם נחלקת בגבולות שורות. בלי זה —
+  // דחיסה חופשית (34 שורות/עמוד מול 28 במקור) והמתיחה מתבטלת.
+  // **היקף:** יחידות אטומיות בפרופיל IMUD (חוזה ה-TOC של המקור); ב-DP —
+  // זרימת שורות חופשית כפי שננעל בקורפוסים (כל שורה יחידה בפני עצמה).
+  const levelOf = (r) => r.kind === 'group' ? Math.max(...r.items.map(it => it.level)) : r.level;
+  const useUnits = imudToc;
+  const units = [];
+  for (const r of model.rows) {
+    if (!useUnits || levelOf(r) <= 2 || !units.length) units.push([r]);
+    else units[units.length - 1].push(r);
+  }
+  const pushRow = (r) => {
+    cur.toc.rows.push(r);
+    usedH += Math.min(rowHeightCache.get(r), availH);
+  };
+  const rowHeightCache = new Map();
   for (const r of model.rows) {
     if (budgetExceeded) break;
     rowsConsumed++;
@@ -224,19 +255,36 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
       budgetExceeded = true;
       break;
     }
-    const { h } = rowHeightOf(r);
-    if (usedH + h > availH && cur.toc.rows.length) {
+    rowHeightCache.set(r, rowHeightOf(r).h);
+  }
+  for (const u of units) {
+    if (budgetExceeded) break;
+    const uH = u.reduce((a, r) => a + (rowHeightCache.get(r) || 0), 0);
+    if (usedH + uH > availH && cur.toc.rows.length) {
       if (pages.length >= TOC_MAX_PAGES) { budgetExceeded = true; break; }
       cur = mkPage(false);
       availH = capacityOf(false, cur.template);
       usedH = 0;
     }
-    // שורה בודדת גבוהה מעמוד שלם ⇒ אל תיתלה: הנח אותה ותעד.
-    if (h > availH) {
-      overflowFindings.push({ why: 'row-taller-than-page', level: r.level || (r.items && r.items[0].level) });
+    if (uH > availH && !cur.toc.rows.length) {
+      // אצווה אטומית גדולה מעמוד שלם — פיצול בגבולות שורות (כמו S5.2/F1 במורשת)
+      for (const r of u) {
+        const h = rowHeightCache.get(r) || 0;
+        if (usedH + h > availH && cur.toc.rows.length) {
+          cur = mkPage(false);
+          availH = capacityOf(false, cur.template);
+          usedH = 0;
+        }
+        if (h > availH) overflowFindings.push({ why: 'row-taller-than-page', level: r.level || (r.items && r.items[0].level) });
+        pushRow(r);
+      }
+      continue;
     }
-    cur.toc.rows.push(r);
-    usedH += Math.min(h, availH);
+    for (const r of u) {
+      const h = rowHeightCache.get(r) || 0;
+      if (h > availH) overflowFindings.push({ why: 'row-taller-than-page', level: r.level || (r.items && r.items[0].level) });
+      pushRow(r);
+    }
   }
 
   pages.forEach((p, i) => { p.toc.isLast = i === pages.length - 1; });
@@ -268,21 +316,50 @@ function buildTocPages(model, pageType, title, settings, measure, lineHeight, io
  */
 function insertTocPages(pages, tocPages, settings, io = {}) {
   if (!tocPages.length) return { pages, inserted: 0, at: 0 };
-  // רצף פותח מבני: עמודי front-matter אמיתיים בלבד (שער ראשי/אחורי/פתיחה מותאמת).
-  // **03.11(ד):** שערי־משנה (shaar-sub) שייכים לזרימת הגוף — הם באים אחרי
-  // תוכן־העניינים (לפני החלק שלהם), לא לפניו. בעבר כל isShaar דולג — ושער־המשנה
-  // של החלק הראשון נדחק לפני התוכן־עניינים.
+  // **Iteration-003 (legacy parity — סדר ההרכבה של המקור, §3343):**
+  // שערים (ראשי+אחורי) → תוכן כללי → גוף עד שער-המשנה הראשון (כולל) →
+  // תוכן מפורט → שאר הגוף. עד כאן שני התכנים הוכנסו יחד לפני כל הגוף —
+  // המפורט נדחק לפני שער-המשנה בניגוד למקור.
+  // **היקף ההרכבה (Iteration-003):** סדר המקור והרווחים — פרופיל IMUD בלבד.
+  const imudAssembly = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  const gtoc = tocPages.filter(p => p.type === 'toc-general');
+  const dtoc = tocPages.filter(p => p.type === 'toc-detail');
   let at = 0;
   while (at < pages.length && (pages[at]._frontMatter === true)) at++;
-  const out = pages.slice(0, at).concat(tocPages, pages.slice(at));
-  out.forEach((p, i) => { p.index = i; });
+  // **היקף:** סדר "המפורט אחרי שער-המשנה הראשון" — חוזה המקור (IMUD);
+  // ב-DP שני התכנים בראש הספר כפי שננעל.
+  const firstSub = imudAssembly ? pages.findIndex(p => p.type === 'shaar-sub') : -1;
+  const atDet = firstSub >= 0 ? firstSub + 1 : at;
+  const out = []
+    .concat(pages.slice(0, at), gtoc, pages.slice(at, atDet), dtoc, pages.slice(atDet));
+  const rawOdd = (settings && settings._imudRaw) || {};
+  const oddH0 = rawOdd['odd-h0'] !== undefined ? rawOdd['odd-h0'] !== false && rawOdd['odd-h0'] !== 'false' : true;
+  const oddH1 = rawOdd['odd-h1'] !== undefined ? rawOdd['odd-h1'] !== false && rawOdd['odd-h1'] !== 'false' : true;
+  const final = [];
+  const mkBlank = () => {
+    const tpl = buildPageTemplate(PAGE_TYPES.REGULAR, settings, final.length % 2 === 0);
+    return {
+      index: -1, type: 'blank', template: tpl,
+      columns: Array.from({ length: tpl.columns.length }, () => []),
+      footnotes: [], sideNotes: [], headingsOnPage: [], balanceInfo: null,
+      fnReservedHeightPx: 0, chapterOpening: true, decorations: []
+    };
+  };
+  for (const p of out) {
+    const lvl = p._secStartLevel != null ? p._secStartLevel
+      : (p.type === 'shaar-sub' ? 1 : (p.type === 'preface' && p.columns.some(c => c.some(ln => ln.kind === 'heading' && ln.level === 0))) ? 0 : null);
+    const need = imudAssembly && (lvl === 0 ? oddH0 : (lvl === 1 ? oddH1 : false));
+    if (need && final.length % 2 === 1) final.push(mkBlank());
+    final.push(p);
+  }
+  final.forEach((p, i) => { p.index = i; });
   // בניית תבניות מחדש לפי הזוגיות הסופית (D-63) — אותו סוג, אותן הגדרות, זוגיות נכונה
   const binding = settings['binding-offset-px'] || 0;
   const parityShifted = [];
-  for (const p of out) {
+  for (const p of final) {
     const newIsRecto = p.index % 2 === 0;
     const shifted = binding !== 0 && p.isRecto !== undefined && p.isRecto !== newIsRecto;
-    p.template = buildPageTemplate(p.type, settings, newIsRecto);
+    if (p.type !== 'blank') p.template = buildPageTemplate(p.type, settings, newIsRecto);
     p.isRecto = newIsRecto;
     if (shifted) parityShifted.push(p);
   }
@@ -305,10 +382,13 @@ function insertTocPages(pages, tocPages, settings, io = {}) {
     }
     if (io.eventLog) io.eventLog.emit('toc', 'binding-parity-rebuild', { pages: parityShifted.length, overflowLines: overflowCount });
   }
-  return { pages: out, inserted: tocPages.length, at };
+  const blanks = final.length - out.length;
+  if (io.eventLog) io.eventLog.emit('toc', 'toc-order-assembled', {
+    gtoc: gtoc.length, dtoc: dtoc.length, dtocAfterFirstSub: firstSub >= 0, blanksInserted: blanks
+  });
+  return { pages: final, inserted: tocPages.length, at };
 }
 
-/** פענוח עוגנים + תוויות לפי המספור הסופי (מופעל אחרי assignNumbers). */
 function resolveTocTargets(pages, tocPages, numbers, settings, { formatLabel }) {
   let resolved = 0;
   for (const tp of tocPages) {

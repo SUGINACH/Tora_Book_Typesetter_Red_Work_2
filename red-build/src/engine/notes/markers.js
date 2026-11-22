@@ -21,8 +21,29 @@ function hebrewMarkFinish(letters) {
   return letters.slice(0, -1) + '\u05F4' + letters.slice(-1);   // כ״ג — גרשיים לפני האחרונה
 }
 
-/** סמן בודד לפי סגנון הרישום (footnote-marker-style). */
-function markerFor(index1Based, style) {
+/** גימטריה בלבד (בלי סיומת) — על בסיס אותיות 22; מעל 999 — חלק אלפים בגרש
+ *  (כמו toGematria של המורשת — הגבול המפורש של D-108 לשדות שאינם פוליו). */
+function hebrewBare(index1Based) {
+  let i = index1Based - 1, s = '';
+  if (i < 0) return 'א';
+  do { s = HEB_LETTERS[i % 22] + s; i = Math.floor(i / 22) - 1; } while (i >= 0);
+  if (index1Based >= 1000) {
+    const th = Math.floor(index1Based / 1000);
+    let j = th - 1, ts = '';
+    do { ts = HEB_LETTERS[j % 22] + ts; j = Math.floor(j / 22) - 1; } while (j >= 0);
+    s = ts + '\u05F3' + hebrewBare(index1Based % 1000 || 1);
+  }
+  return s;
+}
+
+/** סמן בודד לפי סגנון הרישום (footnote-marker-style).
+ *  **Iteration-003 (legacy parity):** סגנון 'hebrew' — גימטריה + מפריד הרישום
+ *  (note-num-separator, ברירת מחדל '.') — בדיוק כמו markerWord של המורשת
+ *  (toGematria(n) + sep). הגרש מהמוסכמת של הגיליון (S5.2 תיקון 10) אינו
+ *  חל על סמני הערות — גבול D-108 עצמו ("אין להסיק מכלל זה דבר על ... גרש
+ *  בהערות"); 'hebrew-geresh' נשמר כבחירה מפורשת בלבד. */
+function markerFor(index1Based, style, opts) {
+  const separator = opts && opts.separator != null ? String(opts.separator) : '.';
   switch (style) {
     case 'decimal': return String(index1Based);
     case 'parenthesis': return `(${index1Based})`;
@@ -30,6 +51,8 @@ function markerFor(index1Based, style) {
       const n = ((index1Based - 1) % 3) + 1; // *,**,*** ואז חוזר — policy מקובלת
       return '*'.repeat(n) + (index1Based > 3 ? String(Math.ceil(index1Based / 3)) : '');
     }
+    case 'hebrew':
+      return hebrewBare(index1Based) + separator;
     case 'hebrew-geresh':
     default: {
       let i = index1Based - 1, s = '';
@@ -95,7 +118,7 @@ function makeCounter(policy, start = 0) {
  * @returns {{renumbered:number, skipped:string|null}} — כמה סמנים הוחלפו; אם דילוג — סיבתו.
  */
 function renumberPageScopedMarkers(pages, opts) {
-  const { markerStyle, markersByToken, customMarks, blocks, eventLog } = opts || {};
+  const { markerStyle, markerSeparator, markersByToken, customMarks, blocks, eventLog } = opts || {};
   const tokenMark = new Map(); // tokenId → סמן חדש (מופע ראשון)
 
   // שלב א (תכנון בלבד — בלי מוטציה): מספור פר-עמוד לפי סדר הופעה ראשון
@@ -106,7 +129,7 @@ function renumberPageScopedMarkers(pages, opts) {
       if (!n || n.tokenId == null) continue;
       if (!tokenMark.has(n.tokenId)) {
         seq += 1;
-        tokenMark.set(n.tokenId, markerFor(seq, markerStyle));
+        tokenMark.set(n.tokenId, markerFor(seq, markerStyle, { separator: markerSeparator != null ? markerSeparator : '.' }));
       }
       if (n.marker !== tokenMark.get(n.tokenId)) anyChange = true;
     }
@@ -205,4 +228,14 @@ function markerFragmentOf(word) {
   return frag || null;
 }
 
-module.exports = { markerFor, makeCounter, hebrewMarkFinish, HEB_LETTERS, renumberPageScopedMarkers, markerFragmentOf, MARK_TAG: '\uE102' };
+/** **Iteration-003:** סמן לפי ההגדרות המלאות — סגנון + מפריד (note-num-separator
+ *  מה-raw של IMUD כשקיים; ברירת מחדל '.') — מקור אחד לכל הצרכנים עם settings. */
+function markerForSettings(index1Based, settings) {
+  const s = settings || {};
+  const style = s['footnote-marker-style'];
+  const sep = s['note-num-separator'] != null ? s['note-num-separator']
+    : (s._imudRaw && s._imudRaw['note-num-separator'] != null ? s._imudRaw['note-num-separator'] : '.');
+  return markerFor(index1Based, style, { separator: sep });
+}
+
+module.exports = { markerFor, markerForSettings, makeCounter, hebrewMarkFinish, hebrewBare, HEB_LETTERS, renumberPageScopedMarkers, markerFragmentOf, MARK_TAG: '\uE102' };

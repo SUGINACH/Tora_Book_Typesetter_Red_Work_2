@@ -31,6 +31,7 @@
  * הפקטור מתקן את טבלת impl A בלבד; ב-impl B (font-metrics — ייצוא PDF)
  * המטריקות מדויקות והכפלה מנפחת (S70/R7-M4) — measureContextFor מכבה אותו שם.
  */
+const { SZ_CORE } = require('../core/imud-geometry');
 const NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
 const SIDE_NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
 
@@ -79,7 +80,12 @@ function measureContextFor(kind, settings, opts = {}, measure = null) {
   }
   if (kind === NOTE_KINDS.SIDE_NOTE || kind === NOTE_KINDS.INFO_BOX) {
     // היסטורי (estimateSideNoteHeight): 0.75× הגוף, פיץ' 1.15 — כמו .side-note.
-    const sizePt = Number(opts.sizePt) > 0 ? Number(opts.sizePt) : bodyPt * 0.75;
+    // **Iteration-003 (legacy parity):** בפרופיל IMUD הערת-הצד ב-6pt המכויל
+    // (SZ_CORE.marginNote — נמדד בייחוס: ToraMargin 6pt; s-note-body=9 של
+    // המקור אינו נצרך שם, כמו f-gtoc).
+    const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+    const sizePt = Number(opts.sizePt) > 0 ? Number(opts.sizePt)
+      : (imudProf ? (Number(SZ_CORE.marginNote) || 6) : bodyPt * 0.75);
     const fontName = opts.fontName || settings['s-note-body-font'];
     const fallbackW = Math.max(60, Math.round(settings._outerMarginPx || 120) - 12);
     return {

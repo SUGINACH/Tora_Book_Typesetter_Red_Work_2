@@ -135,7 +135,14 @@ function assignNumbers(pages, settings) {
   return pages.map(p => {
     const tpl = p.template;
     let counted = !!tpl.counts;
-    if (p.type === 'shaar-main' || p.type === 'shaar-sub' || p.type === 'shaar-back') counted = counted && settings['count-shaar-pages'];
+    // **Iteration-003 (legacy parity):** המקור מונה שער-משנה בפוליו אך לא ראשי/אחורי —
+    // בקרה פר-סוג (sub-shaar-count-numbering=true, main/back=false ברירת המקור).
+    if (p.type === 'shaar-main' || p.type === 'shaar-back') counted = counted && settings['count-shaar-pages'];
+    if (p.type === 'shaar-sub') counted = counted && (settings['count-shaar-sub-pages'] === true || settings['count-shaar-pages']);
+    // עמודי התוכן — מקור יחיד: count-toc-pages. דגלי המקור
+    // (general/detailed-toc-count-numbering=true) ממופים אליו בייבוא
+    // (legacy-settings-map — לאחר תיקון הכפילות); עד כאן נקראו גם כאן
+    // ישירות והמנייה דלפה גם לפרופיל DP (ברירת המחדל ברגיסטרי true).
     if (p.type === 'toc-general') counted = counted && settings['count-toc-pages'];
     if (p.type === 'toc-detail') counted = counted && settings['count-toc-pages'];
     if (p.type === 'endnotes') counted = counted && (settings['count-endnote-pages'] === true);

@@ -9,37 +9,37 @@
       "config": "default",
       "pages": 37,
       "identity": true,
-      "worstBboxPx": 3
+      "worstBboxPx": 2.31
     },
     {
       "config": "ornaments",
       "pages": 37,
       "identity": true,
-      "worstBboxPx": 3
+      "worstBboxPx": 2.31
     },
     {
       "config": "aq-on",
       "pages": 37,
       "identity": true,
-      "worstBboxPx": 3
+      "worstBboxPx": 2.31
     },
     {
       "config": "continuous-notes",
       "pages": 37,
       "identity": true,
-      "worstBboxPx": 3
+      "worstBboxPx": 2.31
     },
     {
       "config": "verso-headers",
       "pages": 37,
       "identity": true,
-      "worstBboxPx": 3
+      "worstBboxPx": 2.31
     },
     {
       "config": "custom-styles",
       "pages": 37,
       "identity": true,
-      "worstBboxPx": 3
+      "worstBboxPx": 2.31
     }
   ]
 }

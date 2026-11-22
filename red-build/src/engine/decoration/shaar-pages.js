@@ -106,6 +106,7 @@ function insertShaarPages(pages, blocks, settings, customDefs) {
 
   // גוף המסמך — עם שערי־משנה לפני פתיחות חלקים ועמודים מותאמים סביב חלקים
   let lastPart = 0;
+  const consumedPages = [];
   for (const pg of pages) {
     let openingPart = null;
     if (pg.chapterOpening && pg.type === 'preface') {
@@ -128,15 +129,46 @@ function insertShaarPages(pages, blocks, settings, customDefs) {
         // במקף: titleMain=לפני, titleSub=אחרי). הכותרת נלקחת מהבלוק עצמו (מקור יחיד).
         const partBlock = blocks.find(b => b.kind === 'heading' && b.level === 1 && b.part === openingPart);
         const partTitle = partBlock ? partBlock.lines.map(l => l.words.join(' ')).join(' ').trim() : '';
-        push(makeShaarPage(PAGE_TYPES.SHAAR_SUB, settings, out.length, { part: openingPart, title: partTitle }), `shaar-sub:part${openingPart}`);
+        // **Iteration-003 (legacy parity — חוזה sub_shaar):** במקור ה-h1 נצרך
+        // כולו לשער-המשנה (HEADING_MODES[1]='sub_shaar' — הטוקן אינו זורם לגוף).
+        // עד כאן שורות ה-heading:1 נשארו גם על עמוד הפתיחה ⇒ כפילות H1 (השער
+        // וגם עמוד נפרד). כאן השורות מוסרות מהעמוד; התוכן עצמו אינו אובד — הוא
+        // מוצג בשער (shaarInfo → shaarLayout). עמוד שהתרוקן כליל מוסר.
+        // **היקף:** פרופיל IMUD בלבד — חוזה המקור. בפרופיל DP הכותרת זורמת
+        // בעמוד הפתיחה כפי שננעל בקורפוסים.
+        const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+        const h1Lines = [];
+        if (imudProf) {
+          for (const col of pg.columns) {
+            for (let ci = col.length - 1; ci >= 0; ci--) {
+              if (col[ci].kind === 'heading' && col[ci].level === 1) h1Lines.unshift(col[ci]), col.splice(ci, 1);
+            }
+          }
+          if (pg.spanning && pg.spanning.lines) {
+            pg.spanning.lines = pg.spanning.lines.filter(ln => !(ln.kind === 'heading' && ln.level === 1));
+            if (!pg.spanning.lines.length) pg.spanning = null;
+          }
+        }
+        const pageEmpty = imudProf && !pg.spanning && pg.columns.every(c => !c.length);
+        const gatePage = makeShaarPage(PAGE_TYPES.SHAAR_SUB, settings, out.length, { part: openingPart, title: partTitle });
+        // **Iteration-003:** רישום ה-h1 שנצרך לשער — ה-TOC והעוגנים מפנים אליו
+        // (ההופעה "הראשונה" של הכותרת היא עמוד השער, כמו שערי-המשנה במורשת).
+        if (imudProf && partBlock) gatePage._consumedH1Tokens = [partBlock.tokenId];
+        push(gatePage, `shaar-sub:part${openingPart}`);
+        if (!pageEmpty) push(pg, 'part-opening-after-gate');
+        else consumedPages.push(pg.index);
+      } else {
+        push(pg);
       }
       lastPart = openingPart;
+    } else {
+      push(pg);
     }
-    push(pg);
     if (openingPart != null && customPlan) for (const d of (customPlan.afterPart.get(openingPart) || [])) {
       customPlaced.push(d.id); push(makeCustomPage(d, settings, out.length), `custom:${d.id}`);
     }
   }
+  void consumedPages;
 
   // custom:end — עמודים מותאמים בסוף המסמך (PT-09); השער האחורי כבר הוכנס אחרי
   // הראשי (סדר המקור — 03.11(ד)).

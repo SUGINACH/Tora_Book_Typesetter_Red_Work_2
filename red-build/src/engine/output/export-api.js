@@ -434,7 +434,11 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
         if (fn.marker) collectFam(fn.marker, 'fnbody');
       }
       if (pg.folio && pg.folio.text && pg.folio.fontKey) collectFam(pg.folio.text, pg.folio.fontKey);
-      if (pg.header) for (const s of (pg.header.slots || [])) for (const w of (s.words || [])) collectFam(w.text, w.fontKey);
+      // **Iteration-003:** סלוטי כותרת בנתיב המודל — מילים לפי הטקסט וה-fontKey המוטבע
+      if (pg.header) for (const s of (pg.header.slots || [])) {
+        for (const w of (s.words || [])) collectFam(w.text, w.fontKey);
+        if ((!s.words || !s.words.length) && s.text) collectFam(s.text, s.fontKey);
+      }
     }
     const extraFonts = [];
     for (const fam of [...famWords.keys()].sort()) {
@@ -565,6 +569,14 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
     };
     const fontForWriter = mkFont(subset);
     // ---- גופני-תפקידים מהמודל (window/heading/fnbody/margin) + משפחות רשודות ----
+    // **Iteration-003 (תיקון שורש — תצוגה=ייצוא):** מילות המודל נושאות את
+    // **מפתח התפקיד** ('heading'/'window'/'fnbody'/'margin' — כך מטביעים
+    // structural-stamps/projectLine), לא את שם המשפחה. עד כאן החיפוש נעשה
+    // לפי שם המשפחה בלבד ('DavidLibre-Bold' וכו') ⇒ אפס מילים נמצאו ⇒ כל
+    // גופני התפקידים היו null וכל הטקסט נפל ל-/F1 (גוף הטקסט) — ההערות,
+    // הערות-הצד, מילות-החלון ושורות ה-TOC נצבעו בגופן הגוף במקום בגופניהן.
+    // כעת: איסוף לפי מפתח-התפקיד ומיפוי מפתח→משפחה (אותה טבלה הפוכה של
+    // familyFontKeyOf — מקור יחיד ב-font-keys).
     const wordsByRole = new Map();
     const allLines = [];
     for (const pg of pages) { allLines.push(...(pg.spanning ? pg.spanning.lines : []), ...pg.lines); }
@@ -578,19 +590,51 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       if (!wordsByRole.has(w.fontKey)) wordsByRole.set(w.fontKey, []);
       wordsByRole.get(w.fontKey).push(w.text);
     }
-    const mkRoleFont = (family) => {
+    const mkRoleFont = (roleKey, family) => {
       const prof = registeredFontsRef.get(family);
       if (!prof) return null;
-      const parts = wordsByRole.get(family) || [];
+      const parts = wordsByRole.get(roleKey) || [];
       if (!parts.length) return null;
       const sub = buildSubset(prof, charInventory(parts.join(' ')));
       return sub.ok ? mkFont(sub) : null;
     };
-    const fontForWriter2 = mkRoleFont('FrankReal-Bold');
-    const fontForWriter3 = mkRoleFont('DavidLibre-Bold');
-    const fontForWriter4 = mkRoleFont('David Libre');
-    const fontForWriter5 = mkRoleFont('Frank Ruhl Libre');
-    const fontForWriter6 = mkRoleFont('Hadassah Friedlaender');
+    const fontForWriter2 = mkRoleFont('window', 'FrankReal-Bold');
+    const fontForWriter3 = mkRoleFont('heading', 'DavidLibre-Bold');
+    // **Iteration-003:** משפחת גוף ההערה מההגדרות (f-note-body-font — אסיסטנט
+    // קל מאוד בפרוביל IMUD, כמו fnApi של המורשת); נפילה היסטורית ל-FRL.
+    const fnBodyFamilyForRole = (settings && settings['f-note-body-font']) || 'Frank Ruhl Libre';
+    const fontForWriter5 = mkRoleFont('fnbody', fnBodyFamilyForRole) || mkRoleFont('fnbody', 'Frank Ruhl Libre');
+    const fontForWriter6 = mkRoleFont('margin', 'Hadassah Friedlaender');
+    // **S4.26 (כמו נתיב הטקסט):** הגופן הרביעי — Frank Ruhl Libre כ-fallback
+    // לפיסוק שחסר בגוף הראשי (בנתיב המודל היה מת תמיד — חיפוש מילים במפתח
+    // 'David Libre' שאינו קיים אף פעם). תווים חסרים ב-/F1 שקיימים ב-FRL.
+    let fontForWriter4 = null;
+    {
+      const frlProfile = registeredFontsRef.get('Frank Ruhl Libre');
+      if (frlProfile && fontForWriter) {
+        const missingChars = new Set();
+        const scan = (lines) => {
+          for (const ln of lines) {
+            for (const w of (ln.words || [])) {
+              for (const ch of String(w.text || '')) {
+                if (fontForWriter.cidOf(ch) === 0 && glyphIdOf(frlProfile, ch) !== 0) missingChars.add(ch);
+              }
+            }
+          }
+        };
+        for (const pg of pages) {
+          scan(pg.spanning ? pg.spanning.lines : []);
+          scan(pg.lines || []);
+          for (const fn of (pg.footnotes || [])) scan([{ words: fn.words || [] }]);
+          if (pg.folio && pg.folio.text) scan([{ words: [{ text: pg.folio.text }] }]);
+          if (pg.header) for (const s of (pg.header.slots || [])) if (s && s.text) scan([{ words: [{ text: s.text }] }]);
+        }
+        if (missingChars.size) {
+          const punctSubset = buildSubset(frlProfile, charInventory([...missingChars].join('')));
+          if (punctSubset.ok) fontForWriter4 = mkFont(punctSubset);
+        }
+      }
+    }
     // משפחות רשודות נוספות (מפתחות שאינם תפקידים) — כמו הנתיב הקיים
     const ROLE_KEYS = new Set(['window', 'heading', 'fnbody', 'margin']);
     const extraFonts = [];

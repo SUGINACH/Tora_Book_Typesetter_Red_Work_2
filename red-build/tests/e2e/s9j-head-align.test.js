@@ -71,19 +71,27 @@ function inkAsym(ml) {
   return Math.abs((inkL - ml.x) - (ml.x + ml.w - inkR));
 }
 
-/** מסמך עם כותרת H1 ארוכה (רבת-שורות) בטור — המקרה ההיסטורי של 50pt. */
+/** מסמך עם H1 (נצרך לשער-משנה — חוזה Iteration-003) + H4 ארוכה (רבת-שורות)
+ * בטור — המקרה ההיסטורי של כותרת נעטפת בטור הצר. **Iteration-003:** בפרופיל
+ * IMUD ה-h1 אינו זורם בגוף — הוא נצרך כולו לשער-המשנה (כמו במקור: כותרת
+ * החלק מופיעה בשער בלבד, מיוחס עמ' 23 לעומת עמ' 24); הרב-שורות בטור נבדק
+ * ברמה שזורמת (H4). */
 function multilineHeadingDoc() {
   const parts = ['כותרת 1 - הקדמות וכללים - יום השבת - גדרי מלאכה - הוצאה - רשימות'];
-  for (let i = 0; i < 12; i++) parts.push(`פסקה ${i + 1} למילוי העמוד בטקסט רציף. ${'מילים רבות למדידה ולשבירה ברוחב הטור המלא '.repeat(8)}`);
+  for (let i = 0; i < 6; i++) parts.push(`פסקה ${i + 1} למילוי העמוד בטקסט רציף. ${'מילים רבות למדידה ולשבירה ברוחב הטור המלא '.repeat(8)}`);
+  parts.push('כותרת 4 - כותרת משנה ארוכה במיוחד לבדיקת שבירת שורות מרובות בטור הצר של העמוד');
+  for (let i = 0; i < 6; i++) parts.push(`עוד פסקה ${i + 1}. ${'טקסט גוף רגיל למילוי עמודים נוספים אחרי הכותרת '.repeat(8)}`);
   return parts.join('\n');
 }
 
-/** מסמך עם H2/H3 בפס חוצה-טורים + H1 בטור — מכסה את שני מסלולי ההקרנה. */
+/** מסמך עם H2/H3 בפס חוצה-טורים + H4 בטור — מכסה את שני מסלולי ההקרנה. */
 function spanningHeadingDoc() {
   return ['כותרת 2 - קדושת יום השבת ומצוותיה']
     .concat(Array.from({ length: 30 }, (_, i) => `פסקה ${i + 1}. ${'טקסט גוף רגיל למילוי עמודים אחרי הכותרת '.repeat(10)}`))
     .concat(['כותרת 3 - מהות השבת וחלקי מצוותה'])
-    .concat(Array.from({ length: 30 }, (_, i) => `עוד פסקה ${i + 1}. ${'טקסט גוף רגיל למילוי עמודים נוספים '.repeat(10)}`))
+    .concat(Array.from({ length: 14 }, (_, i) => `עוד פסקה ${i + 1}. ${'טקסט גוף רגיל למילוי עמודים נוספים '.repeat(10)}`))
+    .concat(['כותרת 4 - כותרת ארוכה בטור לכיסוי מסלול ההקרנה הטורי של הכותרות'])
+    .concat(Array.from({ length: 14 }, (_, i) => `פסקת סיום ${i + 1}. ${'טקסט גוף למילוי העמודים שאחרי כותרת הטור '.repeat(10)}`))
     .join('\n');
 }
 
@@ -119,6 +127,14 @@ describe('U-15 — חוזה יישור כותרות (כל שורות הכותר�
   it('כותרת רבת-שורות בטור: כל שורותיה ממורכזות — לא נמתחות מקצה לקצה', () => {
     const r = typeset(multilineHeadingDoc(), imudSettings, envExtras);
     assert(r.pageModel && r.pageModel.pages.length, 'PageModel קיים');
+    // **Iteration-003 (חוזה צריכת ה-h1):** בפרופיל IMUD ה-h1 נצרך לשער-המשנה
+    // ואינו זורם בגוף (ייחוס: כותרת החלק בשער בלבד). ההיבט הזה נעול כאן
+    // במפורש — לא רק נעלם מהבדיקה.
+    const h1InBody = r.pageModel.pages.some(pml => pml.lines.some(ml => ml.kind === 'heading' && Number(ml.level) === 1));
+    assert(!h1InBody, 'h1 אינו זורם בגוף — נצרך לשער-המשנה (חוזה Iteration-003)');
+    const gate = r.pages.find(p => p.type === 'shaar-sub');
+    assert(gate && Array.isArray(gate._consumedH1Tokens) && gate._consumedH1Tokens.length >= 1, 'שער-המשנה רושם את ה-h1 שנצרך');
+    assert(gate && gate.shaarInfo && /הקדמות/.test(String(gate.shaarInfo.title || '')), 'השער נושא את כותרת החלק');
     const heads = [];
     for (const pml of r.pageModel.pages) for (const ml of pml.lines) if (ml.kind === 'heading') heads.push(ml);
     assert(heads.length >= 2, `כותרת רבת-שורות: ${heads.length} שורות כותרת`);

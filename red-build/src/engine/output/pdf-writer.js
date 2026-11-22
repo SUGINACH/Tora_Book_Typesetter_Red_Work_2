@@ -452,7 +452,9 @@ function writePdf(opts) {
           for (const w of s.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : y, w.sizePt || s.sizePt || 9, w.fontKey, w.color);
           continue;
         }
-        emitWord(s.text, x, y, s.sizePt || 9, null, s.color);
+        // **Iteration-003 (תצוגה=ייצוא):** הסלוט המוטבע נושא fontKey (גופן
+        // הסלוט מההגדרות — Livorna בייחוס) — עד כאן null קבוע ⇒ /F1 (גוף).
+        emitWord(s.text, x, y, s.sizePt || 9, s.fontKey || null, s.color);
       }
     }
     // **EXT-4 (ציור עיטורים):** פעולות הציור מגיעות מוכנות מהפרויקטור

@@ -136,12 +136,16 @@ describe('גיאומטריית ריהוט — מקור יחיד ל-DOM ול-PDF 
     }
     assertEq(headerGeometry({ template: { headerTop: 42 } }).y, 42, 'הכותרת נקראת מעוגן PageTemplate מפורש');
 
-    // IMUD: היסט 180px נשאר בתוכן של sign-open, אך אינו מזיז את הכותרת.
+    // IMUD: היסט אזור ה-h2 נשאר בתוכן של sign-open, אך אינו מזיז את הכותרת.
+    // **Iteration-003 (legacy parity — תיקון ערך-צפי מבוסס מדידה):** עד כאן
+    // 180px (h2-spacer מניחוש ישן). החוזה המכויל של המורשת — H2_AREA_H=284.25
+    // (flowSection: הסימן והכותרת חיים בתוך האזור; הטורים מתחילים מתחתיו —
+    // נמדד מול הייחוס ב-iteration-003).
     const imud = { '_layout-profile': 'imud', 'binding-offset-px': 0 };
     const imudRegular = buildPageTemplate(PAGE_TYPES.REGULAR, imud, true);
     const imudSignRecto = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, imud, true);
     const imudSignVerso = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, imud, false);
-    assertEq(imudSignRecto.contentBox.top - imudRegular.contentBox.top, 180, 'היסט פתיחת סימן נשמר לגוף');
+    assertEq(imudSignRecto.contentBox.top - imudRegular.contentBox.top, 284.25, 'היסט פתיחת סימן נשמר לגוף (H2_AREA_H — חוזה המורשת, Iteration-003)');
     assertEq(headerGeometry({ template: imudSignRecto }).y, headerGeometry({ template: imudRegular }).y, 'כותרת sign-open recto נשארת בעוגן העמוד');
     assertEq(headerGeometry({ template: imudSignVerso }).y, headerGeometry({ template: imudRegular }).y, 'כותרת sign-open verso נשארת בעוגן העמוד');
     for (const type of [PAGE_TYPES.PREFACE, PAGE_TYPES.H3_SPREAD, PAGE_TYPES.TOC_GENERAL, PAGE_TYPES.TOC_DETAIL]) {

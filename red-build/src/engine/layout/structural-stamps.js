@@ -76,8 +76,15 @@ function stampTocLayout(page, settings, measure) {
       if (Number.isFinite(rawSize) && rawSize > 0) return rawSize;
       return Number(SZ_CORE.tocLevel[level]) || 10.5;
     };
+    // **Iteration-003 (legacy parity — גופן שורות ה-TOC):** כמו legacy-projector
+    // §599 — גופן הרמה מההגדרות (heading-N-font; נפילה ל-raw f-gtoc-N המת
+    // במקור, ואז ל-fontFamily שהבונה קבע). הייחוס: רמה 1 ⇒ Lia Sgula,
+    // רמה 2 ⇒ AlphaBlack, רמה 3+ ⇒ Alpha.
     const familyOf = row => {
-      const stack = String(raw[`f-${prefix}-${levelOf(row)}`] || row.fontFamily || '').split(',')[0].trim();
+      const lvl = levelOf(row);
+      const fromSettings = String(settings[`heading-${lvl}-font`] || '').split(',')[0].trim().replace(/^['"]|['"]$/g, '');
+      if (fromSettings) return fromSettings;
+      const stack = String(raw[`f-${prefix}-${lvl}`] || row.fontFamily || '').split(',')[0].trim();
       return stack.replace(/^['"]|['"]$/g, '') || null;
     };
     const rowHeightOf = row => {
@@ -158,12 +165,13 @@ function stampTocLayout(page, settings, measure) {
     let title = null;
     if (first && String(page.toc.title || '').trim()) {
       const titleSize = Number(SZ_CORE.tocTitle) || 17;
-      const family = familyOf({ level: 1, kind: 'entry' });
-      const measured = makeWords(page.toc.title, titleSize, family);
+      // **Iteration-003 (legacy parity):** כותרת התוכן בגוף הטקסט (ToraBook
+      // בייחוס, 17pt) — לא בגופן הרמה; ללא fontKey ⇒ /F1 בייצוא.
+      const measured = makeWords(page.toc.title, titleSize, null);
       title = {
         x: GEO.COL_L_X, y: GEO.FLOW_TOP + 136, w: 552.3, h: 30,
         words: measured.words, spaceW: measured.spaceW, align: 'center',
-        sizePt: titleSize, fontKey: measured.fontKey, bold: true, kind: 'toc-title'
+        sizePt: titleSize, fontKey: null, bold: true, kind: 'toc-title'
       };
     }
     page.tocLayout = {
@@ -231,9 +239,16 @@ function stampShaarLayout(page, settings, measure) {
   };
   // גובה כל בלוק: שבירת שורות לרוחב התיבה במדידת הגופן שלו + גובה שורה לפי הגודל.
   // **רוחבי המילים נצברים בהטבעה** — ההקרנה מקבלת מילים ממוקמות, לא טקסט למדידה.
+  // **Iteration-003 (legacy parity):** פיץ' שורות שער = גודל×1.3 (כמו wrapGate
+  // של המורשת) — לא 1.25.
   const blocks = model.blocks.map(bl => {
+    // **Iteration-003 (היקף DP):** בלוק גרפי (כתר השער של פרופיל DP) — אין
+    // טקסט למדידה; גובה קבוע כמו החוזה המקורי. ב-IMUD אין בלוקים גרפיים
+    // (עיצוב השער בא מ-gate-design).
     if (bl.graphic) return { ...bl, lines: [], h: 24, fontKey: null, color: null, sizePt: bl.sizePt };
-    const blFam = shaarFontOf(bl.cls, settings) || null;
+    const blFam = (bl.fontFamily != null && String(bl.fontFamily) !== '')
+      ? String(bl.fontFamily)
+      : (shaarFontOf(bl.cls, settings) || null);
     const blMeasure = measureOfFamily(measure, blFam, settings);
     const words = String(bl.text || '').split(/\s+/).filter(Boolean);
     const spaceW = blMeasure.measureTextWidth(' ', bl.sizePt, 0);
@@ -246,7 +261,7 @@ function stampShaarLayout(page, settings, measure) {
       else { cur.push({ text: w, w: ww }); curW += add; }
     }
     if (cur.length) lines.push(cur);
-    const lh = Math.max(12, Math.round((bl.sizePt * (96 / 72)) * 1.25));
+    const lh = Math.max(12, Math.round((bl.sizePt * (96 / 72)) * 1.3));
     return { ...bl, lines, spaceW, h: lines.length * lh, fontKey: familyFontKeyOf(blFam), color: shaarColorOf(bl.cls), sizePt: bl.sizePt };
   });
   const placed = [];
@@ -257,10 +272,21 @@ function stampShaarLayout(page, settings, measure) {
     const gap = gaps ? Math.max(0, (boxH - total) / gaps) : 0;
     y = boxY;
     for (const bl of blocks) { placed.push({ ...bl, yTop: y }); y += bl.h + gap; }
-  } else {
+  } else if (model.mode === 'center') {
     const total = blocks.reduce((a2, b2) => a2 + b2.h, 0);
     y = boxY + Math.max(0, (boxH - total) / 2);
     for (const bl of blocks) { placed.push({ ...bl, yTop: y }); y += bl.h; }
+  } else {
+    // **Iteration-003 (legacy parity — מיקומים קבועים):** כל בלוק נעוץ
+    // ב-yTop המכויל שלו; בלוק עם followGap לא עולה מעל תחתית הקודם+המרווח
+    // (עטיפת כותרת דוחפת את ההמשך — כמו ה-S6.3/S74 של המורשת).
+    let prevBottom = -Infinity;
+    for (const bl of blocks) {
+      const gap = Number.isFinite(bl.followGap) ? bl.followGap : 0;
+      const yTop = Math.max(Number.isFinite(bl.yTop) ? bl.yTop : boxY, prevBottom + gap);
+      placed.push({ ...bl, yTop });
+      prevBottom = yTop + bl.h;
+    }
   }
   page.shaarLayout = { schema: 'shaar-layout-v1', box: { x: boxX, y: boxY, w: boxW, h: boxH }, blocks: placed };
   return true;
@@ -282,10 +308,19 @@ function stampHeaderSlots(page, settings, measure) {
     const sKey = familyFontKeyOf(s.font);
     const sMeasure = (sKey && sKey !== 'heading' && sKey !== 'fnbody' && sKey !== 'margin' && sKey !== 'window')
       ? measureOfFamily(measure, s.font, settings) : measure;
-    const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, 9)));
-    return { pos: s.pos, align: s.align, text: t, w, sizePt: 9, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
+    // **Iteration-003 (legacy parity):** מדידה ורישום בגודל האמיתי של הסלוט
+    // מההגדרות (15pt צדדים / 11pt מרכז — כמו הייחוס) — עד כאן 9pt קבוע
+    // גם לרינדור, והכותרת הודפסה זעירה.
+    const slotSize = Number(s.sizePt) > 0 ? Number(s.sizePt) : 9;
+    const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, slotSize)));
+    return { pos: s.pos, align: s.align, text: t, w, sizePt: slotSize, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
   });
-  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y, slots: stamped };
+  // **Iteration-003 (legacy parity):** בסיס הכותרת המכויל (GEO.HEADER_BASELINE
+  // — כמו legacy-projector) בפרופיל IMUD; בלי זה הנוסחה הגנרית הדפיסה
+  // את הכותרת ~20pt נמוך מדי.
+  const imudHdr = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  const { GEO } = require('../core/imud-geometry');
+  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y, ...(imudHdr ? { baselineY: GEO.HEADER_BASELINE } : {}), slots: stamped };
   return true;
 }
 
@@ -352,11 +387,67 @@ function stampEndnoteHeading(page, settings, measure) {
  * @param {object} measure — MeasureAPI פעיל
  * @returns {{stamped: Object<string, number>, pagesStamped: number}}
  */
+/**
+ * **Iteration-003 (legacy parity — פס הסימן):** כמו bands.push(kind:'h2-siman')
+ * של המורשת (§1341): בכל עמוד פתיחת-סימן נחתם פס "סימן <גימטריה>" מעל כותרת
+ * ה-H2 (עוגן מכויל 307.88px, 20pt, גופן f-siman). המונה מתאפס בכל חלק
+ * (h2-reset-siman של המקור, ברירת מחדל true). המילים נמדדות כאן פעם אחת.
+ */
+function stampSimanBands(pages, settings, measure, stamped) {
+  // **היקף:** פרופיל IMUD בלבד — פס הסימן הוא חוזה המקור (h2-auto-siman);
+  // ב-DP אין פסי סימן והחותמת אינה רצה.
+  const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  if (!imudProf) return 0;
+  const raw = (settings && settings._imudRaw) || {};
+  const autoSiman = raw['h2-auto-siman'] !== false && raw['h2-auto-siman'] !== 'false';
+  const resetSiman = raw['h2-reset-siman'] !== false && raw['h2-reset-siman'] !== 'false';
+  if (!autoSiman) return 0;
+  const { toBareGematria } = require('../decoration/folio');
+  const simanSize = Number(raw['s-siman']) > 0 ? Number(raw['s-siman']) : (Number(SZ_CORE.siman) || 20);
+  const stack = String(raw['f-siman'] || '').split(',')[0].trim().replace(/^['"]|['"]$/g, '');
+  const fam = stack || 'AlphaBlack';
+  const famMeasure = measureOfFamily(measure, fam, settings);
+  const fontKey = familyFontKeyOf(fam);
+  let simanCounter = 0;
+  let placed = 0;
+  for (const page of pages) {
+    if (page.type === 'shaar-sub') { if (resetSiman) simanCounter = 0; continue; }
+    if (page.type !== 'sign-open') continue;
+    if (!page.spanning || !page.spanning.lines || !page.spanning.lines.length) continue;
+    const hasH2 = page.spanning.lines.some(ln => ln.kind === 'heading' && ln.level === 2);
+    if (!hasH2) continue;
+    simanCounter++;
+    const text = 'סימן ' + toBareGematria(simanCounter);
+    const words = text.split(/\s+/).filter(Boolean).map(word => ({
+      text: scrubPUAText(word),
+      w: famMeasure.measureTextWidth(scrubPUAText(word), simanSize, 0)
+    }));
+    page.simanBand = {
+      y: 307.88, h: 36, sizePt: simanSize, fontKey,
+      words, spaceW: famMeasure.measureTextWidth(' ', simanSize, 0)
+    };
+    placed++;
+  }
+  if (stamped) stamped.siman = placed;
+  return placed;
+}
+
 function stampStructuralGeometry(pages, settings, measure) {
-  const stamped = { toc: 0, shaar: 0, header: 0, folio: 0, lanes: 0, endnoteTitle: 0 };
+  const stamped = { toc: 0, shaar: 0, header: 0, folio: 0, lanes: 0, endnoteTitle: 0, gateDesign: 0, siman: 0 };
+  const { planGateDesign } = require('../decoration/gate-design');
+  stampSimanBands(pages, settings, measure, stamped);
   for (const page of pages) {
     if (stampTocLayout(page, settings, measure)) stamped.toc++;
     if (stampShaarLayout(page, settings, measure)) stamped.shaar++;
+    // **Iteration-003 (legacy parity):** עיצוב השערים המכויל + כלל הכותרת —
+    // אחרי חותמת השער (עוגן הגל נקרא ממנה) ואחרי buildHeader של ה-pipeline
+    // (הכלל מתנה בקיום סלוטים). overlay גיאומטרי נייטרלי בלבד.
+    const gateDeco = planGateDesign(page, settings);
+    if (gateDeco.length) {
+      page.decorations = Array.isArray(page.decorations) ? page.decorations : [];
+      page.decorations.push(...gateDeco);
+      stamped.gateDesign += gateDeco.length;
+    }
     if (stampHeaderSlots(page, settings, measure)) stamped.header++;
     if (stampFolioGeometry(page, settings, measure)) stamped.folio++;
     if (stampFootnoteLanes(page)) stamped.lanes++;

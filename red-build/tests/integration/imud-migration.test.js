@@ -61,7 +61,12 @@ describe('S4.5-ד: מיפוי default_settings.json המקורי — 100% dispos
     assertEq(settings['en-line-prefix'], 'הערת סיום -', 'מזהה הערות הסיום');
     assertEq(settings['fn-delim-open'], '[', 'תוחם פתיחה');
     assertEq(settings['fn-delim-close'], ']', 'תוחם סגירה');
-    assertEq(settings['footnote-separator-rule'], 'star', 'note-rule-style=star');
+    // **Iteration-003 (legacy parity — תיקון ערך-צפי מבוסס מדידה):** עד כאן
+    // 'star ⇒ star'. הייחוס (PDF המנוע הישן) מוכיח שאין אף חוט מפריד מעל
+    // מרזב ההערות — ההערות נפתחות ישירות בסמן (נמדד בעמודי ההערות של
+    // הייחוס; המנוע הישן אינו מצייר את note-rule-style כלל). הייבוא מכבה
+    // את הציור; הערך הגולמי נשמר ב-_imudRaw.
+    assertEq(settings['footnote-separator-rule'], 'none', 'note-rule-style=star ⇒ none (המנוע הישן אינו מצייר חוט מפריד — נמדד בייחוס; Iteration-003)');
     assertEq(settings['runt-min-width-pct'], 20, 'avoid-runt-word=true ⇒ 20%');
     assertEq(settings['heading-7-mode'], 'side-note', 'mode-h7=side_note');
     assertEq(settings['show-shaar-sub'], true, 'mode-h1=sub_shaar ⇒ שערי משנה דלוקים');

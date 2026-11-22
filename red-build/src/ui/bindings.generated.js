@@ -302,6 +302,20 @@ const BINDINGS = [
     "note": null
   },
   {
+    "id": "count-shaar-sub-pages",
+    "control": "chk-count-shaar-sub",
+    "panel": "רשת העמוד ומספור",
+    "panelKey": "GRID",
+    "labelHe": "count-shaar-sub-pages",
+    "type": "bool",
+    "def": false,
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "Iteration-003: המקור מונה שערי-משנה בפוליו אך לא את השערים הראשי/אחורי (sub-shaar-count-numbering=true, main/back=false) — בקרה פר-סוג"
+  },
+  {
     "id": "count-toc-pages",
     "control": "chk-count-toc",
     "panel": "רשת העמוד ומספור",
@@ -1993,6 +2007,7 @@ const BINDINGS = [
     "type": "enum",
     "def": "hebrew-geresh",
     "enum": [
+      "hebrew",
       "hebrew-geresh",
       "parenthesis",
       "asterisk",
@@ -2001,7 +2016,7 @@ const BINDINGS = [
     "min": null,
     "max": null,
     "step": null,
-    "note": null
+    "note": "Iteration-003: 'hebrew' = גימטריה+מפריד (כמו המקור — markerWord); 'hebrew-geresh' = מוסכמת הגיליון (בחירה מפורשת)"
   },
   {
     "id": "footnote-reset-policy",
@@ -2815,6 +2830,20 @@ const BINDINGS = [
     "max": null,
     "step": null,
     "note": "S9: עמודי תוכן־עניינים כלליים מציגים גיליון כשהם נספרים (count-toc-pages=true)"
+  },
+  {
+    "id": "toc-count-row-numbers",
+    "control": "chk-toc-row-nums",
+    "panel": "תוכן העניינים",
+    "panelKey": "TOC",
+    "labelHe": "toc-count-row-numbers",
+    "type": "bool",
+    "def": false,
+    "enum": null,
+    "min": null,
+    "max": null,
+    "step": null,
+    "note": "Iteration-003: מספור סידורי לשורות התוכן — כבוי כמו המקור (המקור מציג תווית גימטריה בלבד; count-numbering של המקור = מניית עמודים)"
   },
   {
     "id": "detailed-toc-show-numbering",
