@@ -1,0 +1,83 @@
+{
+ "generated": "2026-11-23 i004 G5 (RC-5a..d) — app-path export g1-export.pdf",
+ "old_pdf": "work/ref-pdfs/old-engine.pdf (699 pages, md5 7c0fe033b494b2c15c6cde2c95656356)",
+ "new_pdf": "work/iter004-export/g1-export.pdf (700 pages)",
+ "pages": {
+  "old": 699,
+  "new": 700,
+  "iter003_new": 715
+ },
+ "layout_hash_new": "326937ae77839c80",
+ "token_coverage": {
+  "old_tokens": 404118,
+  "new_tokens": 404016,
+  "matched_pairs": 361341
+ },
+ "column_fill": {
+  "old": {
+   "columns": 1232,
+   "last_baseline_median": 767.5,
+   "filled_gt762": 771,
+   "filled_pct": 62.6,
+   "cap_median": 33
+  },
+  "new": {
+   "columns": 1184,
+   "last_baseline_median": 768.5,
+   "filled_gt762": 779,
+   "filled_pct": 65.8,
+   "cap_median": 34
+  },
+  "iter003_new": {
+   "last_baseline_median": 726.5,
+   "filled_pct": 41.8
+  }
+ },
+ "no_notes_fill": {
+  "old_median": 767.5,
+  "new_median": 768.5,
+  "iter003_new_median": 689.0
+ },
+ "line_partition": {
+  "identity_1to1_pct": 19.04,
+  "split_pct": 70.85,
+  "unmatched_pct": 10.1
+ },
+ "drift_curve": {
+  "5%": -2,
+  "10%": -2,
+  "15%": -4,
+  "20%": -6,
+  "25%": -6,
+  "30%": -5,
+  "35%": -5,
+  "40%": -7,
+  "45%": -3,
+  "50%": -4,
+  "55%": -4,
+  "60%": -4,
+  "65%": -4,
+  "70%": -6,
+  "75%": -3,
+  "80%": -2,
+  "85%": -2,
+  "90%": -2,
+  "95%": -4,
+  "100%": 1
+ },
+ "drift_iter003": "0 at 45%, +16 at 100%",
+ "paren_glyphs": {
+  "old": {
+   "10.0": 2391,
+   "12.5": 2
+  },
+  "new": {
+   "10.0": 2408,
+   "12.0": 1
+  }
+ },
+ "pitch_tail_gt185": {
+  "old": 3820,
+  "new": 3791
+ }
+}
