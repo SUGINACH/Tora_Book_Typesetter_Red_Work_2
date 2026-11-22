@@ -10650,7 +10650,12 @@ function renderShaarContent(page, settings, doc, metadata) {
     const el = doc.createElement('div');
     el.className = b.cls;
     el.dir = 'rtl';
-    const fam = shaarFontOf(b.cls, settings);
+    // **Iteration-003 (parity משקל):** משפחה מפורשת מהבלוק (fontFamily — בקשה
+    // מילולית, כמו המשך כותרת שער-משנה ב-David Libre) גוברת על הנגזרת
+    // מההגדרות לפי מחלקה — אותו חוזה כמו החותמת (stampShaarLayout).
+    const fam = (b.fontFamily != null && String(b.fontFamily) !== '')
+      ? String(b.fontFamily)
+      : shaarFontOf(b.cls, settings);
     if (fam) el.style.fontFamily = fontStack(fam);
     if (b.sizePt > 0) el.style.fontSize = px(b.sizePt);
     if (b.bold) el.style.fontWeight = '700';
@@ -13232,12 +13237,16 @@ function buildShaarBlocks(page, settings, metadata) {
       B.push({ cls: 'bsd-header', text: 'בס״ד', sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 5 });
     }
     B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']), ...(imudProf ? { yTop: PT(128.1) } : {}) });
-    B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true, ...(imudProf ? { yTop: PT(225.2), followGap: 25 } : {}) });
+    // **Iteration-003 (parity משקל):** בייחוס IMUD כותרת-המשנה ב-Livorna רגיל
+    // (ToraEx6="Livorna", לא Bold) — ההדגשה נשארת לעיצוב DP בלבד.
+    B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: !imudProf, ...(imudProf ? { yTop: PT(225.2), followGap: 25 } : {}) });
     if (!imudProf) {
       B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-main' });
     }
     B.push({ cls: 'book-description', text: desc, sizePt: num(settings['shaar-desc-size-pt']), ...(imudProf ? { yTop: PT(410.3) } : {}) });
-    B.push({ cls: 'book-sections-summary', text: sections, sizePt: num(settings['shaar-sections-size-pt']), bold: true, ...(imudProf ? { yTop: PT(558.0) } : {}) });
+    // **Iteration-003 (parity משקל):** שורת פרטי-המהדורא בייחוס ב-David Libre
+    // רגיל (נמדד: ToraEx4="David Libre Regular", 11.5pt) — לא מודגש.
+    B.push({ cls: 'book-sections-summary', text: sections, sizePt: num(settings['shaar-sections-size-pt']), bold: !imudProf, ...(imudProf ? { yTop: PT(558.0) } : {}) });
     B.push({ cls: 'author-block', text: author, sizePt: num(settings['shaar-author-size-pt']), ...(imudProf ? { yTop: PT(713.5) } : {}) });
     if (!imudProf) {
       const year = settings['imud-book-year'] || meta['מקום ושנת הוצאה'] || '';
@@ -13251,8 +13260,10 @@ function buildShaarBlocks(page, settings, metadata) {
       const h1Size = num(settings['heading-1-size-pt']);
       B.push({ cls: 'book-title-main', text: titleMain, sizePt: h1Size, yTop: PT(345.7) });
       if (titleSub) {
-        // ההמשך ב-David Libre המכויל (כמו ההקשחה במורשת — הייחוס בגופן זה)
-        B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true, yTop: PT(469.7), followGap: 40.8, fontFamily: 'David Libre' });
+        // ההמשך ב-David Libre המכויל (כמו ההקשחה במורשת — הייחוס בגופן זה);
+        // **Iteration-003 (parity משקל):** בייחוס רגיל (ToraEx4="David Libre
+        // Regular"), לא מודגש — המפתח המילולי בחותמת מביא את הקובץ הרגיל.
+        B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: false, yTop: PT(469.7), followGap: 40.8, fontFamily: 'David Libre' });
       }
     } else {
       B.push({ cls: 'book-title-main', text: titleMain, sizePt: 36 });
@@ -13275,7 +13286,7 @@ function buildShaarBlocks(page, settings, metadata) {
       String(value).split('\n').map(l => l.trim()).filter(Boolean)
         .forEach(l => B.push({ cls: 'back-shaar-text-line', text: l, sizePt, ...(imudProf && yTop != null ? { yTop } : {}) }));
     };
-    if (copyright) B.push({ cls: 'back-shaar-copyright-header', text: 'כל הזכויות שמורות', sizePt: 13.5, bold: true, ...(imudProf ? { yTop: PT(191.8) } : {}) });
+    if (copyright) B.push({ cls: 'back-shaar-copyright-header', text: 'כל הזכויות שמורות', sizePt: 13.5, bold: !imudProf, ...(imudProf ? { yTop: PT(191.8) } : {}) });
     pushSection(copyright, 10, PT(216.4));
     pushSection(publisher, 11, PT(357.3));
     pushSection(contact, 10, PT(500.9));
@@ -20524,6 +20535,18 @@ function familyFontKeyOf(fam) {
   return fam;
 }
 
+/** **Iteration-003 (parity משקל בשערים):** בקשת משפחה מילולית — המשפחה הרשומה
+ * עצמה היא המפתח, בלי המנהרות התפקידיות. למשל 'David Libre' ⇒ תת-הגופן
+ * הרגיל (DavidLibre-Regular) ולא מפתח ה-heading (DavidLibre-Bold).
+ * משמש את חותמת השערים בפרופיל IMUD: שורות המהדורה/המחבר/המשך-כותרת-
+ * המשנה מופיעות בייחוס ב-David Libre רגיל (נמדד ב-PDF הייחוס:
+ * ToraEx4 = "David Libre Regular"), בעוד כותרות ההערות/ה-TOC — שם
+ * המנהרה ל-heading נכונה — נשארות ב-familyFontKeyOf. */
+function literalFamilyKeyOf(fam) {
+  if (!fam || !registeredFonts.has(fam)) return null;
+  return fam;
+}
+
 /** **פרוסה 3 (§2.2 — זהות גופן מהמודל):** היפוך המיפוי לצורך הקרנה —
  * מפתח גופן (על שורות/מילים ב-PageModel) ⇒ שם משפחה לתצוגה. משפחה רשומה
  * היא המפתח עצמו; המפתחות הפונקציונליים ממופים למשפחה הקנונית שיצרה אותם
@@ -20542,7 +20565,7 @@ function familyOfFontKey(key) {
   return KEY_FAMILY[key] || key;
 }
 
-module.exports = { familyFontKeyOf, familyOfFontKey };
+module.exports = { familyFontKeyOf, literalFamilyKeyOf, familyOfFontKey };
 
 };
 __modules["src/ui/testing-tab.js"] = function (require, module, exports) {
@@ -26158,16 +26181,19 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
 /* **03.11(ד) — תוכן מובנה של עמודי השער (פורט CSS המקור):** */
 .shaar-content{position:absolute;display:flex;flex-direction:column;justify-content:space-between;align-items:center;text-align:center;z-index:20}
 .shaar-content--sub,.shaar-content--back{justify-content:center}
-.bsd-header{font-family:'David Libre',serif;font-size:15pt;letter-spacing:5px;font-weight:700;margin-bottom:40px}
+.bsd-header{font-family:'David Libre',serif;font-size:15pt;letter-spacing:5px;margin-bottom:40px}
 .book-title-main{line-height:1.1;margin:10px 0 40px 0;font-weight:400}
 .shaar-content--sub .book-title-main,.shaar-content--back .book-title-main{margin:10px 0 15px 0}
-.book-subtitle{font-weight:700;line-height:1.25}
+/* **Iteration-003 (parity משקל):** המשקל בא מדגל ה-bold של הבלוק (מוטבע
+   inline) — לא מה-CSS; כך IMUD (רגיל בייחוס) ו-DP (מודגש) חולקים כלל
+   אחד בלי סתירת פרופילים. */
+.book-subtitle{line-height:1.25}
 .shaar-crown{width:180px;height:24px;margin:12px auto}
 .shaar-crown svg{width:100%;height:100%;display:block}
 .book-description{line-height:1.5;max-width:65%;margin:10px auto}
-.book-sections-summary{line-height:1.5;border-top:1px solid #ccc;border-bottom:1px solid #ccc;padding:6px 12px;margin:8px 0;font-weight:700}
+.book-sections-summary{line-height:1.5;border-top:1px solid #ccc;border-bottom:1px solid #ccc;padding:6px 12px;margin:8px 0}
 .author-block{line-height:1.3}
-.publication-footer{font-weight:700;letter-spacing:1px}
+.publication-footer{letter-spacing:1px}
 .back-shaar-text-line{font-size:10.5pt;line-height:1.6;max-width:90%;margin:10px auto;color:#333}
 .book-title-main--back{font-size:36pt}
 .cs-counter{display:inline-block;min-width:1.4em;margin-inline-end:6px;font-weight:700;opacity:.7;font-size:.85em}
