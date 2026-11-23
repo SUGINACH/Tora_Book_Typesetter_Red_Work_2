@@ -23,7 +23,8 @@ const {
   sideOrnamentOffsetY, sideOrnamentLiftPx, assertSingleSourceSizing
 } = require('./ornament-fit');
 const { headingDividerDecision, shaarDividerDecision, createDividerCounters } = require('./dividers');
-const { ornamentInk } = require('./ornament-ink'); // **השלמת שלב 6 (§6.1-6/§6.1-10):** זהות הדיו נקבעת בהצבה — המקרינים צורכים
+const { ornamentInk } = require('./ornament-ink');
+const { colCapacityOf } = require('../layout/column-flow'); // **RC-F3a (i005):** קיבולת אחת — מודעת לתקציב ההערות ולשמורות // **השלמת שלב 6 (§6.1-6/§6.1-10):** זהות הדיו נקבעת בהצבה — המקרינים צורכים
 
 /** גובה ברירת־מחדל לעיטור סיום פרק (em של גוף הטקסט). */
 const ORN_NATURAL_W_EM = 4, ORN_NATURAL_H_EM = 1.2;
@@ -34,9 +35,13 @@ function bodyFontPx(settings) {
   return Math.round(settings['body-font-size-pt'] * 96 / 72 * 100) / 100;
 }
 
-/** סכום גובה שורות טור. */
+/** סכום גובה שורות טור — **סמנטיקת רינדור** (balancing.usedHeight): גובה
+ *  שורה × aqStretch + פער הבלוקים (gapBeforePx). **RC-F3a (i005):** עד כאן
+ *  נספרו גבהים גולמיים בלבד — המתיחה (G5) והפערים לא נכללו ⇒ עיטור
+ *  סיום-הפרק מוקם לפי תחתית מדומה ונחת על טקסט מתוח (נמדדו 47 חפיפות
+ *  בייצוא עם העיטורים פעילים; דוח v4/F3). */
 function colUsed(colLines) {
-  return colLines.reduce((s, ln) => s + (ln.heightPx || 0), 0);
+  return colLines.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1) + (ln.gapBeforePx || 0), 0);
 }
 
 /** מדידת רוחב טקסט שורה דרך MeasureAPI (מדידת JS — CSS fit-content נכשל; REQ-ORN-01). */
@@ -113,14 +118,53 @@ function planPageOrnaments(pages, settings, measureFn, io = {}) {
         // הכותרת מתחילה אחרי ההזמנה העליונה (פס: titleTopPadPx; טור: padding שורה ראשונה)
         const topPad = spanLines.length ? (page.spanning.titleTopPadPx || 0) : (titleLines[0].h2OrnPadTop || 0);
         const linesBefore = spanLines.length ? 0 : col.slice(0, h0).reduce((s, ln) => s + (ln.heightPx || 0), 0);
-        const titleTop = tpl.contentBox.top + linesBefore + topPad;
-        const titleH = titleLines.reduce((s, ln) => s + (ln.heightPx || 0), 0)
-          - (spanLines.length ? 0 : ((titleLines[0].h2OrnPadTop || 0) + (titleLines[titleLines.length - 1].h2OrnPadBottom || 0)));
-        const titleBottom = titleTop + titleH;
+        // **RC-F2a (i005 — מקור עוגן אחד עם ההקרנה):** ההקרנה (materialize) מציבה
+        // את שורות הפס ב-bandTopPx המכויל (עוגן אזור-h2 בתבנית — Iteration-003),
+        // ושורה עם yPx נעוצה בו; החישוב כאן השתמש ב-contentBox.top בלבד ⇒ תיבת
+        // הכותרת של העיטור נפלה ~60px מתחת לכותרת בפועל, ועיטור ה-h2-bottom נחת
+        // בתוך הגוף (נמדד: עיטור y=433px מול כותרת בעוגן 344.05px; 78/84 חפיפות
+        // בדוח v4/F2). כעת אותו מסלול-y כמו materialize: bandTopPx → topPad →
+        // yPx לכל שורה. תיבת הכותרת לעיטור = תיבת הטקסט בלבד (בלי ריפודי ההזמנה
+        // h2OrnPadTop/Bottom — ההזמנה היא מקום העיטור עצמו, F-08).
+        let titleTop;
+        let titleBottom;
+        let reservedPadBottom = 0;
+        if (spanLines.length) {
+          let y = (page.spanning.bandTopPx != null ? page.spanning.bandTopPx : tpl.contentBox.top) + topPad;
+          titleTop = y + (spanLines[0].h2OrnPadTop || 0);
+          for (const ln of spanLines) {
+            if (ln.yPx != null) y = ln.yPx;
+            y += ln.heightPx || 0;
+          }
+          // **RC-F2a (המשך):** ההזמנה התחתונה של פס FWD-1 חיה ב-spanning.orn.bottomPx
+          // (לא על השורה — השורות שם לא נושאות ריפוד); ההזמנה של H2 בטור חיה
+          // על h2OrnPadBottom של השורה האחרונה. מקור אחד לכל נתיבי ה-H2.
+          const ornBottomPx = (page.spanning.orn && page.spanning.orn.scope && page.spanning.orn.scope.signBottom)
+            ? (page.spanning.orn.bottomPx || 0) : 0;
+          reservedPadBottom = Math.max(ornBottomPx, spanLines[spanLines.length - 1].h2OrnPadBottom || 0);
+          titleBottom = y - (spanLines[spanLines.length - 1].h2OrnPadBottom || 0);
+          if (titleBottom < titleTop) titleBottom = titleTop;
+        } else {
+          // תיבת הטקסט בלבד — ריפודי ההזמנה אינם חלק מהכותרת (F-08)
+          const padTop = titleLines[0].h2OrnPadTop || 0;
+          const padBot = titleLines[titleLines.length - 1].h2OrnPadBottom || 0;
+          titleTop = tpl.contentBox.top + linesBefore + padTop;
+          titleBottom = titleTop + titleLines.reduce((s, ln) => s + (ln.heightPx || 0), 0) - padTop - padBot;
+          reservedPadBottom = padBot;
+          if (titleBottom < titleTop) titleBottom = titleTop;
+        }
+        const titleH = titleBottom - titleTop;
         const cx = colX + colW / 2;
 
         if (scope.signTop) {
           const y = titleTop - ornMargins.top - h; // בתוך האזור שהוזמן (F-08)
+          // **RC-F2a (i005 — שולי דיו):** הגליפים יכולים לבצבץ ~2px מעל תיבת
+          // השורה (bbox של הגופן — נמדד p634: דיו הכותרת ב-titleTop−2.1). בלי
+          // מרווח נשימה העיטור העליון נוגע בדיו — נדרשים ≥2px.
+          if (titleTop - (y + h) < 2) {
+            rejected.push({ page: pi, slot: 'h2-top', reason: 'no-room-above', ornH: h, titleTop: Math.round(titleTop) });
+            if (ledger) ledger.create('ornament-rejected', `h2-top@p${pi}`, pi, { reason: 'no-room-above', ornH: h }, 'ornaments');
+          } else {
           pushOrnament(page, { kind: 'h2-ornament', slot: 'h2-top', kindStyle: settings['h2-orn-top'], x: Math.round(cx - w / 2), y, w, h, marginGapTop: titleTop - (y + h) }, rejected, pi, settings, { ledger }, {
             naturalW: Math.round(H2_ORN_W_EM * fontPx), naturalH: Math.round(H2_ORN_H_EM * fontPx),
             scale: orn ? (orn.scale || 1) : 1, fitMode: 'fit-to-text', fitReason: settings['h2-orn-fit-to-text'] !== false ? 'fit-to-text' : 'disabled',
@@ -130,9 +174,22 @@ function planPageOrnaments(pages, settings, measureFn, io = {}) {
             reservationWhere: spanLines.length ? 'spanning.titleTopPadPx' : 'line.h2OrnPadTop'
           });
           planted.h2Top++;
+          }
         }
         if (scope.signBottom) {
           const y = titleBottom + ornMargins.bottom; // בתוך ההזמנה התחתונה
+          // **RC-F2a (i005 — הכלה בתוך ההזמנה שנקבעה בפריסה):** תחום העיטור התחתון
+          // הוא ריפוד ההזמנה עצמו (h2OrnPadBottom — F-08). בפס ממוקם-עוגן (IMUD —
+          // bandTopPx) הזרימה קבועה ב-contentBox.top ואינה זזה מהריפוד: שם
+          // ההזמנה חייבת להיכנס מעל ראש הזרימה (נמדד: אין מקום — האזור מלא;
+          // דחייה מתועדת). אין מקום ⇒ דחייה, לא חפיפה שקטה עם הגוף.
+          const allowedBottom = (spanLines.length && page.spanning.bandTopPx != null)
+            ? Math.min(titleBottom + reservedPadBottom, tpl.contentBox.top - 1)
+            : Math.min(titleBottom + reservedPadBottom + 0.5, tpl.contentBox.bottom);
+          if (y + h > allowedBottom) {
+            rejected.push({ page: pi, slot: 'h2-bottom', reason: 'no-room-below', ornH: h, allowedBottom: Math.round(allowedBottom), y: Math.round(y) });
+            if (ledger) ledger.create('ornament-rejected', `h2-bottom@p${pi}`, pi, { reason: 'no-room-below', ornH: h, allowedBottom: Math.round(allowedBottom) }, 'ornaments');
+          } else {
           // ההזמנה התחתונה בפועל: בפס חוצה-טורים — bottomPx מההזמנה שנקבעה בפריסה
           // (spanning.heightPx = topPad+bandH+bottomPad); בטור — padding השורה.
           const bottomPadActual = spanLines.length
@@ -147,6 +204,7 @@ function planPageOrnaments(pages, settings, measureFn, io = {}) {
             reservationWhere: spanLines.length ? 'spanning.heightPx (bottomPad)' : 'line.h2OrnPadBottom'
           });
           planted.h2Bottom++;
+          }
         }
         if (scope.titleSide) {
           // צדדיים לכותרת: התאמת גובה לגובה הכותרת + הרמה אופטית −0.08em (שיעור V4)
@@ -314,17 +372,25 @@ function planPageOrnaments(pages, settings, measureFn, io = {}) {
       if (last >= 0) {
         const col = page.columns[last];
         const used = colUsed(col);
-        // התקציב הפנוי בפועל — בכפוף לפס החוצה־טורים (FWD-1) ולמרווח נשימה
-        const cap = tpl.contentBox.height - (page.spanning ? page.spanning.heightPx : 0);
+        // התקציב הפנוי בפועל — **RC-F3a (i005): קיבולת אחת (colCapacityOf)** —
+        // בכפוף לפס החוצה־טורים (FWD-1), לתקציב ההערות (U-8: המרזב חוצה-רוחב —
+        // עד כאן העיטור נחת בתוך המרזב; נמדד p260: עיטור y=636 מול הערות עד y=773)
+        // ולשמורות האחידות.
+        const cap = colCapacityOf(page, { colIndex: last });
         const budget = cap - used - Math.round(fontPx * 0.5);
         const wPx = Number(settings['chapter-end-ornament-w-em']) * fontPx || ORN_NATURAL_W_EM * fontPx;
         const hPx = Number(settings['chapter-end-ornament-h-em']) * fontPx || ORN_NATURAL_H_EM * fontPx;
         const fit = chapterEndOrnamentFit(settings['chapter-end-ornament'], wPx, hPx, budget);
         if (fit.placed) {
           const colX = tpl.columns[last].x, colW = tpl.columns[last].w;
+          // **RC-F3a (i005 — עוגן זרימה מתחת לפס):** הקיבולת מנכה את הפס החוצה-
+          // טורים (colCapacityOf) אך עוגן ה-y שכח להוסיף אותו — הטור מתחיל
+          // ב-contentBox.top + spanning.heightPx (כמו spanOffset בהקרנה).
+          // נמדד p260: עיטור ב-748px בעוד התוכן מסתיים ב-794 (פס 60px).
+          const flowTop = tpl.contentBox.top + (page.spanning && page.spanning.heightPx ? page.spanning.heightPx : 0);
           pushOrnament(page, {
             kind: 'chapter-end-ornament', slot: 'chapter-end', kindStyle: settings['chapter-end-ornament'],
-            x: Math.round(colX + (colW - fit.wPx) / 2), y: Math.round(tpl.contentBox.top + used + (budget - fit.hPx) / 2),
+            x: Math.round(colX + (colW - fit.wPx) / 2), y: Math.round(flowTop + used + (budget - fit.hPx) / 2),
             w: fit.wPx, h: fit.hPx
           }, rejected, pi, settings, { ledger }, {
             naturalW: wPx, naturalH: hPx,
