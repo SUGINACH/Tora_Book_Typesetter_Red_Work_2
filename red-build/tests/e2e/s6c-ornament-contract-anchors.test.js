@@ -103,9 +103,16 @@ describe('§3.1 חוזה עיטורים — הצהרה מלאה דרך חוזה 
     assertEq(base.contentPreserved, true, 'content preserved (base)');
     assertEq(orn.contentPreserved, true, 'content preserved (ornaments)');
     // אותן מילים באותו סדר קריאה (העיטור אינו נוגע בתוכן)
+    // **RC-F1a (i005):** סדר הקריאה האמיתי הוא סדר ה-seq — לא סדר ההשטחה
+    // (טור-אחר-טור לכל עמוד), שנשבר כשהעיטור מזיז שורה בין טורים בלי שהתוכן
+    // או סדר הקריאה משתנים (נמדד: seq זהה מילה-במילה, 604=604; ההשטחה נפרדת
+    // בשורה אחת). ההשוואה לפי seq חזקה מהקודמת — היא בודקת בדיוק את הנטען.
     const wordsOf = (r) => r.pages.flatMap(p => p.columns.flat()).map(ln => (ln.words || []).join('\u00A0'));
+    const readingOrderOf = (r) => r.pages.flatMap(p => p.columns.flat())
+      .filter(ln => ln.seq != null).sort((a, b) => a.seq - b.seq)
+      .map(ln => (ln.words || []).join('\u00A0'));
     assertEq(wordsOf(orn).length, wordsOf(base).length, 'אותו מספר שורות גוף');
-    assertEq(JSON.stringify(wordsOf(orn).slice(0, 50)), JSON.stringify(wordsOf(base).slice(0, 50)), 'ראש המסמך זהה מילה-במילה');
+    assertEq(JSON.stringify(readingOrderOf(orn)), JSON.stringify(readingOrderOf(base)), 'סדר הקריאה זהה מילה-במילה (לפי seq)');
     // והעיטורים אכן נוספו (גאומטריה השתנתה)
     assert(allOrnaments(orn).some(({ d }) => d.slot === 'h2-top'), 'h2-top planted');
     assertEq(allOrnaments(base).some(({ d }) => d.slot === 'h2-top'), false, 'base: no h2-top');

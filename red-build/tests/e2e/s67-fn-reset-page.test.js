@@ -167,7 +167,10 @@ describe('S67-2 — אינטגרציה: הקורפוס הקנוני במדיני
     // שטיפת-עמוד בלתי-מותנית בכל כותרת. הקנוני: 37=37 עמודים, contentPreserved=true,
     // דטרמיניזם OK, אפס הפרות תוכנית (s7 16/16) ואפס חפיפות בהקרנה (s14 53/53).
     // דוח: audits/legacy-parity-iteration/iteration-001/.
-    assert(r.layoutHash.startsWith('8a6b23bd'), `canonical hash unchanged, got ${r.layoutHash.slice(0, 16)}`);
+    // **Iteration-005 (RC-F1a):** נעילה מחודשת 8a6b23bd→89a0eb42 — חוזה spanning
+    // אחיד לפסי H3 (עוגן blockBottom+פער-בלוק; צל מיושר לטווח הפס). 37=37;
+    // contentPreserved=true. דוח: audits/legacy-parity-iteration/iteration-005/.
+    assert(r.layoutHash.startsWith('89a0eb42'), `canonical hash unchanged, got ${r.layoutHash.slice(0, 16)}`);
   });
 
   it('ביקורת שלילה — המדיניות באמת משנה: מסמך חלק-אחד רב-עמודים — page מאפס, section ממשיך', () => {

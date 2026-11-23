@@ -313,10 +313,17 @@ function typeset(rawText, settingsIn, env = {}) {
       // **Iteration-003 (legacy parity — H2 בעמוד פתיחת סימן):** כותרת ה-H2
       // נמדדת ברוחב תיבת הכותרת של המקור (H23_TITLE_W — 60% מרוחב הפס;
       // wrapText במורשת §1350) ומוצגת כפס ממורכז — לא ברוחב טור/עמוד.
-      const h2TitleW = (settings['_layout-profile'] === 'imud' || settings._imudRaw) && t.level === 2
+      // **RC-F1b (i005 — legacy parity — שבירת שורות פסי H3):** גם כותרת 3
+      // (span_1col — HEADING_MODES[3] של המקור) נעטפת במקור ברוחב תיבת
+      // הכותרה H23_TITLE_W (legacy-imud-flow §2019), לא ברוחב מלא: בייחוס
+      // 252 פסים חד-שורתיים (רוחב דיו מקסימלי 330.3px ≤ 331.38) ו-83
+      // דו-שורתיים; המנוע המאוחד מדד ברוחב מלא ⇒ פסים ארוכים נשארו שורה
+      // אחת (דוח v4/F1: «ד. בשם הוצאה…» — שתי שורות בישן, אחת בחדש) ⇒
+      // גובה פס שגוי והסחת עימוד. אותו רוחב תיבה כמו H2 — מקור יחיד.
+      const h23TitleW = (settings['_layout-profile'] === 'imud' || settings._imudRaw) && (t.level === 2 || t.level === 3)
         ? H23_TITLE_W
         : null;
-      const wLimit = h2TitleW != null ? h2TitleW
+      const wLimit = h23TitleW != null ? h23TitleW
         : (t.level <= 1 || hMode === 'full-width')
           ? fullWidthWidth(settings)
           : columnWidthFor({ kind: 'heading', level: t.level }, settings);

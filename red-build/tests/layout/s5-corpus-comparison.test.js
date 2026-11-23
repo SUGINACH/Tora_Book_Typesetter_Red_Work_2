@@ -58,7 +58,7 @@ function classifyBlockDiff(wb, nb) {
 }
 
 describe('שלב 5 פרוסה 1 — השוואת קורפוס מול main (§16: תוכן פר-בלוק זהה; שינויי פריסה מסווגים)', () => {
-  it('הקורפוס הקנוני: תוכן נשמר + דטרמיניזם + נעילת iteration-001 (8a6b23bd; חודשה מ-fdff19d8 — פסי H3 באמצע עמוד)', () => {
+  it('הקורפוס הקנוני: תוכן נשמר + דטרמיניזם + נעילת iteration-005 (89a0eb42; חודשה מ-8a6b23bd — חוזה spanning אחיד לפסי H3)', () => {
     assert(fs.existsSync(BASELINE), 'בסיס main קיים (tests/artifacts/s5-main-baseline.json)');
     const base = JSON.parse(fs.readFileSync(BASELINE, 'utf8'));
     const now = capture(CANONICAL, getDefaultSettings());
@@ -73,13 +73,16 @@ describe('שלב 5 פרוסה 1 — השוואת קורפוס מול main (§16:
     // ה-FX של שלב 5 עדיין אינם נפגשים בקורפוס הקטן — השער נותר חזק: שינוי
     // פריסה אפשרי רק מהחלטה מתועדת.
     assertEq(now.pages, 37, 'מספר עמודים (36 + עמוד toc-detail חדש — D-107)');
-        // **Iteration-001 (legacy parity — 22.11):** נעילה מחודשת fdff19d8→8a6b23bd —
-    // פסי H3 באמצע העמוד כמו המקור (span_1col; איזון לפני ההחלטה; סף
-    // max(60, גובה-פס+22)); 37=37 עמודים; contentPreserved=true; דטרמיניזם OK.
-    // very_long: 1216→1066 עמודים (בסיס ההשוואה כאן נשאר מהצילום ההיסטורי —
-    // סיווג הפערים במבחן השני מוכיח אפס בלתי-מסווגים). דוח מלא:
-    // audits/legacy-parity-iteration/iteration-001/.
-    assertEq(now.hash, '8a6b23bd0e6d8439', `hash קנוני נעילת iteration-001 (${now.hash.slice(0, 16)})`);
+        // **Iteration-005 (legacy parity — RC-F1a):** נעילה מחודשת 8a6b23bd→89a0eb42 —
+    // חוזה spanning אחיד לפסי H3 באמצע עמוד: עוגן הפס = התחתית המשותפת
+    // של כל הטורים (blockBottom של המקור — max סמני הטורים) + פער-הבלוק
+    // כמו לכל בלוק מתחת לתוכן; הצל בטור המשני מזמין את ההפרש עד העוגן
+    // (שני הטורים מפנים את אותו טווח-y; התוכן ממשיך באותו y). סוגר את
+    // שורש 919 חפיפות הפס-בגוף ב-154 עמ' בספר הייחוס (מול 11 בישן;
+    // דוח v4/F1 — הוכחה p143: פס 312.16–334.12 מול גוף c1.52 ב-316.68).
+    // 37=37 עמודים; contentPreserved=true; דטרמיניזם OK. דוח מלא:
+    // audits/legacy-parity-iteration/iteration-005/.
+    assertEq(now.hash, '89a0eb42c774943b', `hash קנוני נעילת iteration-005 (${now.hash.slice(0, 16)})`);
     // דטרמיניזם
     const b2 = typeset(fs.readFileSync(CANONICAL, 'utf8'), getDefaultSettings());
     assertEq(now.hash, b2.layoutHash.slice(0, 16), 'דטרמיניזם');

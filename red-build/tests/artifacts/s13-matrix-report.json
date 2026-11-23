@@ -5,32 +5,14 @@
     {
       "config": "default",
       "pages": 37,
-      "ms": 281,
+      "ms": 293,
       "contentPreserved": true,
       "geometryNeutral": true,
-      "layoutHash": "8a6b23bd0e6d843908566d37632b8153ae4e89eae4e1019c43af26aadb6036c3",
-      "findingsOpen": 16,
+      "layoutHash": "89a0eb42c774943b0347d4bfa913d703e556f6bdda0369decbdb8a127f9853b9",
+      "findingsOpen": 30,
       "findingsHigh": 0,
       "openByKind": {
-        "column-imbalance": 8,
-        "page-underfill": 7,
-        "rollback-compromise": 1
-      },
-      "htmlDeterministic": true,
-      "pdfDeterministic": true,
-      "pdfPages": 37
-    },
-    {
-      "config": "ornaments",
-      "pages": 37,
-      "ms": 127,
-      "contentPreserved": true,
-      "geometryNeutral": true,
-      "layoutHash": "4878558106bd419eb404059cb1c246122e56717fe08e0bac21f93d48f08d893f",
-      "findingsOpen": 38,
-      "findingsHigh": 0,
-      "openByKind": {
-        "rollback-compromise": 16,
+        "rollback-compromise": 8,
         "column-imbalance": 15,
         "page-underfill": 7
       },
@@ -39,18 +21,38 @@
       "pdfPages": 37
     },
     {
-      "config": "aq-on",
+      "config": "ornaments",
       "pages": 37,
-      "ms": 99,
+      "ms": 202,
       "contentPreserved": true,
       "geometryNeutral": true,
-      "layoutHash": "8a6b23bd0e6d843908566d37632b8153ae4e89eae4e1019c43af26aadb6036c3",
-      "findingsOpen": 16,
+      "layoutHash": "88e76306388c496a605db55904fa0f10bb5eff59de147305e8fc1bde2dd51c03",
+      "findingsOpen": 46,
       "findingsHigh": 0,
       "openByKind": {
-        "column-imbalance": 8,
+        "rollback-compromise": 8,
+        "column-imbalance": 15,
+        "orphan-bottom": 8,
         "page-underfill": 7,
-        "rollback-compromise": 1
+        "page-plan-invalid": 8
+      },
+      "htmlDeterministic": true,
+      "pdfDeterministic": true,
+      "pdfPages": 37
+    },
+    {
+      "config": "aq-on",
+      "pages": 37,
+      "ms": 151,
+      "contentPreserved": true,
+      "geometryNeutral": true,
+      "layoutHash": "89a0eb42c774943b0347d4bfa913d703e556f6bdda0369decbdb8a127f9853b9",
+      "findingsOpen": 30,
+      "findingsHigh": 0,
+      "openByKind": {
+        "rollback-compromise": 8,
+        "column-imbalance": 15,
+        "page-underfill": 7
       },
       "htmlDeterministic": true,
       "pdfDeterministic": true,
@@ -59,16 +61,16 @@
     {
       "config": "continuous-notes",
       "pages": 37,
-      "ms": 80,
+      "ms": 99,
       "contentPreserved": true,
       "geometryNeutral": true,
-      "layoutHash": "09f7a6f3342b080cbbfb67131b32480ba071e8053c5741d505a964d184eec2bc",
-      "findingsOpen": 16,
+      "layoutHash": "730a096ee6ade8c3a568f6693dbd0688fb2fd330044c5002ee3fe726cf1f9b13",
+      "findingsOpen": 30,
       "findingsHigh": 0,
       "openByKind": {
-        "column-imbalance": 8,
-        "page-underfill": 7,
-        "rollback-compromise": 1
+        "rollback-compromise": 8,
+        "column-imbalance": 15,
+        "page-underfill": 7
       },
       "htmlDeterministic": true,
       "pdfDeterministic": true,
@@ -77,16 +79,16 @@
     {
       "config": "verso-headers",
       "pages": 37,
-      "ms": 93,
+      "ms": 124,
       "contentPreserved": true,
       "geometryNeutral": true,
-      "layoutHash": "8a6b23bd0e6d843908566d37632b8153ae4e89eae4e1019c43af26aadb6036c3",
-      "findingsOpen": 16,
+      "layoutHash": "89a0eb42c774943b0347d4bfa913d703e556f6bdda0369decbdb8a127f9853b9",
+      "findingsOpen": 30,
       "findingsHigh": 0,
       "openByKind": {
-        "column-imbalance": 8,
-        "page-underfill": 7,
-        "rollback-compromise": 1
+        "rollback-compromise": 8,
+        "column-imbalance": 15,
+        "page-underfill": 7
       },
       "htmlDeterministic": true,
       "pdfDeterministic": true,
@@ -95,16 +97,16 @@
     {
       "config": "custom-styles",
       "pages": 37,
-      "ms": 98,
+      "ms": 111,
       "contentPreserved": true,
       "geometryNeutral": true,
-      "layoutHash": "8a6b23bd0e6d843908566d37632b8153ae4e89eae4e1019c43af26aadb6036c3",
-      "findingsOpen": 16,
+      "layoutHash": "89a0eb42c774943b0347d4bfa913d703e556f6bdda0369decbdb8a127f9853b9",
+      "findingsOpen": 30,
       "findingsHigh": 0,
       "openByKind": {
-        "column-imbalance": 8,
-        "page-underfill": 7,
-        "rollback-compromise": 1
+        "rollback-compromise": 8,
+        "column-imbalance": 15,
+        "page-underfill": 7
       },
       "htmlDeterministic": true,
       "pdfDeterministic": true,

@@ -99,10 +99,11 @@ describe('שלב 8 פרוסה 1 (§4.1) — materialization חד-פעמי טהו
 
   it('ההטבעה אינה משנה תכנון: layoutHash זהה לנעילה; ההקרנה דטרמיניסטית', () => {
     const r = typeset(CORPUS, S());
-        // **Iteration-001 (legacy parity — 22.11):** נעילה מחודשת fdff19d8→8a6b23bd —
-    // פסי H3 באמצע העמוד כמו המקור; 37=37 עמודים; contentPreserved=true.
-    // דוח: audits/legacy-parity-iteration/iteration-001/.
-    assert(r.layoutHash.startsWith('8a6b23bd'), `layoutHash נשמר (${r.layoutHash.slice(0, 8)})`);
+        // **Iteration-005 (legacy parity — RC-F1a):** נעילה מחודשת 8a6b23bd→89a0eb42 —
+    // חוזה spanning אחיד לפסי H3 (עוגן blockBottom + פער-בלוק; צל מיושר
+    // לטווח הפס — סוגר את חפיפות הפס-בגוף). 37=37 עמודים; contentPreserved=true.
+    // דוח: audits/legacy-parity-iteration/iteration-005/.
+    assert(r.layoutHash.startsWith('89a0eb42'), `layoutHash נשמר (${r.layoutHash.slice(0, 8)})`);
     const p1 = materializeDocument(r, S());
     const p2 = materializeDocument(r, S());
     const key = (x) => JSON.stringify(x.pages.map(pg => pg.lines.map(l => l.words.map(w => [w.text, w.x, w.w]))));

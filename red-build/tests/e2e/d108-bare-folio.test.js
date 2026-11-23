@@ -164,7 +164,11 @@ describe('D-108 typeset מלא — כל פוליו וכל תווית TOC חשו�
     // שטיפת-עמוד בלתי-מותנית בכל כותרת. הקנוני: 37=37 עמודים, contentPreserved=true,
     // דטרמיניזם OK, אפס הפרות תוכנית (s7 16/16) ואפס חפיפות בהקרנה (s14 53/53).
     // דוח: audits/legacy-parity-iteration/iteration-001/.
-    assert(r.layoutHash.startsWith('8a6b23bd'), `layoutHash קנוני נשמר (התקבל ${r.layoutHash.slice(0, 16)})`);
+    // **Iteration-005 (RC-F1a — חוזה spanning אחיד):** נעילה מחודשת
+    // 8a6b23bd→89a0eb42 — עוגן הפס = blockBottom + פער-בלוק; הצל מיושר
+    // לטווח הפס בשני הטורים. 37=37 עמודים; contentPreserved=true; דטרמיניזם OK.
+    // דוח: audits/legacy-parity-iteration/iteration-005/.
+    assert(r.layoutHash.startsWith('89a0eb42'), `layoutHash קנוני נשמר (התקבל ${r.layoutHash.slice(0, 16)})`);
   });
 
   it('legacy (פרופיל IMUD, הגדרות חיות): כל folioDisplay חשוף', () => {

@@ -229,7 +229,10 @@ describe('S75 — נייטרליות נתיב DP (המנגנון החדש בנת
         // **Iteration-001 (legacy parity — 22.11):** נעילה מחודשת fdff19d8→8a6b23bd —
     // פסי H3 באמצע העמוד (span_1col של המקור); 37=37 עמודים; contentPreserved=true.
     // דוח: audits/legacy-parity-iteration/iteration-001/.
-    assert(r.layoutHash.startsWith('8a6b23bd'), `hash קנוני DP נותר: ${r.layoutHash.slice(0, 16)}`);
+    // **Iteration-005 (RC-F1a):** נעילה מחודשת 8a6b23bd→89a0eb42 — חוזה spanning
+    // אחיד לפסי H3 (עוגן blockBottom+פער-בלוק; צל מיושר לטווח הפס). 37=37 עמודים;
+    // contentPreserved=true. דוח: audits/legacy-parity-iteration/iteration-005/.
+    assert(r.layoutHash.startsWith('89a0eb42'), `hash קנוני DP נותר: ${r.layoutHash.slice(0, 16)}`);
   });
 });
 

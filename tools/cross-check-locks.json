@@ -4,14 +4,14 @@
     {
       "name": "canonical (DP)",
       "file": "red-build/tests/fixtures/canonical_corpus.txt",
-      "lockHash": "8a6b23bd",
-      "renewed": "iteration-001 (22.11, legacy parity — H3 mid-page bands; 37=37 pages; contentPreserved=true)"
+      "lockHash": "89a0eb42",
+      "renewed": "iteration-005 (23.11, RC-F1a — חוזה spanning אחיד לפסי H3: עוגן הפס = blockBottom (max טורים) + פער-בלוק; הצל בטור המשני מזמין את ההפרש עד העוגן — סוגר את 919 חפיפות הפס-בגוף (דוח v4/F1). 37=37 עמודים; contentPreserved=true; דטרמיניזם OK. שרשרת: fdff19d8→8a6b23bd (iteration-001)→89a0eb42. דוח: audits/legacy-parity-iteration/iteration-005/)"
     },
     {
       "name": "very_long (DP)",
       "file": "audits/very_long_test_text.txt",
-      "lockHash": "4288bb4f",
-      "renewed": "iteration-004 (23.11, RC-5 — מילוי גרידי בגבול העמוד כמו המורשת; שרשרת מלאה: d2b871cf→6d1858a3 (1066→1031, RC-5a ניקוד מזעור-שארית)→89063eb8 (1031→1021, RC-5b minPerSide=1 בגבול העמוד)→4288bb4f (1021→996, RC-5c מקום-פנוי בכל הטורים + RC-5d זרימת בלוק-כמכלות דרך pushLines). contentPreserved=true; mf=0; widow-bottom=0; orphan-top=0; orphan-bottom=84 (legacy-faithful, 84/996≈8.4% — הייחוס 43/604≈7.1%); דטרמיניזם מאומת ב-s72; הקנוני לא השתנה (8a6b23bd). דוח: audits/legacy-parity-iteration/iteration-004/)"
+      "lockHash": "f7f72473",
+      "renewed": "iteration-005 (23.11, RC-F1a+RC-F1c). RC-F1a — חוזה spanning אחיד לפסי H3: 996→969 עמודים (הצל הלא-מיושר הותיר 27 עמודים כמעט-ריקים מפיצויי הזזה/נסיגה). RC-F1c — שעת הכלה בהתחייבות הסמן של נתיב הפיצול (U-8): 969→968 (הסמן והערה עוברים יחד לעמוד הבא כשהתקציב אינו נכנס; סגר חריגת טור 34px ב-very_long/IMUD). contentPreserved=true; mf=0; 0 בלתי-מסווגים. דוח: audits/legacy-parity-iteration/iteration-005/"
     },
     {
       "name": "very_long (legacy, run-ours = corpus-invariants CI)",

@@ -386,7 +386,13 @@ describe('S70 (R3-M2/M3) — כיול orphan/widow: רק הפרות אמיתיו
         // במקום הזזה מלאה. הוכחות: contentPreserved=true; mf=0; widow-bottom=0;
         // orphan-top=0; orphan-bottom=84 (זנבות עמוד נאמני-מורשת, 84/996≈8.4%
         // — הייחוס: 43/604≈7.1%). דוח: iteration-004.
-    assert(r.layoutHash.startsWith('4288bb4f'), `layout unchanged (got ${r.layoutHash.slice(0, 8)})`);
+    // **RC-F1a+RC-F1c (i005, 23.11):** נעילה מחודשת 4288bb4f→f7f72473 (996→968 עמודים) —
+    // חוזה spanning אחיד לפסי H3: הצל הלא-מיושר הותיר 27 עמודים כמעט-ריקים
+    // (שורה בודדת; נמדד p182/p195 בריצה הישנה) שפיצויי ההזזה/נסיגה גרמו להם.
+    // הוכחות: contentPreserved=true; mf=0; widow-bottom=0; orphan-top=0;
+    // orphan-bottom (נאמן-מורשת — הייחוס 43/604≈7.1%).
+    // דוח: audits/legacy-parity-iteration/iteration-005/.
+    assert(r.layoutHash.startsWith('f7f72473'), `layout unchanged (got ${r.layoutHash.slice(0, 8)})`);
     const count = (kind) => [...r.ledger.issues.values()].filter(x => x.kind === kind && x.status === 'persists').length;
     assertEq(count('widow-bottom'), 0, 'false widow-bottom flood eliminated (was 1176)');
     assertEq(count('orphan-top'), 0, 'false orphan-top flood eliminated (was 791)');

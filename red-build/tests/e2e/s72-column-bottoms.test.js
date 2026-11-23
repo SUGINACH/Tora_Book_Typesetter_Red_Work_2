@@ -258,13 +258,18 @@ describe('S72.2 DP — יישור תחתיות ככלל עימוד (שיפורי
         // השני לא מולא מעולם). RC-5d: בלוק שנכנס לסך השארית זורם דרך pushLines
         // (breakPara חוצה-טורים) במקום הזזה מלאה. contentPreserved=true;
         // דטרמיניזם מאומת בהמשך; הקנוני לא השתנה (8a6b23bd).
-    assert(result.layoutHash.startsWith('2b43da81'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
+    // **RC-F1a (i005):** נעילה מחודשת 2b43da81→d8a18ce9 — חוזה spanning אחיד
+    // לפסי H3 (עוגן blockBottom+פער-בלוק; צל מיושר לטווח הפס — מבטל את
+    // חפיפות הפס-בגוף ואת העמודים הכמעט-ריקים שפיצויי ההזזה הותירו).
+    // contentPreserved=true; דטרמיניזם מאומת להלן; הקנוני לא השתנה (89a0eb42).
+    // דוח: audits/legacy-parity-iteration/iteration-005/.
+    assert(result.layoutHash.startsWith('d8a18ce9'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
     const r2 = typeset(corpus, getDefaultSettings(), {});
     assertEq(result.layoutHash, r2.layoutHash, 'דטרמיניזם');
     // הקנוני — נעילת fdff19d8 ממקטע ב׳ (מאומת ב-s13-acceptance)
     const canon = fs.readFileSync(path.join(REPO, 'tests/fixtures/canonical_corpus.txt'), 'utf8');
     const rc = typeset(canon, getDefaultSettings(), {});
-        assert(rc.layoutHash.startsWith('8a6b23bd'), `hash קנוני השתנה: ${rc.layoutHash.slice(0, 16)}`); // **Iteration-001:** fdff19d8→8a6b23bd (פסי H3 באמצע עמוד; 37=37 עמודים)
+        assert(rc.layoutHash.startsWith('89a0eb42'), `hash קנוני השתנה: ${rc.layoutHash.slice(0, 16)}`); // **Iteration-005 (RC-F1a):** 8a6b23bd→89a0eb42 — חוזה spanning אחיד לפסי H3 (עוגן blockBottom+פער-בלוק; צל מיושר לטווח הפס). 37=37 עמודים; contentPreserved=true. דוח: audits/legacy-parity-iteration/iteration-005/.
   });
 
   it('אין גלישה חדשה: כל טור מתוח נשאר בתוך הקיבולת (בלי חדירה לאזור ההערות)', () => {

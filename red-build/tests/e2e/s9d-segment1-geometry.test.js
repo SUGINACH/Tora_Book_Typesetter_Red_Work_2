@@ -215,7 +215,7 @@ describe('s9d-segment1 — שלילי: הנתיב הלא-IMUD אינו משתנ�
 });
 
 describe('s9d-segment1 — הקורפוס הקנוני בפרופיל DP הכללי: נעילת cross-check', () => {
-  it('digest של הקורפוס הקנוני (DP כללי) זהה לנעילה המתועדת fdff19d8 (cross-check-locks, חודשה ב-9b.2/D-107)', () => {
+  it('digest של הקורפוס הקנוני (DP כללי) זהה לנעילה המתועדת 89a0eb42 (cross-check-locks, חודשה ב-i005/RC-F1a)', () => {
     // מקור הנעילה: tools/cross-check-locks.json — "canonical (DP)" lockHash=fdff19d8,
     // חודשה ב-18.11 (9b.2, D-107: 36→37 עמ\', עמוד toc-detail חדש) עם תיעוד מלא
     // בקובץ הנעילות. בדיקה זו מריצה את אותו קלט/הגדרות בדיוק כמו cross-check
@@ -234,8 +234,11 @@ describe('s9d-segment1 — הקורפוס הקנוני בפרופיל DP הכל�
       // הנעילה המתועדת
             // **Iteration-001 (legacy parity — 22.11):** נעילה מחודשת fdff19d8→8a6b23bd
       // (פסי H3 באמצע עמוד כמו המקור; 37=37 עמודים; contentPreserved=true).
-      assertEq(String(res.layoutHash).startsWith('8a6b23bd'), true,
-        `layoutHash ${String(res.layoutHash).slice(0, 16)} ≠ lock fdff19d8`);
+      // **Iteration-005 (RC-F1a):** נעילה מחודשת 8a6b23bd→89a0eb42 — חוזה spanning
+      // אחיד לפסי H3 (עוגן blockBottom+פער-בלוק; צל מיושר לטווח הפס). 37=37 עמודים;
+      // contentPreserved=true. דוח: audits/legacy-parity-iteration/iteration-005/.
+      assertEq(String(res.layoutHash).startsWith('89a0eb42'), true,
+        `layoutHash ${String(res.layoutHash).slice(0, 16)} ≠ lock 89a0eb42`);
       assertEq(res.pages.length > 0, true, 'pages exist');
       // שלילה: קלט מוטמע קלות חייב לשנות את ה-digest (הבדיקה מזהה שינוי אמיתי)
       const mutated = text + '\nשורת תוכן נוספת לשינוי ה-digest לצורך בדיקת השלילה';

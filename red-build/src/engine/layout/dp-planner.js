@@ -207,7 +207,9 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   function pageFitsNoteBudget() {
     const cap = colCapacity(cur.template, cur);
     for (let c = 0; c < cur.columns.length; c++) {
-      if (usedHeight(cur.columns[c], cur) > cap + CM.CAPACITY_EPS) return false;
+      if (usedHeight(cur.columns[c], cur) > cap + CM.CAPACITY_EPS) {
+        return false;
+      }
     }
     return true;
   }
@@ -268,10 +270,27 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
    *  **טוהר מדידה (s5b):** גובה כל רשומת-פס = lineHeightPx המקורי מה-LineModel —
    *  הזנב של הפס (ריפוד תחתון 4 + שוליים 4) הוא רשומה סינתטית נפרדת
    *  (h3BandTail, בלי lineModel) — כמו gapBeforePx, גיאומטריה מתוכננת
-   *  ולא שינוי מדידה. הזרימה ממשיכה מטור 0 מתחת לפס (כמו openBlock של המקור). */
+   *  ולא שינוי מדידה. הזרימה ממשיכה מטור 0 מתחת לפס (כמו openBlock של המקור).
+   *
+   *  **RC-F1a (i005 — חוזה spanning אחיד):** עוגן הפס = התחתית המשותפת של
+   *  כל הטורים הפתוחים לזרימה — blockBottom של המקור (‏max סמני הטורים,
+   *  legacy-imud-flow §2005: `blockBottom() = max(cursor[0], cursor[1])`) —
+   *  ועליו פער-הבלוק כמו לכל בלוק הנפתח מתחת לתוכן קיים (pushLines/gapHere),
+   *  ואז ריפוד הפס העליון. הצל בכל טור משני מזמין את ההפרש עד העוגן
+   *  (‏gapBeforePx גיאומטרי, קבוע כמו הפס עצמו — isFixedBandLine): שני
+   *  הטורים מפנים את אותו טווח-y באותו מיקום, והתוכן ממשיך מתחת לפס
+   *  באותו y בשני הטורים. עד כאן הצל הוצב בגובה המילוי של הטור המשני
+   *  עצמו — הפרש הטורים שנותר אחרי איזון פלחי-הזנב (גרנולריות שורה)
+   *  גרם לגוף הטור המשני לחדור לטווח הפס (919 זוגות חפיפה ב-154 עמ',
+   *  מול 11 בייחוס — דוח v4/F1; הוכחה: p143 — פס 312.16–334.12 מול
+   *  שורת גוף c1.52 ב-316.68). עוגן-max + מרווח-עד-העוגן סוגרים את השורש. */
   function pushH3BandRecords(blk, bandTotal) {
     const n = blk.lines.length;
     const tailPx = H3_BOTTOM_PAD_PX + H3_MARGIN_BOTTOM_PX;
+    const gap = cur.columns[0].length ? blockGapPx(settings, lineH) : 0; // GAP_HEAD_POLICY: ראש טור ריק — אין פער (כמו בלוק ריק במקור)
+    const usedAll = cur.columns.map(c => planningUsedHeight(c));
+    const base = Math.max(...usedAll); // blockBottom של המקור
+    const leadPx = gap + H3_TOP_PAD_PX; // פער הבלוק + ריפוד הפס — פעם אחת לפני השורה הראשונה
     const seqs = blk.lines.map(() => seqCounter++);
     for (let i = 0; i < n; i++) {
       const ln = blk.lines[i];
@@ -279,26 +298,26 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         ...ln,
         h3Band: true,
         kind: 'heading',
-        gapBeforePx: i === 0 ? H3_TOP_PAD_PX : 0,
+        gapBeforePx: i === 0 ? leadPx + (base - usedAll[0]) : 0,
         meta: { tokenId: blk.tokenId, firstOfBlock: i === 0, docPart: blk.part, h3Band: true },
         seq: seqs[i]
       });
     }
-    for (let c = 0; c < cur.columns.length; c++) {
-      if (c > 0) {
-        for (let i = 0; i < n; i++) {
-          cur.columns[c].push({
-            h3BandShadow: true,
-            kind: 'h3band-shadow',
-            synthetic: true,
-            words: [],
-            heightPx: blk.lines[i].heightPx || 0,
-            gapBeforePx: i === 0 ? H3_TOP_PAD_PX : 0,
-            meta: { tokenId: blk.tokenId, h3BandShadow: true, docPart: blk.part },
-            seq: seqs[i]
-          });
-        }
+    for (let c = 1; c < cur.columns.length; c++) {
+      for (let i = 0; i < n; i++) {
+        cur.columns[c].push({
+          h3BandShadow: true,
+          kind: 'h3band-shadow',
+          synthetic: true,
+          words: [],
+          heightPx: blk.lines[i].heightPx || 0,
+          gapBeforePx: i === 0 ? leadPx + (base - usedAll[c]) : 0,
+          meta: { tokenId: blk.tokenId, h3BandShadow: true, docPart: blk.part },
+          seq: seqs[i]
+        });
       }
+    }
+    for (let c = 0; c < cur.columns.length; c++) {
       // הזנב — רשומה סינתטית בלי lineModel (טוהר המדידה נשמר; בלי seq — אינה תוכן)
       cur.columns[c].push({
         h3BandTail: true,
@@ -312,7 +331,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     }
     flowCol = 0; // הבלוק הבא נפתח בטור הימני מתחת לפס (כמו openBlock של המקור)
     eventLog.emit('page-plan', 'h3-band-midpage', { token: blk.tokenId, page: cur.index, heightPx: Math.round(bandTotal), lines: n }, cur.index);
-    trace.emit(cur.index, 'h3-band-midpage', { token: blk.tokenId, heightPx: Math.round(bandTotal), lines: n });
+    trace.emit(cur.index, 'h3-band-midpage', { token: blk.tokenId, heightPx: Math.round(bandTotal), lines: n, anchor: Math.round(base), leadPx });
   }
 
   function flushPage() {
@@ -843,7 +862,11 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         resplitTailSegments(cur, colCapacity(cur.template, cur));
         const cap = colCapacity(cur.template, cur);
         const usedMax = Math.max(...cur.columns.map(c => usedHeight(c, cur)));
-        if (cap - usedMax >= roomNeeded - CM.CAPACITY_EPS) {
+        // **RC-F1a (i005):** פער הבלוק של הפס עצמו נכלל בבדיקת המקום — כמו
+        // curY של המקור (blockBottom כולל מרווח הפסקה העוקב) — אחרת הפס
+        // נכנס ב-4px שאינם קיימים ושוקע לתוך תקרית הקיבולת.
+        const bandGap = cur.columns[0].length ? blockGapPx(settings, lineH) : 0;
+        if (cap - usedMax - bandGap >= roomNeeded - CM.CAPACITY_EPS) {
           pushH3BandRecords(blk, bandTotal);
           placedMidPage = true;
         }
@@ -998,23 +1021,38 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       }
       const fitsPageTotal = needStack <= totalFree + CM.CAPACITY_EPS;
       if (!fitsPageTotal) {
-        const splitAt = findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, settings, generateCandidates, trace, flowCol);
+        let splitAt = findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, settings, generateCandidates, trace, flowCol);
         if (splitAt > 0) {
           // **FX-3:** ההערות מחויבות לעמוד של החלק שבו שורת הסמן:
           // הסמן בחלק הראשון ⇒ כאן; הסמן בהמשך ⇒ בעמוד החדש (לאחר ה-flush).
           const splitMIdx = (blk.kind === 'paragraph' && (blk.notes || []).length && settings['footnotes-enabled'])
             ? firstMarkerLineOf(blk) : -1;
-          if (blk.kind === 'paragraph' && splitMIdx < splitAt) reserveNotes(blk);
-          // **FX-6 (פרוסה 2):** החלק הראשון של הפיצול הוא פתיחת בלוק בפועל
-          // בטור שמתחתיו תוכן קיים — חותמת פער כמו כל פתיחת בלוק (בעבר חלק
-          // הפיצול לא סומן כלל כ-firstOfBlock ⇒ הפער לא נגבה גם כשער כניסה).
-          pushLines(blk.lines.slice(0, splitAt - 1), { tokenId: blk.tokenId, part: 'first', firstOfBlock: true, docPart: blk.part });
-          pushLines([blk.lines[splitAt - 1]], { tokenId: blk.tokenId, part: 'first', isLast: true });
-          flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
-          cur.openedBy = blk.tokenId; // מעבר עמוד בפיצול — הבלוק פתח את העמוד החדש
-          if (blk.kind === 'paragraph' && splitMIdx >= splitAt) reserveNotes(blk);
-          pushLines(blk.lines.slice(splitAt), { tokenId: blk.tokenId, part: 'rest', docPart: blk.part });
-          continue;
+          // **RC-F1c (i005 — שעת הכלה בהתחייבות הסמן של נתיב הפיצול):** עד כאן
+          // התחייבות ההערות כאן רצה **בלי שעת הכלה של U-8** (בניגוד ל-reserveAtMarker)
+          // — נמדד ב-very_long/IMUD: p600, טור 0 ב-630px קיבל תקציב 112px ⇒
+          // חריגת טור 34–63px שנתפסה רק באודיט ההקרנה. כעת: אם התקציב אינו
+          // נכנס — הסמן וההערה עוברים יחד לעמוד הבא (F-17): החיתוך נסוג
+          // לפני שורת הסמן; סמן בשורה 0 ⇒ אין חיתוך חוקי — נפילה לנתיב
+          // "אין פיצול" (שטיפה + התחייבות מבוקרת בעמוד החדש דרך reserveAtMarker).
+          if (blk.kind === 'paragraph' && splitMIdx >= 0 && splitMIdx < splitAt) {
+            const snap = reserveNotes(blk);
+            if (snap && snap.clean && !pageFitsNoteBudget()) {
+              uncommitNotes(cur, snap);
+              splitAt = splitMIdx > 0 ? splitMIdx : 0;
+            }
+          }
+          if (splitAt > 0) {
+            // **FX-6 (פרוסה 2):** החלק הראשון של הפיצול הוא פתיחת בלוק בפועל
+            // בטור שמתחתיו תוכן קיים — חותמת פער כמו כל פתיחת בלוק (בעבר חלק
+            // הפיצול לא סומן כלל כ-firstOfBlock ⇒ הפער לא נגבה גם כשער כניסה).
+            pushLines(blk.lines.slice(0, splitAt - 1), { tokenId: blk.tokenId, part: 'first', firstOfBlock: true, docPart: blk.part });
+            pushLines([blk.lines[splitAt - 1]], { tokenId: blk.tokenId, part: 'first', isLast: true });
+            flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
+            cur.openedBy = blk.tokenId; // מעבר עמוד בפיצול — הבלוק פתח את העמוד החדש
+            if (blk.kind === 'paragraph' && splitMIdx >= splitAt) reserveNotes(blk);
+            pushLines(blk.lines.slice(splitAt), { tokenId: blk.tokenId, part: 'rest', docPart: blk.part });
+            continue;
+          }
         }
         // **FX-5/#16 — שמירת עמוד ריק:** אם העמוד ריק משורות גוף — אין טעם לאטום
         // אותו; הבלוק נכנס לכאן (בעבר נאטם עמוד ריק עם הערות יתומות).
@@ -1184,12 +1222,18 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         }
         target.footnotes.splice(insertAt, 0, n);
         recomputeFnBudget(target);
-        // **קיבולת מצטברת אמיתית (U-8 — אמנה אחת):** cap מודע-תקציב לכל טור,
-        // used = שורות בלבד — אותו אי-שוויון בדיוק (שורות ≤ cap−תקציב), כולל
-        // הערות שהועברו קודם לאותו עמוד באותה סריקה.
+        // **קיבולת מצטברת אמיתית (U-8 — אמנה אחת):** cap מודע-תקציב, used = שורות
+        // בלבד — אותו אי-שוויון בדיוק (שורות ≤ cap−תקציב), כולל הערות שהועברו
+        // קודם לאותו עמוד באותה סריקה.
+        // **RC-F1c (i005 — סגירת חור רדום בשער ההכלה):** הבדיקה נעשתה על הטור
+        // **האחרון** בלבד — מול אמנת U-8 המתועדת ("כל טורי העמוד חייבים לעמוד
+        // מעל המרזב"). עמוד שטורו הראשון מלא (נמדד: very_long בהקשר IMUD —
+        // p646, טור 0 ב-629.8 מול cap 566.8 אחרי העברת הערה בתקציב 64) קיבל
+        // את ההערה בכוח ⇒ חריגת טור של 34–63px. כעת נבדקים כל הטורים —
+        // בדיוק כמו pageFitsNoteBudget — שער אחד, אמנה אחת.
         const capWithFn = colCapacityOf(target);
-        const usedLast = planningUsedHeight(target.columns[target.columns.length - 1], target);
-        if (usedLast <= capWithFn + CM.CAPACITY_EPS) {
+        const allColsFit = target.columns.every(c => planningUsedHeight(c, target) <= capWithFn + CM.CAPACITY_EPS);
+        if (allColsFit) {
           changed = true;
           movedCount++;
           movedList.push({ noteId: n.noteId || null, marker: n.marker, from: pg.index, to: target.index });

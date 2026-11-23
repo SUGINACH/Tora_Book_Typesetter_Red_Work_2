@@ -59,8 +59,10 @@ describe('שלב 8 ביקורת (§3.1) — גבולות materialization', () =>
 
   it('מסלול הייצור מקבל הכול ללא fallback: קורפוס קנוני (footnotes) — חוזה הישן נשמר', () => {
     const r = typeset(CORPUS, S());
-        // **Iteration-001 (legacy parity — 22.11):** נעילה מחודשת fdff19d8→8a6b23bd (פסי H3 באמצע עמוד; 37=37 עמודים). דוח: audits/legacy-parity-iteration/iteration-001/.
-    assert(r.layoutHash.startsWith('8a6b23bd'), `layoutHash נשמר (${r.layoutHash.slice(0, 8)})`);
+        // **Iteration-005 (RC-F1a):** נעילה מחודשת 8a6b23bd→89a0eb42 — חוזה spanning
+    // אחיד לפסי H3 (עוגן blockBottom + פער-בלוק; צל מיושר לטווח הפס). 37=37 עמודים.
+    // דוח: audits/legacy-parity-iteration/iteration-005/.
+    assert(r.layoutHash.startsWith('89a0eb42'), `layoutHash נשמר (${r.layoutHash.slice(0, 8)})`);
     assertEq(r.pageModel.meta.materializeFallbacks, 0, 'אפס נפילות במודל');
     assertEq(r.pageModelValidation.violations.length, 0, 'אפס הפרות (מצב footnotes)');
   });
@@ -140,7 +142,17 @@ describe('שלב 8 ביקורת (§3.1) — גבולות materialization', () =>
         // fitsPageTotal נפל בטעות לענף ההזזה (1021→1111). הוכחות:
         // contentPreserved=true; mf=0; widow-bottom=0; orphan-top=0;
         // orphan-bottom=84 (legacy-faithful, 84/996≈8.4% — הייחוס 43/604≈7.1%).
-    assert(r.layoutHash.startsWith('4288bb4f'), `layoutHash very_long נשמר (${r.layoutHash.slice(0, 8)})`);
+        // **RC-F1a+RC-F1c (i005, 23.11):** נעילה מחודשת 4288bb4f→f7f72473 (996→968
+        // עמודים). RC-F1a: הצל הלא-מיושר שמר פחות מטווח הפס בטור המשני ⇒
+        // ה־usedHeight שלו נראה קטן ⇒ מנגנוני ההזזה/הנסיגה פיצו והותירו
+        // עמודים כמעט-ריקים (נמדד: 27 עמודים עם שורה בודדת — למשל p182/p195
+        // בריצה הישנה). עם ההזמנה הנכונה הפסים מיושרים, הפיצוי מתבטל והעמודים
+        // מתמלאים (חציון מילוי 1012.3→1017.3). הוכחות: contentPreserved=true;
+        // mf=0; אפס בלתי-מסווגים בהשוואת הקורפוס; 318 פסים באמצע-עמוד
+        // (מול 323 — 5 עברו לפס-עליון בבדיקת המקום המחמירה). RC-F1c: שעת הכלה
+        // בהתחייבות הסמן של נתיב הפיצול (U-8) — הסמן וההערה עוברים יחד לעמוד הבא
+        // כשהתקציב אינו נכנס (969→968).
+    assert(r.layoutHash.startsWith('f7f72473'), `layoutHash very_long נשמר (${r.layoutHash.slice(0, 8)})`);
     assertEq(r.pageModel.meta.materializeFallbacks, 0, 'אפס נפילות (בעבר: 852 שווא-נפילות רוחב-רווח)');
     const mfViol = r.pageModelValidation.violations.filter(v => v.code === 'materialize-fallback');
     assertEq(mfViol.length, 0, 'אפס violations');
