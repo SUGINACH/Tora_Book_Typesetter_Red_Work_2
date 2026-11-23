@@ -257,10 +257,18 @@ function greedyFallback(items, maxWidthPx, measure, lineHeightPx) {
  * breakItemSequence — שבירת רצף LineItem לשורות.
  * @param {Array<object>} items — רצף מ-buildLineSequences (בלי ה-penalty הסופי; נוסף כאן)
  * @param {number} maxWidthPx — רוחב הטור/האזור
- * @param {{runts?:number, raggedEnd?:boolean, lineWidthAt?: (lineIndex:number)=>number}} opts
+ * @param {{runts?:number, raggedEnd?:boolean, lineWidthAt?: (lineIndex:number)=>number, policy?:'optimal'|'greedy'}} opts
  *   lineWidthAt: אילוצי אזור/שורה (§4.1-7 — wrap-around): רוחב אפקטיבי לפי מספר
  *   השורה (תמונה צפה מקטינה רוחב לשורות שבגובהה). אין מנגנון שבירה שני לטקסט
- *   שעוקף תמונה — אותו DP, אילוץ אחד.
+ *   שעוקף תמונה — אותו מנוע, אילוץ אחד.
+ *   policy: 'optimal' (ברירת המחדל — Knuth-Plass) או **'greedy' (RC-A2, i006 —
+ *   חוזה המקור לפרופיל IMUD)**: מילוי גרידי מקסימלי של כל שורה ברוחב טבעי
+ *   (curW+add > limit−FIT_EPS ⇒ שבירה — breakPara של המקור). ה-DP עם raggedEnd
+ *   מעניק עלות כמעט-שווה לכל חיתוך חוקי (badness≈0) ולכן המסלול הזוכה שרירותי
+ *   — נמדדו שורות דלילות באמצע פסקאות (p43 t11: «תחלק לשלושה» 79px מתוך
+ *   269px; 3.5% שורות בצפיפות-דיו <0.62 מול 0.6% בייחוס) ו-71% שבירות שונות
+ *   מהייחוס. הגרידי מייצר את שבירת המקור בדיוק: כל שורה מלאה עד גבול
+ *   FIT_EPS, השאריות נופלות לשורה האחרונה בלבד.
  * @returns {{lines:Array<{from:number,to:number,badness:number,reason:string}>, fallback:boolean, diagnostics:Array}}
  */
 function breakItemSequence(items, maxWidthPx, opts = {}) {
@@ -269,6 +277,81 @@ function breakItemSequence(items, maxWidthPx, opts = {}) {
   const lineWidthAt = typeof opts.lineWidthAt === 'function' ? opts.lineWidthAt : null;
   if (!Array.isArray(items) || !items.length) {
     return { lines: [], fallback: false, diagnostics: [{ code: 'empty-sequence', message: 'breakItemSequence: רצף ריק' }] };
+  }
+  // **RC-A2 (i006 — חוזה המקור: מילוי גרידי מקסימלי):** אותם פריטים, אותה מדידה
+  // ואותם כללי חיתוך (breakBetweenItems/canStart/canEnd) — רק ההחלטה משתנה:
+  // כל שורה ממולאת עד גבול lineMax−FIT_EPS ברוחב טבעי (breakPara של המקור,
+  // §660: `curW + addW > limitOf() − FIT_EPS`). אין badness ואין runts — השארית
+  // נופלת לשורה האחרונה. חיתוך סמנטי אסור מרחיק את החיתוך לחוקי הקודם.
+  if (opts.policy === 'greedy') {
+    const seqG = items.concat([{ role: 'penalty', penaltyType: 'final', cost: 0, measuredAdvance: 0, internal: false, itemId: '#final' }]);
+    const linesG = [];
+    let from = 0;
+    let lineIdx = 0;
+    while (from < seqG.length) {
+      // גלישת glue פותח — אינה ברוחב השורה (אותו כלל של ה-DP)
+      while (from < seqG.length && seqG[from].role === 'glue' && !seqG[from].internal) from++;
+      if (from >= seqG.length || seqG[from].role === 'penalty') break;
+      const maxW = lineMax(lineWidthAt, lineIdx, maxWidthPx);
+      let w = 0, lastLegalCut = -1, lastBoxIdx = -1, sawBox = false;
+      for (let j = from; j < seqG.length; j++) {
+        const it = seqG[j];
+        if (it.role === 'box') {
+          w += it.measuredAdvance;
+          sawBox = true;
+          const next = seqG[j + 1];
+          if (next && next.role === 'glue' && !next.internal && seqG[j + 2] && seqG[j + 2].role === 'box') {
+            // חיתוך חוקי מבנית + סמנטית. **חוזה המקור (RC-A2):** המקור שובר בכל
+            // רווח בין-מילים — אין איסורי פיסוק בפתיחת/סגירת שורה (נמדד בייחוס:
+            // שורות הפותחות ב-'.', כמו «.מרכיבים.א.העושה...» p44). כללי הפיסוק
+            // (canStart/canEnd) הם חוזה RED (spec 00 §4.1) — נשארים למדיניות
+            // האופטימלית בלבד. הצמדות מבניות (joined/atomic) נשמרות כאן כמו שם.
+            const br = breakBetweenItems(it, seqG[j + 2], { joined: false });
+            if (br.allowed) {
+              if (w <= maxW - FIT_EPS) { lastLegalCut = j + 1; lastBoxIdx = j; }
+            }
+          }
+          if (w > maxW - FIT_EPS) break; // המילה הבאה אינה נכנסת — עצור (כמו המקור)
+        } else if (it.role === 'glue') {
+          const g = glueWidths(it);
+          w += g.width;
+        } else if (it.role === 'penalty') {
+          if (it.penaltyType === 'final') break;
+          continue; // forbidden בתוך יחידה צמודה — ההצברה נמשכת
+        }
+      }
+      if (!sawBox) break;
+      let cut;
+      if (lastLegalCut > from) {
+        cut = lastLegalCut;
+      } else {
+        // אף חיתוך חוקי בגבול (מילה בודדת/יחידה צמודה רחבה) — קדימה מובטחת:
+        // התיבה הראשונה עד החיתוך החוקי הראשון אחריה (או עד סוף הרצף)
+        cut = -1;
+        for (let j = from; j < seqG.length; j++) {
+          const it = seqG[j];
+          if (it.role !== 'box') continue;
+          const next = seqG[j + 1];
+          if (next && next.role === 'glue' && !next.internal && seqG[j + 2] && seqG[j + 2].role === 'box') {
+            cut = j + 1; break;
+          }
+        }
+        if (cut < 0) cut = seqG.length; // שורה אחת עד הסוף (ערוץ ה-overflow המפורש)
+      }
+      linesG.push({ from, to: cut, badness: 0, reason: 'greedy-fill' });
+      from = cut;
+      lineIdx++;
+    }
+    // סינון שורות ריקות (כמו ה-DP)
+    const realG = linesG.filter((c) => {
+      for (let k = c.from; k < c.to; k++) if (seqG[k].role === 'box') return true;
+      return false;
+    });
+    // השורה האחרונה נושאת reason='final' — assembleLine קובע לפיה isLastLine
+    // (וממנו: אי-מתיחה + יישור אחרונה לפי body-last-line-align). בלי זה כל
+    // שורה אחרונה של פסקה הייתה מיושרת justify כמו שורת גוף רגילה.
+    if (realG.length) realG[realG.length - 1].reason = 'final';
+    return { lines: realG, fallback: false, diagnostics: [] };
   }
   const seq = items.concat([{ role: 'penalty', penaltyType: 'final', cost: 0, measuredAdvance: 0, internal: false, itemId: '#final' }]);
   const n = seq.length;

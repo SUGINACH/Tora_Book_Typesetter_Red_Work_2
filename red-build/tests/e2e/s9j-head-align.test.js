@@ -243,11 +243,14 @@ describe('U-15 — חוזה יישור כותרות (כל שורות הכותר�
     let sawJustify = false, sawLastCenter = false;
     for (const pml of r.pageModel.pages) {
       for (const ml of pml.lines) {
-        if (ml.kind !== 'paragraph' || (ml.words || []).length < 2) continue;
+        if (ml.kind !== 'paragraph') continue;
         if (ml.isLast) {
+          // **RC-A2 (i006):** הגרידי של המקור משאיר שאריות קצרות — גם שורה
+          // אחרונה חד-מילית היא חוזה לגיטימי (בייחוס הישן 169 שורות כאלה);
+          // חוזה היישור חל עליה כמו על כל שורה אחרונה.
           if (ml.align === 'center') sawLastCenter = true;
           else assertEq(ml.align, String(imudSettings['body-last-line-align'] || 'center'), 'שורה אחרונה לפי ההגדרה');
-        } else if (ml.align === 'justify') sawJustify = true;
+        } else if ((ml.words || []).length >= 2 && ml.align === 'justify') sawJustify = true;
       }
     }
     assert(sawJustify, 'שורות גוף שאינן-אחרונות עדיין מיושרות (justify)');

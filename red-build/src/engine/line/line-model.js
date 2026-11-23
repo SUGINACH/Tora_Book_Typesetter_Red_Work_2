@@ -34,6 +34,16 @@ const LINE_MODEL_VERSION = 'line-model-v2(floats+justify-policy+gap-chars)';
  * center — בלי מתיחה). המנוע מקבל את המדיניות **במפורש מהגדרות המסמך** —
  * אין הנחת ragged; ההקצאה נעשית פעם אחת כאן וה-renderer צורך ואינו מותח.
  */
+/** **RC-A2 (i006 — חוזה שבירת השורות של המקור):** פרופיל IMUD (הייחוס) שובר
+ *  שורות במילוי גרידי מקסימלי — breakPara של המקור (§660). ה-DP האופטימלי
+ *  (ברירת המחדל של RED — REQ-LB-02/03) נותר למסמכי ברירת המחדל. מדיניות אחת
+ *  לכל מסמך, מאותו מקור הגדרות — לא ענף לפי עמוד/טקסט. */
+function breakPolicyOf(settings) {
+  const s = settings || {};
+  const isImud = s['_layout-profile'] === 'imud' || s._imudRaw != null;
+  return isImud ? 'greedy' : 'optimal';
+}
+
 function justifyPolicyOf(settings) {
   const s = settings || {};
   const last = String(s['body-last-line-align'] || 'center');
@@ -171,7 +181,8 @@ function layoutSequence(sequence, opts = {}) {
 const res = breakItemSequence(ex.kept, maxWidthPx, {
       runts: opts.runts,
       raggedEnd: opts.raggedEnd,
-      lineWidthAt: wrap ? (li) => wrap.widthAt(li) : null
+      lineWidthAt: wrap ? (li) => wrap.widthAt(li) : null,
+      policy: breakPolicyOf(opts.settings) // **RC-A2:** גרידי לפרופיל המקור (IMUD), KP לברירת המחדל
     });
     for (const d of res.diagnostics) diagnostics.push(d);
     let lineIdxInSeg = 0;
