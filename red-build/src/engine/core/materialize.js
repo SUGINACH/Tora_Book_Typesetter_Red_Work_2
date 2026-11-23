@@ -311,13 +311,37 @@ function projectPage(page, settings, apiOrOpts) {
         // **RTL:** השפה הימנית של תיבת השורה זזה שמאלה מעבר לחלון (כמו
         // right=windowW ב-DOM) — השפה השמאלית נשארת בשפת הטור.
         const lnProj = projectLine(ln, col.x, y, col.w - winShift, settings, measure, lineAlignOf(ln, settings), production);
+        // **Iteration-006 (RC-W1 — דגלי חלון בהקרנה):** הפרופיל המאוחד מצר את
+        // שתי השורות הראשונות של פסקת-חלון וממקם את מילת-החלון מחוץ לתיבה —
+        // אך הדגלים (window/windowW/windowWords) נשארו על שורת התוכנית ולא
+        // עברו להקרנה ולמודל. בלי זה המקרין החי (PageModel) לא יכול היה לסמן
+        // את שורת ההמשך line--window-wrap — והאודיט החי דיווח INK_NOT_JUSTIFIED
+        // על שורה שמוצרת בכוונה (חוזה המקור: החלון מרחף height:1.25em על שתי
+        // השורות; הייחוס p44: שורה 2 מסתיימת ב-472 מול קצה טור 513 = רוחב
+        // החלון). אותה החלטה כבר קיימת במקרין המורשת (dom-renderer: S4.26).
+        if (ln.window && Number.isFinite(ln.windowW)) {
+          lnProj.window = true;
+          lnProj.windowW = ln.windowW;
+          if (ln.windowWords && ln.windowWords.length) lnProj.windowWords = ln.windowWords.slice();
+        }
         if (ln.windowWords && ln.windowWords.length) {
           const winText = ln.windowWords.join(' ');
           const winSizePt = (ln.sizePt || settings['body-font-size-pt']) * (Number(settings['first-word-size-em']) || 1.5);
-          const winW = Math.max(4, ln.windowW - 2);
+          // **Iteration-006 (RC-W2 — מילת-חלון צמודה לשפה):** המילה נמדדת
+          // במטריקות גופן החלון (FrankReal — כמו המקרין המורשת: winMeasure
+          // + tracking 0 לדיו) ומוצבת מהשפה הימנית של הטור שמאלה — כמו
+          // הייחוס ('השבת' x1=513.3 = קצה הטור במדויק, p44) וכמו המורשת
+          // (legacy-projector: cx=col.x+col.w; cx-=w). בעבר התיבה הייתה
+          // ההשקעה כולה (windowW−2) — הטיה של ~3px מהקצה (ההשקעה כוללת
+          // רווח+0.5 שאינם דיו של המילה) ⇒ WINDOW_WRONG_SIDE באודיט החי.
+          // הצרינת השורות נשארת לפי ההשקעה המלאה (winShift לעיל) — מקור אחד.
+          const winFam = settings['first-word-font'] || null;
+          const MeasureAPICls = require('../typography/measure-api').MeasureAPI;
+          const wApi = (winFam && MeasureAPICls.forFamily(winFam, settings)) || measure;
+          const winInkW = Math.max(4, wApi.measureTextWidth(winText, winSizePt, 0));
           lnProj.words = lnProj.words || [];
           lnProj.words.push({
-            text: winText, x: col.x + col.w - winW, w: winW,
+            text: winText, x: col.x + col.w - winInkW, w: winInkW,
             baselineY: null, __window: true, // נקבע במעבר התיקון אחרי attachBaselines
             sizePt: winSizePt, fontKey: 'window',
             ...(settings['first-word-color'] && settings['first-word-color'] !== '#000000'

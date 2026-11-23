@@ -181,7 +181,18 @@ async function retypesetAndWait(label) {
     ? `(function(){ const st = window.__toraApp && window.__toraApp.getState(); return st && typeof st.gen === 'number' && st.gen > ${gen0} && st.hasResult && st.pages > 0 ? 'READY_' + st.pages : 'WAIT'; })()`
     : `(function(){ const st = window.__toraApp && window.__toraApp.getState(); return st && st.hasResult && st.pages > 0 ? 'READY_' + st.pages : 'WAIT'; })()`;
   for (;;) {
-    const st = await ev(pollJs);
+    let st;
+    try { st = await ev(pollJs); }
+    catch (e) {
+      // **Iteration-006 (RC-D1 — עמידות דמון חולף):** בזמן עימוד כבד (very_long)
+      // הדמון של agent-browser מחזיר לעיתים EAGAIN ("Resource temporarily
+      // unavailable") על eval מקביל — כשל תשתית חולף, לא כשל תוכן. ניסיון
+      // חוזר במקום מוות הריצה; פסק הזמן הכללי (READY_TIMEOUT_MS) עדיין שומר
+      // על החוזה. אותו דפוס עמידות כמו S4.14 ב-run.sh.
+      if (Date.now() - t0 > READY_TIMEOUT_MS) throw new Error(`${label}: פסק זמן לעימוד (כולל כשלי דמון: ${String(e && e.message || e).slice(0, 90)})`);
+      await sleep(3000);
+      continue;
+    }
     if (String(st).startsWith('READY_')) {
       // **S5.2:** המתנה קצרה אחרי READY — הווירטואליזציה של התצוגה מרנדרת את
       // החלון החי בגלילה; בלי המתנה הבדיקה עלולה לראות placeholders טריים.

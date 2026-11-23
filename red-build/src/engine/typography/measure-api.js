@@ -37,6 +37,14 @@ let _fontClearSync = false;
 /** מזכר חית סביבה (מבוטל בכל שינוי רישום) — מדידות רבות לא ימיינו שמות שוב ושוב. */
 let _envFpMemo = null;
 
+/**
+ * **Iteration-006 (RC-M4):** סימנים משולבים (Mn) — ניקוד עברי, משולבים כלליים
+ * וסימני ערבית. הדפדפן מציב אותם ב-GPOS mark-to-base ב-advance 0 גם כשה-hmtx
+ * שלהם אינו אפסי (נמדד ב-FrankReal: 1.72–4.68px לסימן) — המדידה חייבת להאמין
+ * להצבה, לא ל-hmtx (ראו _isMappedMark).
+ */
+const COMBINING_MARK_RE = /[\u0300-\u036F\u0483-\u0489\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u0711\u0730-\u074A\u07A6-\u07B0\u0816-\u082D\u0859-\u085B\u08E3-\u0903]/;
+
 /** טביעת מבנה לגופן שנרשם ללא בתים (שחזור) — חלשה מזהות-תוכן אך דטרמיניסטית. */
 function _structuralFontFp(font) {
   if (!font) return 'none';
@@ -137,6 +145,9 @@ class MeasureAPI {
     this.fontFactor = 1;
     this.cache = new Map();
     this.stats = { calls: 0, hits: 0, fontFallbacks: 0, evictions: 0 };
+    // **Iteration-006 (RC-M4):** חוזה הצבת הסימנים המשולבים של הרינדור שהכין
+    // הקורא הזה — 'combined' (הדפדפן/GPOS) או ברירת המחדל hmtx (המורשת).
+    this._marksCombined = !!(settings && settings['_marks-advance'] === 'combined');
     if (this.impl === 'font-metrics') this._bindProfile();
   }
 
@@ -204,12 +215,29 @@ class MeasureAPI {
     return charWidthEm(ch);
   }
 
-  /** סימן משולב ממופה עם advance=0 (ניקוד): שכבת-אפס — לא חלק מאשכול מדידה. */
+  /** סימן משולב ממופה (ניקוד): שכבת-אפס — לא חלק מאשכול מדידה.
+   * **Iteration-006 (RC-M4 — סימנים משולבים עם hmtx לא-אפסי):** חוזה S4.16
+   * הניח שסימן ניקוד ממופה מקבל advance=0 ב-hmtx (נכון ל-Guttman Rashi).
+   * FrankReal מקורקע אחרת: לסימני הניקוד שלו advance לא-אפסי ב-hmtx
+   * (1.72–4.68px @18pt — נמדד: ְ=1.72, ַ=4.68, ֵ=4.68, ּ=1.72). כאן שני
+   * חוזי רינדור, והמדידה חייבת להאמין לרינדרר שלה:
+   *  - **hmtx (ברירת המחדל — המורשת):** המנוע המקורי הציב את הסימנים
+   *    בהפרדה לפי ה-hmtx (הוכח מהייחוס: חלון «וְהָיָה» — הצרינת השורה
+   *    52.4px = מדידת hmtx 47.06+רווח; תיבת הדיו ב-PDF 47.09px = הפרדה).
+   *    הפורט חייב מדידה זו — הנעילות (legacy-*) והשוואת השורות מול הייחוס
+   *    בנויות עליה.
+   *  - **combined ('_marks-advance':'combined' — המנוע המאוחד):** ה-PageModel
+   *    ממקם מילים מוחלט והדפדפן מציב סימנים משולבים ב-GPOS mark-to-base
+   *    (advance 0 בפועל). מדידת hmtx הנפוחה הותירה את מילת-החלון «וַיְדַבֵּר»
+   *    17px משפת הטור (נמדד: fm=61.21 מול דפדפן=43.73 — הפרש 17.5px = בדיוק
+   *    חמשת הסימנים; WINDOW_WRONG_SIDE p613-614 באודיט החי). בפרופיל זה
+   *    תו ממופה שהוא סימן משולב (Mn) נמדד תמיד ב-0. */
   _isMappedMark(ch) {
     if (this.impl !== 'font-metrics' || !this.fontProfile) return false;
     const gid = fm.glyphIdOf(this.fontProfile, ch);
-    return gid !== 0 && gid < this.fontProfile.numGlyphs
-      && fm.advanceUnitsOf(this.fontProfile, ch) === 0;
+    if (!(gid !== 0 && gid < this.fontProfile.numGlyphs)) return false;
+    if (fm.advanceUnitsOf(this.fontProfile, ch) === 0) return true;
+    return this._marksCombined === true && COMBINING_MARK_RE.test(ch);
   }
 
   /**
@@ -323,7 +351,11 @@ MeasureAPI.forFamily = function forFamily(family, settings) {
   if (!family || !registeredFonts.has(String(family))) return null;
   const fam = String(family);
   const sizeKey = settings && settings['body-font-size-pt'] != null ? String(settings['body-font-size-pt']) : '';
-  const key = `${fam}|${sizeKey}`;
+  // **Iteration-006 (RC-M4):** חוזה הסימנים במפתח — מופע combined ומופע hmtx
+  // של אותה משפחה הם שתי מדידות שונות; בלי זה המופע הראשון שנוצר היה
+  // מוגש לשני המנועים.
+  const marksKey = settings && settings['_marks-advance'] === 'combined' ? '|mkC' : '';
+  const key = `${fam}|${sizeKey}${marksKey}`;
   if (!_familyApiCache.has(key)) {
     _familyApiCache.set(key, new MeasureAPI({ ...(settings || {}), 'body-font': fam }, 'font-metrics'));
   }

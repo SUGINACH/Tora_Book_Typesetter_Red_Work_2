@@ -41,6 +41,21 @@ const BOUNDS_TOLERANCE_PX = 1.5;
 /** סוגי שורות שאינן שורות טור-גוף ב-out.lines (הקרנות ייעודיות לפריטי עמוד). */
 const NON_BODY_LINE_KINDS = new Set(['side-note', 'info-box']);
 
+/**
+ * **Iteration-006 (RC-S1 — פס פתיחת-הסימן במודל העמוד):** חותמות-פס ברמת העמוד
+ * מההקרנה (materialize) שאין להן שורת-תוכנית בטורים — המתכנן מטביע אותן
+ * כחותמת עמוד (page.simanBand), לא כשורות זרימה. אם הן משתתפות במיפוי
+ * שורות-הגוף (ה-zip מול page.columns) הן מזיזות כל ציוות באחד: שורת הפס
+ * נכנסת לטור 0 עם גיאומטריית רוחב-מלא (552.3px) ומעל לראשית הטור
+ * (y=307.88 מול contentBox.top=391.45) — ובטור השני שורת-גוף עם גיאומטריית
+ * טור-0 מקבלת col=1 (נמדד: «את דברי הראשונים» right=−253px; LINE_OVERLAP
+ * 557px ב-DOM; ושורת הגוף האחרונה נפלטת ל-structural). הוכחה נוספת:
+ * המורשת מטפלת בפס הסימן כ-pg.bands ברמת העמוד (legacy-imud-flow §1341:
+ * y=307.88, tokenId:null) — לא כשורת טור. הן מסווגות כאן structural —
+ * מיקום מוחלט בקואורדינטות העמוד, כמו תוכן השער ושורות ה-TOC.
+ */
+const STAMPED_BAND_KINDS = new Set(['h2-siman']);
+
 // ─── עזרי הקפאה עמוקה (immutable final model — §7.1-12) ───
 
 /**
@@ -144,9 +159,18 @@ function buildPageModel(result, opts = {}) {
         li++;
       }
     } else {
+      // **Iteration-006 (RC-S1):** חותמות-פס ברמת העמוד (h2-siman — פתיחת הסימן)
+      // מוקרנות בגיאומטריית עמוד מוחלטת ואין להן שורת-תוכנית בטורים —
+      // הן מוצבות כאן כ-structural (לפני הטורים, בסדר הקריאה של העמוד)
+      // ואינן משתתפות במיפוי שורות-הגוף. בלי זה הן הזיזו כל ציוות באחד
+      // (ראו STAMPED_BAND_KINDS למעלה).
+      for (const pl of ((pp && pp.lines) || [])) {
+        if (!STAMPED_BAND_KINDS.has(pl.kind)) continue;
+        lines.push(placeLine(pl, { gapBeforePx: 0, aqStretch: 1 }, { page: page.index, area: 'structural', col: -1, li: lines.length }));
+      }
       // שורות הגוף: out.lines נבנה בסדר "טור 0 ואז טור 1" ואז הקרנות פריטי-עמוד
       // (הערות-צד וכו') — מסננים את אלה שאינן שורות גוף וממפים בסדר.
-      const bodyProjected = ((pp && pp.lines) || []).filter(pl => !NON_BODY_LINE_KINDS.has(pl.kind));
+      const bodyProjected = ((pp && pp.lines) || []).filter(pl => !NON_BODY_LINE_KINDS.has(pl.kind) && !STAMPED_BAND_KINDS.has(pl.kind));
       // **פרוסה 2 (§4.2):** מילוי המיפוי שורת-תוכנית → שורת-מודל לפי אובייקט
       // (מדויק — טוקן אחד מתפרס על כמה שורות, וחיפוש לפי tokenId פגע במיקום התמונה).
       let cursor = 0;
@@ -484,6 +508,11 @@ function placeLine(pl, srcLine, where) {
     // **Iteration-001 (legacy parity):** דגל פס-H3 באמצע עמוד — גיאומטריית
     // עמוד (המקרינים מציבים אותו ברמת העמוד, לא בתוך קופסת טור).
     ...(pl.midBand ? { midBand: true } : {}),
+    // **Iteration-006 (RC-W1):** דגלי פסקת-חלון — שורות 0–1 נמדדו ברוחב
+    // מוקטן ושורה 0 נושאת את מילת-החלון; המקרינים (DOM/PDF) והאודיט
+    // זקוקים להם כדי לסמן line--window-wrap / w--window (כמו המורשת).
+    ...(pl.window ? { window: true, windowW: r2(pl.windowW) } : {}),
+    ...(pl.windowWords ? { windowWords: pl.windowWords } : {}),
     level: pl.level != null ? pl.level : null,
     isLast: pl.isLast === true,
     align: pl.align || null,

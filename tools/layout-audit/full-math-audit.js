@@ -784,6 +784,28 @@ if (typeof document !== 'undefined') {
       info.words += wc(b.textContent);
     }
 
+    // **Iteration-006 (RC-P1 — עיוורון פסי הפרופיל המאוחד):** בנתיב ה-PageModel
+    // הפסים אינם בעלי מחלקת .band: פס חוצה-הטורים הוא .spanning-band ופס H3
+    // באמצע עמוד הוא .mid-bands — שניהם מיכלים ברמת העמוד, לא ילדי טור.
+    // בלי איסופם היו בדיקות הפטון (bandBetween ב-PITCH_UNIFORMITY וב-
+    // COLUMN_TOPS_ALIGN) עיוורות אליהם: נמדדו 188 הפרות PITCH שווא (פס H3
+    // בין שורות גוף עוקבות — pitch 63.4=21.44×2+פס — לא נראה לבדיקה) ו-9
+    // הפרות TOPS. אותה גיאומטריה בדיוק נאספת כאן; מילות ה-spanning נספרות
+    // כבר בספירת השורות להלן (בלי כפילות) — מילות ה-mid-bands נספרות כאן
+    // (הן תוכן H3 שלא נספר בשום מסלול אחר).
+    for (const b of pg.querySelectorAll('.spanning-band, .mid-bands')) {
+      if (!(b.textContent || '').trim()) continue;
+      const br = rel(R(b), origin);
+      const bcs = getComputedStyle(b);
+      const band = { cls: String(b.className), x: br.x, y: br.y, w: br.w, h: br.h, align: bcs.textAlign, text: (b.textContent || '').slice(0, 24), ink: null };
+      band.ink = inkOf(b, origin);
+      info.bands.push(band);
+      if (String(b.className).indexOf('mid-bands') >= 0) {
+        info.words += wc(b.textContent);
+        info.midBandLines = (info.midBandLines || 0) + b.querySelectorAll('.line').length;
+      }
+    }
+
     // שורות תוכן-עניינים — מורשת: בנות של העמוד; מודרני: בתוך .toc-rows
     const tocWrap = pg.querySelector('.toc-rows');
     info.tocInContainer = !!(tocWrap && tocWrap.querySelector('.toc-row'));

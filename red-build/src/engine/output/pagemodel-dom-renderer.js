@@ -66,7 +66,15 @@ function renderModelLine(ml, doc, relX, relY) {
   el.className = 'line'
     + (ml.isLast ? ' line--last' : '')
     + (ml.kind === 'heading' ? ' line--heading' : '')
-    + (ml.kind === 'toc-title' ? ' toc-title' : '');
+    + (ml.kind === 'toc-title' ? ' toc-title' : '')
+    // **Iteration-006 (RC-W1 — חלון קלאסי שקוע):** שורת ההמשך של פסקת-חלון
+    // (window בלי windowWords) נמדדה ברוחב מוקטן — השפה הימנית תפוסה
+    // בכוונה ע"י החלון המרחף (חוזה המקור: float height:1.25em על שתי
+    // השורות; מדידת ייחוס p44: שורה 2 מסתיימת ב-472 מול קצה טור 513).
+    // המחלקה מסמנת לאודיט החי לדלג על בדיקת היישור — אותה החלטה כמו
+    // line--window-wrap במקרין המורשת (dom-renderer S4.26); הגיאומטריה
+    // עצמה כבר מצומצמת במודל (w=colW−windowW, עוגן שמאלי בשפת הטור).
+    + (ml.window && !ml.windowWords && ml.windowW ? ' line--window-wrap' : '');
   el.setAttribute('dir', 'rtl');
   el.style.position = 'absolute';
   el.style.left = `${px2(ml.x - relX)}px`;
@@ -96,7 +104,10 @@ function renderModelLine(ml, doc, relX, relY) {
     if (!firstWord && typeof doc.createTextNode === 'function') el.appendChild(doc.createTextNode(' '));
     firstWord = false;
     const span = doc.createElement('span');
-    span.className = 'w' + (wd.mk ? ' w--fnmarker' : '');
+    // **Iteration-006 (RC-W1):** מילת-החלון (fontKey 'window') מסומנת
+    // w--window — כמו במקרין המורשת; האודיט החי בודק את מיקומה (צמודה
+    // לקצה הימני, הדיו הראשון בשורה) דרך המחלקה הזו בדיוק.
+    span.className = 'w' + (wd.mk ? ' w--fnmarker' : '') + (wd.fontKey === 'window' ? ' w--window' : '');
     span.style.position = 'absolute';
     span.style.left = `${px2(wd.x - ml.x)}px`;
     span.style.top = '0';

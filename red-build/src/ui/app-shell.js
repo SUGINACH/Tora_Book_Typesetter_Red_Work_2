@@ -192,6 +192,13 @@ function createApp(doc, opts = {}) {
    * השמורות (פער 2 — הגדרה ששוחזרה עשויה לדרוש גופן שטרם נטען). */
   const FONT_SETTING_KEYS = [
     'body-font', 'first-word-font', 'dh-font', 'f-note-body-font',
+    // **Iteration-006 (RC-M3 — השלמת מפתחות גופן שלא נטענו):** שלושה מפתחות
+    // גופן מההגדרות לא היו ברשימה — הגופן שלהם לעולם לא נרשם ב-Worker ⇒ המדידה
+    // נפלה בשקיפות לקירוב הטבלה בעוד הרינדור השתמש במחסנית אחרת (measure≠render).
+    // ההוכחה החיה: גוף ההקדמה (heading-0-body-font='Frank Ruhl Libre') —
+    // נמדד בטבלה ורונדר ב-Guttman ⇒ רווחי דיו 4–15px ב-19 שורות הקדמה
+    // (אודיט p42/p411). גם ביאורי-הצד וכותרת הערות-הסיום נפגעו באותו דפוס.
+    'heading-0-body-font', 's-note-body-font', 'endnote-title-font',
     // **S75 (בקשה 2):** גופן הגיליון — ברירת המחדל החדשה 'ליבורנה מודגש' חייבת
     // להיטען (FontFace לתצוגה + registerFont למדידה/ייצוא) כשאר גופני ההגדרות.
     'page-num-font',
@@ -437,13 +444,28 @@ function createApp(doc, opts = {}) {
     lightDirty = false; heavyDirty = false;
     status.setPending({ light: false, heavy: false });
     status.setEngineState('working', { label: 'מתחיל עימוד…' });
-    const started = perf.now();
-    const req = engine.requestTypeset({
-      text, settings,
-      onProgress: (m) => status.setEngineState('working', m) // "עמוד X מתוך Y"
-    });
-    const jobId = req && req.jobId ? req.jobId : null; // **S1-ה/U-2:** מזהה הריצה לתצוגה
-    req.promise.then((res) => {
+    // **Iteration-006 (RC-M1 — שער גופני-ההגדרות לפני העימוד):** המדידה
+    // בפרופיל המאוחד היא הפריסה (מילים ממוקמות-מוחלט מהמודל) — עימוד שרץ
+    // לפני שרישום הגופנים שההגדרות דורשות הושלם ב-Worker נופל בשקיפות
+    // למדידת הטבלה המקורבת (חוזה _bindProfile) ⇒ שבירות שונות ורווחי-דיו
+    // של 4–15px בשפה הימנית של שורות מיושרות (נמדד בייחוס p42: «האיסור,»
+    // 51.8px בטבלה מול 43.8px בפועל). המירוץ הוכח בדפדפן החי: הזרקה אחרי
+    // 3.5 שנ' ⇒ 12 מילים בשורה (טבלה); המתנה לגופנים ⇒ 13 מילים
+    // (font-metrics) = המודל ב-Node והייחוס. השער: loadFontStack אידמפוטנטי
+    // (appliedFontsReady משותף עם האתחול — אין טעינה כפולה); תקרת 12 שנ'
+    // שומרת תגובתיות גם אם מקור גופן נתקע (אז הנפילה לטבלה — המתנהגות
+    // המתועדת). גופן חיצוני/חסר — catch מתועד, לא חסימה.
+    Promise.race([
+      loadFontsForCurrentSettings().catch(() => { /* fallback מערכת — מתועד */ }),
+      new Promise((resolve) => setTimeout(resolve, 12000))
+    ]).then(() => {
+      const started = perf.now();
+      const req = engine.requestTypeset({
+        text, settings,
+        onProgress: (m) => status.setEngineState('working', m) // "עמוד X מתוך Y"
+      });
+      const jobId = req && req.jobId ? req.jobId : null; // **S1-ה/U-2:** מזהה הריצה לתצוגה
+      req.promise.then((res) => {
       if (res && res.cancelled) return;
       result = res;
       // **שלב 8 פרוסה 2 (§4.3-4.4 — חוזה ההעברה):** המודל עבר structured-clone —
@@ -494,7 +516,7 @@ function createApp(doc, opts = {}) {
       if (msg === RESTART_ERROR) return;
       status.setEngineState('error', { message: msg });
     });
-    return started;
+    });
   }
 
   /** **S1-ה/U-1:** ביטול מפורש של העימוד הפעיל — כפתור ⏹ בפס המצב (גלוי רק בזמן

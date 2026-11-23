@@ -29,7 +29,13 @@ const PT_CLASS = {
   'toc-general': 'page page--toc page--toc-general',
   'toc-detail': 'page page--toc page--toc-detail',
   'custom': 'page page--custom',
-  'filler': 'page page--filler'
+  'filler': 'page page--filler',
+  // **Iteration-006 (RC-B1 — עמודי מילוי ריקים בפרופיל המאוחד):** המודל
+  // המאוחד מייצר עמודי blank (מילוי לפני שער-משנה שחייב recto — נמדד:
+  // 8 עמודים כאלה ב-very_long, תמיד צמודים ל-shaar-sub). בלי המיפוי הם
+  // קיבלו className='page' בלי page--* ⇒ TYPE_UNKNOWN באודיט החי (סיווג
+  // העמוד לא זיהה אף מחלקה). אותה מחלקה בדיוק כמו LEGACY_PT_CLASS.
+  'blank': 'page page--blank'
 };
 
 // **S4.10:** סוגי עמודי מנוע המורשת (legacy-imud-flow) — מיפוי למחלקות ה-CSS.

@@ -293,7 +293,7 @@ function breakItemSequence(items, maxWidthPx, opts = {}) {
       while (from < seqG.length && seqG[from].role === 'glue' && !seqG[from].internal) from++;
       if (from >= seqG.length || seqG[from].role === 'penalty') break;
       const maxW = lineMax(lineWidthAt, lineIdx, maxWidthPx);
-      let w = 0, lastLegalCut = -1, lastBoxIdx = -1, sawBox = false;
+      let w = 0, lastLegalCut = -1, lastBoxIdx = -1, sawBox = false, reachedFinal = false;
       for (let j = from; j < seqG.length; j++) {
         const it = seqG[j];
         if (it.role === 'box') {
@@ -316,27 +316,39 @@ function breakItemSequence(items, maxWidthPx, opts = {}) {
           const g = glueWidths(it);
           w += g.width;
         } else if (it.role === 'penalty') {
-          if (it.penaltyType === 'final') break;
+          if (it.penaltyType === 'final') { reachedFinal = true; break; }
           continue; // forbidden בתוך יחידה צמודה — ההצברה נמשכת
         }
       }
       if (!sawBox) break;
       let cut;
       if (lastLegalCut > from) {
-        cut = lastLegalCut;
+        // **RC-A2b (i006 — סוף פסקה בשורה אחת):** כשהלולאה הגיעה ל-final
+        // בלי גלישה — כל השארית נכנסה לשורה, וה-final עצמו הוא נקודת
+        // חיתוך חוקית בעלות 0 (בדיוק כמו ב-DP שלעיל). בלי זה lastLegalCut
+        // האמצעי הדיח את המילה האחרונה לשורה עצמאית — בכל פסקה שסיומה
+        // נכנס כולו (נמדד: «מכוונת» | «כנגדו.»; ועם סמן — «קיומו ב.» | «.»
+        // ⇒ 5 ממצאי INK_NOT_JUSTIFIED באודיט החי p69-283 ושורת-זנב נוספת
+        // לכל פסקה כזו — סה"כ אלפי שורות בספר; בייחוס המקור ממלא עד
+        // גבול הרוחב והשארית נופלת לשורה האחרונה האחת).
+        cut = reachedFinal ? seqG.length - 1 : lastLegalCut;
       } else {
         // אף חיתוך חוקי בגבול (מילה בודדת/יחידה צמודה רחבה) — קדימה מובטחת:
         // התיבה הראשונה עד החיתוך החוקי הראשון אחריה (או עד סוף הרצף)
         cut = -1;
-        for (let j = from; j < seqG.length; j++) {
-          const it = seqG[j];
-          if (it.role !== 'box') continue;
-          const next = seqG[j + 1];
-          if (next && next.role === 'glue' && !next.internal && seqG[j + 2] && seqG[j + 2].role === 'box') {
-            cut = j + 1; break;
+        if (reachedFinal) {
+          cut = seqG.length - 1; // השארית כולה נכנסה — שורה אחת עד ה-final
+        } else {
+          for (let j = from; j < seqG.length; j++) {
+            const it = seqG[j];
+            if (it.role !== 'box') continue;
+            const next = seqG[j + 1];
+            if (next && next.role === 'glue' && !next.internal && seqG[j + 2] && seqG[j + 2].role === 'box') {
+              cut = j + 1; break;
+            }
           }
+          if (cut < 0) cut = seqG.length; // שורה אחת עד הסוף (ערוץ ה-overflow המפורש)
         }
-        if (cut < 0) cut = seqG.length; // שורה אחת עד הסוף (ערוץ ה-overflow המפורש)
       }
       linesG.push({ from, to: cut, badness: 0, reason: 'greedy-fill' });
       from = cut;

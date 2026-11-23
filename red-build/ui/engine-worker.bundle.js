@@ -479,6 +479,7 @@ var __paths = {
   "src/engine/core/materialize.js|../output/shaar-content": "src/engine/output/shaar-content.js",
   "src/engine/core/materialize.js|../decoration/asset-registry": "src/engine/decoration/asset-registry.js",
   "src/engine/core/materialize.js|../typography/measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/core/materialize.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/core/materialize.js|../extensions/style-schema": "src/engine/extensions/style-schema.js",
   "src/engine/core/materialize.js|../extensions/apply-styles": "src/engine/extensions/apply-styles.js",
   "src/ui/worker-protocol.js|../audit/report-schema": "src/audit/report-schema.js",
@@ -861,6 +862,13 @@ function typeset(rawText, settingsIn, env = {}) {
   };
   // **D-39 (P0-4):** מקור־האמת note-placement-mode; קלט משתמש מפורש גובר על נגזרות.
   const settings = derivePlacementFlags({ ...getDefaultSettings(), ...(settingsIn || {}) });
+  // **Iteration-006 (RC-M4 — חוזה הצבת סימנים משולבים במנוע המאוחד):** המאוחד
+  // מקרין מילים ממוקמות-מוחלט (PageModel) והדפדפן מציב ניקוד ב-GPOS
+  // mark-to-base (advance 0 בפועל) — המדידה חייבת להאמין לרינדרר הזה.
+  // הפורט (legacy-imud-flow) מודד hmtx בהפרדה — כמו מנוע המקור שייצר את
+  // הייחוס (הוכחה: הצרינת חלון «וְהָיָה» בייחוס 52.4px = hmtx 47.06+רווח;
+  // תיבת הדיו ב-PDF 47.09px = סימנים מופרדים). ראו measure-api::_isMappedMark.
+  settings['_marks-advance'] = 'combined';
   const eventLog = new EventLog(settings['trace-verbosity'] || 'standard'); // נצרך בפועל (P0-5)
   const ledger = new Ledger();
   const notesMode = settings['note-placement-mode'];
@@ -1233,17 +1241,29 @@ function typeset(rawText, settingsIn, env = {}) {
     const colW = (csBlock && csBlock.style.layoutMode === 'full-width')
       ? fullWidthWidth(settings)
       : (inH0Section ? fullWidthWidth(settings) : columnWidthFor({ kind: 'paragraph' }, settings));
-    // **RC-2a (i004) — מקטע 2, סגנון גוף ההקדמה:** המקור מזרים את גוף ה-h0
-    // ב-Frank Ruhl Libre 11.5pt בפיץ' H0_LINE_H (SZ.h0Body/prefaceApi —
-    // הוכח מה-PDF הישן: p43-45 גוף 11.5pt, פיץ' ~15.5pt, ומילות-החלון 17.25=
-    // 11.5×1.5). עד כאן זרם ההקדמה כגוף 12pt — שורות ארוכות מהייחוס,
-    // פיץ' 16.1 במקום 15.5, ומילות-חלון 18pt. הסגנון נבנה כאן פעם אחת
-    // (מקור יחיד) וזורם: מדידה (baseStyle), פיץ' (lineHeightPx), מילת-חלון
-    // (winSizePt), ורינדור (ln.sizePt/ln.font — נקראים ב-line-font.js S6.3).
+    // **RC-2a (i004) — מקטע 2, סגנון גוף ההקדמה:** גוף ה-h0 בגוף הספר ב-11.5pt
+    // בפיץ' H0_LINE_H (SZ.h0Body — הוכח מה-PDF הישן: p43-45 גוף 11.5pt, פיץ'
+    // ~15.5pt, ומילות-החלון 17.25=11.5×1.5). עד כאן זרם ההקדמה כגוף 12pt —
+    // שורות ארוכות מהייחוס, פיץ' 16.1 במקום 15.5, ומילות-חלון 18pt. הסגנון
+    // נבנה כאן פעם אחת (מקור יחיד) וזורם: מדידה (baseStyle), פיץ' (lineHeightPx),
+    // מילת-חלון (winSizePt), ורינדור (ln.sizePt — נקרא ב-line-font.js S6.3).
+    // **Iteration-006 (RC-M2 — גופן גוף ההקדמה = גופן הגוף, כמו הייחוס):**
+    // עד כאן הוזרם גם הגופן מ-heading-0-body-font (ברירת המחדל מהמקור:
+    // f-h0-body='Frank Ruhl Libre') — הן למדידת הרצות והן ל-ln.font. הייחוס
+    // מכריע שהמקור לא מימש הגדרה זו בפלט: 9 מילים מגוף ההקדמה ב-PDF הישן
+    // (p43, ToraBook@11.5 — אותו גופן מוטמע כמו גוף הספר) נמדדו מול שני
+    // המועמדים: Guttman Rashi סטייה כוללת 0.03pt (התאמה מדויקת פר-מילה —
+    // 'לדיני' 19.83=19.83, 'הוצאה' 25.27=25.27, 'רשויות' 26.56=26.56),
+    // Frank Ruhl Libre סטייה 8.58pt. בנתיב המאוחד הפער יצר מדידה≠רינדור:
+    // הרצות נמדדו ב-FRL (בלי גופן רשום באפליקציה החיה ⇒ קירוב טבלה, רחב
+    // ב-18–42%) בעוד המילים רונדרו במחסנית הגוף (Guttman) — רווחי דיו
+    // 4–15px בשפה הימנית של 19 שורות הקדמה (אודיט חי p42/p411). הקביעה
+    // כאן: גוף ההקדמה בגופן הגוף — ההיבט היחיד שהמקור מימש מ-f-h0-body
+    // הוא הגודל (11.5pt).
     const h0BodySizePt = Number(settings['heading-0-body-size-pt']) || 11.5;
-    const h0BodyFamily = settings['heading-0-body-font'] || null;
+    const h0BodyFamily = null; // גוף הגוף — כמו הייחוס (ההוכחה לעיל)
     const h0BaseStyle = inH0Section
-      ? baseStyleOf({ ...settings, 'body-font-size-pt': h0BodySizePt, 'body-font': h0BodyFamily || settings['body-font'] }, 'paragraph')
+      ? baseStyleOf({ ...settings, 'body-font-size-pt': h0BodySizePt }, 'paragraph')
       : null;
     const paraLineHeightPx = inH0Section ? api.lineHeightPx(h0BodySizePt) : api.lineHeightPx(null);
     const customFactorById = new Map(csInlineSpans.map(s => [s.styleId, s.factor]));
@@ -5016,6 +5036,14 @@ let _fontClearSync = false;
 /** מזכר חית סביבה (מבוטל בכל שינוי רישום) — מדידות רבות לא ימיינו שמות שוב ושוב. */
 let _envFpMemo = null;
 
+/**
+ * **Iteration-006 (RC-M4):** סימנים משולבים (Mn) — ניקוד עברי, משולבים כלליים
+ * וסימני ערבית. הדפדפן מציב אותם ב-GPOS mark-to-base ב-advance 0 גם כשה-hmtx
+ * שלהם אינו אפסי (נמדד ב-FrankReal: 1.72–4.68px לסימן) — המדידה חייבת להאמין
+ * להצבה, לא ל-hmtx (ראו _isMappedMark).
+ */
+const COMBINING_MARK_RE = /[\u0300-\u036F\u0483-\u0489\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u0711\u0730-\u074A\u07A6-\u07B0\u0816-\u082D\u0859-\u085B\u08E3-\u0903]/;
+
 /** טביעת מבנה לגופן שנרשם ללא בתים (שחזור) — חלשה מזהות-תוכן אך דטרמיניסטית. */
 function _structuralFontFp(font) {
   if (!font) return 'none';
@@ -5116,6 +5144,9 @@ class MeasureAPI {
     this.fontFactor = 1;
     this.cache = new Map();
     this.stats = { calls: 0, hits: 0, fontFallbacks: 0, evictions: 0 };
+    // **Iteration-006 (RC-M4):** חוזה הצבת הסימנים המשולבים של הרינדור שהכין
+    // הקורא הזה — 'combined' (הדפדפן/GPOS) או ברירת המחדל hmtx (המורשת).
+    this._marksCombined = !!(settings && settings['_marks-advance'] === 'combined');
     if (this.impl === 'font-metrics') this._bindProfile();
   }
 
@@ -5183,12 +5214,29 @@ class MeasureAPI {
     return charWidthEm(ch);
   }
 
-  /** סימן משולב ממופה עם advance=0 (ניקוד): שכבת-אפס — לא חלק מאשכול מדידה. */
+  /** סימן משולב ממופה (ניקוד): שכבת-אפס — לא חלק מאשכול מדידה.
+   * **Iteration-006 (RC-M4 — סימנים משולבים עם hmtx לא-אפסי):** חוזה S4.16
+   * הניח שסימן ניקוד ממופה מקבל advance=0 ב-hmtx (נכון ל-Guttman Rashi).
+   * FrankReal מקורקע אחרת: לסימני הניקוד שלו advance לא-אפסי ב-hmtx
+   * (1.72–4.68px @18pt — נמדד: ְ=1.72, ַ=4.68, ֵ=4.68, ּ=1.72). כאן שני
+   * חוזי רינדור, והמדידה חייבת להאמין לרינדרר שלה:
+   *  - **hmtx (ברירת המחדל — המורשת):** המנוע המקורי הציב את הסימנים
+   *    בהפרדה לפי ה-hmtx (הוכח מהייחוס: חלון «וְהָיָה» — הצרינת השורה
+   *    52.4px = מדידת hmtx 47.06+רווח; תיבת הדיו ב-PDF 47.09px = הפרדה).
+   *    הפורט חייב מדידה זו — הנעילות (legacy-*) והשוואת השורות מול הייחוס
+   *    בנויות עליה.
+   *  - **combined ('_marks-advance':'combined' — המנוע המאוחד):** ה-PageModel
+   *    ממקם מילים מוחלט והדפדפן מציב סימנים משולבים ב-GPOS mark-to-base
+   *    (advance 0 בפועל). מדידת hmtx הנפוחה הותירה את מילת-החלון «וַיְדַבֵּר»
+   *    17px משפת הטור (נמדד: fm=61.21 מול דפדפן=43.73 — הפרש 17.5px = בדיוק
+   *    חמשת הסימנים; WINDOW_WRONG_SIDE p613-614 באודיט החי). בפרופיל זה
+   *    תו ממופה שהוא סימן משולב (Mn) נמדד תמיד ב-0. */
   _isMappedMark(ch) {
     if (this.impl !== 'font-metrics' || !this.fontProfile) return false;
     const gid = fm.glyphIdOf(this.fontProfile, ch);
-    return gid !== 0 && gid < this.fontProfile.numGlyphs
-      && fm.advanceUnitsOf(this.fontProfile, ch) === 0;
+    if (!(gid !== 0 && gid < this.fontProfile.numGlyphs)) return false;
+    if (fm.advanceUnitsOf(this.fontProfile, ch) === 0) return true;
+    return this._marksCombined === true && COMBINING_MARK_RE.test(ch);
   }
 
   /**
@@ -5302,7 +5350,11 @@ MeasureAPI.forFamily = function forFamily(family, settings) {
   if (!family || !registeredFonts.has(String(family))) return null;
   const fam = String(family);
   const sizeKey = settings && settings['body-font-size-pt'] != null ? String(settings['body-font-size-pt']) : '';
-  const key = `${fam}|${sizeKey}`;
+  // **Iteration-006 (RC-M4):** חוזה הסימנים במפתח — מופע combined ומופע hmtx
+  // של אותה משפחה הם שתי מדידות שונות; בלי זה המופע הראשון שנוצר היה
+  // מוגש לשני המנועים.
+  const marksKey = settings && settings['_marks-advance'] === 'combined' ? '|mkC' : '';
+  const key = `${fam}|${sizeKey}${marksKey}`;
   if (!_familyApiCache.has(key)) {
     _familyApiCache.set(key, new MeasureAPI({ ...(settings || {}), 'body-font': fam }, 'font-metrics'));
   }
@@ -6719,7 +6771,7 @@ function breakItemSequence(items, maxWidthPx, opts = {}) {
       while (from < seqG.length && seqG[from].role === 'glue' && !seqG[from].internal) from++;
       if (from >= seqG.length || seqG[from].role === 'penalty') break;
       const maxW = lineMax(lineWidthAt, lineIdx, maxWidthPx);
-      let w = 0, lastLegalCut = -1, lastBoxIdx = -1, sawBox = false;
+      let w = 0, lastLegalCut = -1, lastBoxIdx = -1, sawBox = false, reachedFinal = false;
       for (let j = from; j < seqG.length; j++) {
         const it = seqG[j];
         if (it.role === 'box') {
@@ -6742,27 +6794,39 @@ function breakItemSequence(items, maxWidthPx, opts = {}) {
           const g = glueWidths(it);
           w += g.width;
         } else if (it.role === 'penalty') {
-          if (it.penaltyType === 'final') break;
+          if (it.penaltyType === 'final') { reachedFinal = true; break; }
           continue; // forbidden בתוך יחידה צמודה — ההצברה נמשכת
         }
       }
       if (!sawBox) break;
       let cut;
       if (lastLegalCut > from) {
-        cut = lastLegalCut;
+        // **RC-A2b (i006 — סוף פסקה בשורה אחת):** כשהלולאה הגיעה ל-final
+        // בלי גלישה — כל השארית נכנסה לשורה, וה-final עצמו הוא נקודת
+        // חיתוך חוקית בעלות 0 (בדיוק כמו ב-DP שלעיל). בלי זה lastLegalCut
+        // האמצעי הדיח את המילה האחרונה לשורה עצמאית — בכל פסקה שסיומה
+        // נכנס כולו (נמדד: «מכוונת» | «כנגדו.»; ועם סמן — «קיומו ב.» | «.»
+        // ⇒ 5 ממצאי INK_NOT_JUSTIFIED באודיט החי p69-283 ושורת-זנב נוספת
+        // לכל פסקה כזו — סה"כ אלפי שורות בספר; בייחוס המקור ממלא עד
+        // גבול הרוחב והשארית נופלת לשורה האחרונה האחת).
+        cut = reachedFinal ? seqG.length - 1 : lastLegalCut;
       } else {
         // אף חיתוך חוקי בגבול (מילה בודדת/יחידה צמודה רחבה) — קדימה מובטחת:
         // התיבה הראשונה עד החיתוך החוקי הראשון אחריה (או עד סוף הרצף)
         cut = -1;
-        for (let j = from; j < seqG.length; j++) {
-          const it = seqG[j];
-          if (it.role !== 'box') continue;
-          const next = seqG[j + 1];
-          if (next && next.role === 'glue' && !next.internal && seqG[j + 2] && seqG[j + 2].role === 'box') {
-            cut = j + 1; break;
+        if (reachedFinal) {
+          cut = seqG.length - 1; // השארית כולה נכנסה — שורה אחת עד ה-final
+        } else {
+          for (let j = from; j < seqG.length; j++) {
+            const it = seqG[j];
+            if (it.role !== 'box') continue;
+            const next = seqG[j + 1];
+            if (next && next.role === 'glue' && !next.internal && seqG[j + 2] && seqG[j + 2].role === 'box') {
+              cut = j + 1; break;
+            }
           }
+          if (cut < 0) cut = seqG.length; // שורה אחת עד הסוף (ערוץ ה-overflow המפורש)
         }
-        if (cut < 0) cut = seqG.length; // שורה אחת עד הסוף (ערוץ ה-overflow המפורש)
       }
       linesG.push({ from, to: cut, badness: 0, reason: 'greedy-fill' });
       from = cut;
@@ -23679,6 +23743,21 @@ const BOUNDS_TOLERANCE_PX = 1.5;
 /** סוגי שורות שאינן שורות טור-גוף ב-out.lines (הקרנות ייעודיות לפריטי עמוד). */
 const NON_BODY_LINE_KINDS = new Set(['side-note', 'info-box']);
 
+/**
+ * **Iteration-006 (RC-S1 — פס פתיחת-הסימן במודל העמוד):** חותמות-פס ברמת העמוד
+ * מההקרנה (materialize) שאין להן שורת-תוכנית בטורים — המתכנן מטביע אותן
+ * כחותמת עמוד (page.simanBand), לא כשורות זרימה. אם הן משתתפות במיפוי
+ * שורות-הגוף (ה-zip מול page.columns) הן מזיזות כל ציוות באחד: שורת הפס
+ * נכנסת לטור 0 עם גיאומטריית רוחב-מלא (552.3px) ומעל לראשית הטור
+ * (y=307.88 מול contentBox.top=391.45) — ובטור השני שורת-גוף עם גיאומטריית
+ * טור-0 מקבלת col=1 (נמדד: «את דברי הראשונים» right=−253px; LINE_OVERLAP
+ * 557px ב-DOM; ושורת הגוף האחרונה נפלטת ל-structural). הוכחה נוספת:
+ * המורשת מטפלת בפס הסימן כ-pg.bands ברמת העמוד (legacy-imud-flow §1341:
+ * y=307.88, tokenId:null) — לא כשורת טור. הן מסווגות כאן structural —
+ * מיקום מוחלט בקואורדינטות העמוד, כמו תוכן השער ושורות ה-TOC.
+ */
+const STAMPED_BAND_KINDS = new Set(['h2-siman']);
+
 // ─── עזרי הקפאה עמוקה (immutable final model — §7.1-12) ───
 
 /**
@@ -23782,9 +23861,18 @@ function buildPageModel(result, opts = {}) {
         li++;
       }
     } else {
+      // **Iteration-006 (RC-S1):** חותמות-פס ברמת העמוד (h2-siman — פתיחת הסימן)
+      // מוקרנות בגיאומטריית עמוד מוחלטת ואין להן שורת-תוכנית בטורים —
+      // הן מוצבות כאן כ-structural (לפני הטורים, בסדר הקריאה של העמוד)
+      // ואינן משתתפות במיפוי שורות-הגוף. בלי זה הן הזיזו כל ציוות באחד
+      // (ראו STAMPED_BAND_KINDS למעלה).
+      for (const pl of ((pp && pp.lines) || [])) {
+        if (!STAMPED_BAND_KINDS.has(pl.kind)) continue;
+        lines.push(placeLine(pl, { gapBeforePx: 0, aqStretch: 1 }, { page: page.index, area: 'structural', col: -1, li: lines.length }));
+      }
       // שורות הגוף: out.lines נבנה בסדר "טור 0 ואז טור 1" ואז הקרנות פריטי-עמוד
       // (הערות-צד וכו') — מסננים את אלה שאינן שורות גוף וממפים בסדר.
-      const bodyProjected = ((pp && pp.lines) || []).filter(pl => !NON_BODY_LINE_KINDS.has(pl.kind));
+      const bodyProjected = ((pp && pp.lines) || []).filter(pl => !NON_BODY_LINE_KINDS.has(pl.kind) && !STAMPED_BAND_KINDS.has(pl.kind));
       // **פרוסה 2 (§4.2):** מילוי המיפוי שורת-תוכנית → שורת-מודל לפי אובייקט
       // (מדויק — טוקן אחד מתפרס על כמה שורות, וחיפוש לפי tokenId פגע במיקום התמונה).
       let cursor = 0;
@@ -24122,6 +24210,11 @@ function placeLine(pl, srcLine, where) {
     // **Iteration-001 (legacy parity):** דגל פס-H3 באמצע עמוד — גיאומטריית
     // עמוד (המקרינים מציבים אותו ברמת העמוד, לא בתוך קופסת טור).
     ...(pl.midBand ? { midBand: true } : {}),
+    // **Iteration-006 (RC-W1):** דגלי פסקת-חלון — שורות 0–1 נמדדו ברוחב
+    // מוקטן ושורה 0 נושאת את מילת-החלון; המקרינים (DOM/PDF) והאודיט
+    // זקוקים להם כדי לסמן line--window-wrap / w--window (כמו המורשת).
+    ...(pl.window ? { window: true, windowW: r2(pl.windowW) } : {}),
+    ...(pl.windowWords ? { windowWords: pl.windowWords } : {}),
     level: pl.level != null ? pl.level : null,
     isLast: pl.isLast === true,
     align: pl.align || null,
@@ -24703,13 +24796,37 @@ function projectPage(page, settings, apiOrOpts) {
         // **RTL:** השפה הימנית של תיבת השורה זזה שמאלה מעבר לחלון (כמו
         // right=windowW ב-DOM) — השפה השמאלית נשארת בשפת הטור.
         const lnProj = projectLine(ln, col.x, y, col.w - winShift, settings, measure, lineAlignOf(ln, settings), production);
+        // **Iteration-006 (RC-W1 — דגלי חלון בהקרנה):** הפרופיל המאוחד מצר את
+        // שתי השורות הראשונות של פסקת-חלון וממקם את מילת-החלון מחוץ לתיבה —
+        // אך הדגלים (window/windowW/windowWords) נשארו על שורת התוכנית ולא
+        // עברו להקרנה ולמודל. בלי זה המקרין החי (PageModel) לא יכול היה לסמן
+        // את שורת ההמשך line--window-wrap — והאודיט החי דיווח INK_NOT_JUSTIFIED
+        // על שורה שמוצרת בכוונה (חוזה המקור: החלון מרחף height:1.25em על שתי
+        // השורות; הייחוס p44: שורה 2 מסתיימת ב-472 מול קצה טור 513 = רוחב
+        // החלון). אותה החלטה כבר קיימת במקרין המורשת (dom-renderer: S4.26).
+        if (ln.window && Number.isFinite(ln.windowW)) {
+          lnProj.window = true;
+          lnProj.windowW = ln.windowW;
+          if (ln.windowWords && ln.windowWords.length) lnProj.windowWords = ln.windowWords.slice();
+        }
         if (ln.windowWords && ln.windowWords.length) {
           const winText = ln.windowWords.join(' ');
           const winSizePt = (ln.sizePt || settings['body-font-size-pt']) * (Number(settings['first-word-size-em']) || 1.5);
-          const winW = Math.max(4, ln.windowW - 2);
+          // **Iteration-006 (RC-W2 — מילת-חלון צמודה לשפה):** המילה נמדדת
+          // במטריקות גופן החלון (FrankReal — כמו המקרין המורשת: winMeasure
+          // + tracking 0 לדיו) ומוצבת מהשפה הימנית של הטור שמאלה — כמו
+          // הייחוס ('השבת' x1=513.3 = קצה הטור במדויק, p44) וכמו המורשת
+          // (legacy-projector: cx=col.x+col.w; cx-=w). בעבר התיבה הייתה
+          // ההשקעה כולה (windowW−2) — הטיה של ~3px מהקצה (ההשקעה כוללת
+          // רווח+0.5 שאינם דיו של המילה) ⇒ WINDOW_WRONG_SIDE באודיט החי.
+          // הצרינת השורות נשארת לפי ההשקעה המלאה (winShift לעיל) — מקור אחד.
+          const winFam = settings['first-word-font'] || null;
+          const MeasureAPICls = require('../typography/measure-api').MeasureAPI;
+          const wApi = (winFam && MeasureAPICls.forFamily(winFam, settings)) || measure;
+          const winInkW = Math.max(4, wApi.measureTextWidth(winText, winSizePt, 0));
           lnProj.words = lnProj.words || [];
           lnProj.words.push({
-            text: winText, x: col.x + col.w - winW, w: winW,
+            text: winText, x: col.x + col.w - winInkW, w: winInkW,
             baselineY: null, __window: true, // נקבע במעבר התיקון אחרי attachBaselines
             sizePt: winSizePt, fontKey: 'window',
             ...(settings['first-word-color'] && settings['first-word-color'] !== '#000000'
@@ -27715,7 +27832,13 @@ const PT_CLASS = {
   'toc-general': 'page page--toc page--toc-general',
   'toc-detail': 'page page--toc page--toc-detail',
   'custom': 'page page--custom',
-  'filler': 'page page--filler'
+  'filler': 'page page--filler',
+  // **Iteration-006 (RC-B1 — עמודי מילוי ריקים בפרופיל המאוחד):** המודל
+  // המאוחד מייצר עמודי blank (מילוי לפני שער-משנה שחייב recto — נמדד:
+  // 8 עמודים כאלה ב-very_long, תמיד צמודים ל-shaar-sub). בלי המיפוי הם
+  // קיבלו className='page' בלי page--* ⇒ TYPE_UNKNOWN באודיט החי (סיווג
+  // העמוד לא זיהה אף מחלקה). אותה מחלקה בדיוק כמו LEGACY_PT_CLASS.
+  'blank': 'page page--blank'
 };
 
 // **S4.10:** סוגי עמודי מנוע המורשת (legacy-imud-flow) — מיפוי למחלקות ה-CSS.
@@ -29864,7 +29987,15 @@ function renderModelLine(ml, doc, relX, relY) {
   el.className = 'line'
     + (ml.isLast ? ' line--last' : '')
     + (ml.kind === 'heading' ? ' line--heading' : '')
-    + (ml.kind === 'toc-title' ? ' toc-title' : '');
+    + (ml.kind === 'toc-title' ? ' toc-title' : '')
+    // **Iteration-006 (RC-W1 — חלון קלאסי שקוע):** שורת ההמשך של פסקת-חלון
+    // (window בלי windowWords) נמדדה ברוחב מוקטן — השפה הימנית תפוסה
+    // בכוונה ע"י החלון המרחף (חוזה המקור: float height:1.25em על שתי
+    // השורות; מדידת ייחוס p44: שורה 2 מסתיימת ב-472 מול קצה טור 513).
+    // המחלקה מסמנת לאודיט החי לדלג על בדיקת היישור — אותה החלטה כמו
+    // line--window-wrap במקרין המורשת (dom-renderer S4.26); הגיאומטריה
+    // עצמה כבר מצומצמת במודל (w=colW−windowW, עוגן שמאלי בשפת הטור).
+    + (ml.window && !ml.windowWords && ml.windowW ? ' line--window-wrap' : '');
   el.setAttribute('dir', 'rtl');
   el.style.position = 'absolute';
   el.style.left = `${px2(ml.x - relX)}px`;
@@ -29894,7 +30025,10 @@ function renderModelLine(ml, doc, relX, relY) {
     if (!firstWord && typeof doc.createTextNode === 'function') el.appendChild(doc.createTextNode(' '));
     firstWord = false;
     const span = doc.createElement('span');
-    span.className = 'w' + (wd.mk ? ' w--fnmarker' : '');
+    // **Iteration-006 (RC-W1):** מילת-החלון (fontKey 'window') מסומנת
+    // w--window — כמו במקרין המורשת; האודיט החי בודק את מיקומה (צמודה
+    // לקצה הימני, הדיו הראשון בשורה) דרך המחלקה הזו בדיוק.
+    span.className = 'w' + (wd.mk ? ' w--fnmarker' : '') + (wd.fontKey === 'window' ? ' w--window' : '');
     span.style.position = 'absolute';
     span.style.left = `${px2(wd.x - ml.x)}px`;
     span.style.top = '0';

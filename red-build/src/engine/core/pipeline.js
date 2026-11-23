@@ -133,6 +133,13 @@ function typeset(rawText, settingsIn, env = {}) {
   };
   // **D-39 (P0-4):** מקור־האמת note-placement-mode; קלט משתמש מפורש גובר על נגזרות.
   const settings = derivePlacementFlags({ ...getDefaultSettings(), ...(settingsIn || {}) });
+  // **Iteration-006 (RC-M4 — חוזה הצבת סימנים משולבים במנוע המאוחד):** המאוחד
+  // מקרין מילים ממוקמות-מוחלט (PageModel) והדפדפן מציב ניקוד ב-GPOS
+  // mark-to-base (advance 0 בפועל) — המדידה חייבת להאמין לרינדרר הזה.
+  // הפורט (legacy-imud-flow) מודד hmtx בהפרדה — כמו מנוע המקור שייצר את
+  // הייחוס (הוכחה: הצרינת חלון «וְהָיָה» בייחוס 52.4px = hmtx 47.06+רווח;
+  // תיבת הדיו ב-PDF 47.09px = סימנים מופרדים). ראו measure-api::_isMappedMark.
+  settings['_marks-advance'] = 'combined';
   const eventLog = new EventLog(settings['trace-verbosity'] || 'standard'); // נצרך בפועל (P0-5)
   const ledger = new Ledger();
   const notesMode = settings['note-placement-mode'];
@@ -505,17 +512,29 @@ function typeset(rawText, settingsIn, env = {}) {
     const colW = (csBlock && csBlock.style.layoutMode === 'full-width')
       ? fullWidthWidth(settings)
       : (inH0Section ? fullWidthWidth(settings) : columnWidthFor({ kind: 'paragraph' }, settings));
-    // **RC-2a (i004) — מקטע 2, סגנון גוף ההקדמה:** המקור מזרים את גוף ה-h0
-    // ב-Frank Ruhl Libre 11.5pt בפיץ' H0_LINE_H (SZ.h0Body/prefaceApi —
-    // הוכח מה-PDF הישן: p43-45 גוף 11.5pt, פיץ' ~15.5pt, ומילות-החלון 17.25=
-    // 11.5×1.5). עד כאן זרם ההקדמה כגוף 12pt — שורות ארוכות מהייחוס,
-    // פיץ' 16.1 במקום 15.5, ומילות-חלון 18pt. הסגנון נבנה כאן פעם אחת
-    // (מקור יחיד) וזורם: מדידה (baseStyle), פיץ' (lineHeightPx), מילת-חלון
-    // (winSizePt), ורינדור (ln.sizePt/ln.font — נקראים ב-line-font.js S6.3).
+    // **RC-2a (i004) — מקטע 2, סגנון גוף ההקדמה:** גוף ה-h0 בגוף הספר ב-11.5pt
+    // בפיץ' H0_LINE_H (SZ.h0Body — הוכח מה-PDF הישן: p43-45 גוף 11.5pt, פיץ'
+    // ~15.5pt, ומילות-החלון 17.25=11.5×1.5). עד כאן זרם ההקדמה כגוף 12pt —
+    // שורות ארוכות מהייחוס, פיץ' 16.1 במקום 15.5, ומילות-חלון 18pt. הסגנון
+    // נבנה כאן פעם אחת (מקור יחיד) וזורם: מדידה (baseStyle), פיץ' (lineHeightPx),
+    // מילת-חלון (winSizePt), ורינדור (ln.sizePt — נקרא ב-line-font.js S6.3).
+    // **Iteration-006 (RC-M2 — גופן גוף ההקדמה = גופן הגוף, כמו הייחוס):**
+    // עד כאן הוזרם גם הגופן מ-heading-0-body-font (ברירת המחדל מהמקור:
+    // f-h0-body='Frank Ruhl Libre') — הן למדידת הרצות והן ל-ln.font. הייחוס
+    // מכריע שהמקור לא מימש הגדרה זו בפלט: 9 מילים מגוף ההקדמה ב-PDF הישן
+    // (p43, ToraBook@11.5 — אותו גופן מוטמע כמו גוף הספר) נמדדו מול שני
+    // המועמדים: Guttman Rashi סטייה כוללת 0.03pt (התאמה מדויקת פר-מילה —
+    // 'לדיני' 19.83=19.83, 'הוצאה' 25.27=25.27, 'רשויות' 26.56=26.56),
+    // Frank Ruhl Libre סטייה 8.58pt. בנתיב המאוחד הפער יצר מדידה≠רינדור:
+    // הרצות נמדדו ב-FRL (בלי גופן רשום באפליקציה החיה ⇒ קירוב טבלה, רחב
+    // ב-18–42%) בעוד המילים רונדרו במחסנית הגוף (Guttman) — רווחי דיו
+    // 4–15px בשפה הימנית של 19 שורות הקדמה (אודיט חי p42/p411). הקביעה
+    // כאן: גוף ההקדמה בגופן הגוף — ההיבט היחיד שהמקור מימש מ-f-h0-body
+    // הוא הגודל (11.5pt).
     const h0BodySizePt = Number(settings['heading-0-body-size-pt']) || 11.5;
-    const h0BodyFamily = settings['heading-0-body-font'] || null;
+    const h0BodyFamily = null; // גוף הגוף — כמו הייחוס (ההוכחה לעיל)
     const h0BaseStyle = inH0Section
-      ? baseStyleOf({ ...settings, 'body-font-size-pt': h0BodySizePt, 'body-font': h0BodyFamily || settings['body-font'] }, 'paragraph')
+      ? baseStyleOf({ ...settings, 'body-font-size-pt': h0BodySizePt }, 'paragraph')
       : null;
     const paraLineHeightPx = inH0Section ? api.lineHeightPx(h0BodySizePt) : api.lineHeightPx(null);
     const customFactorById = new Map(csInlineSpans.map(s => [s.styleId, s.factor]));
