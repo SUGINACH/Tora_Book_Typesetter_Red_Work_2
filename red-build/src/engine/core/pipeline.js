@@ -251,7 +251,7 @@ function typeset(rawText, settingsIn, env = {}) {
   // GEO.MARGIN_W (50.5px, margin-col של המקור). עד כאן ~101px — חרג מהשטח
   // הזמין ודרס את שולי העמוד (נמדד: אזור 76pt מול 37pt בייחוס).
   if (settings['_layout-profile'] === 'imud' || settings._imudRaw) {
-    settings._sideNoteColWidthPx = Math.round(GEO.MARGIN_W);
+    settings._sideNoteColWidthPx = GEO.MARGIN_W; // **G4/RC-4c:** מדויק (50.5) — כמו wrapText של המקור; עיגול ל-51 שינה נקודות שבירה
   } else {
     settings._sideNoteColWidthPx = Math.max(24, Math.min(
       Math.round(settings._outerMarginPx) - 12,

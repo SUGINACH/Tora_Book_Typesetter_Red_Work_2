@@ -17,6 +17,8 @@
  */
 
 const { stampNote, stampIsValid, NOTE_KINDS } = require('./notes-model');
+// **G4/RC-4 (i004):** גיאומטריית טורי-השוליים המכוילת — מקור יחיד (imud-geometry).
+const { GEO } = require('../core/imud-geometry'); // **G4/RC-4b:** GEO.MARGIN_NOTE_CENTER_INSET_PX — מרכז מכויל
 
 const CONTAINMENT_PX = 20; // חריגה מזערית מעבר למיכל — לא נחשב overlap אמיתי (ספרד קטלוג D3)
 const STACK_GAP_PX = 8;    // מרווח בין הערות צד סמוכות בשוליים
@@ -88,14 +90,30 @@ function placeSideNotes(pages, settings, measureFn, hooks = {}) {
   const pending = []; // pagePendingNotes — נשארות מועברות לעמוד הבא
   const overflowEvents = [];
 
-  for (const page of pages) {
+  // **G4/RC-4b (i004 — תיבת ההערה היא עמודת-השוליים עצמה):** בפרופיל IMUD
+  // שורות ההערה ממורכזות בעמודת margin-col הגיאומטרית — x=MARGIN_R_X/L_X,
+  // רוחב MARGIN_W — בדיוק כמו המקרין המורשת (placeWords 'center'). הוכח
+  // מהייחוס בהמרה הנכונה (MediaBox כולל 3מ״מ bleed: pt→px דרך (pt−8.5)/0.75):
+  // מרכזי כל 11,840 השורות = 711.55/81.95px — מרכזי העמודות בדיוק (סטייה 0.00;
+  // הערכת הביניים של "היסס פנימי 8.85px" נבעה מהמרת סקאלה שגויה ונסוגה).
+  const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  const marginNoteX = (page, side, colW) => {
+    if (imudProf) return side === 'right' ? GEO.MARGIN_R_X : GEO.MARGIN_L_X;
     // recto: שוליים חיצוניים בצד שמאל (RTL); verso: בצד ימין
-    const outerX = page.isRecto !== false
+    return page.isRecto !== false
       ? page.template.margins.side * 0.15
-      : page.template.width - page.template.margins.side * 0.15 - marginColWidth(settings, null);
+      : page.template.width - page.template.margins.side * 0.15 - colW;
+  };
+
+  for (const page of pages) {
     const queue = [...pending.splice(0), ...(page.sideNotes || [])];
     page.sideNotes = []; // ייבנה מחדש לפי מה שבאמת מוקם בעמוד זה
-    let lastBottom = -1;
+    // **G4/RC-4a (i004 — הצד לפי טור העוגן, כמו המורשת):** emitUnit של
+    // המקור מפריש את הערת-הצד לשוליים **הסמוכים לטור שבו הפסקה נמצאת**
+    // (colR ⇒ ימין, colL ⇒ שמאל) — לא לשוליים החיצוניים של העמוד. בייחוס
+    // 514/596 עמודי-הערות משתמשים בשני השוליים גם יחד. מפל הדחיקה
+    // (push-down) נשאר פר-צד — שני השוליים זורמים בלתי-תלויים.
+    const lastBottomBySide = { right: -1, left: -1 };
 
     for (let i = 0; i < queue.length; i++) {
       const sn = queue[i];
@@ -112,9 +130,18 @@ function placeSideNotes(pages, settings, measureFn, hooks = {}) {
       const anchorY = anchor
         ? lineYTop(page, anchor.colIdx, anchor.lineIdx)
         : page.template.contentBox.top; // אנקור לא בעמוד זה ⇒ ראש תוכן
+      // **G4/RC-4a:** הצד לפי טור העוגן (עמודה 0 = ימין ב-RTL) — חוזה המורשת
+      // (פרופיל IMUD); נדחקת בלי עוגן בעמוד ⇒ השוליים החיצוניים של העמוד
+      // (שארית מתועדת — במקור ההערה אינה נדחקת לעולם; היא חיה עם הפסקה שלה).
+      // במנוע הגנרי (לא-IMUD) החוזה נשאר שוליים-חיצוניים-לפי-זוגיות — המפל
+      // הפר-צד מתנהג שם כמפל יחיד (כל ההערות באותו הצד).
+      const side = (imudProf && anchor)
+        ? (anchor.colIdx === 0 ? 'right' : 'left')
+        : (page.isRecto !== false ? 'left' : 'right');
+      sn.side = side;
       let yTop = anchorY;
-      // push-down cascade: אין לחפוף את ההערה הקודמת (מרווח מינימלי לפי מדיניות)
-      if (lastBottom >= 0 && yTop < lastBottom + STACK_GAP_PX) yTop = lastBottom + STACK_GAP_PX;
+      // push-down cascade (פר-צד): אין לחפוף את ההערה הקודמת באותו השוליים
+      if (lastBottomBySide[side] >= 0 && yTop < lastBottomBySide[side] + STACK_GAP_PX) yTop = lastBottomBySide[side] + STACK_GAP_PX;
       if (trace) trace.emit(page.index, 'side-note-allocated', {
         note: sn.noteId || sn.ownToken || sn.anchorToken,
         anchorY: Math.round(anchorY * 10) / 10,
@@ -133,16 +160,17 @@ function placeSideNotes(pages, settings, measureFn, hooks = {}) {
         });
         continue;
       }
+      const colW = marginColWidth(settings, sn);
       const rec = {
         ...sn, page: page.index,
-        x: outerX, yTop,
+        x: marginNoteX(page, side, colW), yTop,
         heightPx: h,
         batchGroup: sn.batchId || (anchor ? `${sn.anchorToken}` : `p${page.index}i${i}`),
-        colWidth: marginColWidth(settings, sn)
+        colWidth: colW
       };
       placed.push(rec);
       page.sideNotes.push(rec); // מה שמוקם בפועל בעמוד זה (נרנדר)
-      lastBottom = yTop + h;
+      lastBottomBySide[side] = yTop + h;
     }
   }
 
@@ -172,7 +200,11 @@ function placeSideNotes(pages, settings, measureFn, hooks = {}) {
           ledger.transition(rec.issue_id, 'persists', 'decorations', 'note taller than a page — placed with documented containment breach');
         }
       }
-      const rec = { ...sn, page: tail.index, x: tail.isRecto !== false ? tail.template.margins.side * 0.15 : tail.template.width - tail.template.margins.side * 0.15 - marginColWidth(settings, sn), yTop, heightPx: h, colWidth: marginColWidth(settings, sn) };
+      // **G4/RC-4a (עמוד-זנב):** אין עוגן בעמוד — השוליים החיצוניים לפי הזוגיות
+      // (במקור הערה לא נדחקת לעולם; שארית מתועדת). הרוחב והמרכז — אותם כללים.
+      const sideT = tail.isRecto !== false ? 'left' : 'right';
+      sn.side = sideT;
+      const rec = { ...sn, page: tail.index, x: marginNoteX(tail, sideT, marginColWidth(settings, sn)), yTop, heightPx: h, colWidth: marginColWidth(settings, sn) };
       placed.push(rec);
       tail.sideNotes.push(rec);
       if (trace) trace.emit(tail.index, 'side-note-tail-placed', {

@@ -88,9 +88,13 @@ function measureContextFor(kind, settings, opts = {}, measure = null) {
       : (imudProf ? (Number(SZ_CORE.marginNote) || 6) : bodyPt * 0.75);
     const fontName = opts.fontName || settings['s-note-body-font'];
     const fallbackW = Math.max(60, Math.round(settings._outerMarginPx || 120) - 12);
+    // **G4/RC-4c (i004):** בפרופיל IMUD הפיץ' המכויל — GEO.MN_PITCH (9.6px =
+    // 6pt×1.2×4/3, כמו המקור; נמדד בייחוס). היה Math.round(6×1.333×1.15)=9 —
+    // 0.6px צפוף מדי לכל שורת הערה.
+    const imudLineH = imudProf ? sizePt * (96 / 72) * 1.2 : Math.round(sizePt * (96 / 72) * 1.15); // **RC-4c:** 9.6 מדויק — עיגול היה הופך ל-10
     return {
       kind, sizePt,
-      lineH: Math.round(sizePt * (96 / 72) * 1.15),
+      lineH: imudLineH,
       widthPx: Number(opts.widthPx) > 0 ? Math.round(Number(opts.widthPx)) : (settings._sideNoteColWidthPx || fallbackW),
       fontName,
       factor: implB ? 1 : (SIDE_NOTE_FONT_FACTORS[fontName] || (fontName && fontName !== settings['body-font'] ? 1.08 : 1))

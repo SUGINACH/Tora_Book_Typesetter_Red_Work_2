@@ -97,17 +97,21 @@ describe('שלב 6 פרוסה 2 (§13) — תרחישי הערות: יצירה, 
     assert(pagesWith.length >= 1, 'יש עמודים עם הערות צד');
     for (const p of pagesWith) {
       assert(p.sideNotes.length >= 1, 'מקצה אחד לכל הערות העמוד (§8)');
-      let lastBottom = -1;
+      // **G4/RC-4a (i004 — הצד לפי טור העוגן כמו המורשת):** המפל האנכי הוא
+      // פר-שוליים — הערות בשני טורי העוגן חיות בשני עמודות-שוליים שונות
+      // ורשאיות לחפוף אנכית (בייחוס 514/596 עמודי-הערות משתמשים בשניהם).
+      const bySide = { right: -1, left: -1 };
       for (const sn of p.sideNotes) {
         placed++;
         assert(sn.yTop != null && sn.heightPx > 0, 'הערה מוקמה עם גובה מהחותמת');
-        if (lastBottom >= 0) {
-          assert(sn.yTop >= lastBottom + 8 - 0.01,
-            `מרווח מינימלי STACK_GAP_PX הופר: ${sn.yTop} < ${lastBottom + 8}`);
+        const side = sn.side || (p.isRecto !== false ? 'left' : 'right');
+        if (bySide[side] >= 0) {
+          assert(sn.yTop >= bySide[side] + 8 - 0.01,
+            `מרווח מינימלי STACK_GAP_PX הופר (${side}): ${sn.yTop} < ${bySide[side] + 8}`);
         }
         assert(sn.yTop + sn.heightPx <= p.template.contentBox.bottom + 20 + 0.01,
           'אין חריגה שקטה מגבולות העמוד (מיכל 20px)');
-        lastBottom = sn.yTop + sn.heightPx;
+        bySide[side] = Math.max(bySide[side], sn.yTop + sn.heightPx);
       }
     }
     assert(placed >= 8, `הערות צד מוקמו (${placed})`);
@@ -134,10 +138,16 @@ describe('שלב 6 פרוסה 2 (§13) — תרחישי הערות: יצירה, 
   it('הערה במעבר עמוד + הערת המשך: pagePendingNotes זורם קדימה בסדר קריאה', () => {
     const r = typeset(SN_DOC, S());
     // סדר הקריאה של ההערות בעמוד = סדר הqueue (pending קודם, ואז של העמוד)
+    // **G4/RC-4a:** פר-שוליים — שני עמודות-השוליים זורמים בלתי-תלויים.
     for (const p of r.pages) {
       const sns = p.sideNotes || [];
-      for (let i = 1; i < sns.length; i++) {
-        assert(sns[i].yTop >= sns[i - 1].yTop - 0.01, 'סדר קריאה נשמר במקצה (מעלה ב-y)');
+      const bySide = { right: [], left: [] };
+      for (const sn of sns) bySide[sn.side || (p.isRecto !== false ? 'left' : 'right')].push(sn);
+      for (const side of ['right', 'left']) {
+        const arr = bySide[side];
+        for (let i = 1; i < arr.length; i++) {
+          assert(arr[i].yTop >= arr[i - 1].yTop - 0.01, `סדר קריאה נשמר במקצה ${side} (מעלה ב-y)`);
+        }
       }
     }
   });

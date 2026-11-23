@@ -1,0 +1,43 @@
+{
+ "generated": "2026-11-23 i004 G4 (RC-4a..d) — app-path export",
+ "pages": {
+  "old": 699,
+  "new": 700
+ },
+ "margin_notes": {
+  "ink_center_right_px": {
+   "old": 711.55,
+   "new": 711.58,
+   "old_std": 0.0,
+   "new_std_pt": 0.45
+  },
+  "ink_center_left_px": {
+   "old": 81.95,
+   "new": 81.99,
+   "old_std": 0.0,
+   "new_std_pt": 0.46
+  },
+  "internal_pitch_pt": {
+   "old": 7.2,
+   "new": 7.2
+  },
+  "side_usage": {
+   "old": {
+    "both": 514,
+    "right_only": 62,
+    "left_only": 20
+   },
+   "new": {
+    "both": 490,
+    "right_only": 70,
+    "left_only": 16
+   }
+  },
+  "line_counts": {
+   "old_right": 6635,
+   "old_left": 5205,
+   "new_right": 6110,
+   "new_left": 4341
+  }
+ }
+}

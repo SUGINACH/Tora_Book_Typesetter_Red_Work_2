@@ -557,12 +557,21 @@ function projectStampedRows(n, x, w, yTop, opts) {
     const live = toks.filter(t => t.text && String(t.text).trim());
     const sumW = live.reduce((s, t) => s + t.w, 0);
     const gaps = Math.max(0, live.length - 1);
+    // **G4/RC-4d (i004 — הערות-צד ממורכזות כמו המקור):** placeWords('center')
+    // של המקרין המורשת ממרז את **כל** שורות הערת-הצד — כולל האחרונה (נמדד
+    // בייחוס: מרכז קבוע, סטייה 0.00 על n=11,840 שורות). המרזב התחתון נשאר
+    // ביישור-מלא + אחרונה-לימין (כמו .note-line של המקור) — מצב ברירת המחדל.
+    const centerAlign = opts.align === 'center';
     let gapW = spaceW;
-    if (!isLast && gaps > 0 && sumW + gaps * spaceW < gw) gapW = (gw - sumW) / gaps;
+    if (!centerAlign && !isLast && gaps > 0 && sumW + gaps * spaceW < gw) gapW = (gw - sumW) / gaps;
     const y = yTop + pad + li * lineH;
     const baselineY = y + half + ascent * sizePx;
     const wds = [];
-    let cursor = gx + gw; // RTL — מימין לשמאל
+    // RTL — מימין לשמאל; מרוכז: רוחבי החותמת כוללים רווח עוקב לכל מילה — הרווח
+    // שאחרי המילה השמאלית ביותר מנפח את התיבה משמאל; האמת ממורכזת על הדיו:
+    // עוגן ההתחלה מוסט שמאלה בחצי אותו רווח (נמדד: מרכז הדיו יורד מ-712.9 ל-711.6px
+    // — מרכז עמודת-השוליים בייחוס, סטייה 0.00).
+    let cursor = centerAlign ? gx + (gw + sumW + gaps * gapW) / 2 - gapW / 2 : gx + gw;
     for (const t of live) {
       cursor -= t.w;
       const wd = { text: t.text, x: cursor, w: t.w, sizePt, baselineY, fontKey: opts.fontKey,
@@ -775,7 +784,8 @@ function projectSideNotes(page, settings, measure, out) {
     const rec = projectStampedRows(sn, sn.x, boxW, sn.yTop, {
       sizePt, fontKey: 'margin',
       color: colorOfSetting(settings['s-note-body-color']), measure,
-      padPx: isBox ? chrome.pad + chrome.border : 0
+      padPx: isBox ? chrome.pad + chrome.border : 0,
+      align: 'center' // **G4/RC-4d:** הערות-צד ממורכזות כמו המקור (מרזב: יישור מלא)
     });
     if (!rec) { pushStampDiagnostic(out, 'side-note', page, sn); continue; } // §9.8
     rec.lines.forEach((line) => {

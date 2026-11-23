@@ -87,8 +87,15 @@ describe('S68-2 — אינטגרציה: הקורפוס עם paren-scale — הה
     let scaledWords = 0, overflow = 0;
     for (const pl of proj.pages) {
       for (const ln of pl.lines) {
+        // **G4/RC-4d (i004):** שורות הערת-צד ממורכזות על הדיו — רוחבי החותמת
+        // כוללים רווח ריק מובנה בקצה השמאלי של המילה האחרונה, ולכן תיבת מילה
+        // של שורה מלאה יכולה לחרוג רווח-אחד מחוץ לתיבת השורה בלי שהדיו חורג
+        // (נמדע בייחוס: מרכז הדיו = מרכז עמודת-השוליים בדיוק). הבדיקה כאן
+        // עוסקת במילות גוף מוקטנות-סוגריים — שורות השוליין אינן בתחומה.
+        const isMarginLine = ln.kind === 'side-note' || ln.kind === 'info-box' || ln.kind === 'margin-note';
         for (const w of ln.words) {
           if (w.sizePt != null && Math.abs(w.sizePt - 14 * 0.85) < 0.05) scaledWords++;
+          if (isMarginLine) continue;
           if (w.x < ln.x - 0.5 || w.x + w.w > ln.x + ln.w + 0.5) overflow++;
         }
       }
