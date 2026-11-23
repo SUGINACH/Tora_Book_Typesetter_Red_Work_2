@@ -362,7 +362,11 @@ function insertTocPages(pages, tocPages, settings, io = {}) {
   for (const p of final) {
     const newIsRecto = p.index % 2 === 0;
     const shifted = binding !== 0 && p.isRecto !== undefined && p.isRecto !== newIsRecto;
-    if (p.type !== 'blank') p.template = buildPageTemplate(p.type, settings, newIsRecto, { h2SpanExempt: p._h2SpanExempt === true });
+    // **Iteration-006 (G3/RC-C1 — המשך RC-3c):** הבנייה החוזרת של D-63 חייבת
+    // לשאת גם את שורות-הכותרת-העטופות (h2ExtraLines) — בדיוק כמו h2SpanExempt
+    // ב-i004: בלי זה הדחיפה שנבנתה בהצבת ה-H2 נמחקה בסוף התכנון וה-H3 חזר לגעת
+    // בשורת-הכותרת השנייה (נמדד ב-probe: top=368.5 במקום 398.5 בכותרת דו-שורתית).
+    if (p.type !== 'blank') p.template = buildPageTemplate(p.type, settings, newIsRecto, { h2SpanExempt: p._h2SpanExempt === true, h2ExtraLines: p._h2ExtraLines || 0 });
     p.isRecto = newIsRecto;
     if (shifted) parityShifted.push(p);
   }

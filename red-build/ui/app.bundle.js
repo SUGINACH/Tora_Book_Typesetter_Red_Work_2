@@ -8362,7 +8362,7 @@ const PAGE_SIZES = {
 // מול מרזב 13.48px במקור; שוליים של 7.5% מול 120.72px (15.2%) במקור.
 // לא ערכי קסם: המקור הוא החוזה המשותף ששני המנועים צורכים.
 const {
-  GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, H2_AREA_H, H2_SPAN_AREA_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
+  GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, H2_AREA_H, H2_SPAN_AREA_H, H2_TITLE_LINE_PITCH_PX, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
 } = require('../core/imud-geometry');
 const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
 
@@ -8392,8 +8392,15 @@ function buildImudPageTemplate(type, settings, isRecto, opts = {}) {
   // 284.25 בפתיחה רגילה — עמ' 24/38) — הטורים מתחילים 22.95px גבוה יותר
   // ושורת-תוכן נוספת נכנסת בעמודים אלה.
   const h2Area = (opts && opts.h2SpanExempt) ? H2_SPAN_AREA_H : H2_AREA_H;
+  // **Iteration-006 (G3/RC-C1 — שורות כותרת-h2 עטופות דוחפות את ראש הזרימה):**
+  // כל שורה עטופה מעבר לראשונה מורידה את textTop בפס שלה (H2_TITLE_LINE_PITCH_PX)
+  // — הרווח התחתון המוגדר של האזור נשמר, כמו flowSection של המורשת
+  // (top = FLOW_TOP + areaH + (h2Lines−1)×30; הוכחת ייחוס p278 — ראו שם).
+  // ברירת המחדל 0 — כותרת חד-שורתית אינה מושפעת (rc3 נשאר תקף).
+  const h2ExtraLines = type === PAGE_TYPES.SIGN_OPEN ? Math.max(0, Math.floor((opts && opts.h2ExtraLines) || 0)) : 0;
+  const h2ExtraPx = h2ExtraLines * H2_TITLE_LINE_PITCH_PX;
   const textTop = type === PAGE_TYPES.SIGN_OPEN
-    ? GEO.FLOW_TOP + h2Area
+    ? GEO.FLOW_TOP + h2Area + h2ExtraPx
     : (type === PAGE_TYPES.PREFACE ? GEO.FLOW_TOP + H0_AREA_H : GEO.FLOW_TOP);
   return {
     type, isRecto, imud: true,
@@ -8403,8 +8410,9 @@ function buildImudPageTemplate(type, settings, isRecto, opts = {}) {
     headerHeight: GEO.HEADER_BASELINE,   // פס הכותרת: גליפים 42.56–57.56pt (גאומטריית הפס; התוכן — מקטע 3)
     headerTop: GEO.FLOW_TOP - RUNNING_HEAD_TOP_INSET_PX,
     folioHeight: GEO.PAGE_H - GEO.FOLIO_BASELINE,
-    h2TopOffset: type === PAGE_TYPES.SIGN_OPEN ? h2Area : (type === PAGE_TYPES.PREFACE ? H0_AREA_H : 0),
+    h2TopOffset: type === PAGE_TYPES.SIGN_OPEN ? h2Area + h2ExtraPx : (type === PAGE_TYPES.PREFACE ? H0_AREA_H : 0),
     h2SpanExempt: type === PAGE_TYPES.SIGN_OPEN ? !!(opts && opts.h2SpanExempt) : false,
+    h2ExtraLines,
     contentBox: { top: textTop, bottom: FLOW_BOTTOM, height: FLOW_BOTTOM - textTop },
     numbered: true,
     counts: true,
@@ -8529,6 +8537,15 @@ const H2_SIMAN_Y = 307.88;    // עוגן פס הסימן (פתיחה רגילה
 const H2_SIMAN_Y_SPAN = 284.9; // עוגן פס הסימן (פתיחה עם span — מורם ב-22.98px)
 const H2_TITLE_Y = 344.05;    // עוגן כותרת ה-h2 (פתיחה רגילה)
 const H2_TITLE_Y_SPAN = 321.1; // עוגן כותרת ה-h2 (פתיחה עם span)
+// **Iteration-006 (G3/RC-C1 — מסלול שורות כותרת-h2 עטופות):** כל שורה עטופה
+// של כותרת ה-h2 מעבר לראשונה דוחפת את ראש הזרימה בפס שלה — הרווח התחתון
+// המוגדר של האזור נשמר (מורשת flowSection: top = FLOW_TOP + areaH +
+// (h2Lines−1)×30; פסי הכותרת y = עוגן + li×30, h=30). נמדד בייחוס p278
+// «בגדר פסול דלמעלה מעשרים אמה / בנר חנוכה»: ה-H3 שאחרי כותרת דו-שורתית
+// ב-315.8pt = 421.45px = FLOW_TOP+284.25+30 במדויק — בלי הדחיפה ה-H3 עולה
+// ל-391.45px (נמדד במאוחד לפני התיקון) ונוגע בשורת-הכותרת השנייה
+// (374.05–404.05px). מקור יחיד לשני המנועים.
+const H2_TITLE_LINE_PITCH_PX = 30;
 const H0_AREA_H = 249.2;    // זרימת ההקדמה מתחילה ב-356.4px (S4.19)
 const SINGLE_W = 552.3;     // .single-wide-col = 2×269.41+13.48 (grid)
 const TITLE_W_PCT = 0.6;    // תיבת כותרת 2/3 — 60% מרוחב הפס (S74)
@@ -8564,6 +8581,7 @@ module.exports = {
   GEO,
   FLOW_BOTTOM, H2_AREA_H, H0_AREA_H, SINGLE_W, TITLE_W_PCT, H23_TITLE_W,
   H2_SPAN_AREA_H, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN,
+  H2_TITLE_LINE_PITCH_PX,
   H0_LINE_H, H0_TITLE_Y,
   TOC_TITLE_BLOCK_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM,
   PAGE_STRETCH_MAX, JUSTIFY_MAX_GAP, JUSTIFY_MAX_LH_EXTRA, ORPHAN_RECLAIM_BUFFER, RECLAIM_BELOW_BASE,
@@ -21284,7 +21302,7 @@ const crypto = require('crypto');
 // אותו חוזה כמו המנוע המורשת (legacy-imud-flow) ומדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, H3_FOLLOW_MIN_PX, h3BandHeightPx, h3BandRoomThresholdPx } = require('../core/h3-contract');
 const { PAGE_TYPES, buildPageTemplate } = require('./page-templates');
-const { H0_TITLE_Y, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** עוגני פתיחת-הסימן — מקור יחיד (S4.19)
+const { H0_TITLE_Y, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN, H2_TITLE_LINE_PITCH_PX } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** עוגני פתיחת-הסימן — מקור יחיד (S4.19)
 const { isImudProfile: isImud } = require('./page-templates');
 const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
@@ -22201,15 +22219,23 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         const spanExempt = !!(next && next.kind === 'heading' && next.level === 3 && next.fullWidth);
         const startY = spanExempt ? H2_TITLE_Y_SPAN : H2_TITLE_Y;
         cur._h2SpanExempt = spanExempt; // לחותמת פס-הסימן (עוגן דואלי)
-        if (spanExempt !== !!cur.template.h2SpanExempt) {
-          cur.template = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, settings, cur.isRecto !== false, { h2SpanExempt: spanExempt });
+        // **Iteration-006 (G3/RC-C1 — שורות כותרת-h2 עטופות דוחפות את ראש הזרימה):**
+        // כל שורה עטופה מעבר לראשונה מורידה את ראש הטורים ב-H2_TITLE_LINE_PITCH_PX —
+        // הרווח התחתון של האזור נשמר (חוזה flowSection: top = FLOW_TOP + areaH +
+        // (h2Lines−1)×30). הוכחת ייחוס p278 «בגדר פסול דלמעלה מעשרים אמה / בנר חנוכה»:
+        // ה-H3 שאחרי כותרת דו-שורתית ב-421.45px במדויק; בלי הדחיפה ה-H3 עלה ל-391.45px
+        // ונגע בשורת-הכותרת השנייה (374.05–404.05px) — נמדד במאוחד לפני התיקון.
+        const h2ExtraLines = Math.max(0, blk.lines.length - 1);
+        cur._h2ExtraLines = h2ExtraLines; // לבנייה החוזרת של D-63 (RC-3c — כמו _h2SpanExempt)
+        if (spanExempt !== !!cur.template.h2SpanExempt || h2ExtraLines !== (cur.template.h2ExtraLines || 0)) {
+          cur.template = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, settings, cur.isRecto !== false, { h2SpanExempt: spanExempt, h2ExtraLines });
           reAlignColumns(cur);
         }
-        let yy = startY;
         cur.spanning = {
-          lines: blk.lines.map((ln) => {
-            const rec = { ...ln, yPx: yy, meta: { tokenId: blk.tokenId, firstOfBlock: true, docPart: blk.part }, seq: seqCounter++ };
-            yy += ln.heightPx || 0;
+          lines: blk.lines.map((ln, li) => {
+            // **G3/RC-C1:** פס שטוח בין שורות הכותרת — כמו המורשת (y = עוגן + li×30,
+            // h=30; נמדד בייחוס p278: Δ=30.0px במדויק מול 30.4 ב-heightPx היחסי).
+            const rec = { ...ln, yPx: startY + li * H2_TITLE_LINE_PITCH_PX, meta: { tokenId: blk.tokenId, firstOfBlock: true, docPart: blk.part }, seq: seqCounter++ };
             return rec;
           }),
           heightPx: 0, // free band — חי בשטח השמור; אינו מקצץ את קיבולת הטורים

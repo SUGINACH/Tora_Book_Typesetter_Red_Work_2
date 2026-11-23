@@ -53,6 +53,15 @@ const H2_SIMAN_Y = 307.88;    // עוגן פס הסימן (פתיחה רגילה
 const H2_SIMAN_Y_SPAN = 284.9; // עוגן פס הסימן (פתיחה עם span — מורם ב-22.98px)
 const H2_TITLE_Y = 344.05;    // עוגן כותרת ה-h2 (פתיחה רגילה)
 const H2_TITLE_Y_SPAN = 321.1; // עוגן כותרת ה-h2 (פתיחה עם span)
+// **Iteration-006 (G3/RC-C1 — מסלול שורות כותרת-h2 עטופות):** כל שורה עטופה
+// של כותרת ה-h2 מעבר לראשונה דוחפת את ראש הזרימה בפס שלה — הרווח התחתון
+// המוגדר של האזור נשמר (מורשת flowSection: top = FLOW_TOP + areaH +
+// (h2Lines−1)×30; פסי הכותרת y = עוגן + li×30, h=30). נמדד בייחוס p278
+// «בגדר פסול דלמעלה מעשרים אמה / בנר חנוכה»: ה-H3 שאחרי כותרת דו-שורתית
+// ב-315.8pt = 421.45px = FLOW_TOP+284.25+30 במדויק — בלי הדחיפה ה-H3 עולה
+// ל-391.45px (נמדד במאוחד לפני התיקון) ונוגע בשורת-הכותרת השנייה
+// (374.05–404.05px). מקור יחיד לשני המנועים.
+const H2_TITLE_LINE_PITCH_PX = 30;
 const H0_AREA_H = 249.2;    // זרימת ההקדמה מתחילה ב-356.4px (S4.19)
 const SINGLE_W = 552.3;     // .single-wide-col = 2×269.41+13.48 (grid)
 const TITLE_W_PCT = 0.6;    // תיבת כותרת 2/3 — 60% מרוחב הפס (S74)
@@ -88,6 +97,7 @@ module.exports = {
   GEO,
   FLOW_BOTTOM, H2_AREA_H, H0_AREA_H, SINGLE_W, TITLE_W_PCT, H23_TITLE_W,
   H2_SPAN_AREA_H, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN,
+  H2_TITLE_LINE_PITCH_PX,
   H0_LINE_H, H0_TITLE_Y,
   TOC_TITLE_BLOCK_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM,
   PAGE_STRETCH_MAX, JUSTIFY_MAX_GAP, JUSTIFY_MAX_LH_EXTRA, ORPHAN_RECLAIM_BUFFER, RECLAIM_BELOW_BASE,

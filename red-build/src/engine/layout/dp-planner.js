@@ -6,7 +6,7 @@ const crypto = require('crypto');
 // אותו חוזה כמו המנוע המורשת (legacy-imud-flow) ומדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, H3_FOLLOW_MIN_PX, h3BandHeightPx, h3BandRoomThresholdPx } = require('../core/h3-contract');
 const { PAGE_TYPES, buildPageTemplate } = require('./page-templates');
-const { H0_TITLE_Y, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** עוגני פתיחת-הסימן — מקור יחיד (S4.19)
+const { H0_TITLE_Y, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN, H2_TITLE_LINE_PITCH_PX } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** עוגני פתיחת-הסימן — מקור יחיד (S4.19)
 const { isImudProfile: isImud } = require('./page-templates');
 const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
@@ -923,15 +923,23 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         const spanExempt = !!(next && next.kind === 'heading' && next.level === 3 && next.fullWidth);
         const startY = spanExempt ? H2_TITLE_Y_SPAN : H2_TITLE_Y;
         cur._h2SpanExempt = spanExempt; // לחותמת פס-הסימן (עוגן דואלי)
-        if (spanExempt !== !!cur.template.h2SpanExempt) {
-          cur.template = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, settings, cur.isRecto !== false, { h2SpanExempt: spanExempt });
+        // **Iteration-006 (G3/RC-C1 — שורות כותרת-h2 עטופות דוחפות את ראש הזרימה):**
+        // כל שורה עטופה מעבר לראשונה מורידה את ראש הטורים ב-H2_TITLE_LINE_PITCH_PX —
+        // הרווח התחתון של האזור נשמר (חוזה flowSection: top = FLOW_TOP + areaH +
+        // (h2Lines−1)×30). הוכחת ייחוס p278 «בגדר פסול דלמעלה מעשרים אמה / בנר חנוכה»:
+        // ה-H3 שאחרי כותרת דו-שורתית ב-421.45px במדויק; בלי הדחיפה ה-H3 עלה ל-391.45px
+        // ונגע בשורת-הכותרת השנייה (374.05–404.05px) — נמדד במאוחד לפני התיקון.
+        const h2ExtraLines = Math.max(0, blk.lines.length - 1);
+        cur._h2ExtraLines = h2ExtraLines; // לבנייה החוזרת של D-63 (RC-3c — כמו _h2SpanExempt)
+        if (spanExempt !== !!cur.template.h2SpanExempt || h2ExtraLines !== (cur.template.h2ExtraLines || 0)) {
+          cur.template = buildPageTemplate(PAGE_TYPES.SIGN_OPEN, settings, cur.isRecto !== false, { h2SpanExempt: spanExempt, h2ExtraLines });
           reAlignColumns(cur);
         }
-        let yy = startY;
         cur.spanning = {
-          lines: blk.lines.map((ln) => {
-            const rec = { ...ln, yPx: yy, meta: { tokenId: blk.tokenId, firstOfBlock: true, docPart: blk.part }, seq: seqCounter++ };
-            yy += ln.heightPx || 0;
+          lines: blk.lines.map((ln, li) => {
+            // **G3/RC-C1:** פס שטוח בין שורות הכותרת — כמו המורשת (y = עוגן + li×30,
+            // h=30; נמדד בייחוס p278: Δ=30.0px במדויק מול 30.4 ב-heightPx היחסי).
+            const rec = { ...ln, yPx: startY + li * H2_TITLE_LINE_PITCH_PX, meta: { tokenId: blk.tokenId, firstOfBlock: true, docPart: blk.part }, seq: seqCounter++ };
             return rec;
           }),
           heightPx: 0, // free band — חי בשטח השמור; אינו מקצץ את קיבולת הטורים

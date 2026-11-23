@@ -46,7 +46,7 @@ const PAGE_SIZES = {
 // מול מרזב 13.48px במקור; שוליים של 7.5% מול 120.72px (15.2%) במקור.
 // לא ערכי קסם: המקור הוא החוזה המשותף ששני המנועים צורכים.
 const {
-  GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, H2_AREA_H, H2_SPAN_AREA_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
+  GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, H2_AREA_H, H2_SPAN_AREA_H, H2_TITLE_LINE_PITCH_PX, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
 } = require('../core/imud-geometry');
 const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
 
@@ -76,8 +76,15 @@ function buildImudPageTemplate(type, settings, isRecto, opts = {}) {
   // 284.25 בפתיחה רגילה — עמ' 24/38) — הטורים מתחילים 22.95px גבוה יותר
   // ושורת-תוכן נוספת נכנסת בעמודים אלה.
   const h2Area = (opts && opts.h2SpanExempt) ? H2_SPAN_AREA_H : H2_AREA_H;
+  // **Iteration-006 (G3/RC-C1 — שורות כותרת-h2 עטופות דוחפות את ראש הזרימה):**
+  // כל שורה עטופה מעבר לראשונה מורידה את textTop בפס שלה (H2_TITLE_LINE_PITCH_PX)
+  // — הרווח התחתון המוגדר של האזור נשמר, כמו flowSection של המורשת
+  // (top = FLOW_TOP + areaH + (h2Lines−1)×30; הוכחת ייחוס p278 — ראו שם).
+  // ברירת המחדל 0 — כותרת חד-שורתית אינה מושפעת (rc3 נשאר תקף).
+  const h2ExtraLines = type === PAGE_TYPES.SIGN_OPEN ? Math.max(0, Math.floor((opts && opts.h2ExtraLines) || 0)) : 0;
+  const h2ExtraPx = h2ExtraLines * H2_TITLE_LINE_PITCH_PX;
   const textTop = type === PAGE_TYPES.SIGN_OPEN
-    ? GEO.FLOW_TOP + h2Area
+    ? GEO.FLOW_TOP + h2Area + h2ExtraPx
     : (type === PAGE_TYPES.PREFACE ? GEO.FLOW_TOP + H0_AREA_H : GEO.FLOW_TOP);
   return {
     type, isRecto, imud: true,
@@ -87,8 +94,9 @@ function buildImudPageTemplate(type, settings, isRecto, opts = {}) {
     headerHeight: GEO.HEADER_BASELINE,   // פס הכותרת: גליפים 42.56–57.56pt (גאומטריית הפס; התוכן — מקטע 3)
     headerTop: GEO.FLOW_TOP - RUNNING_HEAD_TOP_INSET_PX,
     folioHeight: GEO.PAGE_H - GEO.FOLIO_BASELINE,
-    h2TopOffset: type === PAGE_TYPES.SIGN_OPEN ? h2Area : (type === PAGE_TYPES.PREFACE ? H0_AREA_H : 0),
+    h2TopOffset: type === PAGE_TYPES.SIGN_OPEN ? h2Area + h2ExtraPx : (type === PAGE_TYPES.PREFACE ? H0_AREA_H : 0),
     h2SpanExempt: type === PAGE_TYPES.SIGN_OPEN ? !!(opts && opts.h2SpanExempt) : false,
+    h2ExtraLines,
     contentBox: { top: textTop, bottom: FLOW_BOTTOM, height: FLOW_BOTTOM - textTop },
     numbered: true,
     counts: true,
