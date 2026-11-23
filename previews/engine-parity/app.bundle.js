@@ -878,6 +878,13 @@ function createApp(doc, opts = {}) {
    * השמורות (פער 2 — הגדרה ששוחזרה עשויה לדרוש גופן שטרם נטען). */
   const FONT_SETTING_KEYS = [
     'body-font', 'first-word-font', 'dh-font', 'f-note-body-font',
+    // **Iteration-006 (RC-M3 — השלמת מפתחות גופן שלא נטענו):** שלושה מפתחות
+    // גופן מההגדרות לא היו ברשימה — הגופן שלהם לעולם לא נרשם ב-Worker ⇒ המדידה
+    // נפלה בשקיפות לקירוב הטבלה בעוד הרינדור השתמש במחסנית אחרת (measure≠render).
+    // ההוכחה החיה: גוף ההקדמה (heading-0-body-font='Frank Ruhl Libre') —
+    // נמדד בטבלה ורונדר ב-Guttman ⇒ רווחי דיו 4–15px ב-19 שורות הקדמה
+    // (אודיט p42/p411). גם ביאורי-הצד וכותרת הערות-הסיום נפגעו באותו דפוס.
+    'heading-0-body-font', 's-note-body-font', 'endnote-title-font',
     // **S75 (בקשה 2):** גופן הגיליון — ברירת המחדל החדשה 'ליבורנה מודגש' חייבת
     // להיטען (FontFace לתצוגה + registerFont למדידה/ייצוא) כשאר גופני ההגדרות.
     'page-num-font',
@@ -1123,13 +1130,28 @@ function createApp(doc, opts = {}) {
     lightDirty = false; heavyDirty = false;
     status.setPending({ light: false, heavy: false });
     status.setEngineState('working', { label: 'מתחיל עימוד…' });
-    const started = perf.now();
-    const req = engine.requestTypeset({
-      text, settings,
-      onProgress: (m) => status.setEngineState('working', m) // "עמוד X מתוך Y"
-    });
-    const jobId = req && req.jobId ? req.jobId : null; // **S1-ה/U-2:** מזהה הריצה לתצוגה
-    req.promise.then((res) => {
+    // **Iteration-006 (RC-M1 — שער גופני-ההגדרות לפני העימוד):** המדידה
+    // בפרופיל המאוחד היא הפריסה (מילים ממוקמות-מוחלט מהמודל) — עימוד שרץ
+    // לפני שרישום הגופנים שההגדרות דורשות הושלם ב-Worker נופל בשקיפות
+    // למדידת הטבלה המקורבת (חוזה _bindProfile) ⇒ שבירות שונות ורווחי-דיו
+    // של 4–15px בשפה הימנית של שורות מיושרות (נמדד בייחוס p42: «האיסור,»
+    // 51.8px בטבלה מול 43.8px בפועל). המירוץ הוכח בדפדפן החי: הזרקה אחרי
+    // 3.5 שנ' ⇒ 12 מילים בשורה (טבלה); המתנה לגופנים ⇒ 13 מילים
+    // (font-metrics) = המודל ב-Node והייחוס. השער: loadFontStack אידמפוטנטי
+    // (appliedFontsReady משותף עם האתחול — אין טעינה כפולה); תקרת 12 שנ'
+    // שומרת תגובתיות גם אם מקור גופן נתקע (אז הנפילה לטבלה — המתנהגות
+    // המתועדת). גופן חיצוני/חסר — catch מתועד, לא חסימה.
+    Promise.race([
+      loadFontsForCurrentSettings().catch(() => { /* fallback מערכת — מתועד */ }),
+      new Promise((resolve) => setTimeout(resolve, 12000))
+    ]).then(() => {
+      const started = perf.now();
+      const req = engine.requestTypeset({
+        text, settings,
+        onProgress: (m) => status.setEngineState('working', m) // "עמוד X מתוך Y"
+      });
+      const jobId = req && req.jobId ? req.jobId : null; // **S1-ה/U-2:** מזהה הריצה לתצוגה
+      req.promise.then((res) => {
       if (res && res.cancelled) return;
       result = res;
       // **שלב 8 פרוסה 2 (§4.3-4.4 — חוזה ההעברה):** המודל עבר structured-clone —
@@ -1180,7 +1202,7 @@ function createApp(doc, opts = {}) {
       if (msg === RESTART_ERROR) return;
       status.setEngineState('error', { message: msg });
     });
-    return started;
+    });
   }
 
   /** **S1-ה/U-1:** ביטול מפורש של העימוד הפעיל — כפתור ⏹ בפס המצב (גלוי רק בזמן
@@ -10003,7 +10025,13 @@ const PT_CLASS = {
   'toc-general': 'page page--toc page--toc-general',
   'toc-detail': 'page page--toc page--toc-detail',
   'custom': 'page page--custom',
-  'filler': 'page page--filler'
+  'filler': 'page page--filler',
+  // **Iteration-006 (RC-B1 — עמודי מילוי ריקים בפרופיל המאוחד):** המודל
+  // המאוחד מייצר עמודי blank (מילוי לפני שער-משנה שחייב recto — נמדד:
+  // 8 עמודים כאלה ב-very_long, תמיד צמודים ל-shaar-sub). בלי המיפוי הם
+  // קיבלו className='page' בלי page--* ⇒ TYPE_UNKNOWN באודיט החי (סיווג
+  // העמוד לא זיהה אף מחלקה). אותה מחלקה בדיוק כמו LEGACY_PT_CLASS.
+  'blank': 'page page--blank'
 };
 
 // **S4.10:** סוגי עמודי מנוע המורשת (legacy-imud-flow) — מיפוי למחלקות ה-CSS.
@@ -13397,6 +13425,14 @@ let _fontClearSync = false;
 /** מזכר חית סביבה (מבוטל בכל שינוי רישום) — מדידות רבות לא ימיינו שמות שוב ושוב. */
 let _envFpMemo = null;
 
+/**
+ * **Iteration-006 (RC-M4):** סימנים משולבים (Mn) — ניקוד עברי, משולבים כלליים
+ * וסימני ערבית. הדפדפן מציב אותם ב-GPOS mark-to-base ב-advance 0 גם כשה-hmtx
+ * שלהם אינו אפסי (נמדד ב-FrankReal: 1.72–4.68px לסימן) — המדידה חייבת להאמין
+ * להצבה, לא ל-hmtx (ראו _isMappedMark).
+ */
+const COMBINING_MARK_RE = /[\u0300-\u036F\u0483-\u0489\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u0711\u0730-\u074A\u07A6-\u07B0\u0816-\u082D\u0859-\u085B\u08E3-\u0903]/;
+
 /** טביעת מבנה לגופן שנרשם ללא בתים (שחזור) — חלשה מזהות-תוכן אך דטרמיניסטית. */
 function _structuralFontFp(font) {
   if (!font) return 'none';
@@ -13497,6 +13533,9 @@ class MeasureAPI {
     this.fontFactor = 1;
     this.cache = new Map();
     this.stats = { calls: 0, hits: 0, fontFallbacks: 0, evictions: 0 };
+    // **Iteration-006 (RC-M4):** חוזה הצבת הסימנים המשולבים של הרינדור שהכין
+    // הקורא הזה — 'combined' (הדפדפן/GPOS) או ברירת המחדל hmtx (המורשת).
+    this._marksCombined = !!(settings && settings['_marks-advance'] === 'combined');
     if (this.impl === 'font-metrics') this._bindProfile();
   }
 
@@ -13564,12 +13603,29 @@ class MeasureAPI {
     return charWidthEm(ch);
   }
 
-  /** סימן משולב ממופה עם advance=0 (ניקוד): שכבת-אפס — לא חלק מאשכול מדידה. */
+  /** סימן משולב ממופה (ניקוד): שכבת-אפס — לא חלק מאשכול מדידה.
+   * **Iteration-006 (RC-M4 — סימנים משולבים עם hmtx לא-אפסי):** חוזה S4.16
+   * הניח שסימן ניקוד ממופה מקבל advance=0 ב-hmtx (נכון ל-Guttman Rashi).
+   * FrankReal מקורקע אחרת: לסימני הניקוד שלו advance לא-אפסי ב-hmtx
+   * (1.72–4.68px @18pt — נמדד: ְ=1.72, ַ=4.68, ֵ=4.68, ּ=1.72). כאן שני
+   * חוזי רינדור, והמדידה חייבת להאמין לרינדרר שלה:
+   *  - **hmtx (ברירת המחדל — המורשת):** המנוע המקורי הציב את הסימנים
+   *    בהפרדה לפי ה-hmtx (הוכח מהייחוס: חלון «וְהָיָה» — הצרינת השורה
+   *    52.4px = מדידת hmtx 47.06+רווח; תיבת הדיו ב-PDF 47.09px = הפרדה).
+   *    הפורט חייב מדידה זו — הנעילות (legacy-*) והשוואת השורות מול הייחוס
+   *    בנויות עליה.
+   *  - **combined ('_marks-advance':'combined' — המנוע המאוחד):** ה-PageModel
+   *    ממקם מילים מוחלט והדפדפן מציב סימנים משולבים ב-GPOS mark-to-base
+   *    (advance 0 בפועל). מדידת hmtx הנפוחה הותירה את מילת-החלון «וַיְדַבֵּר»
+   *    17px משפת הטור (נמדד: fm=61.21 מול דפדפן=43.73 — הפרש 17.5px = בדיוק
+   *    חמשת הסימנים; WINDOW_WRONG_SIDE p613-614 באודיט החי). בפרופיל זה
+   *    תו ממופה שהוא סימן משולב (Mn) נמדד תמיד ב-0. */
   _isMappedMark(ch) {
     if (this.impl !== 'font-metrics' || !this.fontProfile) return false;
     const gid = fm.glyphIdOf(this.fontProfile, ch);
-    return gid !== 0 && gid < this.fontProfile.numGlyphs
-      && fm.advanceUnitsOf(this.fontProfile, ch) === 0;
+    if (!(gid !== 0 && gid < this.fontProfile.numGlyphs)) return false;
+    if (fm.advanceUnitsOf(this.fontProfile, ch) === 0) return true;
+    return this._marksCombined === true && COMBINING_MARK_RE.test(ch);
   }
 
   /**
@@ -13683,7 +13739,11 @@ MeasureAPI.forFamily = function forFamily(family, settings) {
   if (!family || !registeredFonts.has(String(family))) return null;
   const fam = String(family);
   const sizeKey = settings && settings['body-font-size-pt'] != null ? String(settings['body-font-size-pt']) : '';
-  const key = `${fam}|${sizeKey}`;
+  // **Iteration-006 (RC-M4):** חוזה הסימנים במפתח — מופע combined ומופע hmtx
+  // של אותה משפחה הם שתי מדידות שונות; בלי זה המופע הראשון שנוצר היה
+  // מוגש לשני המנועים.
+  const marksKey = settings && settings['_marks-advance'] === 'combined' ? '|mkC' : '';
+  const key = `${fam}|${sizeKey}${marksKey}`;
   if (!_familyApiCache.has(key)) {
     _familyApiCache.set(key, new MeasureAPI({ ...(settings || {}), 'body-font': fam }, 'font-metrics'));
   }
@@ -15100,7 +15160,7 @@ function breakItemSequence(items, maxWidthPx, opts = {}) {
       while (from < seqG.length && seqG[from].role === 'glue' && !seqG[from].internal) from++;
       if (from >= seqG.length || seqG[from].role === 'penalty') break;
       const maxW = lineMax(lineWidthAt, lineIdx, maxWidthPx);
-      let w = 0, lastLegalCut = -1, lastBoxIdx = -1, sawBox = false;
+      let w = 0, lastLegalCut = -1, lastBoxIdx = -1, sawBox = false, reachedFinal = false;
       for (let j = from; j < seqG.length; j++) {
         const it = seqG[j];
         if (it.role === 'box') {
@@ -15123,27 +15183,39 @@ function breakItemSequence(items, maxWidthPx, opts = {}) {
           const g = glueWidths(it);
           w += g.width;
         } else if (it.role === 'penalty') {
-          if (it.penaltyType === 'final') break;
+          if (it.penaltyType === 'final') { reachedFinal = true; break; }
           continue; // forbidden בתוך יחידה צמודה — ההצברה נמשכת
         }
       }
       if (!sawBox) break;
       let cut;
       if (lastLegalCut > from) {
-        cut = lastLegalCut;
+        // **RC-A2b (i006 — סוף פסקה בשורה אחת):** כשהלולאה הגיעה ל-final
+        // בלי גלישה — כל השארית נכנסה לשורה, וה-final עצמו הוא נקודת
+        // חיתוך חוקית בעלות 0 (בדיוק כמו ב-DP שלעיל). בלי זה lastLegalCut
+        // האמצעי הדיח את המילה האחרונה לשורה עצמאית — בכל פסקה שסיומה
+        // נכנס כולו (נמדד: «מכוונת» | «כנגדו.»; ועם סמן — «קיומו ב.» | «.»
+        // ⇒ 5 ממצאי INK_NOT_JUSTIFIED באודיט החי p69-283 ושורת-זנב נוספת
+        // לכל פסקה כזו — סה"כ אלפי שורות בספר; בייחוס המקור ממלא עד
+        // גבול הרוחב והשארית נופלת לשורה האחרונה האחת).
+        cut = reachedFinal ? seqG.length - 1 : lastLegalCut;
       } else {
         // אף חיתוך חוקי בגבול (מילה בודדת/יחידה צמודה רחבה) — קדימה מובטחת:
         // התיבה הראשונה עד החיתוך החוקי הראשון אחריה (או עד סוף הרצף)
         cut = -1;
-        for (let j = from; j < seqG.length; j++) {
-          const it = seqG[j];
-          if (it.role !== 'box') continue;
-          const next = seqG[j + 1];
-          if (next && next.role === 'glue' && !next.internal && seqG[j + 2] && seqG[j + 2].role === 'box') {
-            cut = j + 1; break;
+        if (reachedFinal) {
+          cut = seqG.length - 1; // השארית כולה נכנסה — שורה אחת עד ה-final
+        } else {
+          for (let j = from; j < seqG.length; j++) {
+            const it = seqG[j];
+            if (it.role !== 'box') continue;
+            const next = seqG[j + 1];
+            if (next && next.role === 'glue' && !next.internal && seqG[j + 2] && seqG[j + 2].role === 'box') {
+              cut = j + 1; break;
+            }
           }
+          if (cut < 0) cut = seqG.length; // שורה אחת עד הסוף (ערוץ ה-overflow המפורש)
         }
-        if (cut < 0) cut = seqG.length; // שורה אחת עד הסוף (ערוץ ה-overflow המפורש)
       }
       linesG.push({ from, to: cut, badness: 0, reason: 'greedy-fill' });
       from = cut;
@@ -20108,7 +20180,15 @@ function renderModelLine(ml, doc, relX, relY) {
   el.className = 'line'
     + (ml.isLast ? ' line--last' : '')
     + (ml.kind === 'heading' ? ' line--heading' : '')
-    + (ml.kind === 'toc-title' ? ' toc-title' : '');
+    + (ml.kind === 'toc-title' ? ' toc-title' : '')
+    // **Iteration-006 (RC-W1 — חלון קלאסי שקוע):** שורת ההמשך של פסקת-חלון
+    // (window בלי windowWords) נמדדה ברוחב מוקטן — השפה הימנית תפוסה
+    // בכוונה ע"י החלון המרחף (חוזה המקור: float height:1.25em על שתי
+    // השורות; מדידת ייחוס p44: שורה 2 מסתיימת ב-472 מול קצה טור 513).
+    // המחלקה מסמנת לאודיט החי לדלג על בדיקת היישור — אותה החלטה כמו
+    // line--window-wrap במקרין המורשת (dom-renderer S4.26); הגיאומטריה
+    // עצמה כבר מצומצמת במודל (w=colW−windowW, עוגן שמאלי בשפת הטור).
+    + (ml.window && !ml.windowWords && ml.windowW ? ' line--window-wrap' : '');
   el.setAttribute('dir', 'rtl');
   el.style.position = 'absolute';
   el.style.left = `${px2(ml.x - relX)}px`;
@@ -20138,7 +20218,10 @@ function renderModelLine(ml, doc, relX, relY) {
     if (!firstWord && typeof doc.createTextNode === 'function') el.appendChild(doc.createTextNode(' '));
     firstWord = false;
     const span = doc.createElement('span');
-    span.className = 'w' + (wd.mk ? ' w--fnmarker' : '');
+    // **Iteration-006 (RC-W1):** מילת-החלון (fontKey 'window') מסומנת
+    // w--window — כמו במקרין המורשת; האודיט החי בודק את מיקומה (צמודה
+    // לקצה הימני, הדיו הראשון בשורה) דרך המחלקה הזו בדיוק.
+    span.className = 'w' + (wd.mk ? ' w--fnmarker' : '') + (wd.fontKey === 'window' ? ' w--window' : '');
     span.style.position = 'absolute';
     span.style.left = `${px2(wd.x - ml.x)}px`;
     span.style.top = '0';
