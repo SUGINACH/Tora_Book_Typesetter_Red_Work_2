@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>דוח השוואה — מנוע עימוד ישן מול חדש · 23-11-2026 08:30 · סבב 3</title>
+<style>
+:root{
+  --bg:#f6f5f1; --paper:#ffffff; --ink:#1f2933; --muted:#5f6b76; --line:#e3e1da;
+  --accent:#8b5e34; --accent2:#b07d4a; --ok:#1e7d46; --okbg:#e8f5ee;
+  --crit:#b3261e; --critbg:#fdeceb; --high:#c77700; --highbg:#fdf3e2;
+  --med:#8a6d00; --medbg:#fdf8e3; --low:#4a6fa5; --lowbg:#eaf1fa;
+  --code:#f4f2ec; --codeink:#2d2a26; --mono:'Consolas','Menlo','Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Assistant','Segoe UI','Noto Sans Hebrew','Helvetica Neue',Arial,sans-serif;
+  font-size:16.5px;line-height:1.65;direction:rtl}
+.page-wrap{max-width:1080px;margin:0 auto;padding:0 20px 90px}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(139,94,52,.35)}
+a:hover{border-bottom-color:var(--accent)}
+code,pre{font-family:var(--mono);direction:ltr;text-align:left}
+pre{background:var(--code);color:var(--codeink);border:1px solid var(--line);
+   border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.55;margin:14px 0}
+code{background:var(--code);border-radius:5px;padding:1px 6px;font-size:.92em;white-space:normal;overflow-wrap:anywhere}
+code.big{white-space:normal}
+h1,h2,h3,h4{line-height:1.3;margin:0}
+.hero{background:linear-gradient(135deg,#233038 0%,#3d3428 60%,#6b4f2e 100%);color:#fff;
+  padding:54px 0 46px;margin-bottom:34px}
+.hero .inner{max-width:1080px;margin:0 auto;padding:0 20px}
+.hero .kicker{font-size:13.5px;letter-spacing:.14em;opacity:.75;margin-bottom:10px;font-weight:600}
+.hero h1{font-size:37px;font-weight:800}
+.hero .sub{font-size:18px;opacity:.88;margin-top:12px;max-width:760px}
+.hero .meta{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:26px;font-size:14px;opacity:.92}
+.hero .meta b{font-weight:700}
+.badge{display:inline-block;border-radius:99px;padding:3px 13px;font-size:13px;font-weight:700;vertical-align:2px}
+.b-ok{background:var(--okbg);color:var(--ok)}
+.b-crit{background:var(--critbg);color:var(--crit)}
+.b-high{background:var(--highbg);color:var(--high)}
+.b-med{background:var(--medbg);color:var(--med)}
+.b-low{background:var(--lowbg);color:var(--low)}
+.b-gray{background:#eceff2;color:#3d4852}
+section{margin:42px 0 0}
+.sec-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;border-bottom:3px solid var(--accent);
+  padding-bottom:10px;margin-bottom:18px}
+.sec-head .no{font-size:15px;font-weight:800;color:var(--accent);letter-spacing:.06em}
+.sec-head h2{font-size:26px;font-weight:800}
+.sec-head .note{font-size:14px;color:var(--muted);margin-inline-start:auto}
+table{border-collapse:collapse;width:100%;background:var(--paper);border:1px solid var(--line);
+  border-radius:10px;overflow:hidden;font-size:14.5px;margin:12px 0 6px}
+th{background:#efece5;text-align:right;padding:9px 12px;font-size:13.5px;border-bottom:2px solid var(--line);white-space:nowrap}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.num,th.num{font-family:var(--mono);direction:ltr;text-align:center;white-space:nowrap;font-size:13.5px}
+td.pos{font-family:var(--mono);direction:ltr;text-align:left;white-space:normal;overflow-wrap:anywhere;font-size:12.8px;color:#42505c}
+.small{font-size:13px;color:var(--muted)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;
+  padding:22px 24px;margin:18px 0;box-shadow:0 1px 2px rgba(31,41,51,.05);position:relative}
+.card.crit{border-inline-start:5px solid var(--crit)}
+.card.high{border-inline-start:5px solid var(--high)}
+.card.med{border-inline-start:5px solid var(--med)}
+.card.low{border-inline-start:5px solid var(--low)}
+.card.fixed{border-inline-start:5px solid var(--ok)}
+.card h3{font-size:19.5px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.card h3 .id{font-family:var(--mono);font-size:12.5px;color:var(--muted);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:840px){.grid2{grid-template-columns:1fr}}
+.kv{background:#faf9f5;border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+.kv .t{font-weight:800;font-size:13px;letter-spacing:.05em;color:var(--accent);margin-bottom:6px}
+.kv ul{margin:6px 0 2px;padding-inline-start:18px}
+.kv li{margin:3px 0}
+.evidence{background:#f3f6f4;border:1px solid #d7e2da;border-radius:10px;padding:12px 16px;margin-top:12px}
+.evidence .t{font-weight:800;font-size:13px;color:var(--ok);letter-spacing:.05em;margin-bottom:6px}
+.fix{background:#fdf6ec;border:1px solid #eadbc0;border-radius:10px;padding:12px 16px;margin-top:12px}
+.fix .t{font-weight:800;font-size:13px;color:var(--high);letter-spacing:.05em;margin-bottom:6px}
+.root{background:#f1f0f9;border:1px solid #dcd9ec;border-radius:10px;padding:12px 16px;margin-top:12px}
+.root .t{font-weight:800;font-size:13px;color:#5b4d8a;letter-spacing:.05em;margin-bottom:6px}
+.score{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+.score .cell{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center}
+.score .cell .v{font-size:26px;font-weight:800;font-family:var(--mono);direction:ltr}
+.score .cell .k{font-size:13px;color:var(--muted);margin-top:4px}
+.score .cell.good .v{color:var(--ok)}
+.score .cell.bad .v{color:var(--crit)}
+.score .cell.warn .v{color:var(--high)}
+details{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;margin:12px 0}
+summary{cursor:pointer;font-weight:700;color:var(--accent)}
+.tagchips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 2px}
+.chip{background:#efece5;border:1px solid var(--line);border-radius:99px;padding:3px 12px;font-size:12.8px;color:#42505c}
+.toc{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 22px;position:sticky;top:14px}
+.toc .t{font-weight:800;font-size:14px;letter-spacing:.05em;color:var(--accent);margin-bottom:8px}
+.toc a{display:block;padding:2.5px 0;border-bottom:none;font-size:14.5px;color:#33404b}
+.toc a:hover{color:var(--accent)}
+.layout-grid{display:grid;grid-template-columns:250px 1fr;gap:22px}
+.layout-grid > .main{min-width:0}
+@media(max-width:900px){.layout-grid{grid-template-columns:1fr}.toc{position:static}}
+.footer{margin-top:60px;border-top:2px solid var(--line);padding-top:18px;color:var(--muted);font-size:13.5px}
+.callout{background:#fdeceb;border:1px solid #f2c4c1;border-radius:12px;padding:16px 20px;margin:16px 0}
+.callout.good{background:var(--okbg);border-color:#bcdcc9}
+.arrow{color:var(--muted)}
+.win{font-weight:700;color:var(--ok)}
+.loss{font-weight:700;color:var(--crit)}
+.hl{background:#fff3d9;border-radius:4px;padding:0 3px}
+@media print{
+  .hero{background:#fff;color:#111;border-bottom:3px solid var(--accent)}
+  .toc{display:none}
+  body{font-size:12.5pt;background:#fff}
+  .card,.score .cell,table{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="hero"><div class="inner">
+<div class="kicker">TORA BOOK TYPESETTER · RED · ביקורת השוואה פורנזית · PDF-TO-PDF</div>
+<h1>השוואת יצוא PDF: מנוע ישן (בסיס) מול מנוע חדש</h1>
+<div class="sub">יצוא <b>23-11-2026 שעה 08:30</b> — הסבב השלישי במבחן. העימוד של המנוע הישן הוא היעד המחייב.
+כל המספרים להלן נמדדו בכלים ייעודים ל-PDF (PyMuPDF/pdfplumber/fontTools) — <b>ללא כל שימוש ב-VLM</b>.</div>
+<div class="meta">
+  <div><b>מסמכי המבחן:</b> 2 קבצי PDF + 1 HTML ביניים (אותו PageModel)</div>
+  <div><b>יחוסים:</b> עמוד + bbox ב-pt לכל span</div>
+  <div><b>אימות שלמות:</b> SHA-256 לכל קובץ</div>
+</div>
+</div></div>
+<div class="page-wrap"><div class="layout-grid">
+<nav class="toc" id="toc">
+<div class="t">תוכן הדוח</div>
+<a href="#files">1 · מסמכי המבחן ואימותם</a>
+<a href="#score">2 · תמונת מצב ומגמה</a>
+<a href="#verdict">3 · תקציר מנהלים</a>
+<a href="#fixed">4 · מה תוקן מאז הסבב הקודם</a>
+<a href="#findings">5 · ממצאים (F1–F14)</a>
+<a href="#tables">6 · טבלאות השוואה מלאות</a>
+<a href="#overlaps">7 · מפת חפיפות הטקסט</a>
+<a href="#method">8 · מתודולוגיה וקוד לשימוש חוזר</a>
+<a href="#appendix">9 · נספחים וגבולות הבדיקה</a>
+</nav>
+<div class="main">
+<section id="files">
+<div class="sec-head"><span class="no">01</span><h2>מסמכי המבחן ואימותם</h2>
+<span class="note">כל הקבצים הורדו מ־<code>audits/PDF Export Page Comparison - Old Engine VS New Engine/</code> ב־repo ואומתו ב־SHA-256</span></div>
+<table>
+<tr><th>תפקיד</th><th>קובץ</th><th>SHA-256 (8 ספרות)</th><th class="num">עמודים</th><th class="num">גודל</th></tr>
+<tr><td>קובץ בסיס (מנוע ישן — העימוד הרצוי)</td><td><code>PDF File Export - Old Engine.pdf</code></td><td class='num'>d6280392c608ca95…</td><td class='num'>699</td><td class='num'>20.8MB</td></tr><tr><td>מנוע חדש — סבב נוכחי</td><td><code>PDF File Export - New Engine - 23 11 2026 08 30.pdf</code></td><td class='num'>8e272aafb84d18fe…</td><td class='num'>700</td><td class='num'>21.3MB</td></tr><tr><td>מנוע חדש — יצוא HTML ביניים (אותו PageModel)</td><td><code>HTML File Export - New Engine - 23 11 2026 08 30.html</code></td><td class='num'>b865fa35e49cd435…</td><td class='num'>700 עמודים (article.page)</td><td class='num'>65.6MB</td></tr><tr><td>מנוע חדש — סבב קודם (להשוואת מגמה)</td><td><code>PDF File Export - New Engine - 22 11 2026 19 47.pdf</code></td><td class='num'>d3983e864b8d260e…</td><td class='num'>715</td><td class='num'>21.3MB</td></tr><tr><td>מנוע חדש — סבב ראשון (להשוואת מגמה)</td><td><code>PDF File Export - New Engine - 21 11 2026 19 55.pdf</code></td><td class='num'>—</td><td class='num'>882</td><td class='num'>—</td></tr>
+</table>
+<div class="small">גודל עמוד אחיד בכל הקבצים: <code>612.3 × 858.9 pt</code>. טקסט המקור המשותף: <code>Source text – …txt</code> (3.4MB) — נבדק לאיתור מקורם של מחרוזות (למשל «המשך»).</div>
+</section>
+<section id="score">
+<div class="sec-head"><span class="no">02</span><h2>תמונת מצב ומגמה</h2><span class="note">שלושת הסבבים: 21-11 · 22-11 · 23-11</span></div>
+<div class="score">
+<div class="cell good"><div class="v">699</div><div class="k">עמודים בישן (היעד)</div><div class="k">חדש: 700</div></div><div class="cell good"><div class="v">3,016</div><div class="k">מילות חלון בשני המנועים</div><div class="k">זהות מושלמת</div></div><div class="cell good"><div class="v">‎−3</div><div class="k">הפרש תווי גוף</div><div class="k">מתוך 1.15M</div></div><div class="cell bad"><div class="v">919</div><div class="k">זוגות span חופפים בחדש</div><div class="k">בישן: 11 בלבד</div></div><div class="cell bad"><div class="v">78/84</div><div class="k">עיטורי h2-bottom על טקסט</div><div class="k">לא קיים בישן</div></div><div class="cell bad"><div class="v">104</div><div class="k">עמודים ללא folio בחדש</div><div class="k">בישן: 19</div></div>
+</div>
+<table>
+<tr><th>מדד</th><th class="num">יעד (ישן)</th><th class="num">21-11 19:55</th><th class="num">22-11 19:47</th><th class="num">23-11 08:30</th><th>מגמה</th></tr>
+<tr><td>מספר עמודים</td><td class='num'>699</td><td class='num'>882</td><td class='num'>715</td><td class='num'>700</td><td>מתקרב — עוד 1</td></tr><tr><td>מילות חלון (ToraWin@18, תווים)</td><td class='num'>13,308</td><td class='num'>0</td><td class='num'>13,321</td><td class='num'>13,308</td><td>זהות מלאה ✓</td></tr><tr><td>מולטיסט מילות חלון</td><td class='num'>3,016 מילים</td><td class='num'>—</td><td class='num'>3,016</td><td class='num'>3,016 — זהות מושלמת (0 הבדלים)</td><td>✓</td></tr><tr><td>שם הספר בשער</td><td class='num'>«מקום בינה» מהמקור</td><td class='num'>שם גנרי</td><td class='num'>«מקום בינה»</td><td class='num'>«מקום בינה» — נכון</td><td>✓</td></tr><tr><td>גוף הטקסט (תווים)</td><td class='num'>1,146,260</td><td class='num'>—</td><td class='num'>—</td><td class='num'>1,146,257 (‎−3)</td><td>כמעט זהות ✓</td></tr><tr><td>זוגות span חופפים</td><td class='num'>11 (10 עמודים)</td><td class='num'>—</td><td class='num'>668 (121)</td><td class='num'>919 (154)</td><td>החמרה ✗</td></tr><tr><td>עיטורים וקטוריים (אשכולות)</td><td class='num'>6</td><td class='num'>—</td><td class='num'>184</td><td class='num'>184</td><td>פער יציב ✗</td></tr><tr><td>עמודים עם folio</td><td class='num'>678</td><td class='num'>—</td><td class='num'>607</td><td class='num'>594</td><td>החמרה ✗</td></tr>
+</table>
+<div class="callout good"><b>ההתקדמות הגדולה:</b> מילות החלון שבו במלואן (3,016 מילים, מולטיסט <b>זהה להפליא</b> — אפס הבדלי מילים), שם הספר «מקום בינה» מיובא כעת מטקסט המקור, הפג'ינציה כמעט התכנסה (700 מול 699), ו<b>כל הגופנים הפיזיים זהים</b> בין המנועים — ההחלפות שנראו בסבבים קודמים התגלו כמספור-סלוט פנימי של כותב ה-PDF בלבד.</div>
+<div class="callout"><b>אזהרת מגמה:</b> לא הכול השתפר — זוגות החפיפה <b>עלו מ־668 (22-11) ל־919</b> ועטפו 154 עמודים (מול 121), ומספר העמודים עם folio ירד מ־607 ל־594. ההתכנסות בפג'ינציה «דחסה» כותרות ביניים נוספות לתוך פסי גוף — ראו F1.</div>
+</section>
+<section id="verdict">
+<div class="sec-head"><span class="no">03</span><h2>תקציר מנהלים</h2></div>
+<div class="card">
+<p><b>מצב ההשוואה:</b> המנוע החדש הגיע לשלב שבו <b>התוכן, הגופנים, הגדלים והמבנה</b> זהים כמעט לחלוטין למנוע הישן — גוף הטקסט (1,145,175 תווים ב־12pt, פער 3 תווים), מילות החלון (3,016/3,016, אפס הבדלים), הערות השוליים (105,040 תווים — <b>זהות מלאה</b>), הערות תחתונות, כותרות הרצות ותיבות פתיחת-הפרק (±6pt). מה שמפריד כעת בין המנועים הם <b>פגמי מיקום</b> — לא פגמי תוכן:</p>
+<div class="grid2">
+<div class="kv"><div class="t">שלושת הליקויים המרכזיים</div><ul>
+<li><b>F1 — כותרות ביניים חופפות גוף:</b> 919 זוגות span ב־154 עמודים (מול 11 בישן). הכותרת מסוג «ד. בשם הוצאה בגדר הכולל…» מרונדרת כפס חוצה-טורים ממורכז <b>בלי הזמנת מקום בשני הטורים</b>.</li>
+<li><b>F2 — עיטור תחת כותרת פרק:</b> 78 מתוך 84 עיטורי h2-bottom מונחים <b>על</b> שורת כותרת-המשנה בתיבת הפרק.</li>
+<li><b>F4 — כותרות הצד:</b> מילות שם-הספר הוזזו ממרכזי הטורים (מורשת) אל הפינות החיצוניות של העמוד.</li>
+</ul></div>
+<div class="kv"><div class="t">ושלושה נוספים בדרגה גבוהה</div><ul>
+<li><b>F5 — folio:</b> חסרים בכל 88 עמודי פתיחת-הפרק (ועוד 14), ובעמודים הרגילים ירדו 28pt.</li>
+<li><b>F6 — «(המשך)»:</b> 19 תוויות המשך-הערה שהמנוע הישן מייצר — חסרות כולן.</li>
+<li><b>F7 — מרווח פסקה:</b> לפני פתיחה-פתוחה (מילת חלון) — ירד מ־23.9pt (חציון) ל־3.1pt.</li>
+</ul></div>
+</div>
+<div class="evidence"><div class="t">הוכחת שכבה</div>
+החפית של F1 קיימת <b>ב־PageModel עצמו</b>: ביצוא ה־HTML (אותו מודל כמו ה־PDF) שורת הכותרת <code>p143.c0.9</code> ב־<code>data-model-y=312.16</code> חופפת את שורת הגוף <code>p143.c1.52</code> ב־<code>316.68</code> — כלומר <b>השורש בבונה המודל</b>, לא בכותב ה־PDF. תוויות «(המשך)» חסרות גם ב־HTML (<code>data-continuation-of: 0</code>) — אף הן בשכבת היצירה.</div>
+</div>
+</section>
+<section id="fixed">
+<div class="sec-head"><span class="no">04</span><h2>מה תוקן מאז הסבב הקודם</h2><span class="note">מאומת במדידה חוזרת על קובצי 23-11</span></div>
+<div class="card fixed"><h3><span class="badge b-ok">תוקן</span>מילות החלון (ToraWin@18) — שבו בשלמות</h3><p>ישן: 13,308 תווים / 3,016 מילים. חדש: 13,308 / 3,016. מולטיסט המילים: <b>אפס הבדלים</b> (0 missing / 0 added). בסבב הראשון (21-11) היו 0 מילים בכלל.</p><div class="evidence"><div class="t">הוכחה / הגבלה</div>הגופן הפיזי FrankReal-Bold מוטמע בבייטים זהים בשני הקבצים; גודל 18pt; יישור המילה מעל שורת הגוף שלצידה: חציון −4.2pt בשני המנועים — הזהה בדיוק.</div></div><div class="card fixed"><h3><span class="badge b-ok">תוקן</span>שם הספר בשער — מיובא מהמקור</h3><p>«מקום בינה» (שתי מילים, x=196–416, 46pt, Lia Sgula) — אותו טקסט, אותו גופן, אותן רוחבי-x כמו הישן. בסבב הקודם הוצג שם גנרי.</p><div class="evidence"><div class="t">הוכחה / הגבלה</div>ההבדל היחיד: מיקום אנכי — y=142 במקום y=124 (18pt נמוך יותר) — ראו F11.</div></div><div class="card fixed"><h3><span class="badge b-ok">תוקן</span>כל הגופנים הפיזיים — זהים</h3><p>השוואת SHA-256 של הגופנים המוטמעים + קריאת name-table: <b>12/12 typefaces זהים</b> (Guttman Rashi, FrankReal, Hadassah, Livorna, Livorna Bold, Alpha, AlphaBlack, AlphaLight, David Libre, Noto Serif Hebrew, Assistant ExtraLight, Lia Sgula).</p><div class="evidence"><div class="t">הוכחה / הגבלה</div>«החלפות הגופנים» שנראו בטבלאות (Ex1→Ex6 וכו') הן <b>מספור-סלוט פנימי של כותב ה-PDF</b> (pdf-writer.js: <code>ToraEx${i+1}</code> לפי אינדקס) — לא החלפת פנים.</div></div><div class="card fixed"><h3><span class="badge b-ok">תוקן</span>פג'ינציה כמעט התכנסה</h3><p>882 (21-11) ← 715 (22-11) ← 700 (23-11) מול 699 בישן. 88 פתיחות-פרק בשני המנועים; תיבת הפתיחה בגיאומטריה של ±6pt מהישן.</p></div><div class="card fixed"><h3><span class="badge b-ok">תוקן</span>שלמות תוכן גוף/סוגריים/שוליים</h3><p>מולטיסט תווים (ללא רווחים): גוף — 8 תווים שונים בלבד מתוך 1.15M; סוגריים — 3; הערות שוליים — <b>0</b>.</p><div class="evidence"><div class="t">הוכחה / הגבלה</div>הפרשי הפיצול שנראו ברמת המילה ('גדרי השביתה,' מול 'גדרי,השביתה') הם חיתוך-span בין מנועים — לא שינוי תוכן.</div></div>
+</section><section id="findings"><div class="sec-head"><span class="no">05</span><h2>ממצאים</h2><span class="note">14 ממצאים: 1 קריטי · 3 גבוהים · 4 בינוניים · 3 נמוכים · 3 לתיעוד</span></div><div class="card crit"><h3><span class="badge b-crit">קריטי</span>כותרות ביניים (פס חוצה-טורים) מוצבות על גבי שורות הגוף<span class="id">F1</span></h3><div>כותרות הביניים מסוג «ד. בשם הוצאה בגדר הכולל ובגדר החלוק בסוגי מעשה הוצאה» (13.5pt, הגופן Alpha — זהה לישן) מרונדרות במנוע החדש כפס ממורכז ברוחב חוצה-טורים, אך <b>בלי שהטורים פינו עבורן מקום אנכי</b>: התוצאה — הכותרת מודפסת ממש על שורות הגוף שמתחתיה. סה"כ <b>919 זוגות span חופפים ב־154 עמודים</b> (הישן: 11 זוגות ב־10 עמודים).
+<table>
+<tr><th>השוואה</th><th>מנוע ישן</th><th>מנוע חדש</th></tr>
+<tr><td>מיקום הכותרת «ד. בשם הוצאה…בסוגי מעשה הוצאה»</td>
+<td class="pos">PDF p148 · y=402–416 ושורה שנייה y=419–432 (שתי שורות ממורכזות)</td>
+<td class="pos">PDF p144 · y=244–258 (שורה אחת, x=155–457)</td></tr>
+<tr><td>שורת הגוף שמתחת</td><td class="pos">y=441–453 — פער 9pt מהכותרת</td><td class="pos">y=248–260 — <b>חפיפה של 10pt</b> עם הכותרת</td></tr>
+<tr><td>שורת הגוף שמעל</td><td class="pos">y=374–386 — פער 16pt</td><td class="pos">— (הכותרת הוצמדה לזרימה)</td></tr>
+</table>
+<p>התוכן זהה (שתי הכותרות הן אותן מילים; ההבדל הוא רק שבישן הכותרת נערכה לשתי שורות ובחדש לשורה אחת). דוגמאות נוספות לאותו ליקוי באותו עמוד: הכותרת «ה. ביאור גדרי מקום רה"ר ודין הושטה הנובע…» ב־y=565–579 חופפת גוף ב־y=559–587.</p>
+<div class="tagchips"><span class="chip">פילוח החפיפות: 658 body+heading@13.5 · 103 heading@13.5+@17 · 91 heading@13.5+paren · 29 body+@17 · 17 drop-word+@13.5</span></div></div><div class="evidence"><div class="t">ראיות מדויקות (קובץ · עמוד · bbox ב-pt)</div>ביצוא ה־HTML (אותו PageModel) — עמוד 143 (0-based):<br/>
+<code>div.line.line--heading</code> (left:120.72px, w:552.3px, מרוכז, Alpha@18px) ב־<code>data-model-y=312.16</code>, h=21.96.<br/>
+שורת הגוף <code>p143.c1.52</code> ב־<code>data-model-y=316.68</code>, h=21.44 — <b>חפיפה של 17.4px במודל עצמו</b>.<br/>
+הטור הפעיל (c0) אכן פינה: שורותיו קפצו מ־304.16 אל 342.12 (הזמנה תקינה סביב הפס). הטור השני (c1) פינה מ־278.72 עד 316.68 — <b>מחוץ לטווח הפס בפועל</b> (312.16–334.12). בישן, שני הטורים פינים יחדיו (שורות y=386 בשני הטורים, חידוש ב־y=441).</div><div class="root"><div class="t">חקירת השורש בקוד</div>בקוד המחויב ב־repo קיים מנגנון אחד בלבד לפס חוצה-טורים — <b>בראש העמוד</b>: <code>dp-planner.js</code> שורות 149–157 («FWD-1: כותרת שנמדדה ברוחב מלא מוצבת בפס עליון חוצה-טורים… הטורים מתחילים מתחת לפס») עם הזמנה ב־<code>page-items.js:132</code> (<code>spanning-band · scope:'all-columns'</code>). פסי הביניים באמצע-עמוד נוספו בגרסת ה-build שיצרה את היצוא ואינם במקור המחויב — ובהם ההזמנה מתבצעת בטור הפעיל בלבד.<br/>
+<b>ממצא ביקורתי (F14):</b> המחלקות <code>mid-bands</code> ו־<code>rh--right/center/left</code> שמופיעות ביצואי ה־HTML (21/22/23-11) <b>לא קיימות באף קובץ מקור או באנדל ב־repo</b> — היצוא נוצר מ־build מקומי שטרם הועלה.</div><div class="fix"><div class="t">הצעת תיקון</div>להזמין את פס הכותרת בשני הטורים באותו טווח y (scope: <code>all-columns</code>, בדיוק כמו <code>spanning-band</code> של ראש-עמוד) — כך שגם הטור השני יקפוץ את שורותיו מעבר לתחתית הפס; לחלופין להשיב את הכותרת לטור בלבד ברוחב הטור כמו במורשת. ולהוסיף לביקורת החיה בדיקת «חפיפות bbox על המודל לפני יצוא» — הקוד המלא בסעיף 8.</div></div><div class="card high"><h3><span class="badge b-high">גבוה</span>עיטור h2-bottom מונח על שורת כותרת-המשנה בתיבת הפרק (78 מתוך 84)<span class="id">F2</span></h3><div>עיטור הפתיחה שמוצב מתחת לתיבת כותרת הפרק (slot <code>h2-bottom</code>, רוחב 50pt, 5 עקומות מלאות/לבנות לסירוגין) נצייר <b>בתוך שורת הכותרת-משנה</b> של התיבה עצמה: 78 מתוך 84 עיטורים חופפים טקסט בפועל. במנוע הישן <b>אין אלמנט כזה כלל</b> — כל ה־6 אשכולות העקומות בישן הם מסגרות/קווי שער.<table>
+<tr><th>עמוד</th><th class="num">עיטור (y, pt)</th><th>שורה שנפגעת</th><th class="num">שטח חפיפה</th></tr>
+<tr><td class="num">p44</td><td class="pos">y=326–327 · x=387–437</td><td>«מצוות» Ex6@12.5 · y=315–328 · x=401–429</td><td class="num">50.6pt²</td></tr>
+<tr><td class="num">p56</td><td class="pos">y=343–344 · x=387–437</td><td>«משלושה» ToraBook@12 · y=336–348 · x=369–403</td><td class="num">29.0pt²</td></tr>
+<tr><td class="num">p70</td><td class="pos">y=343–344 · x=387–437</td><td>«שהשבת» ToraBook@12 · y=340–352 · x=380–411</td><td class="num">42.4pt²</td></tr>
+<tr><td class="num">p86</td><td class="pos">y=325–327 · x=387–437</td><td>«המציאות» ToraBook@12 · y=315–327 · x=382–418</td><td class="num">47.2pt²</td></tr>
+</table>
+<p>בישן: אותם עמודים (p44/p57/p71/p87) — תיבת הכותרת נקייה לחלוטין, אפס ציורים בפס y=200–340.</p></div><div class="evidence"><div class="t">ראיות מדויקות (קובץ · עמוד · bbox ב-pt)</div>במודל (HTML page-43): העיטור ב־<code>top:416.9px</code> בעוד שורת המשנה (12.5pt) מסתיימת ב־426px — העיטור נכנס 9px לתוך השורה.</div><div class="root"><div class="t">חקירת השורש בקוד</div><code>ornament-plan.js</code> שורות 134–149: <code>y = titleBottom + ornMargins.bottom</code>. ההערה בקוד טוענת «ההזמנה כבר נכנסה לגובה הפס… אין גלישה ואין חפיפה» — אך המדידה מראה ש־<code>titleBottom</code> נקצר בכ־9px מתחתית תיבת הכותרת בפועל (שורת 12.5pt לא נכללה במלואה בחישוב הגובה), או ש־<code>ornMargins.bottom</code> הופעל על 0. העיטור נשלט מהגדרות (<code>h2-orn-bottom</code>, «עיטור סיום פרק» בפאנל).</div><div class="fix"><div class="t">הצעת תיקון</div>לכלול את שורת 12.5pt בחישוב <code>titleBottom</code> (או לחרוג את <code>ornMargins.bottom</code> לפחות ב־12px) ולהוסיף בדיקת חפיפה בין העיטור לשורות התיבה בזמן התכנון. אם העיטור אינו אמור להופיע כלל (כמו בישן) — לכבות <code>h2-orn-bottom</code> בהגדרות הפרויקט.</div></div><div class="card med"><h3><span class="badge b-med">בינוני</span>עיטורי סוף-פרק (chapter-end) — אלמנט חדש שאינו במנוע הישן; 5 חפיפות טקסט<span class="id">F3</span></h3><div>96 עיטורים מסוג <code>chapter-end</code> (64×19pt, סלוט המופעל מההגדרה «עיטור סיום פרק») מוצבים בסוף תוכן הפרק — בדרך כלל בשולי השטח הריק שאחרי השורה האחרונה (91 נקיים, בפער ~2–3px בלבד מהטקסט — צמוד מאוד), ו־<b>5 חופפים טקסט בפועל</b>:<table>
+<tr><th class="num">עמוד</th><th class="num">עיטור y (pt)</th><th>טקסט שנפגע</th><th class="num">חפיפה</th></tr>
+<tr><td class="num">p260</td><td class="pos">647</td><td>ToraFn@9 «חייב» · y=643–653</td><td class="num">22.3pt²</td></tr>
+<tr><td class="num">p464</td><td class="pos">763</td><td>ToraBook@12 «לברור» · y=759–771</td><td class="num">27.8pt²</td></tr>
+<tr><td class="num">p603</td><td class="pos">541</td><td>ToraFn@9 «שהחפץ» · y=535–545</td><td class="num">40.1pt²</td></tr>
+<tr><td class="num">p698</td><td class="pos">445</td><td>ToraFn@9 «אונאה» · y=439–449</td><td class="num">30.7pt²</td></tr>
+</table>
+<p>בישן אין עיטורי סוף-פרק (רק שני קווים בודדים ב־p585/p673). עיטור נוסף מסוג chapter-end מופיע גם בסוף הספר (p700, y=612–613).</p></div><div class="evidence"><div class="t">ראיות מדויקות (קובץ · עמוד · bbox ב-pt)</div>במודל: עיטורי chapter-end ב־<code>top:583–969px</code> בעמוד שלפני פתיחת הפרק הבא (למשל p42-model ← פרק בעמוד 43-model).</div><div class="root"><div class="t">חקירת השורש בקוד</div><code>ornament-plan.js</code> שורות 310–341: העיטור מוצב במרווח הפנוי של העמוד האחרון של הפרק (budget לפי <code>chapterEndOrnamentFit</code>); ה־5 חפיפות נגרמות כשה-budget חופף את תחילת פס ההערות התחתונות או את שורת הגוף האחרונה.</div><div class="fix"><div class="t">הצעת תיקון</div>לאמת את ה-budget מול תחתית פס ההערות בעמודים עם הערות (p260/603/698) ומול שורת הגוף האחרונה (p464); להוסיף מרווח מינימלי של line-height מתחת לשורה האחרונה.</div></div><div class="card high"><h3><span class="badge b-high">גבוה</span>כותרות הצד: מילות שם-הספר הוזזו ממרכזי הטורים אל הפינות החיצוניות<span class="id">F4</span></h3><div>שורת ראש-העמוד בנויה משלושה סלוטים: ימין · מרכז (הכותרת הרצה) · שמאל. הכותרת הרצה המרכזית <b>זהה</b> בשני המנועים (אותו טקסט, Livorna@11pt, y=54, ממורכזת בדיוק), אך מילות שם-הספר הוזזו:<table>
+<tr><th>מידה</th><th>מנוע ישן</th><th>מנוע חדש</th></tr>
+<tr><td>«מקום» (מילה ראשונה)</td><td class="pos">מרכז הטור הימני: x-center=433.5 (טור: 311–563)</td><td class="pos">הפינה החיצונית: x=533–558</td></tr>
+<tr><td>«בינה» (מילה שנייה)</td><td class="pos">מרכז הטור השמאלי: x-center=178.5 (טור: 49–301)</td><td class="pos">הפינה החיצונית: x=54–73</td></tr>
+<tr><td>מרחק ממרכז העמוד</td><td class="num">±130pt (678 עמודים)</td><td class="num">±240pt (684 עמודים)</td></tr>
+</table>
+<p class="small">נמדד על כלל הספר: ישן — 678 עמודים עם זוג המילים במרכזי הטורים; חדש — 684 עמודים עם הזוג בפינות. הפרש אנכי/גודל/גופן: זהים (15pt, Livorna).</p></div><div class="evidence"><div class="t">ראיות מדויקות (קובץ · עמוד · bbox ב-pt)</div>במודל (page-143): <code>rh--right left:699.7px</code> · <code>rh--center left:349px</code> · <code>rh--left left:60px</code> — רוחב עמוד 793.7px.</div><div class="root"><div class="t">חקירת השורש בקוד</div><code>headers-builder.js</code> בונה 3×2 סלוטים (recto/verso × ימין/מרכז/שמאל) עם מקור/יישור/גופן/גודל/רוחב% מההגדרות; העיגון נקבע ברנדרר. בקוד המחויב (<code>dom-renderer.js</code> שורות 830–876) העיגון הוא <code>right:0 / left:0</code> בתוך פס הכותרת — הערה בקוד מכנה את מקור המורשת «top-header-grid», שבו חצאי שם-הספר עגנו במרכזי הטורים (מאומש במדידה לעיל).</div><div class="fix"><div class="t">הצעת תיקון</div>לעגן את סלוטי הימין/שמאל למרכזי הטורים (או להוסיף anchor ייעודי «column-center» בהגדרות הסלוט) כדי לשחזר את המורשת במדויק — שינוי מיקום בלבד, ללא שינוי תוכן/גודל.</div></div><div class="card high"><h3><span class="badge b-high">גבוה</span>מספרי עמוד (folio): חסרים בעמודי פתיחת-הפרק, ומוזזים 28pt כלפי מטה<span class="id">F5</span></h3><div>ה-folio (Livorna Bold@11pt, ממורכז) קיים בשני המנועים בעמודי התוכן — אך במנוע החדש הוא ירד ב־28pt, ובעמודי פתיחת-הפרק הוא נעלם כליל:<table>
+<tr><th>מדד</th><th class="num">ישן</th><th class="num">חדש</th></tr>
+<tr><td>עמודים עם folio</td><td class="num">678</td><td class="num">594</td></tr>
+<tr><td>מיקום אנכי (y0)</td><td class="num">791 (678/678 אחיד)</td><td class="num">819 (594/594 אחיד)</td></tr>
+<tr><td>עמודים ללא folio (מעבר לשערים/חלקים)</td><td class="num">19</td><td class="num">104</td></tr>
+</table>
+<p>ה־85 העמודים החסרים בחדש הם ברובם המוחלט <b>עמודי פתיחת-הפרק</b> (p44, p56, p70, p86, p121, p130, p142, p149, p181 … p697 — כל 88 הפתיחות) בתוספת עמודים כמו 43, 129, 262–263, 276, 281, 290, 297, 300, 303, 306, 308. בישן, עמודי הפתיחה נושאים folio (למשל p44). הפסיקה הפיזית: y=791–803 מול y=819–831.</p></div><div class="evidence"><div class="t">ראיות מדויקות (קובץ · עמוד · bbox ב-pt)</div>במודל (page-143): <code>footer.folio.folio--bottom-center.folio--frame-none · inset:1079.5px · font-size:14.67px</code> — 1079.5px ≈ 831px רגל אמיתית + ההפרש לישן.</div><div class="root"><div class="t">חקירת השורש בקוד</div>ה-folio נבנה במסלול הריהוט של העמוד (folio.js / page-templates); תבנית «שער/פתיחת פרק» במנוע החדש אינה מצרפת folio, בניגוד למורשת; ובתבנית הרגילה העוגן האנכי הוסט 28pt.</div><div class="fix"><div class="t">הצעת תיקון</div>להחזיר folio לתבניות פתיחת-הפרק (כמו בישן) ולהשיב את העוגן ל־y=791. עדכון: בסבב 22-11 היו 607 עמודים עם folio — כלומר המגמה יורדת (607→594) ומצריכה תיקון כיוון.</div></div><div class="card med"><h3><span class="badge b-med">בינוני</span>תוויות המשך «(המשך)» בהערות תחתונות — 19 חסרות<span class="id">F6</span></h3><div>המנוע הישן מייצר תווית «(המשך)» בראש שורת ההמשך כשהערה נחצית בין טורים/עמודים — <b>פיצ'ר יצירה של המנוע</b> (בטקסט המקור «(המשך)» מופיע 0 פעמים; המילה «המשך» כתוכן מופיעה 73 פעמים). המנוע החדש אינו מייצר אף תווית כזו.ישן: 19 תוויות — p80, p82, p393, p561, p565, p566, p568, p569, p573, p604, p605, p639 ועוד; כולן כ־<code>()המשך</code> בראש שורת המשך-הערה ב-ToraEx8@9.<br/>
+חדש: <b>0</b> תוויות ב-PDF <b>וגם 0 ב-HTML</b> (<code>data-continuation-of: 0</code>; המחרוזת מופיעה רק בהגדרת ה-CSS). הערות התוכן עצמן — קיימות במלואן (פער התווים הכולל: ‎−312 תווים, מתוכם 133 = התוויות).</div><div class="evidence"><div class="t">ראיות מדויקות (קובץ · עמוד · bbox ב-pt)</div>—</div><div class="root"><div class="t">חקירת השורש בקוד</div>המנגנון קיים במקור: <code>notes-model.js:46</code> — <code>const CONTINUATION_MARK = '(המשך)'</code> (מקור יחיד למחרוזת), ו־<code>materialize.js</code> דוחף את הקידומת לשורה 0 של המשך (<code>prefix.push({text: NM.n, …})</code>). אך בזרימה החדשה לא נוצרות רשומות המשך כלל — פיצול ההערות מתבצע אחרת ותוויות ההמשך לא נוצרות.</div><div class="fix"><div class="t">הצעת תיקון</div>להשוות את מדיניות פיצול ההערות למורשת (חצייה בגבול טור + סימון «המשך» בטור הבא), או — אם ההמשכים בזרימה החדשה מסומנות ב־<code>continuationOf</code> — להפיק מהן את הקידומת בבניית המודל, בדיוק כפי ש-materialize כבר תומך.</div></div><div class="card med"><h3><span class="badge b-med">בינוני</span>מרווח הפסקה לפני פתיחות (Petucha) אבד — 23.9pt ← 3.1pt<span class="id">F7</span></h3><div>מילות החלון ממוקמות נכון (יישור זהה), אך <b>הפסקה הפתוחה כבר לא מופרדת ויזואלית מהפסקה הקודמת</b>: במנוע הישן, שורת הפתיחה (עם מילת החלון) מתחילה במרווח ניכר מתחת לשורה שמעליה; בחדש — במרחק שורה רגיל. זה גם מסביר את הצטופפות העמודים.<table>
+<tr><th>מדידה</th><th class="num">ישן</th><th class="num">חדש</th></tr>
+<tr><td>מרווח מעל שורת מילת-החלון (חציון)</td><td class="num">23.9pt</td><td class="num">3.1pt</td></tr>
+<tr><td>אחוזון 5 / 95</td><td class="num">5.2 / 33.8</td><td class="num">2.9 / 28.6</td></tr>
+<tr><td>מילות חלון במרווח &lt;2pt</td><td class="num">3</td><td class="num">50</td></tr>
+<tr><td>נגיעות bbox ממשיות (חפיפה)</td><td class="num">1</td><td class="num">14</td></tr>
+<tr><td>מבנה הפסקאות הכללי</td><td class="num">3,344 מרווחים &gt;8pt (8.7%, חציון 16.2pt)</td><td class="num">1,268 (3.4%, חציון 32.8pt)</td></tr>
+</table>
+<p class="small">הנגיעות הממשיות (0.1pt) הן «נשיקות» bbox — בדוגמת p83 השורה שמעל מסתיימת ב־y=311.6 ומילת החלון מתחילה ב־311.5. הבעיה המהותית היא אובדן ההפרדה החזותית בין פסקאות.</p></div><div class="evidence"><div class="t">ראיות מדויקות (קובץ · עמוד · bbox ב-pt)</div>למשל בישן p148: שורה מעל y=374–386, מילת החלון «וכן» y=437–455 — פער 51pt. בחדש p144: מילת «וזה» בראש הטור; במקרים החופפים (p83: מעל 299.6–311.6, מילה 311.5–329.5).</div><div class="root"><div class="t">חקירת השורש בקוד</div>המרווח-לפני-פתיחה אינו מוזכר כהזמנה נפרדת בקוד המחויב; סביר שהגרסה שיצרה את היצוא מאתחלת את ה-gap של השורה הראשונה של הפסקה ל־0 (normalizeColumnGaps / GAP_HEAD_POLICY ב־dp-planner.js מאפסים פערי-ראש-טור — אך כאן מדובר בפתיחות בתוך-טור).</div><div class="fix"><div class="t">הצעת תיקון</div>להשיב את הגדרת המרווח-לפני-פתוחה מהמורשת (כ־21pt מעל line-height) — בין בהגדרת ברירת-מחדל (paragraph-gap) ובין בהזמנת שורה לפתיחה.</div></div><div class="card med"><h3><span class="badge b-med">בינוני</span>עטיפת שורות הערות-שוליים שונה — אותו תוכן, אחרת הפריסה<span class="id">F8</span></h3><div>הערות השוליים זהות בתוכנן (105,040 תווים — <b>אפס הפרש</b>; גופן Hadassah@6pt זהה), אך נשברות לשורות שונות: פחות שורות ורחבות יותר.<table>
+<tr><th>מדד</th><th class="num">ישן</th><th class="num">חדש</th></tr>
+<tr><td>שורות בטור שמאל</td><td class="num">5,205</td><td class="num">4,346 (‎−859, −16.5%)</td></tr>
+<tr><td>שורות בטור ימין</td><td class="num">6,076</td><td class="num">5,687 (−389)</td></tr>
+<tr><td>רוחב שורה חציוני (שמאל)</td><td class="num">30.4pt</td><td class="num">32.8pt</td></tr>
+<tr><td>שורות מיושרות-מלא (שמאל)</td><td class="num">18.2%</td><td class="num">13.8%</td></tr>
+<tr><td>עמודים עם הערות</td><td class="num">596</td><td class="num">577</td></tr>
+</table></div><div class="evidence"><div class="t">ראיות מדויקות (קובץ · עמוד · bbox ב-pt)</div>—</div><div class="root"><div class="t">חקירת השורש בקוד</div><code>side-notes.js</code> אחראי על הצבת ההערות; הפרש הרוחב החציוני (~2.4pt) מרמז על רוחב-עמודה/measure שונה במקצת או על כלל שבירה שונה (מילה אחרונה נסחבת).</div><div class="fix"><div class="t">הצעת תיקון</div>להשוות את רוחב עמודת השוליים והכלל «מילה אחרונה נכנסת/נשארת» למורשת; ההשוואה חייב להתבצע מול הישן משום שהתוכן זהה לחלוטין — כל שורה שונה היא בעיה של פרמטר בלבד.</div></div><div class="card med"><h3><span class="badge b-med">בינוני</span>סמני הערה (מרקרים) לא אחידים — שני גופנים ושני גדלים באותו ספר<span class="id">F9</span></h3><div>בישן כל 251 סמני ההערה בגוף ובבלוק ההערות הם Guttman Rashi@8pt (ToraBook@8). בחדש — 245 סמנים המפוצלים בין שתי צורות:<table>
+<tr><th>צורה</th><th class="num">ישן</th><th class="num">חדש</th></tr>
+<tr><td>ToraBook@8 (Guttman Rashi 8pt)</td><td class="num">251</td><td class="num">120</td></tr>
+<tr><td>ToraFn@9 (Assistant ExtraLight 9pt)</td><td class="num">—</td><td class="num">125</td></tr>
+</table>
+<p>בעמודי הערות, סמן פתיחת ההערה בבלוק (למשל «.א») מוצג אצל הישן ב־ToraBook@8 ואצל החדש ב־ToraFn@9 — שינוי גופן וגודל גלוי לעין בסמנים בחלק מהעמודים.</p></div><div class="evidence"><div class="t">ראיות מדויקות (קובץ · עמוד · bbox ב-pt)</div>—</div><div class="root"><div class="t">חקירת השורש בקוד</div>סמני ההערה נבנים במסלול ההערות (notes/markers.js); הסלוט ToraFn בכותב ה-PDF (Assistant ExtraLight) נוצר במיוחד לגוף ההערות — וחלק מהסמנים מוצבים באותו מפתח גופן במקום במפתח הגוף.</div><div class="fix"><div class="t">הצעת תיקון</div>לאחד את מפתח הגופן/הגודל של הסמנים בכל המסלולים (8pt, Guttman Rashi) כמו במורשת.</div></div><div class="card low"><h3><span class="badge b-low">נמוך</span>הסחת עימוד: 699 ← 700 עמודים ותוצאותיה<span class="id">F10</span></h3><div>ספר החדש ארוך בעמוד אחד וההסחה מצטברת לאורכו (באמצע הספר ~4 עמודים: עמוד 144 בחדש = 148 בישן; לקראת הסוף ~1–2). התוצאות:<ul>
+<li>עדכוני תוכן-העניינים נגררים: הרישום «הקדמות וכללים…» מצביע בישן על «כב» (22) ובחדש על «כא» (21); «…ביאור לישנא דקרא» — «מט»←«מח». ההצבעה נכונה לפי הפג'ינציה של כל מנוע — אך שונה מהיעד.</li>
+<li>התכנסות כמעט מלאה: 88 פתיחות-פרק בשני המנועים; 84 מול 81 עמודי-הערות.</li>
+</ul></div><div class="evidence"><div class="t">ראיות מדויקות (קובץ · עמוד · bbox ב-pt)</div>—</div><div class="root"><div class="t">חקירת השורש בקוד</div>מקורות ההסחה משולבים: אובדן מרווחי-פסקה (F7 מצמצם), כותרות שאינן צורות שורות (F1), עיטורים חדשים ועוד — ולכן תיקון F1/F7 ישנה את הפג'ינציה שוב וחובה להריץ את ההשוואה מחדש אחריו.</div><div class="fix"><div class="t">הצעת תיקון</div>אין תיקון ישיר — לתקן את F1/F7/F5 ואז למדוד מחדש; עדכוני ה-TOC ילכו אחרי הפג'ינציה הסופית.</div></div><div class="card low"><h3><span class="badge b-low">נמוך</span>שער: כותרת שם-הספר ירדה 18pt; פיצול span-ים<span class="id">F11</span></h3><div>שם הספר «מקום בינה» נכון, באותו גופן (Lia Sgula), אותו גודל (46pt) ואותם רוחבי-x — אך מוקם 18pt נמוך יותר (y=124←142). שורות המחבר («נתנאל דיינובסקי») והמהדורה («מהדורת ניסיון | לא מוגה») זהות במיקומן אך פוצלו ל-span-ים מרובים (ייצוג פנימי; לא בהכרח הפרש חזותי). כמו כן <code>&lt;title&gt;ספר&lt;/title&gt;</code> גנרי בראש ה-HTML (ה-PDF אינו נושא metadata כלל).ישן p1: «מקום» y=124–? x=302–416; חדש p1: y=142. שאר יסודות השער: כותרת-משנה y=237/236, «הקדמות וביאורים…» y=421/420, מהדורה y=568, מחבר y=724 — כמעט זהים.</div><div class="evidence"><div class="t">ראיות מדויקות (קובץ · עמוד · bbox ב-pt)</div>—</div><div class="root"><div class="t">חקירת השורש בקוד</div>עוגן הכותרת בשער נקבע ב-shaar-pages/shaar-content (GATE_BOX); הפרש 18pt ≈ גובה שורה — ייתכן שהשער החדש מפצה על אלמנט שנוסף/הוסר מעל הכותרת.</div><div class="fix"><div class="t">הצעת תיקון</div>לכייל את עוגן כותרת-השער למורשת (y=124) ולקבוע <code>title</code> אמיתי ב-HTML («מקום בינה — הקדמות וביאורים במסכתות שבת ועירובין»).</div></div><div class="card low"><h3><span class="badge b-low">נמוך</span>כלל-עליון בעמודים מבניים + עיטור סוף-ספר חדש<span class="id">F12</span></h3><div>ב־9 עמודים מבניים (p132, p394, p396, p478, p558, p634, p654, p672, p700 — מקבילי עמודי החלק/סוף בישן) מצייר המנוע החדש את כלל-הכותרת העליון (rect y=71–72) גם כשהישן אינו מצייר דבר באותם עמודים (סה"כ rects: 705 מול 699). בנוסף, סוף הספר בחדש נחתם בעיטור chapter-end ב־p700 (y=612–613) — אין מקבילה בישן.—</div><div class="root"><div class="t">חקירת השורש בקוד</div>תבניות העמודים המבניים במנוע החדש יורשות את סלוט הכותרת העליונה גם כשלא צריך.</div><div class="fix"><div class="t">הצעת תיקון</div>להתניה את כלל-הכותרת בסוג העמוד (part/endnote) כמו במורשת.</div></div><div class="card info"><h3><span class="badge b-gray">לתיעוד</span>לתיעוד: ליקויים קיימים גם במנוע הישן (11 חפיפות)<span class="id">F13</span></h3><div>הישן — הבסיס — אינו מושלם: 11 זוגות חפיפה: heading@11+15 ×7 (p618, p647–p653 — כותרת רצה מעל מילות שם-הספר), heading@50 ×2 (עמודי חלק), heading@13.5+9 ×2. כמו כן 1 מקרה של מילת-חלון נוגעת בשורה שמעליה. מצוין לתיעוד בלבד — ההשוואה מתייחסת אליהם כרף-עליון (7 זוגות ב-p618/647–653 הם נגיעות כותרת-רצה עם מילות-שם-הספר באותו פס).—</div><div class="fix"><div class="t">הצעת תיקון</div>אין פעולה — הישן הוא הייחוס המחייב; הנתונים למניעת רגרסיה עתידית.</div></div><div class="card info"><h3><span class="badge b-gray">לתיעוד</span>הערת ביקורת: היצוא נוצר מ-build שאינו מאוחסן ב-repo<span class="id">F14</span></h3><div>המחלקות <code>mid-bands</code>, <code>rh--right/center/left</code> ומבנה <code>pmr-page</code> שמופיעים בשלושת יצואי ה-HTML (21/22/23-11) <b>לא נמצאו בשום קובץ מקור או באנדל ב-repo</b> (המקור המחויב האחרון: 19507eb מ־18-11; בדיקת grep על כל red-build/src והבאנדלים). כלומר: האפליקציה שיצרה את היצוא כוללת שינויים מקומיים שטרם הועלו — וחקירת-השורש שלעיל (F1/F4) מסתמכת על המנגנונים המחויבים + ראיות המודל.הוכחה: <code>rg -c "mid-bands"</code> על כל ה-repo → רק בשלושת קובצי ה-HTML שב-audits; אפס במקורות.</div><div class="root"><div class="t">חקירת השורש בקוד</div>תהליך העבודה: שינויים מקומיים לפני פריסה.</div><div class="fix"><div class="t">הצעת תיקון</div>להעלות את הקוד שיצר את היצוא (בפרט את מנגנון ה-mid-bands) כדי שביקורות השורש יהיו מדויקות וניתנות לשחזור.</div></div></section>
+<section id="tables">
+<div class="sec-head"><span class="no">06</span><h2>טבלאות השוואה מלאות</h2></div>
+<h3 style="margin:20px 0 6px">6.1 · מפת הגופנים — זהות פיזית (typeface) מול מספור-סלוט</h3>
+<table>
+<tr><th>Typeface (מה-name-table של הגופן המוטמע)</th><th>שם ב-PDF הישן</th><th>שם ב-PDF החדש</th><th>מסקנה</th></tr>
+<tr><td>Guttman Rashi — גוף הספר</td><td class='num'>ToraBook</td><td class='num'>ToraBook</td><td>זהה</td></tr><tr><td>FrankReal Bold — מילות חלון</td><td class='num'>ToraWin</td><td class='num'>ToraWin</td><td>זהה (בייטים זהים)</td></tr><tr><td>Hadassah Friedlaender — הערות שוליים</td><td class='num'>ToraMargin</td><td class='num'>ToraMargin</td><td>זהה (בייטים זהים)</td></tr><tr><td>Livorna Bold — מספרי עמוד (folio)</td><td class='num'>ToraEx9</td><td class='num'>ToraEx9</td><td>זהה (בייטים זהים)</td></tr><tr><td>Alpha — כותרות ביניים 13.5pt</td><td class='num'>ToraEx1</td><td class='num'>ToraEx6</td><td>אותו גופן — מספר סלוט שונה</td></tr><tr><td>AlphaBlack — סימן/כותרת פרק (20/17pt)</td><td class='num'>ToraEx2</td><td class='num'>ToraEx5</td><td>אותו גופן — סלוט שונה</td></tr><tr><td>AlphaLight</td><td class='num'>ToraEx3</td><td class='num'>ToraEx7</td><td>אותו גופן — סלוט שונה</td></tr><tr><td>David Libre</td><td class='num'>ToraEx4</td><td class='num'>ToraEx3</td><td>אותו גופן — סלוט שונה</td></tr><tr><td>Livorna — כותרות רצות/פינות (11/15pt)</td><td class='num'>ToraEx6</td><td class='num'>ToraEx2</td><td>אותו גופן — סלוט שונה</td></tr><tr><td>Noto Serif Hebrew</td><td class='num'>ToraEx7</td><td class='num'>ToraEx8</td><td>אותו גופן — סלוט שונה</td></tr><tr><td>Assistant ExtraLight — הערות תחתונות 9pt</td><td class='num'>ToraEx8</td><td class='num'>ToraFn (+Ex4)</td><td>אותו גופן — שני סלוטים בחדש</td></tr><tr><td>Lia Sgula — כותרת השער 46pt</td><td class='num'>ToraEx5</td><td class='num'>ToraEx1</td><td>אותו גופן — סלוט שונה</td></tr>
+</table>
+<div class="small"><b>שיטת ההוכחה:</b> חילוץ ה-FontFile2 מכל קובץ (PyMuPDF <code>extract_font</code>) → SHA-256 לזיהוי זהויות, וקריאת name-table (fontTools) לזיהוי ה-typeface כשהבייטים שונים (subsets שונים של אותו פנים). מסקנה: <b>אין אף החלפת פנים</b> — ההבדלים שנראו בהיסטוגרמות «Ex1→Ex6» הם מספור סלוט בכותב (<code>pdf-writer.js:668</code>: <code>ToraEx${i+1}'</code> לפי סדר שימוש).</div>
+<h3 style="margin:20px 0 6px">6.2 · גדלים — השוואת כל סוג אלמנט</h3>
+<table>
+<tr><th>אלמנט</th><th class="num">ישן</th><th class="num">חדש</th><th>פסיקה</th></tr>
+<tr><td>גוף הספר (ToraBook)</td><td class='num'>12pt</td><td class='num'>12pt</td><td>זהה</td></tr><tr><td>טקסט בתוך סוגריים בגוף</td><td class='num'>10pt</td><td class='num'>10pt</td><td>זהה</td></tr><tr><td>הערות שוליים (ToraMargin)</td><td class='num'>6pt</td><td class='num'>6pt</td><td>זהה</td></tr><tr><td>הערות תחתונות (Ex8→Fn)</td><td class='num'>9pt</td><td class='num'>9pt</td><td>זהה</td></tr><tr><td>מילות חלון (ToraWin)</td><td class='num'>18pt</td><td class='num'>18pt</td><td>זהה</td></tr><tr><td>כותרת רצה מרכזית</td><td class='num'>11pt (Livorna)</td><td class='num'>11pt (Livorna)</td><td>זהה</td></tr><tr><td>מילות שם־הספר בראש העמוד</td><td class='num'>15pt (Livorna)</td><td class='num'>15pt (Livorna)</td><td>זהה</td></tr><tr><td>«סימן» בפתיחת פרק</td><td class='num'>20pt</td><td class='num'>20pt</td><td>זהה</td></tr><tr><td>כותרת פרק (H2)</td><td class='num'>17pt</td><td class='num'>17pt</td><td>זהה</td></tr><tr><td>שורת משנה בתיבת הפרק</td><td class='num'>13.5pt / 12.5pt</td><td class='num'>13.5pt / 12.5pt</td><td>זהה</td></tr><tr><td>כותרות ביניים (ד. ה. וכו')</td><td class='num'>13.5pt (Alpha)</td><td class='num'>13.5pt (Alpha)</td><td>זהה</td></tr><tr><td>כותרות חלקים (עמודי חלק)</td><td class='num'>50pt</td><td class='num'>50pt</td><td>זהה</td></tr><tr><td>שער — שם הספר</td><td class='num'>46pt (Lia Sgula)</td><td class='num'>46pt (Lia Sgula)</td><td>זהה</td></tr><tr><td>folio</td><td class='num'>11pt (Livorna Bold)</td><td class='num'>11pt (Livorna Bold)</td><td>זהה</td></tr>
+</table>
+<h3 style="margin:20px 0 6px">6.3 · גיאומטריית עמוד</h3>
+<table>
+<tr><th>מדד</th><th>ערך</th><th>פסיקה</th></tr>
+<tr><td>גודל עמוד</td><td>612.3 × 858.9 pt</td><td>זהה</td></tr><tr><td>טורים</td><td>ימין x≈311–563 · שמאל x≈49–301 (רוחב 252pt)</td><td>זהה</td></tr><tr><td>שורת כותרות ראש העמוד</td><td>y≈54 (11pt) · y≈51–66 (15pt)</td><td>זהה</td></tr><tr><td>כלל עליון (rect)</td><td>y=71–72, x=52–562</td><td>זהה (בכל עמודי התוכן)</td></tr><tr><td>תיבת פתיחת פרק</td><td>סימן y=226 · כותרת y=252 · משנה y=293/316</td><td>±6pt — כמעט זהה</td></tr><tr><td>folio תחתית</td><td>y=791–803, מרכז x=306</td><td>y=819–831 (‎−28pt) — ראו ממצא F5</td></tr><tr><td>פס הערות תחתונות</td><td>תחתית הטור, מתחת לקו הפרדה</td><td>זהה</td></tr>
+</table>
+<h3 style="margin:20px 0 6px">6.4 · סטטיסטיקת תוכן</h3>
+<table>
+<tr><th>מדד</th><th class="num">ישן</th><th class="num">חדש</th></tr>
+<tr><td>עמודים</td><td class='num'>699</td><td class='num'>700 (+1)</td></tr><tr><td>spans טקסט סה"כ</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>תווי גוף (12pt)</td><td class='num'>1,145,175</td><td class='num'>1,145,176 (+1)</td></tr><tr><td>תווי סוגריים (10pt)</td><td class='num'>177,253</td><td class='num'>177,249 (−4)</td></tr><tr><td>תווי הערות שוליים (6pt)</td><td class='num'>105,040</td><td class='num'>105,040 (זהים)</td></tr><tr><td>תווי הערות תחתונות (9pt)</td><td class='num'>69,549 (Ex8)</td><td class='num'>69,701 (Fn) — הפרש = סמנים מוכנסים</td></tr><tr><td>מילות חלון (18pt)</td><td class='num'>13,308 תווים / 3,016 מילים</td><td class='num'>13,308 / 3,016 — זהות</td></tr><tr><td>ציורים וקטוריים</td><td class='num'>907 (re 699 · l 120 · c 88)</td><td class='num'>1,803 (re 705 · l 120 · c 978)</td></tr><tr><td>תמונות רסטר</td><td class='num'>0</td><td class='num'>0</td></tr><tr><td>טקסט מסובב (כותרות אנכיות)</td><td class='num'>0</td><td class='num'>0</td></tr><tr><td>פתיחות פרק (סימן@20)</td><td class='num'>88</td><td class='num'>88</td></tr><tr><td>זוגות חפיפה</td><td class='num'>11 ב-10 עמודים</td><td class='num'>919 ב-154 עמודים</td></tr>
+</table>
+<div class="small">בדיקת שלמות מלאה (מולטיסט תווים ללא-רווחים על כל הטקסט): ישן 1,574,452 · חדש 1,574,204 (‎−248). מפורט: 133 תווי התוויות «(המשך)» החסרות (F6) + עוד ~115 תווים בפיזור טוקניזציה קטן. שורה תחתונה: <b>אין תוכן חסר מעבר למתועד</b>.</div>
+</section>
+<section id="overlaps">
+<div class="sec-head"><span class="no">07</span><h2>מפת חפיפות הטקסט</h2><span class="note">הגלאי: חיתוך bbox ≥ 6pt² או ≥ 25% מהקטן; פטור-שכנים באותו פס</span></div>
+<div class="grid2">
+<div class="kv"><div class="t">מנוע חדש — 919 זוגות · 154 עמודים</div>
+<table>
+<tr><th>קטגוריה</th><th class="num">זוגות</th><th>קשר</th></tr>
+<tr><td class='num'>body + heading@13.5</td><td class='num'>658</td><td>כותרות ביניים על שורות גוף — הליבה של F1</td></tr><tr><td class='num'>heading@13.5 + heading@17</td><td class='num'>103</td><td>כותרת ביניים נוגעת בכותרת פרק/תיבה</td></tr><tr><td class='num'>heading@13.5 + paren-body</td><td class='num'>91</td><td>כותרת ביניים על טקסט 10pt</td></tr><tr><td class='num'>body + heading@17</td><td class='num'>29</td><td>כותרת 17pt על גוף</td></tr><tr><td class='num'>drop-word + heading@13.5</td><td class='num'>17</td><td>מילת חלון × כותרת ביניים</td></tr><tr><td class='num'>heading@17 + paren-body</td><td class='num'>10</td><td></td></tr><tr><td class='num'>body + heading@10</td><td class='num'>5</td><td></td></tr><tr><td class='num'>body + paren-body</td><td class='num'>1</td><td></td></tr><tr><td class='num'>body + drop-word</td><td class='num'>1</td><td>נגיעת מילת חלון (F7)</td></tr><tr><td class='num'>אחר</td><td class='num'>4</td><td></td></tr>
+</table></div>
+<div class="kv"><div class="t">מנוע ישן — 11 זוגות · 10 עמודים (רף עליון)</div>
+<table>
+<tr><th>קטגוריה</th><th class="num">זוגות</th><th>עמודים</th></tr>
+<tr><td class='num'>heading@11 + heading@15</td><td class='num'>7</td><td>p618, p647–p653</td></tr><tr><td class='num'>heading@50 + heading@50</td><td class='num'>2</td><td>עמודי חלק</td></tr><tr><td class='num'>heading@13.5 + heading@9</td><td class='num'>2</td><td></td></tr>
+</table></div>
+</div>
+<h3 style="margin:18px 0 6px">15 העמודים החמים (חדש)</h3>
+<div class="tagchips"><span class="chip">p144 · 20 זוגות</span><span class="chip">p644 · 18 זוגות</span><span class="chip">p254 · 15 זוגות</span><span class="chip">p421 · 15 זוגות</span><span class="chip">p469 · 14 זוגות</span><span class="chip">p223 · 13 זוגות</span><span class="chip">p411 · 13 זוגות</span><span class="chip">p617 · 13 זוגות</span><span class="chip">p697 · 12 זוגות</span><span class="chip">p214 · 11 זוגות</span><span class="chip">p462 · 11 זוגות</span><span class="chip">p550 · 11 זוגות</span><span class="chip">p624 · 11 זוגות</span><span class="chip">p669 · 11 זוגות</span><span class="chip">p251 · 10 זוגות</span></div>
+<details><summary>רשימה מלאה של 154 העמודים עם חפיפות (לחצו להרחבה)</summary>
+<div class="tagchips" id="allpages"></div>
+</details>
+<div class="small">הפירוט המלא של 919 הזוגות נשמר ב־<code>scripts/out/pdf3/new_overlap_pairs.json</code> (עמוד ← רשימת זוגות עם גופן, גודל, טקסט ו-bbox). הסבב הקודם (22-11): 668 זוגות ב־121 עמודים — כלומר <b>החפיפות התרבו</b>.</div>
+</section>
+<section id="method">
+<div class="sec-head"><span class="no">08</span><h2>מתודולוגיה וקוד לשימוש חוזר</h2><span class="note">PyMuPDF · fontTools · difflib — אפס VLM</span></div>
+<div class="card">
+<p>ששת השלבים שנהלו את הבדיקה, בסדר הריצה. הקוד הוא הקוד שהופעל בפועל (הותאם לקריאה) וניתן להרצה חוזרת על כל זוג קבצים עתידי בשינוי נתיבים בלבד.</p>
+<h3 style="margin:14px 0 4px">שלב 1 — חילוץ פורנזי מלא</h3>
+<pre><code># -*- coding: utf-8 -*-
+# שלב 1 — חילוץ פורנזי מלא (PyMuPDF בלבד, ללא VLM):
+# לכל PDF: פליטת spans (כולל כיוון כתיבה dir), ציורים וקטוריים, תמונות, והיסטוגרמת גופן@גודל
+import fitz, json, os
+OUT = "/home/z/my-project/scripts/out/pdf3"
+FILES = {"old": ".../PDF File Export - Old Engine.pdf",
+         "new": ".../PDF File Export - New Engine - 23 11 2026 08 30.pdf"}
+
+def dump(tag):
+    doc = fitz.open(FILES[tag])
+    with open(f"{OUT}/{tag}_spans.jsonl", "w", encoding="utf-8") as sf, \
+         open(f"{OUT}/{tag}_drawings.jsonl", "w", encoding="utf-8") as df:
+        for pno in range(len(doc)):
+            page = doc[pno]
+            d = page.get_text("dict")
+            for blk in d.get("blocks", []):
+                if blk.get("type") != 0: continue
+                for line in blk.get("lines", []):
+                    dv = line.get("dir", (1, 0))          # לזיהוי טקסט מסובב
+                    for sp in line.get("spans", []):
+                        if not sp.get("text", "").strip(): continue
+                        rec = {"p": pno + 1,
+                               "b": [round(v, 2) for v in sp["bbox"]],   # [x0,y0,x1,y1] ב-pt
+                               "s": round(sp["size"], 2), "f": sp["font"],
+                               "t": sp["text"], "dir": [round(dv[0],3), round(dv[1],3)]}
+                        sf.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            for dr in page.get_drawings():                # עיטורים/מסגרות/קווים
+                r = dr.get("rect")
+                if r is None: continue
+                df.write(json.dumps({"p": pno+1, "r": [round(v,2) for v in r],
+                    "kinds": "/".join(sorted(set(it[0] for it in dr.get("items",[])))),
+                    "fill": str(dr.get("fill"))[:40], "sw": dr.get("width")}, ensure_ascii=False) + "\n")
+
+dump("old"); dump("new")
+# ייחוס מדויק בדוח = (קובץ, מס' עמוד, bbox ב-pt) לכל span.</code></pre>
+<h3 style="margin:14px 0 4px">שלב 2 — גלאי חפיפות טקסט (הליבה)</h3>
+<pre><code># -*- coding: utf-8 -*-
+# שלב 2 — גלאי חפיפות טקסט (issue «חפיפות»): זוגות spans שחיתוך ה-bbox שלהם
+# &gt;= 6pt^2 או &gt;= 25% מהקטן — למעט שכנים באותו פס-שורה (אותו גופן/גודל/y)
+import json
+from collections import defaultdict
+
+def inter(a, b):
+    x0=max(a[0],b[0]); x1=min(a[2],b[2]); y0=max(a[1],b[1]); y1=min(a[3],b[3])
+    return max(0,x1-x0)*max(0,y1-y0)
+
+def area(a): return max(0,(a[2]-a[0]))*max(0,(a[3]-a[1]))
+
+def overlaps(spans):
+    by_page = defaultdict(list)
+    for s in spans: by_page[s["p"]].append(s)
+    pairs = defaultdict(int); pages = defaultdict(int); total = 0
+    for p, sps in by_page.items():
+        n = len(sps)
+        for i in range(n):
+            for j in range(i+1, n):
+                a, b = sps[i], sps[j]
+                same_line = (abs(a["b"][1]-b["b"][1]) &lt; 2.0 and a["f"] == b["f"]
+                             and abs(a["s"]-b["s"]) &lt; 0.3)
+                if same_line: continue
+                ov = inter(a["b"], b["b"])
+                if ov &lt;= 0: continue
+                small = min(area(a["b"]), area(b["b"]))
+                if ov &gt;= 6.0 or (small &gt; 0 and ov/small &gt;= 0.25):
+                    total += 1; pages[p] += 1
+                    pairs[f'{a["f"]}@{a["s"]:.0f}+{b["f"]}@{b["s"]:.0f}'] += 1
+    return total, pairs, pages
+
+for tag in ["old", "new"]:
+    spans = [json.loads(l) for l in open(f"{tag}_spans.jsonl")]
+    t, cats, pgs = overlaps(spans)
+    print(tag, "total:", t, "| pages:", len(pgs))
+    for k, v in sorted(cats.items(), key=lambda kv: -kv[1])[:10]:
+        print("   ", k, v)</code></pre>
+<h3 style="margin:14px 0 4px">שלב 3 — זהות גופנים פיזית (חשוב: סדר על name-table, לא על בייטים)</h3>
+<pre><code># -*- coding: utf-8 -*-
+# שלב 3 — זהות גופנים פיזית: חילוץ ה-FontFile2 המוטמע והשוואת SHA-256 + name-table.
+# חשוב: הקבצים הם SUBSET — בייטים שונים אינם בהכרח פנים שונים; סדו רק לפי שם המשפחה!
+import fitz, hashlib
+from fontTools.ttLib import TTFont
+
+def extract(path, outdir, tag):
+    doc = fitz.open(path); seen = {}
+    for pno in range(doc.page_count):
+        for f in doc[pno].get_fonts(full=True):
+            xref, ext, ftype, basefont = f[0], f[1], f[2], f[3]
+            if basefont in seen: continue
+            name, extn, ftype2, buf = doc.extract_font(xref)
+            if not buf: continue
+            with open(f"{outdir}/{tag}_{basefont}.{extn}", "wb") as fh:
+                fh.write(buf)
+            seen[basefont] = hashlib.sha256(buf).hexdigest()[:12]
+    return seen
+
+old = extract("old_engine.pdf", "fonts_old", "old")
+new = extract("new_engine.pdf", "fonts_new", "new")
+for bf in sorted(set(old) | set(new)):
+    print(bf, old.get(bf, "—"), new.get(bf, "—"))
+# ואז לכל קובץ: קריאת זהות ה-typeface מטבלת השם
+f = TTFont(f"fonts_old/old_ToraEx5.ttf", lazy=True)
+print(f["name"].getDebugName(1))   # -&gt; "Lia Sgula"</code></pre>
+<h3 style="margin:14px 0 4px">שלב 4 — בדיקות מילות-חלון</h3>
+<pre><code># -*- coding: utf-8 -*-
+# שלב 4 — מילות חלון: מלאי, מיקום, עטיפה ומרווחים
+# (א) מלאי: מולטיסט מילים מכל ה-ToraWin@&gt;=17 — חייב להיות זהה לחלוטין
+# (ב) יישור: dy בין ראש מילת-החלון לראש שורת הגוף שלצידה (באותו פס) — פער זהה
+# (ג) מרווח פסקה: פער בין תחתית השורה שמעל לבין ראש המילה
+from collections import Counter
+wins_old = [s for s in old_spans if s["f"] == "ToraWin" and s["s"] &gt;= 17]
+wins_new = [s for s in new_spans if s["f"] == "ToraWin" and s["s"] &gt;= 17]
+assert Counter(s["t"] for s in wins_old) == Counter(s["t"] for s in wins_new)
+
+def gap_above(spans, wins):
+    by_page = defaultdict(list)
+    for s in spans: by_page[s["p"]].append(s)
+    gaps = []
+    for w in wins:
+        best = None
+        for s in by_page[w["p"]]:
+            if s["f"] in ("ToraBook", "ToraFn"):
+                sb = s["b"]
+                if sb[3] &lt;= w["b"][1]+5 and sb[3] &gt;= w["b"][1]-40 \
+                   and sb[0] &lt; w["b"][2] and sb[2] &gt; w["b"][0]:
+                    if best is None or sb[3] &gt; best: best = sb[3]
+        if best is not None: gaps.append(w["b"][1] - best)
+    gaps.sort(); return gaps
+# ישן: חציון 23.9pt · חדש: חציון 3.1pt  (ממצא F7)</code></pre>
+<h3 style="margin:14px 0 4px">שלב 5 — גשר ה-HTML: בידוד שכבת-יצירה מול שכבת-רינדור</h3>
+<pre><code># -*- coding: utf-8 -*-
+# שלב 5 — גשר HTML (בידוד שכבת-יצירה מול שכבת-רינדור):
+# יצוא ה-HTML נבנה מאותו PageModel כמו ה-PDF. אם הליקוי קיים גם ב-y של המודל
+# (data-model-y) — השורש בבונה המודל; אם רק ב-PDF — בכותב ה-PDF.
+import re
+buf = open("new_engine_2308.html", encoding="utf-8").read()
+i0 = buf.find('id="page-143"'); i1 = buf.find('id="page-144"')
+page = buf[i0:i1]
+pat = re.compile(
+  r'&lt;div class="(line[^"]*)"[^&gt;]*?data-model-y="([0-9.]+)"[^&gt;]*?'
+  r'data-model-h="([0-9.]+)"[^&gt;]*?data-id="([^"]+)"[^&gt;]*&gt;(.*?)&lt;/div&gt;', re.S)
+rows = []
+for m in pat.finditer(page):
+    cls, y, h, did, inner = m.groups()
+    text = "".join(re.findall(r'&gt;([^&lt;&gt;]+)&lt;/span&gt;', inner))
+    rows.append((float(y), float(h), cls, did, text))
+rows.sort()
+# פלט: כותרת p143.c0.9 ב-y=312.16 (h=21.96) חופפת את שורת הגוף
+# p143.c1.52 ב-y=316.68 (h=21.44) — החפיפה במודל עצמו.</code></pre>
+<h3 style="margin:14px 0 4px">שלב 6 — שלמות תוכן (מולטיסט תווים לפי תפקיד)</h3>
+<pre><code># -*- coding: utf-8 -*-
+# שלב 6 — שלמות תוכן: מולטיסט תווים לפי תפקיד (עמיד לפיצול-מילים ולהסחות עימוד)
+from collections import Counter
+ROLES = {
+  "body":  lambda s: s["f"] == "ToraBook" and s["s"] &gt;= 11.5,
+  "paren": lambda s: s["f"] == "ToraBook" and 9.5 &lt; s["s"] &lt; 11.5,
+  "fn":    lambda s: s["f"] in ("ToraEx8", "ToraFn"),
+  "side":  lambda s: s["f"] == "ToraMargin",
+}
+for name, filt in ROLES.items():
+    co = Counter(); cn = Counter()
+    for s in old_spans:
+        if filt(s): co.update(c for c in s["t"] if c != " ")
+    for s in new_spans:
+        if filt(s): cn.update(c for c in s["t"] if c != " ")
+    diff = {c: (co.get(c,0), cn.get(c,0)) for c in set(co)|set(cn)
+            if co.get(c,0) != cn.get(c,0)}
+    print(name, "differing chars:", len(diff))
+# body: 8 תווים בלבד · side: 0 · win: 0  ·  fn: +594 (בעיקר סמנים שהוכנסו לסלוט Fn)</code></pre>
+<h3 style="margin:14px 0 4px">כללי פרשנות שנלמדו בסבבים</h3>
+<ul>
+<li><b>שמות הגופנים ב-PDF הם כינויי-סלוט</b> (ToraEx1..9 לפי אינדקס בכותב) — יש לזהות פנים רק דרך name-table של הגופן המוטמע; בייטים שונים פירושם subsets שונים.</li>
+<li><b>פיצול-span אינו שינוי תוכן</b>: החדש פולט מילה-מילה, הישן פלט משפטים — לכן מספרי תווים לפי span מטעים; רק מולטיסט תווים גלובלי אמין.</li>
+<li><b>הסחות עימוד</b> מחייבות התאמה לפי תוכן (מילים נדירות / עוגני פרק) ולא לפי מספר עמוד, לפני כל השוואת מיקום.</li>
+<li><b>יצוא ה-HTML הוא אותו PageModel</b> — חפיפה שנמצאת גם ב־<code>data-model-y</code> מוכיחה שהשורש בבונה המודל ולא בכותב ה-PDF.</li>
+<li>מחרוזות «מנוע» (כמו «(המשך)») — יש לבדוק את מקורן בטקסט המקור לפני הכרזה על תוכן חסר; הן עשויות להיות פיצ'ר יצירה של אחד המנועים.</li>
+</ul>
+</div>
+</section>
+<section id="appendix">
+<div class="sec-head"><span class="no">09</span><h2>נספחים וגבולות הבדיקה</h2></div>
+<div class="card">
+<ul>
+<li><b>קבצי ביניים לשחזור</b> (תחת <code>/home/z/my-project/scripts/out/pdf3/</code>): <code>old/new_spans.jsonl</code> · <code>old/new_drawings.jsonl</code> · <code>old/new_fontsizes.json</code> · <code>windows_analysis.json</code> · <code>old/new_overlap_pairs.json</code> · <code>old/new_ornaments.json</code> · תקצירי wrap/side-notes.</li>
+<li><b>גבולות:</b> (1) הקוד שיצר את היצוא אינו מאוחסן ב-repo (F14) — ניתוח השורש של F1/F4 נשען על המנגנונים המחויבים + ראיות-מודל; (2) פסקי-מגמה (21-11/22-11) חושבו באותו גלאי באופן אחיד; (3) הבדיקה סטטית בלבד — לא הופעל רינדור חזותי/אינטראקטיבי.</li>
+<li><b>מקור ההשוואה:</b> <code>audits/PDF Export Page Comparison - Old Engine VS New Engine/</code> ב-repo (main@01e2c6d), כולל טקסט המקור; ה-clone סונכרן ואומת לפני חקירת הקוד.</li>
+</ul>
+</div>
+<div class="footer">
+דוח סבב 3 · 23-11-2026 · הופק בכלים ייעודיי-PDF (PyMuPDF/fontTools/difflib) ללא VFM/VLM ·
+כל מספר בדוח נמדד מהקבצים עצמם וניתן לשחזור באמצעות הקוד בסעיף 8.
+</div>
+</section></div></div></div>
+<script>
+// רשימת 154 העמודים (מנוע חדש) — מוזרקת מהמדידה
+const PAGES = [[62, 2], [71, 2], [73, 1], [78, 2], [81, 3], [86, 1], [94, 6], [97, 1], [122, 3], [130, 5], [131, 5], [132, 9], [133, 5], [139, 6], [143, 9], [144, 20], [146, 8], [148, 6], [151, 2], [155, 5], [156, 8], [160, 2], [165, 8], [167, 5], [169, 2], [172, 3], [175, 6], [178, 3], [182, 6], [183, 6], [184, 5], [189, 5], [193, 6], [195, 6], [199, 2], [202, 3], [208, 6], [209, 5], [213, 8], [214, 11], [215, 8], [217, 7], [219, 3], [220, 3], [222, 8], [223, 13], [224, 8], [226, 6], [230, 4], [231, 4], [232, 4], [241, 8], [243, 5], [247, 4], [251, 10], [254, 15], [265, 3], [270, 2], [273, 8], [275, 3], [276, 6], [277, 2], [278, 2], [283, 5], [291, 2], [294, 2], [295, 3], [301, 5], [304, 6], [310, 3], [311, 8], [314, 5], [319, 2], [323, 8], [324, 5], [325, 3], [326, 4], [334, 3], [346, 3], [347, 7], [350, 2], [352, 5], [355, 3], [360, 4], [361, 4], [362, 4], [365, 5], [367, 4], [373, 7], [381, 4], [384, 8], [385, 9], [394, 7], [397, 7], [400, 7], [404, 5], [405, 8], [410, 4], [411, 13], [414, 10], [421, 15], [431, 5], [437, 8], [438, 5], [443, 7], [457, 5], [462, 11], [469, 14], [476, 8], [486, 6], [489, 6], [493, 8], [508, 6], [511, 8], [517, 7], [520, 9], [528, 7], [534, 7], [538, 10], [550, 11], [551, 4], [552, 4], [553, 2], [558, 9], [566, 6], [574, 3], [575, 1], [578, 7], [584, 7], [585, 3], [587, 4], [590, 7], [598, 4], [601, 5], [604, 7], [607, 5], [613, 5], [617, 13], [623, 5], [624, 11], [627, 4], [628, 5], [629, 4], [632, 9], [642, 10], [644, 18], [645, 3], [647, 8], [649, 1], [657, 5], [665, 7], [669, 11], [674, 10], [697, 12]];
+(function(){
+  const el = document.getElementById('allpages');
+  if(!el) return;
+  el.innerHTML = PAGES.map(([p,n]) => `<span class="chip">p${p} · ${n}</span>`).join('');
+})();
+</script>
+</body></html>
