@@ -29751,6 +29751,20 @@ function familyOf(key) {
  * דבר — גם לא מילים בתוך השורה. הקו-בסיס נופל באותה נוסחת half-leading
  * שבה הסמכות (attachBaselines) חישבה את baselineY במודל.
  */
+/** **RC-A1 (i006 — רווח בין שורות של אותו טקסט לוגי):** השורות ממוקמות-מוחלט
+ *  ואין ביניהן רווחי-זרימה; בתוך שורה מוכנסת צומת רווח (renderModelLine),
+ *  אך בין שורות באותו מיכל לוגי — ביאור-צד, שורות הערה, פס — לא נוסף
+ *  דבר, ו-textContent מתמזג בכל צומת-שורה (נמדד: 8,848 מילים מודבקות
+ *  בביאורי-הצד + 626 בהערות-הגוף ב-very_long ⇒ רצפת הנפח של האודיט החי
+ *  נכשלה 341,160 < 345,999; גם העתקה ונגישות נפגעות). מקור אחד לכל
+ *  המיכלים: צומת רווח לפני כל שורה שאינה הראשונה באותו טקסט. הרווח
+ *  אינו נראה (whitespace בתחילת מיכל ממוקט-מוחלט מתמוטם). */
+function appendLineSep(container, doc, isFirstLogicalLine) {
+  if (!isFirstLogicalLine && typeof doc.createTextNode === 'function') {
+    container.appendChild(doc.createTextNode(' '));
+  }
+}
+
 function renderModelLine(ml, doc, relX, relY) {
   const el = doc.createElement('div');
   el.className = 'line'
@@ -29937,7 +29951,10 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     band.style.top = `${px2(mp.spanning.y)}px`;
     band.style.width = `${px2(mp.spanning.w)}px`;
     band.style.height = `${px2(mp.spanning.h)}px`;
+    let firstSpanningLine = true;
     for (const ln of mp.lines.filter(l => l.area === 'spanning')) {
+      appendLineSep(band, doc, firstSpanningLine); // **RC-A1:** רווח בין שורות הפס
+      firstSpanningLine = false;
       band.appendChild(renderModelLine(ln, doc, mp.spanning.x, mp.spanning.y));
     }
     root.appendChild(band);
@@ -29948,6 +29965,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
   // עמוד-מוחלט ולא בתוך קופסת טור בודד (בתוך טור היו מקבלות left שלילי
   // ונחתכות בהקשרי clipping). הקואורדינטות מהמודל — טהור.
   const midBandLines = mp.lines.filter(l => l.area === 'column' && l.midBand === true && l.projected !== false);
+  let prevMidBandToken = null;
   if (midBandLines.length) {
     const mbWrap = doc.createElement('div');
     mbWrap.className = 'mid-bands';
@@ -29958,6 +29976,9 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     mbWrap.style.width = `${px2(geo.width)}px`;
     mbWrap.style.height = `${px2(geo.height)}px`;
     for (const ln of midBandLines) {
+      // **RC-A1:** רווח בין שורות של אותו פס (אותו token) — לא בין פסים שונים
+      appendLineSep(mbWrap, doc, prevMidBandToken == null || ln.sourceTokenId !== prevMidBandToken);
+      prevMidBandToken = ln.sourceTokenId != null ? ln.sourceTokenId : null;
       mbWrap.appendChild(renderModelLine(ln, doc, 0, 0));
     }
     root.appendChild(mbWrap);
@@ -30086,7 +30107,12 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     // שורות הטקסט של אותה הערה: אותו עמוד-שוליים (x) בטווח התיבה (yTop..yTop+h)
     const own = marginLines.filter(l => l.x != null && sn.x != null && Math.abs(l.x - sn.x) < 0.01
       && l.y != null && sn.yTop != null && l.y >= sn.yTop - 0.01 && l.y <= sn.yTop + (sn.heightPx || 0) + 0.01);
-    for (const ln of own) el.appendChild(renderModelLine(ln, doc, sn.x, sn.yTop));
+    let firstOwnLine = true; // **RC-A1:** רווח בין שורות הביאור (טקסט אחד לוגי)
+    for (const ln of own) {
+      appendLineSep(el, doc, firstOwnLine);
+      firstOwnLine = false;
+      el.appendChild(renderModelLine(ln, doc, sn.x, sn.yTop));
+    }
     if (!own.length && sn.text) {
       // רשומה בלי שורות מוקרנות — דיאגנוסטיק גלוי; הטקסט אינו נעלם (§2.4)
       diags.push({ kind: 'pmr-side-note-without-lines', noteId: sn.noteId || null, anchorId: sn.anchorId || null });
@@ -30158,6 +30184,8 @@ function renderModelPage(mp, settings, doc, opts = {}) {
         diags.push({ kind: 'pmr-footnote-without-words', noteId: n.noteId || null });
       }
       sortedRows.forEach(([baselineY, words], k) => {
+        // **RC-A1:** רווח בין שורות ההערה (טקסט אחד לוגי) — textContent שלם
+        appendLineSep(el, doc, k === 0);
         const row = doc.createElement('div');
         row.className = 'fn-row';
         row.style.position = 'relative';
