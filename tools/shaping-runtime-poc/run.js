@@ -212,6 +212,7 @@ async function main() {
         format: item.fontFormat,
         normalizedFrom: item.normalizedFrom,
         sourceOutlineFormat: item.sourceOutlineFormat,
+        outlineSweep: item.outlineSweep,
         unitsPerEm: item.unitsPerEm,
         variationMode: item.variationMode,
         axisInfos: item.axisInfos,
@@ -252,6 +253,11 @@ async function main() {
           missingBaseCodepoints: item.missingBaseCodepoints,
           missingMarkCodepoints: item.missingMarkCodepoints
         });
+      }
+      if ((item.sourceOutlineFormat === 'CFF' || item.sourceOutlineFormat === 'CFF2') &&
+          (!item.outlineSweep || item.outlineSweep.glyphCount <= 0 ||
+           item.outlineSweep.outlineGlyphCount + item.outlineSweep.emptyOutlineGlyphCount !== item.outlineSweep.glyphCount)) {
+        invalidCoverageFixtures.push({ font: item.fontName, error: 'CFF full-glyph outline sweep is incomplete', outlineSweep: item.outlineSweep });
       }
       if (fixture.variationMode && !item.appliedVariations.length) {
         invalidCoverageFixtures.push({ font: item.fontName, error: 'variation axis was not applied' });

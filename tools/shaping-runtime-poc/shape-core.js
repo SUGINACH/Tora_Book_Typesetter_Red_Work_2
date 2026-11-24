@@ -114,11 +114,48 @@
       shapedCases.push({ text, glyphs });
     }
 
+    let outlineSweep = null;
+    if (fixture.sourceOutlineFormat === 'CFF' || fixture.sourceOutlineFormat === 'CFF2') {
+      const maxp = face.referenceTable('maxp');
+      if (!maxp || maxp.length < 6) throw new Error('CFF font is missing a valid maxp table: ' + fixture.name);
+      const maxGlyphs = (maxp[4] << 8) | maxp[5];
+      if (!Number.isInteger(maxGlyphs) || maxGlyphs <= 0) throw new Error('Invalid maxp.numGlyphs for ' + fixture.name);
+      let outlineGlyphCount = 0;
+      let emptyOutlineGlyphCount = 0;
+      let totalOutlinePathChars = 0;
+      let digest = 2166136261;
+      for (let gid = 0; gid < maxGlyphs; gid++) {
+        const path = font.glyphToPath(gid);
+        if (typeof path !== 'string') throw new Error('CFF glyphToPath returned a non-string for ' + fixture.name + ' GID ' + gid);
+        if (path.length) outlineGlyphCount++; else emptyOutlineGlyphCount++;
+        totalOutlinePathChars += path.length;
+        digest ^= gid & 0xff;
+        digest = Math.imul(digest, 16777619);
+        digest ^= (gid >>> 8) & 0xff;
+        digest = Math.imul(digest, 16777619);
+        for (let i = 0; i < path.length; i++) {
+          const code = path.charCodeAt(i);
+          digest ^= code & 0xff;
+          digest = Math.imul(digest, 16777619);
+          digest ^= (code >>> 8) & 0xff;
+          digest = Math.imul(digest, 16777619);
+        }
+      }
+      outlineSweep = {
+        outlineFormat: fixture.sourceOutlineFormat,
+        glyphCount: maxGlyphs,
+        outlineGlyphCount,
+        emptyOutlineGlyphCount,
+        totalOutlinePathChars,
+        outlineDigest: (digest >>> 0).toString(16).padStart(8, '0')
+      };
+    }
     return {
       fontName: fixture.name || 'unnamed',
       fontFormat: fixture.format || 'unknown',
       normalizedFrom: fixture.normalizedFrom || null,
       sourceOutlineFormat: fixture.sourceOutlineFormat || null,
+      outlineSweep,
       unitsPerEm: Number(face.upem),
       harfBuzzVersion: hb.versionString(),
       featureTags: FEATURE_TAGS.slice(),
