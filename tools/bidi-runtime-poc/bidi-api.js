@@ -457,6 +457,7 @@
         const key = [
           grapheme.script || '?',
           grapheme.direction || '?',
+          grapheme.bidiLevel == null ? '?' : grapheme.bidiLevel,
           grapheme.status === 'mixed-grapheme' ? 'mixed' :
             (grapheme.script ? 'resolved' : 'unresolved'),
           grapheme.script ? '' : grapheme.candidates.join(',')

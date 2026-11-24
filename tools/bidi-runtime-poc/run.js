@@ -257,6 +257,36 @@ async function main() {
         JSON.stringify(arabicCommaGrapheme));
     }
 
+    const nestedHebrewEmbeddingText = String.fromCodePoint(
+      0x05D0, 0x05D1, 0x202B, 0x05D2, 0x05D3, 0x202C, 0x05D4, 0x05D5
+    );
+    const nestedHebrewEmbeddingBidi = runtime.resolve(nestedHebrewEmbeddingText, 'rtl');
+    const nestedHebrewEmbedding = runtime.itemizeScripts(
+      nestedHebrewEmbeddingText, nestedHebrewEmbeddingBidi
+    );
+    const nestedHebrewLevels = [...new Set(nestedHebrewEmbedding.graphemes
+      .filter((item) => item.script === 'Hebr')
+      .map((item) => item.bidiLevel))].sort((a, b) => a - b);
+    const nestedHebrewScriptRuns = nestedHebrewEmbedding.scriptRuns
+      .filter((item) => item.script === 'Hebr');
+    const nestedHebrewRunLevelsConsistent = nestedHebrewScriptRuns.every((scriptRun) => {
+      const clusters = nestedHebrewEmbedding.graphemes.slice(
+        scriptRun.graphemeStart, scriptRun.graphemeEnd
+      );
+      const levels = new Set(clusters.map((item) => item.bidiLevel));
+      return levels.size === 1 && levels.has(scriptRun.bidiLevel);
+    });
+    if (!nestedHebrewLevels.includes(1) || !nestedHebrewLevels.includes(3) ||
+        new Set(nestedHebrewScriptRuns.map((item) => item.bidiLevel)).size < 2 ||
+        !nestedHebrewRunLevelsConsistent) {
+      throw new Error('Same-script RTL runs at embedding levels 1 and 3 were merged or lost their Bidi level: ' +
+        JSON.stringify({
+          levels: nestedHebrewLevels,
+          scriptRuns: nestedHebrewScriptRuns,
+          graphemes: nestedHebrewEmbedding.graphemes
+        }));
+    }
+
     const mixedSpace = mixedScriptItemization.graphemes.find((item) => item.text === ' ');
     if (!mixedSpace || mixedSpace.script !== 'Hebr' ||
         mixedSpace.status !== 'context-left-preferred' ||
@@ -349,6 +379,12 @@ async function main() {
         combiningLatinCount: combiningLatin.graphemes.length
       },
       mixedScriptRuns: mixedScriptItemization.scriptRuns,
+      nestedHebrewEmbedding: {
+        text: nestedHebrewEmbeddingText,
+        levels: nestedHebrewLevels,
+        scriptRuns: nestedHebrewScriptRuns,
+        runLevelsConsistent: nestedHebrewRunLevelsConsistent
+      },
       commonWhitespace: mixedSpace,
       pairedPunctuation: {
         text: pairedText,
@@ -476,6 +512,10 @@ async function main() {
       scriptExtensionsResolveFromContext: arabicCommaGrapheme.candidates.includes('Arab') &&
         arabicCommaGrapheme.script === 'Arab' &&
         arabicCommaGrapheme.status === 'context-both-sides',
+      sameScriptBidiLevelsRemainSeparate: nestedHebrewLevels.includes(1) &&
+        nestedHebrewLevels.includes(3) &&
+        new Set(nestedHebrewScriptRuns.map((item) => item.bidiLevel)).size >= 2 &&
+        nestedHebrewRunLevelsConsistent,
       commonWhitespaceGetsContextualScript: mixedSpace.script === 'Hebr' &&
         mixedSpace.status === 'context-left-preferred' &&
         mixedScriptItemization.scriptRuns.every((run) => run.script != null),
