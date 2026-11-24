@@ -114,8 +114,8 @@
           const start = values[cursor++];
           const end = values[cursor++];
           const level = values[cursor++];
-          if (start > end || end > units.length || (level & 1) > 1) {
-            throw new Error('Bidi WASM returned an invalid paragraph range or level');
+          if (start > end || end > units.length || level > 126) {
+            throw new Error('Bidi WASM returned an invalid paragraph range or embedding level');
           }
           if (!isUtf16Boundary(units, start) || !isUtf16Boundary(units, end)) {
             throw new Error('Bidi paragraph range splits a UTF-16 surrogate pair');
