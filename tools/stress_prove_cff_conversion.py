@@ -38,10 +38,11 @@ def main():
                 row['instancedAxes']=axes
             cmap0={int(cp):int(f.getGlyphID(n)) for cp,n in (f.getBestCmap() or {}).items()}
             order=list(f.getGlyphOrder()); metrics0=[tuple(int(v) for v in f['hmtx'].metrics[n]) for n in order]
-            tol=float(f['head'].unitsPerEm)*MAX_ERR_EM
+            upem=float(f['head'].unitsPerEm)
+            tol=upem*MAX_ERR_EM
             geom=convert_cff_to_glyf(f,tol); row['maxBoundsDeltaFontUnits']=geom['maxBoundsDeltaFontUnits']; row['worstGlyph']=geom['worstGlyph']
             if maximum is None or row['maxBoundsDeltaFontUnits']>maximum['delta']:
-                maximum={'file':rel,'delta':row['maxBoundsDeltaFontUnits'],'worstGlyph':row['worstGlyph']}
+                maximum={'file':rel,'delta':row['maxBoundsDeltaFontUnits'],'deltaEm':row['maxBoundsDeltaFontUnits']/float(f['head'].unitsPerEm) if 'head' in f else None,'worstGlyph':row['worstGlyph']}
             converted_order=list(f.getGlyphOrder())
             converted_bounds=glyph_bounds(f)
             converted_bounds_by_gid=[converted_bounds.get(name) for name in converted_order]
@@ -100,7 +101,10 @@ def main():
                 else:
                     sample = latin[:32]
             visual_dir = args.visual_dir if args.visual_dir.is_absolute() else root / args.visual_dir
-            if row['maxBoundsDeltaFontUnits'] >= 20 and row.get('worstGlyph'):
+            row['maxBoundsDeltaEm'] = row['maxBoundsDeltaFontUnits'] / upem
+            row['maxBoundsDeltaOverTolerance'] = row['maxBoundsDeltaFontUnits'] / tol if tol else None
+            visual_outlier = row['maxBoundsDeltaEm'] >= 0.01
+            if visual_outlier and row.get('worstGlyph'):
                 label = 'outlier-' + Path(rel).stem.replace(' ', '-').replace('/', '-')
                 row['glyphComparisonArtifacts'] = write_glyph_comparison(
                     src, output, int(row['worstGlyph']['gid']), visual_dir, label
@@ -115,7 +119,9 @@ def main():
                     alt_geometry = convert_cff_to_glyf_decomposed(alt_font, float(alt_font['head'].unitsPerEm) * MAX_ERR_EM)
                     alt_gid = int(row['worstGlyph']['gid'])
                     alt_name = alt_font.getGlyphOrder()[alt_gid]
-                    alt_after_bounds = glyph_bounds(alt_font)
+                    alt_pre_save_order = list(alt_font.getGlyphOrder())
+                    alt_pre_save_bounds = glyph_bounds(alt_font)
+                    alt_pre_save_bounds_by_gid = [alt_pre_save_bounds.get(n) for n in alt_pre_save_order]
                     alt_f = tmp / (hashlib.sha256((rel + '|decomposed').encode()).hexdigest() + '.ttf')
                     alt_font.flavor = None
                     alt_font.save(str(alt_f))
@@ -131,6 +137,17 @@ def main():
                     if alt_cmap != cmap0:
                         raise ValueError('decomposed strategy changed cmap-to-GID mapping')
                     alt_bounds = glyph_bounds(alt_check)
+                    alt_roundtrip = 0.0
+                    for alt_index, alt_glyph_name in enumerate(alt_order):
+                        pre = alt_pre_save_bounds_by_gid[alt_index]
+                        post = alt_bounds.get(alt_glyph_name)
+                        if pre is None or post is None:
+                            if pre != post:
+                                raise ValueError(f'decomposed empty outline changed at GID {alt_index}')
+                            continue
+                        alt_roundtrip = max(alt_roundtrip, max(abs(float(x) - float(y)) for x, y in zip(pre, post)))
+                    if alt_roundtrip > 0.01:
+                        raise ValueError(f'decomposed save/load bounds changed {alt_roundtrip}')
                     alt_worst_bounds = alt_bounds.get(alt_order[alt_gid])
                     source_worst_bounds = alt_source_bounds.get(order[alt_gid])
                     alt_gid_delta = None
@@ -143,6 +160,7 @@ def main():
                         'maxBoundsDeltaFontUnits': alt_geometry['maxBoundsDeltaFontUnits'],
                         'worstGlyph': alt_geometry['worstGlyph'],
                         'primaryWorstGlyphBoundsDelta': alt_gid_delta,
+                        'roundTripBoundsDelta': alt_roundtrip,
                         'runtimeSubset': alt_runtime,
                     }
                     row['decomposedGlyphComparisonArtifacts'] = write_glyph_comparison(
@@ -153,7 +171,7 @@ def main():
                 except Exception as alt_exc:
                     row['decomposedAlternative'] = {'status': 'failed', 'error': f'{type(alt_exc).__name__}: {alt_exc}'}
             runtime=java_subset_check(root,output,sample)
-            row.update({'roundTripBoundsDelta':maxround,'runtimeSubset':runtime,'conversionBoundsOutlier':row['maxBoundsDeltaFontUnits'] >= 20,'convertedBytes':output.stat().st_size,'convertedSha256':sha(output),'status':'passed'})
+            row.update({'roundTripBoundsDelta':maxround,'runtimeSubset':runtime,'conversionBoundsOutlier':visual_outlier,'convertedBytes':output.stat().st_size,'convertedSha256':sha(output),'status':'passed'})
             out.close(); output.unlink(missing_ok=True)
         except Exception as e:
             row.update({'status':'failed','error':f'{type(e).__name__}: {e}'})
