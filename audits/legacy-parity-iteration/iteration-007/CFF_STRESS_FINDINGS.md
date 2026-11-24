@@ -114,3 +114,51 @@ Verification:
 ### Remaining decision boundary
 
 The conversion pipeline is still proof-only. Do not add converted fonts to the active catalog, alter live renderer/layout behavior, or approve mass conversion until the final 380-font artifact is inspected, geometric outliers and raster evidence are reviewed, and the shaping/measurement integration is designed as a shared deterministic contract.
+
+## Final stress run on the corrected metric — 2026-11-24
+
+The run started from code commit `18de329a1a718cd4204bbb155c2b10875325a314` completed successfully:
+
+- Workflow: [font-catalog-audit #45402648301](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/actions/runs/45402648301)
+- Artifact: `14923273960`, `imud-font-catalog-audit-18de329a1a718cd4204bbb155c2b10875325a314`
+- Schema: `cff-conversion-stress-v3`
+- CFF files attempted: 380
+- Structural/runtime conversion pass: 380/380
+- Conversion failures: 0
+- Production parser / PDF subset checks: passed for all 380
+- SFNT save/load and glyph/cmap/advance/head/hhea checks: passed
+- Source curve/LSB diagnostic fonts: 46
+- Diagnostic glyphs: 1,285
+- FreeType raster samples: 46/46 generated
+- Raster diagnostic failures: 0
+- Missing raster/comparison evidence: 0
+- Geometric bound outlier fonts: 47
+- Maximum source-CFF to converted-glyf curve-bound delta: `0.001317186459em` (Shluk-Regular.woff2, GID 380, U+05E0)
+- Decomposed conversion: ran for all 47 geometric outlier fonts; all 47 passed structural checks, but every measured maximum bounds delta was identical to direct conversion. No demonstrated geometric benefit from the decomposed alternative.
+
+The 47 geometry-outlier comparisons were inspected visually in four contact sheets. The compared source CFF and converted glyf silhouettes remained very close; no gross deformation or displacement was apparent in the reviewed worst-glyph samples. This is not a glyph-by-glyph visual review of every outline in every font, and it does not replace the numerical bound-delta and FreeType evidence.
+
+The Ploni-Regular GID 725 issue is resolved as a false alarm in the previous metric: the 111-unit difference was between CFF true-curve xMin and TrueType off-curve control-box xMin. The converted outline's stored `glyf.xMin` is -72 and its output LSB is -72, giving zero GlyphSet horizontal translation. The source CFF curve bounds and converted true-curve bounds differ by only about 0.019636 font units for that glyph. The old LSB of 39 would introduce a 111-unit GlyphSet translation and is not to be restored.
+
+### Interpretation and status
+
+The corrected automated conversion stress test is green: 380/380 assets are structurally and operationally convertible by this proof pipeline. This does **not** authorize mass conversion or live activation:
+
+- 47 fonts remain explicitly flagged for geometric review because their measured curve-bound differences exceed the nominal `0.001em` diagnostic.
+- 46 fonts have curve-bound/source-LSB diagnostic sets comprising 1,285 glyphs; the run rasterized one representative glyph per flagged font, not every flagged glyph.
+- The report therefore correctly retains `manualReviewRequired: true`, `manualReviewStatus: "required"`, and `massConversionApproved: false`.
+- The decomposed method has no demonstrated advantage over the direct method in the tested geometric outliers; it must not become an automatic fallback.
+- The proof pipeline still writes temporary conversions for validation only. No source font files, active catalog entries, app runtime, or layout engine behavior were changed.
+
+Next font-specific gate: decide whether the 47 measured bound deltas and 46 one-glyph-per-font placement samples are sufficiently characterized, or extend the tests with a curve-distance/raster comparison over all materially flagged glyphs. Do not relax `MAX_ERR_EM` merely to remove the outlier count.
+
+### Overall workflow status at the latest code commit
+
+For `18de329a`:
+- font-catalog-audit #45402648301 — success (380/380).
+- full-math-audit #45402648390 — success.
+- preview-engine-parity #45402648305 — success.
+- corpus-invariants #45402648376 — success.
+- CI #45402648294 — its layout-audit job succeeded (smoke and 691-page long fixture, zero issues); three Node 18/20/22 test jobs were still reported in progress at the latest query. Recheck those jobs before treating the full CI matrix as complete.
+
+The latest documentation-only branch commit is later than the validated code commit. All run references above are pinned to the exact code SHA `18de329a...`.
