@@ -161,7 +161,7 @@ def convert_cff_to_glyf_decomposed(font: TTFont, max_err: float) -> dict[str, An
     font["glyf"] = glyf
     font["loca"] = newTable("loca")
     del font["CFF "]
-    font.sfntVersion = "\\x00\\x01\\x00\\x00"
+    font.sfntVersion = "\x00\x01\x00\x00"
     font["head"].indexToLocFormat = 1
     if "post" in font:
         font["post"].formatType = 3.0
