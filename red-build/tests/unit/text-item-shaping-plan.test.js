@@ -15,8 +15,19 @@ function fakeItemizer(text, graphemes, scriptRuns, sourceRuns) {
     itemizeScripts(input, resolved) {
       assertEq(input, text, 'same complete TextItem is itemized');
       assertEq(resolved.text, text);
-      return { text, utf16Length: text.length, graphemes, scriptRuns, sourceRuns,
-        nonShapingRuns: sourceRuns.filter((run) => run.kind !== 'shape') };
+      const enrichedSourceRuns = sourceRuns.map((sourceRun) => {
+        if (sourceRun.kind !== 'shape') return sourceRun;
+        const scriptRun = scriptRuns.find((candidate) =>
+          candidate.start === sourceRun.start && candidate.end === sourceRun.end);
+        return scriptRun ? {
+          ...sourceRun, script: scriptRun.script, direction: scriptRun.direction,
+          bidiLevel: scriptRun.bidiLevel, graphemeStart: scriptRun.graphemeStart,
+          graphemeEnd: scriptRun.graphemeEnd
+        } : sourceRun;
+      });
+      return { text, utf16Length: text.length, graphemes, scriptRuns,
+        sourceRuns: enrichedSourceRuns,
+        nonShapingRuns: enrichedSourceRuns.filter((run) => run.kind !== 'shape') };
     }
   };
 }
@@ -87,8 +98,10 @@ describe('TextItem Shaping Plan — paragraph itemization before word splitting'
     assertEq(plan.scriptRuns.length, 1, 'equal resolved font runs coalesce');
     assertEq(plan.scriptRuns[0].sourceRange, {
       coordinateSpace: 'document-utf16', start: 100, end: 107,
-      docId: 'doc-1', blockId: 'block-1', itemId: 'text-1', runIndex: 0
+      docId: 'doc-1', blockId: 'block-1', itemId: 'text-1'
     });
+    assertEq(plan.scriptRuns[0].styleRunIndexes, [0, 1, 2],
+      'coalesced shaping run preserves all original inline style run indexes');
     assertEq(plan.scriptRuns[0].text, text);
     assertEq(plan.scriptRuns[0].font.fontId, 'fnt-11111111111111');
     assertEq(plan.scriptRuns[0].features, FEATURES.Hebr);
@@ -179,6 +192,43 @@ describe('TextItem Shaping Plan — paragraph itemization before word splitting'
     try { createTextItemShapingPlan(item, options); } catch (caught) { error = caught; }
     assert(error instanceof Error);
     assertEq(error.code, 'missing-script-language');
+  });
+
+  it('does not require a font for a TextItem made only of Bidi_Control characters', () => {
+    const text = String.fromCodePoint(0x202B, 0x202C);
+    const graphemes = [
+      { start: 0, end: 1, text: text[0], status: 'bidi-control', direction: 'rtl', bidiLevel: 1, shapeable: false, containsBidiControl: true, isBidiControl: true },
+      { start: 1, end: 2, text: text[1], status: 'bidi-control', direction: 'rtl', bidiLevel: 1, shapeable: false, containsBidiControl: true, isBidiControl: true }
+    ];
+    const item = baseItem([{ text, sourceStart: 100, sourceEnd: 102, fontFamily: 'NoFontRegistered' }], text);
+    let resolveCalls = 0;
+    const options = makeOptions(text, graphemes, [], [
+      { kind: 'bidi-control', start: 0, end: 1, text: text[0] },
+      { kind: 'bidi-control', start: 1, end: 2, text: text[1] }
+    ], {
+      fontResolver: { resolveFont() { resolveCalls++; return { ok: false, code: 'font-unavailable' }; } },
+      variationAxesByFontId: {}
+    });
+    const plan = createTextItemShapingPlan(item, options);
+    assertEq(resolveCalls, 0);
+    assertEq(plan.scriptRuns.length, 0);
+    assertEq(plan.nonShapingRuns.map((run) => run.kind), ['bidi-control', 'bidi-control']);
+  });
+
+  it('rejects ScriptRuns whose direction parity conflicts with their Bidi level', () => {
+    const text = 'אב';
+    const graphemes = [
+      { start: 0, end: 1, text: 'א', script: 'Hebr', status: 'strong', direction: 'rtl', bidiLevel: 1, shapeable: true },
+      { start: 1, end: 2, text: 'ב', script: 'Hebr', status: 'strong', direction: 'rtl', bidiLevel: 1, shapeable: true }
+    ];
+    const scriptRuns = [{ start: 0, end: 2, text, script: 'Hebr', direction: 'ltr', bidiLevel: 1, graphemeStart: 0, graphemeEnd: 2 }];
+    const sourceRuns = [{ kind: 'shape', start: 0, end: 2, text, script: 'Hebr', direction: 'ltr', bidiLevel: 1, graphemeStart: 0, graphemeEnd: 2 }];
+    const item = baseItem([{ text, sourceStart: 100, sourceEnd: 102, fontFamily: 'Frank Ruhl Libre' }], text);
+    let error;
+    try { createTextItemShapingPlan(item, makeOptions(text, graphemes, scriptRuns, sourceRuns)); }
+    catch (caught) { error = caught; }
+    assert(error instanceof Error);
+    assertEq(error.code, 'invalid-script-run');
   });
 
   it('retains an explicit diagnostic when the font resolver uses its configured fallback', () => {

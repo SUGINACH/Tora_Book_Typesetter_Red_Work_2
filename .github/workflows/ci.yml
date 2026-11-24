@@ -32,9 +32,9 @@ jobs:
       # **S5.3:** הסוויטות של S5.2 (s52-dp/s52-ui/audit-sensitivity) נוספו לשרשרת —
       # עד כאן היו קיימות בעץ אך לא הורצו בשום workflow (מוקש שנתפס בסקירת S5.3).
       # **שלב 5 פרוסה 2 (דיוק דיווח — §3.3 בביקורת):** התווית מתעדכנת למספרים
-      # בפועל בכל שינוי מהותי במספר הבדיקות (נכון לשלב 7: 1146 בדיקות ·
+      # בפועל בכל שינוי מהותי במספר הבדיקות (נכון לשלב ShapedRun/Itemizer: 1162 בדיקות ·
       # 67 קבצי סוויטה + scan-control-triggers; הקודם ציין 1130/66 — פרוסה 2).
-      - name: Run full test suite (1154 tests · 68 suite files + scan-control-triggers, zero deps)
+      - name: Run full test suite (1162 tests · 69 suite files + scan-control-triggers, zero deps)
         run: cd red-build && npm test
       - name: Determinism check
         run: cd red-build && npm run test:determinism
