@@ -59,6 +59,9 @@ def main():
             row['maxBoundsDeltaFontUnits']=geom['maxBoundsDeltaFontUnits']
             row['worstGlyph']=geom['worstGlyph']
             row['hmetricsRemapping']=geom['hmetricsRemapping']
+            row['maxGlyphSetPlacementDeltaFontUnits']=geom['maxGlyphSetPlacementDeltaFontUnits']
+            row['maxGlyphSetPlacementDeltaEm']=geom['maxGlyphSetPlacementDeltaEm']
+            row['worstPlacementGlyph']=geom['worstPlacementGlyph']
             converted_metrics_by_gid=[tuple(int(v) for v in f['hmtx'].metrics[n]) for n in order]
             if [m[0] for m in converted_metrics_by_gid] != [m[0] for m in metrics0]:
                 raise ValueError('advance widths changed during CFF-to-glyf conversion')
@@ -104,6 +107,8 @@ def main():
             converted_order=list(f.getGlyphOrder())
             converted_bounds=raw_glyf_bounds(f)
             converted_bounds_by_gid=[converted_bounds.get(name) for name in converted_order]
+            aligned_converted_bounds=glyph_bounds(f, prefer_cff=False)
+            aligned_converted_bounds_by_gid=[aligned_converted_bounds.get(name) for name in converted_order]
             f.flavor=None; tmp=root/'artifacts/cff-conversion-stress/tmp'
             tmp.mkdir(parents=True,exist_ok=True); output=tmp/(hashlib.sha256(rel.encode()).hexdigest()+'.ttf'); f.save(str(output))
             if rel == 'Ploni-Regular.ttf' and len(order) > 725:
@@ -157,13 +162,20 @@ def main():
                 raise ValueError('advance widths changed')
             if len(out.getGlyphOrder())!=len(order): raise ValueError('glyph count changed')
             bounds1=raw_glyf_bounds(out); maxround=0.0
+            aligned_bounds1=glyph_bounds(out, prefer_cff=False); max_aligned_roundtrip=0.0
             for gid,n in enumerate(out.getGlyphOrder()):
                 a=converted_bounds_by_gid[gid]; b=bounds1[n]
-                if a is None or b is None:
-                    if a!=b: raise ValueError(f'empty outline changed at GID {gid}')
+                aa=aligned_converted_bounds_by_gid[gid]; bb=aligned_bounds1[n]
+                if a is None or b is None or aa is None or bb is None:
+                    if a!=b or aa!=bb: raise ValueError(f'empty outline changed at GID {gid}')
                     continue
                 maxround=max(maxround,max(abs(float(x)-float(y)) for x,y in zip(a,b)))
-            if maxround>0.01: raise ValueError(f'round-trip bbox changed {maxround}')
+                max_aligned_roundtrip=max(
+                    max_aligned_roundtrip,
+                    max(abs(float(x)-float(y)) for x,y in zip(aa,bb)),
+                )
+            if maxround>0.01: raise ValueError(f'raw round-trip bbox changed {maxround}')
+            if max_aligned_roundtrip>0.01: raise ValueError(f'GlyphSet-aligned round-trip bbox changed {max_aligned_roundtrip}')
             if 'glyf' not in out or 'loca' not in out or 'CFF ' in out: raise ValueError('output not glyf/loca')
             cmap = out.getBestCmap() or {}
             bounds_by_name = raw_glyf_bounds(out)
@@ -287,7 +299,7 @@ def main():
                 except Exception as alt_exc:
                     row['decomposedAlternative'] = {'status': 'failed', 'error': f'{type(alt_exc).__name__}: {alt_exc}'}
             runtime=java_subset_check(root,output,sample)
-            row.update({'roundTripBoundsDelta':maxround,'runtimeSubset':runtime,'conversionBoundsOutlier':visual_outlier,'convertedBytes':output.stat().st_size,'convertedSha256':sha(output),'status':'passed'})
+            row.update({'roundTripBoundsDelta':maxround,'alignedRoundTripBoundsDelta':max_aligned_roundtrip,'runtimeSubset':runtime,'conversionBoundsOutlier':visual_outlier,'convertedBytes':output.stat().st_size,'convertedSha256':sha(output),'status':'passed'})
             out.close(); output.unlink(missing_ok=True)
         except Exception as e:
             row.update({'status':'failed','error':f'{type(e).__name__}: {e}'})
