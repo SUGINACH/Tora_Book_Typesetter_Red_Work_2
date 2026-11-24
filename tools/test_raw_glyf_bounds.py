@@ -103,6 +103,14 @@ def main() -> int:
         assert raw_remapped == raw_before, (raw_before, raw_remapped)
         assert aligned_remapped == raw_before, (raw_before, aligned_remapped)
         assert int(font["hmtx"].metrics["offcurve-test"][0]) == 611
+        assert int(font["hhea"].advanceWidthMax) == 611
+        assert int(font["hhea"].minLeftSideBearing) == -72
+        assert int(font["hhea"].minRightSideBearing) == 100
+        assert int(font["hhea"].xMaxExtent) == 500
+        assert [
+            int(font["head"].xMin), int(font["head"].yMin),
+            int(font["head"].xMax), int(font["head"].yMax),
+        ] == [-72, 0, 500, 700]
 
         font.save(path)
         font.close()
