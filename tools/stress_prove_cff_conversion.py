@@ -5,7 +5,7 @@ import argparse, json, hashlib, sys
 from pathlib import Path
 from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
-from prove_font_conversion import convert_cff_to_glyf, glyph_bounds, java_subset_check, font_sample_text, MAX_ERR_EM
+from prove_font_conversion import convert_cff_to_glyf, glyph_bounds, java_subset_check, write_glyph_comparison, MAX_ERR_EM
 from audit_font_catalog import read_catalog
 
 
@@ -19,6 +19,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--repo-root',type=Path,default=Path(__file__).resolve().parents[1])
     p.add_argument('--output',type=Path,default=Path('artifacts/cff-conversion-stress/report.json'))
+    p.add_argument('--visual-dir',type=Path,default=Path('artifacts/cff-conversion-stress/visuals'))
     args=p.parse_args(); root=args.repo_root.resolve(); assets=root/'red-build/ui/assets/imud'
     core=read_catalog(assets/'imud-fonts.json','core'); ext=read_catalog(assets/'fonts-extended.json','extended')
     unique={str(e['file']) for e in core+ext}
@@ -62,21 +63,38 @@ def main():
             if maxround>0.01: raise ValueError(f'round-trip bbox changed {maxround}')
             if 'glyf' not in out or 'loca' not in out or 'CFF ' in out: raise ValueError('output not glyf/loca')
             cmap = out.getBestCmap() or {}
-            hebrew_count = sum(1 for cp in range(0x05D0, 0x05EB) if cp in cmap)
-            row['hebrewLettersMapped'] = hebrew_count
-            if hebrew_count == 27:
-                sample = font_sample_text(out, 'stress-full-hebrew')
-            elif hebrew_count:
-                sample = font_sample_text(out, 'partial-hebrew')
+            bounds_by_name = glyph_bounds(out)
+            mapped_letters = [cp for cp in range(0x05D0, 0x05EB) if cp in cmap]
+            empty_letters = [cp for cp in mapped_letters if bounds_by_name.get(out.getGlyphName(cmap[cp])) is None]
+            if empty_letters:
+                raise ValueError('Hebrew letters map to empty outlines: ' + ','.join(f'U+{cp:04X}' for cp in empty_letters))
+            hebrew = ''.join(chr(cp) for cp in mapped_letters)
+            row['hebrewLettersMapped'] = len(mapped_letters)
+            mapped_marks = [cp for cp in range(0x0591, 0x05C8) if cp in cmap]
+            empty_marks = [cp for cp in mapped_marks if bounds_by_name.get(out.getGlyphName(cmap[cp])) is None]
+            supported_marks = [cp for cp in mapped_marks if cp not in empty_marks]
+            row['hebrewMarksMapped'] = len(mapped_marks)
+            row['hebrewMarksWithNonEmptyOutlines'] = len(supported_marks)
+            row['emptyMappedHebrewMarks'] = [f'U+{cp:04X}' for cp in empty_marks]
+            if empty_marks:
+                row['coverageWarnings'] = ['mapped Hebrew marks have empty outlines; these marks are excluded from the subset sample']
+            if hebrew:
+                sample = hebrew + ''.join(chr(cp) for cp in supported_marks)
             else:
-                latin = ''.join(ch for ch in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' if ord(ch) in cmap)
-                if len(latin) < 1:
-                    latin = ''.join(chr(cp) for cp in sorted(cmap) if 0x20 <= cp <= 0x7E and not chr(cp).isspace())[:12]
+                latin = ''.join(ch for ch in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' if ord(ch) in cmap and bounds_by_name.get(out.getGlyphName(cmap[ord(ch)])) is not None)
                 if not latin:
-                    raise ValueError('no printable Unicode sample available for production subset check')
-                sample = latin[:12]
+                    latin = ''.join(chr(cp) for cp in sorted(cmap) if 0x20 <= cp <= 0x7E and not chr(cp).isspace() and bounds_by_name.get(out.getGlyphName(cmap[cp])) is not None)[:12]
+                if not latin:
+                    raise ValueError('no printable, non-empty Unicode sample available for production subset check')
+                sample = latin[:32]
+            if row['maxBoundsDeltaFontUnits'] >= 20 and row.get('worstGlyph'):
+                label = 'outlier-' + Path(rel).stem.replace(' ', '-').replace('/', '-')
+                visual_dir = args.visual_dir if args.visual_dir.is_absolute() else root / args.visual_dir
+                row['glyphComparisonArtifacts'] = write_glyph_comparison(
+                    src, output, int(row['worstGlyph']['gid']), visual_dir, label
+                )
             runtime=java_subset_check(root,output,sample)
-            row.update({'roundTripBoundsDelta':maxround,'runtimeSubset':runtime,'convertedBytes':output.stat().st_size,'convertedSha256':sha(output),'status':'passed'})
+            row.update({'roundTripBoundsDelta':maxround,'runtimeSubset':runtime,'conversionBoundsOutlier':row['maxBoundsDeltaFontUnits'] >= 20,'convertedBytes':output.stat().st_size,'convertedSha256':sha(output),'status':'passed'})
             out.close(); output.unlink(missing_ok=True)
         except Exception as e:
             row.update({'status':'failed','error':f'{type(e).__name__}: {e}'})
