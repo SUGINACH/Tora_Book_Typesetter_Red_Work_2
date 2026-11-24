@@ -336,7 +336,8 @@
 
     function buildScriptRuns(graphemes) {
       const runs = [];
-      for (const grapheme of graphemes) {
+      for (let graphemeIndex = 0; graphemeIndex < graphemes.length; graphemeIndex++) {
+        const grapheme = graphemes[graphemeIndex];
         const key = [
           grapheme.script || '?',
           grapheme.direction || '?',
@@ -360,8 +361,8 @@
           scriptCandidates: grapheme.candidates.slice(),
           direction: grapheme.direction || null,
           bidiLevel: grapheme.bidiLevel,
-          graphemeStart: graphemes.indexOf(grapheme),
-          graphemeEnd: graphemes.indexOf(grapheme) + 1,
+          graphemeStart: graphemeIndex,
+          graphemeEnd: graphemeIndex + 1,
           _key: key
         });
       }
@@ -401,8 +402,9 @@
         const extensionCount = header[3];
         if (utf16Length !== units.length || graphemeCount > units.length ||
             scalarCount > units.length || extensionCount > scalarCount * 64) {
-          // Header values are validated before allocating/copying the output array.
-          freeOutput(outputPointer, 4);
+          // Do not free with an untrusted/partial length: bidi_free_u32 reconstructs
+          // a boxed slice and requires the exact allocation length. A malformed ABI
+          // header is fatal; preserving memory safety is preferable to guessing.
           throw new Error('Unicode 18 itemizer returned unsafe output dimensions');
         }
         const outputLength = 4 + graphemeCount * 4 + scalarCount * 5 + extensionCount;
@@ -649,12 +651,14 @@
               lines
             };
           });
+          const itemization = itemizeScripts(text, resolved);
           return {
             id: fixture.id,
             baseDirection,
             text,
             utf16Length: units.length,
             levels: resolved.levels,
+            itemization,
             paragraphs: paragraphResults
           };
         })
