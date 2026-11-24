@@ -683,6 +683,53 @@
       };
     }
 
+    function validateGraphemeFixtures(data) {
+      if (!data || data.unicodeVersion !== '18.0.0' || !Array.isArray(data.fixtures) ||
+          !Number.isSafeInteger(data.testCount) || data.testCount !== data.fixtures.length ||
+          !data.sourceCommit || !data.sourcePath) {
+        throw new TypeError('Grapheme fixtures must be a versioned Unicode 18.0.0 conformance dataset');
+      }
+      const failures = [];
+      let checkedBoundaries = 0;
+      let passedCases = 0;
+      for (const fixture of data.fixtures) {
+        const text = String(fixture.text);
+        const expected = fixture.expectedBoundaries;
+        if (!Array.isArray(expected) || !expected.length ||
+            expected.some((value) => !Number.isSafeInteger(value) || value < 0 || value > text.length) ||
+            expected[0] !== 0 || expected[expected.length - 1] !== text.length ||
+            expected.some((value, index) => index > 0 && value <= expected[index - 1])) {
+          throw new Error('Malformed expected GraphemeBreakTest boundaries for ' + String(fixture.id));
+        }
+        const itemization = itemizeScripts(text);
+        const actual = [0, ...itemization.graphemes.map((grapheme) => grapheme.end)];
+        checkedBoundaries += expected.length;
+        const matches = actual.length === expected.length &&
+          actual.every((value, index) => value === expected[index]);
+        if (matches) {
+          passedCases++;
+        } else if (failures.length < 25) {
+          failures.push({
+            id: fixture.id,
+            sourceLine: fixture.sourceLine,
+            expected,
+            actual
+          });
+        }
+      }
+      return {
+        unicodeVersion: data.unicodeVersion,
+        sourceRepository: data.sourceRepository,
+        sourceCommit: data.sourceCommit,
+        sourcePath: data.sourcePath,
+        testCount: data.fixtures.length,
+        passedCases,
+        failedCases: data.fixtures.length - passedCases,
+        checkedBoundaries,
+        failureExamples: failures
+      };
+    }
+
     function logicalRunsForParagraph(paragraph, levels, units) {
       const runs = [];
       let index = paragraph.start;
@@ -772,6 +819,7 @@
       lineVisualRuns,
       itemizeScripts,
       validateFontBoundaries,
+      validateGraphemeFixtures,
       analyzeFixtures
     };
   }

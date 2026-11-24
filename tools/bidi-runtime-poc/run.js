@@ -78,7 +78,7 @@ async function main() {
   let browserOpened = false;
 
   try {
-    for (const file of ['index.html', 'bidi-api.js', 'bidi-worker.js', 'fixtures.json']) {
+    for (const file of ['index.html', 'bidi-api.js', 'bidi-worker.js']) {
       fs.copyFileSync(path.join(__dirname, file), path.join(site, file));
     }
     fs.copyFileSync(wasmPath, path.join(site, 'bidi-runtime.wasm'));
@@ -87,6 +87,24 @@ async function main() {
     const wasmBytes = fs.readFileSync(wasmPath);
     const runtime = await api.instantiate(wasmBytes);
     const fixtures = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures.json'), 'utf8'));
+    const graphemeFixturesPath = process.argv[3];
+    if (!graphemeFixturesPath || !fs.existsSync(graphemeFixturesPath)) {
+      throw new Error('usage: node tools/bidi-runtime-poc/run.js /path/to/red-bidi-runtime-poc.wasm /path/to/unicode18-grapheme-fixtures.json');
+    }
+    const graphemeFixtures = JSON.parse(fs.readFileSync(graphemeFixturesPath, 'utf8'));
+    const graphemeResult = runtime.validateGraphemeFixtures(graphemeFixtures);
+    const graphemeResultJson = JSON.stringify(graphemeResult);
+    report.graphemeBreakConformance = {
+      ...graphemeResult,
+      outputSha256: crypto.createHash('sha256').update(graphemeResultJson).digest('hex')
+    };
+    if (graphemeResult.failedCases !== 0 ||
+        graphemeResult.passedCases !== graphemeResult.testCount) {
+      throw new Error('Unicode 18 GraphemeBreakTest failed: ' + JSON.stringify(report.graphemeBreakConformance));
+    }
+
+    fs.writeFileSync(path.join(site, 'fixtures.json'), JSON.stringify(fixtures), 'utf8');
+    fs.writeFileSync(path.join(site, 'grapheme-fixtures.json'), JSON.stringify(graphemeFixtures), 'utf8');
 
     const malformedUtf16Probe = { unpairedHighRejected: false, unpairedLowRejected: false };
     try {
@@ -453,11 +471,16 @@ async function main() {
     }
     const browserJson = JSON.stringify(browserResult.report);
     report.browserWorker.outputSha256 = crypto.createHash('sha256').update(browserJson).digest('hex');
+    const browserGraphemeJson = JSON.stringify(browserResult.graphemeResult);
+    report.browserWorker.graphemeOutputSha256 = crypto.createHash('sha256').update(browserGraphemeJson).digest('hex');
     report.exactNodeParity = browserJson === nodeJson;
-    if (!report.exactNodeParity) {
-      throw new Error('Node/classic Worker Bidi output differs: ' + JSON.stringify({
+    report.exactNodeGraphemeParity = browserGraphemeJson === graphemeResultJson;
+    if (!report.exactNodeParity || !report.exactNodeGraphemeParity) {
+      throw new Error('Node/classic Worker Bidi or GraphemeBreakTest output differs: ' + JSON.stringify({
         nodeSha256: report.nodeReference.outputSha256,
-        workerSha256: report.browserWorker.outputSha256
+        workerSha256: report.browserWorker.outputSha256,
+        nodeGraphemeSha256: report.graphemeBreakConformance.outputSha256,
+        workerGraphemeSha256: report.browserWorker.graphemeOutputSha256
       }));
     }
     report.result = 'passed';
