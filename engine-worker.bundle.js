@@ -7321,8 +7321,13 @@ function registerFont(alias, bytes, meta = {}) {
   if (!bytes || !bytes.length) return { ok: false, code: 'empty-bytes', message: `גופן ללא בתים: ${alias}` };
   const parsed = fm.parseFont(bytes);
   if (!parsed.ok) return { ok: false, code: 'unparseable-font', message: `פענוח הגופן נכשל (${alias}): ${parsed.error}` };
-  const fontId = `fnt-${sha256Hex(bytes).slice(0, 14)}`;
+  const sourceHash = sha256Hex(bytes);
+  const fontId = `fnt-${sourceHash.slice(0, 14)}`;
   let record = _fonts.get(fontId);
+  if (record && record.sourceHash !== sourceHash) {
+    return { ok: false, code: 'font-id-prefix-collision', fontId,
+      message: 'A short fontId prefix collision was detected; the existing font record was not replaced' };
+  }
   const isNew = !record;
   if (isNew) {
     record = {
@@ -7330,7 +7335,8 @@ function registerFont(alias, bytes, meta = {}) {
       aliases: [],
       face: meta.face || alias,
       source: meta.source || null,
-      fingerprint: sha256Hex(bytes).slice(14, 28), // טביעת אצבע משלימה (מעבר המזהה)
+      sourceHash,
+      fingerprint: sourceHash.slice(14, 28), // טביעת אצבע משלימה (מעבר המזהה)
       unitsPerEm: parsed.font.unitsPerEm,
       numGlyphs: parsed.font.numGlyphs,
       metrics: {
