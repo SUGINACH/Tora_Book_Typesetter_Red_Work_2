@@ -5,7 +5,7 @@ import argparse, json, hashlib, sys, re
 from pathlib import Path
 from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
-from prove_font_conversion import convert_cff_to_glyf, convert_cff_to_glyf_decomposed, glyph_bounds, java_subset_check, write_glyph_comparison, MAX_ERR_EM
+from prove_font_conversion import convert_cff_to_glyf, convert_cff_to_glyf_decomposed, glyph_bounds, raw_glyf_bounds, java_subset_check, write_glyph_comparison, MAX_ERR_EM
 from audit_font_catalog import read_catalog
 
 
@@ -75,7 +75,7 @@ def main():
             if maximum is None or row['maxBoundsDeltaFontUnits']>maximum['delta']:
                 maximum={'file':rel,'delta':row['maxBoundsDeltaFontUnits'],'deltaEm':row['maxBoundsDeltaFontUnits']/float(f['head'].unitsPerEm) if 'head' in f else None,'worstGlyph':row['worstGlyph']}
             converted_order=list(f.getGlyphOrder())
-            converted_bounds=glyph_bounds(f)
+            converted_bounds=raw_glyf_bounds(f)
             converted_bounds_by_gid=[converted_bounds.get(name) for name in converted_order]
             f.flavor=None; tmp=root/'artifacts/cff-conversion-stress/tmp'
             tmp.mkdir(parents=True,exist_ok=True); output=tmp/(hashlib.sha256(rel.encode()).hexdigest()+'.ttf'); f.save(str(output)); f.close()
@@ -85,7 +85,7 @@ def main():
             if cmap1!=cmap0: raise ValueError('cmap-to-GID mapping changed')
             if metrics1!=metrics0: raise ValueError('hmtx advance/sidebearing changed')
             if len(out.getGlyphOrder())!=len(order): raise ValueError('glyph count changed')
-            bounds1=glyph_bounds(out); maxround=0.0
+            bounds1=raw_glyf_bounds(out); maxround=0.0
             for gid,n in enumerate(out.getGlyphOrder()):
                 a=converted_bounds_by_gid[gid]; b=bounds1[n]
                 if a is None or b is None:
@@ -95,7 +95,7 @@ def main():
             if maxround>0.01: raise ValueError(f'round-trip bbox changed {maxround}')
             if 'glyf' not in out or 'loca' not in out or 'CFF ' in out: raise ValueError('output not glyf/loca')
             cmap = out.getBestCmap() or {}
-            bounds_by_name = glyph_bounds(out)
+            bounds_by_name = raw_glyf_bounds(out)
             mapped_letters = [cp for cp in range(0x05D0, 0x05EB) if cp in cmap]
             empty_letters = [cp for cp in mapped_letters if bounds_by_name.get(cmap[cp]) is None]
             row['hebrewLettersMapped'] = len(mapped_letters)
@@ -154,7 +154,7 @@ def main():
                     alt_geometry = convert_cff_to_glyf_decomposed(alt_font, float(alt_font['head'].unitsPerEm) * MAX_ERR_EM)
                     alt_gid = int(row['worstGlyph']['gid'])
                     alt_pre_save_order = list(alt_font.getGlyphOrder())
-                    alt_pre_save_bounds = glyph_bounds(alt_font)
+                    alt_pre_save_bounds = raw_glyf_bounds(alt_font)
                     alt_pre_save_bounds_by_gid = [alt_pre_save_bounds.get(n) for n in alt_pre_save_order]
                     alt_f = tmp / (hashlib.sha256((rel + '|decomposed').encode()).hexdigest() + '.ttf')
                     alt_font.flavor = None
@@ -170,7 +170,7 @@ def main():
                     alt_cmap = {int(cp): int(alt_check.getGlyphID(n)) for cp, n in (alt_check.getBestCmap() or {}).items()}
                     if alt_cmap != cmap0:
                         raise ValueError('decomposed strategy changed cmap-to-GID mapping')
-                    alt_bounds = glyph_bounds(alt_check)
+                    alt_bounds = raw_glyf_bounds(alt_check)
                     alt_roundtrip = 0.0
                     for alt_index, alt_glyph_name in enumerate(alt_order):
                         pre = alt_pre_save_bounds_by_gid[alt_index]
