@@ -80,6 +80,167 @@
     return true;
   }
 
+  function cubicValue(p0, p1, p2, p3, t) {
+    const mt = 1 - t;
+    return mt * mt * mt * p0 +
+      3 * mt * mt * t * p1 +
+      3 * mt * t * t * p2 +
+      t * t * t * p3;
+  }
+
+  function cubicDerivativeRoots(p0, p1, p2, p3) {
+    // Solve derivative/3 = a*t^2 + b*t + c = 0.
+    const a = -p0 + 3 * p1 - 3 * p2 + p3;
+    const b = 2 * (p0 - 2 * p1 + p2);
+    const c = p1 - p0;
+    const scale = Math.max(1, Math.abs(a), Math.abs(b), Math.abs(c));
+    const epsilon = Number.EPSILON * scale * 32;
+
+    if (Math.abs(a) <= epsilon) {
+      if (Math.abs(b) <= epsilon) return [];
+      const root = -c / b;
+      return root > 0 && root < 1 ? [root] : [];
+    }
+
+    let discriminant = b * b - 4 * a * c;
+    if (discriminant < -epsilon * scale) return [];
+    if (discriminant < 0) discriminant = 0;
+    const squareRoot = Math.sqrt(discriminant);
+    if (squareRoot === 0) {
+      const root = -b / (2 * a);
+      return root > 0 && root < 1 ? [root] : [];
+    }
+
+    // Numerically stable quadratic formula; the second root uses c/q.
+    const q = -0.5 * (b + (b >= 0 ? squareRoot : -squareRoot));
+    const candidates = q === 0
+      ? [-b / (2 * a)]
+      : [q / a, c / q];
+    return candidates.filter((root, index) =>
+      root > 0 && root < 1 && candidates.indexOf(root) === index
+    );
+  }
+
+  // Exact axis-aligned bounds of SVG M/L/C/Z paths. Cubic Bézier extrema
+  // are solved analytically; control points are never mistaken for ink.
+  // Unknown commands fail closed so a new outline syntax cannot silently
+  // produce an incomplete or misleading bound.
+  function pathBoundsFromSvgPath(path) {
+    if (typeof path !== 'string') throw new TypeError('SVG path must be a string');
+    if (!path.trim()) return null;
+
+    const tokens = [];
+    const tokenPattern = /([A-Za-z])|([-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)/g;
+    let cursor = 0;
+    let match;
+    while ((match = tokenPattern.exec(path)) !== null) {
+      const separator = path.slice(cursor, match.index);
+      if (!/^[\s,]*$/.test(separator)) {
+        throw new Error('Unsupported SVG path syntax near: ' + separator);
+      }
+      tokens.push(match[1] || Number(match[2]));
+      cursor = tokenPattern.lastIndex;
+    }
+    if (!/^[\s,]*$/.test(path.slice(cursor))) {
+      throw new Error('Unsupported trailing SVG path syntax');
+    }
+
+    let bounds = null;
+    function includePoint(px, py) {
+      if (!Number.isFinite(px) || !Number.isFinite(py)) {
+        throw new Error('Non-finite SVG path coordinate');
+      }
+      if (!bounds) {
+        bounds = { xMin: px, yMin: py, xMax: px, yMax: py };
+        return;
+      }
+      bounds.xMin = Math.min(bounds.xMin, px);
+      bounds.yMin = Math.min(bounds.yMin, py);
+      bounds.xMax = Math.max(bounds.xMax, px);
+      bounds.yMax = Math.max(bounds.yMax, py);
+    }
+
+    function includeCubic(p0, p1, p2, p3) {
+      includePoint(p0[0], p0[1]);
+      includePoint(p3[0], p3[1]);
+      const xRoots = cubicDerivativeRoots(p0[0], p1[0], p2[0], p3[0]);
+      const yRoots = cubicDerivativeRoots(p0[1], p1[1], p2[1], p3[1]);
+      for (const t of xRoots) {
+        includePoint(
+          cubicValue(p0[0], p1[0], p2[0], p3[0], t),
+          cubicValue(p0[1], p1[1], p2[1], p3[1], t)
+        );
+      }
+      for (const t of yRoots) {
+        includePoint(
+          cubicValue(p0[0], p1[0], p2[0], p3[0], t),
+          cubicValue(p0[1], p1[1], p2[1], p3[1], t)
+        );
+      }
+    }
+
+    let index = 0;
+    let command = null;
+    let x = 0;
+    let y = 0;
+    let subpathX = 0;
+    let subpathY = 0;
+
+    while (index < tokens.length) {
+      if (typeof tokens[index] === 'string') {
+        command = tokens[index++];
+        const upper = command.toUpperCase();
+        if (!'MLCZ'.includes(upper)) {
+          throw new Error('Unsupported SVG path command: ' + command);
+        }
+        if (upper === 'Z') {
+          includePoint(x, y);
+          includePoint(subpathX, subpathY);
+          x = subpathX;
+          y = subpathY;
+          command = null;
+        }
+        continue;
+      }
+
+      if (!command) throw new Error('SVG path numbers without a command');
+      const upper = command.toUpperCase();
+      const relative = command !== upper;
+      const groupSize = upper === 'C' ? 6 : 2;
+      if (index + groupSize > tokens.length ||
+          tokens.slice(index, index + groupSize).some((value) => typeof value !== 'number')) {
+        throw new Error('Malformed SVG path command: ' + command);
+      }
+      const values = tokens.slice(index, index + groupSize);
+      index += groupSize;
+
+      if (upper === 'M') {
+        x = values[0] + (relative ? x : 0);
+        y = values[1] + (relative ? y : 0);
+        subpathX = x;
+        subpathY = y;
+        includePoint(x, y);
+        // Additional coordinate pairs after moveto are implicit lineto.
+        command = relative ? 'l' : 'L';
+      } else if (upper === 'L') {
+        x = values[0] + (relative ? x : 0);
+        y = values[1] + (relative ? y : 0);
+        includePoint(x, y);
+      } else if (upper === 'C') {
+        const baseX = x;
+        const baseY = y;
+        const p0 = [baseX, baseY];
+        const p1 = [values[0] + (relative ? baseX : 0), values[1] + (relative ? baseY : 0)];
+        const p2 = [values[2] + (relative ? baseX : 0), values[3] + (relative ? baseY : 0)];
+        const p3 = [values[4] + (relative ? baseX : 0), values[5] + (relative ? baseY : 0)];
+        includeCubic(p0, p1, p2, p3);
+        x = p3[0];
+        y = p3[1];
+      }
+    }
+    return bounds;
+  }
+
   // JavaScript source ranges in the engine are UTF-16 code-unit offsets.
   // HarfBuzzJS 1.6.4 Buffer.addText uses hb_buffer_add_utf16; pin that contract
   // with one supplementary-plane scalar between two BMP characters.
@@ -286,11 +447,18 @@
       if (!Number.isInteger(maxGlyphs) || maxGlyphs <= 0) throw new Error('Invalid maxp.numGlyphs for ' + fixture.name);
       let outlineGlyphCount = 0;
       let emptyOutlineGlyphCount = 0;
+      let exactPathBoundsGlyphCount = 0;
+      let emptyPathBoundsGlyphCount = 0;
       let totalOutlinePathChars = 0;
       let digest = 2166136261;
       const outlinePaths = fixture.captureOutlinePaths ? [] : null;
       for (let gid = 0; gid < maxGlyphs; gid++) {
         const path = font.glyphToPath(gid);
+        if (typeof path !== 'string') {
+          throw new Error('CFF glyphToPath returned a non-string for ' + fixture.name + ' GID ' + gid);
+        }
+        const exactInkBounds = pathBoundsFromSvgPath(path);
+        if (exactInkBounds) exactPathBoundsGlyphCount++; else emptyPathBoundsGlyphCount++;
         const rawExtents = font.glyphExtents(gid);
         const glyphExtents = rawExtents ? {
           xBearing: Number(rawExtents.xBearing),
@@ -301,8 +469,7 @@
         if (glyphExtents && Object.values(glyphExtents).some((value) => !Number.isFinite(value))) {
           throw new Error('Non-finite CFF glyph extents for ' + fixture.name + ' GID ' + gid);
         }
-        if (outlinePaths) outlinePaths.push({ gid, path, glyphExtents });
-        if (typeof path !== 'string') throw new Error('CFF glyphToPath returned a non-string for ' + fixture.name + ' GID ' + gid);
+        if (outlinePaths) outlinePaths.push({ gid, path, glyphExtents, exactInkBounds });
         if (path.length) outlineGlyphCount++; else emptyOutlineGlyphCount++;
         totalOutlinePathChars += path.length;
         digest ^= gid & 0xff;
@@ -322,6 +489,9 @@
         glyphCount: maxGlyphs,
         outlineGlyphCount,
         emptyOutlineGlyphCount,
+        exactPathBoundsGlyphCount,
+        emptyPathBoundsGlyphCount,
+        pathBoundsMethod: 'analytic-svg-cubic-extrema-v1',
         totalOutlinePathChars,
         outlineDigest: (digest >>> 0).toString(16).padStart(8, '0'),
         outlinePaths
@@ -355,5 +525,8 @@
     };
   }
 
-  return { CASES, FEATURE_TAGS, UTF16_CLUSTER_PROBE_TEXT, clusterSourceRanges, clustersMonotone, shapeWithHarfBuzz };
+  return {
+    CASES, FEATURE_TAGS, UTF16_CLUSTER_PROBE_TEXT,
+    clusterSourceRanges, clustersMonotone, pathBoundsFromSvgPath, shapeWithHarfBuzz
+  };
 });
