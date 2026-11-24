@@ -51,11 +51,28 @@ def sha256_file(path: Path) -> str:
 
 
 def glyph_bounds(font: TTFont, *, prefer_cff: bool = True) -> dict[str, tuple[float, float, float, float] | None]:
+    """Bounds through FontTools' generic GlyphSet (includes glyf LSB alignment)."""
     glyph_set = font.getGlyphSet(preferCFF=prefer_cff)
     result = {}
     for name in font.getGlyphOrder():
         pen = BoundsPen(glyph_set)
         glyph_set[name].draw(pen)
+        result[name] = pen.bounds
+    return result
+
+
+def raw_glyf_bounds(font: TTFont) -> dict[str, tuple[float, float, float, float] | None]:
+    """Measure stored TrueType contours directly, without GlyphSet's LSB translation."""
+    if "glyf" not in font:
+        raise ValueError("raw glyf bounds require a glyf table")
+    glyf = font["glyf"]
+    result = {}
+    for name in font.getGlyphOrder():
+        glyph = glyf[name]
+        if glyph.isComposite():
+            raise ValueError(f"raw glyph audit expects decomposed outlines, composite found at {name}")
+        pen = BoundsPen(None)
+        glyph.draw(pen, glyf, 0)
         result[name] = pen.bounds
     return result
 
@@ -112,7 +129,8 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
             setattr(maxp, field, default)
     maxp.recalc(font)
 
-    after = glyph_bounds(font, prefer_cff=False)
+    after = raw_glyf_bounds(font)
+    glyphset_aligned_after = glyph_bounds(font, prefer_cff=False)
     max_bbox_delta = 0.0
     worst_glyph = None
     for gid, name in enumerate(names):
@@ -132,6 +150,14 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
                 "deltaFontUnits": delta,
                 "deltaEm": delta / float(font["head"].unitsPerEm),
                 "deltaOverCu2QuTolerance": delta / max_err if max_err else None,
+                "glyphSetAlignedBounds": (
+                    [float(v) for v in glyphset_aligned_after[name]]
+                    if glyphset_aligned_after[name] is not None else None
+                ),
+                "glyphSetHorizontalTranslation": (
+                    float(font["hmtx"].metrics[name][1] - font["glyf"][name].xMin)
+                    if hasattr(font["glyf"][name], "xMin") else None
+                ),
             }
     if worst_glyph is not None:
         source_recording = RecordingPen()
@@ -207,7 +233,7 @@ def convert_cff_to_glyf_decomposed(font: TTFont, max_err: float) -> dict[str, An
         if not hasattr(maxp, field):
             setattr(maxp, field, default)
     maxp.recalc(font)
-    after = glyph_bounds(font)
+    after = raw_glyf_bounds(font)
     max_delta = 0.0
     worst = None
     for gid, name in enumerate(names):
@@ -231,7 +257,15 @@ def convert_cff_to_glyf_decomposed(font: TTFont, max_err: float) -> dict[str, An
 
 
 def glyph_svg_path(font: TTFont, glyph_name: str) -> str:
-    glyph_set = font.getGlyphSet()
+    if "glyf" in font and "CFF " not in font:
+        glyf = font["glyf"]
+        glyph = glyf[glyph_name]
+        if glyph.isComposite():
+            raise ValueError(f"raw comparison requires decomposed glyph, got composite: {glyph_name}")
+        pen = SVGPathPen(None)
+        glyph.draw(pen, glyf, 0)
+        return pen.getCommands()
+    glyph_set = font.getGlyphSet(preferCFF=True)
     pen = SVGPathPen(glyph_set)
     glyph_set[glyph_name].draw(pen)
     return pen.getCommands()
@@ -257,7 +291,7 @@ def write_glyph_comparison(
     source_path_data = glyph_svg_path(source, source_name)
     converted_path_data = glyph_svg_path(converted, converted_name)
     source_bounds = glyph_bounds(source)[source_name]
-    converted_bounds = glyph_bounds(converted)[converted_name]
+    converted_bounds = raw_glyf_bounds(converted)[converted_name]
     if source_bounds is None or converted_bounds is None:
         raise ValueError(f"cannot create visual comparison for empty GID {gid}")
     upem = float(source["head"].unitsPerEm)
