@@ -263,7 +263,12 @@ describe('S72.2 DP — יישור תחתיות ככלל עימוד (שיפורי
     // חפיפות הפס-בגוף ואת העמודים הכמעט-ריקים שפיצויי ההזזה הותירו).
     // contentPreserved=true; דטרמיניזם מאומת להלן; הקנוני לא השתנה (89a0eb42).
     // דוח: audits/legacy-parity-iteration/iteration-005/.
-    assert(result.layoutHash.startsWith('d8a18ce9'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
+    // **Iteration-006 (G4/RC-D1, 24.11):** נעילה מחודשת d8a18ce9→4a136b4a —
+    // הליווי-כותרת רואה דרך בלוקי הערת-צד (בלוק-צד שבין כותרת לפסקה ריק את
+    // בדיקת הליווי ⇒ heading+1line בתחתית טור). heading+1line 1→0;
+    // contentPreserved=true; הקנוני לא השתנה (89a0eb42); דטרמיניזם להלן.
+    // דוח: audits/legacy-parity-iteration/iteration-006/.
+    assert(result.layoutHash.startsWith('4a136b4a'), `hash הקורפוס השתנה: ${result.layoutHash.slice(0, 16)}`);
     const r2 = typeset(corpus, getDefaultSettings(), {});
     assertEq(result.layoutHash, r2.layoutHash, 'דטרמיניזם');
     // הקנוני — נעילת fdff19d8 ממקטע ב׳ (מאומת ב-s13-acceptance)

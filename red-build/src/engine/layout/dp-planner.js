@@ -969,22 +969,35 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
 
     // REQ-BAL-10: heading escort ≥2 שורות אחרי כותרת H1–H6 באותו טור.
     if (blk.kind === 'heading' && blk.level <= 6) {
-      const following = (next && next.lines) ? next.lines.length : 0;
+      // **Iteration-006 (G4/RC-D1 — הליווי רואה דרך בלוקי-צד):** בלוק הערת-צד
+      // (H7/asSideNote) שבין הכותרת לפסקה ריק את בדיקת הליווי — following=0 ⇒
+      // הכותרת הוצבה בלי ליווי ושורת הפסקה הראשונה נכנסה לבדה לתחתית הטור
+      // (נמדד: p50 — H4 t95, אחריו בלוק-צד t96, ואז פסקה t97 בת 14 שורות;
+      // שורה אחת נותרה עם הכותרת, 13 בעמוד הבא — הפרת "מנע-כותרת-יתומה לא
+      // ייצר אלמנת-גוף" מבעיה D). העוקב האמיתי לליווי = הבלוק הגופני הראשון
+      // אחרי בלוקי-צד/בלוקים ריקים.
+      let follower = null;
+      for (let fj = bi + 1; fj < blocks.length; fj++) {
+        const cand = blocks[fj];
+        const isSide = cand.asSideNote === true || (cand.kind === 'heading' && cand.level === 7);
+        if (!isSide && cand.lines && cand.lines.length) { follower = cand; break; }
+      }
+      const following = (follower && follower.lines) ? follower.lines.length : 0;
       if (following >= 1) {
         // **FX-1/FX-5 (דוח 06, שלב 5):** הבדיקה מודדת את המחסנית הפיזית האמיתית
         // (CM.escortStackHeightPx — גבהי הכותרת + פערי כניסה + שורות הליווי)
         // ותוצאתה מנוצלת להצבה מכוונת (escortLockCol/startCol) — בדיקה שאינה
         // קשורה להצבה יוצרת כותרות יתומות שאין להן תיקון (הוכח: FX-1 בדוח 06).
         const escortN = Math.min(CM.ESCORT_MIN_LINES, following);
-        let escortStack = CM.escortStackHeightPx(blk, next, () => blockGapPx(settings, lineH));
+        let escortStack = CM.escortStackHeightPx(blk, follower, () => blockGapPx(settings, lineH));
         // **Iteration-001 (escort×תקציב-הערות):** פסקת הליווי נושאת לעתים הערות
         // שיוקצו לתקציד המרזב בהצבה בפועל (FX-3 — reserveAtMarker לפני השורות).
         // בדיקת הליווי חייבת לראות את הקיבולת שאחרי ההקצאה: בלי זה נמדד
         // (very_long p43) כותרת-H4 מוצבת בתחתית הטור, התקציד מצטמצם, ושורת
         // הפתיחה של הפסקה נותרת בודדת (orphan-bottom שנסיגת האיזון נתקעה
         // עליו בתנודה). הערכה עליונה שמרנית — גובה ההערות החתום של הפסקה.
-        if (settings['footnotes-enabled'] && (next.notes || []).length) {
-          escortStack += next.notes.reduce((s, n) => s + noteHeight(n, settings, null), 0);
+        if (settings['footnotes-enabled'] && (follower.notes || []).length) {
+          escortStack += follower.notes.reduce((s, n) => s + noteHeight(n, settings, null), 0);
         }
         let pushed = false;
         let room = ensureRoomFor(escortStack);

@@ -1,8 +1,8 @@
 {
   "tool": "cross-check",
   "schema": 1,
-  "started": "2026-11-24T07:11:59.836Z",
-  "commit": "943ab14",
+  "started": "2026-11-24T07:35:33.757Z",
+  "commit": "9d44128",
   "node": "v24.22.3",
   "corpora": [
     {
@@ -14,18 +14,18 @@
       "lockHash": "89a0eb42",
       "contentPreserved": true,
       "hashOk": true,
-      "ms": 292
+      "ms": 306
     },
     {
       "name": "very_long (DP)",
       "file": "audits/very_long_test_text.txt",
       "legacy": false,
       "pages": 968,
-      "layoutHash": "f7f7247348c0a059",
-      "lockHash": "f7f72473",
+      "layoutHash": "a5aaa431a75dc4c2",
+      "lockHash": "a5aaa431",
       "contentPreserved": true,
       "hashOk": true,
-      "ms": 14932
+      "ms": 14736
     },
     {
       "name": "very_long (legacy, run-ours = corpus-invariants CI)",
@@ -37,7 +37,7 @@
       "lockHash": "legacy-28f52",
       "contentPreserved": true,
       "hashOk": true,
-      "ms": 5705
+      "ms": 5454
     }
   ],
   "bundles": [

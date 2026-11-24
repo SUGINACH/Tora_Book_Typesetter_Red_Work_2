@@ -10,8 +10,8 @@
     {
       "name": "very_long (DP)",
       "file": "audits/very_long_test_text.txt",
-      "lockHash": "f7f72473",
-      "renewed": "iteration-005 (23.11, RC-F1a+RC-F1c). RC-F1a — חוזה spanning אחיד לפסי H3: 996→969 עמודים (הצל הלא-מיושר הותיר 27 עמודים כמעט-ריקים מפיצויי הזזה/נסיגה). RC-F1c — שעת הכלה בהתחייבות הסמן של נתיב הפיצול (U-8): 969→968 (הסמן והערה עוברים יחד לעמוד הבא כשהתקציב אינו נכנס; סגר חריגת טור 34px ב-very_long/IMUD). contentPreserved=true; mf=0; 0 בלתי-מסווגים. דוח: audits/legacy-parity-iteration/iteration-005/"
+      "lockHash": "a5aaa431",
+      "renewed": "iteration-006 (24.11, G4/RC-D1 — הליווי-כותרת רואה דרך בלוקי הערת-צד אל הפסקה הבאה: בלוק-צד שבין כותרת H1-H6 לפסקה ריק את בדיקת הליווי ⇒ heading+1line בודדת בתחתית הטור. 968=968 עמודים; heading+1line 1→0; הקנוני לא הושפע (89a0eb42); השוואת קורפוס — מספרי סיווג זהים (3325 identical + 311 redivision — חלוקות שורות ללא שינוי; רק הקצאת עמודים של כותרות שנסוגו). דוח: audits/legacy-parity-iteration/iteration-006/)"
     },
     {
       "name": "very_long (legacy, run-ours = corpus-invariants CI)",

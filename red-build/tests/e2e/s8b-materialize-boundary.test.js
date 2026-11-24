@@ -152,7 +152,16 @@ describe('שלב 8 ביקורת (§3.1) — גבולות materialization', () =>
         // (מול 323 — 5 עברו לפס-עליון בבדיקת המקום המחמירה). RC-F1c: שעת הכלה
         // בהתחייבות הסמן של נתיב הפיצול (U-8) — הסמן וההערה עוברים יחד לעמוד הבא
         // כשהתקציב אינו נכנס (969→968).
-    assert(r.layoutHash.startsWith('f7f72473'), `layoutHash very_long נשמר (${r.layoutHash.slice(0, 8)})`);
+        // **Iteration-006 (G4/RC-D1, 24.11):** נעילה מחודשת f7f72473→a5aaa431
+        // (968=968 עמודים). הליווי-כותרת רואה כעת דרך בלוקי הערת-צד (H7/
+        // asSideNote) אל הפסקה הגופנית הבאה — בלוק-צד שבין כותרת לפסקה ריק
+        // את בדיקת הליווי (following=0 ⇒ הכותרת ללא ליווי, שורה בודדת של
+        // הפסקה נותרת עמה בתחתית הטור — הפרת "מנע-כותרת-יתומה לא ייצר
+        // אלמנת-גוף"). הוכחות: heading+1line בתחתיות טורים 1→0; הקנוני לא
+        // הושפע (89a0eb42); מספר עמודים זהה; השוואת קורפוס — מספרי
+        // הסיווג זהים (3325 identical + 311 redivision — חלוקות השורות לא
+        // השתנו; רק הקצאת עמודים של שורות הכותרות שנסוגו). contentPreserved.
+    assert(r.layoutHash.startsWith('a5aaa431'), `layoutHash very_long נשמר (${r.layoutHash.slice(0, 8)})`);
     assertEq(r.pageModel.meta.materializeFallbacks, 0, 'אפס נפילות (בעבר: 852 שווא-נפילות רוחב-רווח)');
     const mfViol = r.pageModelValidation.violations.filter(v => v.code === 'materialize-fallback');
     assertEq(mfViol.length, 0, 'אפס violations');
