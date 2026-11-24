@@ -61,19 +61,35 @@ def glyph_bounds(font: TTFont, *, prefer_cff: bool = True) -> dict[str, tuple[fl
     return result
 
 
+class _RawGlyfGlyph:
+    def __init__(self, glyf_table, name: str):
+        self.glyf_table = glyf_table
+        self.name = name
+
+    def draw(self, pen) -> None:
+        self.glyf_table[self.name].draw(pen, self.glyf_table, 0)
+
+
+class _RawGlyfGlyphSet:
+    def __init__(self, glyf_table):
+        self.glyf_table = glyf_table
+
+    def __getitem__(self, name: str) -> _RawGlyfGlyph:
+        return _RawGlyfGlyph(self.glyf_table, name)
+
+
 def raw_glyf_bounds(font: TTFont) -> dict[str, tuple[float, float, float, float] | None]:
     """Measure stored TrueType contours directly, without GlyphSet's LSB translation."""
     if "glyf" not in font:
         raise ValueError("raw glyf bounds require a glyf table")
     glyf = font["glyf"]
+    raw_set = _RawGlyfGlyphSet(glyf)
     result = {}
     for name in font.getGlyphOrder():
-        glyph = glyf[name]
-        if glyph.isComposite():
-            raise ValueError(f"raw glyph audit expects decomposed outlines, composite found at {name}")
-        pen = BoundsPen(None)
-        glyph.draw(pen, glyf, 0)
-        result[name] = pen.bounds
+        output = BoundsPen(None)
+        decomposing = DecomposingPen(raw_set, output, skipMissingComponents=False)
+        raw_set[name].draw(decomposing)
+        result[name] = output.bounds
     return result
 
 
@@ -258,13 +274,11 @@ def convert_cff_to_glyf_decomposed(font: TTFont, max_err: float) -> dict[str, An
 
 def glyph_svg_path(font: TTFont, glyph_name: str) -> str:
     if "glyf" in font and "CFF " not in font:
-        glyf = font["glyf"]
-        glyph = glyf[glyph_name]
-        if glyph.isComposite():
-            raise ValueError(f"raw comparison requires decomposed glyph, got composite: {glyph_name}")
-        pen = SVGPathPen(None)
-        glyph.draw(pen, glyf, 0)
-        return pen.getCommands()
+        raw_set = _RawGlyfGlyphSet(font["glyf"])
+        output = SVGPathPen(None)
+        decomposing = DecomposingPen(raw_set, output, skipMissingComponents=False)
+        raw_set[glyph_name].draw(decomposing)
+        return output.getCommands()
     glyph_set = font.getGlyphSet(preferCFF=True)
     pen = SVGPathPen(glyph_set)
     glyph_set[glyph_name].draw(pen)
