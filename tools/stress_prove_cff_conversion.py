@@ -65,13 +65,13 @@ def main():
             cmap = out.getBestCmap() or {}
             bounds_by_name = glyph_bounds(out)
             mapped_letters = [cp for cp in range(0x05D0, 0x05EB) if cp in cmap]
-            empty_letters = [cp for cp in mapped_letters if bounds_by_name.get(out.getGlyphName(cmap[cp])) is None]
+            empty_letters = [cp for cp in mapped_letters if bounds_by_name.get(cmap[cp]) is None]
             if empty_letters:
                 raise ValueError('Hebrew letters map to empty outlines: ' + ','.join(f'U+{cp:04X}' for cp in empty_letters))
             hebrew = ''.join(chr(cp) for cp in mapped_letters)
             row['hebrewLettersMapped'] = len(mapped_letters)
             mapped_marks = [cp for cp in range(0x0591, 0x05C8) if cp in cmap]
-            empty_marks = [cp for cp in mapped_marks if bounds_by_name.get(out.getGlyphName(cmap[cp])) is None]
+            empty_marks = [cp for cp in mapped_marks if bounds_by_name.get(cmap[cp]) is None]
             supported_marks = [cp for cp in mapped_marks if cp not in empty_marks]
             row['hebrewMarksMapped'] = len(mapped_marks)
             row['hebrewMarksWithNonEmptyOutlines'] = len(supported_marks)
@@ -81,9 +81,9 @@ def main():
             if hebrew:
                 sample = hebrew + ''.join(chr(cp) for cp in supported_marks)
             else:
-                latin = ''.join(ch for ch in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' if ord(ch) in cmap and bounds_by_name.get(out.getGlyphName(cmap[ord(ch)])) is not None)
+                latin = ''.join(ch for ch in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' if ord(ch) in cmap and bounds_by_name.get(cmap[ord(ch)]) is not None)
                 if not latin:
-                    latin = ''.join(chr(cp) for cp in sorted(cmap) if 0x20 <= cp <= 0x7E and not chr(cp).isspace() and bounds_by_name.get(out.getGlyphName(cmap[cp])) is not None)[:12]
+                    latin = ''.join(chr(cp) for cp in sorted(cmap) if 0x20 <= cp <= 0x7E and not chr(cp).isspace() and bounds_by_name.get(cmap[cp]) is not None)[:12]
                 if not latin:
                     raise ValueError('no printable, non-empty Unicode sample available for production subset check')
                 sample = latin[:32]
