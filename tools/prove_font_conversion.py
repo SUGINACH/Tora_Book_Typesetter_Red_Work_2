@@ -559,14 +559,13 @@ def main() -> int:
                     raise ValueError("variable tables remain after full default instancing")
 
                 glyph_order_before = list(font.getGlyphOrder())
+                is_cff_source = "CFF " in font
                 source_hmetrics = {
                     name: (int(font["hmtx"].metrics[name][0]), int(font["hmtx"].metrics[name][1]))
                     for name in glyph_order_before
                 }
-                source_bounds_by_gid = (
-                    [glyph_bounds(font, prefer_cff=True).get(name) for name in glyph_order_before]
-                    if "CFF " in font else [None] * len(glyph_order_before)
-                )
+                source_bounds_by_name = glyph_bounds(font, prefer_cff=True) if is_cff_source else {}
+                source_bounds_by_gid = [source_bounds_by_name.get(name) for name in glyph_order_before]
                 cmap_before = {
                     int(cp): int(font.getGlyphID(glyph_name))
                     for cp, glyph_name in (font.getBestCmap() or {}).items()
@@ -623,7 +622,7 @@ def main() -> int:
                 ]
                 if advances_after != advances_before:
                     raise ValueError("glyph advance widths changed by GID during outline conversion")
-                if "CFF " in (row["sourceOutline"] and font.keys()):
+                if is_cff_source:
                     max_phantom_delta = 0.0
                     for gid, output_name in enumerate(check.getGlyphOrder()):
                         source_box = source_bounds_by_gid[gid]
