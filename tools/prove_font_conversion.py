@@ -92,6 +92,61 @@ def raw_glyf_bounds(font: TTFont) -> dict[str, tuple[float, float, float, float]
     return result
 
 
+def reconcile_cff_metrics_for_glyf(
+    font: TTFont,
+    source_bounds: dict[str, tuple[float, float, float, float] | None],
+    source_metrics: dict[str, tuple[int, int]],
+) -> dict[str, Any]:
+    """Map CFF left phantom points to TrueType control-box coordinates.
+
+    A CFF bound is the curve bound; a glyf header xMin is the minimum of all
+    on/off-curve points and can be outside the visible curve. Preserve
+    pp1 = xMin - lsb (and advanceWidth), rather than blindly copying a CFF
+    LSB into the newly-created glyf font.
+    """
+    if "glyf" not in font or "hmtx" not in font:
+        raise ValueError("CFF metric reconciliation requires glyf and hmtx tables")
+    changed = 0
+    max_adjustment = 0
+    max_phantom_error = 0.0
+    empty_count = 0
+    for name in font.getGlyphOrder():
+        glyph = font["glyf"][name]
+        advance, source_lsb = source_metrics[name]
+        source_bbox = source_bounds.get(name)
+        has_contours = bool(glyph.isComposite() or getattr(glyph, "numberOfContours", 0) > 0)
+        if not has_contours or source_bbox is None:
+            target_lsb = 0
+            if has_contours != (source_bbox is not None):
+                raise ValueError(f"CFF/glyf empty-outline classification changed for {name}")
+            empty_count += 1
+        else:
+            source_pp1 = float(source_bbox[0]) - float(source_lsb)
+            target_lsb = int(round(float(glyph.xMin) - source_pp1))
+            output_pp1 = float(glyph.xMin) - float(target_lsb)
+            phantom_error = abs(output_pp1 - source_pp1)
+            max_phantom_error = max(max_phantom_error, phantom_error)
+            if phantom_error > 0.500001:
+                raise ValueError(
+                    f"left phantom-point remap exceeds integer rounding bound for {name}: {phantom_error}"
+                )
+        if not -32768 <= target_lsb <= 32767:
+            raise ValueError(f"remapped LSB outside signed FWORD range for {name}: {target_lsb}")
+        font["hmtx"].metrics[name] = (int(advance), int(target_lsb))
+        adjustment = abs(int(target_lsb) - int(source_lsb))
+        if adjustment:
+            changed += 1
+            max_adjustment = max(max_adjustment, adjustment)
+    return {
+        "glyphCount": len(font.getGlyphOrder()),
+        "lsbChangedGlyphCount": changed,
+        "emptyGlyphCount": empty_count,
+        "maxAbsoluteLsbAdjustmentFontUnits": max_adjustment,
+        "maxLeftPhantomPointDeltaFontUnits": max_phantom_error,
+        "preservedAdvanceWidths": True,
+    }
+
+
 def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
     if "CFF " not in font:
         return {"maxBoundsDeltaFontUnits": 0.0, "worstGlyph": None}
@@ -100,7 +155,11 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
 
     names = font.getGlyphOrder()
     glyph_set = font.getGlyphSet()
-    before = glyph_bounds(font)
+    before = glyph_bounds(font, prefer_cff=True)
+    source_metrics = {
+        name: (int(font["hmtx"].metrics[name][0]), int(font["hmtx"].metrics[name][1]))
+        for name in names
+    }
     glyphs = {}
     for name in names:
         pen = TTGlyphPen(glyph_set)
@@ -144,6 +203,7 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
             setattr(maxp, field, default)
     maxp.recalc(font)
 
+    hmetrics_remapping = reconcile_cff_metrics_for_glyf(font, before, source_metrics)
     after = raw_glyf_bounds(font)
     glyphset_aligned_after = glyph_bounds(font, prefer_cff=False)
     max_bbox_delta = 0.0
@@ -168,6 +228,13 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
                 "glyphSetAlignedBounds": (
                     [float(v) for v in glyphset_aligned_after[name]]
                     if glyphset_aligned_after[name] is not None else None
+                ),
+                "sourceLsb": source_metrics[name][1],
+                "outputLsb": int(font["hmtx"].metrics[name][1]),
+                "sourceLeftPhantomPoint": float(a[0]) - float(source_metrics[name][1]),
+                "outputLeftPhantomPoint": (
+                    float(font["glyf"][name].xMin) - float(font["hmtx"].metrics[name][1])
+                    if hasattr(font["glyf"][name], "xMin") else None
                 ),
                 "glyphSetHorizontalTranslation": (
                     float(font["hmtx"].metrics[name][1] - font["glyf"][name].xMin)
@@ -200,7 +267,11 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
                 for point in list(converted_glyph.coordinates)[:24]
             ]
     del font["CFF "]
-    return {"maxBoundsDeltaFontUnits": max_bbox_delta, "worstGlyph": worst_glyph}
+    return {
+        "maxBoundsDeltaFontUnits": max_bbox_delta,
+        "worstGlyph": worst_glyph,
+        "hmetricsRemapping": hmetrics_remapping,
+    }
 
 
 
