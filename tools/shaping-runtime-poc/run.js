@@ -123,6 +123,24 @@ async function main() {
           fixture.source,
           normalizedPath
         ]);
+        // Determinism gate: normalize the same source a second time and compare the
+        // actual SFNT bytes, not just parsed metadata or glyph outputs.
+        const repeatPath = path.join(normalizedDir, normalizedName + '.repeat');
+        runCommand(python, [
+          path.join(__dirname, 'normalize_woff2.py'),
+          fixture.source,
+          repeatPath
+        ]);
+        const normalizedBytes = fs.readFileSync(normalizedPath);
+        const repeatBytes = fs.readFileSync(repeatPath);
+        const normalizedSha256 = crypto.createHash('sha256').update(normalizedBytes).digest('hex');
+        const repeatSha256 = crypto.createHash('sha256').update(repeatBytes).digest('hex');
+        const sourceSha256 = crypto.createHash('sha256').update(fs.readFileSync(fixture.source)).digest('hex');
+        if (normalizedSha256 !== repeatSha256 || !normalizedBytes.equals(repeatBytes)) {
+          throw new Error('WOFF2 normalization is not byte-deterministic for ' + fixture.name +
+            ': ' + normalizedSha256 + ' != ' + repeatSha256);
+        }
+        fs.rmSync(repeatPath, { force: true });
         fs.copyFileSync(normalizedPath, path.join(site, 'fonts', normalizedName));
         shapeFixtures.push({
           name: normalizedName,
@@ -134,7 +152,11 @@ async function main() {
           source: fixture.name,
           normalized: normalizedName,
           method: 'fontTools.ttLib.TTFont; flavor=None; Brotli decoder',
-          outputBytes: fs.statSync(normalizedPath).size
+          outputBytes: fs.statSync(normalizedPath).size,
+          sourceSha256,
+          normalizedSha256,
+          repeatSha256,
+          deterministicBytes: normalizedSha256 === repeatSha256
         });
       }
     }
