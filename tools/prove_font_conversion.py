@@ -288,7 +288,11 @@ def convert_cff_to_glyf_decomposed(font: TTFont, max_err: float) -> dict[str, An
         raise ValueError("CFF2 conversion is not included in this proof")
     names = font.getGlyphOrder()
     glyph_set = font.getGlyphSet()
-    before = glyph_bounds(font)
+    before = glyph_bounds(font, prefer_cff=True)
+    source_metrics = {
+        name: (int(font["hmtx"].metrics[name][0]), int(font["hmtx"].metrics[name][1]))
+        for name in names
+    }
     glyphs = {}
     for name in names:
         pen = TTGlyphPen(None)
@@ -319,6 +323,7 @@ def convert_cff_to_glyf_decomposed(font: TTFont, max_err: float) -> dict[str, An
         if not hasattr(maxp, field):
             setattr(maxp, field, default)
     maxp.recalc(font)
+    hmetrics_remapping = reconcile_cff_metrics_for_glyf(font, before, source_metrics)
     after = raw_glyf_bounds(font)
     max_delta = 0.0
     worst = None
@@ -339,7 +344,11 @@ def convert_cff_to_glyf_decomposed(font: TTFont, max_err: float) -> dict[str, An
                 "deltaEm": delta / float(font["head"].unitsPerEm),
                 "deltaOverCu2QuTolerance": delta / max_err if max_err else None,
             }
-    return {"maxBoundsDeltaFontUnits": max_delta, "worstGlyph": worst}
+    return {
+        "maxBoundsDeltaFontUnits": max_delta,
+        "worstGlyph": worst,
+        "hmetricsRemapping": hmetrics_remapping,
+    }
 
 
 def glyph_svg_path(font: TTFont, glyph_name: str) -> str:
