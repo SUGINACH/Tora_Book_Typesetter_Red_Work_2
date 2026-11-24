@@ -375,3 +375,92 @@ HarfBuzz מבצע shaping לריצות שסופקו לו; הוא אינו מחל
   normalization; זהו full-GID API sweep עם digest ו-Node/Worker parity.
 - Raw WOFF2 נשאר unsupported; ה-sweep נעשה על SFNT מנורמל (CFF/CFF2),
   לא על WOFF2 גולמי. לא הוכנסו נכסים מנורמלים ל-production.
+
+
+## הוכחת Node/Worker + CFF source-vector parity מורחבת — 24.11.2026
+
+### ריצה וארטיפקט
+- Commit: c3433737a5cff373e85e8f5da8ce3b7dce757ff4.
+- Workflow: 45451884094; Artifact: 14948224078; conclusion: success.
+- Report result: passed_with_raw_woff2_limitations; normalized_sfnt_supported.
+- HarfBuzzJS 1.6.4; HarfBuzz core 15.0.0; Node v22.23.5.
+- 15 font streams, 5 Hebrew/niqqud cases per stream, 617 glyph instances.
+- Classic Worker (not module Worker), dynamic ESM import and WASM all passed.
+  exactNodeParity=true; Node/Worker output SHA-256:
+  6f2ff5e91d7e138d5551a0f943ec2140e1b4940e035fce9ac9a856cd7b51e7bc.
+  ההשוואה כוללת GID, cluster, flags, x/y advances, offsets, paths, variation,
+  coverage ו-full outline sweep metadata.
+
+### כיסוי הגופנים
+מתוך 15 streams:
+- 7 קובצי SFNT/TTF קיימים (כולל baseline DejaVu Sans וגופן
+  Frank Ruhl Libre Variable עם wght=900) — כיסוי עברי וניקוד מלא,
+  notdefGlyphCount=0.
+- 4 קובצי WOFF2 גולמיים — כל אחד החזיר 42/42 GID 0; הם סווגו
+  unsupported ואינם נספרים כהצלחת shaping.
+- 4 קובצי SFNT שנוצרו מאותם WOFF2 — כיסוי מלא, אפס codepoints חסרים,
+  notdefGlyphCount=0.
+
+### נרמול WOFF2 דטרמיניסטי
+הנרמול נעשה פעמיים לכל מקור באמצעות
+fontTools==4.68.0 ו-brotli==1.2.1; byte buffers ו-SHA-256
+היו זהים בכל זוג הרצות:
+
+| מקור WOFF2 | תוצר SFNT | Format | GIDs | Bytes | SHA-256 |
+|---|---|---|---:|---:|---|
+| Ambivalenti-Regular.woff2 | Ambivalenti-Regular.normalized.sfnt | CFF | 444 | 50,440 | 087d2a9edda23ae76163806838c508f14d658f283fb6dc8b3e09ba87eb0d1bf4 |
+| FrankBasic-1-regular.woff2 | FrankBasic-1-regular.normalized.sfnt | glyf/loca | 440 | 51,140 | 7a16211442d61632f124c99a00ff6f241c3d3fd109ae1968e5575e6d39226883 |
+| Mixtape-Bold.woff2 | Mixtape-Bold.normalized.sfnt | CFF | 204 | 47,956 | 41a60f8dc6b837bee17d662a2979dd4b3d5fee366be2b3e3b25bfd8ee1e90d76 |
+| Mixtape-Regular.woff2 | Mixtape-Regular.normalized.sfnt | CFF | 204 | 47,012 | e7c15710dfdb9c512d5eee0e9aa3deac5d1af43474aa3e51e8cd550177079819 |
+
+הקבצים המנורמלים נוצרו ב-temp של Actions בלבד ונמחקו בסיום; אין שינוי
+בקטלוג או בנכסי הייצור. ה-proof חל על ארבעת fixtures האלה, ולא על כל
+1,315 משפחות הקטלוג המורחב.
+
+### CFF source-vector proof — 852/852 GIDs
+נבדקו כל קווי המתאר של שלושת SFNT מסוג CFF:
+- Ambivalenti: 444 GIDs.
+- Mixtape Bold: 204 GIDs.
+- Mixtape Regular: 204 GIDs.
+- סך הכול: 852 glyphs; 849 עם outline לא ריק ו-3 outlines ריקים
+  (אחד בכל גופן). המקור והפלט הסכימו לגבי כל שלושת ה-empty outlines.
+
+ההשוואה נעשתה בין SVG paths שהופקו מ-HarfBuzz לבין פעולות
+fontTools RecordingPen של אותו GID בגופן המקור. נמצא הבדל ייצוג
+סמנטי בלבד: HarfBuzz SVG serializer פלט לעיתים lineTo מפורש לנקודת
+תחילת הקונטור מיד לפני closePath, בעוד fontTools מייצג את אותה סגירה
+ב-closePath בלבד. הבודק מנרמל רק את קטע הסגירה המפורש הזה כאשר
+נקודת הקצה שווה לנקודת תחילת הקונטור; הוא אינו מסיר קו בעל אורך,
+אינו משנה כיוון/סדר קונטורים ואינו משטח עקומות.
+
+תוצאות:
+- 852/852 התאמות מלאות של רצף הפעולות לאחר הנרמול המצומצם.
+- 852/852 התאמות קואורדינטות בתוך סבילות 1e-5 יחידות גופן.
+- coordinateMismatches=0; operationSequenceMismatches=0.
+- maxCoordinateDeltaFontUnits=0 בכל שלושת הגופנים.
+- 484 קטעי סגירה כפולים הוסרו בייצוג ההשוואה בלבד.
+- cffSourceOutlineComparison.passed=true.
+
+זו הוכחת נאמנות וקטורית של outlines עבור כל GID בשלושת ה-fixtures
+הללו לאחר normalization; היא אינה הוכחה שכל גופני CFF/WOFF2 בקטלוג
+תקינים, ואינה אישור mass conversion. היא גם אינה הוכחה ל-render parity
+של DOM/PDF.
+
+### מצב שערי הפרויקט על אותו commit
+- Shaping PoC 45451884094: success.
+- Corpus 45451884137: success.
+- Preview 45451884196: success.
+- Full Math 45451884021: success.
+- Layout Audit בתוך CI 45451884168: success.
+- Node 18/20/22 בתוך CI 45451884168: עדיין in progress בעת כתיבת
+  העדכון; אין להכריז על CI מלא כ-green עד לסיום שלושת ה-jobs.
+
+### גבולות שאינם משתנים
+- WOFF2 raw נשאר unsupported בקלט Blob של HarfBuzzJS; נדרש SFNT/TTF
+  מנורמל ב-build-time.
+- הנרמול אינו pipeline קנוני לכל הקטלוג ולא נוסף ל-production.
+- אין integration ב-MeasureAPI, LineBreaker, PageModel, DOM/HTML או PDF.
+- font-subset.js הנוכחי ממוקד glyf/loca; הוכחת outlines CFF אינה
+  מוכיחה embedding/subsetting של CFF ב-PDF.
+- TYP-SHAPING-01 נשאר פתוח עד חוזה ShapedRun/ShapedGlyph ו-end-to-end
+  shaping-before-line-break/render/export parity.

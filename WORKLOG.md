@@ -4798,3 +4798,39 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
 - זהו full-GID extraction sweep, לא השוואת Bézier against source. אין production
   integration ואין אישור המרה גורפת. WOFF2 raw נשאר unsupported; רק SFNT CFF
   אחרי normalization נבדק.
+
+
+## 2026-11-24 — CFF vector parity מלא + Node/classic Worker (PoC v6)
+
+- HEAD: c3433737a5cff373e85e8f5da8ce3b7dce757ff4.
+- Run 45451884094; Artifact 14948224078; shaping-runtime-poc: success.
+- HarfBuzzJS 1.6.4 / core 15.0.0 / Node 22.23.5.
+- 15 streams × 5 Hebrew-niqqud cases = 617 glyph instances.
+  Node↔classic Worker: exactNodeParity=true, SHA-256
+  6f2ff5e91d7e138d5551a0f943ec2140e1b4940e035fce9ac9a856cd7b51e7bc.
+- Worker classic (לא module), dynamic import ESM ו-WASM עברו.
+- 7 SFNT/TTF מקוריים, כולל Frank Ruhl Libre VF עם wght=900, כיסוי מלא;
+  4 raw WOFF2 אינם נתמכים (42 GID0 לכל fixture); ארבעת התוצרים המנורמלים
+  כ-SFNT כיסו עברית/ניקוד במלואם, 0 missing, 0 notdef.
+- WOFF2 normalized פעמיים עם fontTools 4.68.0 + brotli 1.2.1:
+  כל ארבעת ה-byte buffers וה-SHA-256 זהים. hashes:
+  Ambivalenti 087d2a9e…0d1bf4; FrankBasic 7a162114…226883;
+  Mixtape Bold 41a60f8d…e90d76; Mixtape Regular e7c15710…0779819.
+- CFF full vector compare מול fontTools RecordingPen:
+  Ambivalenti 444 + Mixtape Bold 204 + Mixtape Regular 204 = 852/852 GIDs.
+  852/852 operation sequences ו-coordinate tuples תואמים לאחר נרמול
+  מצומצם של explicit zero-length lineTo to contour start before closePath.
+  484 redundant close segments הוסרו בייצוג ההשוואה בלבד; לא שונו קווים
+  בעלי אורך או Bézier segments. coordinate mismatches=0,
+  operation mismatches=0, max coordinate delta=0, tolerance=1e-5.
+  Empty outlines: 3/3 הסכימו (אחד לכל גופן).
+- תוצאת CFF compare: passed=true; ה-proof מוגבל לשלושת SFNT CFF אלה.
+- Preview 45451884196, Corpus 45451884137, Full Math 45451884021
+  ו-Layout Audit 45451884168: success. Node 18/20/22 ב-CI
+  45451884168 עדיין רצו בעת כתיבת העדכון.
+- אין production changes: לא MeasureAPI, לא linebreak, לא PageModel,
+  לא DOM/PDF, לא font catalog. אין אישור mass conversion.
+- WOFF2 raw אינו קלט תקין ל-HarfBuzzJS Blob; SFNT normalization
+  נדרש. CFF vector proof אינו PDF embedding/subsetting proof.
+- TYP-SHAPING-01 נשאר פתוח עד ShapedRun/ShapedGlyph משותף, shaping
+  לפני line-break ו-end-to-end parity בכל יעדי הפלט.
