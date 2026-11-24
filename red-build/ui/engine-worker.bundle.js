@@ -460,6 +460,7 @@ var __paths = {
   "src/engine/layout/structural-stamps.js|../core/pua-text": "src/engine/core/pua-text.js",
   "src/engine/layout/structural-stamps.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/layout/structural-stamps.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
+  "src/engine/layout/structural-stamps.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/layout/structural-stamps.js|../decoration/folio": "src/engine/decoration/folio.js",
   "src/engine/layout/structural-stamps.js|../decoration/gate-design": "src/engine/decoration/gate-design.js",
   "src/engine/typography/font-keys.js|./measure-api": "src/engine/typography/measure-api.js",
@@ -14211,8 +14212,15 @@ function assignNumbers(pages, settings) {
     if (!counted) return { page: null, ordinal: null, display: '', shown: false, counted: false };
     ordinal++; // סוד העמוד הנספר (1 ואילך)
     const effective = ordinal - startIdx + initialValue;
-    // D-36: פתיחת פרק/סימן — נספר, לא מוצג; עמודי הערות לא מציגים כותרת עליונה ממילא
-    const suppressDisplay = p.chapterOpening === true;
+    // D-36: פתיחת פרק/סימן — נספר, לא מוצג (מוסכמת ספרים כללית; פרופיל DP);
+    // עמודי הערות לא מציגים כותרת עליונה ממילא.
+    // **Iteration-006 (F5/RC-F5b — התנהגות הייחוס בפרופיל IMUD):** פתיחות-סימן
+    // בייחוס מציגות גיליון (נמדד: p44 «מב», p57 «נה», p70 «סח», p87 «פה» —
+    // כל 88 פתיחות הייחוס עם פוליו; נמדדו גם בפורט המורשת). D-91: התנהגות
+    // המקור היא המפרס — הכותרות העליונות של הפתיחות הושבו כבר ב-03.11(ד)
+    // מאותו שורש; הפוליו מושב כאן. DP נשאר על D-36 (נעול ב-NC-04/s9).
+    const imud = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+    const suppressDisplay = p.chapterOpening === true && !imud;
     // D-62: show-numbering של עמודי תוכן־העניינים (מוחל רק כשנספרים)
     let showFlag = true;
     if (p.type === 'toc-general') showFlag = settings['general-toc-show-numbering'] !== false;
@@ -23326,6 +23334,17 @@ function stampFolioGeometry(page, settings, measure) {
   const folioMeasure = (fam && familyFontKeyOf(fam)) ? measureOfFamily(measure, fam, settings) : measure;
   const geo = folioGeometry(page, settings, folioMeasure);
   if (!geo) return false;
+  // **Iteration-006 (F5/RC-F5a — עוגן העמודון בפרופיל IMUD):** הנוסחה הגנרית
+  // (bottom:25px מה-CSS) הנמיכה את הגיליון ב-36.8px מהייחוס (נמדד ב-PDF:
+  // y=818.8 מול 791.2). העוגן המכויל = GEO.FOLIO_BASELINE (1054.5px —
+  // «עמודון: y0=783.82pt בייחוס»; עם 11pt גיליון: glyph-top=791.2pt במדויק) —
+  // כמו HEADER_BASELINE לכותרת העליונה. ההיסט מוחל על y ו-baselineY כאחד.
+  const imudFolio = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  if (imudFolio && geo.baselineY != null) {
+    const { GEO } = require('../core/imud-geometry');
+    const dy = GEO.FOLIO_BASELINE - geo.baselineY;
+    if (Number.isFinite(dy) && dy !== 0) { geo.y += dy; geo.baselineY += dy; }
+  }
   const key = (fam && familyFontKeyOf(fam)) || null;
   const color = colorOfSetting(settings['page-num-color']);
   page.folioGeo = { ...geo, ...(key ? { fontKey: key } : {}), ...(color ? { color } : {}) };
@@ -23544,7 +23563,12 @@ function buildShaarBlocks(page, settings, metadata) {
     if (!imudProf) {
       B.push({ cls: 'bsd-header', text: 'בס״ד', sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 5 });
     }
-    B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']), ...(imudProf ? { yTop: PT(128.1) } : {}) });
+    // **Iteration-006 (G8/F11 — עוגן כותרת השער הראשי):** בייחוס עמ' 1 שורת
+    // הכותרת «מקום בינה» (46pt) ב-y=123.5pt; העוגן הקודם (PT(128.1)) הניח
+    // אותה ב-142.4pt — נמוכה ב-18.9pt. הותאם ב-−18.9pt (bbox השורה נבדק
+    // מול הייחוס ברגרסיה). שאר הבלוקים (משנה/תיאור/מהדורה/מחבר) נשארים
+    // על עוגניהם — הם כבר תואמים (נמדד: 236.3 מול 237.4; 420.3 מול 420.9).
+    B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']), ...(imudProf ? { yTop: PT(109.2) } : {}) });
     // **Iteration-003 (parity משקל):** בייחוס IMUD כותרת-המשנה ב-Livorna רגיל
     // (ToraEx6="Livorna", לא Bold) — ההדגשה נשארת לעיצוב DP בלבד.
     B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: !imudProf, ...(imudProf ? { yTop: PT(225.2), followGap: 25 } : {}) });

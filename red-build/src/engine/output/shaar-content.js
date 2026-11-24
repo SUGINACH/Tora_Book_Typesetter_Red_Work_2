@@ -83,7 +83,12 @@ function buildShaarBlocks(page, settings, metadata) {
     if (!imudProf) {
       B.push({ cls: 'bsd-header', text: 'בס״ד', sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 5 });
     }
-    B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']), ...(imudProf ? { yTop: PT(128.1) } : {}) });
+    // **Iteration-006 (G8/F11 — עוגן כותרת השער הראשי):** בייחוס עמ' 1 שורת
+    // הכותרת «מקום בינה» (46pt) ב-y=123.5pt; העוגן הקודם (PT(128.1)) הניח
+    // אותה ב-142.4pt — נמוכה ב-18.9pt. הותאם ב-−18.9pt (bbox השורה נבדק
+    // מול הייחוס ברגרסיה). שאר הבלוקים (משנה/תיאור/מהדורה/מחבר) נשארים
+    // על עוגניהם — הם כבר תואמים (נמדד: 236.3 מול 237.4; 420.3 מול 420.9).
+    B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']), ...(imudProf ? { yTop: PT(109.2) } : {}) });
     // **Iteration-003 (parity משקל):** בייחוס IMUD כותרת-המשנה ב-Livorna רגיל
     // (ToraEx6="Livorna", לא Bold) — ההדגשה נשארת לעיצוב DP בלבד.
     B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: !imudProf, ...(imudProf ? { yTop: PT(225.2), followGap: 25 } : {}) });
