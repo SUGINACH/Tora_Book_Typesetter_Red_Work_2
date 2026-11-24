@@ -25,7 +25,7 @@ jobs:
       - name: Install fontTools and Brotli for offline WOFF2 normalization
         run: |
           python3 -m venv /tmp/hb-poc-venv
-          /tmp/hb-poc-venv/bin/pip install --disable-pip-version-check fonttools brotli
+          /tmp/hb-poc-venv/bin/pip install --disable-pip-version-check fonttools==4.68.0 brotli==1.2.1
           echo "HB_POC_PYTHON=/tmp/hb-poc-venv/bin/python" >> "$GITHUB_ENV"
       - name: Install headless browser
         run: |
