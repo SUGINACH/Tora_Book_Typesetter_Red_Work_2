@@ -526,3 +526,41 @@ Probe `A😀B`:
 - Layout Audit בתוך CI 45464251283: success.
 - Node 18/20/22 באותו CI: in_progress בעת הבדיקה; אין להכריז על CI מלא כ-green
   עד לסיום שלושת ה-jobs.
+
+
+## PoC v10 — תיקון semantics של glyphExtents (24.11.2026)
+
+Run `45467805796`, Artifact `14955353770`, commit
+`a7db7e8b28e343bbf71bf6dd9eabf0f835e7a2ee` הסתיים success.
+
+### השוואה לכל 852 ה-GIDs של שלושה מקורות CFF מקוריים
+
+| מדד | תוצאה |
+|---|---:|
+| HarfBuzz glyphExtents מול fontTools ControlBoundsPen | 852/852 |
+| Control-bound mismatches | 0 |
+| Max control-bound delta | 0 font units |
+| HarfBuzz glyphExtents מול fontTools BoundsPen (tight curve) | 433/852 |
+| True-curve disagreements | 419 |
+| Max true-curve delta | 56.1117434352 font units |
+
+Ambivalenti: 444 control matches; 14 true-curve disagreements.
+Mixtape Bold: 204 control matches; 202 true-curve disagreements.
+Mixtape Regular: 204 control matches; 203 true-curve disagreements.
+
+**מסקנה:** `glyphExtents` ב-HarfBuzzJS 1.6.4 תואם ל-control-point box
+ולא לגבול העקומה האמיתי. אין להשתמש בו כ-`inkBounds`. החוזה חייב
+להפריד `controlBounds` שמרני מ-`inkBounds` הדוק. האחרון ייגזר מ-outline
+path באמצעות חישוב extrema אנליטי של Bézier; אם לא ניתן לחשבו, יש לסמן
+unavailable/diagnostic ולא להחליף אותו ב-control box.
+
+### Source range proof (PoC v9/v10)
+75/75 cases RTL עברו מונוטוניות לא-עולה של clusters; 617/617 glyphs
+קיבלו absolute UTF-16 sourceRange תקין; 345 clusters ייחודיים, 220
+multi-glyph cluster groups, 272 glyphs עם cluster חוזר, אפס range errors,
+אפס surrogate splits ואפס source coverage gaps. Probe `A😀B` החזיר
+clusters [0,1,3] ו-ranges [37,38), [38,40), [40,41).
+
+Node/classic Worker: `exactNodeParity=true`; 15 font streams,
+617 glyph instances, HarfBuzz core 15.0.0. CFF source outlines:
+852/852 operation+coordinate matches מול WOFF2 המקוריים; אפס mismatches.
