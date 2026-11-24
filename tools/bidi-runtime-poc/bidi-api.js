@@ -25,6 +25,18 @@
     text = String(text);
     const units = new Uint16Array(text.length);
     for (let i = 0; i < text.length; i++) units[i] = text.charCodeAt(i);
+    for (let i = 0; i < units.length; i++) {
+      const unit = units[i];
+      if (unit >= 0xD800 && unit <= 0xDBFF) {
+        const next = units[i + 1];
+        if (next === undefined || next < 0xDC00 || next > 0xDFFF) {
+          throw new TypeError('Ill-formed UTF-16: unpaired high surrogate at code-unit offset ' + i);
+        }
+        i++;
+      } else if (unit >= 0xDC00 && unit <= 0xDFFF) {
+        throw new TypeError('Ill-formed UTF-16: unpaired low surrogate at code-unit offset ' + i);
+      }
+    }
     return units;
   }
 
