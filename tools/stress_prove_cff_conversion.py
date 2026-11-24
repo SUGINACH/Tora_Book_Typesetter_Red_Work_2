@@ -279,7 +279,7 @@ def path_geometry_raster_comparison(
             svg = (
                 f'<svg xmlns="http://www.w3.org/2000/svg" '
                 f'width="{view_width:.8f}" height="{view_height:.8f}" '
-                f'viewBox="{view_x:.8f} {view_y:.8f} {view_width:.8f} {view_height:.8f}">'
+                f'viewBox="0 0 {view_width:.8f} {view_height:.8f}">'
                 f'<g transform="translate({translate_x:.8f},{translate_y:.8f}) scale(1,-1)">'
                 f'<path d="{path_data}" fill="#000" fill-rule="nonzero"/>'
                 f'</g></svg>'
