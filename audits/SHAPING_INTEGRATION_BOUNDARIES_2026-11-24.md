@@ -1,466 +1,98 @@
-# Shaping integration boundaries — מיפוי חוזה המימוש הקיים (24.11.2026)
-
-## מעמד
-
-**ביקורת עצמאית של נקודות החיבור, על HEAD `bdefac0795452d3c8e9a78f05caf932446a66823`.**
-המסמך מבוסס על קוד הענף ועל Artifact `14954247955` מריצת
-`45464251243`. הוא אינו מציג את ה-PoC כמימוש מנוע, ואינו משנה את ברירות
-המחדל, את ה-renderers, את קטלוג הגופנים או את ה-LineBreaker.
-
-המטרה היא למנוע אינטגרציה חלקית שבה HarfBuzz מחליף את מדידת הרוחב בלבד,
-אבל פרטי הגליפים אובדים לפני DOM/PDF או מחושבים מחדש בכל יעד.
-
-## 1. שערי הוכחה שכבר נסגרו ב-PoC
-
-### 1.1 Runtime ו-Worker
-- HarfBuzzJS `1.6.4`; HarfBuzz core `15.0.0`; Node `v22.23.5`.
-- ESM נטען ב-Node באמצעות `import()`.
-- ב-classic Worker נעשה שימוש ב-`importScripts()` ל-helper וב-`import()`
-  דינמי למודול ESM; WASM נטען בהצלחה.
-- Node ו-classic Worker החזירו JSON זהה byte-for-byte. ב-PoC v7
-  SHA-256: `c06da4e4b69d3546e0be3f64a067c4caf0ab1191df8b91dd068cf1eb514926f2`.
-- 15 font streams ו-617 מופעי glyph בחמש מחרוזות עבריות מנוקדות לכל stream.
-
-### 1.2 חוזה clusters ו-ink extents
-- Probe `A😀B`: אורך UTF-16 הוא 4, מספר Unicode scalars הוא 3;
-  clusters צפויים ומתקבלים: `[0,1,3]`; GIDs: `[36,5857,37]`.
-  לכן HarfBuzzJS `Buffer.addText` מחזיר offsets ביחידות UTF-16 התואמות
-  ל-`String.length` ול-`sourceRange` במנוע. ההוכחה מכסה supplementary
-  scalar אחד ב-LTR, ולא עדיין כל תרחישי RTL/ligature/cluster merging.
-- מתוך 617 מופעי glyph מעוצבים: 449 outlines לא ריקים ו-449 ink extents
-  סופיים; 168 outlines ריקים ללא extents; אפס outline לא-ריק ללא extents;
-  אפס extents לא-סופיים.
-- HarfBuzz glyph extents מוחזרים ביחידות font units. יש להמיר אותם ליחידות
-  המנוע במקום אחד בלבד, לפי UPEM ו-scale של ה-run, תוך שילוב offsets
-  ו-current pen position.
-
-### 1.3 מקור CFF ו-WOFF2
-- 3 מקורות WOFF2 מסוג CFF נורמלו ל-SFNT ב-build זמני באמצעות
-  fontTools `4.68.0` ו-Brotli `1.2.1`. כל מקור נורמל פעמיים,
-  עם byte-identical output ו-SHA-256 זהה.
-- השוואת outlines בוצעה מול **המקור WOFF2 המקורי** בעזרת fontTools
-  RecordingPen, ולא מול ה-SFNT המנורמל: Ambivalenti 444 GIDs,
-  Mixtape Bold 204, Mixtape Regular 204 — סה"כ 852/852.
-- לאחר נרמול ייצוגי מצומצם בלבד של `lineTo(start)` אפסי לפני
-  `closePath`: אפס הבדלי רצף-פעולות, אפס הבדלי קואורדינטות,
-  max delta אפס בכל שלושת הקבצים.
-- WOFF2 גולמי נשאר unsupported ב-Blob של HarfBuzzJS; הקלט הנתמך
-  ב-PoC הוא SFNT/TTF. ארבעת fixtures המנורמלים שנבדקו אינם הוכחה
-  לנרמול מלא של 1,315 משפחות/קובצי WOFF2 בקטלוג.
-
-**הגבול:** הוכחות אלה סוגרות runtime, units של clusters, extents,
-ו-vector extraction לשלושה SFNT מסוג CFF. הן אינן מוכיחות bidi paragraph
-itemization, font fallback לפי grapheme, shaping של mixed-direction runs,
-PDF subsetting של CFF, או DOM/HTML/PDF ink parity.
-
-## 2. זרימת הנתונים הקיימת ונקודות אובדן
-
-| שלב | קובץ/פונקציה | נתונים קיימים | מה חסר לחוזה shaping |
-|---|---|---|---|
-| מקור טקסט וריצות | `DocumentModel` / `payload.runs` | טקסט, `fontFamily`, טווחי מקור | script/bidi run, language/features, resolved font identity לפני הפילוח |
-| פיצול למילים | `line-items.js::splitTextItem` | fragments, `runIndex`, `docStart/docEnd` | פיצול רק בגבולות grapheme/cluster מותרים; run segmentation שלא מנתק combining cluster |
-| style + font identity | `wordStyleFor` / `fontIds` | `fontId` לפי alias/fragment | coverage לפי grapheme, axes, face index, מקור/נרמול |
-| מדידה קנונית | `measure-api.js::measureItem` | advance פר-run, ascent/descent, segments | glyph infos/positions/clusters/extents; advance ו-ink bounds בנפרד |
-| LineItem | `line-items.js::lineItemOf` | measured object, fragments, sourceRange, fontId, measuredAdvance | שמירת shapedRuns כנתון immutable; מיפוי glyph↔source |
-| שבירת שורות | `kp-linebreak.js` / `line-model.js::layoutSequence` | תיבות, advances, break opportunities, glue allocation | cut opportunities לפי גבולות cluster חוקיים; reshape-context לגבול שורה |
-| LineModel | `line-model.js` | ordered fragments, source ranges, measured advances, baseline, glue | shaped glyph sequence ו-ink bounds ברמת fragment/run |
-| Materialization | `core/materialize.js::lineWidthsFromModel/projectLine` | רוחבים נצרכים מה-LineModel; ללא מדידה ב-production | העברת shaped data ללא remeasure או flatten |
-| PageModel | `core/page-model.js::placeLine` | מיקום סופי, baseline, text, x/w/fontKey/color | כיום מושמט `fontId`, source fragments, glyph IDs/positions/clusters/extents |
-| DOM/HTML | `pagemodel-dom-renderer.js::renderModelLine` | מיקום מוחלט ומחרוזת Unicode ב-span | הדפדפן מבצע shaping מחדש; אין ציור לפי GID ו-position data |
-| PDF | `export-api.js`, `font-subset.js`, `pdf-writer.js` | inventory מתווים, cmap→GID, widths, CID/ToUnicode | subset לפי GIDs בפועל; mapping CID↔GID↔cluster; positioning; ToUnicode/ActualText לפי source text |
-
-### מסקנת זרימת הנתונים
-נקודת האינטגרציה הראשית למדידה היא `measureItem`, מפני שהיא נקראת פעם
-אחת לכל תיבת מילה לפני שבירת השורות ומחזירה את ה-advance שעליו ה-LineBreaker
-נשען. אין ליצור ShapingMeasureAPI נפרד. עם זאת, `measureItem` לבדו אינו
-נקודת סגירה: יש להעביר את התוצאה דרך LineItem → LineModel → PageModel
-→ כל היעדים בלי לאבד אותה.
-
-## 3. גבול גופנים: מקור אחד, bytes אחד, זהות אחת
-
-### 3.1 המצב הנוכחי
-- `font-resolver.js::registerFont(alias, bytes, meta)` הוא נקודת הרישום
-  הקנונית. הוא מחשב `fontId` מ-SHA-256 של bytes, מנתח דרך
-  `font-metrics.parseFont`, ושומר את הפרנסר תחת אותו ID.
-- `font-metrics.parseFont` מקבל SFNT signatures `0x00010000` ו-`OTTO`
-  (כולל metrics של SFNT מסוג CFF אם הטבלאות הדרושות קיימות), אך WOFF2
-  raw ו-TTC collections נדחים. אין ליצור parser/registry מקביל ל-HarfBuzz.
-- `imud-library.js::loadFont` מדלג על `registerFont` כאשר המקור הוא
-  WOFF2. הדפדפן מקבל FontFace מה-WOFF2, בעוד Worker/MeasureAPI אינם מקבלים
-  את אותם bytes ונופלים לפרופיל הטבלה/approximation עם diagnostic.
-- ל-`fontResolver.resolveFont` יש fallback לפי alias/stack/default family,
-  אך אין בו בחירת גופן לפי coverage של grapheme שלם. אין לחלק base letter
-  ו-niqqud בין fonts שונים בלי מדיניות מפורשת.
-
-### 3.2 חוזה מקור מוצע
-רישום קנוני יחיד צריך לקבל **תוצר SFNT מנורמל** ואת provenance של המקור:
-- `fontId`: hash של ה-bytes שהמנוע אכן מעצב/מודד (normalized SFNT).
-- `sourceSha256`: hash של קובץ המקור WOFF2/TTF.
-- `normalizedSha256`, `sourceFormat`, `normalizedFormat`,
-  `normalizerName/version`, Brotli version כשנדרש, ו-`normalizationProfile`.
-- `faceIndex`, `unitsPerEm`, `numGlyphs`, `glyphOrderHash`,
-  variable axes/defaults ו-metadata של face.
-- alias נשאר alias בלבד; הוא אינו זהות התוכן ואינו cache key של shaping.
-
-הנרמול צריך להיות build/deploy asset pipeline דטרמיניסטי, עם manifest
-חתום/ממוספר ו-failure מפורש. אין לדחוף אלפי קובצי SFNT מנורמלים למאגר
-אם אפשר להפיקם בזמן build. אין להפעיל output בקטלוג לפני בדיקת כל קובצי
-המקור, כולל variable, collections, symbol/partial-Hebrew ו-fonts שאינם
-מכילים Hebrew.
-
-## 4. גבול Runtime: asynchronous WASM מול מנוע סינכרוני
-
-### מצב קיים
-- HarfBuzzJS initialization דרך ESM/WASM היא asynchronous.
-- `engine-worker-main.js::createEngineWorkerMain` מטפל בהודעות באופן
-  סינכרוני, ו-`typeset()` סינכרוני.
-- `worker-client.js` יכול לשלוח register-font/typeset/export מיד לאחר
-  יצירת Worker; אין כרגע ready barrier של shaping.
-- `inline-transport.js` מפעיל את אותו handler באותו תהליך באמצעות
-  `queueMicrotask`; הוא אינו יכול להניח ש-HarfBuzz כבר initialized.
-
-### תנאי אינטגרציה
-לא להוסיף `await import()` בתוך `measureItem` ולא להפוך כל קריאת מדידה
-ל-asynchronous. נדרש bootstrap אחד, גלובלי ובעל Promise יחיד:
-1. initialize HarfBuzz + WASM לפני קבלת הודעות שמפעילות `typeset`.
-2. לפרסם readiness מפורש ולשמר סדר הודעות: רישום גופנים לפני עימוד.
-3. לשחזר את אותו readiness ב-respawn של Worker.
-4. ל-Node/Inline יהיה אותו initialization contract; בדיקות ישירות ל-`typeset`
-   חייבות לקבל initialized runtime לפני כניסה סינכרונית.
-5. כשל init חייב להיות error גלוי ומאבחן; אין fallback שקט למדידת טבלה.
-6. ה-runtime/wasm binary וגרסת HarfBuzz נכנסים ל-version/hash של shaping
-   ול-cache key.
-
-ה-PoC מוכיח dynamic import ב-classic Worker, אך אינו פותר עדיין את ה-ready
-barrier ב-WorkerClient/InlineTransport ואת תאימות כל מסלולי Node.
-
-## 5. חוזה ShapedRun / ShapedGlyph
-
-המודל הקנוני צריך להיות עצמאי מ-DOM/PDF, immutable ו-versioned. הצעה:
-
-```js
-ShapedRun = {
-  schemaVersion,
-  fontId, sourceFontSha256, normalizedFontSha256,
-  faceIndex, variationAxes, unitsPerEm,
-  text, sourceRange: { start, end }, // UTF-16 document offsets
-  script, language, direction, features,
-  clusterLevel, shapingVersion, fontFallback: null | diagnostic,
-  glyphs: [ShapedGlyph],
-  advance: { x, y, unit: "font-units" },
-  controlBounds: { xMin, yMin, xMax, yMax, unit: "font-units" } | null,
-  inkBounds: { xMin, yMin, xMax, yMax, unit: "font-units" } | null,
-  inkBoundsMethod: "analytic-bezier" | "unavailable"
-};
-
-ShapedGlyph = {
-  gid, cluster,
-  sourceRange: { start, end }, // UTF-16; כמה glyphs יכולים לחלוק cluster
-  flags,
-  xAdvance, yAdvance, xOffset, yOffset,
-  controlBounds: { xMin, yMin, xMax, yMax, unit: "font-units" } | null,
-  inkBounds: { xMin, yMin, xMax, yMax, unit: "font-units" } | null,
-  outlineRef // outline path/cache key; exact ink bounds are derived from the path
-};
-```
-
-### כללי המקור וה-cluster
-- `cluster` הוא UTF-16 code-unit offset ביחס לטקסט שהוזן ל-buffer;
-  לתיעוד מקור מוחלט מוסיפים `sourceRange.start`.
-- RTL עלול להחזיר glyphs בסדר ויזואלי ו-cluster offsets שאינם עולים
-  מונוטונית. אין לחשב `sourceEnd` לפי glyph הבא במערך. בונים boundaries
-  מקבוצת cluster starts ייחודית, ממיינים אותם בסדר לוגי וממפים כל cluster
-  לטווח הבא; כמה glyphs יכולים לשתף את אותו cluster.
-- `MONOTONE_GRAPHEMES` לבדו אינו מחליף UAX #29 / script segmentation /
-  bidi. אין לחתוך combining sequence, ligature או grapheme באמצע.
-- `glyphExtents` של HarfBuzz הוא control-point bounding box, לא tight
-  curve bound. הוא נשמר כ-`controlBounds` בלבד. `inkBounds` נגזר מ-outline
-  path בחישוב analytic Bézier extrema; אין להסיק אותו מ-controlBounds.
-- כל ink position נגזר מ-pen origin + offsets + exact curve bounds באותו
-  coordinate convention. יש להוכיח סימני RTL ו-Y-axis לפני המרה ל-px.
-- Font fallback נבחר עבור grapheme שלם, לא תו בודד. אם אף גופן אינו מכיל
-  base+marks ביחד, יש diagnostic או מדיניות קומפוזיציה מפורשת — לא פיצול שקט.
-- Cache key חייב לכלול לפחות: normalized fontId, faceIndex, canonical
-  variation axes, script, language, direction, features, cluster level,
-  source text/run boundary, HarfBuzz/normalizer version.
-
-## 6. שבירת שורות ושילוב עם מודל הקיים
-
-1. Itemization של paragraph: bidi runs (אלגוריתם UAX #9), script runs,
-   language, font/grapheme fallback, style/feature runs.
-2. Shaping של הריצות לפני יצירת תיבות המדידה. גבולות run ייקבעו לפי font,
-   script, direction, language, feature/variation state — לא רק לפי CSS run.
-3. `measureItem` יחזיר `advancePx` מסכום positions של אותו ShapedRun,
-   `inkBounds` אמיתי, ascent/descent ובקשות שבירה חוקיות.
-4. `LineItem` ישמור את ה-ShapedRuns המקוריים ואת מיפוי source fragments.
-5. `LineModel` ישמור אותם לפי סדר זרימה ויקבע את מיקומי ה-runs/glyphs
-   אחרי allocation של glue/justify. אין לשנות advances פנימיים של glyphs
-   בגלל justify; יש להוסיף inter-word allocation בין runs/words.
-6. כאשר שורה נשברת בתוך paragraph context שמשפיע על shaping, יש לבצע
-   reshape רק ל-context window הנדרש ולשמר source ranges; אין לחתוך glyph
-   sequence שרירותית לפי סכום advance.
-7. Materialization יקרין את ה-LineModel כפי שהוא. אין `measureTextWidth`
-   ב-production materializer.
-
-## 7. DOM/HTML: לא לבצע shaping מחדש
-
-ה-DOM הקיים מציב מילה במיקום מוחלט אך מקצה `span.textContent`; הדפדפן
-מעצב מחדש את הטקסט. לאחר ShapedRun, הטקסט הגולמי אינו יכול להיות מקור
-הדיו של המילה.
-
-נדרשת הקרנה לפי GID/positions:
-- אפשרות outline paths מ-HarfBuzz, עם cache keyed לפי `fontId/gid/axes`;
-  יש לבחון נפח, reuse ו-memory לפני שכפול paths לכל PageModel.
-- אפשרות glyph atlas או renderer מבוסס fonts/paths שמסוגל לצייר GID ישיר.
-  בחירה פתוחה; אין להניח ש-SVG path מכסה color fonts או כל variation.
-- semantic text נפרד חייב להישאר ל-accessibility, selection, copy/paste,
-  search ו-screen readers. אין להפוך טקסט ל-SVG בלבד בלי שכבת טקסט נגישה.
-- HTML standalone צריך לכלול את אותם glyph assets/IDs ואת אותו coordinate
-  model; אין להסתמך על FontFace shaping מקומי.
-
-## 8. PDF: subset לפי GID ו-preserve clusters
-
-### המצב הקיים
-- `font-subset.js` מתחיל מ-Unicode chars, עושה cmap→GID, יוצר
-  `glyf/loca` ו-cmap חדש; הוא אינו מקבל ישירות inventory של shaped GIDs.
-- `pdf-writer.js::cidHex` ממפה תווים ל-CID דרך `cidOf(ch)` אחרי
-  `visualOrderRtl`.
-- `buildToUnicode` מניח GID/CID→Unicode scalar יחיד.
-- writer בונה `CIDFontType2` ו-`FontFile2`; אין הוכחה ל-CFF
-  CIDFontType0/FontFile3 embedding או CFF subsetting.
-- offsets/advances של HarfBuzz אינם נכנסים ל-writer.
-
-### חוזה נדרש
-- inventory של GIDs שנצרכו ב-ShapedRuns, כולל closure של composite glyphs
-  ורישום mapping `sourceGid → subsetGid → CID`.
-- widths/metrics ותנועת glyphs נגזרים מאותו shaped result; אין cmap remap
-  לפי תווים בשלב הכתיבה.
-- bidi סדרוּת נלקחת מהמודל, לא מ-`visualOrderRtl` נוסף ב-PDF.
-- ToUnicode חייב לתמוך במיפוי cluster שלם לטקסט מקור (UTF-16BE string),
-  ובמקרים מורכבים `ActualText`/marked content כדי למנוע אובדן או שכפול
-  טקסט בחילוץ. יש לבדוק pdftotext ו-reader בפועל.
-- להחליט ולבדוק מסלול embedding לכל outline format (glyf/TrueType ו-CFF);
-  אין לעקוף CFF embedding על ידי המרה אוטומטית שלא עברה את שערי הגאומטריה.
-- glyph offsets יומרו לאופרציות מיקום PDF מדויקות; אין להסתמך על
-  browser/PDF text layout או על סדר Unicode.
-
-## 9. Bidi ו-script itemization — פער נפרד מ-HarfBuzz
-
-ה-PoC הנוכחי מעביר `direction=RTL`, `script=Hebr`, `language=he`
-למחרוזות עבריות שכל אחת מהן היא run יחיד. הוא אינו מבצע paragraph bidi
-itemization.
-
-במימוש הקיים:
-- DOM מגדיר `dir=rtl` ומוסר מחרוזת לדפדפן, שבוחר את סדר הריצות בעצמו.
-- PDF משתמש ב-`visualOrderRtl` המבוסס על regex בסיסי לאותיות לטיניות/ספרות
-  וכללי glue/mirroring מקומיים. זה אינו מקור bidi משותף.
-- HarfBuzz מעצב run שכבר סווג; הוא אינו מחליף את bidi paragraph algorithm.
-
-לפני production shaping נדרש מקור סמכות יחיד ל-UAX #9 itemization, עם
-logical→visual run mapping ומיפוי חזרה לטווחי מקור. יש לבדוק עברית+לטינית+
-ספרות, סוגריים, סימני פיסוק, nested isolates/embeddings, neutrals ו-mark
-attachment. אין לנסות לפתור bidi על ידי היפוך מחרוזת או על ידי `visualOrderRtl`
-נוסף בתוך ה-shaper.
-
-## 10. סדר ביצוע ושערי קבלה
-
-1. **Contract tests בלבד:** UTF-16/cluster mapping (כולל RTL descending clusters,
-   ligature ומספר glyphs לכל cluster), extents/pen positions, units ו-axes.
-2. **Font source pipeline:** WOFF2→SFNT דטרמיניסטי לקטלוג; manifest של מקור/
-   normalized hash/tool/face/axes/coverage; בדיקת TTC, variable, symbol,
-   partial Hebrew ו-CFF; אין production activation.
-3. **Runtime bootstrap:** HarfBuzz/WASM readiness barrier משותף Worker+Inline;
-   test של respawn, ordering, failed init ו-no silent fallback.
-4. **Paragraph itemization:** bidi/script/language/font segmentation;
-   fallback לפי grapheme; מיפוי source ranges.
-5. **Measure/Line integration:** `measureItem` כנקודת מדידה אחת; shaped
-   runs ב-LineItem/LineModel; break only at safe opportunities; reshape after
-   line break when context requires.
-6. **PageModel preservation:** shape data + final positions + ink bounds
-   עוברים את materialize/placeLine/hash/transport ללא אובדן.
-7. **DOM/HTML projection:** same glyphs and positions; semantic text layer;
-   no browser shaping affecting visible ink.
-8. **PDF projection:** GID subset/embedding/cluster ToUnicode/ActualText;
-   no per-character cmap reshaping.
-9. **End-to-end parity:** fixture corpus זהה ב-DOM/HTML/PDF; השוואת positions,
-   glyph IDs, ink bounds ו-rasterized ink; extraction/selection/accessibility.
-10. **Only then F7:** לאחר יציבות גופנים+shaping, לחזור ל-fragment-flow
-    contract ולתקן את הפער הכללי ללא חריגי מיקום.
-
-### Fixtures מחייבים לפני חיבור
-- עברית מנוקדת: אות בסיס + כמה marks (niqqud, dagesh, shin/sin dot,
-  cantillation/tropes), כולל mark stacking.
-- ligatures ו-GSUB/GPOS context; אותיות סופיות.
-- עברית+Latin+ספרות+סימני פיסוק/סוגריים באותו paragraph עם bidi isolates.
-- surrogate pairs / emoji ו-cluster boundaries.
-- fallback: font ראשי חסר mark יחיד; fallback שמכיל את כל grapheme;
-  fallback שאף אחד אינו מכסה — diagnostic.
-- variable axes: default/min/max ובחירת ציר מפורשת; cache key נבדק.
-- WOFF2/TTF/OTF-CFF, symbol fonts, partial Hebrew, glyph 0.
-- paragraph/line split, justify, beginning/end of run and line; PDF extraction
-  של ligature/mark cluster, DOM copy/paste, HTML standalone.
-- Node, classic Worker, InlineTransport ו-browser rasterization determinism.
-
-## 11. מצב והחלטות פתוחות
-
-- HarfBuzzJS 1.6.4 נשאר מועמד ה-runtime; PoC הוכיח classic Worker + Node,
-  WASM, UTF-16 cluster אחד, extents ו-CFF outlines לשלושה WOFF2 originals
-  לאחר normalizing SFNT.
-- לא הוכח עדיין async initialization barrier מול `WorkerEngineClient`,
-  `inline-transport` וה-API הסינכרוני של `typeset()`.
-- לא הוכח עדיין paragraph bidi itemization/fallback-by-grapheme.
-- לא נבחר מנגנון DOM/HTML שמצייר GID בלי shaping מחדש.
-- לא נבחר מנגנון PDF CFF embedding או GID-based subsetting.
-- לא בוצעה שום אינטגרציה ב-production. `TYP-SHAPING-01` נשאר פתוח.
-- `FNT-CFF-GEO-01` / `FNT-CFF-APPROVAL-01` נשארים פתוחים; אין mass
-  conversion approval. F7 נשאר ממתין לייצוב גופנים ו-shaping.
-
-
-## 12. PoC v10 — semantics של glyphExtents וגבולות הדיו (24.11.2026)
-
-### ריצה ו-Artifact
-- Commit: `a7db7e8b28e343bbf71bf6dd9eabf0f835e7a2ee`.
-- Run: `45467805796`; Artifact: `14955353770`; conclusion: success.
-- HarfBuzzJS 1.6.4 / HarfBuzz core 15.0.0.
-- השוואה מול fontTools בשני מדדים נפרדים לכל אחד מ-852 GIDs בשלושה
-  קובצי CFF מקוריים (Ambivalenti 444, Mixtape Bold 204, Mixtape Regular 204).
-
-### תוצאות מדויקות
-
-| מדד | תוצאה |
-|---|---:|
-| HB glyphExtents מול fontTools ControlBoundsPen | 852/852 התאמות |
-| control-bound mismatches | 0 |
-| סטיית control bounds מרבית | 0 font units |
-| HB glyphExtents מול fontTools BoundsPen (true curve bounds) | 433/852 התאמות |
-| true curve bound disagreements | 419 |
-| פער curve bounds מרבי | 56.1117434352 font units |
-| glyphs ריקים עם אפס-area agreement | 3 |
-| HB extents חסרים | 0 |
-
-פירוט לפי גופן:
-- Ambivalenti: control 444/444; true curve 430 התאמות ו-14 הבדלים;
-  max true-curve delta 56.1117434352.
-- Mixtape Bold: control 204/204; true curve 2 התאמות ו-202 הבדלים;
-  max true-curve delta 27.1715025721.
-- Mixtape Regular: control 204/204; true curve 1 התאמה ו-203 הבדלים;
-  max true-curve delta 27.6752283218.
-
-### מסקנה הנדסית — תיקון לחוזה ShapedGlyph הקודם
-HarfBuzzJS `glyphExtents` תואם בדיוק ל-control-point bounding box
-(`ControlBoundsPen`), לא ל-tight curve bounding box (`BoundsPen`).
-לכן אין לקרוא לערך זה `inkBounds` ואין להשתמש בו כאילו הוא גבול הדיו
-המדויק. הוא יכול לשמש `controlBounds` שמרני בלבד.
-
-בחוזה ShapedRun/ShapedGlyph יש להפריד:
-- `controlBounds`: תיבת נקודות הבקרה שמספקת HarfBuzz, עם provenance ברור.
-- `inkBounds`: גבול עקומה הדוק שייגזר מנתיב ה-outline באמצעות חישוב
-  extrema אנליטי של quadratic/cubic Bézier segments, כולל endpoints,
-  נגזרות, contours ו-transform/position של הגליף.
-- אם outline format/renderer אינו מספק נתיב שממנו אפשר לחשב bounds מדויקים,
-  `inkBounds` יסומן unavailable/diagnostic; אין להחליף אותו בשקט ב-control box.
-
-לפני שילוב production נדרש pure-JS deterministic path-bounds test ולהשוות
-מול fontTools BoundsPen לכל 852 GIDs, כולל empty outlines, quadratic/cubic
-curves, contours סגורים ו-extrema פנימיים. ה-PoC הנוכחי עדיין אינו מוכיח
-pen accumulation, signs ב-RTL, transformed run-level bounds או ink parity
-בין DOM/HTML/PDF.
-
-### חוזה source ranges — אימות נוסף
-- 75/75 מחרוזות RTL עם סדר clusters מונוטוני לא-עולה.
-- 617/617 glyphs עם absolute UTF-16 sourceRange תקין.
-- 345 clusters ייחודיים; 220 קבוצות multi-glyph cluster; 272 glyphs
-  החוזרים על cluster של glyph אחר.
-- אפס source-range errors, אפס surrogate-pair splits ואפס source-coverage gaps.
-- `A😀B`: clusters [0,1,3], source ranges [37,38), [38,40), [40,41).
-
-### גבול המסקנה
-הבדיקה מאשרת את semantics של `glyphExtents` בשלושת CFF fixtures ובגרסת
-HarfBuzz שנבדקה. אין להסיק ממנה שכל outline format או כל variation mode
-מחזירים אותן תכונות, ואין לראות בה מימוש של ink-bounds engine. ה-production
-engine לא שונה; `TYP-SHAPING-01` נשאר פתוח.
-
-
-## 13. PoC v11 — analytic cubic Bézier ink bounds (24.11.2026)
-
-### ריצה ו-Artifact
-- Code commit: `cfba9e3b0668e49c36b9e6baa8ba0632e62985cb`.
-- Shaping run: `45474206847`; Artifact: `14956464558`; conclusion: success.
-- HarfBuzzJS 1.6.4 / HarfBuzz core 15.0.0.
-- Node/classic Worker parity עבר; Corpus ו-Preview עברו על אותו commit.
-
-### שיטת החישוב
-- JavaScript parser עצמאי ל-SVG commands `M/m`, `L/l`, `C/c`, `Z/z`.
-- פקודה לא נתמכת (למשל `Q`) נדחית בכשל מפורש; אין bounds חלקיים.
-- לכל cubic Bézier מחושבים שורשי הנגזרת של X ושל Y בתחום הפתוח (0,1);
-  הערכת העקומה בנקודות הקיצון יחד עם endpoints נותנת tight axis-aligned bounds.
-- control points אינם נחשבים כנקודות דיו אלא אם הם endpoints/extrema בפועל.
-- 7 unit tests עברו: cubic Y-extremum, cubic X-extremum, relative cubic,
-  line/close contour, zero-area contour, degenerate cubic, multi-contour bounds.
-  בדיקת unsupported quadratic command עברה (הפקודה נדחתה).
-- ה-parser הופעל על כל 852 CFF glyph paths. כל path נתמך; empty outlines
-  הושוו כ-empty מול source BoundsPen.
-
-### השוואה למקור — כל 852 GIDs
-
-| גופן | GIDs | JS analytic bounds = BoundsPen | אי-התאמות |
-|---|---:|---:|---:|
-| Ambivalenti-Regular | 444 | 444 | 0 |
-| Mixtape Bold | 204 | 204 | 0 |
-| Mixtape Regular | 204 | 204 | 0 |
-| **סה"כ** | **852** | **852** | **0** |
-
-- `svgPathBoundsMatches=852`; mismatches=0; missing=0.
-- סטיית קואורדינטות מרבית: `2.2737367544323206e-13` font units
-  (דיוק floating-point; מתחת ל-`1e-5` tolerance).
-- במקביל, glyphExtents נשאר 852/852 מול ControlBoundsPen בלבד;
-  419/852 אינם tight BoundsPen. ההפרדה בין controlBounds ל-inkBounds
-  אומתה ונשמרה.
-- Vector path operations והקואורדינטות עדיין תואמים למקורות WOFF2 המקוריים
-  ב-852/852 GIDs.
-
-### מסקנה
-ה-PoC מכיל כעת חישוב tight ink bounds ב-JavaScript שאינו תלוי ב-fontTools,
-והושווה אל fontTools BoundsPen על כל 852 GIDs של שלושת מקורות ה-CFF.
-לכן ניתן להשתמש באלגוריתם זה כבסיס לחישוב `inkBounds` עבור outline paths
-במימוש המנוע, בעוד `glyphExtents` נשמר בנפרד כ-`controlBounds`.
-
-### גבולות שעדיין פתוחים
-- נבדקו פקודות SVG M/L/C/Z בקורפוס CFF זה בלבד. Quadratic paths (glyf/TrueType),
-  arcs, color glyphs ו-formats אחרים אינם נתמכים ע"י parser זה; הם חייבים
-  parser/algorithm ייעודי או diagnostic, לא fallback משוער.
-- עדיין אין pen accumulation כולל x/y offsets, run-level transformed bounds,
-  baseline and RTL sign conventions ב-coordinate system של RED.
-- זהו PoC; production MeasureAPI/LineItem/LineModel/PageModel/DOM/PDF
-  עדיין אינם מקבלים ShapedRun. אין לשנות את סטטוס TYP-SHAPING-01 ל-closed.
-
-
-## 14. Bidi runtime candidate — Unicode 18 UTF-16 proof (24.11.2026)
-
-A dedicated POC using `servo/unicode-bidi` 0.3.18 at pinned revision
-`9a8c7b03be01def5cf7014b89d5af90f7382fdad` passed against regenerated official
-Unicode 18.0.0 data:
-
-- 39/39 upstream library unit tests, 4/4 official Bidi conformance tests,
-  3/3 doc tests, wasm32 wrapper build and classic Worker all passed.
-- Ten fixtures produced 13 paragraphs, 44 logical embedding runs and 37
-  line-level visual-run probes.
-- Node/classic Worker output is byte-identical
-  (SHA-256 `cb2704eaeacde8aede3ceb7b33cae982767e9897137ded04b829a5c62c1bd24c`).
-- UTF-16 behavior covers supplementary characters, valid and invalid
-  surrogate boundaries, empty text/ranges, paragraph base direction and L1
-  trailing-whitespace reset.
-
-Full record: `audits/BIDI_UNICODE18_RUNTIME_2026-11-24.md`.
-
-### Integration boundary
-
-The upstream visual-run API implements the line-level L1/L2 stage. It does
-not perform L3 combining-mark sequence handling or L4 mirroring. This wrapper
-currently emits embedding-level logical runs and L1/L2 visual runs only;
-it does not yet itemize script/language/font/feature runs, choose fallback by
-grapheme, or pass glyph IDs to RED's line and output models.
-
-Therefore this is a validated Bidi runtime candidate, not production
-integration. L3/L4 and the complete ShapedRun path remain required before
-`TYP-SHAPING-01` can close.
+# מפת מסמכי התכנון — מקור סמכות יחיד
+
+> עודכן: 15.11.2026  
+> **הוראת חובה לכל אדם או סוכן AI שעובד במאגר:** לפני שינוי קוד יש לקרוא את `00_CURRENT_ENGINE_COMPLETION_PLAN.md`. זהו מסמך ביצוע פעיל יחיד.
+
+## 0. קטלוג רכיבי המסמך והגדרות העימוד
+
+הקטלוג [HTML העריך](קטלוג-רכיבי-מסמך-הגדרות-עימוד.html) וקובץ [נתוני המקור](קטלוג-רכיבי-מסמך-הגדרות-עימוד.data.json) הם מקור הייחוס התיעודי היחיד למלאי הגדרות, רכיבי מסמך/עמוד, ערכים, אפשרויות, ברירות מחדל, fallback והיסטוריית מפתחות. כל שינוי בקוד שמשפיע עליהם חייב לעדכן את הקטלוג באותו PR. אין לשכפל את רשימות ההגדרות במפרטים ובתוכניות; יש להפנות לכאן. אודיטים היסטוריים נשארים ראיות, לא קטלוג עדכני.
+
+## 1. מסמך הביצוע המחייב
+
+**[`00_CURRENT_ENGINE_COMPLETION_PLAN.md`](00_CURRENT_ENGINE_COMPLETION_PLAN.md)**
+
+זהו מסמך התוכנית הנוכחית והיחיד שמגדיר את סדר העבודה. הוא מחלק את השלמת המנוע לעשרה שלבים, ומגדיר לכל שלב משימות, תוצרים, שער קבלה, גבולות ועקרונות ארכיטקטוניים. אין לבחור מסמך ישן כחלופה, ואין להמשיך לבצע שלבים מתוכנית ישנה שלא מופיעים בתוכנית זו.
+
+## 2. מסמכי דרישות/ייחוס שנשארים שימושיים — אך אינם תוכנית ביצוע
+
+| מסמך | מעמד מעתה | אופן השימוש |
+|---|---|---|
+| `01_MASTER_SPECIFICATION.md` | מקור דרישות פונקציונלי היסטורי | לחלץ דרישות משתמש שעדיין בתוקף; לא להשתמש בשלבי העבודה/הנחות המיזוג הישנים שבו כהוראות ביצוע |
+| `תכנית לשיפור תוכנת עימוד Red.MD` | תוכנית ביצוע קודמת — מוחלפת | מקור להיסטוריית החלטות, ממצאים ודרישות; אין לבצע את סדר השלבים הישן |
+| `תוכנית הפעלה לחמשת הסוכנים.md` | חלוקת תפקידים קודמת — מוחלפת | לשמר הכנות וידע; חלוקת העבודה החדשה נמצאת בסעיף 3.1 בתוכנית הקנונית |
+| `02_MASTER_WORK_PLAN.md` | תוכנית מיזוג היסטורית — אינה פעילה | חומר רקע בלבד; הנחות Orange/UNIFIED ושלבי S0–S13 אינם מסלול העבודה הנוכחי |
+| מסמכי S14/PRs/חוזים/ענפים | תיעוד מימוש וראיות | לבדוק מה קיים ומה הוכח; אינם מחליפים את עשרת שלבי התוכנית |
+
+## 3. כללי הכרעה בין מסמכים
+
+1. החלטות משתמש מפורשות גוברות על כל מסמך או הצעת AI.
+2. תוכנית עשרת השלבים היא הסמכות לסדר הביצוע ולשערי ההשלמה.
+3. מסמכי דרישות ישנים נשארים מקור פונקציונלי רק כאשר אינם סותרים את ההחלטות ואת התוכנית הקנונית.
+4. `DECISIONS.md`, `WORKLOG.md`, `ISSUE_REGISTRY.md` ו-`OPEN_QUESTIONS.md` הם פנקסי מצב והכרעות. הם אינם תוכניות חלופיות.
+5. קוד קיים או PR פתוח אינם הוכחה להשלמה. יש לאמת חיבור במסלול runtime פעיל ובדיקות על HEAD עדכני.
+6. אם נמצא סתירה, אין לנחש: פותחים שאלה/החלטה מתועדת, וממשיכים רק בעבודה שאינה תלויה בה.
+
+## 4. החרגות שאסור להחזיר
+
+- P6/P7 אינם חלק ממסלול העבודה, ממדדי הקבלה או מהתאמת שורות/מילים.
+- PDF הייחוס אינו יעד התאמה.
+- אין להקים מחדש תשתיות שכבר קיימות ללא הוכחת חוסר.
+- אין להחזיק מסלול עימוד מקביל כפתרון קבוע.
+- אין למחוק legacy לפני הוכחת המסלול המאוחד מקצה לקצה.
+
+## 5. מצב עדכון
+
+עדכון של תוכנית זו ייעשה רק באמצעות גרסה חדשה ומפורשת של המסמך הקנוני, עם תיעוד החלטה ב-`DECISIONS.md`. אין ליצור קובץ "roadmap" נוסף ללא הכרעה מפורשת שמחליפה את המסמך הנוכחי.
+
+
+## בקרת שלמות הקטלוג מול המימוש
+
+- [דוח בקרה מעמיקה — 19.11.2026](../audits/CATALOG_IMPLEMENTATION_COMPLETENESS_AUDIT_2026-11-19.md)
+- [קטלוג רכיבי המסמך והגדרות העימוד](קטלוג-רכיבי-מסמך-הגדרות-עימוד.html)
+
+
+## דוחות ביקורת טכניים עדכניים
+
+הדוחות הבאים הם ראיות וממצאים, לא תוכנית ביצוע חלופית. סדר העבודה המחייב
+נותר ב-`00_CURRENT_ENGINE_COMPLETION_PLAN.md`.
+
+- [CFF Geometry / Raster / LSB Review — 24.11.2026](../audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md)
+- [Shared Shaping Contract Gap — 24.11.2026](../audits/SHAPING_CONTRACT_GAP_2026-11-24.md)
+
+
+
+- [Shaping integration boundaries — 24.11.2026](../audits/SHAPING_INTEGRATION_BOUNDARIES_2026-11-24.md)
+
+
+- [Unicode 18 UTF-16 Bidi runtime POC — 24.11.2026](../audits/BIDI_UNICODE18_RUNTIME_2026-11-24.md)
+
+
+## 15. ICU4X Unicode 18 → HarfBuzz shared shaping proof (25.11.2026)
+
+The earlier sections documented the integration boundary before itemizer output was
+passed to HarfBuzz. That PoC boundary has now been exercised end-to-end without
+changing production RED renderers.
+
+Workflow `45504394154`, Artifact `14972097998`, code HEAD
+`9e2d59d06a4eba208e5c4f69b65986651693be18` passed:
+- Node and browser classic Worker independently instantiate the pinned Unicode
+  18.0.0 Bidi/grapheme WASM and itemize the same paragraph.
+- The resulting three Hebrew ScriptRuns at levels [1,3,1] are passed directly
+  to HarfBuzz; RLE/PDF remain in the lossless source partition but are excluded
+  from shaping.
+- Absolute UTF-16 grapheme starts are supplied per scalar through
+  `Buffer.add(codePoint, cluster)`; HarfBuzz uses MONOTONE_CHARACTERS.
+  All returned clusters remain on the original ICU4X grapheme boundaries.
+- 11/11 fully covered fonts passed the shared-run probe; 118 glyph instances.
+  The broader 15-font/five-string suite passed 617 glyph/source-range checks.
+- Node/classic Worker full-result parity is exact.
+- Original-source CFF outline comparison and tight cubic ink bounds both
+  matched 852/852 glyphs in the tested three-font CFF corpus.
+
+**Still not production integration:** this does not yet feed RED's LineItem,
+LineModel, PageModel, DOM or PDF output. Production line-edge reshaping, bidi L3/L4,
+script/font fallback, glyph-ID based DOM drawing, PDF GID/CID and ToUnicode/ActualText,
+quadratic glyf bounds and full renderer parity remain open. The earlier description
+of HarfBuzz and itemizer as isolated POCs is superseded only for the tested
+ICU4X-to-HarfBuzz bridge, not for the production engine.
+Full data and limits: `audits/ICU4X_HARFBUZZ_SHARED_SHAPING_POC_2026-11-25.md`.

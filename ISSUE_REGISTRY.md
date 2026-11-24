@@ -795,3 +795,30 @@ mark order, L4 mirroring, script/language/font itemization and grapheme-level
 fallback still need to be integrated before shaping. Line probes are not RED
 line-breaker integration. No production Bidi or shaping code has been changed;
 `TYP-SHAPING-01` remains open.
+
+
+### TYP-SHAPING-01 — ICU4X Unicode 18 → HarfBuzz shared-run proof (25.11.2026)
+
+Run `45504394154`, Artifact `14972097998`, code HEAD
+`9e2d59d06a4eba208e5c4f69b65986651693be18` completed success.
+
+- 11/11 fully covered font byte streams passed the shared itemization probe:
+  3 shaped runs at Bidi levels [1,3,1], 2 non-shaping Bidi_Control runs,
+  118 glyphs total. The 13 UTF-16 source units are fully partitioned.
+- Node and classic Worker independently instantiated Unicode 18.0.0 itemizer WASM,
+  created the same ScriptRuns, and shaped them through HarfBuzz 15.0.0.
+  `exactNodeParity=true`; all output clusters were engine grapheme starts.
+- Broader shaping report: 15 font fixtures, 5 strings/font, 617 glyph instances,
+  75/75 RTL monotone cases, 617/617 valid UTF-16 source ranges, 220 multi-glyph
+  cluster groups, zero source coverage errors.
+- CFF outline reference: 852/852 exact operation/coordinate matches against
+  the original sources; tight analytic CFF ink bounds 852/852 fontTools matches.
+
+**Boundary / remaining work:** this is now an end-to-end *POC* from ICU4X itemization
+into HarfBuzz, not a production RED integration. The 4 raw WOFF2 files required
+SFNT normalization; raw WOFF2 support is not claimed. Production line-breaker,
+LineItem/LineModel/PageModel, DOM glyph drawing and PDF GID/CID/ToUnicode/ActualText
+must still consume the same shaped records. Line-edge reshaping, quadratic glyf
+bounds, L3/L4 and full renderer parity remain open. Keep TYP-SHAPING-01 open.
+
+Detailed report: `audits/ICU4X_HARFBUZZ_SHARED_SHAPING_POC_2026-11-25.md`.

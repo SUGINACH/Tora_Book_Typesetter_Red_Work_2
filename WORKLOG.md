@@ -4940,3 +4940,19 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
   line-breaker integration, ShapedRun/LineModel/PageModel and DOM/PDF parity
   remain open. No production engine code was changed.
 
+
+
+## 2026-11-25 — ICU4X Unicode 18 → HarfBuzz shared shaping POC passed
+
+- Code HEAD tested: `9e2d59d06a4eba208e5c4f69b65986651693be18`.
+- Workflow: `shaping-runtime-poc`, run `45504394154`, Artifact `14972097998`, conclusion success.
+- The workflow builds the pinned Unicode 18.0.0 Bidi/grapheme WASM and uses the same runtime in Node and browser classic Worker.
+- Both runtimes independently itemize the 13-code-unit Hebrew paragraph into ScriptRuns `[0,7)`, `[8,10)`, `[11,13)` at Bidi levels `[1,3,1]`; RLE/PDF at `[7,8)` and `[10,11)` remain in non-shaping source runs.
+- Only ICU4X ScriptRuns enter HarfBuzz. Each scalar is added with the absolute UTF-16 start of its ICU4X grapheme as cluster; HarfBuzz uses `MONOTONE_CHARACTERS`; returned clusters are checked against the exact input EGC starts and full source coverage.
+- 11/11 fonts with complete Hebrew coverage passed the shared-itemization probe: three shaped runs, two non-shaping controls, levels [1,3,1]. 118 shared-run glyphs in total.
+- Broader HarfBuzz fixture set: 15 fonts, 5 strings/font, 617 glyphs, 75/75 RTL monotone cases; 617/617 absolute UTF-16 source ranges valid; 220 multi-glyph cluster groups; zero range/surrogate/source-coverage errors.
+- Node and classic Worker exact parity: `exactNodeParity=true`; both loaded HarfBuzz 15.0.0 and Unicode 18.0.0 WASM.
+- Source CFF outlines: 852/852 exact operation/coordinate matches against fontTools RecordingPen decoded from the original WOFF2 sources; zero mismatches/missing. Analytic CFF tight ink bounds: 852/852 BoundsPen matches; 7 unit tests passed.
+- The 4 raw WOFF2 fixtures were not directly shaped by HarfBuzzJS; after fontTools/Brotli normalization to SFNT, those normalized SFNTs shaped successfully. Do not claim raw WOFF2 support.
+- Boundary: this is POC only; production MeasureAPI/LineItem/LineModel/PageModel/DOM/PDF remain unchanged. Line-break-edge reshaping, PDF GID/CID/ActualText, DOM glyph drawing, quadratic glyf bounds, L3/L4 and complete renderer parity remain open. `TYP-SHAPING-01` stays open.
+- Full report: `audits/ICU4X_HARFBUZZ_SHARED_SHAPING_POC_2026-11-25.md`.
