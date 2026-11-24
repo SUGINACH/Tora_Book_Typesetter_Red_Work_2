@@ -50,8 +50,8 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-def glyph_bounds(font: TTFont) -> dict[str, tuple[float, float, float, float] | None]:
-    glyph_set = font.getGlyphSet()
+def glyph_bounds(font: TTFont, *, prefer_cff: bool = True) -> dict[str, tuple[float, float, float, float] | None]:
+    glyph_set = font.getGlyphSet(preferCFF=prefer_cff)
     result = {}
     for name in font.getGlyphOrder():
         pen = BoundsPen(glyph_set)
@@ -112,7 +112,7 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
             setattr(maxp, field, default)
     maxp.recalc(font)
 
-    after = glyph_bounds(font)
+    after = glyph_bounds(font, prefer_cff=False)
     max_bbox_delta = 0.0
     worst_glyph = None
     for gid, name in enumerate(names):
