@@ -34,7 +34,7 @@ jobs:
       # **שלב 5 פרוסה 2 (דיוק דיווח — §3.3 בביקורת):** התווית מתעדכנת למספרים
       # בפועל בכל שינוי מהותי במספר הבדיקות (נכון לשלב 7: 1146 בדיקות ·
       # 67 קבצי סוויטה + scan-control-triggers; הקודם ציין 1130/66 — פרוסה 2).
-      - name: Run full test suite (1146 tests · 67 suite files + scan-control-triggers, zero deps)
+      - name: Run full test suite (1154 tests · 68 suite files + scan-control-triggers, zero deps)
         run: cd red-build && npm test
       - name: Determinism check
         run: cd red-build && npm run test:determinism
