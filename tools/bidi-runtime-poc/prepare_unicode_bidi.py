@@ -16,6 +16,12 @@ PINNED_REVISION = "9a8c7b03be01def5cf7014b89d5af90f7382fdad"
 EXPECTED_CRATE_VERSION = "0.3.18"
 
 # UCD long property names used only in DerivedBidiClass.txt @missing lines.
+VALID_BIDI_CLASSES = {
+    "L", "R", "AL", "EN", "ES", "ET", "AN", "CS", "B", "S", "WS",
+    "ON", "BN", "NSM", "LRE", "RLE", "LRO", "RLO", "PDF", "LRI",
+    "RLI", "FSI", "PDI",
+}
+
 LONG_TO_SHORT = {
     "Left_To_Right": "L",
     "Right_To_Left": "R",
@@ -80,7 +86,7 @@ def load_unassigned_overrides(ucd_file: Path, assigned: set[int]) -> dict[int, s
         start, end = parse_range(fields[0])
         class_name = fields[1]
         short_class = LONG_TO_SHORT.get(class_name, class_name)
-        if len(short_class) not in (1, 2):
+        if short_class not in VALID_BIDI_CLASSES:
             raise ValueError(f"Unknown Bidi_Class value {class_name!r} in {ucd_file}")
 
         # L is the global default. Avoid materializing the whole Unicode range;
@@ -187,6 +193,11 @@ def main() -> None:
     # as the standalone preparation check.
     helper_marker = "def load_unicode_data():"
     helper = r'''def load_derived_bidi_classes_for_generator(path, assigned):
+    valid_bidi_classes = {
+        "L", "R", "AL", "EN", "ES", "ET", "AN", "CS", "B", "S", "WS",
+        "ON", "BN", "NSM", "LRE", "RLE", "LRO", "RLO", "PDF", "LRI",
+        "RLI", "FSI", "PDI",
+    }
     long_to_short = {
         "Left_To_Right": "L", "Right_To_Left": "R", "Arabic_Letter": "AL",
         "European_Number": "EN", "European_Separator": "ES",
@@ -224,7 +235,7 @@ def main() -> None:
             bidi = long_to_short.get(fields[1], fields[1])
             if is_missing and bidi == "L":
                 continue
-            if len(bidi) not in (1, 2) or first > last or last > 0x10FFFF:
+            if bidi not in valid_bidi_classes or first > last or last > 0x10FFFF:
                 raise ValueError("Invalid DerivedBidiClass value/range: " + payload)
             for code in range(first, last + 1):
                 if 0xD800 <= code <= 0xDFFF or code in assigned:
