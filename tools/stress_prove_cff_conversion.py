@@ -216,6 +216,7 @@ def freetype_raster_metrics_only(
             "remappedLeftSideBearing": int(converted_lsb),
             "sourceVsCopiedSourceLsb": outline_raster_metrics(source_image, legacy_image),
             "sourceVsRemappedLsb": outline_raster_metrics(source_image, converted_image),
+            "copiedSourceLsbVsRemappedLsb": outline_raster_metrics(legacy_image, converted_image),
         }
     finally:
         legacy_path.unlink(missing_ok=True)
