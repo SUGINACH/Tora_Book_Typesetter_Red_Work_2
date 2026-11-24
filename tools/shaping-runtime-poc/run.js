@@ -205,8 +205,55 @@ async function main() {
         utf16ClusterProbe.clustersUseUtf16CodeUnitOffsets !== true ||
         utf16ClusterProbe.utf16Length !== 4 ||
         utf16ClusterProbe.unicodeScalarCount !== 3 ||
-        JSON.stringify(utf16ClusterProbe.actualClusters) !== JSON.stringify([0, 1, 3])) {
+        JSON.stringify(utf16ClusterProbe.actualClusters) !== JSON.stringify([0, 1, 3]) ||
+        JSON.stringify(utf16ClusterProbe.actualSourceRanges) !== JSON.stringify([
+          { start: 37, end: 38 }, { start: 38, end: 40 }, { start: 40, end: 41 }
+        ])) {
       throw new Error('UTF-16 source-cluster proof failed: ' + JSON.stringify(utf16ClusterProbe));
+    }
+    const clusterCases = expected.flatMap((item) =>
+      item.cases.map((testCase) => ({ fontName: item.fontName, ...testCase }))
+    );
+    const invalidClusterSourceRanges = clusterCases.flatMap((testCase) =>
+      testCase.glyphs.filter((glyph) =>
+        !glyph.sourceRange ||
+        !Number.isSafeInteger(glyph.sourceRange.start) ||
+        !Number.isSafeInteger(glyph.sourceRange.end) ||
+        glyph.sourceRange.start < 0 ||
+        glyph.sourceRange.end <= glyph.sourceRange.start ||
+        glyph.sourceRange.end > testCase.clusterAudit.sourceEnd
+      ).map((glyph) => ({ fontName: testCase.fontName, text: testCase.text, gid: glyph.gid, cluster: glyph.cluster, sourceRange: glyph.sourceRange }))
+    );
+    const rtlClusterOrderFailures = clusterCases.filter((testCase) =>
+      testCase.direction !== 'rtl' || testCase.clusterAudit.clusterOrderMonotone !== true
+    );
+    const incompleteClusterCoverage = clusterCases.filter((testCase) =>
+      testCase.clusterAudit.coversFullSource !== true ||
+      testCase.clusterAudit.uncoveredPrefixLength !== 0 ||
+      testCase.glyphs.some((glyph) => glyph.sourceRange.start < testCase.clusterAudit.sourceStart ||
+        glyph.sourceRange.end > testCase.clusterAudit.sourceEnd)
+    );
+    const clusterSourceRangeAudit = {
+      caseCount: clusterCases.length,
+      glyphCount: clusterCases.reduce((sum, item) => sum + item.glyphs.length, 0),
+      rtlCases: clusterCases.filter((item) => item.direction === 'rtl').length,
+      rtlMonotoneCases: clusterCases.filter((item) => item.clusterAudit.clusterOrderMonotone).length,
+      uniqueClusterCount: clusterCases.reduce((sum, item) => sum + item.clusterAudit.uniqueClusterCount, 0),
+      multiGlyphClusterGroups: clusterCases.reduce((sum, item) => sum + item.clusterAudit.multiGlyphClusterCount, 0),
+      repeatedClusterGlyphCount: clusterCases.reduce((sum, item) => sum + item.clusterAudit.repeatedClusterGlyphCount, 0),
+      invalidSourceRanges: invalidClusterSourceRanges.length,
+      rtlClusterOrderFailures: rtlClusterOrderFailures.length,
+      incompleteSourceCoverageCases: incompleteClusterCoverage.length,
+      sourceRangeUnit: 'absolute-utf16-code-unit-offsets'
+    };
+    if (invalidClusterSourceRanges.length || rtlClusterOrderFailures.length || incompleteClusterCoverage.length ||
+        clusterSourceRangeAudit.multiGlyphClusterGroups === 0) {
+      throw new Error('Shaped cluster-to-source-range contract failed: ' + JSON.stringify({
+        audit: clusterSourceRangeAudit,
+        invalidRanges: invalidClusterSourceRanges.slice(0, 8),
+        rtlOrderFailures: rtlClusterOrderFailures.slice(0, 8).map((x) => ({ fontName: x.fontName, text: x.text, clusters: x.glyphs.map((g) => g.cluster) })),
+        incompleteCoverage: incompleteClusterCoverage.slice(0, 8).map((x) => ({ fontName: x.fontName, text: x.text, audit: x.clusterAudit }))
+      }));
     }
     const shapedGlyphs = expected.flatMap((item) =>
       item.cases.flatMap((testCase) => testCase.glyphs)
@@ -225,6 +272,7 @@ async function main() {
       }));
     }
     report.utf16ClusterProbe = utf16ClusterProbe;
+    report.clusterSourceRangeAudit = clusterSourceRangeAudit;
     report.glyphExtentsAudit = {
       unit: 'font-units',
       shapedGlyphCount: shapedGlyphs.length,
@@ -319,7 +367,9 @@ async function main() {
         coverageStatus: item.coverageStatus,
         glyphCount: item.cases.reduce((sum, testCase) => sum + testCase.glyphs.length, 0),
         glyphIds: item.cases.map((testCase) => testCase.glyphs.map((glyph) => glyph.gid)),
-        clusters: item.cases.map((testCase) => testCase.glyphs.map((glyph) => glyph.cluster))
+        clusters: item.cases.map((testCase) => testCase.glyphs.map((glyph) => glyph.cluster)),
+        sourceRanges: item.cases.map((testCase) => testCase.glyphs.map((glyph) => glyph.sourceRange)),
+        clusterAudits: item.cases.map((testCase) => testCase.clusterAudit)
       }))
     };
     const unsupportedFontFixtures = [];

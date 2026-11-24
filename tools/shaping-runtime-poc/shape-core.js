@@ -18,6 +18,68 @@
     return 'U+' + cp.toString(16).toUpperCase().padStart(4, '0');
   }
 
+  // Map HarfBuzz cluster starts to logical UTF-16 source intervals. Glyph order
+  // is visual for RTL and can be descending/repeated; never infer an end from
+  // the next glyph in the returned array.
+  function clusterSourceRanges(text, clusters, sourceStart = 0) {
+    text = String(text);
+    if (!Number.isSafeInteger(sourceStart) || sourceStart < 0) {
+      throw new TypeError('sourceStart must be a non-negative safe integer');
+    }
+    if (!Array.isArray(clusters) || !clusters.length) {
+      throw new TypeError('clusters must be a non-empty array');
+    }
+    const scalarBoundaries = new Set([text.length]);
+    for (let offset = 0; offset < text.length;) {
+      scalarBoundaries.add(offset);
+      const cp = text.codePointAt(offset);
+      offset += cp > 0xFFFF ? 2 : 1;
+    }
+    const uniqueStarts = Array.from(new Set(clusters.map(Number))).sort((a, b) => a - b);
+    for (const start of uniqueStarts) {
+      if (!Number.isInteger(start) || start < 0 || start >= text.length) {
+        throw new RangeError('cluster out of source range: ' + start + ' / ' + text.length);
+      }
+      if (!scalarBoundaries.has(start)) {
+        throw new Error('cluster splits a UTF-16 surrogate pair at offset ' + start);
+      }
+    }
+    const endByStart = new Map();
+    for (let i = 0; i < uniqueStarts.length; i++) {
+      const start = uniqueStarts[i];
+      const end = i + 1 < uniqueStarts.length ? uniqueStarts[i + 1] : text.length;
+      if (!scalarBoundaries.has(end)) {
+        throw new Error('cluster range end splits a UTF-16 surrogate pair at offset ' + end);
+      }
+      endByStart.set(start, end);
+    }
+    const counts = new Map();
+    for (const cluster of clusters) counts.set(Number(cluster), (counts.get(Number(cluster)) || 0) + 1);
+    const ranges = clusters.map((cluster) => {
+      const start = Number(cluster);
+      return { start: sourceStart + start, end: sourceStart + endByStart.get(start) };
+    });
+    return {
+      ranges,
+      uniqueStarts,
+      uniqueClusterCount: uniqueStarts.length,
+      multiGlyphClusterCount: Array.from(counts.values()).filter((count) => count > 1).length,
+      repeatedClusterGlyphCount: clusters.length - uniqueStarts.length,
+      sourceStart,
+      sourceEnd: sourceStart + text.length,
+      uncoveredPrefixLength: uniqueStarts[0],
+      coversFullSource: uniqueStarts[0] === 0
+    };
+  }
+
+  function clustersMonotone(clusters, direction) {
+    for (let i = 1; i < clusters.length; i++) {
+      if (direction === 'rtl' && clusters[i] > clusters[i - 1]) return false;
+      if (direction === 'ltr' && clusters[i] < clusters[i - 1]) return false;
+    }
+    return true;
+  }
+
   // JavaScript source ranges in the engine are UTF-16 code-unit offsets.
   // HarfBuzzJS 1.6.4 Buffer.addText uses hb_buffer_add_utf16; pin that contract
   // with one supplementary-plane scalar between two BMP characters.
@@ -58,6 +120,17 @@
         actualGlyphIds
       }));
     }
+    const sourceStart = 37;
+    const sourceRangeAudit = clusterSourceRanges(UTF16_CLUSTER_PROBE_TEXT, actualClusters, sourceStart);
+    const expectedSourceRanges = [
+      { start: 37, end: 38 },
+      { start: 38, end: 40 },
+      { start: 40, end: 41 }
+    ];
+    if (JSON.stringify(sourceRangeAudit.ranges) !== JSON.stringify(expectedSourceRanges) ||
+        sourceRangeAudit.coversFullSource !== true) {
+      throw new Error('UTF-16 absolute source-range mapping mismatch: ' + JSON.stringify(sourceRangeAudit));
+    }
     return {
       text: UTF16_CLUSTER_PROBE_TEXT,
       utf16Length: UTF16_CLUSTER_PROBE_TEXT.length,
@@ -67,7 +140,11 @@
       expectedGlyphIds,
       actualGlyphIds,
       clusterUnit: 'utf16-code-unit',
-      clustersUseUtf16CodeUnitOffsets: true
+      clustersUseUtf16CodeUnitOffsets: true,
+      sourceStart,
+      expectedSourceRanges,
+      actualSourceRanges: sourceRangeAudit.ranges,
+      sourceRangesDoNotSplitSurrogatePairs: true
     };
   }
 
@@ -143,6 +220,13 @@
       }
       if (!infos.length) throw new Error('HarfBuzz returned no glyphs for ' + JSON.stringify(text));
 
+      const rawClusters = infos.map((info) => Number(info.cluster));
+      const clusterRanges = clusterSourceRanges(text, rawClusters, Number(fixture.sourceStart) || 0);
+      const monotoneClusters = clustersMonotone(rawClusters, 'rtl');
+      if (!monotoneClusters || !clusterRanges.coversFullSource) {
+        throw new Error('RTL cluster/source-range contract failed for ' + JSON.stringify(text) + ': ' +
+          JSON.stringify({ rawClusters, clusterRanges, monotoneClusters }));
+      }
       const glyphs = infos.map((info, index) => {
         const position = positions[index];
         const gid = Number(info.codepoint);
@@ -167,6 +251,7 @@
         return {
           gid,
           cluster,
+          sourceRange: clusterRanges.ranges[index],
           flags: Number(info.flags),
           xAdvance: Number(position.xAdvance),
           yAdvance: Number(position.yAdvance),
@@ -176,7 +261,21 @@
           outline
         };
       });
-      shapedCases.push({ text, glyphs });
+      shapedCases.push({
+        text,
+        direction: 'rtl',
+        glyphs,
+        clusterAudit: {
+          clusterOrderMonotone: monotoneClusters,
+          uniqueClusterCount: clusterRanges.uniqueClusterCount,
+          multiGlyphClusterCount: clusterRanges.multiGlyphClusterCount,
+          repeatedClusterGlyphCount: clusterRanges.repeatedClusterGlyphCount,
+          sourceStart: clusterRanges.sourceStart,
+          sourceEnd: clusterRanges.sourceEnd,
+          uncoveredPrefixLength: clusterRanges.uncoveredPrefixLength,
+          coversFullSource: clusterRanges.coversFullSource
+        }
+      });
     }
 
     let outlineSweep = null;
@@ -246,5 +345,5 @@
     };
   }
 
-  return { CASES, FEATURE_TAGS, UTF16_CLUSTER_PROBE_TEXT, shapeWithHarfBuzz };
+  return { CASES, FEATURE_TAGS, UTF16_CLUSTER_PROBE_TEXT, clusterSourceRanges, clustersMonotone, shapeWithHarfBuzz };
 });
