@@ -256,11 +256,25 @@
       const candidates = intersectTags(extensionSets);
 
       if (primary.length === 1) {
+        // Script_Extensions may contain additional valid scripts even when
+        // Script has one primary value (for example U+096F). Let surrounding
+        // context choose a permitted alternative; use the primary only when
+        // no contextual resolution is possible.
+        if (candidates.length > 1 && candidates.includes(primary[0])) {
+          return {
+            script: null,
+            status: 'script-extension-contextual',
+            candidates,
+            primaryScripts: primary,
+            fallbackScript: primary[0]
+          };
+        }
         return {
           script: primary[0],
           status: 'strong',
           candidates: candidates.length ? candidates : [primary[0]],
-          primaryScripts: primary
+          primaryScripts: primary,
+          fallbackScript: null
         };
       }
       if (primary.length > 1) {
@@ -268,7 +282,8 @@
           script: null,
           status: 'mixed-grapheme',
           candidates,
-          primaryScripts: primary
+          primaryScripts: primary,
+          fallbackScript: null
         };
       }
       if (candidates.length === 1) {
@@ -276,14 +291,16 @@
           script: candidates[0],
           status: 'script-extension-singleton',
           candidates,
-          primaryScripts: []
+          primaryScripts: [],
+          fallbackScript: null
         };
       }
       return {
         script: null,
         status: 'unresolved-common-inherited',
         candidates,
-        primaryScripts: []
+        primaryScripts: [],
+        fallbackScript: null
       };
     }
 
@@ -292,7 +309,8 @@
       // Mixed-script graphemes are kept unresolved and do not contaminate neighbors.
       for (let i = 0; i < graphemes.length; i++) {
         const current = graphemes[i];
-        if (current.status !== 'unresolved-common-inherited') continue;
+        if (current.status !== 'unresolved-common-inherited' &&
+            current.status !== 'script-extension-contextual') continue;
 
         let left = null;
         for (let j = i - 1; j >= 0; j--) {
@@ -330,6 +348,9 @@
         if (chosen) {
           current.script = chosen;
           current.status = status;
+        } else if (current.fallbackScript) {
+          current.script = current.fallbackScript;
+          current.status = 'primary-script-fallback';
         }
       }
     }
