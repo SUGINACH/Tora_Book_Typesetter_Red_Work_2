@@ -205,6 +205,36 @@ async function main() {
         JSON.stringify(arabicCommaGrapheme));
     }
 
+    const mixedSpace = mixedScriptItemization.graphemes.find((item) => item.text === ' ');
+    if (!mixedSpace || mixedSpace.script !== 'Hebr' ||
+        mixedSpace.status !== 'context-left-preferred' ||
+        mixedScriptItemization.scriptRuns.some((run) => run.script == null)) {
+      throw new Error('Common whitespace between Hebrew and Latin was not resolved to the preceding Hebrew run: ' +
+        JSON.stringify({ mixedSpace, runs: mixedScriptItemization.scriptRuns }));
+    }
+
+    const pairedText = 'ABC (γ) XYZ';
+    const pairedItemization = runtime.itemizeScripts(
+      pairedText, runtime.resolve(pairedText, 'ltr')
+    );
+    const openBracket = pairedItemization.graphemes.find((item) => item.text === '(');
+    const closeBracket = pairedItemization.graphemes.find((item) => item.text === ')');
+    const standalonePair = '(γ)';
+    const standalonePairItemization = runtime.itemizeScripts(
+      standalonePair, runtime.resolve(standalonePair, 'ltr')
+    );
+    const standaloneOpen = standalonePairItemization.graphemes.find((item) => item.text === '(');
+    const standaloneClose = standalonePairItemization.graphemes.find((item) => item.text === ')');
+    if (!openBracket || !closeBracket || openBracket.script !== 'Latn' ||
+        closeBracket.script !== 'Latn' ||
+        openBracket.status !== 'paired-enclosing-context' ||
+        closeBracket.status !== 'paired-enclosing-context' ||
+        !standaloneOpen || !standaloneClose ||
+        standaloneOpen.script !== 'Grek' || standaloneClose.script !== 'Grek') {
+      throw new Error('Paired punctuation did not inherit a common enclosing script: ' +
+        JSON.stringify({ openBracket, closeBracket, standaloneOpen, standaloneClose }));
+    }
+
     const badFontBoundary = runtime.validateFontBoundaries(hebrewMarkedText, [
       { start: 0, end: 1, fontId: 'font-a' },
       { start: 1, end: hebrewMarked.utf16Length, fontId: 'font-b' }
@@ -248,6 +278,18 @@ async function main() {
         combiningLatinCount: combiningLatin.graphemes.length
       },
       mixedScriptRuns: mixedScriptItemization.scriptRuns,
+      commonWhitespace: mixedSpace,
+      pairedPunctuation: {
+        text: pairedText,
+        open: openBracket,
+        close: closeBracket,
+        pairCount: pairedItemization.pairedPunctuationPairCount
+      },
+      standalonePairedPunctuation: {
+        text: standalonePair,
+        open: standaloneOpen,
+        close: standaloneClose
+      },
       arabicScriptExtensions: arabicCommaGrapheme,
       fontBoundaryProbe: { bad: badFontBoundary, good: goodFontBoundary },
       fixtureItemizationsComplete: allFixtureItemizationsAreComplete(
@@ -345,6 +387,14 @@ async function main() {
       scriptExtensionsResolveFromContext: arabicCommaGrapheme.candidates.includes('Arab') &&
         arabicCommaGrapheme.script === 'Arab' &&
         arabicCommaGrapheme.status === 'context-both-sides',
+      commonWhitespaceGetsContextualScript: mixedSpace.script === 'Hebr' &&
+        mixedSpace.status === 'context-left-preferred' &&
+        mixedScriptItemization.scriptRuns.every((run) => run.script != null),
+      pairedPunctuationUsesEnclosingScript: openBracket.script === 'Latn' &&
+        closeBracket.script === 'Latn' &&
+        openBracket.status === 'paired-enclosing-context' &&
+        closeBracket.status === 'paired-enclosing-context' &&
+        standaloneOpen.script === 'Grek' && standaloneClose.script === 'Grek',
       fontRunCannotSplitGrapheme: !badFontBoundary.ok &&
         badFontBoundary.diagnostics.some((item) => item.code === 'font-boundary-splits-grapheme') &&
         goodFontBoundary.ok,
