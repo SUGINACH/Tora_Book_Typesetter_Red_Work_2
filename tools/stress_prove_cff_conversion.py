@@ -48,6 +48,7 @@ def main():
                 bbox=getattr(source_cff_top,'FontBBox',None)
                 row['sourceCffFontMatrix']=[float(v) for v in matrix] if matrix else None
                 row['sourceCffFontBBox']=[float(v) for v in bbox] if bbox else None
+            source_bounds_by_gid = [glyph_bounds(f).get(name) for name in order]
             cmap0={int(cp):int(f.getGlyphID(n)) for cp,n in (f.getBestCmap() or {}).items()}
             order=list(f.getGlyphOrder()); metrics0=[tuple(int(v) for v in f['hmtx'].metrics[n]) for n in order]
             upem=float(f['head'].unitsPerEm)
@@ -72,13 +73,49 @@ def main():
                         row['worstGlyphCffProgramPreview']=[str(x) for x in charstring.program[:80]]
                     except Exception as diagnostic_exc:
                         row['worstGlyphCffProgramDiagnosticError']=f'{type(diagnostic_exc).__name__}: {diagnostic_exc}'
-            if maximum is None or row['maxBoundsDeltaFontUnits']>maximum['delta']:
-                maximum={'file':rel,'delta':row['maxBoundsDeltaFontUnits'],'deltaEm':row['maxBoundsDeltaFontUnits']/float(f['head'].unitsPerEm) if 'head' in f else None,'worstGlyph':row['worstGlyph']}
+            candidate_delta_em = row['maxBoundsDeltaFontUnits'] / upem
+            if maximum is None or candidate_delta_em > maximum['deltaEm']:
+                maximum={'file':rel,'delta':row['maxBoundsDeltaFontUnits'],'deltaEm':candidate_delta_em,'worstGlyph':row['worstGlyph']}
             converted_order=list(f.getGlyphOrder())
             converted_bounds=raw_glyf_bounds(f)
             converted_bounds_by_gid=[converted_bounds.get(name) for name in converted_order]
             f.flavor=None; tmp=root/'artifacts/cff-conversion-stress/tmp'
-            tmp.mkdir(parents=True,exist_ok=True); output=tmp/(hashlib.sha256(rel.encode()).hexdigest()+'.ttf'); f.save(str(output)); f.close()
+            tmp.mkdir(parents=True,exist_ok=True); output=tmp/(hashlib.sha256(rel.encode()).hexdigest()+'.ttf'); f.save(str(output))
+            if rel == 'Ploni-Regular.ttf' and len(order) > 725:
+                target_gid = 725
+                target_name = order[target_gid]
+                raw_target = converted_bounds_by_gid[target_gid]
+                source_target = source_bounds_by_gid[target_gid]
+                aligned_target = glyph_bounds(f, prefer_cff=False).get(target_name)
+                stored_target = f['glyf'][target_name]
+                target_lsb = int(f['hmtx'].metrics[target_name][1])
+                row['ploniGID725Diagnostic'] = {
+                    'gid': target_gid,
+                    'glyphName': target_name,
+                    'sourceCffBounds': [float(v) for v in source_target] if source_target else None,
+                    'rawConvertedGlyfBounds': [float(v) for v in raw_target] if raw_target else None,
+                    'glyphSetAlignedBounds': [float(v) for v in aligned_target] if aligned_target else None,
+                    'advanceWidth': int(f['hmtx'].metrics[target_name][0]),
+                    'leftSideBearing': target_lsb,
+                    'storedGlyfXMin': int(stored_target.xMin) if hasattr(stored_target, 'xMin') else None,
+                    'glyphSetHorizontalTranslation': (
+                        target_lsb - int(stored_target.xMin) if hasattr(stored_target, 'xMin') else 0
+                    ),
+                    'rawBoundsDeltaFontUnits': (
+                        max(abs(float(a)-float(b)) for a,b in zip(source_target,raw_target))
+                        if source_target and raw_target else None
+                    ),
+                    'alignedBoundsDeltaFontUnits': (
+                        max(abs(float(a)-float(b)) for a,b in zip(source_target,aligned_target))
+                        if source_target and aligned_target else None
+                    ),
+                }
+                row['ploniGID725VisualComparison'] = write_glyph_comparison(
+                    src, output, target_gid,
+                    args.visual_dir if args.visual_dir.is_absolute() else root / args.visual_dir,
+                    'ploni-gid725-raw',
+                )
+            f.close()
             out=TTFont(str(output),lazy=False,recalcBBoxes=False,recalcTimestamp=False)
             cmap1={int(cp):int(out.getGlyphID(n)) for cp,n in (out.getBestCmap() or {}).items()}
             metrics1=[tuple(int(v) for v in out['hmtx'].metrics[n]) for n in out.getGlyphOrder()]
