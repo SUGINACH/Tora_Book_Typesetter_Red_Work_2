@@ -582,3 +582,6 @@ RED line-breaker integration and renderer parity are still open.
 
 
 - [ICU4X Unicode 18 → HarfBuzz shared shaping POC — 25.11.2026](../audits/ICU4X_HARFBUZZ_SHARED_SHAPING_POC_2026-11-25.md)
+
+
+- [Production ShapedRun integration contract — 25.11.2026](../audits/PRODUCTION_SHAPEDRUN_INTEGRATION_CONTRACT_2026-11-25.md)

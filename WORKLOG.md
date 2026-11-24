@@ -4956,3 +4956,14 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
 - The 4 raw WOFF2 fixtures were not directly shaped by HarfBuzzJS; after fontTools/Brotli normalization to SFNT, those normalized SFNTs shaped successfully. Do not claim raw WOFF2 support.
 - Boundary: this is POC only; production MeasureAPI/LineItem/LineModel/PageModel/DOM/PDF remain unchanged. Line-break-edge reshaping, PDF GID/CID/ActualText, DOM glyph drawing, quadratic glyf bounds, L3/L4 and complete renderer parity remain open. `TYP-SHAPING-01` stays open.
 - Full report: `audits/ICU4X_HARFBUZZ_SHARED_SHAPING_POC_2026-11-25.md`.
+
+
+## 2026-11-25 — Production ShapedRun integration boundary mapped
+
+- Rechecked production source paths: `line-items.js` (`buildContainerSequence`, `splitTextItem`, `boxItemFor`), `line-model.js`, `core/materialize.js`, `measure-api.js`, `pagemodel-dom-renderer.js`, `pdf-writer.js`, `font-subset.js`.
+- Confirmed order: paragraph text/style runs are split into word boxes before the canonical `measureItem` call; each box's measured result feeds LineModel/LineModel fragments and subsequent line breaking.
+- Confirmed PageModel materialization carries word text and fragment positions but not canonical glyph IDs/clusters.
+- Confirmed DOM renderer still emits Unicode `textContent` into positioned spans; browser shapes after geometry.
+- Confirmed PDF still uses per-character `cidOf(ch)` and renderer-local visual-order handling; font subsetter begins from Unicode/cmap rather than shaped GIDs.
+- Created `audits/PRODUCTION_SHAPEDRUN_INTEGRATION_CONTRACT_2026-11-25.md`, defining the one-path contract: itemize paragraph before splitting; canonical shaped result feeds `MeasureAPI.measureItem`; cluster-safe word slices feed LineModel; line-edge BOT/EOT is resolved before PageModel; PageModel glyph placements feed DOM/HTML/PDF without reshaping.
+- This is a source-grounded integration contract, not a claim that production code has changed. No production MeasureAPI, LineItems, LineModel, materializer, DOM or PDF code changed. TYP-SHAPING-01 remains open pending implementation and all-target acceptance.

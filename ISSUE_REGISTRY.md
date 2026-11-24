@@ -822,3 +822,24 @@ must still consume the same shaped records. Line-edge reshaping, quadratic glyf
 bounds, L3/L4 and full renderer parity remain open. Keep TYP-SHAPING-01 open.
 
 Detailed report: `audits/ICU4X_HARFBUZZ_SHARED_SHAPING_POC_2026-11-25.md`.
+
+
+### TYP-SHAPING-01 — production integration contract mapped (25.11.2026)
+
+The ICU4X→HarfBuzz POC passed, but inspection of production source confirms the
+last gap: `buildContainerSequence/splitTextItem` creates word boxes before
+`boxItemFor → measureItem`; the DOM renderer sends Unicode text to browser
+shaping; the PDF writer maps each character to CID; the subsetter starts from
+Unicode/cmap; PageModel materialization does not yet preserve GID/cluster runs.
+
+The production insertion point is therefore paragraph itemization attached to
+TextItem before word splitting, with a single canonical measurement boundary
+at `boxItemFor → MeasureAPI.measureItem`. The same shaped records must carry
+through LineModel and materialization into PageModel and then all three targets.
+Line-edge BOT/EOT re-shaping and width reconsideration must occur before PageModel;
+DOM/PDF may not reshape or measure independently.
+
+Detailed contract and acceptance gates:
+`audits/PRODUCTION_SHAPEDRUN_INTEGRATION_CONTRACT_2026-11-25.md`.
+
+Status remains **open**; no production code cutover has been performed.
