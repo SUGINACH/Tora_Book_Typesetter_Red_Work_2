@@ -27,7 +27,13 @@
  * הרצה: bash tools/layout-audit/run.sh  (מגיש את הסקריפט הזה לדפדפן)
  */
 
-(async function () {
+(function () {
+  // Run the long virtualized sweep asynchronously in the page instead of
+  // making one long CDP Runtime.evaluate await the entire Promise. The shell
+  // polls this state with short CDP calls and retrieves the final JSON only
+  // after the scan is complete.
+  const job = window.__layoutAuditJob = { status: 'running', result: null, error: null };
+  const run = async function () {
   const t0 = Date.now();
   const R = (el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height, r: r.right, b: r.bottom }; };
   const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -522,4 +528,17 @@
 
   finish();
   return JSON.stringify(report);
+  };
+
+  Promise.resolve().then(run).then(
+    (result) => {
+      job.result = result;
+      job.status = 'done';
+    },
+    (error) => {
+      job.error = error && (error.stack || error.message) ? String(error.stack || error.message) : String(error);
+      job.status = 'error';
+    }
+  );
+  return JSON.stringify({ status: 'started' });
 })()
