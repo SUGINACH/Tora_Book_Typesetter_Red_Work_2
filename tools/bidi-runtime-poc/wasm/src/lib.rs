@@ -110,7 +110,7 @@ pub unsafe extern "C" fn bidi_line_visual_runs(
     if pointer.is_null()
         || length == 0
         || length > 16_000_000
-        || line_start >= line_end
+        || line_start > line_end
         || line_end > length
     {
         return ptr::null_mut();
@@ -121,6 +121,11 @@ pub unsafe extern "C" fn bidi_line_visual_runs(
     let text = slice::from_raw_parts(pointer, length);
     if !is_utf16_boundary(text, line_start) || !is_utf16_boundary(text, line_end) {
         return ptr::null_mut();
+    }
+    if line_start == line_end {
+        // Empty lines have no visual runs or code-unit levels. Avoid calling
+        // visual_runs_for_line, whose upstream implementation assumes one level.
+        return boxed_u32(vec![0, 0]);
     }
 
     let info = BidiInfo::new(text, default_level);
