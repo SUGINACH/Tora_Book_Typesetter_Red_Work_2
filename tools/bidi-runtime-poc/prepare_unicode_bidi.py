@@ -144,6 +144,27 @@ def main() -> None:
         "https://www.unicode.org/Public/%s/%s",
     )
 
+    # The upstream README parser predates this versioned data directory.
+    # Derive the version from the exact property file that feeds our Bidi table.
+    old_version_reader = """def get_unicode_version():
+    fetch_data(README_NAME)
+    with open_data(README_NAME) as readme:
+        pattern = "for Version (\\d+)\\.(\\d+)\\.(\\d+) of the Unicode"
+        return re.search(pattern, readme.read()).groups()
+"""
+    new_version_reader = """def get_unicode_version():
+    fetch_data("extracted/DerivedBidiClass.txt")
+    with open_data("DerivedBidiClass.txt") as source:
+        header = source.readline().strip()
+    expected = "# DerivedBidiClass-18.0.0.txt"
+    if header != expected:
+        raise ValueError("Unexpected Unicode Bidi data header: " + header)
+    return ("18", "0", "0")
+"""
+    if generator.count(old_version_reader) != 1:
+        raise SystemExit("Could not uniquely locate upstream Unicode version reader")
+    generator = generator.replace(old_version_reader, new_version_reader, 1)
+
     start_marker = "    # Default Bidi_Class for unassigned codepoints."
     end_marker = "    return (group_categories(bidi_class), on_decomps)"
 
