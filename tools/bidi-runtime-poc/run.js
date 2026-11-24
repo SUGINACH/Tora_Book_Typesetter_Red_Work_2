@@ -1,0 +1,217 @@
+#!/usr/bin/env node
+'use strict';
+
+const { spawn } = require('child_process');
+const crypto = require('crypto');
+const fs = require('fs');
+const http = require('http');
+const os = require('os');
+const path = require('path');
+const { pathToFileURL } = require('url');
+
+const REPORT = process.env.BIDI_POC_REPORT || '/tmp/bidi-runtime-poc-report.json';
+const AGENT_BROWSER = process.env.AGENT_BROWSER || 'agent-browser';
+
+function runAgent(args, timeoutMs = 60000) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(AGENT_BROWSER, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+      reject(new Error('agent-browser ' + args[0] + ' timed out after ' + timeoutMs + 'ms'));
+    }, timeoutMs);
+    child.stdout.on('data', (chunk) => { stdout += chunk; });
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    child.on('error', (error) => {
+      clearTimeout(timer);
+      reject(new Error('agent-browser could not start: ' + error.message));
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      if (code !== 0) reject(new Error('agent-browser ' + args.join(' ') + ' exited ' + code + ': ' +
+        (stderr || stdout).slice(-2000)));
+      else resolve(stdout.trim());
+    });
+  });
+}
+
+function unwrapAgentJson(output) {
+  let value = output.trim();
+  for (let i = 0; i < 3; i++) {
+    try {
+      const parsed = JSON.parse(value);
+      if (typeof parsed === 'string') { value = parsed; continue; }
+      return parsed;
+    } catch (_) {
+      return value;
+    }
+  }
+  return value;
+}
+
+function mimeType(file) {
+  switch (path.extname(file).toLowerCase()) {
+    case '.html': return 'text/html; charset=utf-8';
+    case '.js': return 'text/javascript; charset=utf-8';
+    case '.json': return 'application/json; charset=utf-8';
+    case '.wasm': return 'application/wasm';
+    default: return 'application/octet-stream';
+  }
+}
+
+async function main() {
+  const wasmPath = process.argv[2];
+  if (!wasmPath || !fs.existsSync(wasmPath)) {
+    throw new Error('usage: node tools/bidi-runtime-poc/run.js /path/to/red-bidi-runtime-poc.wasm');
+  }
+  const site = fs.mkdtempSync(path.join(os.tmpdir(), 'red-bidi-runtime-poc-'));
+  const report = {
+    project: 'Tora_Book_Typesetter_Red_Work_2',
+    runtime: 'servo/unicode-bidi 0.3.18 UTF-16 API',
+    expectedUnicodeVersion: '18.0.0',
+    wasmBytes: fs.statSync(wasmPath).size,
+    nodeVersion: process.version,
+    startedAt: new Date().toISOString()
+  };
+  let server = null;
+  let browserOpened = false;
+
+  try {
+    for (const file of ['index.html', 'bidi-api.js', 'bidi-worker.js', 'fixtures.json']) {
+      fs.copyFileSync(path.join(__dirname, file), path.join(site, file));
+    }
+    fs.copyFileSync(wasmPath, path.join(site, 'bidi-runtime.wasm'));
+
+    const api = require('./bidi-api.js');
+    const wasmBytes = fs.readFileSync(wasmPath);
+    const runtime = await api.instantiate(wasmBytes);
+    const fixtures = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures.json'), 'utf8'));
+    const nodeResult = runtime.analyzeFixtures(fixtures);
+    const nodeJson = JSON.stringify(nodeResult);
+    report.nodeReference = {
+      unicodeVersion: runtime.unicodeVersion,
+      fixtureCount: fixtures.length,
+      paragraphCount: nodeResult.fixtures.reduce((sum, item) => sum + item.paragraphs.length, 0),
+      logicalBidiRunCount: nodeResult.fixtures.reduce((sum, item) =>
+        sum + item.paragraphs.reduce((subtotal, para) => subtotal + para.logicalRuns.length, 0), 0),
+      lineProbeCount: nodeResult.fixtures.reduce((sum, item) =>
+        sum + item.paragraphs.reduce((subtotal, para) => subtotal + para.lines.length, 0), 0),
+      outputSha256: crypto.createHash('sha256').update(nodeJson).digest('hex'),
+      fixtures: nodeResult.fixtures.map((item) => ({
+        id: item.id,
+        baseDirection: item.baseDirection,
+        utf16Length: item.utf16Length,
+        levels: item.levels,
+        paragraphs: item.paragraphs
+      }))
+    };
+    if (runtime.unicodeVersion !== report.expectedUnicodeVersion) {
+      throw new Error('Bidi Unicode data version is not Unicode 18.0.0: ' + runtime.unicodeVersion);
+    }
+    report.invariants = {
+      levelsMatchUtf16Length: nodeResult.fixtures.every((item) => item.levels.length === item.utf16Length),
+      allParagraphRangesAreCovered: nodeResult.fixtures.every((item) =>
+        item.paragraphs.every((para) => para.start <= para.end && para.end <= item.utf16Length)),
+      allLineVisualRunsCoverSource: nodeResult.fixtures.every((item) =>
+        item.paragraphs.every((para) => para.lines.every((line) => {
+          const ordered = line.visualRuns.slice().sort((a, b) => a.start - b.start);
+          let next = line.lineStart;
+          for (const run of ordered) {
+            if (run.start !== next) return false;
+            next = run.end;
+          }
+          return next === line.lineEnd;
+        }))),
+      allRunDirectionsMatchEmbeddingParity: nodeResult.fixtures.every((item) =>
+        item.paragraphs.every((para) =>
+          para.logicalRuns.every((run) => run.direction === (run.level % 2 ? 'rtl' : 'ltr')) &&
+          para.lines.every((line) =>
+            line.visualRuns.every((run) => run.direction === (run.level % 2 ? 'rtl' : 'ltr'))))),
+      fixtureIdsUnique: new Set(nodeResult.fixtures.map((item) => item.id)).size === fixtures.length
+    };
+    if (Object.values(report.invariants).some((passed) => passed !== true)) {
+      throw new Error('Bidi UTF-16/run invariants failed: ' + JSON.stringify(report.invariants));
+    }
+
+    server = http.createServer((request, response) => {
+      const parsed = new URL(request.url, 'http://127.0.0.1');
+      const relative = parsed.pathname === '/' ? 'index.html' : decodeURIComponent(parsed.pathname).replace(/^\/+/, '');
+      const target = path.resolve(site, relative);
+      if (target !== site && !target.startsWith(site + path.sep)) {
+        response.writeHead(403); response.end('forbidden'); return;
+      }
+      fs.readFile(target, (error, data) => {
+        if (error) { response.writeHead(404); response.end('not found'); return; }
+        response.writeHead(200, {
+          'Content-Type': mimeType(target),
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff'
+        });
+        response.end(data);
+      });
+    });
+    await new Promise((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(0, '127.0.0.1', resolve);
+    });
+
+    const address = server.address();
+    await runAgent(['open', 'http://127.0.0.1:' + address.port + '/'], 60000);
+    browserOpened = true;
+    await runAgent(['wait', '1000'], 10000);
+
+    const started = Date.now();
+    let browserResult = null;
+    while (Date.now() - started < 90000) {
+      const raw = await runAgent(['eval', 'JSON.stringify(window.__bidiPoc || {state:"missing"})'], 15000);
+      const state = unwrapAgentJson(raw);
+      if (state && typeof state === 'object' && state.state !== 'running') {
+        browserResult = state;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    }
+    if (!browserResult) throw new Error('Timed out waiting for classic Worker Bidi WASM conformance fixtures');
+    report.browserWorker = {
+      state: browserResult.state,
+      unicodeVersion: browserResult.unicodeVersion,
+      error: browserResult.error || null
+    };
+    if (browserResult.state !== 'passed' || !browserResult.report) {
+      throw new Error('Browser classic Worker Bidi execution failed: ' + JSON.stringify(browserResult).slice(0, 5000));
+    }
+    const browserJson = JSON.stringify(browserResult.report);
+    report.browserWorker.outputSha256 = crypto.createHash('sha256').update(browserJson).digest('hex');
+    report.exactNodeParity = browserJson === nodeJson;
+    if (!report.exactNodeParity) {
+      throw new Error('Node/classic Worker Bidi output differs: ' + JSON.stringify({
+        nodeSha256: report.nodeReference.outputSha256,
+        workerSha256: report.browserWorker.outputSha256
+      }));
+    }
+    report.result = 'passed';
+    report.finishedAt = new Date().toISOString();
+    fs.mkdirSync(path.dirname(REPORT), { recursive: true });
+    fs.writeFileSync(REPORT, JSON.stringify(report, null, 2), 'utf8');
+    console.log(JSON.stringify(report, null, 2));
+  } catch (error) {
+    report.result = 'failed';
+    report.error = String(error && error.stack || error);
+    report.finishedAt = new Date().toISOString();
+    fs.mkdirSync(path.dirname(REPORT), { recursive: true });
+    fs.writeFileSync(REPORT, JSON.stringify(report, null, 2), 'utf8');
+    throw error;
+  } finally {
+    if (browserOpened) {
+      try { await runAgent(['close'], 15000); } catch (_) { /* preserve primary result */ }
+    }
+    if (server) await new Promise((resolve) => server.close(resolve));
+    fs.rmSync(site, { recursive: true, force: true });
+  }
+}
+
+main().catch((error) => {
+  console.error(error && error.stack || error);
+  process.exitCode = 1;
+});
