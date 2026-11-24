@@ -79,6 +79,9 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> float:
 
     glyf = newTable("glyf")
     glyf.glyphs = glyphs
+    glyf.setGlyphOrder(names)
+    for name in names:
+        glyf[name].recalcBounds(glyf)
     font["glyf"] = glyf
     font["loca"] = newTable("loca")
     del font["CFF "]
