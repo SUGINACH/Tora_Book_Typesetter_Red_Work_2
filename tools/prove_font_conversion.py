@@ -610,6 +610,16 @@ def main() -> int:
                     name: (int(font["hmtx"].metrics[name][0]), int(font["hmtx"].metrics[name][1]))
                     for name in glyph_order_before
                 }
+                source_hhea_summary = {
+                    "advanceWidthMax": int(font["hhea"].advanceWidthMax),
+                    "minLeftSideBearing": int(font["hhea"].minLeftSideBearing),
+                    "minRightSideBearing": int(font["hhea"].minRightSideBearing),
+                    "xMaxExtent": int(font["hhea"].xMaxExtent),
+                }
+                source_head_bounds = [
+                    int(font["head"].xMin), int(font["head"].yMin),
+                    int(font["head"].xMax), int(font["head"].yMax),
+                ]
                 source_bounds_by_name = glyph_bounds(font, prefer_cff=True) if is_cff_source else {}
                 source_bounds_by_gid = [source_bounds_by_name.get(name) for name in glyph_order_before]
                 cmap_before = {
@@ -684,17 +694,23 @@ def main() -> int:
                     if max_phantom_delta > 0.500001:
                         raise ValueError(f"left phantom-point position changed by {max_phantom_delta} font units")
                     row["maxLeftPhantomPointDeltaFontUnits"] = max_phantom_delta
-                expected_hhea = conversion_geometry["hmetricsRemapping"]["hheaSummary"]
                 actual_hhea = {
                     "advanceWidthMax": int(check["hhea"].advanceWidthMax),
                     "minLeftSideBearing": int(check["hhea"].minLeftSideBearing),
                     "minRightSideBearing": int(check["hhea"].minRightSideBearing),
                     "xMaxExtent": int(check["hhea"].xMaxExtent),
                 }
+                actual_head = [int(check["head"].xMin), int(check["head"].yMin), int(check["head"].xMax), int(check["head"].yMax)]
+                expected_hhea = (
+                    conversion_geometry["hmetricsRemapping"]["hheaSummary"]
+                    if is_cff_source else source_hhea_summary
+                )
+                expected_head = (
+                    conversion_geometry["hmetricsRemapping"]["headGlobalBounds"]
+                    if is_cff_source else source_head_bounds
+                )
                 if actual_hhea != expected_hhea:
                     raise ValueError(f"hhea summary changed or stale: expected {expected_hhea}, got {actual_hhea}")
-                expected_head = conversion_geometry["hmetricsRemapping"]["headGlobalBounds"]
-                actual_head = [int(check["head"].xMin), int(check["head"].yMin), int(check["head"].xMax), int(check["head"].yMax)]
                 if actual_head != expected_head:
                     raise ValueError(f"head global bounds changed or stale: expected {expected_head}, got {actual_head}")
                 row["hheaSummaryAfterReload"] = actual_hhea
