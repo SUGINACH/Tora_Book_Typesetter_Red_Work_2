@@ -142,6 +142,16 @@ def reconcile_cff_metrics_for_glyf(
     # hmtx. Recompute it after changing LSBs; leaving stale CFF-era values
     # would make the new SFNT internally inconsistent.
     font["hhea"].recalc(font)
+    hhea_fields = {
+        "advanceWidthMax": (0, 65535),
+        "minLeftSideBearing": (-32768, 32767),
+        "minRightSideBearing": (-32768, 32767),
+        "xMaxExtent": (-32768, 32767),
+    }
+    for field, (minimum, maximum) in hhea_fields.items():
+        value = int(getattr(font["hhea"], field))
+        if not minimum <= value <= maximum:
+            raise ValueError(f"hhea.{field} outside OpenType field range: {value}")
 
     # head's global bounding box must enclose the newly materialized glyf
     # outlines. Recalculate every glyph (including composite bounds), then
@@ -162,6 +172,10 @@ def reconcile_cff_metrics_for_glyf(
     else:
         font["head"].xMin = font["head"].yMin = 0
         font["head"].xMax = font["head"].yMax = 0
+    for field in ("xMin", "yMin", "xMax", "yMax"):
+        value = int(getattr(font["head"], field))
+        if not -32768 <= value <= 32767:
+            raise ValueError(f"head.{field} outside signed FWORD range: {value}")
 
     return {
         "glyphCount": len(font.getGlyphOrder()),
