@@ -462,42 +462,19 @@
       return pairs.length;
     }
 
-    function buildScriptRuns(graphemes) {
-      const runs = [];
-      for (let graphemeIndex = 0; graphemeIndex < graphemes.length; graphemeIndex++) {
-        const grapheme = graphemes[graphemeIndex];
-        if (!grapheme.shapeable) continue;
-        const key = [
-          grapheme.script || '?',
-          grapheme.direction || '?',
-          grapheme.bidiLevel == null ? '?' : grapheme.bidiLevel,
-          grapheme.status === 'mixed-grapheme' ? 'mixed' :
-            (grapheme.script ? 'resolved' : 'unresolved'),
-          grapheme.script ? '' : grapheme.candidates.join(',')
-        ].join('|');
-        const previous = runs[runs.length - 1];
-        if (previous && previous._key === key && previous.end === grapheme.start) {
-          previous.end = grapheme.end;
-          previous.graphemeEnd++;
-          previous.text += grapheme.text;
-          continue;
-        }
-        runs.push({
-          start: grapheme.start,
-          end: grapheme.end,
-          text: grapheme.text,
-          script: grapheme.script,
-          scriptStatus: grapheme.status,
-          scriptCandidates: grapheme.candidates.slice(),
-          direction: grapheme.direction || null,
-          bidiLevel: grapheme.bidiLevel,
-          graphemeStart: graphemeIndex,
-          graphemeEnd: graphemeIndex + 1,
-          _key: key
-        });
-      }
-      for (const run of runs) delete run._key;
-      return runs;
+    function buildScriptRuns(sourceRuns) {
+      return sourceRuns.filter((run) => run.kind === 'shape').map((run) => ({
+        start: run.start,
+        end: run.end,
+        text: run.text,
+        script: run.script,
+        scriptStatus: run.status,
+        scriptCandidates: run.candidates.slice(),
+        direction: run.direction,
+        bidiLevel: run.bidiLevel,
+        graphemeStart: run.graphemeStart,
+        graphemeEnd: run.graphemeEnd
+      }));
     }
 
     // A lossless source partition distinguishes text that may be shaped from
@@ -729,14 +706,15 @@
           }
         }
 
+        const sourceRuns = buildSourceRuns(graphemes);
         return {
           text,
           utf16Length: units.length,
           unicodeVersion: itemizerUnicodeVersion.join('.'),
           graphemes,
-          scriptRuns: buildScriptRuns(graphemes),
-          sourceRuns: buildSourceRuns(graphemes),
-          nonShapingRuns: buildSourceRuns(graphemes).filter((run) => run.kind !== 'shape'),
+          scriptRuns: buildScriptRuns(sourceRuns),
+          sourceRuns,
+          nonShapingRuns: sourceRuns.filter((run) => run.kind !== 'shape'),
           pairedPunctuationPairCount,
           diagnostics
         };
