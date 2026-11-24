@@ -112,6 +112,29 @@ def main() -> int:
             int(font["head"].xMax), int(font["head"].yMax),
         ] == [-72, 0, 500, 700]
 
+        # CFF curve extrema can be fractional while hmtx LSB is an integer.
+        # This must be reported as a source-metric review, not mistaken for a
+        # failed outline conversion or hidden by changing the curve itself.
+        fractional_source_bounds = dict(source_bounds)
+        fractional_source_bounds["offcurve-test"] = (39.875, 377.0, 150.0, 494.0)
+        fractional_review = reconcile_cff_metrics_for_glyf(
+            font, fractional_source_bounds, source_metrics
+        )
+        assert fractional_review["sourcePlacementReviewCount"] == 1, fractional_review
+        assert abs(fractional_review["worstSourcePlacementReview"]["absolutePlacementMetricDelta"] - 0.875) < 1e-9
+        assert int(font["hmtx"].metrics["offcurve-test"][1]) == -72
+
+        # Large source CFF/LSB discrepancies are also retained explicitly and
+        # escalated for raster review; they are not silently labeled accepted.
+        severe_source_bounds = dict(source_bounds)
+        severe_source_bounds["offcurve-test"] = (89.0, 377.0, 150.0, 494.0)
+        severe_review = reconcile_cff_metrics_for_glyf(
+            font, severe_source_bounds, source_metrics
+        )
+        assert severe_review["sourcePlacementReviewCount"] == 1, severe_review
+        assert abs(severe_review["worstSourcePlacementReview"]["absolutePlacementMetricDelta"] - 50.0) < 1e-9
+        assert severe_review["worstSourcePlacementReview"]["gid"] == 1
+
         font.save(path)
         font.close()
         reloaded = TTFont(path, lazy=False, recalcBBoxes=False, recalcTimestamp=False)
@@ -150,7 +173,9 @@ def main() -> int:
             "leftPhantomPointBefore": source_pp1,
             "leftPhantomPointAfter": output_pp1,
             "metricsRemapping": remap,
-            "regression": "raw outline preserved; LSB remapped to preserve left phantom point and eliminate spurious glyf-control-point translation",
+            "fractionalSourceMetricReview": fractional_review,
+            "largeSourceMetricReview": severe_review,
+            "regression": "raw outline preserved; off-curve glyf LSB remapping is verified, while CFF curve-bound/hmtx fractional or severe discrepancies are retained as explicit visual-review diagnostics",
         }
         print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0
