@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RED Bidi Runtime POC</title>
+</head>
+<body>
+  <main>
+    <h1>RED Bidi Runtime POC</h1>
+    <output id="status">starting</output>
+    <pre id="report"></pre>
+  </main>
+  <script>
+    (function () {
+      const status = document.getElementById('status');
+      const output = document.getElementById('report');
+      const worker = new Worker('/bidi-worker.js');
+      window.__bidiPoc = { state: 'running' };
+      worker.onmessage = function (event) {
+        window.__bidiPoc = event.data;
+        status.textContent = event.data.state;
+        output.textContent = JSON.stringify(event.data, null, 2);
+        worker.terminate();
+      };
+      worker.onerror = function (event) {
+        window.__bidiPoc = { state: 'failed', error: event.message || 'Worker error' };
+        status.textContent = 'failed';
+        output.textContent = JSON.stringify(window.__bidiPoc);
+        worker.terminate();
+      };
+      worker.postMessage({ start: true });
+    })();
+  </script>
+</body>
+</html>
