@@ -124,8 +124,10 @@
       let emptyOutlineGlyphCount = 0;
       let totalOutlinePathChars = 0;
       let digest = 2166136261;
+      const outlinePaths = fixture.captureOutlinePaths ? [] : null;
       for (let gid = 0; gid < maxGlyphs; gid++) {
         const path = font.glyphToPath(gid);
+        if (outlinePaths) outlinePaths.push({ gid, path });
         if (typeof path !== 'string') throw new Error('CFF glyphToPath returned a non-string for ' + fixture.name + ' GID ' + gid);
         if (path.length) outlineGlyphCount++; else emptyOutlineGlyphCount++;
         totalOutlinePathChars += path.length;
@@ -147,7 +149,8 @@
         outlineGlyphCount,
         emptyOutlineGlyphCount,
         totalOutlinePathChars,
-        outlineDigest: (digest >>> 0).toString(16).padStart(8, '0')
+        outlineDigest: (digest >>> 0).toString(16).padStart(8, '0'),
+        outlinePaths
       };
     }
     return {

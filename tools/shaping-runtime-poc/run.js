@@ -152,6 +152,7 @@ async function main() {
           format: 'sfnt-normalized-from-woff2',
           normalizedFrom: fixture.name,
           sourceOutlineFormat: normalizationInfo.outlineFormat,
+          captureOutlinePaths: normalizationInfo.outlineFormat === 'CFF' || normalizationInfo.outlineFormat === 'CFF2',
           source: normalizedPath
         });
         report.normalization.push({
@@ -199,6 +200,19 @@ async function main() {
       const fontArrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
       expected.push(shapeCore.shapeWithHarfBuzz(hb, fontArrayBuffer, fixture));
     }
+    const cffOutlineInputs = expected.filter((item) => item.outlineSweep && item.outlineSweep.outlinePaths)
+      .map((item) => {
+        const fixture = shapeFixtures.find((candidate) => candidate.name === item.fontName);
+        if (!fixture) throw new Error('No source SFNT for CFF outline reference: ' + item.fontName);
+        return { fontName: item.fontName, fontPath: fixture.source, glyphPaths: item.outlineSweep.outlinePaths };
+      });
+    const cffOutlineInputPath = path.join(temp, 'cff-outline-reference-input.json');
+    fs.writeFileSync(cffOutlineInputPath, JSON.stringify(cffOutlineInputs), 'utf8');
+    const outlineComparisonStdout = runCommand(process.env.HB_POC_PYTHON || 'python3', [
+      path.join(__dirname, 'compare_cff_outlines.py'),
+      cffOutlineInputPath
+    ]);
+    report.cffSourceOutlineComparison = JSON.parse(outlineComparisonStdout.split(/\r?\n/).at(-1));
     const expectedJson = JSON.stringify(expected);
     report.nodeReference = {
       harfBuzzVersion: expected[0].harfBuzzVersion,
