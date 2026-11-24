@@ -158,6 +158,88 @@ async function main() {
         JSON.stringify(trailingL1Levels));
     }
 
+    const hebrewMarkedText = 'שָׁלוֹם';
+    const hebrewMarked = runtime.itemizeScripts(hebrewMarkedText);
+    const firstHebrewGrapheme = hebrewMarked.graphemes[0];
+    if (!firstHebrewGrapheme || firstHebrewGrapheme.start !== 0 ||
+        firstHebrewGrapheme.end < 3 || firstHebrewGrapheme.scalars.length < 2 ||
+        firstHebrewGrapheme.script !== 'Hebr') {
+      throw new Error('Hebrew niqqud grapheme was not kept intact and assigned to Hebr: ' +
+        JSON.stringify(firstHebrewGrapheme));
+    }
+
+    const familyEmoji = '👨‍👩‍👧‍👦';
+    const familyItemization = runtime.itemizeScripts(familyEmoji);
+    const flagItemization = runtime.itemizeScripts('🇮🇱');
+    const combiningLatin = runtime.itemizeScripts('e\u0301');
+    if (familyItemization.graphemes.length !== 1 ||
+        familyItemization.graphemes[0].text !== familyEmoji ||
+        flagItemization.graphemes.length !== 1 ||
+        flagItemization.graphemes[0].text !== '🇮🇱' ||
+        combiningLatin.graphemes.length !== 1 ||
+        combiningLatin.graphemes[0].text !== 'e\u0301') {
+      throw new Error('Extended grapheme cluster handling failed for ZWJ emoji, flag, or combining mark');
+    }
+
+    const mixedScriptText = 'שלום ABC';
+    const mixedScriptBidi = runtime.resolve(mixedScriptText, 'auto');
+    const mixedScriptItemization = runtime.itemizeScripts(mixedScriptText, mixedScriptBidi);
+    const seenScripts = new Set(mixedScriptItemization.scriptRuns.map((run) => run.script));
+    if (!seenScripts.has('Hebr') || !seenScripts.has('Latn') ||
+        !mixedScriptItemization.scriptRuns.some((run) => run.script === 'Hebr' && run.direction === 'rtl') ||
+        !mixedScriptItemization.scriptRuns.some((run) => run.script === 'Latn' && run.direction === 'ltr')) {
+      throw new Error('Hebrew/Latin Script and Bidi itemization did not produce separate directional runs: ' +
+        JSON.stringify(mixedScriptItemization.scriptRuns));
+    }
+
+    const badFontBoundary = runtime.validateFontBoundaries(hebrewMarkedText, [
+      { start: 0, end: 1, fontId: 'font-a' },
+      { start: 1, end: hebrewMarked.utf16Length, fontId: 'font-b' }
+    ]);
+    const goodFontBoundary = runtime.validateFontBoundaries(hebrewMarkedText, [
+      { start: 0, end: firstHebrewGrapheme.end, fontId: 'font-a' },
+      { start: firstHebrewGrapheme.end, end: hebrewMarked.utf16Length, fontId: 'font-b' }
+    ]);
+    if (badFontBoundary.ok ||
+        !badFontBoundary.diagnostics.some((item) => item.code === 'font-boundary-splits-grapheme') ||
+        !goodFontBoundary.ok) {
+      throw new Error('Font-run boundary validation did not reject only the grapheme-splitting range: ' +
+        JSON.stringify({ badFontBoundary, goodFontBoundary }));
+    }
+
+    const allFixtureItemizationsAreComplete = (items) => items.every((item) => {
+      const clusters = item.itemization && item.itemization.graphemes;
+      if (!Array.isArray(clusters)) return false;
+      let next = 0;
+      for (const cluster of clusters) {
+        if (cluster.start !== next || cluster.end <= cluster.start ||
+            cluster.end > item.utf16Length) return false;
+        if (cluster.text !== item.text.slice(cluster.start, cluster.end)) return false;
+        if (cluster.scalars[0].start !== cluster.start ||
+            cluster.scalars[cluster.scalars.length - 1].end !== cluster.end) return false;
+        next = cluster.end;
+      }
+      return next === item.utf16Length;
+    });
+
+    report.itemizerContractProbe = {
+      unicodeVersion: hebrewMarked.unicodeVersion,
+      hebrewNiqqud: {
+        text: hebrewMarkedText,
+        firstGrapheme: firstHebrewGrapheme,
+        graphemeCount: hebrewMarked.graphemes.length
+      },
+      extendedGraphemes: {
+        familyEmojiCount: familyItemization.graphemes.length,
+        flagCount: flagItemization.graphemes.length,
+        combiningLatinCount: combiningLatin.graphemes.length
+      },
+      mixedScriptRuns: mixedScriptItemization.scriptRuns,
+      fontBoundaryProbe: { bad: badFontBoundary, good: goodFontBoundary },
+      fixtureItemizationsComplete: allFixtureItemizationsAreComplete(
+        runtime.analyzeFixtures(fixtures).fixtures
+      )
+    };
     report.runtimeContractProbe = {
       unicodeVersion: runtime.unicodeVersion,
       utf16: {
@@ -237,7 +319,19 @@ async function main() {
       lineL1ResetsTrailingWhitespace: trailingL1Levels.every((level) => level === 1),
       emptyTextAndLinesAreSupported: emptyDocument.levels.length === 0 &&
         emptyDocument.paragraphs.length === 0 &&
-        emptyDocumentLine.visualRuns.length === 0 && emptyLine.visualRuns.length === 0
+        emptyDocumentLine.visualRuns.length === 0 && emptyLine.visualRuns.length === 0,
+      itemizerUsesUnicode18: hebrewMarked.unicodeVersion === '18.0.0',
+      hebrewNiqqudStaysInOneGrapheme: firstHebrewGrapheme.scalars.length >= 2 &&
+        firstHebrewGrapheme.script === 'Hebr',
+      extendedGraphemesRemainWhole: familyItemization.graphemes.length === 1 &&
+        flagItemization.graphemes.length === 1 && combiningLatin.graphemes.length === 1,
+      mixedScriptAndDirectionAreSeparated: seenScripts.has('Hebr') && seenScripts.has('Latn') &&
+        mixedScriptItemization.scriptRuns.some((run) => run.script === 'Hebr' && run.direction === 'rtl') &&
+        mixedScriptItemization.scriptRuns.some((run) => run.script === 'Latn' && run.direction === 'ltr'),
+      fontRunCannotSplitGrapheme: !badFontBoundary.ok &&
+        badFontBoundary.diagnostics.some((item) => item.code === 'font-boundary-splits-grapheme') &&
+        goodFontBoundary.ok,
+      fixtureItemizationsCoverSource: allFixtureItemizationsAreComplete(nodeResult.fixtures)
     };
     if (Object.values(report.invariants).some((passed) => passed !== true)) {
       throw new Error('Bidi UTF-16/run invariants failed: ' + JSON.stringify(report.invariants));
