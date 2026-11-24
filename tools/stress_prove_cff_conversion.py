@@ -111,6 +111,112 @@ def freetype_raster_comparison(
     }
 
 
+def select_geometry_raster_sample_gids(
+    worst_gid: int,
+    source_bounds_by_gid: list,
+    converted_bounds_by_gid: list,
+    cmap_by_codepoint: dict[int, int],
+) -> list[dict]:
+    """Choose deterministic overall, Hebrew-base and Hebrew-mark geometry samples."""
+    if len(source_bounds_by_gid) != len(converted_bounds_by_gid):
+        raise ValueError("source/output glyph-bound arrays have different GID cardinality")
+
+    def delta(gid: int):
+        if gid < 0 or gid >= len(source_bounds_by_gid):
+            return None
+        source_bounds = source_bounds_by_gid[gid]
+        converted_bounds = converted_bounds_by_gid[gid]
+        if source_bounds is None or converted_bounds is None:
+            return None
+        return max(abs(float(a) - float(b)) for a, b in zip(source_bounds, converted_bounds))
+
+    selected = []
+    used_gids = set()
+    primary_delta = delta(int(worst_gid))
+    if primary_delta is None:
+        raise ValueError(f"worst geometry GID {worst_gid} has no comparable non-empty outline")
+    selected.append({
+        "sampleKind": "overall-worst-bounds",
+        "gid": int(worst_gid),
+        "boundsDeltaFontUnits": primary_delta,
+        "sourceCodepoints": sorted(
+            f"U+{int(cp):04X}" for cp, gid in cmap_by_codepoint.items() if int(gid) == int(worst_gid)
+        ),
+    })
+    used_gids.add(int(worst_gid))
+
+    def candidates_for_range(start: int, end: int) -> dict[int, list[int]]:
+        result = {}
+        for codepoint, gid in cmap_by_codepoint.items():
+            cp, gid = int(codepoint), int(gid)
+            if start <= cp <= end and delta(gid) is not None:
+                result.setdefault(gid, []).append(cp)
+        return result
+
+    def append_sample(kind: str, candidates: dict[int, list[int]]) -> None:
+        ranked = []
+        for gid, codepoints in candidates.items():
+            value = delta(int(gid))
+            if value is not None:
+                ranked.append((value, int(gid), sorted(set(int(cp) for cp in codepoints))))
+        ranked.sort(key=lambda item: (-item[0], item[1]))
+        for value, gid, codepoints in ranked:
+            if gid in used_gids:
+                continue
+            selected.append({
+                "sampleKind": kind,
+                "gid": gid,
+                "boundsDeltaFontUnits": value,
+                "sourceCodepoints": [f"U+{cp:04X}" for cp in codepoints],
+            })
+            used_gids.add(gid)
+            return
+
+    hebrew_base = candidates_for_range(0x05D0, 0x05EA)
+    hebrew_marks = candidates_for_range(0x0591, 0x05C7)
+    if hebrew_base:
+        append_sample("hebrew-base-max-bounds-delta", hebrew_base)
+    else:
+        latin_base = {}
+        for cp in list(range(ord("A"), ord("Z") + 1)) + list(range(ord("a"), ord("z") + 1)):
+            gid = cmap_by_codepoint.get(cp)
+            if gid is not None and delta(int(gid)) is not None:
+                latin_base.setdefault(int(gid), []).append(cp)
+        if latin_base:
+            append_sample("latin-base-max-bounds-delta", latin_base)
+    if hebrew_marks:
+        append_sample("hebrew-mark-max-bounds-delta", hebrew_marks)
+    return selected
+
+
+def verify_geometry_sample_selection_contract() -> None:
+    source = [(0, 0, 10, 10)] * 5
+    converted = [
+        (0, 0, 10, 10),
+        (0, 0, 10.2, 10),
+        (0, 0, 10.8, 10),
+        (0, 0, 10.5, 10),
+        (0, 0, 10.9, 10),
+    ]
+    cmap = {
+        0x05D0: 2,
+        0x05D1: 1,
+        0x05B0: 4,
+        0x05B1: 3,
+    }
+    selected = select_geometry_raster_sample_gids(3, source, converted, cmap)
+    contract = [(item["sampleKind"], item["gid"]) for item in selected]
+    expected = [
+        ("overall-worst-bounds", 3),
+        ("hebrew-base-max-bounds-delta", 2),
+        ("hebrew-mark-max-bounds-delta", 4),
+    ]
+    if contract != expected:
+        raise AssertionError(f"geometry sample selection is not deterministic: {contract}")
+    if len({item["gid"] for item in selected}) != len(selected):
+        raise AssertionError("geometry sample selection must deduplicate identical GIDs")
+
+
 def outline_raster_metrics(alpha_source, alpha_converted, *, binary_threshold=128, difference_threshold=16) -> dict:
     """Quantify differences between two same-sized glyph-outline alpha masks."""
     from PIL import ImageChops
@@ -395,7 +501,7 @@ def main():
     p.add_argument('--repo-root',type=Path,default=Path(__file__).resolve().parents[1])
     p.add_argument('--output',type=Path,default=Path('artifacts/cff-conversion-stress/report.json'))
     p.add_argument('--visual-dir',type=Path,default=Path('artifacts/cff-conversion-stress/visuals'))
-    args=p.parse_args(); verify_outline_raster_metric_contract(); root=args.repo_root.resolve(); assets=root/'red-build/ui/assets/imud'
+    args=p.parse_args(); verify_outline_raster_metric_contract(); verify_geometry_sample_selection_contract(); root=args.repo_root.resolve(); assets=root/'red-build/ui/assets/imud'
     core=read_catalog(assets/'imud-fonts.json','core'); ext=read_catalog(assets/'fonts-extended.json','extended')
     families_by_file={}
     for entry in core+ext:
@@ -780,20 +886,54 @@ def main():
                 geometry_review_glyph = row.get('worstGlyph') or row.get('worstPlacementGlyph')
                 if geometry_review_glyph is not None:
                     try:
-                        row['geometryRasterReview'] = path_geometry_raster_comparison(
-                            src,
-                            output,
+                        sample_specs = select_geometry_raster_sample_gids(
                             int(geometry_review_glyph['gid']),
-                            visual_dir,
-                            label,
+                            source_bounds_by_gid,
+                            converted_bounds_by_gid,
+                            cmap0,
                         )
-                    except Exception as raster_exc:
-                        row['geometryRasterReview'] = {
-                            'status': 'diagnostic-failed',
-                            'gid': int(geometry_review_glyph['gid']),
-                            'error': f'{type(raster_exc).__name__}: {raster_exc}',
-                        }
+                    except Exception as selection_exc:
+                        sample_specs = []
+                        row['geometryRasterSampleSelectionError'] = (
+                            f'{type(selection_exc).__name__}: {selection_exc}'
+                        )
+                    row['geometryRasterExpectedReviewCount'] = len(sample_specs)
+                    row['geometryRasterReviews'] = []
+                    for sample in sample_specs:
+                        sample_label = label + '-' + sample['sampleKind']
+                        target_pixels = 3072 if sample['sampleKind'] == 'overall-worst-bounds' else 1536
+                        try:
+                            review = path_geometry_raster_comparison(
+                                src,
+                                output,
+                                int(sample['gid']),
+                                visual_dir,
+                                sample_label,
+                                target_pixels_per_em=target_pixels,
+                            )
+                            review['sampleKind'] = sample['sampleKind']
+                            review['selectionBoundsDeltaFontUnits'] = float(sample['boundsDeltaFontUnits'])
+                            review['selectionCodepoints'] = sample['sourceCodepoints']
+                        except Exception as raster_exc:
+                            review = {
+                                'status': 'diagnostic-failed',
+                                'sampleKind': sample['sampleKind'],
+                                'gid': int(sample['gid']),
+                                'error': f'{type(raster_exc).__name__}: {raster_exc}',
+                            }
+                        row['geometryRasterReviews'].append(review)
+                    primary_review = next(
+                        (item for item in row['geometryRasterReviews']
+                         if item.get('sampleKind') == 'overall-worst-bounds'),
+                        None,
+                    )
+                    row['geometryRasterReview'] = primary_review or {
+                        'status': 'diagnostic-failed',
+                        'error': row.get('geometryRasterSampleSelectionError', 'primary geometry sample was not generated'),
+                    }
                 else:
+                    row['geometryRasterExpectedReviewCount'] = 0
+                    row['geometryRasterReviews'] = []
                     row['geometryRasterReview'] = {
                         'status': 'diagnostic-failed',
                         'error': 'geometry outlier has no representative worst glyph',
@@ -936,20 +1076,38 @@ def main():
     ]
     geometry_outlier_rows=[x for x in cff_rows if x.get('conversionBoundsOutlier')]
     geometry_raster_review_rows=[
-        x for x in geometry_outlier_rows
-        if (x.get('geometryRasterReview') or {}).get('status')=='generated'
+        {'file':row['file'],**review}
+        for row in geometry_outlier_rows
+        for review in row.get('geometryRasterReviews',[])
+        if review.get('status')=='generated'
     ]
+    geometry_raster_review_font_count=sum(
+        1 for row in geometry_outlier_rows
+        if any(review.get('status')=='generated' for review in row.get('geometryRasterReviews',[]))
+    )
     geometry_raster_diagnostic_failures=[
-        {'file':x['file'],'diagnostic':x.get('geometryRasterReview')}
-        for x in geometry_outlier_rows
-        if (x.get('geometryRasterReview') or {}).get('status')=='diagnostic-failed'
+        {'file':row['file'],'diagnostic':review}
+        for row in geometry_outlier_rows
+        for review in row.get('geometryRasterReviews',[])
+        if review.get('status')=='diagnostic-failed'
     ]
     geometry_raster_evidence_missing=[
-        x['file'] for x in geometry_outlier_rows
-        if (x.get('geometryRasterReview') or {}).get('status') != 'generated'
+        {
+            'file':row['file'],
+            'expected':int(row.get('geometryRasterExpectedReviewCount',0)),
+            'generated':sum(1 for review in row.get('geometryRasterReviews',[]) if review.get('status')=='generated'),
+        }
+        for row in geometry_outlier_rows
+        if int(row.get('geometryRasterExpectedReviewCount',0)) <= 0
+        or sum(1 for review in row.get('geometryRasterReviews',[]) if review.get('status')=='generated')
+            != int(row.get('geometryRasterExpectedReviewCount',0))
     ]
+    geometry_raster_sample_counts={}
+    for item in geometry_raster_review_rows:
+        kind=item.get('sampleKind','unspecified')
+        geometry_raster_sample_counts[kind]=geometry_raster_sample_counts.get(kind,0)+1
     report={
-        'schema':'cff-conversion-stress-v4',
+        'schema':'cff-conversion-stress-v5',
         'catalogUniqueFiles':len(unique),
         'cffFontCount':len(cff_rows),
         'passed':sum(1 for x in cff_rows if x.get('status')=='passed'),
@@ -971,6 +1129,8 @@ def main():
         'rasterEvidenceMissingFonts':raster_evidence_missing,
         'geometryOutlierFontCount':len(geometry_outlier_rows),
         'geometryRasterComparisonCount':len(geometry_raster_review_rows),
+        'geometryRasterComparisonFontCount':geometry_raster_review_font_count,
+        'geometryRasterSampleCountsByKind':geometry_raster_sample_counts,
         'geometryRasterDiagnosticFailureCount':len(geometry_raster_diagnostic_failures),
         'geometryRasterDiagnosticFailures':geometry_raster_diagnostic_failures,
         'geometryRasterEvidenceMissingFonts':geometry_raster_evidence_missing,
@@ -982,7 +1142,7 @@ def main():
         'failures':failures,
     }
     output=args.output if args.output.is_absolute() else root/args.output; output.parent.mkdir(parents=True,exist_ok=True); output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    summary_keys=('cffFontCount','passed','failureCount','sourceCurveLsbDiagnosticFontCount','sourceCurveLsbDiagnosticGlyphCount','sourceCurveLsbRasterComparisonCount','sourceCurveLsbRasterDiagnosticFailureCount','severeSourceCurveLsbDiagnosticCount','severeSourceCurveLsbRasterComparisonCount','severeSourceCurveLsbRasterDiagnosticFailureCount','severeSourceCurveLsbRasterNotMappedCount','geometryOutlierFontCount','geometryRasterComparisonCount','geometryRasterDiagnosticFailureCount','maximumBoundsDelta','manualReviewRequired','massConversionApproved')
+    summary_keys=('cffFontCount','passed','failureCount','sourceCurveLsbDiagnosticFontCount','sourceCurveLsbDiagnosticGlyphCount','sourceCurveLsbRasterComparisonCount','sourceCurveLsbRasterDiagnosticFailureCount','severeSourceCurveLsbDiagnosticCount','severeSourceCurveLsbRasterComparisonCount','severeSourceCurveLsbRasterDiagnosticFailureCount','severeSourceCurveLsbRasterNotMappedCount','geometryOutlierFontCount','geometryRasterComparisonCount','geometryRasterComparisonFontCount','geometryRasterSampleCountsByKind','geometryRasterDiagnosticFailureCount','maximumBoundsDelta','manualReviewRequired','massConversionApproved')
     summary={k:report[k] for k in summary_keys}
     summary['report']=str(output)
     print(json.dumps(summary,ensure_ascii=False,indent=2))
