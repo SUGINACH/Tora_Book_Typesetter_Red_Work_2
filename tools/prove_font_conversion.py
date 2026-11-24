@@ -108,6 +108,7 @@ def reconcile_cff_metrics_for_glyf(
         raise ValueError("CFF metric reconciliation requires glyf and hmtx tables")
     changed = 0
     max_adjustment = 0
+    max_source_phantom_magnitude = 0.0
     max_phantom_error = 0.0
     empty_count = 0
     for name in font.getGlyphOrder():
@@ -122,6 +123,12 @@ def reconcile_cff_metrics_for_glyf(
             empty_count += 1
         else:
             source_pp1 = float(source_bbox[0]) - float(source_lsb)
+            max_source_phantom_magnitude = max(max_source_phantom_magnitude, abs(source_pp1))
+            if abs(source_pp1) > 0.500001:
+                raise ValueError(
+                    f"CFF curve xMin and hmtx LSB disagree by {source_pp1:.6f} units for {name}; "
+                    "refusing to hide a source placement discrepancy in the CFF-to-glyf conversion"
+                )
             target_lsb = int(round(float(glyph.xMin) - source_pp1))
             output_pp1 = float(glyph.xMin) - float(target_lsb)
             phantom_error = abs(output_pp1 - source_pp1)
@@ -182,6 +189,7 @@ def reconcile_cff_metrics_for_glyf(
         "lsbChangedGlyphCount": changed,
         "emptyGlyphCount": empty_count,
         "maxAbsoluteLsbAdjustmentFontUnits": max_adjustment,
+        "maxSourceLeftPhantomPointMagnitudeFontUnits": max_source_phantom_magnitude,
         "maxLeftPhantomPointDeltaFontUnits": max_phantom_error,
         "preservedAdvanceWidths": True,
         "hheaSummary": {
