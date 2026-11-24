@@ -1,6 +1,10 @@
 use core::ptr;
 use core::slice;
 
+use icu_properties::props::Script;
+use icu_properties::script::ScriptWithExtensions;
+use icu_properties::PropertyNamesShort;
+use icu_segmenter::GraphemeClusterSegmenter;
 use unicode_bidi::utf16::BidiInfo;
 use unicode_bidi::{Level, UNICODE_VERSION};
 
@@ -26,6 +30,23 @@ fn is_utf16_boundary(text: &[u16], index: usize) -> bool {
     !(0xD800..=0xDBFF).contains(&previous) || !(0xDC00..=0xDFFF).contains(&current)
 }
 
+fn icu_unicode_18_is_pinned() -> bool {
+    icu_segmenter_data::unicode_tag!() == "18.0.0"
+        && icu_properties_data::unicode_tag!() == "18.0.0"
+        && icu_segmenter_data::unicode_tag!() == icu_properties_data::unicode_tag!()
+}
+
+fn script_tag(script: Script) -> u32 {
+    let short_name = PropertyNamesShort::<Script>::new()
+        .get(script)
+        .unwrap_or("Zzzz");
+    let bytes = short_name.as_bytes();
+    if bytes.len() != 4 {
+        return u32::from_be_bytes(*b"Zzzz");
+    }
+    u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]])
+}
+
 #[no_mangle]
 pub extern "C" fn bidi_unicode_version_major() -> u32 {
     UNICODE_VERSION.0 as u32
@@ -39,6 +60,21 @@ pub extern "C" fn bidi_unicode_version_minor() -> u32 {
 #[no_mangle]
 pub extern "C" fn bidi_unicode_version_patch() -> u32 {
     UNICODE_VERSION.2 as u32
+}
+
+#[no_mangle]
+pub extern "C" fn bidi_itemizer_unicode_version_major() -> u32 {
+    if icu_unicode_18_is_pinned() { 18 } else { 0 }
+}
+
+#[no_mangle]
+pub extern "C" fn bidi_itemizer_unicode_version_minor() -> u32 {
+    if icu_unicode_18_is_pinned() { 0 } else { 0 }
+}
+
+#[no_mangle]
+pub extern "C" fn bidi_itemizer_unicode_version_patch() -> u32 {
+    if icu_unicode_18_is_pinned() { 0 } else { 0 }
 }
 
 #[no_mangle]
@@ -123,8 +159,6 @@ pub unsafe extern "C" fn bidi_line_visual_runs(
         return ptr::null_mut();
     }
     if line_start == line_end {
-        // Empty lines have no visual runs or code-unit levels. Avoid calling
-        // visual_runs_for_line, whose upstream implementation assumes one level.
         return boxed_u32(vec![0, 0]);
     }
 
@@ -152,5 +186,130 @@ pub unsafe extern "C" fn bidi_line_visual_runs(
         result.push(run.end as u32);
         result.push(line_levels[run.start].number() as u32);
     }
+    boxed_u32(result)
+}
+
+// Itemization ABI layout:
+// [utf16_len, grapheme_count, scalar_count, extension_count,
+//  graphemes: (start,end,scalar_start,scalar_end)*,
+//  scalars: (start,end,script_tag,extension_start,extension_count)*,
+//  extension_script_tags...]
+//
+// Script tags are packed ISO 15924 four-byte ASCII values (e.g. Hebr, Latn,
+// Zyyy, Zinh). Grapheme and scalar offsets are UTF-16 code-unit offsets.
+// The data is raw Unicode Script + Script_Extensions; contextual assignment
+// of Common/Inherited clusters is performed by the JS adapter and is never
+// allowed to move or split a grapheme boundary.
+#[no_mangle]
+pub unsafe extern "C" fn bidi_grapheme_script_map(
+    pointer: *const u16,
+    length: usize,
+) -> *mut u32 {
+    if length > 16_000_000 || (length > 0 && pointer.is_null()) {
+        return ptr::null_mut();
+    }
+    if length == 0 {
+        return boxed_u32(vec![0, 0, 0, 0]);
+    }
+
+    let utf16 = slice::from_raw_parts(pointer, length);
+    let Ok(text) = String::from_utf16(utf16) else {
+        return ptr::null_mut();
+    };
+
+    let grapheme_segmenter = GraphemeClusterSegmenter::new();
+    let boundaries: Vec<usize> = grapheme_segmenter.segment_utf16(utf16).collect();
+    if boundaries.first().copied() != Some(0)
+        || boundaries.last().copied() != Some(length)
+        || boundaries.windows(2).any(|pair| pair[0] >= pair[1])
+        || boundaries.iter().any(|&offset| !is_utf16_boundary(utf16, offset))
+    {
+        return ptr::null_mut();
+    }
+
+    struct ScalarRecord {
+        start: usize,
+        end: usize,
+        script: u32,
+        extensions: Vec<u32>,
+    }
+
+    let script_data = ScriptWithExtensions::new();
+    let mut scalars = Vec::<ScalarRecord>::new();
+    let mut utf16_offset = 0usize;
+    for ch in text.chars() {
+        let width = ch.len_utf16();
+        let script = script_tag(script_data.get_script_val(ch));
+        let extensions = script_data
+            .get_script_extensions_val(ch)
+            .iter()
+            .map(script_tag)
+            .collect::<Vec<_>>();
+        scalars.push(ScalarRecord {
+            start: utf16_offset,
+            end: utf16_offset + width,
+            script,
+            extensions,
+        });
+        utf16_offset += width;
+    }
+    if utf16_offset != length {
+        return ptr::null_mut();
+    }
+
+    let mut grapheme_table = Vec::<u32>::with_capacity((boundaries.len() - 1) * 4);
+    let mut scalar_index = 0usize;
+    for pair in boundaries.windows(2) {
+        let start = pair[0];
+        let end = pair[1];
+        let scalar_start = scalar_index;
+        while scalar_index < scalars.len() && scalars[scalar_index].end <= end {
+            scalar_index += 1;
+        }
+        if scalar_start == scalar_index
+            || scalars[scalar_start].start != start
+            || scalars[scalar_index - 1].end != end
+        {
+            return ptr::null_mut();
+        }
+        grapheme_table.extend([
+            start as u32,
+            end as u32,
+            scalar_start as u32,
+            scalar_index as u32,
+        ]);
+    }
+    if scalar_index != scalars.len() {
+        return ptr::null_mut();
+    }
+
+    let extension_count: usize = scalars.iter().map(|scalar| scalar.extensions.len()).sum();
+    let mut scalar_table = Vec::<u32>::with_capacity(scalars.len() * 5);
+    let mut extension_values = Vec::<u32>::with_capacity(extension_count);
+    for scalar in &scalars {
+        let extension_start = extension_values.len();
+        scalar_table.extend([
+            scalar.start as u32,
+            scalar.end as u32,
+            scalar.script,
+            extension_start as u32,
+            scalar.extensions.len() as u32,
+        ]);
+        extension_values.extend_from_slice(&scalar.extensions);
+    }
+
+    let grapheme_count = boundaries.len().saturating_sub(1);
+    let mut result = Vec::<u32>::with_capacity(
+        4 + grapheme_table.len() + scalar_table.len() + extension_values.len(),
+    );
+    result.extend([
+        length as u32,
+        grapheme_count as u32,
+        scalars.len() as u32,
+        extension_values.len() as u32,
+    ]);
+    result.extend(grapheme_table);
+    result.extend(scalar_table);
+    result.extend(extension_values);
     boxed_u32(result)
 }
