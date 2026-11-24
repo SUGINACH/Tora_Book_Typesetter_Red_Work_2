@@ -115,16 +115,59 @@ case "$READINESS" in
 esac
 
 # הזרקת האודיט (הסקריפט מוגש עם ה-UI ונטען ב-fetch — ללא בעיות escaping).
-# האודיט אסינכרוני (סריקת גלילה של ספר וירטואלי) — agent-browser ממתין ל-Promise.
+# הסריקה הארוכה רצה כאסינכרונית בתוך הדף. כל קריאת CDP קצרה:
+# 1. Start מחזיר מיד; 2. shell polls status; 3. רק בסיום מושכים את JSON הדוח.
 cp "$ROOT/tools/layout-audit/audit-in-page.js" "$UI/_layout-audit.js"
 AUDIT_ERR="${OUT}.stderr"
-rm -f "$AUDIT_ERR"
-agent-browser eval "(async()=>{ const t = await (await fetch('/_layout-audit.js')).text(); return eval(t); })()" > "$OUT" 2> "$AUDIT_ERR"
-AUDIT_RC=$?
+rm -f "$AUDIT_ERR" "$OUT"
+START_RESULT="$(agent-browser eval "(async()=>{ const t = await (await fetch('/_layout-audit.js')).text(); const started = eval(t); return started ? 'STARTED' : 'NO_START'; })()" 2> "$AUDIT_ERR")"
+START_RESULT="${START_RESULT//\"/}"
 rm -f "$UI/_layout-audit.js"
+if [ "$START_RESULT" != "STARTED" ]; then
+  echo "✗ האודיט לא התחיל: $START_RESULT"
+  if [ -s "$AUDIT_ERR" ]; then cat "$AUDIT_ERR"; fi
+  exit 2
+fi
+
+SWEEP_TIMEOUT_MS="${LAYOUT_AUDIT_SWEEP_TIMEOUT_MS:-900000}"
+SWEEP_T0=$(date +%s%3N)
+AUDIT_STATUS="RUNNING"
+while :; do
+  AUDIT_STATUS="$(agent-browser eval "(function(){ const j=window.__layoutAuditJob; if(!j) return 'MISSING'; if(j.status==='done') return 'DONE'; if(j.status==='error') return 'ERROR'; return 'RUNNING'; })()" 2>&1 | tail -1)"
+  AUDIT_STATUS="${AUDIT_STATUS//\"/}"
+  case "$AUDIT_STATUS" in
+    DONE|ERROR|MISSING) break ;;
+  esac
+  SWEEP_NOW=$(date +%s%3N)
+  if [ $((SWEEP_NOW - SWEEP_T0)) -ge "$SWEEP_TIMEOUT_MS" ]; then
+    AUDIT_STATUS="TIMEOUT"
+    break
+  fi
+  sleep 2
+done
+
+case "$AUDIT_STATUS" in
+  DONE)
+    agent-browser eval "(function(){ return window.__layoutAuditJob.result; })()" > "$OUT" 2> "$AUDIT_ERR"
+    ;;
+  ERROR)
+    echo "✗ הסריקה נכשלה בתוך הדף:"
+    agent-browser eval "(function(){ return window.__layoutAuditJob.error || 'unknown audit error'; })()" 2>&1 || true
+    exit 2
+    ;;
+  TIMEOUT)
+    echo "✗ האודיט לא הסתיים בתוך ${SWEEP_TIMEOUT_MS}ms — אין דוח מלא ולכן הבדיקה נכשלת."
+    exit 2
+    ;;
+  *)
+    echo "✗ מצב האודיט אבד לפני קבלת תוצאה: $AUDIT_STATUS"
+    if [ -s "$AUDIT_ERR" ]; then cat "$AUDIT_ERR"; fi
+    exit 2
+    ;;
+esac
 
 if [ ! -s "$OUT" ]; then
-  echo "✗ האודיט לא הפיק דוח (agent-browser exit=$AUDIT_RC)"
+  echo "✗ האודיט הסתיים אך לא הפיק דוח JSON."
   if [ -s "$AUDIT_ERR" ]; then
     echo "--- agent-browser stderr ---"
     cat "$AUDIT_ERR"
