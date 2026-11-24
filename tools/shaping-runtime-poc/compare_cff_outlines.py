@@ -7,6 +7,7 @@ import math
 import sys
 from pathlib import Path
 
+from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.svgLib.path import parse_path
 from fontTools.ttLib import TTFont
@@ -166,6 +167,12 @@ def main():
             empty_agreement = 0
             maximum_delta = 0.0
             normalized_close_segments = 0
+            glyph_extents_matches = 0
+            glyph_extents_mismatches = 0
+            glyph_extents_missing_source = 0
+            glyph_extents_missing_harfbuzz = 0
+            maximum_glyph_extents_delta = 0.0
+            glyph_extents_mismatch_examples = []
             mismatch_examples = []
 
             for record_index, record in enumerate(records):
@@ -182,6 +189,58 @@ def main():
                 parse_path(path_data, hb_pen)
                 source_pen = RecordingPen()
                 source_glyph_set[source_order[gid]].draw(source_pen)
+                source_bounds_pen = BoundsPen(source_glyph_set)
+                source_glyph_set[source_order[gid]].draw(source_bounds_pen)
+                source_bounds = source_bounds_pen.bounds
+                hb_extents = record.get("glyphExtents")
+                if source_bounds is None:
+                    glyph_extents_missing_source += 1
+                    if hb_extents is None:
+                        glyph_extents_matches += 1
+                    else:
+                        glyph_extents_mismatches += 1
+                        if len(glyph_extents_mismatch_examples) < 8:
+                            glyph_extents_mismatch_examples.append({
+                                "gid": gid,
+                                "glyphName": source_order[gid],
+                                "reason": "HarfBuzz returned extents for an empty source outline",
+                                "harfBuzzExtents": hb_extents,
+                            })
+                elif hb_extents is None:
+                    glyph_extents_missing_harfbuzz += 1
+                    glyph_extents_mismatches += 1
+                    if len(glyph_extents_mismatch_examples) < 8:
+                        glyph_extents_mismatch_examples.append({
+                            "gid": gid,
+                            "glyphName": source_order[gid],
+                            "reason": "HarfBuzz omitted extents for a non-empty source outline",
+                            "sourceBounds": [float(value) for value in source_bounds],
+                        })
+                else:
+                    # HarfBuzz uses y-up font coordinates; height is commonly negative.
+                    # The equivalent fontTools bounds are [xBearing, yBearing+height,
+                    # xBearing+width, yBearing].
+                    hb_bounds = [
+                        float(hb_extents["xBearing"]),
+                        float(hb_extents["yBearing"]) + float(hb_extents["height"]),
+                        float(hb_extents["xBearing"]) + float(hb_extents["width"]),
+                        float(hb_extents["yBearing"]),
+                    ]
+                    extents_delta = max_delta(hb_bounds, source_bounds)
+                    maximum_glyph_extents_delta = max(maximum_glyph_extents_delta, extents_delta)
+                    if extents_delta <= tolerance:
+                        glyph_extents_matches += 1
+                    else:
+                        glyph_extents_mismatches += 1
+                        if len(glyph_extents_mismatch_examples) < 8:
+                            glyph_extents_mismatch_examples.append({
+                                "gid": gid,
+                                "glyphName": source_order[gid],
+                                "reason": "HarfBuzz glyph extents differ from source BoundsPen",
+                                "sourceBounds": [float(value) for value in source_bounds],
+                                "harfBuzzBounds": hb_bounds,
+                                "maxDeltaFontUnits": extents_delta,
+                            })
                 hb_ops = hb_pen.value
                 source_ops = source_pen.value
                 if not hb_ops:
@@ -263,6 +322,12 @@ def main():
                 "emptyHarfBuzzOutlines": empty_harfbuzz,
                 "emptyOutlineAgreements": empty_agreement,
                 "maxCoordinateDeltaFontUnits": maximum_delta,
+                "glyphExtentsMatches": glyph_extents_matches,
+                "glyphExtentsMismatches": glyph_extents_mismatches,
+                "glyphExtentsMissingSource": glyph_extents_missing_source,
+                "glyphExtentsMissingHarfBuzz": glyph_extents_missing_harfbuzz,
+                "maxGlyphExtentsDeltaFontUnits": maximum_glyph_extents_delta,
+                "glyphExtentsMismatchExamples": glyph_extents_mismatch_examples,
                 "normalizedRedundantCloseSegments": normalized_close_segments,
                 "toleranceFontUnits": tolerance,
                 "mismatchExamples": mismatch_examples,
@@ -286,6 +351,17 @@ def main():
         "unitsPerEmMismatches": sum(1 for x in font_results if not x["unitsPerEmMatches"]),
         "operationSequenceMismatches": sum(x["operationSequenceMismatches"] for x in font_results),
         "coordinateMismatches": sum(x["coordinateMismatches"] for x in font_results),
+        "glyphExtentsMatches": sum(x["glyphExtentsMatches"] for x in font_results),
+        "glyphExtentsMismatches": sum(x["glyphExtentsMismatches"] for x in font_results),
+        "glyphExtentsMissingSource": sum(x["glyphExtentsMissingSource"] for x in font_results),
+        "glyphExtentsMissingHarfBuzz": sum(x["glyphExtentsMissingHarfBuzz"] for x in font_results),
+        "maxGlyphExtentsDeltaFontUnits": max(
+            (x["maxGlyphExtentsDeltaFontUnits"] for x in font_results), default=0.0
+        ),
+        "glyphExtentsComparisonMethod": (
+            "HarfBuzz glyphExtents converted to [xMin,yMin,xMax,yMax] in y-up font units "
+            "versus fontTools BoundsPen on original source glyphs"
+        ),
         "normalizedRedundantCloseSegments": sum(
             x["normalizedRedundantCloseSegments"] for x in font_results
         ),

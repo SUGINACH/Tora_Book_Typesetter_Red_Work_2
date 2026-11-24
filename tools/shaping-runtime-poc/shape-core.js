@@ -291,7 +291,17 @@
       const outlinePaths = fixture.captureOutlinePaths ? [] : null;
       for (let gid = 0; gid < maxGlyphs; gid++) {
         const path = font.glyphToPath(gid);
-        if (outlinePaths) outlinePaths.push({ gid, path });
+        const rawExtents = font.glyphExtents(gid);
+        const glyphExtents = rawExtents ? {
+          xBearing: Number(rawExtents.xBearing),
+          yBearing: Number(rawExtents.yBearing),
+          width: Number(rawExtents.width),
+          height: Number(rawExtents.height)
+        } : null;
+        if (glyphExtents && Object.values(glyphExtents).some((value) => !Number.isFinite(value))) {
+          throw new Error('Non-finite CFF glyph extents for ' + fixture.name + ' GID ' + gid);
+        }
+        if (outlinePaths) outlinePaths.push({ gid, path, glyphExtents });
         if (typeof path !== 'string') throw new Error('CFF glyphToPath returned a non-string for ' + fixture.name + ' GID ' + gid);
         if (path.length) outlineGlyphCount++; else emptyOutlineGlyphCount++;
         totalOutlinePathChars += path.length;

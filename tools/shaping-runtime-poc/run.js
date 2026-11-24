@@ -322,18 +322,26 @@ async function main() {
       font.coordinateMatchesWithinTolerance !== font.glyphCount ||
       font.emptySourceOutlines !== font.emptyHarfBuzzOutlines ||
       font.emptyOutlineAgreements !== font.emptySourceOutlines ||
-      font.maxCoordinateDeltaFontUnits > 1e-5
+      font.maxCoordinateDeltaFontUnits > 1e-5 ||
+      font.glyphExtentsMismatches !== 0 ||
+      font.glyphExtentsMatches !== font.glyphCount ||
+      font.maxGlyphExtentsDeltaFontUnits > 1e-5
     );
     if (invalidCffComparisons.length ||
         cffComparison.coordinateMismatches !== 0 ||
-        cffComparison.coordinateMatchesWithinTolerance !== cffComparison.glyphCount) {
+        cffComparison.coordinateMatchesWithinTolerance !== cffComparison.glyphCount ||
+        cffComparison.glyphExtentsMismatches !== 0 ||
+        cffComparison.glyphExtentsMatches !== cffComparison.glyphCount) {
       throw new Error('CFF outlines do not match fontTools source geometry: ' +
         JSON.stringify({
           summary: {
             glyphCount: cffComparison.glyphCount,
             coordinateMatchesWithinTolerance: cffComparison.coordinateMatchesWithinTolerance,
             coordinateMismatches: cffComparison.coordinateMismatches,
-            operationSequenceMismatches: cffComparison.operationSequenceMismatches
+            operationSequenceMismatches: cffComparison.operationSequenceMismatches,
+            glyphExtentsMatches: cffComparison.glyphExtentsMatches,
+            glyphExtentsMismatches: cffComparison.glyphExtentsMismatches,
+            maxGlyphExtentsDeltaFontUnits: cffComparison.maxGlyphExtentsDeltaFontUnits
           },
           fonts: invalidCffComparisons
         }));
