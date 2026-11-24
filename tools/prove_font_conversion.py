@@ -253,8 +253,9 @@ def main() -> int:
                 font.sfntVersion = "\x00\x01\x00\x00"
 
                 converted_order = list(font.getGlyphOrder())
+                converted_bounds = glyph_bounds(font)
                 converted_bounds_by_gid = [
-                    glyph_bounds(font).get(name)
+                    converted_bounds.get(name)
                     for name in converted_order
                 ]
                 out = temp / (src.stem + ".ttf")
