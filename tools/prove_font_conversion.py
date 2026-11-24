@@ -86,10 +86,9 @@ def raw_glyf_bounds(font: TTFont) -> dict[str, tuple[float, float, float, float]
     raw_set = _RawGlyfGlyphSet(glyf)
     result = {}
     for name in font.getGlyphOrder():
-        output = BoundsPen(None)
-        decomposing = DecomposingPen(raw_set, output, skipMissingComponents=False)
-        raw_set[name].draw(decomposing)
-        result[name] = output.bounds
+        pen = BoundsPen(raw_set)
+        raw_set[name].draw(pen)
+        result[name] = pen.bounds
     return result
 
 
@@ -275,10 +274,9 @@ def convert_cff_to_glyf_decomposed(font: TTFont, max_err: float) -> dict[str, An
 def glyph_svg_path(font: TTFont, glyph_name: str) -> str:
     if "glyf" in font and "CFF " not in font:
         raw_set = _RawGlyfGlyphSet(font["glyf"])
-        output = SVGPathPen(None)
-        decomposing = DecomposingPen(raw_set, output, skipMissingComponents=False)
-        raw_set[glyph_name].draw(decomposing)
-        return output.getCommands()
+        pen = SVGPathPen(raw_set)
+        raw_set[glyph_name].draw(pen)
+        return pen.getCommands()
     glyph_set = font.getGlyphSet(preferCFF=True)
     pen = SVGPathPen(glyph_set)
     glyph_set[glyph_name].draw(pen)
