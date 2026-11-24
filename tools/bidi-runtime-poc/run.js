@@ -187,9 +187,12 @@ async function main() {
     const latinArabicMarkText = String.fromCodePoint(0x0061, 0x0650);
     const latinArabicMark = runtime.itemizeScripts(latinArabicMarkText);
     const latinArabicMarkGrapheme = latinArabicMark.graphemes[0];
-    const dottedCircleArabicMarkText = String.fromCodePoint(0x25CC, 0x0650);
-    const dottedCircleArabicMark = runtime.itemizeScripts(dottedCircleArabicMarkText);
-    const dottedCircleArabicMarkGrapheme = dottedCircleArabicMark.graphemes[0];
+    const dottedCircleHebrewMarkText = String.fromCodePoint(0x25CC, 0x05B0);
+    const dottedCircleHebrewMark = runtime.itemizeScripts(dottedCircleHebrewMarkText);
+    const dottedCircleHebrewMarkGrapheme = dottedCircleHebrewMark.graphemes[0];
+    const dottedCircleInheritedArabicMarkText = String.fromCodePoint(0x25CC, 0x0650);
+    const dottedCircleInheritedArabicMark = runtime.itemizeScripts(dottedCircleInheritedArabicMarkText);
+    const dottedCircleInheritedArabicMarkGrapheme = dottedCircleInheritedArabicMark.graphemes[0];
     if (!latinArabicMarkGrapheme || latinArabicMark.graphemes.length !== 1 ||
         latinArabicMarkGrapheme.scalars.length !== 2 ||
         !latinArabicMarkGrapheme.scalars[1].isMark ||
@@ -198,13 +201,23 @@ async function main() {
       throw new Error('Combining mark did not inherit the explicit base Script: ' +
         JSON.stringify(latinArabicMarkGrapheme));
     }
-    if (!dottedCircleArabicMarkGrapheme || dottedCircleArabicMark.graphemes.length !== 1 ||
-        dottedCircleArabicMarkGrapheme.scalars.length !== 2 ||
-        !dottedCircleArabicMarkGrapheme.scalars[1].isMark ||
-        dottedCircleArabicMarkGrapheme.script !== 'Arab' ||
-        dottedCircleArabicMarkGrapheme.status !== 'combining-sequence-base-script') {
-      throw new Error('Common base did not inherit the first specific Script in its combining sequence: ' +
-        JSON.stringify(dottedCircleArabicMarkGrapheme));
+    if (!dottedCircleHebrewMarkGrapheme || dottedCircleHebrewMark.graphemes.length !== 1 ||
+        dottedCircleHebrewMarkGrapheme.scalars.length !== 2 ||
+        !dottedCircleHebrewMarkGrapheme.scalars[1].isMark ||
+        dottedCircleHebrewMarkGrapheme.script !== 'Hebr' ||
+        dottedCircleHebrewMarkGrapheme.status !== 'combining-sequence-base-script') {
+      throw new Error('Common base did not inherit the first explicit Hebrew Mark Script: ' +
+        JSON.stringify(dottedCircleHebrewMarkGrapheme));
+    }
+    if (!dottedCircleInheritedArabicMarkGrapheme ||
+        dottedCircleInheritedArabicMark.graphemes.length !== 1 ||
+        dottedCircleInheritedArabicMarkGrapheme.scalars.length !== 2 ||
+        !dottedCircleInheritedArabicMarkGrapheme.scalars[1].isMark ||
+        dottedCircleInheritedArabicMarkGrapheme.script !== null ||
+        dottedCircleInheritedArabicMarkGrapheme.status !== 'unresolved-common-inherited' ||
+        !dottedCircleInheritedArabicMarkGrapheme.candidates.includes('Arab')) {
+      throw new Error('Common base with only an Inherited Arabic mark must remain unresolved, not guess Arab: ' +
+        JSON.stringify(dottedCircleInheritedArabicMarkGrapheme));
     }
 
     const familyEmoji = '👨‍👩‍👧‍👦';
@@ -326,8 +339,9 @@ async function main() {
         graphemeCount: hebrewMarked.graphemes.length
       },
       combiningSequenceScriptInheritance: {
-        latinBaseWithArabicMark: latinArabicMarkGrapheme,
-        commonBaseWithArabicMark: dottedCircleArabicMarkGrapheme
+        latinBaseWithInheritedArabicMark: latinArabicMarkGrapheme,
+        commonBaseWithExplicitHebrewMark: dottedCircleHebrewMarkGrapheme,
+        commonBaseWithInheritedArabicMark: dottedCircleInheritedArabicMarkGrapheme
       },
       extendedGraphemes: {
         familyEmojiCount: familyItemization.graphemes.length,
@@ -445,10 +459,15 @@ async function main() {
         latinArabicMarkGrapheme.scalars[1].isMark &&
         latinArabicMarkGrapheme.script === 'Latn' &&
         latinArabicMarkGrapheme.status === 'combining-sequence-base-script',
-      commonBaseUsesFirstSpecificCombiningScript: dottedCircleArabicMark.graphemes.length === 1 &&
-        dottedCircleArabicMarkGrapheme.scalars[1].isMark &&
-        dottedCircleArabicMarkGrapheme.script === 'Arab' &&
-        dottedCircleArabicMarkGrapheme.status === 'combining-sequence-base-script',
+      commonBaseUsesFirstSpecificCombiningScript: dottedCircleHebrewMark.graphemes.length === 1 &&
+        dottedCircleHebrewMarkGrapheme.scalars[1].isMark &&
+        dottedCircleHebrewMarkGrapheme.script === 'Hebr' &&
+        dottedCircleHebrewMarkGrapheme.status === 'combining-sequence-base-script',
+      commonBaseDoesNotGuessInheritedMarkScript: dottedCircleInheritedArabicMark.graphemes.length === 1 &&
+        dottedCircleInheritedArabicMarkGrapheme.scalars[1].isMark &&
+        dottedCircleInheritedArabicMarkGrapheme.script === null &&
+        dottedCircleInheritedArabicMarkGrapheme.status === 'unresolved-common-inherited' &&
+        dottedCircleInheritedArabicMarkGrapheme.candidates.includes('Arab'),
       extendedGraphemesRemainWhole: familyItemization.graphemes.length === 1 &&
         flagItemization.graphemes.length === 1 && combiningLatin.graphemes.length === 1,
       mixedScriptAndDirectionAreSeparated: seenScripts.has('Hebr') && seenScripts.has('Latn') &&
