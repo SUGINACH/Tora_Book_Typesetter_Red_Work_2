@@ -211,6 +211,7 @@ async function main() {
         name: item.fontName,
         format: item.fontFormat,
         normalizedFrom: item.normalizedFrom,
+        sourceOutlineFormat: item.sourceOutlineFormat,
         unitsPerEm: item.unitsPerEm,
         variationMode: item.variationMode,
         axisInfos: item.axisInfos,
