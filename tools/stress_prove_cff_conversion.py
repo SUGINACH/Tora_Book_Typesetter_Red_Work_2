@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Stress conversion of every CFF/CFF2 catalog font without touching source assets."""
 from __future__ import annotations
-import argparse, json, hashlib, sys
+import argparse, json, hashlib, sys, re
 from pathlib import Path
 from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
@@ -22,11 +22,17 @@ def main():
     p.add_argument('--visual-dir',type=Path,default=Path('artifacts/cff-conversion-stress/visuals'))
     args=p.parse_args(); root=args.repo_root.resolve(); assets=root/'red-build/ui/assets/imud'
     core=read_catalog(assets/'imud-fonts.json','core'); ext=read_catalog(assets/'fonts-extended.json','extended')
+    families_by_file={}
+    for entry in core+ext:
+        families_by_file.setdefault(str(entry['file']), []).append(str(entry['family']))
     unique={str(e['file']) for e in core+ext}
     rows=[]; failures=[]; maximum=None
     for rel in sorted(unique):
         src=assets/'fonts'/rel
-        row={'file':rel}
+        families=sorted(set(families_by_file.get(rel, [])))
+        family_text=' '.join(families)
+        icon_or_symbol = bool(re.search(r'\\b(icon|icons|symbol|symbols|logo|logos|pictogram)\\b', family_text, re.I) or any(term in family_text for term in ('אייקון','סמל','לוגו')))
+        row={'file':rel,'catalogFamilies':families,'catalogUsageHint':'symbol-or-nontext' if icon_or_symbol else 'unspecified'}
         try:
             f=TTFont(str(src),lazy=False,recalcBBoxes=False,recalcTimestamp=False)
             if 'CFF ' not in f and 'CFF2' not in f:
@@ -36,11 +42,36 @@ def main():
                 axes={a.axisTag:float(a.defaultValue) for a in f['fvar'].axes}
                 instantiateVariableFont(f,axes,inplace=True,updateFontNames=False,static=True)
                 row['instancedAxes']=axes
+            source_cff_top = f['CFF '].cff.topDictIndex[0] if 'CFF ' in f else None
+            if source_cff_top is not None:
+                matrix=getattr(source_cff_top,'FontMatrix',None)
+                bbox=getattr(source_cff_top,'FontBBox',None)
+                row['sourceCffFontMatrix']=[float(v) for v in matrix] if matrix else None
+                row['sourceCffFontBBox']=[float(v) for v in bbox] if bbox else None
             cmap0={int(cp):int(f.getGlyphID(n)) for cp,n in (f.getBestCmap() or {}).items()}
             order=list(f.getGlyphOrder()); metrics0=[tuple(int(v) for v in f['hmtx'].metrics[n]) for n in order]
             upem=float(f['head'].unitsPerEm)
             tol=upem*MAX_ERR_EM
             geom=convert_cff_to_glyf(f,tol); row['maxBoundsDeltaFontUnits']=geom['maxBoundsDeltaFontUnits']; row['worstGlyph']=geom['worstGlyph']
+            if geom.get('worstGlyph'):
+                gid=int(geom['worstGlyph']['gid'])
+                row['worstGlyphHmtx']={'advanceWidth':metrics0[gid][0],'leftSideBearing':metrics0[gid][1]}
+                src_bounds=geom['worstGlyph'].get('sourceBounds')
+                conv_bounds=geom['worstGlyph'].get('convertedBounds')
+                if src_bounds and conv_bounds:
+                    row['worstGlyphOriginDelta']={
+                        'dxFromXMin':float(src_bounds[0])-float(conv_bounds[0]),
+                        'dyFromYMin':float(src_bounds[1])-float(conv_bounds[1]),
+                        'rightEdgeResidual':(float(src_bounds[2])-float(conv_bounds[2]))-(float(src_bounds[0])-float(conv_bounds[0])),
+                        'topEdgeResidual':(float(src_bounds[3])-float(conv_bounds[3]))-(float(src_bounds[1])-float(conv_bounds[1]),
+                    }
+                if source_cff_top is not None:
+                    try:
+                        charstring=source_cff_top.CharStrings[geom['worstGlyph']['name']]
+                        charstring.decompile()
+                        row['worstGlyphCffProgramPreview']=[str(x) for x in charstring.program[:80]]
+                    except Exception as diagnostic_exc:
+                        row['worstGlyphCffProgramDiagnosticError']=f'{type(diagnostic_exc).__name__}: {diagnostic_exc}'
             if maximum is None or row['maxBoundsDeltaFontUnits']>maximum['delta']:
                 maximum={'file':rel,'delta':row['maxBoundsDeltaFontUnits'],'deltaEm':row['maxBoundsDeltaFontUnits']/float(f['head'].unitsPerEm) if 'head' in f else None,'worstGlyph':row['worstGlyph']}
             converted_order=list(f.getGlyphOrder())
@@ -70,10 +101,14 @@ def main():
             row['hebrewLettersMapped'] = len(mapped_letters)
             row['hebrewLettersWithNonEmptyOutlines'] = len(mapped_letters) - len(empty_letters)
             row['emptyMappedHebrewLetters'] = [f'U+{cp:04X}' for cp in empty_letters]
-            if empty_letters and len(empty_letters) != len(mapped_letters):
-                raise ValueError('mixed empty/non-empty Hebrew letter mappings: ' + ','.join(f'U+{cp:04X}' for cp in empty_letters))
-            if empty_letters:
+            if empty_letters and len(empty_letters) != len(mapped_letters) and not icon_or_symbol:
+                raise ValueError('mixed empty/non-empty Hebrew letter mappings in a text-like catalog font: ' + ','.join(f'U+{cp:04X}' for cp in empty_letters))
+            if empty_letters and icon_or_symbol:
                 row['coverageClass'] = 'symbol-or-nontext-font'
+                row['coverageWarnings'] = ['catalog family identifies an icon/logo/symbol font; mapped Hebrew codepoints with empty outlines are not treated as text coverage']
+                hebrew = ''
+            elif empty_letters and len(empty_letters) == len(mapped_letters):
+                row['coverageClass'] = 'non-hebrew'
                 row['coverageWarnings'] = ['all mapped Hebrew letter codepoints have empty outlines; Hebrew text coverage is not claimed']
                 hebrew = ''
             else:
