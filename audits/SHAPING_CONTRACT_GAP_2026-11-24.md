@@ -464,3 +464,65 @@ fontTools RecordingPen של אותו GID בגופן המקור. נמצא הבד�
   מוכיחה embedding/subsetting של CFF ב-PDF.
 - TYP-SHAPING-01 נשאר פתוח עד חוזה ShapedRun/ShapedGlyph ו-end-to-end
   shaping-before-line-break/render/export parity.
+
+
+## PoC v7 — UTF-16 clusters, glyph extents ו-CFF source parity (24.11.2026)
+
+### ריצה ו-Artifact
+- Commit: `bdefac0795452d3c8e9a78f05caf932446a66823`.
+- Run: `45464251243`; Artifact: `14954247955`; conclusion: success.
+- HarfBuzzJS 1.6.4 / HarfBuzz core 15.0.0 / Node v22.23.5.
+- 15 font streams, 5 מקרי עברית מנוקדת לכל stream, 617 glyph instances.
+- Node/classic Worker: `exactNodeParity=true`, output SHA-256
+  `c06da4e4b69d3546e0be3f64a067c4caf0ab1191df8b91dd068cf1eb514926f2`.
+
+### UTF-16 source clusters
+Probe `A😀B`:
+- `utf16Length=4`, `unicodeScalarCount=3`.
+- expected/actual clusters: `[0,1,3]`.
+- expected/actual GIDs: `[36,5857,37]`.
+- HarfBuzz cluster offsets are UTF-16 code-unit offsets, matching the engine's
+  JavaScript `sourceRange` coordinates for this probe.
+- הוכח supplementary scalar אחד ב-LTR. עדיין נדרשות בדיקות RTL, descending
+  cluster order, ligatures, multiple glyphs per cluster ו-cluster source-end
+  mapping.
+
+### Glyph ink extents
+- Shaped glyph instances: 617.
+- Outlines לא ריקים: 449; extents סופיים: 449.
+- Outlines ריקים ללא extents: 168.
+- `outlinedGlyphsMissingExtents=0`; `invalidExtents=0`.
+- היחידות בדוח: font units. טרם הוכח שילוב מלא של pen position, offsets,
+  sign conventions ו-Y-axis ב-px של המנוע.
+
+### CFF source-vector proof
+השוואה מול WOFF2 המקורי שנפתח ישירות ב-fontTools, לא מול SFNT מנורמל:
+- Ambivalenti-Regular: 444/444 GIDs.
+- Mixtape Bold: 204/204.
+- Mixtape Regular: 204/204.
+- סך הכול 852/852 operation+coordinate matches; אפס mismatches,
+  `maxCoordinateDeltaFontUnits=0`, glyph order ו-UPEM תואמים.
+- canonicalization מסיר רק explicit zero-length `lineTo(start)` מיד לפני
+  `closePath`; אינו משנה קו בעל אורך או Bézier.
+- ההוכחה מוגבלת לשלושה מקורות CFF. WOFF2 raw עדיין unsupported ב-HarfBuzzJS
+  Blob; רק ה-SFNT המנורמל מעוצב.
+
+### תוצאה והגבלות
+- הוכחת Node/classic Worker, WASM, UTF-16 cluster probe ו-ink extents
+  עברה; אין בה production changes.
+- היא אינה מוכיחה bidi paragraph itemization, grapheme fallback, mixed-script
+  segmentation, line-break reshape, DOM/HTML/PDF renderer parity או PDF
+  subsetting/embedding.
+- הקוד ב-`tools/shaping-runtime-poc/` נשאר harness בדיקה; אין תלות
+  `harfbuzzjs` ב-production runtime.
+- דוח גבולות האינטגרציה שנוסף:
+  `audits/SHAPING_INTEGRATION_BOUNDARIES_2026-11-24.md`.
+
+### מצב Actions על commit bdefac0 בעת כתיבת העדכון
+- Shaping PoC 45464251243: success.
+- Full Math 45464251359: success.
+- Preview 45464251312: success.
+- Corpus 45464251303: success.
+- Layout Audit בתוך CI 45464251283: success.
+- Node 18/20/22 באותו CI: in_progress בעת הבדיקה; אין להכריז על CI מלא כ-green
+  עד לסיום שלושת ה-jobs.

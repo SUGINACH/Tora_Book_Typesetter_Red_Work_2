@@ -59,3 +59,6 @@
 - [CFF Geometry / Raster / LSB Review — 24.11.2026](../audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md)
 - [Shared Shaping Contract Gap — 24.11.2026](../audits/SHAPING_CONTRACT_GAP_2026-11-24.md)
 
+
+
+- [Shaping integration boundaries — 24.11.2026](../audits/SHAPING_INTEGRATION_BOUNDARIES_2026-11-24.md)

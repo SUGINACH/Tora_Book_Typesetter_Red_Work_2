@@ -711,3 +711,23 @@ conversion approval: מדובר בשלושה CFF fixtures בלבד, והוכחת
 TYP-SHAPING-01 נשאר פתוח עד שילוב ShapedRun/ShapedGlyph ב-LineBreaker,
 PageModel, DOM/HTML/PDF ובדיקות end-to-end. פרטים מלאים בדוח
 audits/SHAPING_CONTRACT_GAP_2026-11-24.md.
+
+
+### TYP-SHAPING-01 — עדכון PoC v7 וגבולות אינטגרציה (24.11.2026)
+
+Run `45464251243` / Artifact `14954247955` / commit `bdefac0`
+הסתיים success. ה-PoC הוכיח Node/classic Worker byte parity על 15 streams
+ו-617 glyph instances; UTF-16 cluster probe `A😀B` החזיר [0,1,3] ו-GID
+[36,5857,37]; 449/449 outlines לא ריקים קיבלו glyph extents סופיים, 168
+outlines ריקים ללא extents, אפס missing/invalid. CFF source-vector compare
+מול ה-WOFF2 originals: 852/852 GIDs, אפס mismatch וקואורדינטות זהות.
+
+נוצר דוח `audits/SHAPING_INTEGRATION_BOUNDARIES_2026-11-24.md`, שממפה את
+המעבר מ-DocumentModel עד PageModel/DOM/PDF, את גבול fontResolver/WOFF2,
+את ה-WASM bootstrap החסר, bidi/fallback וה-subsetting. ה-PoC נשאר נפרד
+מהייצור. לא שונו MeasureAPI, LineBreaker, PageModel, DOM/HTML, PDF או
+font catalog. TYP-SHAPING-01 נשאר פתוח עד שילוב ShapedRun/ShapedGlyph
+במסלול יחיד ובדיקות end-to-end בכל היעדים.
+
+על bdefac0: Full Math, Preview, Corpus ו-Layout Audit success; מטריצת
+Node 18/20/22 הייתה in_progress בעת עדכון זה. יש לבדוק מחדש לפי HEAD הסופי.

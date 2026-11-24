@@ -4834,3 +4834,29 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
   נדרש. CFF vector proof אינו PDF embedding/subsetting proof.
 - TYP-SHAPING-01 נשאר פתוח עד ShapedRun/ShapedGlyph משותף, shaping
   לפני line-break ו-end-to-end parity בכל יעדי הפלט.
+
+
+## 2026-11-24 — HarfBuzz PoC v7 וגבולות אינטגרציה
+
+- HEAD הבסיס לפני הדוחות: `bdefac0795452d3c8e9a78f05caf932446a66823`.
+- Shaping run `45464251243`, Artifact `14954247955`, conclusion success.
+- HarfBuzzJS 1.6.4 / core 15.0.0 / Node 22.23.5.
+- 15 streams × 5 cases × 617 glyph instances; Node↔classic Worker
+  `exactNodeParity=true`; SHA-256 `c06da4e4b69d3546e0be3f64a067c4caf0ab1191df8b91dd068cf1eb514926f2`.
+- UTF-16 probe `A😀B`: utf16Length=4, Unicode scalars=3,
+  clusters [0,1,3], GIDs [36,5857,37]. זה מתאים ל-sourceRange של JS
+  במבחן זה; נדרשים עוד RTL/ligature/cluster mapping tests.
+- glyph extents: 617 instances, 449 outlines לא ריקים, 449 extents סופיים,
+  168 outlines ריקים ללא extents, אפס missing/invalid.
+- CFF source-vector compare מול המקורות WOFF2 המקוריים (fontTools):
+  852/852 GIDs, אפס operation/coordinate mismatches, max delta=0,
+  glyph order/UPEM זהים. ההוכחה מוגבלת ל-Ambivalenti, Mixtape Bold ו-Regular.
+- Raw WOFF2 נשאר unsupported ב-HarfBuzzJS; SFNT normalization נשאר PoC
+  זמני ואינו pipeline קנוני לכל הקטלוג.
+- נוצר `audits/SHAPING_INTEGRATION_BOUNDARIES_2026-11-24.md` עם מיפוי
+  הקוד מ-DocumentModel/LineItems/MeasureAPI/LineModel/PageModel ועד DOM/PDF,
+  async WASM bootstrap, fontResolver, grapheme fallback, bidi itemization,
+  PDF GID subsetting ודרישות קבלה.
+- לא בוצעו שינויים ב-production engine; TYP-SHAPING-01 נשאר פתוח.
+- Actions על bdefac0: PoC/FullMath/Preview/Corpus/Layout Audit success;
+  CI Node 18/20/22 in_progress בעת הכתיבה. יש לאמת שוב על HEAD הסופי.
