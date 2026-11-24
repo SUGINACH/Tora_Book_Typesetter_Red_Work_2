@@ -9,6 +9,7 @@ on:
       - 'tools/audit_font_catalog.py'
       - 'tools/prove_font_conversion.py'
       - 'tools/stress_prove_cff_conversion.py'
+      - 'tools/test_raw_glyf_bounds.py'
       - 'red-build/ui/assets/imud/imud-fonts.json'
       - 'red-build/ui/assets/imud/fonts-extended.json'
       - 'red-build/ui/assets/imud/fonts/**'
@@ -38,8 +39,8 @@ jobs:
       - name: Install font decoding and inspection libraries
         run: python -m pip install --disable-pip-version-check fonttools==4.63.0 brotli==1.2.0 cairosvg==2.8.2
       - name: Compile font audit scripts before execution
-        run: python -m py_compile tools/audit_font_catalog.py tools/prove_font_conversion.py tools/stress_prove_cff_conversion.py
-      - name: Audit core and extended catalogs
+        run: python -m py_compile tools/audit_font_catalog.py tools/prove_font_conversion.py tools/stress_prove_cff_conversion.py tools/test_raw_glyf_bounds.py
+      - name: Verify raw glyf bounds regression (off-curve control point / LSB)\n        run: python tools/test_raw_glyf_bounds.py\n      - name: Audit core and extended catalogs
         run: python tools/audit_font_catalog.py --output "$GITHUB_WORKSPACE/artifacts/font-catalog-audit/report.json"
       - name: Prove WOFF2, CFF and variable-font conversion against production parser/subsetter
         run: python tools/prove_font_conversion.py --output "$GITHUB_WORKSPACE/artifacts/font-conversion-proof/report.json"
