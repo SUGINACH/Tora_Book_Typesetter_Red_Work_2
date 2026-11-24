@@ -88,6 +88,22 @@ async function main() {
     const runtime = await api.instantiate(wasmBytes);
     const fixtures = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures.json'), 'utf8'));
 
+    const malformedUtf16Probe = { unpairedHighRejected: false, unpairedLowRejected: false };
+    try {
+      runtime.resolve('\uD800A', 'auto');
+    } catch (error) {
+      malformedUtf16Probe.unpairedHighRejected = /unpaired high surrogate/.test(error.message);
+    }
+    try {
+      runtime.resolve('\uDC00', 'auto');
+    } catch (error) {
+      malformedUtf16Probe.unpairedLowRejected = /unpaired low surrogate/.test(error.message);
+    }
+    if (!malformedUtf16Probe.unpairedHighRejected || !malformedUtf16Probe.unpairedLowRejected) {
+      throw new Error('Bidi UTF-16 adapter accepted an unpaired surrogate: ' +
+        JSON.stringify(malformedUtf16Probe));
+    }
+
     const utf16ProbeText = 'A😀B';
     const utf16Probe = runtime.resolve(utf16ProbeText, 'ltr');
     if (utf16Probe.utf16Length !== 4 || utf16Probe.levels.length !== 4) {
@@ -151,6 +167,7 @@ async function main() {
         emojiLineRange: [1, 3],
         emojiLineRun: emojiOnlyLine.visualRuns[0],
         surrogateSplitRejected,
+        malformedUtf16Probe,
         emptyDocument: {
           utf16Length: emptyDocument.utf16Length,
           paragraphCount: emptyDocument.paragraphs.length
@@ -215,6 +232,8 @@ async function main() {
       autoDirectionChoosesBothParagraphDirections: autoRtl.level === 1 && autoLtr.level === 0,
       forcedDirectionControlsParagraphBase: forcedLtr.level === 0 && forcedRtl.level === 1,
       surrogatePairBoundariesAreEnforced: surrogateSplitRejected,
+      malformedSurrogatesAreRejected: malformedUtf16Probe.unpairedHighRejected &&
+        malformedUtf16Probe.unpairedLowRejected,
       lineL1ResetsTrailingWhitespace: trailingL1Levels.every((level) => level === 1),
       emptyTextAndLinesAreSupported: emptyDocument.levels.length === 0 &&
         emptyDocument.paragraphs.length === 0 &&
