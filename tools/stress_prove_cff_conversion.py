@@ -84,7 +84,7 @@ def main():
         rows.append(row)
         print(f"{row.get('status')}: {rel} {row.get('maxBoundsDeltaFontUnits','')} {row.get('error','')}",flush=True)
     report={'schema':'cff-conversion-stress-v1','catalogUniqueFiles':len(unique),'cffFontCount':sum(1 for x in rows if x.get('outline') in ('CFF','CFF2')),'passed':sum(1 for x in rows if x.get('status')=='passed'),'failureCount':len(failures),'maximumBoundsDelta':maximum,'fonts':rows,'failures':failures}
-    output=args.output if args.output.is_absolute() else root/args.output; output.parent.mkdir(parents=True,exist_ok=True); output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\\n',encoding='utf-8')
+    output=args.output if args.output.is_absolute() else root/args.output; output.parent.mkdir(parents=True,exist_ok=True); output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({k:report[k] for k in ('cffFontCount','passed','failureCount','maximumBoundsDelta','report') if k in report},ensure_ascii=False,indent=2))
     return 1 if failures or report['passed']!=report['cffFontCount'] else 0
 if __name__=='__main__': sys.exit(main())
