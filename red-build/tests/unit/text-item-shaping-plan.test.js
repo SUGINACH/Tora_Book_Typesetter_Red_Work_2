@@ -62,9 +62,11 @@ function makeOptions(text, graphemes, scriptRuns, sourceRuns, extra = {}) {
     fontResolver: makeResolver(),
     direction: 'rtl',
     defaultFamily: 'Frank Ruhl Libre',
-    languageByScript: LANGUAGES,
-    featuresByScript: FEATURES,
-    variationAxesByFontId: AXES,
+    languageByScript: { ...LANGUAGES },
+    featuresByScript: Object.fromEntries(Object.entries(FEATURES).map(([script, features]) =>
+      [script, features.map((feature) => ({ ...feature }))])),
+    variationAxesByFontId: Object.fromEntries(Object.entries(AXES).map(([fontId, axes]) =>
+      [fontId, axes.map((axis) => ({ ...axis }))])),
     ...extra
   };
 }
