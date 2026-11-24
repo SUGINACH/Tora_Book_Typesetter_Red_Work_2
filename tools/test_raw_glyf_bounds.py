@@ -77,7 +77,10 @@ def main() -> int:
         assert aligned_before is not None
         assert max(abs(a - b) for a, b in zip(raw_before, (25.5, 377.0, 123.0, 494.0))) < 1e-9, raw_before
         assert translation == 111, translation
-        assert max(abs((b - a) - translation) for a, b in zip(raw_before, aligned_before)) < 1e-9
+        # GlyphSet alignment is horizontal only: xMin/xMax move by +111;
+        # yMin/yMax must remain byte-for-byte at the same coordinates.
+        differences = [b - a for a, b in zip(raw_before, aligned_before)]
+        assert max(abs(a - b) for a, b in zip(differences, (translation, 0.0, translation, 0.0))) < 1e-9, differences
 
         font.save(path)
         font.close()
