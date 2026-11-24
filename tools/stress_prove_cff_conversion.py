@@ -527,8 +527,45 @@ def main():
             failures.append(row)
         rows.append(row)
         print(f"{row.get('status')}: {rel} {row.get('maxBoundsDeltaFontUnits','')} {row.get('error','')}",flush=True)
-    report={'schema':'cff-conversion-stress-v1','catalogUniqueFiles':len(unique),'cffFontCount':sum(1 for x in rows if x.get('outline') in ('CFF','CFF2')),'passed':sum(1 for x in rows if x.get('status')=='passed'),'failureCount':len(failures),'maximumBoundsDelta':maximum,'fonts':rows,'failures':failures}
+    cff_rows=[x for x in rows if x.get('outline') in ('CFF','CFF2')]
+    placement_review_rows=[x for x in cff_rows if x.get('sourceLeftPhantomPointReviewRequired')]
+    placement_reviews=[
+        {'file':row['file'],**review}
+        for row in placement_review_rows
+        for review in row.get('sourceLeftPhantomPointReviews',[])
+    ]
+    raster_review_rows=[x for x in placement_review_rows if (x.get('sourceLeftPhantomPointRasterReview') or {}).get('status')=='generated-pending-review']
+    raster_diagnostic_failures=[
+        {'file':x['file'],'diagnostic':x.get('sourceLeftPhantomPointRasterReview')}
+        for x in placement_review_rows
+        if (x.get('sourceLeftPhantomPointRasterReview') or {}).get('status')=='diagnostic-failed'
+    ]
+    severe_placement_reviews=[x for x in placement_reviews if abs(float(x['absolutePlacementMetricDelta']))>=10.0]
+    report={
+        'schema':'cff-conversion-stress-v2',
+        'catalogUniqueFiles':len(unique),
+        'cffFontCount':len(cff_rows),
+        'passed':sum(1 for x in cff_rows if x.get('status')=='passed'),
+        'failureCount':len(failures),
+        'sourcePlacementReviewFontCount':len(placement_review_rows),
+        'sourcePlacementReviewGlyphCount':len(placement_reviews),
+        'sourcePlacementRasterComparisonCount':len(raster_review_rows),
+        'sourcePlacementRasterDiagnosticFailureCount':len(raster_diagnostic_failures),
+        'severeSourcePlacementReviewCount':len(severe_placement_reviews),
+        'sourcePlacementReviews':placement_reviews,
+        'severeSourcePlacementReviews':severe_placement_reviews,
+        'rasterDiagnosticFailures':raster_diagnostic_failures,
+        'maximumBoundsDelta':maximum,
+        'fonts':rows,
+        'failures':failures,
+    }
     output=args.output if args.output.is_absolute() else root/args.output; output.parent.mkdir(parents=True,exist_ok=True); output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    print(json.dumps({k:report[k] for k in ('cffFontCount','passed','failureCount','maximumBoundsDelta','report') if k in report},ensure_ascii=False,indent=2))
-    return 1 if failures or report['passed']!=report['cffFontCount'] else 0
+    summary_keys=('cffFontCount','passed','failureCount','sourcePlacementReviewFontCount','sourcePlacementReviewGlyphCount','sourcePlacementRasterComparisonCount','sourcePlacementRasterDiagnosticFailureCount','severeSourcePlacementReviewCount','maximumBoundsDelta')
+    summary={k:report[k] for k in summary_keys}
+    summary['report']=str(output)
+    print(json.dumps(summary,ensure_ascii=False,indent=2))
+    # Structural/runtime failures fail immediately. Source LSB/curve-bound
+    # mismatches are separately reported and rasterized; keep CI non-green
+    # until those visual-placement reviews are explicitly resolved.
+    return 1 if failures or report['passed']!=report['cffFontCount'] or placement_review_rows or raster_diagnostic_failures else 0
 if __name__=='__main__': sys.exit(main())
