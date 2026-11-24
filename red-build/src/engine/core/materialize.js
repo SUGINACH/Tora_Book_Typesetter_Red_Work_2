@@ -393,15 +393,29 @@ function projectPage(page, settings, apiOrOpts) {
   }
 
   // כותרת עליונה — **שלב 8 (§4.1):** מהחותמת שהוטבעה בזמן התכנון
-  // (headerSlotGeo: רוחבי סלוטים נמדדו פעם אחת ב-9pt בגופן הסלוט; ה-x נגזר
-  // מה-pos — טהור). בלי חותמה — נפילה מדווחת ואותה מדידה חד-פעמית.
+  // (headerSlotGeo: רוחבי סלוטים נמדדו פעם אחת בגודל הסלוט בגופן הסלוט; ה-x
+  // נגזר מה-pos — טהור). בלי חותמה — נפילה מדווחת ואותה מדידה חד-פעמית.
+  // **Iteration-006 (G6/RC-F1):** בפרופיל IMUD סלוטי-הצד ממורכזים על עוגני
+  // הייחוס — מרכז העמוד ±HDR_SIDE_SLOT_CENTER_OFFSET_PX (170.2px, מכויל
+  // מ-old-engine.pdf: «מקום»/«בינה» ב-566.8/226.35px) — ולא בקצוות העמוד
+  // (tpl.width−60−w / 60; פער 116..153px). סלוט המרכז נשאר ממורכז-עמוד —
+  // תואם את הייחוס גם כך. ה-x הוא שפת המילה (שמאל) — הסלוט נצייר כמילה
+  // אחת ב-PDF וה-DOM ממורכז בתיבת רוחב-הטקסט.
+  const imudHdr = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
   if (page.header && page.header.slots) {
     if (page.headerSlotGeo && page.headerSlotGeo.slots) {
       out.header = {
         y: page.headerSlotGeo.y,
         ...(page.headerSlotGeo.baselineY != null ? { baselineY: page.headerSlotGeo.baselineY } : {}),
         slots: page.headerSlotGeo.slots.map(s => {
-          const x = s.pos === 'right' ? tpl.width - 60 - s.w : s.pos === 'center' ? Math.round((tpl.width - s.w) / 2) : 60;
+          let x;
+          if (imudHdr && s.pos !== 'center') {
+            const { HDR_SIDE_SLOT_CENTER_OFFSET_PX } = require('../core/imud-geometry');
+            const c = tpl.width / 2 + (s.pos === 'right' ? HDR_SIDE_SLOT_CENTER_OFFSET_PX : -HDR_SIDE_SLOT_CENTER_OFFSET_PX);
+            x = Math.round(c - s.w / 2);
+          } else {
+            x = s.pos === 'right' ? tpl.width - 60 - s.w : s.pos === 'center' ? Math.round((tpl.width - s.w) / 2) : 60;
+          }
           return { ...s, x };
         })
       };

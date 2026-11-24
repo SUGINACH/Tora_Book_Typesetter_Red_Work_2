@@ -8546,6 +8546,17 @@ const H2_TITLE_Y_SPAN = 321.1; // עוגן כותרת ה-h2 (פתיחה עם spa
 // ל-391.45px (נמדד במאוחד לפני התיקון) ונוגע בשורת-הכותרת השנייה
 // (374.05–404.05px). מקור יחיד לשני המנועים.
 const H2_TITLE_LINE_PITCH_PX = 30;
+// **Iteration-006 (G6/RC-F1 — עוגני סלוטי-הצד בכותרת העליונה):** נמדד בייחוס
+// (old-engine.pdf, כל 678 עמודי התוכן — יציב ±0.1pt): מרכזי גליפי המילים —
+// «מקום» (ימין, 15pt) ב-566.8px = מרכז-העמוד+169.95; «בינה» (שמאל, 15pt)
+// ב-226.35px = מרכז−170.5. שלוש תיבות 33.33% על פס [141.5..652.2]px
+// (מרכז = מרכז העמוד, רוחב 510.7px) עם המילים ממורכזות בתיבות
+// (hdr-*-align=center בברירות המחדל של המקור) משחזרות את שני העוגנים
+// בדיוק ±0.3px. סלוט המרכז ממורכז במרכז העמוד — וכותרת-מרכז ארוכה נשארת
+// שורה אחת שחופפת בכוונה את מילות-הצד (בייחוס p647-653 — חפיפת bbox של
+// 1.6pt; חוזה המקור, לא כשל). עד כאן המאוחד הציב את הסלוטים הצדדיים
+// בקצוות העמוד (tpl.width−60−w / 60) — פער 116..153px מהייחוס.
+const HDR_SIDE_SLOT_CENTER_OFFSET_PX = 170.2; // ± ממרכז העמוד
 const H0_AREA_H = 249.2;    // זרימת ההקדמה מתחילה ב-356.4px (S4.19)
 const SINGLE_W = 552.3;     // .single-wide-col = 2×269.41+13.48 (grid)
 const TITLE_W_PCT = 0.6;    // תיבת כותרת 2/3 — 60% מרוחב הפס (S74)
@@ -8582,6 +8593,7 @@ module.exports = {
   FLOW_BOTTOM, H2_AREA_H, H0_AREA_H, SINGLE_W, TITLE_W_PCT, H23_TITLE_W,
   H2_SPAN_AREA_H, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN,
   H2_TITLE_LINE_PITCH_PX,
+  HDR_SIDE_SLOT_CENTER_OFFSET_PX,
   H0_LINE_H, H0_TITLE_Y,
   TOC_TITLE_BLOCK_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM,
   PAGE_STRETCH_MAX, JUSTIFY_MAX_GAP, JUSTIFY_MAX_LH_EXTRA, ORPHAN_RECLAIM_BUFFER, RECLAIM_BELOW_BASE,
@@ -10888,6 +10900,9 @@ function renderLegacyPage(pg, settings, doc) {
       if (sc) s.style.color = sc; // **S73:** צבע הסלוט מההגדרות
       s.style.position = 'absolute';
       s.style.lineHeight = '1';
+      // **Iteration-006 (G6/RC-F1):** סלוט כותרת = שורה אחת תמיד (חוזה הייחוס;
+      // כותרת-מרכז ארוכה נשארת שורה אחת גם כשהיא חופפת את מילות-הצד).
+      s.style.whiteSpace = 'nowrap';
       s.style.top = `${(HDR_BASELINE_Y - 52) - szPx * DLB_BASELINE_FACTOR}px`;
       // **S77:** תיבת הסלוט = רוחב% מהפס; היישור בתוכה מההגדרה. ברירות המחדל
       // (33% + right/center/left) משחזרות את העיגון הקודם: ימין צמוד ימינה,
@@ -20667,6 +20682,10 @@ function renderModelPage(mp, settings, doc, opts = {}) {
       const span = doc.createElement('span');
       span.className = `rh rh--${s.pos}`;
       span.style.position = 'absolute';
+      // **Iteration-006 (G6/RC-F1):** סלוט כותרת = שורה אחת תמיד (חוזה הייחוס —
+      // כותרת-מרכז ארוכה נשארת שורה אחת וחופפת את מילות-הצד, p647-653). בלי
+      // nowrap הדפדפן שובר לשתי שורות בתיבת 14px ⇒ שורות מודבקות זו על זו.
+      span.style.whiteSpace = 'nowrap';
       if (s.x != null) { span.style.left = `${px2(s.x)}px`; span.style.right = 'auto'; }
       if (s.w != null) span.style.width = `${px2(s.w)}px`;
       if (s.align) span.style.textAlign = s.align;

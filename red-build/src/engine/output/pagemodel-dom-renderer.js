@@ -535,6 +535,10 @@ function renderModelPage(mp, settings, doc, opts = {}) {
       const span = doc.createElement('span');
       span.className = `rh rh--${s.pos}`;
       span.style.position = 'absolute';
+      // **Iteration-006 (G6/RC-F1):** סלוט כותרת = שורה אחת תמיד (חוזה הייחוס —
+      // כותרת-מרכז ארוכה נשארת שורה אחת וחופפת את מילות-הצד, p647-653). בלי
+      // nowrap הדפדפן שובר לשתי שורות בתיבת 14px ⇒ שורות מודבקות זו על זו.
+      span.style.whiteSpace = 'nowrap';
       if (s.x != null) { span.style.left = `${px2(s.x)}px`; span.style.right = 'auto'; }
       if (s.w != null) span.style.width = `${px2(s.w)}px`;
       if (s.align) span.style.textAlign = s.align;

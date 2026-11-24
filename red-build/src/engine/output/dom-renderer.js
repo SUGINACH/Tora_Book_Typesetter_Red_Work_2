@@ -874,6 +874,9 @@ function renderLegacyPage(pg, settings, doc) {
       if (sc) s.style.color = sc; // **S73:** צבע הסלוט מההגדרות
       s.style.position = 'absolute';
       s.style.lineHeight = '1';
+      // **Iteration-006 (G6/RC-F1):** סלוט כותרת = שורה אחת תמיד (חוזה הייחוס;
+      // כותרת-מרכז ארוכה נשארת שורה אחת גם כשהיא חופפת את מילות-הצד).
+      s.style.whiteSpace = 'nowrap';
       s.style.top = `${(HDR_BASELINE_Y - 52) - szPx * DLB_BASELINE_FACTOR}px`;
       // **S77:** תיבת הסלוט = רוחב% מהפס; היישור בתוכה מההגדרה. ברירות המחדל
       // (33% + right/center/left) משחזרות את העיגון הקודם: ימין צמוד ימינה,
