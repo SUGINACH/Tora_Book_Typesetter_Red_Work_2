@@ -117,6 +117,7 @@
     return {
       fontName: fixture.name || 'unnamed',
       fontFormat: fixture.format || 'unknown',
+      normalizedFrom: fixture.normalizedFrom || null,
       unitsPerEm: Number(face.upem),
       harfBuzzVersion: hb.versionString(),
       featureTags: FEATURE_TAGS.slice(),

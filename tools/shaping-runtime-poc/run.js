@@ -94,10 +94,12 @@ async function main() {
 
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'harfbuzz-runtime-poc-'));
   const site = path.join(temp, 'site');
+  const normalizedDir = path.join(temp, 'normalized-sfnt');
   const report = {
     package: 'harfbuzzjs@' + VERSION,
     nodeVersion: process.version,
     fixtures: FONT_FIXTURES.map(({ name, format, variationMode }) => ({ name, format, variationMode: variationMode || 'default' })),
+    normalization: [],
     startedAt: new Date().toISOString()
   };
   let server;
@@ -106,6 +108,36 @@ async function main() {
   try {
     fs.mkdirSync(path.join(site, 'harfbuzzjs'), { recursive: true });
     fs.mkdirSync(path.join(site, 'fonts'), { recursive: true });
+    fs.mkdirSync(normalizedDir, { recursive: true });
+    const shapeFixtures = [];
+    for (const fixture of FONT_FIXTURES) {
+      const originalSitePath = path.join(site, 'fonts', fixture.name);
+      fs.copyFileSync(fixture.source, originalSitePath);
+      shapeFixtures.push(Object.assign({}, fixture, { source: fixture.source }));
+      if (fixture.format === 'woff2') {
+        const normalizedName = fixture.name.replace(/\.woff2$/i, '') + '.normalized.sfnt';
+        const normalizedPath = path.join(normalizedDir, normalizedName);
+        const python = process.env.HB_POC_PYTHON || 'python3';
+        runCommand(python, [
+          path.join(__dirname, 'normalize_woff2.py'),
+          fixture.source,
+          normalizedPath
+        ]);
+        fs.copyFileSync(normalizedPath, path.join(site, 'fonts', normalizedName));
+        shapeFixtures.push({
+          name: normalizedName,
+          format: 'sfnt-normalized-from-woff2',
+          normalizedFrom: fixture.name,
+          source: normalizedPath
+        });
+        report.normalization.push({
+          source: fixture.name,
+          normalized: normalizedName,
+          method: 'fontTools.ttLib.TTFont; flavor=None; Brotli decoder',
+          outputBytes: fs.statSync(normalizedPath).size
+        });
+      }
+    }
     const packedName = runCommand('npm', ['pack', 'harfbuzzjs@' + VERSION, '--silent', '--pack-destination', temp]);
     const tarballName = packedName.split(/\r?\n/).at(-1).trim();
     const tarball = path.join(temp, tarballName);
@@ -118,9 +150,6 @@ async function main() {
       }
     }
     fs.cpSync(dist, path.join(site, 'harfbuzzjs', 'dist'), { recursive: true });
-    for (const fixture of FONT_FIXTURES) {
-      fs.copyFileSync(fixture.source, path.join(site, 'fonts', fixture.name));
-    }
     for (const file of ['index.html', 'classic-worker.js', 'shape-core.js']) {
       fs.copyFileSync(path.join(__dirname, file), path.join(site, file));
     }
@@ -129,7 +158,7 @@ async function main() {
     const hb = await import(hbUrl);
     const shapeCore = require('./shape-core.js');
     const expected = [];
-    for (const fixture of FONT_FIXTURES) {
+    for (const fixture of shapeFixtures) {
       const bytes = fs.readFileSync(fixture.source);
       const fontArrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
       expected.push(shapeCore.shapeWithHarfBuzz(hb, fontArrayBuffer, fixture));
@@ -145,6 +174,7 @@ async function main() {
       fonts: expected.map((item) => ({
         name: item.fontName,
         format: item.fontFormat,
+        normalizedFrom: item.normalizedFrom,
         unitsPerEm: item.unitsPerEm,
         variationMode: item.variationMode,
         axisInfos: item.axisInfos,
@@ -163,13 +193,14 @@ async function main() {
     const invalidCoverageFixtures = [];
     for (let i = 0; i < expected.length; i++) {
       const item = expected[i];
-      const fixture = FONT_FIXTURES[i];
+      const fixture = shapeFixtures[i];
       if (item.unitsPerEm <= 0 || item.notdefGlyphCount > 0) {
         if (fixture.format === 'woff2' && fixture.allowUnsupported && item.coverageStatus === 'none') {
           unsupportedFontFixtures.push(item.fontName);
         } else {
           invalidCoverageFixtures.push({
             font: item.fontName,
+            format: fixture.format,
             upem: item.unitsPerEm,
             coverageStatus: item.coverageStatus,
             notdefGlyphCount: item.notdefGlyphCount,
@@ -179,6 +210,7 @@ async function main() {
       } else if (item.coverageStatus !== 'complete') {
         invalidCoverageFixtures.push({
           font: item.fontName,
+          format: fixture.format,
           coverageStatus: item.coverageStatus,
           missingBaseCodepoints: item.missingBaseCodepoints,
           missingMarkCodepoints: item.missingMarkCodepoints
@@ -193,9 +225,11 @@ async function main() {
     }
     report.nodeReference.unsupportedFontFixtures = unsupportedFontFixtures;
     report.nodeReference.unsupportedFontCount = unsupportedFontFixtures.length;
+    report.nodeReference.normalizedWoff2Fixtures = expected.filter((item) => item.normalizedFrom).map((item) => item.fontName);
+    report.nodeReference.normalizedWoff2Count = report.nodeReference.normalizedWoff2Fixtures.length;
     report.limitations = unsupportedFontFixtures.length
-      ? ['HarfBuzzJS@' + VERSION + ' did not expose Hebrew cmap coverage for these WOFF2 fonts: ' + unsupportedFontFixtures.join(', ') +
-         '. Node and Worker parity is not treated as successful shaping for these files; an explicit WOFF2-to-SFNT decoder or a build-time normalized SFNT font asset is required.']
+      ? ['HarfBuzzJS@' + VERSION + ' did not expose Hebrew cmap coverage for raw WOFF2 assets: ' + unsupportedFontFixtures.join(', ') +
+         '. The same files are separately decoded to SFNT by the existing fontTools/Brotli normalization path and shaped successfully as SFNT. The RED build/asset pipeline must supply normalized SFNT bytes to HarfBuzz; raw WOFF2 must not be passed as if HarfBuzz parsed it.']
       : [];
     fs.writeFileSync(path.join(site, 'expected.json'), expectedJson, 'utf8');
 
@@ -242,13 +276,13 @@ async function main() {
     report.browserWorker = browserResult;
     if (browserResult.state !== 'passed' || browserResult.exactNodeParity !== true ||
         browserResult.classicWorker !== true || browserResult.dynamicImport !== true ||
-        browserResult.wasmLoaded !== true || browserResult.fontCount !== FONT_FIXTURES.length) {
+        browserResult.wasmLoaded !== true || browserResult.fontCount !== shapeFixtures.length) {
       throw new Error('Classic Worker multi-font compatibility proof failed: ' +
         JSON.stringify(browserResult).slice(0, 5000));
     }
 
     report.result = report.nodeReference.unsupportedFontCount
-      ? 'passed_with_declared_woff2_limitations' : 'passed';
+      ? 'passed_with_raw_woff2_limitations; normalized_sfnt_supported' : 'passed';
     report.finishedAt = new Date().toISOString();
     fs.mkdirSync(path.dirname(REPORT), { recursive: true });
     fs.writeFileSync(REPORT, JSON.stringify(report, null, 2), 'utf8');
