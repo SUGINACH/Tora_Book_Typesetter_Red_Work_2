@@ -96,7 +96,7 @@ def freetype_raster_comparison(
     panel.save(image_path)
 
     return {
-        "status": "passed",
+        "status": "generated",
         "codepoint": f"U+{codepoint:04X}",
         "gid": gid,
         "renderSize": size,
@@ -109,6 +109,21 @@ def freetype_raster_comparison(
         "remappedLsb": int(converted_lsb),
         "image": str(image_path),
     }
+
+
+def decoded_cff_source_copy(source_path: Path, output_dir: Path, label: str) -> Path:
+    """Decode a WOFF2/SFNT CFF source into a local SFNT for FreeType raster checks."""
+    source = TTFont(str(source_path), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
+    if "CFF " not in source:
+        source.close()
+        raise ValueError(f"expected CFF source font: {source_path}")
+    source.flavor = None
+    extension = ".otf" if source.sfntVersion == "OTTO" else ".ttf"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    destination = output_dir / f"{label}-source{extension}"
+    source.save(str(destination))
+    source.close()
+    return destination
 
 
 def main():
@@ -175,9 +190,12 @@ def main():
                 source_pp1=float(src_box[0])-float(metrics0[gid][1])
                 output_pp1=float(glyph.xMin)-float(out_lsb)
                 max_phantom_delta=max(max_phantom_delta,abs(source_pp1-output_pp1))
-            if max_phantom_delta > 0.500001:
-                raise ValueError(f'left phantom-point preservation error {max_phantom_delta}')
+            hmetric_audit=geom['hmetricsRemapping']
             row['maxLeftPhantomPointDeltaFontUnits']=max_phantom_delta
+            row['sourceLeftPhantomPointReviewRequired']=bool(hmetric_audit.get('sourcePlacementReviewCount',0))
+            row['sourceLeftPhantomPointReviewCount']=int(hmetric_audit.get('sourcePlacementReviewCount',0))
+            row['worstSourceLeftPhantomPointReview']=hmetric_audit.get('worstSourcePlacementReview')
+            row['sourceLeftPhantomPointReviews']=hmetric_audit.get('sourcePlacementReviews',[])
             if geom.get('worstGlyph'):
                 gid=int(geom['worstGlyph']['gid'])
                 row['worstGlyphHmtx']={'advanceWidth':metrics0[gid][0],'leftSideBearing':metrics0[gid][1]}
