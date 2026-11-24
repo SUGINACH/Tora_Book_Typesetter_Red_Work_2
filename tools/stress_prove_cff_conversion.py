@@ -68,12 +68,15 @@ def freetype_raster_comparison(
         intersection_pixels = sum(inter.histogram()[1:])
         union_pixels = sum(union.histogram()[1:])
         diff = ImageChops.difference(image_a, image_b)
-        diff_pixels = sum(1 for count in diff.histogram()[1:] if count)
-        total_diff_intensity = sum(index * count for index, count in enumerate(diff.histogram()))
+        diff_histogram = diff.histogram()
+        differing_pixels = sum(diff_histogram[1:])
+        differing_intensity_levels = sum(1 for count in diff_histogram[1:] if count)
+        total_diff_intensity = sum(index * count for index, count in enumerate(diff_histogram))
         return {
             "intersectionOverUnion": intersection_pixels / union_pixels if union_pixels else 1.0,
             "unionPixels": union_pixels,
-            "differingIntensityLevels": diff_pixels,
+            "differingPixels": differing_pixels,
+            "differingIntensityLevels": differing_intensity_levels,
             "absolutePixelDifference": total_diff_intensity,
         }
 
