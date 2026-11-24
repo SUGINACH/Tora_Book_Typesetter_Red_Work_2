@@ -86,7 +86,7 @@ def main():
             row['hebrewMarksWithNonEmptyOutlines'] = len(supported_marks)
             row['emptyMappedHebrewMarks'] = [f'U+{cp:04X}' for cp in empty_marks]
             if empty_marks:
-                row['coverageWarnings'] = ['mapped Hebrew marks have empty outlines; these marks are excluded from the subset sample']
+                row.setdefault('coverageWarnings', []).append('mapped Hebrew marks have empty outlines; these marks are excluded from the subset sample')
             if hebrew:
                 sample = hebrew + ''.join(chr(cp) for cp in supported_marks)
             else:
@@ -118,7 +118,6 @@ def main():
                     alt_source_bounds = glyph_bounds(alt_font)
                     alt_geometry = convert_cff_to_glyf_decomposed(alt_font, float(alt_font['head'].unitsPerEm) * MAX_ERR_EM)
                     alt_gid = int(row['worstGlyph']['gid'])
-                    alt_name = alt_font.getGlyphOrder()[alt_gid]
                     alt_pre_save_order = list(alt_font.getGlyphOrder())
                     alt_pre_save_bounds = glyph_bounds(alt_font)
                     alt_pre_save_bounds_by_gid = [alt_pre_save_bounds.get(n) for n in alt_pre_save_order]
