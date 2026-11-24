@@ -137,6 +137,15 @@ Artifact `14942623161`. זו הוכחת shaping למדגם מחרוזות בלב
 ממנה שכל 204 glyph outlines בכל משקל נבדקו, ואין שינוי בהחלטת CFF conversion:
 `massConversionApproved=false`, `manualReviewRequired=true`.
 
+
+
+**השלמת full outline sweep:** ב-Run `45441777638` / Artifact `14942924363`
+בוצעה קריאת `glyphToPath` לכל 852 ה-GIDs בשלושת SFNT מסוג CFF (Ambivalenti 444,
+Mixtape Bold 204, Mixtape Regular 204). 849 החזירו path לא ריק ו-3 החזירו
+מחרוזת ריקה (גליפים ללא דיו); לא היו חריגות או ערכים שאינם string. ה-Worker
+החזיר אותם outline digests כמו Node (`54a1505e`, `5fd1c7a3`, `b5f16556`).
+זה סוגר את כיסוי קריאות ה-outline לכל GID בקבצים אלה; הוא אינו תחליף להשוואת
+עקומות Bézier מול מקור ואינו משנה את החלטת אישור ההמרה.
 ## בדיקת השפעת LSB על מיקום הגליף — 54/54
 
 ב-Artifact v5 הסופי בוצעו שלושה רינדורים ב-FreeType לכל אחד מ-54 הגליפים:

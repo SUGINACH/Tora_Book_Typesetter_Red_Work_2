@@ -4778,3 +4778,23 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
 - אין integration ב-production; אין שינוי ב-MeasureAPI, linebreak, PageModel,
   DOM/PDF או font catalog. WOFF2 raw אינו קלט תקין ל-HarfBuzzJS; SFNT מנורמל
   נדרש ב-build-time. החלטת CFF mass-conversion לא השתנתה.
+
+
+## 2026-11-24 — Full CFF glyph outline sweep ב-HarfBuzz
+
+- Run `45441777638`; Artifact `14942924363`; commit `e1c01fd`.
+- ה-PoC קורא `maxp.numGlyphs` ומריץ `font.glyphToPath(gid)` על כל GID
+  בכל SFNT שזוהה בו CFF/CFF2. כל תוצאה חייבת להיות string; מחרוזות ריקות
+  נספרות בנפרד כ-glyphs בלי ink. digest FNV-1a מחושב על GID+path.
+- Ambivalenti CFF: 444 total, 443 non-empty, 1 empty, 89,720 path chars,
+  digest `54a1505e`.
+- Mixtape Bold CFF: 204 total, 203 non-empty, 1 empty, 105,218 chars,
+  digest `5fd1c7a3`.
+- Mixtape Regular CFF: 204 total, 203 non-empty, 1 empty, 102,150 chars,
+  digest `b5f16556`.
+- סה"כ: 852/852 GIDs נבדקו; 849 עם outlines לא ריקים, 3 ריקים; 0 exceptions.
+  Node/Worker exact parity נשמר גם ב-outline digest לכל אחד משלושת הקבצים.
+- SHA-256 של תוצאת Node/Worker המלאה: `9c878d6c41dffc1143b81668cf2ed44f0765a1b9e0d789d298df1ed41b597d61`.
+- זהו full-GID extraction sweep, לא השוואת Bézier against source. אין production
+  integration ואין אישור המרה גורפת. WOFF2 raw נשאר unsupported; רק SFNT CFF
+  אחרי normalization נבדק.

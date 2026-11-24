@@ -346,3 +346,32 @@ HarfBuzz מבצע shaping לריצות שסופקו לו; הוא אינו מחל
   אינו משנה font registry, asset pipeline, production bundles או renderer.
 - אין לאשר WOFF2 raw או להסתמך על raw `Blob` ל-shaping. יש לספק SFNT/TTF
   מנורמל ב-build-time; נרמול קנוני לכל הקטלוג עדיין לא נבנה.
+
+
+## Full CFF glyph-outline sweep — כל GID בכל גופן CFF שנבדק (24.11.2026)
+
+- Workflow: `45441777638`; Artifact: `14942924363`;
+  commit: `e1c01fdc15e4d63e21404a74bc8f36f7e68ab392`.
+- נוספה בדיקה שקוראת `maxp.numGlyphs` ואז מפעילה `font.glyphToPath(gid)`
+  עבור כל GID מ-0 ועד numGlyphs-1 בכל SFNT שזוהה בו `CFF`/`CFF2`.
+  ערך שאינו string גורם ל-workflow להיכשל; מחרוזת ריקה נספרת כגליף ללא דיו,
+  ולא כשגיאה. לכל הגליפים נוצר FNV-1a digest דטרמיניסטי של GID ו-path.
+- תוצאות Node; Worker החזיר בדיוק אותם מספרים ו-digests:
+
+| CFF SFNT | GIDs | עם outline לא ריק | outline ריק | סך תווי paths | digest |
+|---|---:|---:|---:|---:|---|
+| Ambivalenti-Regular.normalized.sfnt | 444 | 443 | 1 | 89,720 | `54a1505e` |
+| Mixtape-Bold.normalized.sfnt | 204 | 203 | 1 | 105,218 | `5fd1c7a3` |
+| Mixtape-Regular.normalized.sfnt | 204 | 203 | 1 | 102,150 | `b5f16556` |
+| **סה"כ** | **852** | **849** | **3** | **297,088** | — |
+
+- `exactNodeParity=true`; output SHA-256 של Node/Worker shaping + outline sweep:
+  `9c878d6c41dffc1143b81668cf2ed44f0765a1b9e0d789d298df1ed41b597d61`.
+- כל 852 הקריאות הסתיימו ללא exception או תוצאה שאינה string. שלושת ה-empty
+  outlines נשמרו בנפרד ומפורשים כגליפים ללא מתאר גלוי, לא ככשל extraction.
+- המשמעות: HarfBuzzJS CFF outline extraction פועל עבור כל GID בשלושת קובצי
+  SFNT שנבדקו, כולל שני משקלי Mixtape שהופיעו בחריגי CFF v5. זו אינה השוואת
+  Bézier mathematically מול מקור, ואינה הוכחה שכל glyph paths נאמנים לאחר
+  normalization; זהו full-GID API sweep עם digest ו-Node/Worker parity.
+- Raw WOFF2 נשאר unsupported; ה-sweep נעשה על SFNT מנורמל (CFF/CFF2),
+  לא על WOFF2 גולמי. לא הוכנסו נכסים מנורמלים ל-production.
