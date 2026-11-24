@@ -346,7 +346,7 @@ async function main() {
       defaultFamily: 'David Libre',
       languageByScript: { Hebr: 'he' },
       featuresByScript: {
-        Hebr: FEATURE_TAGS.map((tag) => ({ tag, value: 1 }))
+        Hebr: shapeCore.FEATURE_TAGS.map((tag) => ({ tag, value: 1 }))
       },
       variationAxesByFontId: {
         [productionRegistration.fontId]: productionVariationAxes
