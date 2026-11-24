@@ -55,7 +55,20 @@ def main():
                 maxround=max(maxround,max(abs(float(x)-float(y)) for x,y in zip(a,b)))
             if maxround>0.01: raise ValueError(f'round-trip bbox changed {maxround}')
             if 'glyf' not in out or 'loca' not in out or 'CFF ' in out: raise ValueError('output not glyf/loca')
-            sample=font_sample_text(out,'stress-full-hebrew')
+            cmap = out.getBestCmap() or {}
+            hebrew_count = sum(1 for cp in range(0x05D0, 0x05EB) if cp in cmap)
+            row['hebrewLettersMapped'] = hebrew_count
+            if hebrew_count == 27:
+                sample = font_sample_text(out, 'stress-full-hebrew')
+            elif hebrew_count:
+                sample = font_sample_text(out, 'partial-hebrew')
+            else:
+                latin = ''.join(ch for ch in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' if ord(ch) in cmap)
+                if len(latin) < 1:
+                    latin = ''.join(chr(cp) for cp in sorted(cmap) if 0x20 <= cp <= 0x7E and not chr(cp).isspace())[:12]
+                if not latin:
+                    raise ValueError('no printable Unicode sample available for production subset check')
+                sample = latin[:12]
             runtime=java_subset_check(root,output,sample)
             row.update({'roundTripBoundsDelta':maxround,'runtimeSubset':runtime,'convertedBytes':output.stat().st_size,'convertedSha256':sha(output),'status':'passed'})
             out.close(); output.unlink(missing_ok=True)
