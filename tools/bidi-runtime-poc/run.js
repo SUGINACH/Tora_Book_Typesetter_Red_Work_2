@@ -264,6 +264,51 @@ async function main() {
     const nestedHebrewEmbedding = runtime.itemizeScripts(
       nestedHebrewEmbeddingText, nestedHebrewEmbeddingBidi
     );
+    const nestedBidiControlGraphemes = nestedHebrewEmbedding.graphemes
+      .filter((grapheme) => grapheme.isBidiControl);
+    const nestedBidiControlRuns = nestedHebrewEmbedding.nonShapingRuns
+      .filter((item) => item.kind === 'bidi-control');
+    const nestedSourceRunsCoverSource = nestedHebrewEmbedding.sourceRuns.every((item, index, all) =>
+      item.start === (index === 0 ? 0 : all[index - 1].end) &&
+      item.end > item.start &&
+      item.text === nestedHebrewEmbeddingText.slice(item.start, item.end)
+    ) && nestedHebrewEmbedding.sourceRuns.at(-1)?.end === nestedHebrewEmbeddingText.length;
+    const nestedScriptRunsExcludeBidiControls = nestedHebrewEmbedding.scriptRuns.every((item) =>
+      !item.text.includes('\\u202B') && !item.text.includes('\\u202C') &&
+      !item.text.includes(String.fromCodePoint(0x202B)) &&
+      !item.text.includes(String.fromCodePoint(0x202C))
+    );
+    const rightToLeftMarkText = String.fromCodePoint(0x05D0, 0x200F, 0x05D1);
+    const rightToLeftMarkItemization = runtime.itemizeScripts(
+      rightToLeftMarkText, runtime.resolve(rightToLeftMarkText, 'rtl')
+    );
+    const rightToLeftMark = rightToLeftMarkItemization.graphemes.find((item) =>
+      item.text === String.fromCodePoint(0x200F)
+    );
+    const rightToLeftMarkIsNonShaping = Boolean(rightToLeftMark &&
+      rightToLeftMark.isBidiControl && !rightToLeftMark.shapeable &&
+      !rightToLeftMarkItemization.scriptRuns.some((item) => item.text.includes(rightToLeftMark.text)));
+    const joinerText = String.fromCodePoint(0x05D0, 0x200D, 0x05D1);
+    const joinerItemization = runtime.itemizeScripts(joinerText, runtime.resolve(joinerText, 'rtl'));
+    const joiner = joinerItemization.graphemes.find((item) => item.text.includes(String.fromCodePoint(0x200D)));
+    if (nestedBidiControlGraphemes.length !== 2 ||
+        nestedBidiControlGraphemes.some((item) => item.shapeable || !item.isBidiControl) ||
+        nestedBidiControlRuns.length !== 2 ||
+        !nestedSourceRunsCoverSource ||
+        !nestedScriptRunsExcludeBidiControls ||
+        !rightToLeftMarkIsNonShaping ||
+        !joiner || joiner.containsBidiControl || joiner.isBidiControl) {
+      throw new Error('Bidi control/non-shaping partition contract failed: ' +
+        JSON.stringify({
+          nestedBidiControlGraphemes,
+          nestedBidiControlRuns,
+          sourceRuns: nestedHebrewEmbedding.sourceRuns,
+          scriptRuns: nestedHebrewEmbedding.scriptRuns,
+          rightToLeftMark,
+          joiner
+        }));
+    }
+
     const nestedHebrewLevels = [...new Set(nestedHebrewEmbedding.graphemes
       .filter((item) => item.script === 'Hebr')
       .map((item) => item.bidiLevel))].sort((a, b) => a - b);
@@ -358,7 +403,17 @@ async function main() {
             cluster.scalars[cluster.scalars.length - 1].end !== cluster.end) return false;
         next = cluster.end;
       }
-      return next === item.utf16Length;
+      if (next !== item.utf16Length || !Array.isArray(item.itemization.sourceRuns)) return false;
+      let sourceNext = 0;
+      for (const sourceRun of item.itemization.sourceRuns) {
+        if (sourceRun.start !== sourceNext || sourceRun.end <= sourceRun.start ||
+            sourceRun.text !== item.text.slice(sourceRun.start, sourceRun.end) ||
+            !['shape', 'bidi-control', 'non-shaping-bidi-mixed', 'unresolved'].includes(sourceRun.kind)) {
+          return false;
+        }
+        sourceNext = sourceRun.end;
+      }
+      return sourceNext === item.utf16Length;
     });
 
     report.itemizerContractProbe = {
@@ -383,7 +438,15 @@ async function main() {
         text: nestedHebrewEmbeddingText,
         levels: nestedHebrewLevels,
         scriptRuns: nestedHebrewScriptRuns,
-        runLevelsConsistent: nestedHebrewRunLevelsConsistent
+        runLevelsConsistent: nestedHebrewRunLevelsConsistent,
+        bidiControlGraphemes: nestedBidiControlGraphemes,
+        bidiControlRuns: nestedBidiControlRuns,
+        sourceRuns: nestedHebrewEmbedding.sourceRuns,
+        sourceRunsCoverSource: nestedSourceRunsCoverSource,
+        scriptRunsExcludeBidiControls: nestedScriptRunsExcludeBidiControls,
+        rightToLeftMark: rightToLeftMark,
+        rightToLeftMarkIsNonShaping: rightToLeftMarkIsNonShaping,
+        joinerIsNotBidiControl: Boolean(joiner && !joiner.containsBidiControl)
       },
       commonWhitespace: mixedSpace,
       pairedPunctuation: {
@@ -516,6 +579,13 @@ async function main() {
         nestedHebrewLevels.includes(3) &&
         new Set(nestedHebrewScriptRuns.map((item) => item.bidiLevel)).size >= 2 &&
         nestedHebrewRunLevelsConsistent,
+      bidiControlsAreExcludedFromShapeRuns: nestedBidiControlGraphemes.length === 2 &&
+        nestedBidiControlRuns.length === 2 &&
+        nestedBidiControlGraphemes.every((item) => item.isBidiControl && !item.shapeable) &&
+        nestedScriptRunsExcludeBidiControls &&
+        rightToLeftMarkIsNonShaping,
+      nonShapingSourcePartitionIsLossless: nestedSourceRunsCoverSource,
+      joinerIsNotBidiControl: Boolean(joiner && !joiner.containsBidiControl && !joiner.isBidiControl),
       commonWhitespaceGetsContextualScript: mixedSpace.script === 'Hebr' &&
         mixedSpace.status === 'context-left-preferred' &&
         mixedScriptItemization.scriptRuns.every((run) => run.script != null),

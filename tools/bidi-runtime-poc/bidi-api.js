@@ -248,6 +248,18 @@
     }
 
     function resolveGraphemeScript(grapheme, scalars) {
+      const containsBidiControl = scalars.some((scalar) => scalar.isBidiControl);
+      if (containsBidiControl) {
+        return {
+          script: null,
+          status: scalars.every((scalar) => scalar.isBidiControl)
+            ? 'bidi-control'
+            : 'bidi-control-mixed-grapheme',
+          candidates: [],
+          primaryScripts: [],
+          fallbackScript: null
+        };
+      }
       // UAX #24 §5.2: all marks in a combining sequence inherit the Script
       // of the base. If the base is Common/Inherited, use the first later
       // scalar with a specific Script. Mark Script values must not turn one
@@ -454,6 +466,7 @@
       const runs = [];
       for (let graphemeIndex = 0; graphemeIndex < graphemes.length; graphemeIndex++) {
         const grapheme = graphemes[graphemeIndex];
+        if (!grapheme.shapeable) continue;
         const key = [
           grapheme.script || '?',
           grapheme.direction || '?',
@@ -487,6 +500,50 @@
       return runs;
     }
 
+    // A lossless source partition distinguishes text that may be shaped from
+    // bidi controls and unresolved clusters that must not be sent to HarfBuzz.
+    function buildSourceRuns(graphemes) {
+      const runs = [];
+      for (let graphemeIndex = 0; graphemeIndex < graphemes.length; graphemeIndex++) {
+        const grapheme = graphemes[graphemeIndex];
+        const kind = grapheme.shapeable
+          ? 'shape'
+          : (grapheme.isBidiControl ? 'bidi-control' :
+            (grapheme.containsBidiControl ? 'non-shaping-bidi-mixed' : 'unresolved'));
+        const key = [
+          kind,
+          grapheme.script || '?',
+          grapheme.direction || '?',
+          grapheme.bidiLevel == null ? '?' : grapheme.bidiLevel,
+          grapheme.status,
+          grapheme.candidates.join(',')
+        ].join('|');
+        const previous = runs[runs.length - 1];
+        if (previous && previous._key === key && previous.end === grapheme.start) {
+          previous.end = grapheme.end;
+          previous.graphemeEnd++;
+          previous.text += grapheme.text;
+          continue;
+        }
+        runs.push({
+          kind,
+          start: grapheme.start,
+          end: grapheme.end,
+          text: grapheme.text,
+          script: grapheme.script,
+          status: grapheme.status,
+          candidates: grapheme.candidates.slice(),
+          direction: grapheme.direction || null,
+          bidiLevel: grapheme.bidiLevel,
+          graphemeStart: graphemeIndex,
+          graphemeEnd: graphemeIndex + 1,
+          _key: key
+        });
+      }
+      for (const run of runs) delete run._key;
+      return runs;
+    }
+
     function itemizeScripts(text, bidiResult = null) {
       text = String(text);
       const units = toUtf16Units(text);
@@ -504,6 +561,8 @@
           unicodeVersion: itemizerUnicodeVersion.join('.'),
           graphemes: [],
           scriptRuns: [],
+          nonShapingRuns: [],
+          sourceRuns: [],
           diagnostics: []
         };
       }
@@ -524,27 +583,29 @@
           // header is fatal; preserving memory safety is preferable to guessing.
           throw new Error('Unicode 18 itemizer returned unsafe output dimensions');
         }
-        const outputLength = 4 + graphemeCount * 4 + scalarCount * 6 + extensionCount;
+        const outputLength = 4 + graphemeCount * 4 + scalarCount * 7 + extensionCount;
         const values = copyAndFreeOutput(outputPointer, outputLength);
         const graphemeTableStart = 4;
         const scalarTableStart = graphemeTableStart + graphemeCount * 4;
-        const extensionTableStart = scalarTableStart + scalarCount * 6;
+        const extensionTableStart = scalarTableStart + scalarCount * 7;
 
         const scalars = [];
         let expectedScalarStart = 0;
         let expectedExtensionStart = 0;
         for (let i = 0; i < scalarCount; i++) {
-          const offset = scalarTableStart + i * 6;
+          const offset = scalarTableStart + i * 7;
           const start = values[offset];
           const end = values[offset + 1];
           const script = scriptTagOf(values[offset + 2]);
           const isMarkValue = values[offset + 3];
-          const extensionStart = values[offset + 4];
-          const extensionLength = values[offset + 5];
+          const isBidiControlValue = values[offset + 4];
+          const extensionStart = values[offset + 5];
+          const extensionLength = values[offset + 6];
           if (start !== expectedScalarStart || end <= start || end > units.length ||
               (end - start !== 1 && end - start !== 2) ||
               !isUtf16Boundary(units, start) || !isUtf16Boundary(units, end) ||
               (isMarkValue !== 0 && isMarkValue !== 1) ||
+              (isBidiControlValue !== 0 && isBidiControlValue !== 1) ||
               extensionStart !== expectedExtensionStart ||
               extensionLength > extensionCount - extensionStart) {
             throw new Error('Unicode 18 itemizer returned an invalid scalar range at index ' + i);
@@ -562,7 +623,12 @@
           for (let j = 0; j < extensionLength; j++) {
             scriptExtensions.push(scriptTagOf(values[extensionTableStart + extensionStart + j]));
           }
-          scalars.push({ start, end, script, isMark: isMarkValue === 1, scriptExtensions });
+          scalars.push({
+            start, end, script,
+            isMark: isMarkValue === 1,
+            isBidiControl: isBidiControlValue === 1,
+            scriptExtensions
+          });
           expectedScalarStart = end;
           expectedExtensionStart += extensionLength;
         }
@@ -599,6 +665,9 @@
             status: scriptInfo.status,
             candidates: scriptInfo.candidates,
             primaryScripts: scriptInfo.primaryScripts,
+            containsBidiControl: clusterScalars.some((scalar) => scalar.isBidiControl),
+            isBidiControl: clusterScalars.every((scalar) => scalar.isBidiControl),
+            shapeable: false,
             bidiLevel: null,
             direction: null
           };
@@ -612,6 +681,10 @@
                 ? cluster.status : 'bidi-level-conflict';
             }
           }
+          cluster.shapeable = Boolean(cluster.script) &&
+            !cluster.containsBidiControl &&
+            cluster.status !== 'mixed-grapheme' &&
+            cluster.status !== 'bidi-level-conflict';
           graphemes.push(cluster);
           expectedStart = end;
           expectedScalarIndex = scalarEnd;
@@ -624,7 +697,13 @@
         const pairedPunctuationPairCount = resolvePairedPunctuation(graphemes);
         const diagnostics = [];
         for (const grapheme of graphemes) {
-          if (grapheme.status === 'mixed-grapheme') {
+          if (grapheme.status === 'bidi-control-mixed-grapheme') {
+            diagnostics.push({
+              code: 'bidi-control-shares-grapheme-with-text',
+              start: grapheme.start,
+              end: grapheme.end
+            });
+          } else if (grapheme.status === 'mixed-grapheme') {
             diagnostics.push({
               code: 'mixed-script-grapheme',
               start: grapheme.start,
@@ -637,7 +716,7 @@
               start: grapheme.start,
               end: grapheme.end
             });
-          } else if (!grapheme.script) {
+          } else if (!grapheme.script && !grapheme.isBidiControl) {
             diagnostics.push({
               code: 'script-context-unresolved',
               start: grapheme.start,
@@ -653,6 +732,8 @@
           unicodeVersion: itemizerUnicodeVersion.join('.'),
           graphemes,
           scriptRuns: buildScriptRuns(graphemes),
+          sourceRuns: buildSourceRuns(graphemes),
+          nonShapingRuns: buildSourceRuns(graphemes).filter((run) => run.kind !== 'shape'),
           pairedPunctuationPairCount,
           diagnostics
         };

@@ -1,8 +1,8 @@
 use core::ptr;
 use core::slice;
 
-use icu_properties::props::{GeneralCategory, Script};
-use icu_properties::CodePointMapData;
+use icu_properties::props::{BidiControl, GeneralCategory, Script};
+use icu_properties::{CodePointMapData, CodePointSetData};
 use icu_properties::script::ScriptWithExtensions;
 use icu_properties::PropertyNamesShort;
 use icu_segmenter::GraphemeClusterSegmenter;
@@ -193,13 +193,13 @@ pub unsafe extern "C" fn bidi_line_visual_runs(
 // Itemization ABI layout:
 // [utf16_len, grapheme_count, scalar_count, extension_count,
 //  graphemes: (start,end,scalar_start,scalar_end)*,
-//  scalars: (start,end,script_tag,is_mark,extension_start,extension_count)*,
+//  scalars: (start,end,script_tag,is_mark,is_bidi_control,extension_start,extension_count)*,
 //  extension_script_tags...]
 //
 // Script tags are packed ISO 15924 four-byte ASCII values (e.g. Hebr, Latn,
 // Zyyy, Zinh). Grapheme and scalar offsets are UTF-16 code-unit offsets.
 // The data is Unicode Script, General_Category mark membership (Mn/Me/Mc),
-// and Script_Extensions; contextual assignment
+// Bidi_Control, and Script_Extensions; contextual assignment
 // of Common/Inherited clusters is performed by the JS adapter and is never
 // allowed to move or split a grapheme boundary.
 #[no_mangle]
@@ -237,11 +237,13 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
         end: usize,
         script: u32,
         is_mark: bool,
+        is_bidi_control: bool,
         extensions: Vec<u32>,
     }
 
     let script_data = ScriptWithExtensions::new();
     let general_category_data = CodePointMapData::<GeneralCategory>::new();
+    let bidi_control_data = CodePointSetData::new::<BidiControl>();
     let mut scalars = Vec::<ScalarRecord>::new();
     let mut utf16_offset = 0usize;
     for ch in text.chars() {
@@ -254,6 +256,7 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
                 | GeneralCategory::EnclosingMark
                 | GeneralCategory::SpacingMark
         );
+        let is_bidi_control = bidi_control_data.contains(ch);
         let extensions = script_data
             .get_script_extensions_val(ch)
             .iter()
@@ -264,6 +267,7 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
             end: utf16_offset + width,
             script,
             is_mark,
+            is_bidi_control,
             extensions,
         });
         utf16_offset += width;
@@ -299,7 +303,7 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
     }
 
     let extension_count: usize = scalars.iter().map(|scalar| scalar.extensions.len()).sum();
-    let mut scalar_table = Vec::<u32>::with_capacity(scalars.len() * 6);
+    let mut scalar_table = Vec::<u32>::with_capacity(scalars.len() * 7);
     let mut extension_values = Vec::<u32>::with_capacity(extension_count);
     for scalar in &scalars {
         let extension_start = extension_values.len();
@@ -308,6 +312,7 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
             scalar.end as u32,
             scalar.script,
             u32::from(scalar.is_mark),
+            u32::from(scalar.is_bidi_control),
             extension_start as u32,
             scalar.extensions.len() as u32,
         ]);
