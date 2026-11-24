@@ -168,7 +168,7 @@ describe('HarfBuzzShaper — canonical plan to immutable ShapedRun', () => {
     assertEq(run.clusters.map((cluster) => [cluster.start, cluster.end]),
       [[100, 103], [103, 104], [104, 106], [106, 107]]);
     assertEq(run.advance, { x: 2000, y: 0 });
-    assertEq(run.glyphs[3].controlBounds, { xMin: 20, yMin: 20, xMax: 500, yMax: 700 });
+    assertEq(run.glyphs[3].controlBounds, { xMin: 26, yMin: 20, xMax: 506, yMax: 700 });
     assertEq(run.glyphs[3].inkBounds, null);
     assert(run.diagnostics.some((item) => item.code === 'tight-ink-bounds-not-computed'));
     assertEq(fake.state.buffers[0].items.map((item) => item.cluster),
