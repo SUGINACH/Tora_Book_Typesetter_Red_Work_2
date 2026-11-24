@@ -12,7 +12,7 @@ const { pathToFileURL } = require('url');
 const VERSION = '1.6.4';
 const REPORT = process.env.HB_POC_REPORT || '/tmp/shaping-runtime-poc-report.json';
 const AGENT_BROWSER = process.env.AGENT_BROWSER || 'agent-browser';
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const FONT_DIR = path.join(REPO_ROOT, 'red-build', 'ui', 'assets', 'imud', 'fonts');
 const FONT_FIXTURES = [
   { name: 'DejaVuSans.ttf', format: 'ttf', source: '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf' },
