@@ -487,14 +487,21 @@
           ? 'shape'
           : (grapheme.isBidiControl ? 'bidi-control' :
             (grapheme.containsBidiControl ? 'non-shaping-bidi-mixed' : 'unresolved'));
-        const key = [
-          kind,
-          grapheme.script || '?',
-          grapheme.direction || '?',
-          grapheme.bidiLevel == null ? '?' : grapheme.bidiLevel,
-          grapheme.status,
-          grapheme.candidates.join(',')
-        ].join('|');
+        const key = kind === 'shape'
+          ? [
+            kind,
+            grapheme.script || '?',
+            grapheme.direction || '?',
+            grapheme.bidiLevel == null ? '?' : grapheme.bidiLevel
+          ].join('|')
+          : [
+            kind,
+            grapheme.script || '?',
+            grapheme.direction || '?',
+            grapheme.bidiLevel == null ? '?' : grapheme.bidiLevel,
+            grapheme.status,
+            grapheme.candidates.join(',')
+          ].join('|');
         const previous = runs[runs.length - 1];
         if (previous && previous._key === key && previous.end === grapheme.start) {
           previous.end = grapheme.end;
@@ -508,8 +515,11 @@
           end: grapheme.end,
           text: grapheme.text,
           script: grapheme.script,
-          status: grapheme.status,
-          candidates: grapheme.candidates.slice(),
+          // Per-grapheme diagnostics remain on graphemes; a shape run is
+          // coalesced by Script/direction/Bidi level and therefore has one
+          // resolved run status even when its graphemes were resolved differently.
+          status: kind === 'shape' ? 'resolved' : grapheme.status,
+          candidates: kind === 'shape' ? [grapheme.script] : grapheme.candidates.slice(),
           direction: grapheme.direction || null,
           bidiLevel: grapheme.bidiLevel,
           graphemeStart: graphemeIndex,

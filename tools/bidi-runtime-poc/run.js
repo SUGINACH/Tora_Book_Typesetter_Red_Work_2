@@ -257,6 +257,27 @@ async function main() {
         JSON.stringify(arabicCommaGrapheme));
     }
 
+    const markedHebrewWordText = String.fromCodePoint(
+      0x05E9, 0x05B8, 0x05C1, 0x05DC, 0x05D5, 0x05B9, 0x05DD
+    );
+    const markedHebrewWordBidi = runtime.resolve(markedHebrewWordText, 'rtl');
+    const markedHebrewWord = runtime.itemizeScripts(markedHebrewWordText, markedHebrewWordBidi);
+    const markedHebrewSingleShapeRun = markedHebrewWord.scriptRuns.length === 1 &&
+      markedHebrewWord.scriptRuns[0].start === 0 &&
+      markedHebrewWord.scriptRuns[0].end === markedHebrewWordText.length &&
+      markedHebrewWord.scriptRuns[0].text === markedHebrewWordText &&
+      markedHebrewWord.scriptRuns[0].script === 'Hebr' &&
+      markedHebrewWord.scriptRuns[0].direction === 'rtl' &&
+      markedHebrewWord.scriptRuns[0].bidiLevel === 1 &&
+      new Set(markedHebrewWord.graphemes.map((item) => item.status)).size > 1;
+    if (!markedHebrewSingleShapeRun) {
+      throw new Error('Same Script/direction/Bidi-level Hebrew text was over-segmented by per-grapheme resolution status: ' +
+        JSON.stringify({
+          scriptRuns: markedHebrewWord.scriptRuns,
+          graphemes: markedHebrewWord.graphemes
+        }));
+    }
+
     const nestedHebrewEmbeddingText = String.fromCodePoint(
       0x05D0, 0x05D1, 0x202B, 0x05D2, 0x05D3, 0x202C, 0x05D4, 0x05D5
     );
@@ -446,6 +467,12 @@ async function main() {
         combiningLatinCount: combiningLatin.graphemes.length
       },
       mixedScriptRuns: mixedScriptItemization.scriptRuns,
+      markedHebrewCoalescing: {
+        text: markedHebrewWordText,
+        scriptRuns: markedHebrewWord.scriptRuns,
+        graphemeStatuses: [...new Set(markedHebrewWord.graphemes.map((item) => item.status))],
+        singleShapeRun: markedHebrewSingleShapeRun
+      },
       nestedHebrewEmbedding: {
         text: nestedHebrewEmbeddingText,
         levels: nestedHebrewLevels,
@@ -587,6 +614,7 @@ async function main() {
       scriptExtensionsResolveFromContext: arabicCommaGrapheme.candidates.includes('Arab') &&
         arabicCommaGrapheme.script === 'Arab' &&
         arabicCommaGrapheme.status === 'context-both-sides',
+      sameScriptSameDirectionAndLevelMergeAcrossResolutionStatuses: markedHebrewSingleShapeRun,
       sameScriptBidiLevelsRemainSeparate: nestedHebrewLevels.includes(1) &&
         nestedHebrewLevels.includes(3) &&
         new Set(nestedHebrewScriptRuns.map((item) => item.bidiLevel)).size >= 2 &&
