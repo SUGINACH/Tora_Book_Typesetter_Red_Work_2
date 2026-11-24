@@ -4733,3 +4733,26 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
 3. להוכיח shaping-before-line-break ו-consistent outlines/positions בכל
    היעדים DOM/HTML/PDF, כולל PDF ToUnicode/ActualText.
 4. רק לאחר יציבות גופנים ו-shaping לפתוח את F7/fragment-flow correction.
+
+
+### המשך PoC — נעילת כלי נרמול והוכחת byte-determinism (24.11.2026)
+
+- HEAD: `61ed8c5c6a2133c6e0a28d375315fc5190b80b3a`.
+- Workflow: `45437827475`; Artifact: `14942416493`; success.
+- ננעלו `fontTools==4.68.0` ו-`brotli==1.2.1` ב-venv זמני של Actions.
+- לכל אחד משני מקורות WOFF2 בוצעו שתי הרצות עצמאיות של
+  `TTFont(flavor=None, recalcTimestamp=False)` ל-SFNT.
+- Ambivalenti normalized SHA-256 בשתי ההרצות:
+  `087d2a9edda23ae76163806838c508f14d658f283fb6dc8b3e09ba87eb0d1bf4`.
+- FrankBasic normalized SHA-256 בשתי ההרצות:
+  `7a16211442d61632f124c99a00ff6f241c3d3fd109ae1968e5575e6d39226883`.
+- לשני הקבצים `deterministicBytes=true`; ה-byte buffers וה-hashes זהים.
+  בדיקה זו מוכיחה דטרמיניזם עבור שני ה-fixtures בלבד, לא עבור כל קטלוג 1,315
+  המשפחות.
+- אותה תוצאת shaping נשמרה: 11 streams, 5 מחרוזות לכל stream, 449 glyphs,
+  exact Node↔Worker parity=true; WOFF2 raw נשאר unsupported, normalized SFNT
+  supported.
+- Corpus `45437827419`, Preview `45437827570`, Full Math `45437827519`
+  עברו success על אותו HEAD. CI `45437827466`: Layout Audit עבר; Node 18/20/22
+  עדיין רצו בעת כתיבת העדכון.
+

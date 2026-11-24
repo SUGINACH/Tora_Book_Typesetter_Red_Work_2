@@ -208,14 +208,17 @@ HarfBuzz מבצע shaping לריצות שסופקו לו; הוא אינו מחל
   לפרויקט המוצר ולא שונה ה-Worker הקיים.
 
 ### תוצאת הריצה המאומתת
-- Workflow: `45435545265`; Artifact: `14939779342`;
-  commit: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
+- Workflow: `45437827475`; Artifact: `14942416493`;
+  commit: `61ed8c5c6a2133c6e0a28d375315fc5190b80b3a`.
 - תוצאה: `passed_with_raw_woff2_limitations; normalized_sfnt_supported`.
 - 11 מופעי גופן (7 SFNT מקוריים — כולל variable —, 2 WOFF2 גולמיים,
   ו-2 SFNT מנורמלים שנוצרו מהם); 5 מחרוזות עבריות מנוקדות לכל מופע;
   449 מופעי glyph בסך הכול.
 - `exactNodeParity=true`; SHA-256 של תוצאת ה-Node:
   `c6451373eb80366695d87c953b6594ab42d4f02ef9d278660f49b4ea6d903af4`.
+- WOFF2 normalization toolchain ננעלה ל-`fontTools==4.68.0` ו-
+  `brotli==1.2.1`; כל WOFF2 נורמל פעמיים לאותו קובץ פלט. שני ה-hashes
+  זהים בכל זוג הרצות, עם `deterministicBytes=true`.
   הפלט כולל לכל glyph: GID, cluster, flags, x/y advances, x/y offsets
   ו-outline path. בנוסף מושווים direction/script/language/features,
   unitsPerEm, צירי variation ומצב coverage.
@@ -239,6 +242,9 @@ HarfBuzz מבצע shaping לריצות שסופקו לו; הוא אינו מחל
   UPEM=1000; כיסוי מלא, 0 glyphs חסרים.
 - FrankBasic → `FrankBasic-1-regular.normalized.sfnt`, ‏51,140 bytes,
   UPEM=2048; כיסוי מלא, 0 glyphs חסרים.
+- Ambivalenti SFNT SHA-256 (שתי הרצות): `087d2a9edda23ae76163806838c508f14d658f283fb6dc8b3e09ba87eb0d1bf4`.
+- FrankBasic SFNT SHA-256 (שתי הרצות): `7a16211442d61632f124c99a00ff6f241c3d3fd109ae1968e5575e6d39226883`.
+- ה-SFNT נבדק בפועל פעמיים מתוך אותו WOFF2 source; `normalizedSha256 == repeatSha256` ו-byte buffers זהים. זו הוכחת byte-determinism עבור שני fixtures אלה, לא עדיין הוכחה לכל 1,315 המשפחות.
 
 כל שני ה-SFNT המנורמלים עוצבו עם רצפי GID/clusters/advances/offsets
 ו-outlines תקינים, וה-parity מול Node היה byte-for-byte. הנכסים המנורמלים
@@ -274,3 +280,12 @@ HarfBuzz מבצע shaping לריצות שסופקו לו; הוא אינו מחל
 ה-PoC נשאר harness בדיקה בלבד. אין `harfbuzzjs` ב-runtime dependencies,
 אין שינוי ב-`MeasureAPI`, ב-`build-worker-bundle.js), ב-PDF writer,
 ב-DOM renderer, ב-font registry, או בקובצי הקטלוג.
+
+
+### שער דטרמיניזם לנרמול WOFF2 — אומת ב-Artifact v4
+
+ה-runnable PoC נועל את כלי הנרמול ומבצע שתי המרות עצמאיות לכל מקור WOFF2,
+לאותו pipeline, לנתיבי temp נפרדים. הוא משווה את כל הבתים ואת SHA-256 של
+כל תוצר; כל mismatch נכשל את ה-workflow. Artifact `14942416493` הראה
+`deterministicBytes=true` לשני המקורות שנבדקו. הרחבת ההוכחה לכל קטלוג WOFF2
+עדיין נדרשת לפני שהנרמול יוגדר כ-build pipeline קנוני.
