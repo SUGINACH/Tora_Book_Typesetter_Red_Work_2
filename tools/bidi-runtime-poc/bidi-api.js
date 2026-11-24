@@ -6,6 +6,7 @@
   'use strict';
 
   const BASE_DIRECTION = Object.freeze({ ltr: 0, rtl: 1, auto: 2 });
+  const NEUTRAL_SCRIPTS = new Set(['Zyyy', 'Zinh', 'Zzzz', 'Zxxx']);
 
   function directionCode(direction) {
     if (!Object.prototype.hasOwnProperty.call(BASE_DIRECTION, direction)) {
@@ -71,6 +72,17 @@
     const freeOutput = requireFunction(exports, 'bidi_free_u32');
     const resolveRaw = requireFunction(exports, 'bidi_resolve');
     const visualRunsRaw = requireFunction(exports, 'bidi_line_visual_runs');
+    const graphemeScriptMapRaw = requireFunction(exports, 'bidi_grapheme_script_map');
+    const itemizerUnicodeVersion = [
+      requireFunction(exports, 'bidi_itemizer_unicode_version_major')(),
+      requireFunction(exports, 'bidi_itemizer_unicode_version_minor')(),
+      requireFunction(exports, 'bidi_itemizer_unicode_version_patch')()
+    ];
+    if (itemizerUnicodeVersion[0] !== 18 || itemizerUnicodeVersion[1] !== 0 ||
+        itemizerUnicodeVersion[2] !== 0) {
+      throw new Error('Grapheme/script data version must be Unicode 18.0.0; got ' +
+        itemizerUnicodeVersion.join('.'));
+    }
     const unicodeVersion = [
       requireFunction(exports, 'bidi_unicode_version_major')(),
       requireFunction(exports, 'bidi_unicode_version_minor')(),
@@ -106,9 +118,11 @@
       if (!pointer || !Number.isSafeInteger(outputLength) || outputLength < 2) {
         throw new Error('Invalid Bidi WASM output buffer');
       }
-      const result = Array.from(new Uint32Array(memory.buffer, pointer, outputLength));
-      freeOutput(pointer, outputLength);
-      return result;
+      try {
+        return Array.from(new Uint32Array(memory.buffer, pointer, outputLength));
+      } finally {
+        freeOutput(pointer, outputLength);
+      }
     }
 
     function resolve(text, baseDirection = 'auto') {
@@ -210,6 +224,362 @@
       });
     }
 
+    function scriptTagOf(value) {
+      const tag = String.fromCharCode(
+        (value >>> 24) & 0xFF,
+        (value >>> 16) & 0xFF,
+        (value >>> 8) & 0xFF,
+        value & 0xFF
+      );
+      if (!/^[A-Za-z]{4}$/.test(tag)) {
+        throw new Error('WASM returned an invalid ISO 15924 Script tag: ' + value);
+      }
+      return tag;
+    }
+
+    function intersectTags(sets) {
+      if (!sets.length) return [];
+      let result = new Set(sets[0]);
+      for (let i = 1; i < sets.length; i++) {
+        const allowed = new Set(sets[i]);
+        result = new Set([...result].filter((tag) => allowed.has(tag)));
+      }
+      return [...result].sort();
+    }
+
+    function resolveGraphemeScript(grapheme, scalars) {
+      const primary = [...new Set(scalars.map((scalar) => scalar.script)
+        .filter((script) => !NEUTRAL_SCRIPTS.has(script)))].sort();
+      const extensionSets = scalars
+        .map((scalar) => scalar.scriptExtensions.filter((script) => !NEUTRAL_SCRIPTS.has(script)))
+        .filter((set) => set.length > 0);
+      const candidates = intersectTags(extensionSets);
+
+      if (primary.length === 1) {
+        return {
+          script: primary[0],
+          status: 'strong',
+          candidates: candidates.length ? candidates : [primary[0]],
+          primaryScripts: primary
+        };
+      }
+      if (primary.length > 1) {
+        return {
+          script: null,
+          status: 'mixed-grapheme',
+          candidates,
+          primaryScripts: primary
+        };
+      }
+      if (candidates.length === 1) {
+        return {
+          script: candidates[0],
+          status: 'script-extension-singleton',
+          candidates,
+          primaryScripts: []
+        };
+      }
+      return {
+        script: null,
+        status: 'unresolved-common-inherited',
+        candidates,
+        primaryScripts: []
+      };
+    }
+
+    function resolveCommonInherited(graphemes) {
+      // Only graphemes with a single, unambiguous primary Script seed the context.
+      // Mixed-script graphemes are kept unresolved and do not contaminate neighbors.
+      for (let i = 0; i < graphemes.length; i++) {
+        const current = graphemes[i];
+        if (current.status !== 'unresolved-common-inherited') continue;
+
+        let left = null;
+        for (let j = i - 1; j >= 0; j--) {
+          if (graphemes[j].script) { left = graphemes[j].script; break; }
+        }
+        let right = null;
+        for (let j = i + 1; j < graphemes.length; j++) {
+          if (graphemes[j].script) { right = graphemes[j].script; break; }
+        }
+        const allowed = current.candidates;
+        const permits = (tag) => !allowed.length || allowed.includes(tag);
+        let chosen = null;
+        let status = null;
+
+        if (left && right) {
+          if (left === right && permits(left)) {
+            chosen = left;
+            status = 'context-both-sides';
+          } else if (left !== right && allowed.length) {
+            const leftAllowed = allowed.includes(left);
+            const rightAllowed = allowed.includes(right);
+            if (leftAllowed !== rightAllowed) {
+              chosen = leftAllowed ? left : right;
+              status = 'script-extensions-context';
+            }
+          }
+        } else {
+          const neighbor = left || right;
+          if (neighbor && permits(neighbor)) {
+            chosen = neighbor;
+            status = 'context-one-side';
+          }
+        }
+
+        if (chosen) {
+          current.script = chosen;
+          current.status = status;
+        }
+      }
+    }
+
+    function buildScriptRuns(graphemes) {
+      const runs = [];
+      for (const grapheme of graphemes) {
+        const key = [
+          grapheme.script || '?',
+          grapheme.direction || '?',
+          grapheme.status === 'mixed-grapheme' ? 'mixed' :
+            (grapheme.script ? 'resolved' : 'unresolved'),
+          grapheme.script ? '' : grapheme.candidates.join(',')
+        ].join('|');
+        const previous = runs[runs.length - 1];
+        if (previous && previous._key === key && previous.end === grapheme.start) {
+          previous.end = grapheme.end;
+          previous.graphemeEnd++;
+          previous.text += grapheme.text;
+          continue;
+        }
+        runs.push({
+          start: grapheme.start,
+          end: grapheme.end,
+          text: grapheme.text,
+          script: grapheme.script,
+          scriptStatus: grapheme.status,
+          scriptCandidates: grapheme.candidates.slice(),
+          direction: grapheme.direction || null,
+          bidiLevel: grapheme.bidiLevel,
+          graphemeStart: graphemes.indexOf(grapheme),
+          graphemeEnd: graphemes.indexOf(grapheme) + 1,
+          _key: key
+        });
+      }
+      for (const run of runs) delete run._key;
+      return runs;
+    }
+
+    function itemizeScripts(text, bidiResult = null) {
+      text = String(text);
+      const units = toUtf16Units(text);
+      if (bidiResult && (
+        bidiResult.utf16Length !== units.length ||
+        !Array.isArray(bidiResult.levels) ||
+        bidiResult.levels.length !== units.length
+      )) {
+        throw new Error('Bidi levels must describe the same UTF-16 source as script itemization');
+      }
+      if (units.length === 0) {
+        return {
+          text,
+          utf16Length: 0,
+          unicodeVersion: itemizerUnicodeVersion.join('.'),
+          graphemes: [],
+          scriptRuns: [],
+          diagnostics: []
+        };
+      }
+
+      return withInput(text, (pointer) => {
+        const outputPointer = graphemeScriptMapRaw(pointer, units.length);
+        if (!outputPointer) throw new Error('Unicode 18 grapheme/script itemizer rejected UTF-16 input');
+
+        const header = new Uint32Array(memory.buffer, outputPointer, 4);
+        const utf16Length = header[0];
+        const graphemeCount = header[1];
+        const scalarCount = header[2];
+        const extensionCount = header[3];
+        if (utf16Length !== units.length || graphemeCount > units.length ||
+            scalarCount > units.length || extensionCount > scalarCount * 64) {
+          // Header values are validated before allocating/copying the output array.
+          freeOutput(outputPointer, 4);
+          throw new Error('Unicode 18 itemizer returned unsafe output dimensions');
+        }
+        const outputLength = 4 + graphemeCount * 4 + scalarCount * 5 + extensionCount;
+        const values = copyAndFreeOutput(outputPointer, outputLength);
+        const graphemeTableStart = 4;
+        const scalarTableStart = graphemeTableStart + graphemeCount * 4;
+        const extensionTableStart = scalarTableStart + scalarCount * 5;
+
+        const scalars = [];
+        let expectedScalarStart = 0;
+        let expectedExtensionStart = 0;
+        for (let i = 0; i < scalarCount; i++) {
+          const offset = scalarTableStart + i * 5;
+          const start = values[offset];
+          const end = values[offset + 1];
+          const script = scriptTagOf(values[offset + 2]);
+          const extensionStart = values[offset + 3];
+          const extensionLength = values[offset + 4];
+          if (start !== expectedScalarStart || end <= start || end > units.length ||
+              (end - start !== 1 && end - start !== 2) ||
+              !isUtf16Boundary(units, start) || !isUtf16Boundary(units, end) ||
+              extensionStart !== expectedExtensionStart ||
+              extensionLength > extensionCount - extensionStart) {
+            throw new Error('Unicode 18 itemizer returned an invalid scalar range at index ' + i);
+          }
+          if (end - start === 1 && units[start] >= 0xD800 && units[start] <= 0xDFFF) {
+            throw new Error('Unicode 18 itemizer returned an isolated surrogate scalar');
+          }
+          if (end - start === 2 && !(
+            units[start] >= 0xD800 && units[start] <= 0xDBFF &&
+            units[start + 1] >= 0xDC00 && units[start + 1] <= 0xDFFF
+          )) {
+            throw new Error('Unicode 18 itemizer returned a non-scalar surrogate pair');
+          }
+          const scriptExtensions = [];
+          for (let j = 0; j < extensionLength; j++) {
+            scriptExtensions.push(scriptTagOf(values[extensionTableStart + extensionStart + j]));
+          }
+          scalars.push({ start, end, script, scriptExtensions });
+          expectedScalarStart = end;
+          expectedExtensionStart += extensionLength;
+        }
+        if (expectedScalarStart !== units.length || expectedExtensionStart !== extensionCount) {
+          throw new Error('Unicode 18 scalar/property tables do not cover their full source');
+        }
+
+        const graphemes = [];
+        let expectedStart = 0;
+        let expectedScalarIndex = 0;
+        for (let i = 0; i < graphemeCount; i++) {
+          const offset = graphemeTableStart + i * 4;
+          const start = values[offset];
+          const end = values[offset + 1];
+          const scalarStart = values[offset + 2];
+          const scalarEnd = values[offset + 3];
+          if (start !== expectedStart || end <= start || end > units.length ||
+              !isUtf16Boundary(units, start) || !isUtf16Boundary(units, end) ||
+              scalarStart !== expectedScalarIndex || scalarEnd <= scalarStart ||
+              scalarEnd > scalarCount || scalars[scalarStart].start !== start ||
+              scalars[scalarEnd - 1].end !== end) {
+            throw new Error('Unicode 18 itemizer returned an invalid grapheme range at index ' + i);
+          }
+          const clusterScalars = scalars.slice(scalarStart, scalarEnd);
+          const scriptInfo = resolveGraphemeScript(null, clusterScalars);
+          const cluster = {
+            start,
+            end,
+            text: text.slice(start, end),
+            scalarStart,
+            scalarEnd,
+            scalars: clusterScalars,
+            script: scriptInfo.script,
+            status: scriptInfo.status,
+            candidates: scriptInfo.candidates,
+            primaryScripts: scriptInfo.primaryScripts,
+            bidiLevel: null,
+            direction: null
+          };
+          if (bidiResult) {
+            const clusterLevels = [...new Set(bidiResult.levels.slice(start, end))];
+            if (clusterLevels.length === 1) {
+              cluster.bidiLevel = clusterLevels[0];
+              cluster.direction = cluster.bidiLevel % 2 ? 'rtl' : 'ltr';
+            } else {
+              cluster.status = cluster.status === 'mixed-grapheme'
+                ? cluster.status : 'bidi-level-conflict';
+            }
+          }
+          graphemes.push(cluster);
+          expectedStart = end;
+          expectedScalarIndex = scalarEnd;
+        }
+        if (expectedStart !== units.length || expectedScalarIndex !== scalarCount) {
+          throw new Error('Unicode 18 grapheme table does not cover its full source');
+        }
+
+        resolveCommonInherited(graphemes);
+        const diagnostics = [];
+        for (const grapheme of graphemes) {
+          if (grapheme.status === 'mixed-grapheme') {
+            diagnostics.push({
+              code: 'mixed-script-grapheme',
+              start: grapheme.start,
+              end: grapheme.end,
+              scripts: grapheme.primaryScripts
+            });
+          } else if (grapheme.status === 'bidi-level-conflict') {
+            diagnostics.push({
+              code: 'grapheme-bidi-level-conflict',
+              start: grapheme.start,
+              end: grapheme.end
+            });
+          } else if (!grapheme.script) {
+            diagnostics.push({
+              code: 'script-context-unresolved',
+              start: grapheme.start,
+              end: grapheme.end,
+              candidates: grapheme.candidates
+            });
+          }
+        }
+
+        return {
+          text,
+          utf16Length: units.length,
+          unicodeVersion: itemizerUnicodeVersion.join('.'),
+          graphemes,
+          scriptRuns: buildScriptRuns(graphemes),
+          diagnostics
+        };
+      });
+    }
+
+    function validateFontBoundaries(text, fontRanges) {
+      text = String(text);
+      if (!Array.isArray(fontRanges)) throw new TypeError('Font ranges must be an array');
+      const itemization = itemizeScripts(text);
+      const boundaries = new Set([0, itemization.utf16Length]);
+      for (const grapheme of itemization.graphemes) {
+        boundaries.add(grapheme.start);
+        boundaries.add(grapheme.end);
+      }
+      const diagnostics = [];
+      for (let i = 0; i < fontRanges.length; i++) {
+        const range = fontRanges[i];
+        if (!range || !Number.isSafeInteger(range.start) ||
+            !Number.isSafeInteger(range.end) || range.start < 0 ||
+            range.end < range.start || range.end > itemization.utf16Length) {
+          diagnostics.push({
+            code: 'invalid-font-range',
+            index: i,
+            range: range || null
+          });
+          continue;
+        }
+        for (const edge of ['start', 'end']) {
+          const offset = range[edge];
+          if (!boundaries.has(offset)) {
+            const grapheme = itemization.graphemes.find((item) =>
+              offset > item.start && offset < item.end);
+            diagnostics.push({
+              code: 'font-boundary-splits-grapheme',
+              index: i,
+              edge,
+              offset,
+              grapheme: grapheme ? { start: grapheme.start, end: grapheme.end, text: grapheme.text } : null
+            });
+          }
+        }
+      }
+      return {
+        ok: diagnostics.length === 0,
+        diagnostics,
+        graphemeCount: itemization.graphemes.length
+      };
+    }
+
     function logicalRunsForParagraph(paragraph, levels, units) {
       const runs = [];
       let index = paragraph.start;
@@ -295,6 +665,8 @@
       unicodeVersion: unicodeVersion.join('.'),
       resolve,
       lineVisualRuns,
+      itemizeScripts,
+      validateFontBoundaries,
       analyzeFixtures
     };
   }
