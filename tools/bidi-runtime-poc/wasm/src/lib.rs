@@ -193,12 +193,13 @@ pub unsafe extern "C" fn bidi_line_visual_runs(
 // Itemization ABI layout:
 // [utf16_len, grapheme_count, scalar_count, extension_count,
 //  graphemes: (start,end,scalar_start,scalar_end)*,
-//  scalars: (start,end,script_tag,extension_start,extension_count)*,
+//  scalars: (start,end,script_tag,is_mark,extension_start,extension_count)*,
 //  extension_script_tags...]
 //
 // Script tags are packed ISO 15924 four-byte ASCII values (e.g. Hebr, Latn,
 // Zyyy, Zinh). Grapheme and scalar offsets are UTF-16 code-unit offsets.
-// The data is raw Unicode Script + Script_Extensions; contextual assignment
+// The data is Unicode Script, General_Category mark membership (Mn/Me/Mc),
+// and Script_Extensions; contextual assignment
 // of Common/Inherited clusters is performed by the JS adapter and is never
 // allowed to move or split a grapheme boundary.
 #[no_mangle]

@@ -184,10 +184,10 @@ async function main() {
         JSON.stringify(firstHebrewGrapheme));
     }
 
-    const latinArabicMarkText = 'a\\u0650';
+    const latinArabicMarkText = String.fromCodePoint(0x0061, 0x0650);
     const latinArabicMark = runtime.itemizeScripts(latinArabicMarkText);
     const latinArabicMarkGrapheme = latinArabicMark.graphemes[0];
-    const dottedCircleArabicMarkText = '\\u25CC\\u0650';
+    const dottedCircleArabicMarkText = String.fromCodePoint(0x25CC, 0x0650);
     const dottedCircleArabicMark = runtime.itemizeScripts(dottedCircleArabicMarkText);
     const dottedCircleArabicMarkGrapheme = dottedCircleArabicMark.graphemes[0];
     if (!latinArabicMarkGrapheme || latinArabicMark.graphemes.length !== 1 ||

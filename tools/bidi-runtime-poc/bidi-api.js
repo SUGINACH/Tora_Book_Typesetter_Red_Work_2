@@ -281,7 +281,7 @@
         }
         return {
           script: primary[0],
-          status: effectiveScalar ? 'combining-sequence-base-script' : 'strong',
+          status: effectiveScalar ? 'combining-sequence-script-inheritance' : 'strong',
           candidates: candidates.length ? candidates : [primary[0]],
           primaryScripts: primary,
           fallbackScript: null
