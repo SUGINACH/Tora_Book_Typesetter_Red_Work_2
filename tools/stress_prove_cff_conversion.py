@@ -163,6 +163,64 @@ def outline_raster_metrics(alpha_source, alpha_converted, *, binary_threshold=12
     }
 
 
+def freetype_raster_metrics_only(
+    source_path: Path,
+    converted_path: Path,
+    gid: int,
+    codepoint: int,
+    source_lsb: int,
+    upem: int,
+) -> dict:
+    """Measure FreeType glyph placement for one severe LSB case without writing a contact sheet."""
+    from PIL import Image, ImageDraw, ImageFont
+    from fontTools.ttLib import TTFont
+
+    converted = TTFont(str(converted_path), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
+    legacy_path = converted_path.with_name(converted_path.stem + f".legacy-lsb-{gid}.ttf")
+    try:
+        order = converted.getGlyphOrder()
+        if gid < 0 or gid >= len(order):
+            raise ValueError(f"LSB raster GID {gid} is outside converted glyph order")
+        glyph_name = order[gid]
+        advance, converted_lsb = converted["hmtx"].metrics[glyph_name]
+        converted["hmtx"].metrics[glyph_name] = (int(advance), int(source_lsb))
+        converted.flavor = None
+        converted.save(str(legacy_path))
+    finally:
+        converted.close()
+
+    layout = getattr(ImageFont, "Layout", None)
+    layout_arg = {"layout_engine": layout.BASIC} if layout is not None else {}
+    size = max(512, int(upem))
+    canvas = max(2048, int(size * 1.8))
+    anchor = (int(canvas * 0.25), int(canvas * 0.72))
+    character = chr(codepoint)
+
+    def render(path: Path):
+        font = ImageFont.truetype(str(path), size=size, **layout_arg)
+        image = Image.new("L", (canvas, canvas), 0)
+        ImageDraw.Draw(image).text(anchor, character, font=font, fill=255, anchor="ls")
+        return image
+
+    try:
+        source_image = render(source_path)
+        legacy_image = render(legacy_path)
+        converted_image = render(converted_path)
+        return {
+            "status": "generated",
+            "gid": gid,
+            "glyphName": glyph_name,
+            "codepoint": f"U+{codepoint:04X}",
+            "renderSize": size,
+            "sourceLeftSideBearing": int(source_lsb),
+            "remappedLeftSideBearing": int(converted_lsb),
+            "sourceVsCopiedSourceLsb": outline_raster_metrics(source_image, legacy_image),
+            "sourceVsRemappedLsb": outline_raster_metrics(source_image, converted_image),
+        }
+    finally:
+        legacy_path.unlink(missing_ok=True)
+
+
 def verify_outline_raster_metric_contract() -> None:
     """Small deterministic self-check for the raster-difference metric."""
     from PIL import Image
@@ -501,6 +559,74 @@ def main():
                             src, output, int(worst_review['gid']), visual_dir,
                             'lsb-review-' + Path(rel).stem.replace(' ', '-'),
                         )
+            severe_candidates = [
+                candidate for candidate in row.get('sourceCurveLsbDiagnostics', [])
+                if abs(float(candidate['absoluteSourceCurveLsbOffset'])) >= 10.0
+            ]
+            row['severeSourceCurveLsbRasterReviews'] = []
+            if severe_candidates:
+                severe_label = 'lsb-severe-' + Path(rel).stem.replace(' ', '-').replace('/', '-')
+                source_render = None
+                try:
+                    source_render = decoded_cff_source_copy(src, tmp, severe_label)
+                    for candidate in severe_candidates:
+                        candidate_gid = int(candidate['gid'])
+                        cps = sorted(
+                            cp for cp, mapped_gid in cmap0.items()
+                            if mapped_gid == candidate_gid and cp not in (0x20, 0x09, 0x0A, 0x0D)
+                        )
+                        if cps:
+                            codepoint = next(
+                                (cp for cp in cps if 0x0590 <= cp <= 0x05FF),
+                                cps[0],
+                            )
+                            codepoint_mapping = 'unicode-cmap'
+                        elif candidate_gid == 0:
+                            # An unmapped sentinel forces FreeType to exercise the .notdef glyph.
+                            codepoint = 0x10FFFF
+                            codepoint_mapping = 'unmapped-sentinel-to-notdef'
+                        else:
+                            row['severeSourceCurveLsbRasterReviews'].append({
+                                'status': 'not-applicable-no-Unicode-mapping',
+                                'gid': candidate_gid,
+                                'glyphName': candidate['name'],
+                                'absoluteMetricDelta': float(candidate['absoluteSourceCurveLsbOffset']),
+                            })
+                            continue
+                        try:
+                            raster_review = freetype_raster_metrics_only(
+                                source_render,
+                                output,
+                                candidate_gid,
+                                codepoint,
+                                int(candidate['sourceLsb']),
+                                int(upem),
+                            )
+                            raster_review['codepointMapping'] = codepoint_mapping
+                            raster_review['absoluteMetricDelta'] = float(candidate['absoluteSourceCurveLsbOffset'])
+                            row['severeSourceCurveLsbRasterReviews'].append(raster_review)
+                        except Exception as severe_raster_exc:
+                            row['severeSourceCurveLsbRasterReviews'].append({
+                                'status': 'diagnostic-failed',
+                                'gid': candidate_gid,
+                                'glyphName': candidate['name'],
+                                'codepoint': f'U+{codepoint:04X}',
+                                'absoluteMetricDelta': float(candidate['absoluteSourceCurveLsbOffset']),
+                                'error': f'{type(severe_raster_exc).__name__}: {severe_raster_exc}',
+                            })
+                except Exception as severe_source_exc:
+                    for candidate in severe_candidates:
+                        row['severeSourceCurveLsbRasterReviews'].append({
+                            'status': 'diagnostic-failed',
+                            'gid': int(candidate['gid']),
+                            'glyphName': candidate['name'],
+                            'absoluteMetricDelta': float(candidate['absoluteSourceCurveLsbOffset']),
+                            'error': f'{type(severe_source_exc).__name__}: {severe_source_exc}',
+                        })
+                finally:
+                    if source_render is not None:
+                        source_render.unlink(missing_ok=True)
+
             if Path(rel).name == 'Ploni-Regular.ttf' and len(order) > 725:
                 target_gid = 725
                 target_name = order[target_gid]
@@ -783,6 +909,30 @@ def main():
         if (x.get('sourceCurveLsbRasterReview') or {}).get('status') != 'generated'
         and not (x.get('sourceCurveLsbGlyphComparison') or {}).get('svg')
     ]
+    severe_lsb_raster_reviews=[
+        {'file':row['file'],**review}
+        for row in cff_rows
+        for review in row.get('severeSourceCurveLsbRasterReviews',[])
+    ]
+    severe_lsb_raster_failures=[
+        review for review in severe_lsb_raster_reviews
+        if review.get('status')=='diagnostic-failed'
+    ]
+    severe_lsb_raster_excluded=[
+        review for review in severe_lsb_raster_reviews
+        if review.get('status')=='not-applicable-no-Unicode-mapping'
+    ]
+    severe_lsb_raster_missing=[
+        {'file':row['file'],'gid':int(candidate['gid'])}
+        for row in curve_lsb_diagnostic_rows
+        for candidate in row.get('sourceCurveLsbDiagnostics',[])
+        if abs(float(candidate['absoluteSourceCurveLsbOffset']))>=10.0
+        and not any(
+            int(review.get('gid',-1))==int(candidate['gid'])
+            and review.get('status') in ('generated','not-applicable-no-Unicode-mapping')
+            for review in row.get('severeSourceCurveLsbRasterReviews',[])
+        )
+    ]
     geometry_outlier_rows=[x for x in cff_rows if x.get('conversionBoundsOutlier')]
     geometry_raster_review_rows=[
         x for x in geometry_outlier_rows
@@ -808,6 +958,12 @@ def main():
         'sourceCurveLsbRasterComparisonCount':len(raster_review_rows),
         'sourceCurveLsbRasterDiagnosticFailureCount':len(raster_diagnostic_failures),
         'severeSourceCurveLsbDiagnosticCount':len(severe_curve_lsb_diagnostics),
+        'severeSourceCurveLsbRasterComparisonCount':sum(1 for x in severe_lsb_raster_reviews if x.get('status')=='generated'),
+        'severeSourceCurveLsbRasterDiagnosticFailureCount':len(severe_lsb_raster_failures),
+        'severeSourceCurveLsbRasterNotMappedCount':len(severe_lsb_raster_excluded),
+        'severeSourceCurveLsbRasterDiagnosticFailures':severe_lsb_raster_failures,
+        'severeSourceCurveLsbRasterEvidenceMissing':severe_lsb_raster_missing,
+        'severeSourceCurveLsbRasterReviews':severe_lsb_raster_reviews,
         'sourceCurveLsbDiagnostics':curve_lsb_diagnostics,
         'severeSourceCurveLsbDiagnostics':severe_curve_lsb_diagnostics,
         'rasterDiagnosticFailures':raster_diagnostic_failures,
@@ -825,11 +981,11 @@ def main():
         'failures':failures,
     }
     output=args.output if args.output.is_absolute() else root/args.output; output.parent.mkdir(parents=True,exist_ok=True); output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    summary_keys=('cffFontCount','passed','failureCount','sourceCurveLsbDiagnosticFontCount','sourceCurveLsbDiagnosticGlyphCount','sourceCurveLsbRasterComparisonCount','sourceCurveLsbRasterDiagnosticFailureCount','severeSourceCurveLsbDiagnosticCount','geometryOutlierFontCount','geometryRasterComparisonCount','geometryRasterDiagnosticFailureCount','maximumBoundsDelta','manualReviewRequired','massConversionApproved')
+    summary_keys=('cffFontCount','passed','failureCount','sourceCurveLsbDiagnosticFontCount','sourceCurveLsbDiagnosticGlyphCount','sourceCurveLsbRasterComparisonCount','sourceCurveLsbRasterDiagnosticFailureCount','severeSourceCurveLsbDiagnosticCount','severeSourceCurveLsbRasterComparisonCount','severeSourceCurveLsbRasterDiagnosticFailureCount','severeSourceCurveLsbRasterNotMappedCount','geometryOutlierFontCount','geometryRasterComparisonCount','geometryRasterDiagnosticFailureCount','maximumBoundsDelta','manualReviewRequired','massConversionApproved')
     summary={k:report[k] for k in summary_keys}
     summary['report']=str(output)
     print(json.dumps(summary,ensure_ascii=False,indent=2))
     # Automated structure, parser, subset, round-trip and raster-diagnostic
     # execution gates are distinct from the remaining manual visual-review set.
-    return 1 if failures or report['passed']!=report['cffFontCount'] or raster_diagnostic_failures or raster_evidence_missing or geometry_raster_diagnostic_failures or geometry_raster_evidence_missing else 0
+    return 1 if failures or report['passed']!=report['cffFontCount'] or raster_diagnostic_failures or raster_evidence_missing or geometry_raster_diagnostic_failures or geometry_raster_evidence_missing or severe_lsb_raster_failures or severe_lsb_raster_missing else 0
 if __name__=='__main__': sys.exit(main())
