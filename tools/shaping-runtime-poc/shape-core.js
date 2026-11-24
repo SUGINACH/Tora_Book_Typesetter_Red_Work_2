@@ -309,6 +309,210 @@
     };
   }
 
+
+  // Build HarfBuzz input with clusters supplied by the canonical itemizer.
+  // The caller provides the resolved ScriptRun plus its source graphemes;
+  // HarfBuzz must not run a second Unicode grapheme segmentation pass.
+  function buildExplicitClusterInput(sourceText, run, graphemes) {
+    sourceText = String(sourceText);
+    if (!run || !Number.isSafeInteger(run.start) || !Number.isSafeInteger(run.end) ||
+        run.start < 0 || run.end <= run.start || run.end > sourceText.length ||
+        typeof run.text !== 'string' || sourceText.slice(run.start, run.end) !== run.text) {
+      throw new TypeError('ScriptRun must identify an exact UTF-16 source range and text');
+    }
+    if (typeof run.script !== 'string' || !run.script ||
+        !['ltr', 'rtl'].includes(run.direction) ||
+        !Number.isSafeInteger(run.bidiLevel) || run.bidiLevel < 0 ||
+        (run.bidiLevel % 2 === 1) !== (run.direction === 'rtl')) {
+      throw new TypeError('ScriptRun requires explicit Script, direction, and consistent Bidi embedding level');
+    }
+    if (!Number.isSafeInteger(run.graphemeStart) || !Number.isSafeInteger(run.graphemeEnd) ||
+        run.graphemeStart < 0 || run.graphemeEnd <= run.graphemeStart ||
+        !Array.isArray(graphemes) || run.graphemeEnd > graphemes.length) {
+      throw new TypeError('ScriptRun grapheme indices are invalid');
+    }
+    if (run.start > 0xFFFFFFFF || run.end > 0xFFFFFFFF) {
+      throw new RangeError('HarfBuzz cluster indices exceed the uint32 cluster domain');
+    }
+
+    const runGraphemes = graphemes.slice(run.graphemeStart, run.graphemeEnd);
+    let expectedStart = run.start;
+    const scalarBoundaries = new Set([0, run.text.length]);
+    for (let offset = 0; offset < run.text.length;) {
+      scalarBoundaries.add(offset);
+      const codePoint = run.text.codePointAt(offset);
+      if (codePoint >= 0xD800 && codePoint <= 0xDFFF) {
+        throw new TypeError('ScriptRun contains ill-formed UTF-16 at offset ' + offset);
+      }
+      offset += codePoint > 0xFFFF ? 2 : 1;
+    }
+
+    const graphemeStarts = [];
+    for (let index = 0; index < runGraphemes.length; index++) {
+      const grapheme = runGraphemes[index];
+      if (!grapheme || grapheme.start !== expectedStart ||
+          !Number.isSafeInteger(grapheme.end) || grapheme.end <= grapheme.start ||
+          grapheme.end > run.end ||
+          !scalarBoundaries.has(grapheme.start - run.start) ||
+          !scalarBoundaries.has(grapheme.end - run.start) ||
+          sourceText.slice(grapheme.start, grapheme.end) !== grapheme.text ||
+          grapheme.shapeable !== true || grapheme.containsBidiControl ||
+          grapheme.isBidiControl ||
+          (Array.isArray(grapheme.scalars) && grapheme.scalars.some((scalar) => scalar.isBidiControl)) ||
+          grapheme.script !== run.script ||
+          grapheme.direction !== run.direction ||
+          grapheme.bidiLevel !== run.bidiLevel) {
+        throw new Error('Itemizer grapheme is not a contiguous shapeable member of the ScriptRun at index ' + index);
+      }
+      graphemeStarts.push(grapheme.start);
+      expectedStart = grapheme.end;
+    }
+    if (expectedStart !== run.end) {
+      throw new Error('Itemizer graphemes do not cover the complete ScriptRun');
+    }
+
+    const codepoints = [];
+    let offset = 0;
+    let graphemeIndex = 0;
+    while (offset < run.text.length) {
+      while (graphemeIndex + 1 < runGraphemes.length &&
+          offset + run.start >= runGraphemes[graphemeIndex].end) {
+        graphemeIndex++;
+      }
+      const codePoint = run.text.codePointAt(offset);
+      if (codePoint >= 0xD800 && codePoint <= 0xDFFF) {
+        throw new TypeError('Invalid Unicode scalar in ScriptRun at UTF-16 offset ' + offset);
+      }
+      codepoints.push({
+        codePoint,
+        cluster: graphemeStarts[graphemeIndex],
+        relativeOffset: offset
+      });
+      offset += codePoint > 0xFFFF ? 2 : 1;
+    }
+    if (codepoints.length === 0 || codepoints[0].cluster !== run.start) {
+      throw new Error('Explicit HarfBuzz cluster input does not start at the ScriptRun boundary');
+    }
+    return {
+      text: run.text,
+      sourceRange: { start: run.start, end: run.end },
+      script: run.script,
+      direction: run.direction,
+      bidiLevel: run.bidiLevel,
+      graphemeStarts,
+      codepoints
+    };
+  }
+
+  // Shape one already-itemized run. Cluster starts are supplied per scalar
+  // from the engine's graphemes and are validated on HarfBuzz output.
+  function shapeWithExplicitGraphemeClusters(hb, font, sourceText, run, graphemes, options = {}) {
+    if (!hb || typeof hb.shape !== 'function' || !hb.Buffer || !hb.ClusterLevel) {
+      throw new TypeError('A fully initialized HarfBuzzJS module is required');
+    }
+    if (!font || !Number.isSafeInteger(font.ptr)) {
+      throw new TypeError('An initialized HarfBuzz Font instance is required');
+    }
+    const language = options.language;
+    if (typeof language !== 'string' || !language.trim()) {
+      throw new TypeError('Language must be supplied explicitly; it is never inferred from Script');
+    }
+    if (!Array.isArray(options.features)) {
+      throw new TypeError('OpenType features must be supplied explicitly as an array');
+    }
+    const input = buildExplicitClusterInput(sourceText, run, graphemes);
+    const buffer = new hb.Buffer();
+    for (const item of input.codepoints) {
+      buffer.add(item.codePoint, item.cluster);
+    }
+    buffer.setDirection(run.direction === 'rtl' ? hb.Direction.RTL : hb.Direction.LTR);
+    buffer.setScript(run.script);
+    buffer.setLanguage(language);
+    // MONOTONE_CHARACTERS prevents HarfBuzz from discovering graphemes again.
+    // Every scalar already carries the canonical itemizer's EGC start.
+    buffer.setClusterLevel(hb.ClusterLevel.MONOTONE_CHARACTERS);
+    buffer.setFlags(Number.isSafeInteger(options.bufferFlags)
+      ? options.bufferFlags
+      : hb.BufferFlag.DEFAULT);
+    hb.shape(font, buffer, options.features);
+
+    const infos = buffer.getGlyphInfos();
+    const positions = buffer.getGlyphPositions();
+    if (!infos.length || infos.length !== positions.length) {
+      throw new Error('HarfBuzz returned an empty or inconsistent glyph/position result');
+    }
+    const allowedStarts = new Set(input.graphemeStarts);
+    const outputClusters = infos.map((info) => Number(info.cluster));
+    const invalidClusters = outputClusters.filter((cluster) =>
+      !Number.isSafeInteger(cluster) || !allowedStarts.has(cluster));
+    if (invalidClusters.length) {
+      throw new Error('HarfBuzz produced cluster starts inside or outside supplied grapheme boundaries: ' +
+        JSON.stringify({ invalidClusters, allowedStarts: input.graphemeStarts }));
+    }
+    if (!clustersMonotone(outputClusters, run.direction)) {
+      throw new Error('HarfBuzz output clusters are not monotone in the ScriptRun direction');
+    }
+    const localClusters = outputClusters.map((cluster) => cluster - run.start);
+    const clusterRanges = clusterSourceRanges(run.text, localClusters, run.start);
+    if (!clusterRanges.coversFullSource || clusterRanges.uncoveredPrefixLength !== 0) {
+      throw new Error('HarfBuzz shaped clusters do not cover the complete ScriptRun source range: ' +
+        JSON.stringify(clusterRanges));
+    }
+    const glyphs = infos.map((info, index) => {
+      const position = positions[index];
+      const gid = Number(info.codepoint);
+      const rawExtents = font.glyphExtents(gid);
+      const extents = rawExtents ? {
+        xBearing: Number(rawExtents.xBearing),
+        yBearing: Number(rawExtents.yBearing),
+        width: Number(rawExtents.width),
+        height: Number(rawExtents.height)
+      } : null;
+      const outline = font.glyphToPath(gid);
+      if (!Number.isSafeInteger(gid) || gid < 0 || typeof outline !== 'string') {
+        throw new Error('HarfBuzz returned an invalid glyph or missing outline for GID ' + gid);
+      }
+      if (extents && Object.values(extents).some((value) => !Number.isFinite(value))) {
+        throw new Error('HarfBuzz returned non-finite glyph extents for GID ' + gid);
+      }
+      return {
+        gid,
+        cluster: outputClusters[index],
+        sourceRange: clusterRanges.ranges[index],
+        flags: Number(info.flags),
+        xAdvance: Number(position.xAdvance),
+        yAdvance: Number(position.yAdvance),
+        xOffset: Number(position.xOffset),
+        yOffset: Number(position.yOffset),
+        glyphExtents: extents,
+        outline
+      };
+    });
+    return {
+      sourceRange: input.sourceRange,
+      text: input.text,
+      script: run.script,
+      direction: run.direction,
+      bidiLevel: run.bidiLevel,
+      language,
+      featureTags: options.featureTags || [],
+      clusterPolicy: 'canonical grapheme starts supplied via Buffer.add(codePoint, absoluteUtf16Cluster); HarfBuzz MONOTONE_CHARACTERS',
+      inputGraphemeStarts: input.graphemeStarts,
+      inputCodepointClusters: input.codepoints.map((item) => item.cluster),
+      outputClusters,
+      allOutputClustersAreInputGraphemeStarts: invalidClusters.length === 0,
+      clusterAudit: {
+        uniqueClusterCount: clusterRanges.uniqueClusterCount,
+        multiGlyphClusterCount: clusterRanges.multiGlyphClusterCount,
+        repeatedClusterGlyphCount: clusterRanges.repeatedClusterGlyphCount,
+        coversFullSource: clusterRanges.coversFullSource,
+        sourceStart: clusterRanges.sourceStart,
+        sourceEnd: clusterRanges.sourceEnd
+      },
+      glyphs
+    };
+  }
+
   function shapeWithHarfBuzz(hb, fontBytes, fixture) {
     if (!hb || typeof hb.shape !== 'function') throw new TypeError('HarfBuzz module is not initialized');
     if (!(fontBytes instanceof ArrayBuffer) && !ArrayBuffer.isView(fontBytes)) {
@@ -363,6 +567,39 @@
       .map(hexCodepoint);
 
     const features = FEATURE_TAGS.map((tag) => new hb.Feature(tag, 1));
+    let explicitClusterProbe = null;
+    if (missingCodepoints.length === 0) {
+      const explicitText = CASES[0];
+      const explicitRanges = [[0, 3], [3, 4], [4, 6], [6, 7]];
+      const explicitSourceStart = 37;
+      const explicitSource = 'x'.repeat(explicitSourceStart) + explicitText + 'tail';
+      const explicitGraphemes = explicitRanges.map(([start, end]) => ({
+        start: explicitSourceStart + start,
+        end: explicitSourceStart + end,
+        text: explicitText.slice(start, end),
+        script: 'Hebr',
+        direction: 'rtl',
+        bidiLevel: 1,
+        shapeable: true,
+        containsBidiControl: false,
+        isBidiControl: false,
+        scalars: []
+      }));
+      const explicitRun = {
+        start: explicitSourceStart,
+        end: explicitSourceStart + explicitText.length,
+        text: explicitText,
+        script: 'Hebr',
+        direction: 'rtl',
+        bidiLevel: 1,
+        graphemeStart: 0,
+        graphemeEnd: explicitGraphemes.length
+      };
+      explicitClusterProbe = shapeWithExplicitGraphemeClusters(
+        hb, font, explicitSource, explicitRun, explicitGraphemes,
+        { language: 'he', features, featureTags: FEATURE_TAGS.slice() }
+      );
+    }
     const shapedCases = [];
     let notdefGlyphCount = 0;
     for (const text of CASES) {
@@ -514,6 +751,7 @@
       variationMode: fixture.variationMode || 'default',
       axisInfos: axes,
       appliedVariations,
+      explicitClusterProbe,
       missingCodepoints,
       missingBaseCodepoints,
       missingMarkCodepoints,
@@ -527,6 +765,7 @@
 
   return {
     CASES, FEATURE_TAGS, UTF16_CLUSTER_PROBE_TEXT,
-    clusterSourceRanges, clustersMonotone, pathBoundsFromSvgPath, shapeWithHarfBuzz
+    clusterSourceRanges, clustersMonotone, pathBoundsFromSvgPath,
+    buildExplicitClusterInput, shapeWithExplicitGraphemeClusters, shapeWithHarfBuzz
   };
 });

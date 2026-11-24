@@ -410,6 +410,20 @@ async function main() {
         normalizedFrom: item.normalizedFrom,
         sourceOutlineFormat: item.sourceOutlineFormat,
         utf16ClusterProbe: item.utf16ClusterProbe,
+        explicitClusterProbe: item.explicitClusterProbe
+          ? {
+            sourceRange: item.explicitClusterProbe.sourceRange,
+            inputGraphemeStarts: item.explicitClusterProbe.inputGraphemeStarts,
+            inputCodepointClusters: item.explicitClusterProbe.inputCodepointClusters,
+            outputClusters: item.explicitClusterProbe.outputClusters,
+            allOutputClustersAreInputGraphemeStarts: item.explicitClusterProbe.allOutputClustersAreInputGraphemeStarts,
+            clusterAudit: item.explicitClusterProbe.clusterAudit,
+            glyphs: item.explicitClusterProbe.glyphs.map((glyph) => ({
+              gid: glyph.gid, cluster: glyph.cluster, sourceRange: glyph.sourceRange,
+              xAdvance: glyph.xAdvance, yAdvance: glyph.yAdvance,
+              xOffset: glyph.xOffset, yOffset: glyph.yOffset
+            }))
+          } : null,
         glyphExtentsCount: item.cases.reduce((count, testCase) =>
           count + testCase.glyphs.filter((glyph) => glyph.glyphExtents).length, 0),
         outlineSweep: item.outlineSweep,
@@ -429,6 +443,21 @@ async function main() {
         clusterAudits: item.cases.map((testCase) => testCase.clusterAudit)
       }))
     };
+    const invalidExplicitClusterFixtures = expected.filter((item) =>
+      item.coverageStatus === 'complete' && (
+        !item.explicitClusterProbe ||
+        item.explicitClusterProbe.allOutputClustersAreInputGraphemeStarts !== true ||
+        item.explicitClusterProbe.clusterAudit.coversFullSource !== true ||
+        item.explicitClusterProbe.inputGraphemeStarts.join(',') !== '37,40,41,43' ||
+        item.explicitClusterProbe.inputCodepointClusters.join(',') !== '37,37,37,40,41,41,43'
+      )
+    );
+    if (invalidExplicitClusterFixtures.length) {
+      throw new Error('HarfBuzz did not preserve engine-supplied grapheme clusters: ' +
+        JSON.stringify(invalidExplicitClusterFixtures.map((item) => ({
+          fontName: item.fontName, explicitClusterProbe: item.explicitClusterProbe
+        }))));
+    }
     const unsupportedFontFixtures = [];
     const invalidCoverageFixtures = [];
     for (let i = 0; i < expected.length; i++) {
@@ -468,6 +497,8 @@ async function main() {
     if (invalidCoverageFixtures.length) {
       throw new Error('Unexpected incomplete Hebrew shaping fixtures: ' + JSON.stringify(invalidCoverageFixtures));
     }
+    report.nodeReference.explicitClusterProbeFontCount = expected.filter((item) => item.explicitClusterProbe).length;
+    report.nodeReference.explicitClusterProbePassed = invalidExplicitClusterFixtures.length === 0;
     report.nodeReference.unsupportedFontFixtures = unsupportedFontFixtures;
     report.nodeReference.unsupportedFontCount = unsupportedFontFixtures.length;
     report.nodeReference.normalizedWoff2Fixtures = expected.filter((item) => item.normalizedFrom).map((item) => item.fontName);
