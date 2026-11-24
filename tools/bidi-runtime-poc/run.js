@@ -288,16 +288,28 @@ async function main() {
     const rightToLeftMarkIsNonShaping = Boolean(rightToLeftMark &&
       rightToLeftMark.isBidiControl && !rightToLeftMark.shapeable &&
       !rightToLeftMarkItemization.scriptRuns.some((item) => item.text.includes(rightToLeftMark.text)));
-    const joinerText = String.fromCodePoint(0x05D0, 0x200D, 0x05D1);
+    const joinerText = String.fromCodePoint(0x05D0, 0x200D, 0x05D1, 0x05D2, 0x200C, 0x05D3);
     const joinerItemization = runtime.itemizeScripts(joinerText, runtime.resolve(joinerText, 'rtl'));
-    const joiner = joinerItemization.graphemes.find((item) => item.text.includes(String.fromCodePoint(0x200D)));
+    const joinerCharacters = [0x200D, 0x200C].map((codePoint) => {
+      const text = String.fromCodePoint(codePoint);
+      return {
+        text,
+        grapheme: joinerItemization.graphemes.find((item) => item.text.includes(text)),
+        retainedInShapeRun: joinerItemization.scriptRuns.some((item) => item.text.includes(text))
+      };
+    });
     if (nestedBidiControlGraphemes.length !== 2 ||
         nestedBidiControlGraphemes.some((item) => item.shapeable || !item.isBidiControl) ||
         nestedBidiControlRuns.length !== 2 ||
         !nestedSourceRunsCoverSource ||
         !nestedScriptRunsExcludeBidiControls ||
         !rightToLeftMarkIsNonShaping ||
-        !joiner || joiner.containsBidiControl || joiner.isBidiControl) {
+        joinerCharacters.some((item) =>
+          !item.grapheme ||
+          item.grapheme.containsBidiControl ||
+          item.grapheme.isBidiControl ||
+          !item.grapheme.shapeable ||
+          !item.retainedInShapeRun)) {
       throw new Error('Bidi control/non-shaping partition contract failed: ' +
         JSON.stringify({
           nestedBidiControlGraphemes,
@@ -446,7 +458,7 @@ async function main() {
         scriptRunsExcludeBidiControls: nestedScriptRunsExcludeBidiControls,
         rightToLeftMark: rightToLeftMark,
         rightToLeftMarkIsNonShaping: rightToLeftMarkIsNonShaping,
-        joinerIsNotBidiControl: Boolean(joiner && !joiner.containsBidiControl)
+        joinersRemainShapeable: joinerCharacters
       },
       commonWhitespace: mixedSpace,
       pairedPunctuation: {
@@ -585,7 +597,13 @@ async function main() {
         nestedScriptRunsExcludeBidiControls &&
         rightToLeftMarkIsNonShaping,
       nonShapingSourcePartitionIsLossless: nestedSourceRunsCoverSource,
-      joinerIsNotBidiControl: Boolean(joiner && !joiner.containsBidiControl && !joiner.isBidiControl),
+      joinersAreNotBidiControlsAndRemainShapeable: joinerCharacters.length === 2 &&
+        joinerCharacters.every((item) =>
+          item.grapheme &&
+          !item.grapheme.containsBidiControl &&
+          !item.grapheme.isBidiControl &&
+          item.grapheme.shapeable &&
+          item.retainedInShapeRun),
       commonWhitespaceGetsContextualScript: mixedSpace.script === 'Hebr' &&
         mixedSpace.status === 'context-left-preferred' &&
         mixedScriptItemization.scriptRuns.every((run) => run.script != null),
