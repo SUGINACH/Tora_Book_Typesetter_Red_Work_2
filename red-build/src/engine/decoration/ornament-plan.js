@@ -108,8 +108,26 @@ function planPageOrnaments(pages, settings, measureFn, io = {}) {
           while (hEnd + 1 < col.length && col[hEnd + 1].kind === 'heading' && col[hEnd + 1].level === 2) hEnd++;
           return col.slice(h0, hEnd + 1);
         })();
-        const colX = tpl.columns[0].x, colW = tpl.columns[0].w;
-        const titleW = Math.max(1, ...titleLines.map(ln => lineWidthPx(ln, measureFn)));
+        // **Iteration-006 (G5/RC-E1 — מסגרת העיטורים של H2):** עד כאן העוגן האופקי
+        // היה תמיד טור-0 (הימני) — cx = מרכז הטור הימני. בפס חוצה-טורים (FWD-1 —
+        // כל פתיחות הסימן ב-IMUD) הכותרת ממורכזת בתיבת הפס (איחוד הטורים —
+        // אותה מסגרת כמו materialize::projectPage), והעיטורים נחתו בקצה ימין של
+        // הכותרת במקום מתחתיה/מעליה (נמדד: פירמידה במרכז 538px מול מרכז הכותרת
+        // 408px; שושנתא ב-550px; הרומחים בתוך טקסט הכותרת — חפיפת דיו בפועל).
+        // מסגרת אחת לכל ארבעת הסלוטים: פס חוצה-טורים ⇒ איחוד הטורים; כותרת בטור ⇒
+        // הטור שלה. אותה החלטה כמו projectPage (מקור יחיד למסגרת).
+        const isSpanBand = spanLines.length > 0;
+        const colX = isSpanBand
+          ? Math.min(...tpl.columns.map(c => c.x))
+          : tpl.columns[0].x;
+        const colW = isSpanBand
+          ? (Math.max(...tpl.columns.map(c => c.x + c.w)) - colX)
+          : tpl.columns[0].w;
+        // **G5/RC-E1 (המשך — מקור יחיד לרוחב הכותרת):** השורה נושאת את רוחבה
+        // שנמדד בגודלה שלה (widthPx/measureW מה-LineModel). מדידה חוזרת דרך
+        // measureFn מדדה בגודל הגוף (12pt) במקום גודל הכותרת (17pt) — הרומחים
+        // נצמדו לרוחב שגוי (~146px במקום ~249px) וחדרו לטקסט.
+        const titleW = Math.max(1, ...titleLines.map(ln => (ln.widthPx || ln.measureW || lineWidthPx(ln, measureFn))));
         // מקור יחיד למידות (F-09): ההזמנה שחושבה בזמן הפריסה — לא חישוב כפול כאן
         const orn = (spanLines.length && page.spanning.orn) || titleLines[0].h2Orn || null;
         const w = orn ? orn.ornW : Math.round(H2_ORN_W_EM * fontPx);
@@ -218,9 +236,26 @@ function planPageOrnaments(pages, settings, measureFn, io = {}) {
             semantic: 'beside-heading', relativeTo: 'heading',
             reservationMode: 'overlay', reservedPx: 0, reservationWhere: null
           };
-          pushOrnament(page, { kind: 'h2-ornament', slot: 'h2-side-right', kindStyle: settings['h2-orn-side'], x: Math.round(colX + colW - titleW - gap - w), y: titleTop + sideOrnamentOffsetY(titleH, sideH) + lift, w, h: sideH }, rejected, pi, settings, { ledger }, sideDecl);
-          pushOrnament(page, { kind: 'h2-ornament', slot: 'h2-side-left', kindStyle: settings['h2-orn-side'], x: Math.round(colX + titleW + gap), y: titleTop + sideOrnamentOffsetY(titleH, sideH) + lift, w, h: sideH }, rejected, pi, settings, { ledger }, sideDecl);
+          // **G5/RC-E1 (המשך):** הכותרות ממורכזות (U-15 — כותרת ⇒ center; נמדד
+          // בייחוס p44: הכותרת ממורכזת במסגרתה). הרומחים מקיפים את טקסט הכותרת
+          // משני צדיו: ימין = קצה הטקסט + רווח; שמאל = קצה הטקסט − רווח − רוחב.
+          // עד כאן הנוסחאות הניחו הצמדה לימין (colRight−titleW / colX+titleW) —
+          // בכותרת ממורכזת הרומח השמאלי נחת בתוך הטקסט (נמדד: רומח 346–396pt
+          // בתוך «קדושת...» 213–400pt — חפיפת דיו מלאה).
+          const textRight = cx + titleW / 2;
+          const textLeft = cx - titleW / 2;
+          const rightX = textRight + gap;
+          const leftX = textLeft - gap - w;
+          // **G5/RC-E1 (המשך — הכלה כמו המורשת):** רומח שחורג מהמסגרת ⇒ דחייה
+          // מתועדת ('title-too-wide'), לא ציור שקט מחוץ לפס (legacy-ornaments).
+          if (rightX + w <= colX + colW && leftX >= colX) {
+          pushOrnament(page, { kind: 'h2-ornament', slot: 'h2-side-right', kindStyle: settings['h2-orn-side'], x: Math.round(rightX), y: titleTop + sideOrnamentOffsetY(titleH, sideH) + lift, w, h: sideH }, rejected, pi, settings, { ledger }, sideDecl);
+          pushOrnament(page, { kind: 'h2-ornament', slot: 'h2-side-left', kindStyle: settings['h2-orn-side'], x: Math.round(leftX), y: titleTop + sideOrnamentOffsetY(titleH, sideH) + lift, w, h: sideH }, rejected, pi, settings, { ledger }, sideDecl);
           planted.h2Side += 2;
+          } else {
+            rejected.push({ page: pi, slot: 'h2-side', reason: 'title-too-wide', titleW: Math.round(titleW) });
+            if (ledger) ledger.create('ornament-rejected', `h2-side@p${pi}`, pi, { reason: 'title-too-wide', titleW: Math.round(titleW) }, 'ornaments');
+          }
         }
       }
     }
@@ -264,6 +299,15 @@ function planPageOrnaments(pages, settings, measureFn, io = {}) {
           const lift = sideOrnamentLiftPx(fontPx);
           const yy = yTop + sideOrnamentOffsetY(lineH, sideH) + lift;
           const wSide = Math.round(fontPx * 1.2);
+          // **Iteration-006 (G5/RC-E1 — H3 פס-באמצע-עמוד):** שורת פס-H3
+          // (h3Band — pushH3BandRecords) נושאת גיאומטריית עמוד מלאה בהקרנה
+          // (ממורכזת באיחוד הטורים — נמדד p44: טקסט 317–499px במרכז 408px), אך
+          // חיה בטור 0 לצורך התכנון. בלי זה המגילות נחתו בשולי הטור הימני
+          // (403/657px) — השמאלית בתוך טקסט הפס. המסגרת = איחוד הטורים, כמו
+          // הענף החוצה-טורים לעיל (אותה החלטה).
+          const bandLn = ln.h3Band === true;
+          const bLeft = bandLn ? Math.min(...tpl.columns.map(c => c.x)) : tpl.columns[c].x;
+          const bRight = bandLn ? Math.max(...tpl.columns.map(cc => cc.x + cc.w)) : (tpl.columns[c].x + tpl.columns[c].w);
           const h3ColDecl = {
             naturalW: wSide, naturalH: sideH,
             scale: sideH > 0 ? Math.min(sideH, lineH) / sideH : 1, fitMode: 'fit-to-line', fitReason: 'side-height-capped-by-line',
@@ -271,8 +315,8 @@ function planPageOrnaments(pages, settings, measureFn, io = {}) {
             semantic: 'beside-heading', relativeTo: 'heading',
             reservationMode: 'overlay', reservedPx: 0, reservationWhere: null
           };
-          pushOrnament(page, { kind: 'h3-side-ornament', slot: 'h3-side-right', kindStyle: settings['h3-side-orn'], x: Math.round(colX + colW - wSide), y: yy, w: wSide, h: Math.min(sideH, lineH) }, rejected, pi, settings, { ledger }, h3ColDecl);
-          pushOrnament(page, { kind: 'h3-side-ornament', slot: 'h3-side-left', kindStyle: settings['h3-side-orn'], x: Math.round(colX), y: yy, w: wSide, h: Math.min(sideH, lineH) }, rejected, pi, settings, { ledger }, h3ColDecl);
+          pushOrnament(page, { kind: 'h3-side-ornament', slot: 'h3-side-right', kindStyle: settings['h3-side-orn'], x: Math.round(bRight - wSide), y: yy, w: wSide, h: Math.min(sideH, lineH) }, rejected, pi, settings, { ledger }, h3ColDecl);
+          pushOrnament(page, { kind: 'h3-side-ornament', slot: 'h3-side-left', kindStyle: settings['h3-side-orn'], x: Math.round(bLeft), y: yy, w: wSide, h: Math.min(sideH, lineH) }, rejected, pi, settings, { ledger }, h3ColDecl);
           planted.h3Side += 2;
         }
       }
