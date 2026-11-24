@@ -48,9 +48,11 @@ def main():
                 bbox=getattr(source_cff_top,'FontBBox',None)
                 row['sourceCffFontMatrix']=[float(v) for v in matrix] if matrix else None
                 row['sourceCffFontBBox']=[float(v) for v in bbox] if bbox else None
-            source_bounds_by_gid = [glyph_bounds(f).get(name) for name in order]
+            order=list(f.getGlyphOrder())
+            source_bounds_by_name = glyph_bounds(f, prefer_cff=True)
+            source_bounds_by_gid = [source_bounds_by_name.get(name) for name in order]
             cmap0={int(cp):int(f.getGlyphID(n)) for cp,n in (f.getBestCmap() or {}).items()}
-            order=list(f.getGlyphOrder()); metrics0=[tuple(int(v) for v in f['hmtx'].metrics[n]) for n in order]
+            metrics0=[tuple(int(v) for v in f['hmtx'].metrics[n]) for n in order]
             upem=float(f['head'].unitsPerEm)
             tol=upem*MAX_ERR_EM
             geom=convert_cff_to_glyf(f,tol); row['maxBoundsDeltaFontUnits']=geom['maxBoundsDeltaFontUnits']; row['worstGlyph']=geom['worstGlyph']
