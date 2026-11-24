@@ -192,6 +192,19 @@ async function main() {
         JSON.stringify(mixedScriptItemization.scriptRuns));
     }
 
+    const arabicCommaText = 'مرحبا،عالم';
+    const arabicCommaItemization = runtime.itemizeScripts(
+      arabicCommaText,
+      runtime.resolve(arabicCommaText, 'rtl')
+    );
+    const arabicCommaGrapheme = arabicCommaItemization.graphemes.find((item) => item.text === '،');
+    if (!arabicCommaGrapheme || !arabicCommaGrapheme.candidates.includes('Arab') ||
+        arabicCommaGrapheme.script !== 'Arab' ||
+        arabicCommaGrapheme.status !== 'context-both-sides') {
+      throw new Error('Arabic comma Script_Extensions did not resolve to Arab from both neighbors: ' +
+        JSON.stringify(arabicCommaGrapheme));
+    }
+
     const badFontBoundary = runtime.validateFontBoundaries(hebrewMarkedText, [
       { start: 0, end: 1, fontId: 'font-a' },
       { start: 1, end: hebrewMarked.utf16Length, fontId: 'font-b' }
@@ -235,6 +248,7 @@ async function main() {
         combiningLatinCount: combiningLatin.graphemes.length
       },
       mixedScriptRuns: mixedScriptItemization.scriptRuns,
+      arabicScriptExtensions: arabicCommaGrapheme,
       fontBoundaryProbe: { bad: badFontBoundary, good: goodFontBoundary },
       fixtureItemizationsComplete: allFixtureItemizationsAreComplete(
         runtime.analyzeFixtures(fixtures).fixtures
@@ -328,6 +342,9 @@ async function main() {
       mixedScriptAndDirectionAreSeparated: seenScripts.has('Hebr') && seenScripts.has('Latn') &&
         mixedScriptItemization.scriptRuns.some((run) => run.script === 'Hebr' && run.direction === 'rtl') &&
         mixedScriptItemization.scriptRuns.some((run) => run.script === 'Latn' && run.direction === 'ltr'),
+      scriptExtensionsResolveFromContext: arabicCommaGrapheme.candidates.includes('Arab') &&
+        arabicCommaGrapheme.script === 'Arab' &&
+        arabicCommaGrapheme.status === 'context-both-sides',
       fontRunCannotSplitGrapheme: !badFontBoundary.ok &&
         badFontBoundary.diagnostics.some((item) => item.code === 'font-boundary-splits-grapheme') &&
         goodFontBoundary.ok,
