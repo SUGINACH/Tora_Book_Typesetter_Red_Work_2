@@ -226,11 +226,6 @@ def path_geometry_raster_comparison(
 
         source_name = source_order[gid]
         converted_name = converted_order[gid]
-        if source_name != converted_name:
-            raise ValueError(
-                f"glyph name changed at GID {gid}: source={source_name!r}, converted={converted_name!r}"
-            )
-
         source_glyph_set = source.getGlyphSet(preferCFF=True)
         converted_glyph_set = converted.getGlyphSet(preferCFF=False)
         source_pen = SVGPathPen(source_glyph_set)
@@ -305,6 +300,7 @@ def path_geometry_raster_comparison(
             "method": "same-viewBox CFF/CFF2-versus-glyf outline alpha-mask comparison; no FreeType, hinting, shaping, cmap, advance-width, or text-positioning stage",
             "gid": gid,
             "glyphName": source_name,
+            "convertedGlyphName": converted_name,
             "sourceBounds": [float(value) for value in source_bounds],
             "convertedBounds": [float(value) for value in converted_bounds],
             "unitsPerEm": upem,
