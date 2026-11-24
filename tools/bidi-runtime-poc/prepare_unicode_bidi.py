@@ -119,6 +119,20 @@ def main() -> None:
     if not match or tuple(map(int, match.groups())) != (17, 0, 0):
         raise SystemExit("Upstream Unicode data baseline changed; re-audit before regenerating")
 
+    # The upstream checkout may already contain Unicode 17 conformance data.
+    # Remove only generated/cached UCD inputs in this disposable clone so the
+    # upstream generator must download the exact Unicode 18.0.0 files.
+    for stale in (
+        root / "data" / "ucd" / "ReadMe.txt",
+        root / "data" / "ucd" / "UnicodeData.txt",
+        root / "data" / "ucd" / "BidiBrackets.txt",
+        root / "data" / "ucd" / "DerivedBidiClass.txt",
+        root / "tests" / "data" / "BidiTest.txt",
+        root / "tests" / "data" / "BidiCharacterTest.txt",
+    ):
+        if stale.is_file():
+            stale.unlink()
+
     generator = generator_path.read_text(encoding="utf-8")
     source_old = 'UNIDATA_SOURCE = "UNIDATA"'
     source_new = 'UNIDATA_SOURCE = "18.0.0/ucd"'
