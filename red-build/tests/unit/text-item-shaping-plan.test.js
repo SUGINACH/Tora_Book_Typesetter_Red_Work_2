@@ -34,8 +34,8 @@ function fakeItemizer(text, graphemes, scriptRuns, sourceRuns) {
 
 function makeResolver() {
   const records = {
-    'Frank Ruhl Libre': { fontId: 'fnt-11111111111111', unitsPerEm: 1000, font: { unitsPerEm: 1000, bytes: Uint8Array.from([1, 2, 3]) } },
-    'David Libre': { fontId: 'fnt-22222222222222', unitsPerEm: 2048, font: { unitsPerEm: 2048, bytes: Uint8Array.from([4, 5, 6]) } }
+    'Frank Ruhl Libre': { fontId: 'fnt-11111111111111', sourceHash: '1'.repeat(64), unitsPerEm: 1000, font: { unitsPerEm: 1000, bytes: Uint8Array.from([1, 2, 3]) } },
+    'David Libre': { fontId: 'fnt-22222222222222', sourceHash: '2'.repeat(64), unitsPerEm: 2048, font: { unitsPerEm: 2048, bytes: Uint8Array.from([4, 5, 6]) } }
   };
   return {
     resolveFont(alias, options) {
@@ -109,6 +109,7 @@ describe('TextItem Shaping Plan — paragraph itemization before word splitting'
       'coalesced shaping run preserves all original inline style run indexes');
     assertEq(plan.scriptRuns[0].text, text);
     assertEq(plan.scriptRuns[0].font.fontId, 'fnt-11111111111111');
+    assertEq(plan.scriptRuns[0].font.sourceHash, '1'.repeat(64));
     assertEq(plan.scriptRuns[0].features, FEATURES.Hebr);
     assertEq(plan.scriptRuns[0].graphemes.map((x) => [x.start, x.end]), [[100, 103], [103, 104], [104, 106], [106, 107]]);
     assertEq(plan.direction, 'rtl');

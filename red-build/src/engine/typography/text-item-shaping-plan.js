@@ -285,13 +285,15 @@ function createTextItemShapingPlan(item, options = {}) {
       fail('font-unavailable-for-shaping','Cannot create a ShapedRun for inline style run '+styleRun.index+': '+(resolution.message||'font bytes are unavailable'));
     }
     const fontId=requireString(resolution.fontId,'invalid-resolved-font','resolved fontId');
+    const sourceHash=requireString(resolution.record.sourceHash,'missing-font-source-hash','resolved font SHA-256');
+    if(!/^[0-9a-f]{64}$/i.test(sourceHash)) fail('invalid-font-source-hash','Resolved font sourceHash must be a 64-character SHA-256');
     const unitsPerEm=requireRange(resolution.record.unitsPerEm,'resolved font unitsPerEm',1);
     if(resolution.record.font.unitsPerEm!==unitsPerEm)
       fail('font-units-per-em-mismatch','FontResolver record and parsed font UPEM disagree for '+fontId);
     const variationAxes=normalizeAxes(variationAxesByFontId[fontId],fontId);
     const faceIndex=faceIndexByFontId[fontId]==null?0:requireRange(faceIndexByFontId[fontId],'faceIndexByFontId.'+fontId);
     resolvedStyleRuns[styleRunIndex]={
-      ...styleRun,requestedFamily,fontId,faceIndex,unitsPerEm,variationAxes,
+      ...styleRun,requestedFamily,fontId,sourceHash:sourceHash.toLowerCase(),faceIndex,unitsPerEm,variationAxes,
       fallbackUsed:!!resolution.fallbackUsed,
       fallbackChain:resolution.fallbackChain||[],
       diagnostics:resolution.diagnostics||[]
@@ -339,6 +341,7 @@ function createTextItemShapingPlan(item, options = {}) {
         })),
         font: {
           fontId: group.fontId,
+          sourceHash: group.sourceHash,
           faceIndex: group.faceIndex,
           unitsPerEm: group.unitsPerEm,
           variationAxes: group.variationAxes
@@ -358,13 +361,15 @@ function createTextItemShapingPlan(item, options = {}) {
       const canMerge = group &&
         group.graphemeEnd === graphemeIndex &&
         group.fontId === styleRun.fontId &&
+        group.sourceHash === styleRun.sourceHash &&
         group.faceIndex === styleRun.faceIndex &&
         JSON.stringify(group.variationAxes) === JSON.stringify(styleRun.variationAxes);
       if (!canMerge) {
         flush();
         group = {
           styleRunIndexes: [styleRunIndex],
-          fontId: styleRun.fontId, faceIndex: styleRun.faceIndex, unitsPerEm: styleRun.unitsPerEm,
+          fontId: styleRun.fontId, sourceHash: styleRun.sourceHash,
+          faceIndex: styleRun.faceIndex, unitsPerEm: styleRun.unitsPerEm,
           variationAxes: styleRun.variationAxes,
           fallbackUsed: styleRun.fallbackUsed,
           fallbackChains: styleRun.fallbackUsed ? [styleRun.fallbackChain] : [],

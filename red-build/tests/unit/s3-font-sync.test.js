@@ -40,6 +40,8 @@ describe('שלב 3 — רישום גופנים: מקור סמכות יחיד ו�
     fontResolver.clearFontResolver();
     const reg = fontResolver.registerFont('Frank Ruhl Libre', bytesOf('Frank Ruhl Libre'));
     assert(reg.ok, reg.message);
+    assert(/^[0-9a-f]{64}$/.test(reg.record.sourceHash), 'הרשומה שומרת SHA-256 מלא של בתי הגופן');
+    assertEq(reg.record.sourceHash.slice(0, 14), reg.fontId.slice(4), 'fontId נגזר מתחילת ה-SHA-256 המלא');
     assert(registeredFonts.has('Frank Ruhl Libre'), 'נרשם גם במרשמי measure-api');
     assertEq(resolveMeasureImpl({ 'body-font': 'Frank Ruhl Libre' }), 'font-metrics', 'EXT-13: גופן רשום ⇒ font-metrics');
     // אותה זהות תוכן בשני הצדדים
