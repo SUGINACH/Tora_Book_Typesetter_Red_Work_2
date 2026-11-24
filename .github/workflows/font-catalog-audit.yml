@@ -8,6 +8,7 @@ on:
       - '.github/workflows/font-catalog-audit.yml'
       - 'tools/audit_font_catalog.py'
       - 'tools/prove_font_conversion.py'
+      - 'tools/stress_prove_cff_conversion.py'
       - 'red-build/ui/assets/imud/imud-fonts.json'
       - 'red-build/ui/assets/imud/fonts-extended.json'
       - 'red-build/ui/assets/imud/fonts/**'
@@ -20,7 +21,7 @@ jobs:
   inventory:
     name: Audit all embedded IMUD font assets
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Checkout exact branch commit
         uses: actions/checkout@v4
@@ -37,11 +38,13 @@ jobs:
       - name: Install font decoding and inspection libraries
         run: python -m pip install --disable-pip-version-check fonttools==4.63.0 brotli==1.2.0 cairosvg==2.8.2
       - name: Compile font audit scripts before execution
-        run: python -m py_compile tools/audit_font_catalog.py tools/prove_font_conversion.py
+        run: python -m py_compile tools/audit_font_catalog.py tools/prove_font_conversion.py tools/stress_prove_cff_conversion.py
       - name: Audit core and extended catalogs
         run: python tools/audit_font_catalog.py --output "$GITHUB_WORKSPACE/artifacts/font-catalog-audit/report.json"
       - name: Prove WOFF2, CFF and variable-font conversion against production parser/subsetter
         run: python tools/prove_font_conversion.py --output "$GITHUB_WORKSPACE/artifacts/font-conversion-proof/report.json"
+      - name: Stress-prove all CFF catalog conversions
+        run: python tools/stress_prove_cff_conversion.py --output "$GITHUB_WORKSPACE/artifacts/cff-conversion-stress/report.json"
       - name: Upload complete font audit and conversion proof
         if: always()
         uses: actions/upload-artifact@v4
@@ -51,5 +54,6 @@ jobs:
             artifacts/font-catalog-audit/report.json
             artifacts/font-conversion-proof/report.json
             artifacts/font-conversion-proof/visuals/
+            artifacts/cff-conversion-stress/report.json
           if-no-files-found: ignore
           retention-days: 14
