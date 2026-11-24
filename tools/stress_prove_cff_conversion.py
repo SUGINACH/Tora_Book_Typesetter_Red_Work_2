@@ -349,12 +349,21 @@ def main():
             visual_dir = args.visual_dir if args.visual_dir.is_absolute() else root / args.visual_dir
             row['maxBoundsDeltaEm'] = row['maxBoundsDeltaFontUnits'] / upem
             row['maxBoundsDeltaOverTolerance'] = row['maxBoundsDeltaFontUnits'] / tol if tol else None
-            visual_outlier = row['maxBoundsDeltaEm'] >= 0.01
-            if visual_outlier and row.get('worstGlyph'):
+            raw_geometry_outlier = row['maxBoundsDeltaEm'] > MAX_ERR_EM
+            placement_outlier = row['maxGlyphSetPlacementDeltaEm'] > MAX_ERR_EM
+            visual_outlier = raw_geometry_outlier or placement_outlier
+            row['rawGeometryOutlier'] = raw_geometry_outlier
+            row['placementOutlier'] = placement_outlier
+            if visual_outlier:
                 label = 'outlier-' + Path(rel).stem.replace(' ', '-').replace('/', '-')
-                row['glyphComparisonArtifacts'] = write_glyph_comparison(
-                    src, output, int(row['worstGlyph']['gid']), visual_dir, label
-                )
+                if row.get('worstGlyph'):
+                    row['glyphComparisonArtifacts'] = write_glyph_comparison(
+                        src, output, int(row['worstGlyph']['gid']), visual_dir, label + '-geometry'
+                    )
+                if row.get('worstPlacementGlyph'):
+                    row['placementGlyphComparisonArtifacts'] = write_glyph_comparison(
+                        src, output, int(row['worstPlacementGlyph']['gid']), visual_dir, label + '-placement'
+                    )
                 # Experimental alternative: decompose CFF components before creating glyf contours.
                 try:
                     alt_font = TTFont(str(src), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
