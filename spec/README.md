@@ -49,3 +49,13 @@
 
 - [דוח בקרה מעמיקה — 19.11.2026](../audits/CATALOG_IMPLEMENTATION_COMPLETENESS_AUDIT_2026-11-19.md)
 - [קטלוג רכיבי המסמך והגדרות העימוד](קטלוג-רכיבי-מסמך-הגדרות-עימוד.html)
+
+
+## דוחות ביקורת טכניים עדכניים
+
+הדוחות הבאים הם ראיות וממצאים, לא תוכנית ביצוע חלופית. סדר העבודה המחייב
+נותר ב-`00_CURRENT_ENGINE_COMPLETION_PLAN.md`.
+
+- [CFF Geometry / Raster / LSB Review — 24.11.2026](../audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md)
+- [Shared Shaping Contract Gap — 24.11.2026](../audits/SHAPING_CONTRACT_GAP_2026-11-24.md)
+
