@@ -4518,3 +4518,71 @@ preview-engine-parity ✓ · full-math ‏FAIL ‏על ‏U-9 ‏בלבד + ‏I
 **גבולות נשמרו:** אפס שינויי מנוע/‏CSS; אף בקרה שלילית לא נותרה בקוד; לא
 בוצעו מיזוג/force-push/cutover; ‏main ‏ו-rescue לא נגעו. ‏Commits מופרדים:
 תיקון בדיקה · תיקון נתונים/סקריפט פורנזי · דוח+יומן.
+
+
+## 2026-11-24 — CFF Geometry/LSB, Shaping Contract ו-F7 source audit
+
+העבודה בוצעה בענף `engine/legacy-parity-preview-20261119` בלבד.
+HEAD בעת עדכון היומן: `b46973a8c223efc49049fe3ddcc080b6c668e229`.
+
+### אימות מצב והיסטוריית commits בסשן
+
+- בתחילת הסשן אומת HEAD `d71af82198cbae9c52853d30a20ae3222917e70f`.
+- CI/Preview/Corpus/Full Math על d71 הושלמו בהצלחה; מטריצת Node 18/20/22 ו-Layout Audit נבדקו ברמת jobs.
+- `cbfcc8c` — הוספת השוואת alpha-mask של קווי CFF מול glyf לאותו GID.
+- `c1222d2` — תיקון viewBox המשותף של SVG לרשת קואורדינטות מקומית חיובית.
+- `26e02e0` — הסרת תנאי שוויון שמות glyph; זהות ההשוואה היא GID יציב.
+- `797467f` — הרחבת בדיקות FreeType לכל אבחוני LSB חמורים (absolute delta ≥10).
+- `54e043c` — הוספת השוואת FreeType ישירה בין אותו מתאר glyf עם LSB מקור ועם LSB remapped.
+- `1528fab` — דוח פער חוזה Shaping בין מדידה, PageModel, DOM/HTML ו-PDF.
+- `b46973a` — דוח ראיות CFF Geometry/LSB מתוך Artifact v4.
+
+### CFF Artifact v4 — ראיות שנבדקו ישירות
+
+Run `45410445175` / Artifact `14928151801`, על commit `797467f`.
+ה-ZIP נפתח והדוח `cff-conversion-stress/report.json` נקרא מתוך ה-artifact.
+
+- קטלוג: 1,758 קובצי גופן; 380 גופני CFF; ‏380/380 המרות עברו; אפס כשלי המרה.
+- Curve/LSB diagnostics: ‏46 גופנים, 1,285 גליפים; 46 דגימות FreeType מייצגות הופקו.
+- Geometry outliers: ‏47; ‏47/47 raster comparisons הופקו ללא כשל.
+- LSB חריג חמור: ‏54 גליפים; ‏54/54 בדיקות FreeType הופקו; אפס כשלי יצירה ואפס unmapped.
+- Raster IoU: מינימום 0.978857, חציון 0.995055, ממוצע 0.993949, מקסימום 0.998892.
+- הפרש Raster מרבי: `Skechers-Regular.woff2`, GID 32; symmetric difference ratio ≈0.021143.
+- סטיית Bounding Box מרבית נשארה `Shluk-Regular.woff2`, GID 380, ‏0.001317186459em; IoU של הדגימה ≈0.995887.
+- FreeType source-CFF מול glyf עם LSB ישן: IoU חציוני ≈0.368336; עם LSB remapped: ≈0.994281.
+- 53 מתוך 54 אבחוני LSB החמורים נמצאים ב-`Likritz-Hebrew.woff2`; החריג הנוסף הוא GID 0 (.notdef) של `Ktav-Yad-Clm-Bold-Italic.woff2`.
+
+הדוח המלא והמתודולוגיה: `audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md`.
+
+### הגבלות ומצב אישור
+
+- השוואות Raster בוצעו לדגימת ה-worst GID בכל אחד מ-47 הגופנים, ולא לכל 1,285 הגליפים.
+- Raster Diff מבוסס CairoSVG alpha masks ב-3,072 px/em; אינו Hausdorff distance ואינו הוכחת שוויון Bézier אנליטית.
+- בדיקות FreeType החמורות הן glyph-level ברינדור BASIC; אינן בדיקות shaping של מחרוזת.
+- commit `54e043c` הוסיף השוואה ישירה של אותו glyf עם LSB ישן/חדש כדי לבודד את תרומת ה-LSB. בעת כתיבת יומן זה run `45411976892` עדיין הופיע in_progress, ולכן התוצאה הישירה טרם הוכרעה ולא נרשמה כהצלחה.
+- `manualReviewRequired=true`; `massConversionApproved=false`. לא שונה `MAX_ERR_EM`; לא הוחזר fallback אוטומטי של DecomposingPen; התוצרים אינם מופעלים בקטלוג.
+
+### Shaping — ממצא חוזה
+
+נוצר `audits/SHAPING_CONTRACT_GAP_2026-11-24.md`.
+הממצא מבוסס על קוד: MeasureAPI מודד תווים ו-kerning זוגי; ה-Line Items נוצרים לפני shaping; DOM/HTML שולחים מחרוזת Unicode לדפדפן אחרי קביעת תיבות; PDF מבצע Unicode→GID תו-אחר-תו; subsetter אינו מקבל GID/cluster כרשומה קנונית ואינו משמר mapping של ligature/cluster.
+HarfBuzzJS 1.6.4 מספק API shaping רלוונטי, אך הוא ESM עם top-level await ו-WASM נפרד, בעוד bundler הפרויקט הוא CommonJS פנימי ל-classic Worker. לא הוספה תלות ולא שונה מימוש; נדרשת הוכחת bundling/runtime זהה ב-Node וב-Worker לפני בחירה.
+
+### F7 — מיפוי מקור בלבד, ללא תיקון
+
+אומת בקוד:
+- `legacy-imud-flow.js` מוסיף `gapPx: 7` לכל יחידת paragraph שהוצבה, ומגדיל את cursor ב-7px לאחר כל חתיכת פסקה, גם כאשר הפסקה ממשיכה (סביב שורות 2332–2350; קיימת גם פליטת orphan-tail בשורות 1970–1974).
+- `dp-planner.js::pushLines` נותן `gapBeforePx` רק לשורה הראשונה של קריאת בלוק; `firstOfCall` מתאפס אחרי ההצבה הראשונה, פער בראש טור/עמוד מדוכא, ואחרי flush לעמוד חדש השורה הראשונה נכנסת בלי פער (סביב 405–465).
+- `column-flow.js::blockGapPx` גוזר פער יחסי מהגדרת `grid-block-gap-pct`; `normalizeColumnGaps` מדכא gap בראש טור (סביב 18–25 ו-45–47).
+- נתיב split ב-`dp-planner.js` שולח קטעים נפרדים ל-`pushLines` (סביב 1043–1075). משמעות הפיצול והאם gap הוא property של paragraph, fragment או block עדיין דורשת חוזה מפורש לפני שינוי.
+
+אין תיקון F7 בסשן זה. לא כופה מספר עמודים, לא שונו thresholds או מרווחי CSS, ולא הוכנסו חריגים מקומיים. F7 נשאר לאחר יציבות הגופנים וחוזה shaping.
+
+### מצב Actions בעת העדכון
+
+- על `797467f`: Full Math, Preview, Corpus, Font Catalog Audit ו-CI הושלמו success; פירוט CI כלל Node 18/20/22 ו-Layout Audit success.
+- על `54e043c`: Preview success, Corpus success, Full Math success; Font Catalog Audit ו-CI היו in_progress בבדיקה האחרונה.
+- על `1528fab`: Preview success, Corpus success; CI ו-Full Math היו in_progress בבדיקה האחרונה.
+- ה-HEAD עבר מאז ל-commits תיעודיים `1528fab` ו-`b46973a`; יש לבדוק את ה-runs העדכניים שלהם לפני מסקנה סופית.
+
+**גבולות:** כל הכתיבות נעשו לענף המוגדר בלבד. לא בוצעו merge, force-push או פעולות destructive. לא שונו main/rescue/legacy. P6/P7 לא נכללו; ערכת 40 ועיצובי השער המקוריים לא שונו.
