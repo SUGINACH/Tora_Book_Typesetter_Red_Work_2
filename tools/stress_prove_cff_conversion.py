@@ -225,6 +225,72 @@ def main():
             aligned_converted_bounds_by_gid=[aligned_converted_bounds.get(name) for name in converted_order]
             f.flavor=None; tmp=root/'artifacts/cff-conversion-stress/tmp'
             tmp.mkdir(parents=True,exist_ok=True); output=tmp/(hashlib.sha256(rel.encode()).hexdigest()+'.ttf'); f.save(str(output))
+            if row.get('sourceLeftPhantomPointReviewRequired'):
+                visual_dir = args.visual_dir if args.visual_dir.is_absolute() else root / args.visual_dir
+                reviews = sorted(
+                    row.get('sourceLeftPhantomPointReviews', []),
+                    key=lambda item: abs(float(item['absolutePlacementMetricDelta'])),
+                    reverse=True,
+                )
+                review_choice = None
+                for candidate in reviews:
+                    candidate_gid = int(candidate['gid'])
+                    cps = sorted(
+                        cp for cp, mapped_gid in cmap0.items()
+                        if mapped_gid == candidate_gid and cp not in (0x20, 0x09, 0x0A, 0x0D)
+                    )
+                    if cps:
+                        preferred = next((cp for cp in cps if 0x0590 <= cp <= 0x05FF), cps[0])
+                        review_choice = (candidate, preferred)
+                        break
+                if review_choice is not None:
+                    candidate, codepoint = review_choice
+                    label = 'lsb-review-' + Path(rel).stem.replace(' ', '-').replace('/', '-')
+                    row['sourceLeftPhantomPointRasterReview'] = {
+                        'status': 'pending-visual-review',
+                        'gid': int(candidate['gid']),
+                        'glyphName': candidate['name'],
+                        'codepoint': f'U+{codepoint:04X}',
+                        'sourceLeftSideBearing': int(candidate['sourceLsb']),
+                        'convertedLeftSideBearing': int(candidate['outputLsb']),
+                        'sourceLeftPhantomPoint': float(candidate['sourceLeftPhantomPoint']),
+                        'convertedLeftPhantomPoint': float(candidate['outputLeftPhantomPoint']),
+                        'absoluteMetricDelta': float(candidate['absolutePlacementMetricDelta']),
+                    }
+                    source_render = None
+                    try:
+                        source_render = decoded_cff_source_copy(src, tmp, label)
+                        raster = freetype_raster_comparison(
+                            source_render,
+                            output,
+                            int(candidate['gid']),
+                            int(codepoint),
+                            int(candidate['sourceLsb']),
+                            int(upem),
+                            visual_dir,
+                            label,
+                        )
+                        raster['status'] = 'generated-pending-review'
+                        row['sourceLeftPhantomPointRasterReview'].update(raster)
+                    except Exception as raster_exc:
+                        row['sourceLeftPhantomPointRasterReview'].update({
+                            'status': 'diagnostic-failed',
+                            'error': f'{type(raster_exc).__name__}: {raster_exc}',
+                        })
+                    finally:
+                        if source_render is not None:
+                            source_render.unlink(missing_ok=True)
+                else:
+                    row['sourceLeftPhantomPointRasterReview'] = {
+                        'status': 'no-unicode-glyph-for-review',
+                        'reason': 'No non-whitespace Unicode codepoint maps to any flagged GID',
+                    }
+                    worst_review = row.get('worstSourceLeftPhantomPointReview')
+                    if worst_review:
+                        row['sourceLeftPhantomPointGlyphComparison'] = write_glyph_comparison(
+                            src, output, int(worst_review['gid']), visual_dir,
+                            'lsb-review-' + Path(rel).stem.replace(' ', '-'),
+                        )
             if Path(rel).name == 'Ploni-Regular.ttf' and len(order) > 725:
                 target_gid = 725
                 target_name = order[target_gid]
