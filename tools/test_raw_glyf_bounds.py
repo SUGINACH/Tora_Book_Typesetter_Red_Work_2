@@ -83,7 +83,7 @@ def main() -> int:
         assert max(abs(a - b) for a, b in zip(differences, (translation, 0.0, translation, 0.0))) < 1e-9, differences
 
         # Treat the raw outline as the CFF curve geometry. Conversion must
-        # move the TrueType LSB so the left phantom point is retained.
+        # move the TrueType LSB so the curve-origin/control-box LSB relation is retained.
         source_bounds = raw_glyf_bounds(font)
         source_metrics = {
             name: tuple(int(v) for v in font["hmtx"].metrics[name])
@@ -92,14 +92,15 @@ def main() -> int:
         remap = reconcile_cff_metrics_for_glyf(font, source_bounds, source_metrics)
         remapped_lsb = int(font["hmtx"].metrics["offcurve-test"][1])
         remapped_translation = remapped_lsb - int(font["glyf"]["offcurve-test"].xMin)
-        source_pp1 = source_bounds["offcurve-test"][0] - source_metrics["offcurve-test"][1]
-        output_pp1 = font["glyf"]["offcurve-test"].xMin - remapped_lsb
+        source_curve_origin_offset = source_bounds["offcurve-test"][0] - source_metrics["offcurve-test"][1]
+        output_control_box_offset = font["glyf"]["offcurve-test"].xMin - remapped_lsb
         raw_remapped = raw_glyf_bounds(font)["offcurve-test"]
         aligned_remapped = glyph_bounds(font, prefer_cff=False)["offcurve-test"]
 
         assert remapped_lsb == -72, remapped_lsb
         assert remapped_translation == 0, remapped_translation
-        assert abs(source_pp1 - output_pp1) < 1e-9, (source_pp1, output_pp1)
+        assert abs(source_curve_origin_offset) < 1e-9, source_curve_origin_offset
+        assert abs(output_control_box_offset) < 1e-9, output_control_box_offset
         assert raw_remapped == raw_before, (raw_before, raw_remapped)
         assert aligned_remapped == raw_before, (raw_before, aligned_remapped)
         assert int(font["hmtx"].metrics["offcurve-test"][0]) == 611
@@ -120,8 +121,8 @@ def main() -> int:
         fractional_review = reconcile_cff_metrics_for_glyf(
             font, fractional_source_bounds, source_metrics
         )
-        assert fractional_review["sourcePlacementReviewCount"] == 1, fractional_review
-        assert abs(fractional_review["worstSourcePlacementReview"]["absolutePlacementMetricDelta"] - 0.875) < 1e-9
+        assert fractional_review["sourceCurveLsbDiagnosticCount"] == 1, fractional_review
+        assert abs(fractional_review["worstSourceCurveLsbDiagnostic"]["absoluteSourceCurveLsbOffset"] - 0.875) < 1e-9
         assert int(font["hmtx"].metrics["offcurve-test"][1]) == -72
 
         # Large source CFF/LSB discrepancies are also retained explicitly and
@@ -131,9 +132,9 @@ def main() -> int:
         severe_review = reconcile_cff_metrics_for_glyf(
             font, severe_source_bounds, source_metrics
         )
-        assert severe_review["sourcePlacementReviewCount"] == 1, severe_review
-        assert abs(severe_review["worstSourcePlacementReview"]["absolutePlacementMetricDelta"] - 50.0) < 1e-9
-        assert severe_review["worstSourcePlacementReview"]["gid"] == 1
+        assert severe_review["sourceCurveLsbDiagnosticCount"] == 1, severe_review
+        assert abs(severe_review["worstSourceCurveLsbDiagnostic"]["absoluteSourceCurveLsbOffset"] - 50.0) < 1e-9
+        assert severe_review["worstSourceCurveLsbDiagnostic"]["gid"] == 1
 
         font.save(path)
         font.close()
@@ -162,20 +163,21 @@ def main() -> int:
         report = {
             "status": "passed",
             "upem": upem,
-            "controlPointXMin": -72,
+            "trueCurveXMin": 39,
+            "offCurveControlPointXMin": -72,
             "actualCurveBoundsBeforeAndAfterSave": [float(v) for v in raw_after],
             "glyphSetAlignedBoundsBeforeAndAfterSave": [float(v) for v in aligned_after],
             "sourceLsb": lsb,
             "outputLsb": remapped_lsb,
-            "storedGlyfXMin": -72,
+            "storedGlyfControlBoxXMin": -72,
             "legacyGlyphSetTranslation": translation,
             "outputGlyphSetTranslation": remapped_translation,
-            "leftPhantomPointBefore": source_pp1,
-            "leftPhantomPointAfter": output_pp1,
+            "sourceCurveXMinMinusSourceLsb": source_curve_origin_offset,
+            "outputGlyfControlXMinMinusOutputLsb": output_control_box_offset,
             "metricsRemapping": remap,
-            "fractionalSourceMetricReview": fractional_review,
-            "largeSourceMetricReview": severe_review,
-            "regression": "raw outline preserved; off-curve glyf LSB remapping is verified, while CFF curve-bound/hmtx fractional or severe discrepancies are retained as explicit visual-review diagnostics",
+            "fractionalSourceCurveLsbDiagnostic": fractional_review,
+            "largeSourceCurveLsbDiagnostic": severe_review,
+            "regression": "raw converted outline is stable across save/load; TrueType LSB matches the stored glyf control box, while source CFF curve bounds versus old LSB remain a separately named diagnostic rather than an equality gate",
         }
         print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0

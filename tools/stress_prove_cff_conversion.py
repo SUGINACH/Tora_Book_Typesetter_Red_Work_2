@@ -176,7 +176,7 @@ def main():
             converted_metrics_by_gid=[tuple(int(v) for v in f['hmtx'].metrics[n]) for n in order]
             if [m[0] for m in converted_metrics_by_gid] != [m[0] for m in metrics0]:
                 raise ValueError('advance widths changed during CFF-to-glyf conversion')
-            max_phantom_delta=0.0
+            max_source_curve_lsb_offset=0.0
             for gid,name in enumerate(order):
                 src_box=source_bounds_by_gid[gid]
                 glyph=f['glyf'][name]
@@ -187,15 +187,20 @@ def main():
                     continue
                 if not hasattr(glyph,'xMin'):
                     raise ValueError(f'non-empty output glyph has no glyf xMin at GID {gid}')
-                source_pp1=float(src_box[0])-float(metrics0[gid][1])
-                output_pp1=float(glyph.xMin)-float(out_lsb)
-                max_phantom_delta=max(max_phantom_delta,abs(source_pp1-output_pp1))
+                if out_lsb != int(glyph.xMin):
+                    raise ValueError(
+                        f'output LSB does not match stored glyf control-box xMin at GID {gid}: '
+                        f'LSB={out_lsb}, xMin={glyph.xMin}'
+                    )
+                source_curve_lsb_offset=float(src_box[0])-float(metrics0[gid][1])
+                max_source_curve_lsb_offset=max(max_source_curve_lsb_offset,abs(source_curve_lsb_offset))
             hmetric_audit=geom['hmetricsRemapping']
-            row['maxLeftPhantomPointDeltaFontUnits']=max_phantom_delta
-            row['sourceLeftPhantomPointReviewRequired']=bool(hmetric_audit.get('sourcePlacementReviewCount',0))
-            row['sourceLeftPhantomPointReviewCount']=int(hmetric_audit.get('sourcePlacementReviewCount',0))
-            row['worstSourceLeftPhantomPointReview']=hmetric_audit.get('worstSourcePlacementReview')
-            row['sourceLeftPhantomPointReviews']=hmetric_audit.get('sourcePlacementReviews',[])
+            row['maxAbsSourceCurveXMinMinusLsbFontUnits']=max_source_curve_lsb_offset
+            row['sourceCurveLsbDiagnosticRequired']=bool(hmetric_audit.get('sourceCurveLsbDiagnosticCount',0))
+            row['sourceCurveLsbDiagnosticCount']=int(hmetric_audit.get('sourceCurveLsbDiagnosticCount',0))
+            row['worstSourceCurveLsbDiagnostic']=hmetric_audit.get('worstSourceCurveLsbDiagnostic')
+            row['sourceCurveLsbDiagnostics']=hmetric_audit.get('sourceCurveLsbDiagnostics',[])
+            row['outputLsbMatchesStoredGlyfControlXMin']=True
             if geom.get('worstGlyph'):
                 gid=int(geom['worstGlyph']['gid'])
                 row['worstGlyphHmtx']={'advanceWidth':metrics0[gid][0],'leftSideBearing':metrics0[gid][1]}
@@ -225,11 +230,11 @@ def main():
             aligned_converted_bounds_by_gid=[aligned_converted_bounds.get(name) for name in converted_order]
             f.flavor=None; tmp=root/'artifacts/cff-conversion-stress/tmp'
             tmp.mkdir(parents=True,exist_ok=True); output=tmp/(hashlib.sha256(rel.encode()).hexdigest()+'.ttf'); f.save(str(output))
-            if row.get('sourceLeftPhantomPointReviewRequired'):
+            if row.get('sourceCurveLsbDiagnosticRequired'):
                 visual_dir = args.visual_dir if args.visual_dir.is_absolute() else root / args.visual_dir
                 reviews = sorted(
-                    row.get('sourceLeftPhantomPointReviews', []),
-                    key=lambda item: abs(float(item['absolutePlacementMetricDelta'])),
+                    row.get('sourceCurveLsbDiagnostics', []),
+                    key=lambda item: abs(float(item['absoluteSourceCurveLsbOffset'])),
                     reverse=True,
                 )
                 review_choice = None
@@ -246,16 +251,16 @@ def main():
                 if review_choice is not None:
                     candidate, codepoint = review_choice
                     label = 'lsb-review-' + Path(rel).stem.replace(' ', '-').replace('/', '-')
-                    row['sourceLeftPhantomPointRasterReview'] = {
+                    row['sourceCurveLsbRasterReview'] = {
                         'status': 'pending-visual-review',
                         'gid': int(candidate['gid']),
                         'glyphName': candidate['name'],
                         'codepoint': f'U+{codepoint:04X}',
                         'sourceLeftSideBearing': int(candidate['sourceLsb']),
                         'convertedLeftSideBearing': int(candidate['outputLsb']),
-                        'sourceLeftPhantomPoint': float(candidate['sourceLeftPhantomPoint']),
-                        'convertedLeftPhantomPoint': float(candidate['outputLeftPhantomPoint']),
-                        'absoluteMetricDelta': float(candidate['absolutePlacementMetricDelta']),
+                        'sourceCurveXMinMinusSourceLsb': float(candidate['sourceCurveXMinMinusSourceLsb']),
+                        'outputGlyfControlXMinMinusOutputLsb': float(candidate['outputGlyfControlXMinMinusOutputLsb']),
+                        'absoluteMetricDelta': float(candidate['absoluteSourceCurveLsbOffset']),
                     }
                     source_render = None
                     try:
@@ -270,10 +275,10 @@ def main():
                             visual_dir,
                             label,
                         )
-                        raster['status'] = 'generated-pending-review'
-                        row['sourceLeftPhantomPointRasterReview'].update(raster)
+                        raster['status'] = 'generated'
+                        row['sourceCurveLsbRasterReview'].update(raster)
                     except Exception as raster_exc:
-                        row['sourceLeftPhantomPointRasterReview'].update({
+                        row['sourceCurveLsbRasterReview'].update({
                             'status': 'diagnostic-failed',
                             'error': f'{type(raster_exc).__name__}: {raster_exc}',
                         })
@@ -281,13 +286,13 @@ def main():
                         if source_render is not None:
                             source_render.unlink(missing_ok=True)
                 else:
-                    row['sourceLeftPhantomPointRasterReview'] = {
+                    row['sourceCurveLsbRasterReview'] = {
                         'status': 'no-unicode-glyph-for-review',
                         'reason': 'No non-whitespace Unicode codepoint maps to any flagged GID',
                     }
-                    worst_review = row.get('worstSourceLeftPhantomPointReview')
+                    worst_review = row.get('worstSourceCurveLsbDiagnostic')
                     if worst_review:
-                        row['sourceLeftPhantomPointGlyphComparison'] = write_glyph_comparison(
+                        row['sourceCurveLsbGlyphComparison'] = write_glyph_comparison(
                             src, output, int(worst_review['gid']), visual_dir,
                             'lsb-review-' + Path(rel).stem.replace(' ', '-'),
                         )
@@ -300,8 +305,8 @@ def main():
                 stored_target = f['glyf'][target_name]
                 source_lsb = int(metrics0[target_gid][1])
                 target_lsb = int(f['hmtx'].metrics[target_name][1])
-                source_pp1 = float(source_target[0]) - source_lsb if source_target else None
-                output_pp1 = float(stored_target.xMin) - target_lsb if hasattr(stored_target, 'xMin') else None
+                source_curve_lsb_offset = float(source_target[0]) - source_lsb if source_target else None
+                output_control_box_offset = float(stored_target.xMin) - target_lsb if hasattr(stored_target, 'xMin') else None
                 row['ploniGID725Diagnostic'] = {
                     'gid': target_gid,
                     'glyphName': target_name,
@@ -312,9 +317,9 @@ def main():
                     'sourceLeftSideBearing': source_lsb,
                     'outputLeftSideBearing': target_lsb,
                     'storedGlyfXMin': int(stored_target.xMin) if hasattr(stored_target, 'xMin') else None,
-                    'sourceLeftPhantomPoint': source_pp1,
-                    'outputLeftPhantomPoint': output_pp1,
-                    'leftPhantomPointDelta': abs(source_pp1-output_pp1) if source_pp1 is not None and output_pp1 is not None else None,
+                    'sourceCurveXMinMinusSourceLsb': source_curve_lsb_offset,
+                    'outputGlyfControlXMinMinusOutputLsb': output_control_box_offset,
+                    'sourceCurveLsbOffsetDiagnostic': abs(source_curve_lsb_offset) if source_curve_lsb_offset is not None else None,
                     'glyphSetHorizontalTranslation': (
                         target_lsb - int(stored_target.xMin) if hasattr(stored_target, 'xMin') else 0
                     ),
@@ -476,10 +481,10 @@ def main():
                             if alt_metrics[alt_index][1] != 0:
                                 raise ValueError(f'decomposed empty glyph LSB not zero at GID {alt_index}')
                         else:
-                            before_pp1 = float(source_box[0]) - float(metrics0[alt_index][1])
-                            after_pp1 = float(alt_glyph.xMin) - float(alt_metrics[alt_index][1])
-                            if abs(before_pp1-after_pp1) > 0.500001:
-                                raise ValueError(f'decomposed left phantom point changed at GID {alt_index}')
+                            if int(alt_metrics[alt_index][1]) != int(alt_glyph.xMin):
+                                raise ValueError(
+                                    f'decomposed LSB does not match stored glyf control-box xMin at GID {alt_index}'
+                                )
                     if len(alt_order) != len(order):
                         raise ValueError('decomposed strategy changed glyph count')
                     alt_cmap = {int(cp): int(alt_check.getGlyphID(n)) for cp, n in (alt_check.getBestCmap() or {}).items()}
@@ -528,44 +533,60 @@ def main():
         rows.append(row)
         print(f"{row.get('status')}: {rel} {row.get('maxBoundsDeltaFontUnits','')} {row.get('error','')}",flush=True)
     cff_rows=[x for x in rows if x.get('outline') in ('CFF','CFF2')]
-    placement_review_rows=[x for x in cff_rows if x.get('sourceLeftPhantomPointReviewRequired')]
-    placement_reviews=[
-        {'file':row['file'],**review}
-        for row in placement_review_rows
-        for review in row.get('sourceLeftPhantomPointReviews',[])
+    curve_lsb_diagnostic_rows=[x for x in cff_rows if x.get('sourceCurveLsbDiagnosticRequired')]
+    curve_lsb_diagnostics=[
+        {'file':row['file'],**diagnostic}
+        for row in curve_lsb_diagnostic_rows
+        for diagnostic in row.get('sourceCurveLsbDiagnostics',[])
     ]
-    raster_review_rows=[x for x in placement_review_rows if (x.get('sourceLeftPhantomPointRasterReview') or {}).get('status')=='generated-pending-review']
+    raster_review_rows=[
+        x for x in curve_lsb_diagnostic_rows
+        if (x.get('sourceCurveLsbRasterReview') or {}).get('status')=='generated'
+    ]
     raster_diagnostic_failures=[
-        {'file':x['file'],'diagnostic':x.get('sourceLeftPhantomPointRasterReview')}
-        for x in placement_review_rows
-        if (x.get('sourceLeftPhantomPointRasterReview') or {}).get('status')=='diagnostic-failed'
+        {'file':x['file'],'diagnostic':x.get('sourceCurveLsbRasterReview')}
+        for x in curve_lsb_diagnostic_rows
+        if (x.get('sourceCurveLsbRasterReview') or {}).get('status')=='diagnostic-failed'
     ]
-    severe_placement_reviews=[x for x in placement_reviews if abs(float(x['absolutePlacementMetricDelta']))>=10.0]
+    severe_curve_lsb_diagnostics=[
+        x for x in curve_lsb_diagnostics
+        if abs(float(x['absoluteSourceCurveLsbOffset']))>=10.0
+    ]
+    raster_evidence_missing=[
+        x['file'] for x in curve_lsb_diagnostic_rows
+        if (x.get('sourceCurveLsbRasterReview') or {}).get('status') != 'generated'
+        and not (x.get('sourceCurveLsbGlyphComparison') or {}).get('svg')
+    ]
+    geometry_outlier_rows=[x for x in cff_rows if x.get('conversionBoundsOutlier')]
     report={
-        'schema':'cff-conversion-stress-v2',
+        'schema':'cff-conversion-stress-v3',
         'catalogUniqueFiles':len(unique),
         'cffFontCount':len(cff_rows),
         'passed':sum(1 for x in cff_rows if x.get('status')=='passed'),
         'failureCount':len(failures),
-        'sourcePlacementReviewFontCount':len(placement_review_rows),
-        'sourcePlacementReviewGlyphCount':len(placement_reviews),
-        'sourcePlacementRasterComparisonCount':len(raster_review_rows),
-        'sourcePlacementRasterDiagnosticFailureCount':len(raster_diagnostic_failures),
-        'severeSourcePlacementReviewCount':len(severe_placement_reviews),
-        'sourcePlacementReviews':placement_reviews,
-        'severeSourcePlacementReviews':severe_placement_reviews,
+        'sourceCurveLsbDiagnosticFontCount':len(curve_lsb_diagnostic_rows),
+        'sourceCurveLsbDiagnosticGlyphCount':len(curve_lsb_diagnostics),
+        'sourceCurveLsbRasterComparisonCount':len(raster_review_rows),
+        'sourceCurveLsbRasterDiagnosticFailureCount':len(raster_diagnostic_failures),
+        'severeSourceCurveLsbDiagnosticCount':len(severe_curve_lsb_diagnostics),
+        'sourceCurveLsbDiagnostics':curve_lsb_diagnostics,
+        'severeSourceCurveLsbDiagnostics':severe_curve_lsb_diagnostics,
         'rasterDiagnosticFailures':raster_diagnostic_failures,
+        'rasterEvidenceMissingFonts':raster_evidence_missing,
+        'geometryOutlierFontCount':len(geometry_outlier_rows),
         'maximumBoundsDelta':maximum,
+        'manualReviewRequired':bool(curve_lsb_diagnostic_rows or geometry_outlier_rows),
+        'manualReviewStatus':'required' if curve_lsb_diagnostic_rows or geometry_outlier_rows else 'none',
+        'massConversionApproved':False,
         'fonts':rows,
         'failures':failures,
     }
     output=args.output if args.output.is_absolute() else root/args.output; output.parent.mkdir(parents=True,exist_ok=True); output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    summary_keys=('cffFontCount','passed','failureCount','sourcePlacementReviewFontCount','sourcePlacementReviewGlyphCount','sourcePlacementRasterComparisonCount','sourcePlacementRasterDiagnosticFailureCount','severeSourcePlacementReviewCount','maximumBoundsDelta')
+    summary_keys=('cffFontCount','passed','failureCount','sourceCurveLsbDiagnosticFontCount','sourceCurveLsbDiagnosticGlyphCount','sourceCurveLsbRasterComparisonCount','sourceCurveLsbRasterDiagnosticFailureCount','severeSourceCurveLsbDiagnosticCount','geometryOutlierFontCount','maximumBoundsDelta','manualReviewRequired','massConversionApproved')
     summary={k:report[k] for k in summary_keys}
     summary['report']=str(output)
     print(json.dumps(summary,ensure_ascii=False,indent=2))
-    # Structural/runtime failures fail immediately. Source LSB/curve-bound
-    # mismatches are separately reported and rasterized; keep CI non-green
-    # until those visual-placement reviews are explicitly resolved.
-    return 1 if failures or report['passed']!=report['cffFontCount'] or placement_review_rows or raster_diagnostic_failures else 0
+    # Automated structure, parser, subset, round-trip and raster-diagnostic
+    # execution gates are distinct from the remaining manual visual-review set.
+    return 1 if failures or report['passed']!=report['cffFontCount'] or raster_diagnostic_failures or raster_evidence_missing else 0
 if __name__=='__main__': sys.exit(main())

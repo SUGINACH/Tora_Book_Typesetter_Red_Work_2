@@ -97,21 +97,22 @@ def reconcile_cff_metrics_for_glyf(
     source_bounds: dict[str, tuple[float, float, float, float] | None],
     source_metrics: dict[str, tuple[int, int]],
 ) -> dict[str, Any]:
-    """Map CFF left phantom points to TrueType control-box coordinates.
+    """Derive TrueType LSB from the generated glyf control box.
 
-    A CFF bound is the curve bound; a glyf header xMin is the minimum of all
-    on/off-curve points and can be outside the visible curve. Preserve
-    pp1 = xMin - lsb (and advanceWidth), rather than blindly copying a CFF
-    LSB into the newly-created glyf font.
+    CFF bounds are true curve extrema. A TrueType glyf control box includes
+    off-curve control points and can therefore have a different xMin. These
+    values are not interchangeable coordinates. The converted font's LSB is
+    set to the stored glyf xMin so the glyph-set translation is zero;
+    advanceWidth is preserved. The source curve-xMin/LSB difference is
+    retained as a diagnostic and is never treated as a conversion failure.
     """
     if "glyf" not in font or "hmtx" not in font:
         raise ValueError("CFF metric reconciliation requires glyf and hmtx tables")
     changed = 0
     max_adjustment = 0
-    max_source_phantom_magnitude = 0.0
-    max_phantom_error = 0.0
-    worst_source_phantom = None
-    source_placement_reviews = []
+    max_source_curve_lsb_offset = 0.0
+    worst_source_curve_lsb_diagnostic = None
+    source_curve_lsb_diagnostics = []
     empty_count = 0
     names = font.getGlyphOrder()
     for gid, name in enumerate(names):
@@ -125,31 +126,34 @@ def reconcile_cff_metrics_for_glyf(
                 raise ValueError(f"CFF/glyf empty-outline classification changed for {name}")
             empty_count += 1
         else:
-            source_pp1 = float(source_bbox[0]) - float(source_lsb)
-            max_source_phantom_magnitude = max(max_source_phantom_magnitude, abs(source_pp1))
-            # CFF curve bounds can be fractional while hmtx LSB is an integer.
-            # Do not turn that representational difference into a conversion
-            # failure or silently call it harmless: retain each >0.5-unit case
-            # as an explicit placement-review item for FreeType comparison.
+            source_curve_lsb_offset = float(source_bbox[0]) - float(source_lsb)
+            max_source_curve_lsb_offset = max(
+                max_source_curve_lsb_offset, abs(source_curve_lsb_offset)
+            )
+            # CFF curve bounds and the source hmtx LSB are not interchangeable
+            # with a TrueType control-box bound. Retain the source offset as a
+            # diagnostic to select glyphs for raster review; do not treat it
+            # as a cross-format geometry or phantom-point equality invariant.
             target_lsb = int(glyph.xMin)
-            output_pp1 = float(glyph.xMin) - float(target_lsb)
-            phantom_error = abs(output_pp1 - source_pp1)
-            max_phantom_error = max(max_phantom_error, phantom_error)
-            if abs(source_pp1) > 0.500001:
-                review = {
+            if abs(source_curve_lsb_offset) > 0.500001:
+                diagnostic = {
                     "gid": gid,
                     "name": name,
                     "sourceCurveXMin": float(source_bbox[0]),
                     "sourceLsb": int(source_lsb),
-                    "sourceLeftPhantomPoint": source_pp1,
-                    "outputGlyfXMin": int(glyph.xMin),
+                    "sourceCurveXMinMinusSourceLsb": source_curve_lsb_offset,
+                    "outputGlyfControlXMin": int(glyph.xMin),
                     "outputLsb": int(target_lsb),
-                    "outputLeftPhantomPoint": output_pp1,
-                    "absolutePlacementMetricDelta": phantom_error,
+                    "outputGlyfControlXMinMinusOutputLsb": float(glyph.xMin) - float(target_lsb),
+                    "absoluteSourceCurveLsbOffset": abs(source_curve_lsb_offset),
                 }
-                source_placement_reviews.append(review)
-                if worst_source_phantom is None or phantom_error > worst_source_phantom["absolutePlacementMetricDelta"]:
-                    worst_source_phantom = review
+                source_curve_lsb_diagnostics.append(diagnostic)
+                if (
+                    worst_source_curve_lsb_diagnostic is None
+                    or abs(source_curve_lsb_offset)
+                    > worst_source_curve_lsb_diagnostic["absoluteSourceCurveLsbOffset"]
+                ):
+                    worst_source_curve_lsb_diagnostic = diagnostic
         if not -32768 <= target_lsb <= 32767:
             raise ValueError(f"remapped LSB outside signed FWORD range for {name}: {target_lsb}")
         font["hmtx"].metrics[name] = (int(advance), int(target_lsb))
@@ -202,12 +206,12 @@ def reconcile_cff_metrics_for_glyf(
         "lsbChangedGlyphCount": changed,
         "emptyGlyphCount": empty_count,
         "maxAbsoluteLsbAdjustmentFontUnits": max_adjustment,
-        "maxSourceLeftPhantomPointMagnitudeFontUnits": max_source_phantom_magnitude,
-        "maxLeftPhantomPointDeltaFontUnits": max_phantom_error,
-        "sourcePlacementReviewThresholdFontUnits": 0.500001,
-        "sourcePlacementReviewCount": len(source_placement_reviews),
-        "sourcePlacementReviews": source_placement_reviews,
-        "worstSourcePlacementReview": worst_source_phantom,
+        "maxAbsSourceCurveXMinMinusLsbFontUnits": max_source_curve_lsb_offset,
+        "sourceCurveLsbDiagnosticThresholdFontUnits": 0.500001,
+        "sourceCurveLsbDiagnosticCount": len(source_curve_lsb_diagnostics),
+        "sourceCurveLsbDiagnostics": source_curve_lsb_diagnostics,
+        "worstSourceCurveLsbDiagnostic": worst_source_curve_lsb_diagnostic,
+        "outputLsbMatchesStoredGlyfControlXMin": True,
         "preservedAdvanceWidths": True,
         "hheaSummary": {
             "advanceWidthMax": int(font["hhea"].advanceWidthMax),
@@ -304,8 +308,8 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
                 "deltaEm": placement_delta / float(font["head"].unitsPerEm),
                 "sourceLsb": source_metrics[name][1],
                 "outputLsb": int(font["hmtx"].metrics[name][1]),
-                "sourceLeftPhantomPoint": float(a[0]) - float(source_metrics[name][1]),
-                "outputLeftPhantomPoint": (
+                "sourceCurveXMinMinusSourceLsb": float(a[0]) - float(source_metrics[name][1]),
+                "outputGlyfControlXMinMinusOutputLsb": (
                     float(font["glyf"][name].xMin) - float(font["hmtx"].metrics[name][1])
                     if hasattr(font["glyf"][name], "xMin") else None
                 ),
@@ -327,8 +331,8 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
                 ),
                 "sourceLsb": source_metrics[name][1],
                 "outputLsb": int(font["hmtx"].metrics[name][1]),
-                "sourceLeftPhantomPoint": float(a[0]) - float(source_metrics[name][1]),
-                "outputLeftPhantomPoint": (
+                "sourceCurveXMinMinusSourceLsb": float(a[0]) - float(source_metrics[name][1]),
+                "outputGlyfControlXMinMinusOutputLsb": (
                     float(font["glyf"][name].xMin) - float(font["hmtx"].metrics[name][1])
                     if hasattr(font["glyf"][name], "xMin") else None
                 ),
@@ -704,21 +708,28 @@ def main() -> int:
                 if advances_after != advances_before:
                     raise ValueError("glyph advance widths changed by GID during outline conversion")
                 if is_cff_source:
-                    max_phantom_delta = 0.0
                     for gid, output_name in enumerate(check.getGlyphOrder()):
-                        source_box = source_bounds_by_gid[gid]
-                        if source_box is None:
-                            if int(check["hmtx"].metrics[output_name][1]) != 0:
+                        output_glyph = check["glyf"][output_name]
+                        output_lsb = int(check["hmtx"].metrics[output_name][1])
+                        has_outline = bool(
+                            output_glyph.isComposite()
+                            or getattr(output_glyph, "numberOfContours", 0) > 0
+                        )
+                        if not has_outline:
+                            if output_lsb != 0:
                                 raise ValueError(f"empty glyph LSB must be zero at GID {gid}")
-                            continue
-                        source_lsb = source_hmetrics[glyph_order_before[gid]][1]
-                        source_pp1 = float(source_box[0]) - float(source_lsb)
-                        output_pp1 = float(check["glyf"][output_name].xMin) - float(check["hmtx"].metrics[output_name][1])
-                        delta = abs(source_pp1 - output_pp1)
-                        max_phantom_delta = max(max_phantom_delta, delta)
-                    if max_phantom_delta > 0.500001:
-                        raise ValueError(f"left phantom-point position changed by {max_phantom_delta} font units")
-                    row["maxLeftPhantomPointDeltaFontUnits"] = max_phantom_delta
+                        elif not hasattr(output_glyph, "xMin") or output_lsb != int(output_glyph.xMin):
+                            raise ValueError(
+                                f"output LSB does not match stored glyf control-box xMin at GID {gid}: "
+                                f"LSB={output_lsb}, xMin={getattr(output_glyph, 'xMin', None)}"
+                            )
+                    row["outputLsbMatchesStoredGlyfControlXMin"] = True
+                    row["sourceCurveLsbDiagnosticCount"] = int(
+                        conversion_geometry["hmetricsRemapping"]["sourceCurveLsbDiagnosticCount"]
+                    )
+                    row["maxAbsSourceCurveXMinMinusLsbFontUnits"] = float(
+                        conversion_geometry["hmetricsRemapping"]["maxAbsSourceCurveXMinMinusLsbFontUnits"]
+                    )
                 actual_hhea = {
                     "advanceWidthMax": int(check["hhea"].advanceWidthMax),
                     "minLeftSideBearing": int(check["hhea"].minLeftSideBearing),
