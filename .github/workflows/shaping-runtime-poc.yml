@@ -5,6 +5,7 @@ on:
     branches: [ engine/legacy-parity-preview-20261119 ]
     paths:
       - 'tools/shaping-runtime-poc/**'
+      - 'tools/bidi-runtime-poc/**'
       - '.github/workflows/shaping-runtime-poc.yml'
   workflow_dispatch:
 
@@ -14,7 +15,7 @@ permissions:
 jobs:
   harfbuzz-node-classic-worker:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
