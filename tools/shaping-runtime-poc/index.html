@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HarfBuzz classic-worker runtime proof</title>
+</head>
+<body>
+  <pre id="result">RUNNING</pre>
+  <script>
+    (async function main() {
+      const output = document.getElementById('result');
+      window.__hbPoc = { state: 'running' };
+      const finish = (value) => {
+        window.__hbPoc = value;
+        output.textContent = JSON.stringify(value, null, 2);
+      };
+      try {
+        const expectedResponse = await fetch('/expected.json', { cache: 'no-store' });
+        if (!expectedResponse.ok) throw new Error('could not fetch Node reference output');
+        const expected = await expectedResponse.json();
+        const worker = new Worker('/classic-worker.js', { name: 'harfbuzz-classic-worker-poc' });
+        const timer = setTimeout(() => {
+          worker.terminate();
+          finish({ state: 'failed', error: 'classic Worker shaping timed out' });
+        }, 60000);
+        worker.onmessage = (event) => {
+          clearTimeout(timer);
+          worker.terminate();
+          const data = event.data || {};
+          if (!data.ok) {
+            finish({ state: 'failed', error: data.error || 'worker shaping failed' });
+            return;
+          }
+          const exactMatch = JSON.stringify(data.shape) === JSON.stringify(expected);
+          finish({
+            state: exactMatch && data.runtime && data.runtime.classicWorker && data.runtime.dynamicImport
+              ? 'passed' : 'failed',
+            classicWorker: data.runtime && data.runtime.classicWorker,
+            dynamicImport: data.runtime && data.runtime.dynamicImport,
+            wasmLoaded: data.runtime && data.runtime.wasmLoaded,
+            harfBuzzVersion: data.shape && data.shape.harfBuzzVersion,
+            caseCount: data.shape && data.shape.cases && data.shape.cases.length,
+            glyphCount: data.shape && data.shape.cases
+              ? data.shape.cases.reduce((sum, item) => sum + item.glyphs.length, 0) : 0,
+            exactNodeParity: exactMatch,
+            expected: expected,
+            actual: data.shape
+          });
+        };
+        worker.onerror = (event) => {
+          clearTimeout(timer);
+          worker.terminate();
+          finish({ state: 'failed', error: event.message || 'classic Worker error' });
+        };
+        worker.postMessage({
+          type: 'shape',
+          moduleUrl: new URL('/harfbuzzjs/dist/index.mjs', location.href).href,
+          fontUrl: '/fonts/DejaVuSans.ttf'
+        });
+      } catch (error) {
+        finish({ state: 'failed', error: String(error && error.stack || error) });
+      }
+    })();
+  </script>
+</body>
+</html>

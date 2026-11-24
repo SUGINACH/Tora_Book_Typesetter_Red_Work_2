@@ -1,0 +1,37 @@
+name: shaping-runtime-poc
+
+on:
+  push:
+    branches: [ engine/legacy-parity-preview-20261119 ]
+    paths:
+      - 'tools/shaping-runtime-poc/**'
+      - '.github/workflows/shaping-runtime-poc.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  harfbuzz-node-classic-worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser font fixture
+        run: sudo apt-get update && sudo apt-get install -y fonts-dejavu-core
+      - name: Install headless browser
+        run: |
+          npm install -g agent-browser@0.41.2
+          agent-browser install --with-deps
+      - name: Prove Node and classic Worker shaping parity
+        run: node tools/shaping-runtime-poc/run.js
+      - name: Upload compatibility report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shaping-runtime-poc
+          path: /tmp/shaping-runtime-poc-report.json
+          if-no-files-found: ignore
