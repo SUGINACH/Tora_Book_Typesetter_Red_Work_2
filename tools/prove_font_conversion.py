@@ -177,7 +177,7 @@ def write_glyph_comparison(
     height = cell_h + 2 * pad
     tx = -min_x + pad
     ty = max_y + pad
-    svg = f\'''<svg xmlns="http://www.w3.org/2000/svg" width="{width:.2f}" height="{height:.2f}" viewBox="0 0 {width:.2f} {height:.2f}">
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{width:.2f}" height="{height:.2f}" viewBox="0 0 {width:.2f} {height:.2f}">
   <rect width="100%" height="100%" fill="#f5f5f5"/>
   <g font-family="sans-serif" font-size="{upem * 0.035:.2f}" fill="#222">
     <text x="{cell_w/2:.2f}" y="{pad*0.65:.2f}" text-anchor="middle">Source CFF · GID {gid} · {source_name}</text>
@@ -189,7 +189,7 @@ def write_glyph_comparison(
   <g transform="translate({cell_w + gutter:.2f},{pad:.2f})">
     <g transform="translate({tx:.2f},{ty:.2f}) scale(1,-1)"><path d="{converted_path_data}" fill="#111"/></g>
   </g>
-</svg>\'''
+</svg>'''
     output_dir.mkdir(parents=True, exist_ok=True)
     svg_path = output_dir / f"{label}-gid-{gid}.svg"
     png_path = output_dir / f"{label}-gid-{gid}.png"
