@@ -55,5 +55,6 @@ jobs:
             artifacts/font-conversion-proof/report.json
             artifacts/font-conversion-proof/visuals/
             artifacts/cff-conversion-stress/report.json
+            artifacts/cff-conversion-stress/visuals/
           if-no-files-found: ignore
           retention-days: 14
