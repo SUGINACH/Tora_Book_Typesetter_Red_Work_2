@@ -20,8 +20,36 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
       - name: Install browser font fixture
         run: sudo apt-get update && sudo apt-get install -y fonts-dejavu-core python3-venv
+      - name: Checkout pinned Unicode 18 Bidi/ICU4X itemizer source
+        run: |
+          git clone https://github.com/servo/unicode-bidi.git /tmp/unicode-bidi
+          git -C /tmp/unicode-bidi checkout 9a8c7b03be01def5cf7014b89d5af90f7382fdad
+          test "$(git -C /tmp/unicode-bidi rev-parse HEAD)" = "9a8c7b03be01def5cf7014b89d5af90f7382fdad"
+      - name: Regenerate pinned Unicode 18.0.0 Bidi tables
+        run: |
+          python3 tools/bidi-runtime-poc/prepare_unicode_bidi.py /tmp/unicode-bidi
+          cd /tmp/unicode-bidi
+          python3 tools/generate.py
+          grep -F 'pub const UNICODE_VERSION: (u64, u64, u64) = (18, 0, 0);' src/char_data/tables.rs
+          test "$(head -n 1 data/ucd/DerivedBidiClass.txt)" = "# DerivedBidiClass-18.0.0.txt"
+      - name: Build pinned Unicode 18 Bidi/grapheme WASM itemizer
+        run: |
+          mkdir -p /tmp/unicode-bidi/bidi-runtime-poc-wrapper/src
+          cp tools/bidi-runtime-poc/wasm/Cargo.toml /tmp/unicode-bidi/bidi-runtime-poc-wrapper/Cargo.toml
+          cp tools/bidi-runtime-poc/wasm/src/lib.rs /tmp/unicode-bidi/bidi-runtime-poc-wrapper/src/lib.rs
+          cd /tmp/unicode-bidi
+          RUSTFLAGS="-C link-arg=--export-memory" cargo build \
+            --manifest-path bidi-runtime-poc-wrapper/Cargo.toml \
+            --target-dir /tmp/unicode-bidi/target \
+            --target wasm32-unknown-unknown --release
+          WASM_FILE=/tmp/unicode-bidi/target/wasm32-unknown-unknown/release/red_bidi_runtime_poc.wasm
+          test -s "$WASM_FILE"
+          echo "BIDI_POC_WASM=$WASM_FILE" >> "$GITHUB_ENV"
       - name: Install fontTools and Brotli for offline WOFF2 normalization
         run: |
           python3 -m venv /tmp/hb-poc-venv

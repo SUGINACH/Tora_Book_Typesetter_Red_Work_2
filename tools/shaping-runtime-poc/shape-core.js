@@ -513,6 +513,120 @@
     };
   }
 
+
+  function shapeWithItemizedRuns(hb, font, sourceText, itemization, options = {}) {
+    sourceText = String(sourceText);
+    if (!itemization || itemization.text !== sourceText ||
+        itemization.utf16Length !== sourceText.length ||
+        !Array.isArray(itemization.graphemes) ||
+        !Array.isArray(itemization.scriptRuns) ||
+        !Array.isArray(itemization.sourceRuns) ||
+        !Array.isArray(itemization.nonShapingRuns)) {
+      throw new TypeError('A complete Unicode itemization result for this exact source paragraph is required');
+    }
+    let expectedStart = 0;
+    for (let index = 0; index < itemization.sourceRuns.length; index++) {
+      const sourceRun = itemization.sourceRuns[index];
+      if (!sourceRun || sourceRun.start !== expectedStart ||
+          !Number.isSafeInteger(sourceRun.end) || sourceRun.end <= sourceRun.start ||
+          sourceRun.end > sourceText.length ||
+          sourceRun.text !== sourceText.slice(sourceRun.start, sourceRun.end) ||
+          !['shape', 'bidi-control', 'non-shaping-bidi-mixed', 'unresolved'].includes(sourceRun.kind)) {
+        throw new Error('sourceRuns is not a lossless contiguous UTF-16 partition at index ' + index);
+      }
+      expectedStart = sourceRun.end;
+    }
+    if (expectedStart !== sourceText.length) throw new Error('sourceRuns do not cover the complete paragraph');
+
+    const projectedShapeRuns = itemization.sourceRuns.filter((run) => run.kind === 'shape');
+    const projectedNonShapingRuns = itemization.sourceRuns.filter((run) => run.kind !== 'shape');
+    if (projectedShapeRuns.length !== itemization.scriptRuns.length ||
+        projectedNonShapingRuns.length !== itemization.nonShapingRuns.length) {
+      throw new Error('scriptRuns and nonShapingRuns do not partition sourceRuns');
+    }
+    for (let index = 0; index < projectedShapeRuns.length; index++) {
+      const sourceRun = projectedShapeRuns[index];
+      const scriptRun = itemization.scriptRuns[index];
+      if (sourceRun.start !== scriptRun.start || sourceRun.end !== scriptRun.end ||
+          sourceRun.text !== scriptRun.text || sourceRun.script !== scriptRun.script ||
+          sourceRun.direction !== scriptRun.direction || sourceRun.bidiLevel !== scriptRun.bidiLevel ||
+          sourceRun.graphemeStart !== scriptRun.graphemeStart ||
+          sourceRun.graphemeEnd !== scriptRun.graphemeEnd ||
+          sourceRun.status !== scriptRun.scriptStatus) {
+        throw new Error('scriptRuns are not a projection of sourceRuns at index ' + index);
+      }
+    }
+    for (let index = 0; index < projectedNonShapingRuns.length; index++) {
+      const a = projectedNonShapingRuns[index], b = itemization.nonShapingRuns[index];
+      if (a.start !== b.start || a.end !== b.end || a.text !== b.text || a.kind !== b.kind) {
+        throw new Error('nonShapingRuns do not preserve sourceRuns at index ' + index);
+      }
+    }
+
+    const languageByScript = options.languageByScript;
+    const featureTagsByScript = options.featureTagsByScript;
+    if (!languageByScript || typeof languageByScript !== 'object' ||
+        !featureTagsByScript || typeof featureTagsByScript !== 'object') {
+      throw new TypeError('Explicit languageByScript and featureTagsByScript maps are required');
+    }
+    const shapedRuns = itemization.scriptRuns.map((scriptRun) => {
+      const language = languageByScript[scriptRun.script];
+      const featureTags = featureTagsByScript[scriptRun.script];
+      if (typeof language !== 'string' || !language.trim()) {
+        throw new Error('No explicit language supplied for Script ' + scriptRun.script);
+      }
+      if (!Array.isArray(featureTags) ||
+          featureTags.some((tag) => typeof tag !== 'string' || !/^[a-zA-Z0-9]{4}$/.test(tag))) {
+        throw new Error('No valid explicit OpenType features supplied for Script ' + scriptRun.script);
+      }
+      const features = featureTags.map((tag) => new hb.Feature(tag, 1));
+      let bufferFlags = hb.BufferFlag.DEFAULT;
+      if (scriptRun.start === 0) bufferFlags |= hb.BufferFlag.BOT;
+      if (scriptRun.end === sourceText.length) bufferFlags |= hb.BufferFlag.EOT;
+      return shapeWithExplicitGraphemeClusters(
+        hb, font, sourceText, scriptRun, itemization.graphemes,
+        { language, features, featureTags, bufferFlags }
+      );
+    });
+    const shapeableGraphemeIndexes = new Set();
+    for (const scriptRun of itemization.scriptRuns) {
+      for (let index = scriptRun.graphemeStart; index < scriptRun.graphemeEnd; index++) {
+        const grapheme = itemization.graphemes[index];
+        if (!grapheme || grapheme.shapeable !== true ||
+            grapheme.containsBidiControl || grapheme.isBidiControl) {
+          throw new Error('A non-shapeable/Bidi_Control grapheme entered a ScriptRun');
+        }
+        shapeableGraphemeIndexes.add(index);
+      }
+    }
+    const bidiControlRuns = itemization.nonShapingRuns.filter((run) => run.kind === 'bidi-control');
+    const controlsExcluded = bidiControlRuns.every((run) =>
+      !itemization.scriptRuns.some((scriptRun) =>
+        scriptRun.start < run.end && run.start < scriptRun.end));
+    if (!controlsExcluded) throw new Error('Bidi_Control ranges overlap a HarfBuzz ScriptRun');
+    return {
+      status: 'passed',
+      unicodeVersion: itemization.unicodeVersion,
+      sourceRange: { start: 0, end: sourceText.length },
+      sourceCoverageComplete: true,
+      sourceRuns: itemization.sourceRuns,
+      nonShapingRuns: itemization.nonShapingRuns,
+      shapedRuns,
+      sourceRunCount: itemization.sourceRuns.length,
+      nonShapingRunCount: itemization.nonShapingRuns.length,
+      bidiControlRunCount: bidiControlRuns.length,
+      shapedRunCount: shapedRuns.length,
+      shapeableGraphemeCount: shapeableGraphemeIndexes.size,
+      totalGlyphCount: shapedRuns.reduce((sum, x) => sum + x.glyphs.length, 0),
+      everyOutputClusterIsAnEngineGraphemeStart: shapedRuns.every((x) => x.allOutputClustersAreInputGraphemeStarts),
+      everyScriptRunHasFullSourceCoverage: shapedRuns.every((x) => x.clusterAudit.coversFullSource),
+      bidiLevels: shapedRuns.map((x) => x.bidiLevel),
+      directions: shapedRuns.map((x) => x.direction),
+      scripts: shapedRuns.map((x) => x.script),
+      controlsExcludedFromShaping: controlsExcluded
+    };
+  }
+
   function shapeWithHarfBuzz(hb, fontBytes, fixture) {
     if (!hb || typeof hb.shape !== 'function') throw new TypeError('HarfBuzz module is not initialized');
     if (!(fontBytes instanceof ArrayBuffer) && !ArrayBuffer.isView(fontBytes)) {
@@ -567,6 +681,25 @@
       .map(hexCodepoint);
 
     const features = FEATURE_TAGS.map((tag) => new hb.Feature(tag, 1));
+    let sharedItemizationProbe = null;
+    if (fixture.sharedItemization) {
+      const sharedText = String(fixture.sharedItemization.sourceText || '');
+      const itemization = fixture.sharedItemization.itemization;
+      const sharedCodepoints = new Set();
+      for (const scriptRun of (itemization && itemization.scriptRuns) || []) {
+        for (const char of Array.from(scriptRun.text)) sharedCodepoints.add(char.codePointAt(0));
+      }
+      const missingSharedCodepoints = Array.from(sharedCodepoints)
+        .filter((codePoint) => !supported.has(codePoint))
+        .sort((a, b) => a - b)
+        .map(hexCodepoint);
+      sharedItemizationProbe = missingSharedCodepoints.length
+        ? { status: 'skipped-font-coverage', missingCodepoints: missingSharedCodepoints }
+        : shapeWithItemizedRuns(hb, font, sharedText, itemization, {
+            languageByScript: fixture.sharedItemization.languageByScript,
+            featureTagsByScript: fixture.sharedItemization.featureTagsByScript
+          });
+    }
     let explicitClusterProbe = null;
     if (missingCodepoints.length === 0) {
       const explicitText = CASES[0];
@@ -752,6 +885,7 @@
       axisInfos: axes,
       appliedVariations,
       explicitClusterProbe,
+      sharedItemizationProbe,
       missingCodepoints,
       missingBaseCodepoints,
       missingMarkCodepoints,
@@ -766,6 +900,7 @@
   return {
     CASES, FEATURE_TAGS, UTF16_CLUSTER_PROBE_TEXT,
     clusterSourceRanges, clustersMonotone, pathBoundsFromSvgPath,
-    buildExplicitClusterInput, shapeWithExplicitGraphemeClusters, shapeWithHarfBuzz
+    buildExplicitClusterInput, shapeWithExplicitGraphemeClusters,
+    shapeWithItemizedRuns, shapeWithHarfBuzz
   };
 });

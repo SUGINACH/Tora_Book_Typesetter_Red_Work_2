@@ -20,6 +20,9 @@
         if (!expectedResponse.ok) throw new Error('could not fetch Node reference output');
         const expectedJson = await expectedResponse.text();
         const expected = JSON.parse(expectedJson);
+        const sharedResponse = await fetch('/shared-itemization-input.json', { cache: 'no-store' });
+        if (!sharedResponse.ok) throw new Error('could not fetch shared itemization input');
+        const sharedItemization = await sharedResponse.json();
         const worker = new Worker('/classic-worker.js', { name: 'harfbuzz-classic-worker-poc' });
         const timer = setTimeout(() => {
           worker.terminate();
@@ -36,11 +39,15 @@
           const actualJson = JSON.stringify(data.results);
           const exactMatch = actualJson === expectedJson;
           finish({
-            state: exactMatch && data.runtime && data.runtime.classicWorker && data.runtime.dynamicImport
+            state: exactMatch && data.runtime && data.runtime.classicWorker && data.runtime.dynamicImport && data.runtime.bidiWasmLoaded && data.runtime.bidiUnicodeVersion === '18.0.0' && data.runtime.sharedItemizationProbePassed
               ? 'passed' : 'failed',
             classicWorker: data.runtime && data.runtime.classicWorker,
             dynamicImport: data.runtime && data.runtime.dynamicImport,
             wasmLoaded: data.runtime && data.runtime.wasmLoaded,
+            bidiWasmLoaded: data.runtime && data.runtime.bidiWasmLoaded,
+            bidiUnicodeVersion: data.runtime && data.runtime.bidiUnicodeVersion,
+            sharedItemizationProbeFontCount: data.runtime && data.runtime.sharedItemizationProbeFontCount,
+            sharedItemizationProbePassed: data.runtime && data.runtime.sharedItemizationProbePassed,
             harfBuzzVersion: data.results && data.results[0] && data.results[0].harfBuzzVersion,
             fontCount: data.results && data.results.length,
             caseCountPerFont: data.results && data.results[0] && data.results[0].cases.length,
@@ -52,6 +59,18 @@
               upem: item.unitsPerEm,
               axes: item.axisInfos,
               utf16ClusterProbe: item.utf16ClusterProbe,
+              sharedItemizationProbe: item.sharedItemizationProbe ? {
+                status: item.sharedItemizationProbe.status,
+                sourceRunCount: item.sharedItemizationProbe.sourceRunCount,
+                nonShapingRunCount: item.sharedItemizationProbe.nonShapingRunCount,
+                bidiControlRunCount: item.sharedItemizationProbe.bidiControlRunCount,
+                shapedRunCount: item.sharedItemizationProbe.shapedRunCount,
+                bidiLevels: item.sharedItemizationProbe.bidiLevels,
+                totalGlyphCount: item.sharedItemizationProbe.totalGlyphCount,
+                everyOutputClusterIsAnEngineGraphemeStart: item.sharedItemizationProbe.everyOutputClusterIsAnEngineGraphemeStart,
+                everyScriptRunHasFullSourceCoverage: item.sharedItemizationProbe.everyScriptRunHasFullSourceCoverage,
+                controlsExcludedFromShaping: item.sharedItemizationProbe.controlsExcludedFromShaping
+              } : null,
               glyphExtentsCount: item.cases.reduce((count, testCase) =>
                 count + testCase.glyphs.filter((glyph) => glyph.glyphExtents).length, 0),
               sourceRangeAudit: item.cases.map((testCase) => testCase.clusterAudit),
@@ -84,6 +103,8 @@
         worker.postMessage({
           type: 'shape',
           moduleUrl: new URL('/harfbuzzjs/dist/index.mjs', location.href).href,
+          bidiWasmUrl: new URL('/bidi-runtime.wasm', location.href).href,
+          sharedItemization,
           fonts
         });
       } catch (error) {

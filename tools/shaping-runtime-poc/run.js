@@ -11,6 +11,7 @@ const { pathToFileURL } = require('url');
 
 const VERSION = '1.6.4';
 const REPORT = process.env.HB_POC_REPORT || '/tmp/shaping-runtime-poc-report.json';
+const BIDI_WASM_PATH = process.env.BIDI_POC_WASM || '';
 const AGENT_BROWSER = process.env.AGENT_BROWSER || 'agent-browser';
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const FONT_DIR = path.join(REPO_ROOT, 'red-build', 'ui', 'assets', 'imud', 'fonts');
@@ -90,6 +91,7 @@ function mimeType(file) {
 }
 
 async function main() {
+  if (!BIDI_WASM_PATH || !fs.existsSync(BIDI_WASM_PATH)) throw new Error('BIDI_POC_WASM must point to the pinned Unicode 18 itemizer WASM');
   const missingFiles = FONT_FIXTURES.filter((fixture) => !fs.existsSync(fixture.source));
   if (missingFiles.length) throw new Error('Missing repository font fixtures: ' +
     missingFiles.map((fixture) => fixture.name + ' at ' + fixture.source).join(', '));
@@ -190,10 +192,55 @@ async function main() {
     for (const file of ['index.html', 'classic-worker.js', 'shape-core.js']) {
       fs.copyFileSync(path.join(__dirname, file), path.join(site, file));
     }
+    fs.copyFileSync(path.join(REPO_ROOT, 'tools', 'bidi-runtime-poc', 'bidi-api.js'), path.join(site, 'bidi-api.js'));
+    fs.copyFileSync(BIDI_WASM_PATH, path.join(site, 'bidi-runtime.wasm'));
 
     const hbUrl = pathToFileURL(path.join(site, 'harfbuzzjs', 'dist', 'index.mjs')).href;
     const hb = await import(hbUrl);
     const shapeCore = require('./shape-core.js');
+    const bidiApi = require('../bidi-runtime-poc/bidi-api.js');
+    const bidiRuntime = await bidiApi.instantiate(fs.readFileSync(BIDI_WASM_PATH));
+    if (bidiRuntime.unicodeVersion !== '18.0.0') throw new Error('Expected Unicode 18 itemizer; got ' + bidiRuntime.unicodeVersion);
+    const sharedSourceText = String.fromCodePoint(
+      0x05E9, 0x05B8, 0x05C1, 0x05DC, 0x05D5, 0x05B9, 0x05DD,
+      0x202B, 0x05D2, 0x05D3, 0x202C, 0x05D4, 0x05D5
+    );
+    const sharedItemizationResult = bidiRuntime.itemizeScripts(sharedSourceText, bidiRuntime.resolve(sharedSourceText, 'rtl'));
+    const sharedExpectedRuns = [
+      { start: 0, end: 7, text: String.fromCodePoint(0x05E9, 0x05B8, 0x05C1, 0x05DC, 0x05D5, 0x05B9, 0x05DD), level: 1 },
+      { start: 8, end: 10, text: String.fromCodePoint(0x05D2, 0x05D3), level: 3 },
+      { start: 11, end: 13, text: String.fromCodePoint(0x05D4, 0x05D5), level: 1 }
+    ];
+    const actualRuns = sharedItemizationResult.scriptRuns.map((x) => ({ start: x.start, end: x.end, text: x.text, level: x.bidiLevel }));
+    const controlRuns = sharedItemizationResult.nonShapingRuns.filter((x) => x.kind === 'bidi-control');
+    if (JSON.stringify(actualRuns) !== JSON.stringify(sharedExpectedRuns) || controlRuns.length !== 2 ||
+        controlRuns.map((x) => x.text).join('') !== String.fromCodePoint(0x202B, 0x202C) ||
+        sharedItemizationResult.sourceRuns.length < 5) {
+      throw new Error('Unexpected Unicode 18 itemization: ' + JSON.stringify({
+        scriptRuns: actualRuns, controlRuns, sourceRuns: sharedItemizationResult.sourceRuns
+      }));
+    }
+    const sharedItemizationConfig = {
+      sourceText: sharedSourceText,
+      baseDirection: 'rtl',
+      languageByScript: { Hebr: 'he' },
+      featureTagsByScript: { Hebr: shapeCore.FEATURE_TAGS.slice() }
+    };
+    const sharedItemization = {
+      sourceText: sharedSourceText, itemization: sharedItemizationResult,
+      languageByScript: sharedItemizationConfig.languageByScript,
+      featureTagsByScript: sharedItemizationConfig.featureTagsByScript
+    };
+    fs.writeFileSync(path.join(site, 'shared-itemization-input.json'), JSON.stringify(sharedItemizationConfig), 'utf8');
+    report.sharedItemizationInput = {
+      unicodeVersion: bidiRuntime.unicodeVersion, sourceText: sharedSourceText,
+      utf16Length: sharedSourceText.length, sourceRuns: sharedItemizationResult.sourceRuns,
+      scriptRuns: sharedItemizationResult.scriptRuns,
+      nonShapingRuns: sharedItemizationResult.nonShapingRuns,
+      expectedBidiLevels: [1, 3, 1],
+      languageByScript: sharedItemizationConfig.languageByScript,
+      featureTagsByScript: sharedItemizationConfig.featureTagsByScript
+    };
     const pathBoundsUnitCases = [
       { path: 'M0 0 C0 100 100 100 100 0', expected: { xMin: 0, yMin: 0, xMax: 100, yMax: 75 } },
       { path: 'M0 0 C100 0 100 100 0 100', expected: { xMin: 0, yMin: 0, xMax: 75, yMax: 100 } },
@@ -230,7 +277,23 @@ async function main() {
     for (const fixture of shapeFixtures) {
       const bytes = fs.readFileSync(fixture.source);
       const fontArrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-      expected.push(shapeCore.shapeWithHarfBuzz(hb, fontArrayBuffer, fixture));
+      expected.push(shapeCore.shapeWithHarfBuzz(hb, fontArrayBuffer, Object.assign({}, fixture, { sharedItemization })));
+    }
+    const sharedItemizationProbeFontCount = expected.filter((x) => x.sharedItemizationProbe && x.sharedItemizationProbe.status === 'passed').length;
+    const sharedItemizationProbeFailures = expected.filter((x) => x.coverageStatus === 'complete' && (
+      !x.sharedItemizationProbe || x.sharedItemizationProbe.status !== 'passed' ||
+      x.sharedItemizationProbe.shapedRunCount !== 3 || x.sharedItemizationProbe.nonShapingRunCount !== 2 ||
+      x.sharedItemizationProbe.bidiControlRunCount !== 2 ||
+      JSON.stringify(x.sharedItemizationProbe.bidiLevels) !== JSON.stringify([1, 3, 1]) ||
+      x.sharedItemizationProbe.controlsExcludedFromShaping !== true ||
+      x.sharedItemizationProbe.everyOutputClusterIsAnEngineGraphemeStart !== true ||
+      x.sharedItemizationProbe.everyScriptRunHasFullSourceCoverage !== true
+    ));
+    if (!sharedItemizationProbeFontCount || sharedItemizationProbeFailures.length) {
+      throw new Error('ICU4X-to-HarfBuzz shaping contract failed: ' + JSON.stringify({
+        passedFontCount: sharedItemizationProbeFontCount,
+        failures: sharedItemizationProbeFailures.map((x) => ({ fontName: x.fontName, probe: x.sharedItemizationProbe }))
+      }));
     }
     const utf16ClusterProbe = expected.find((item) => item.utf16ClusterProbe)?.utf16ClusterProbe || null;
     if (!utf16ClusterProbe ||
@@ -498,6 +561,8 @@ async function main() {
       throw new Error('Unexpected incomplete Hebrew shaping fixtures: ' + JSON.stringify(invalidCoverageFixtures));
     }
     report.nodeReference.explicitClusterProbeFontCount = expected.filter((item) => item.explicitClusterProbe).length;
+    report.nodeReference.sharedItemizationProbeFontCount = sharedItemizationProbeFontCount;
+    report.nodeReference.sharedItemizationProbePassed = true;
     report.nodeReference.explicitClusterProbePassed = invalidExplicitClusterFixtures.length === 0;
     report.nodeReference.unsupportedFontFixtures = unsupportedFontFixtures;
     report.nodeReference.unsupportedFontCount = unsupportedFontFixtures.length;
@@ -552,7 +617,7 @@ async function main() {
     report.browserWorker = browserResult;
     if (browserResult.state !== 'passed' || browserResult.exactNodeParity !== true ||
         browserResult.classicWorker !== true || browserResult.dynamicImport !== true ||
-        browserResult.wasmLoaded !== true || browserResult.fontCount !== shapeFixtures.length) {
+        browserResult.wasmLoaded !== true || browserResult.bidiWasmLoaded !== true || browserResult.bidiUnicodeVersion !== '18.0.0' || browserResult.sharedItemizationProbeFontCount !== sharedItemizationProbeFontCount || browserResult.sharedItemizationProbePassed !== true || browserResult.fontCount !== shapeFixtures.length) {
       throw new Error('Classic Worker multi-font compatibility proof failed: ' +
         JSON.stringify(browserResult).slice(0, 5000));
     }
