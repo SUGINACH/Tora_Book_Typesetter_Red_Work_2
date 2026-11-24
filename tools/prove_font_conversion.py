@@ -208,12 +208,33 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
     glyphset_aligned_after = glyph_bounds(font, prefer_cff=False)
     max_bbox_delta = 0.0
     worst_glyph = None
+    max_placement_delta = 0.0
+    worst_placement_glyph = None
     for gid, name in enumerate(names):
         a, b = before[name], after[name]
-        if a is None or b is None:
-            if a != b:
+        aligned = glyphset_aligned_after[name]
+        if a is None or b is None or aligned is None:
+            if a != b or a != aligned:
                 raise ValueError(f"empty/non-empty outline changed for GID {gid} ({name})")
             continue
+        placement_delta = max(abs(float(x) - float(y)) for x, y in zip(a, aligned))
+        if placement_delta > max_placement_delta:
+            max_placement_delta = placement_delta
+            worst_placement_glyph = {
+                "gid": gid,
+                "name": name,
+                "sourceBounds": [float(v) for v in a],
+                "glyphSetAlignedBounds": [float(v) for v in aligned],
+                "deltaFontUnits": placement_delta,
+                "deltaEm": placement_delta / float(font["head"].unitsPerEm),
+                "sourceLsb": source_metrics[name][1],
+                "outputLsb": int(font["hmtx"].metrics[name][1]),
+                "sourceLeftPhantomPoint": float(a[0]) - float(source_metrics[name][1]),
+                "outputLeftPhantomPoint": (
+                    float(font["glyf"][name].xMin) - float(font["hmtx"].metrics[name][1])
+                    if hasattr(font["glyf"][name], "xMin") else None
+                ),
+            }
         delta = max(abs(float(x) - float(y)) for x, y in zip(a, b))
         if delta > max_bbox_delta:
             max_bbox_delta = delta
@@ -270,6 +291,9 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
     return {
         "maxBoundsDeltaFontUnits": max_bbox_delta,
         "worstGlyph": worst_glyph,
+        "maxGlyphSetPlacementDeltaFontUnits": max_placement_delta,
+        "maxGlyphSetPlacementDeltaEm": max_placement_delta / float(font["head"].unitsPerEm),
+        "worstPlacementGlyph": worst_placement_glyph,
         "hmetricsRemapping": hmetrics_remapping,
     }
 
