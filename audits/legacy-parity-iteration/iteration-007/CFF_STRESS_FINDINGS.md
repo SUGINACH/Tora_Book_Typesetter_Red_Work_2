@@ -79,3 +79,38 @@ For the same HEAD `011ba614...`:
 ## Branch boundary
 
 All work described here is audit tooling, diagnostics, and documentation. No production font assets, active font catalog, layout engine behavior, or legacy engine were changed. Continue only on `engine/legacy-parity-preview-20261119`; do not merge into or modify `main`, `rescue`, or the legacy engine.
+
+## Follow-up — corrected metric semantics and audit harness (2026-11-24)
+
+### Commit `18de329a1a718cd4204bbb155c2b10875325a314`
+
+The same invalid comparison was present in the pilot validator and the synthetic raw-glyf regression, not only in the stress-runner exit gate. The three tools were updated together:
+
+- `reconcile_cff_metrics_for_glyf` now names the source diagnostic `sourceCurveXMinMinusSourceLsb`; it no longer labels a CFF curve bound minus source LSB as a preserved TrueType phantom point.
+- The conversion invariant is explicit and checked per non-empty glyph: output `hmtx.LSB == glyf.xMin` (stored TrueType control-box xMin). Empty glyphs retain LSB zero; advance widths remain exact; `hhea` and `head` are recalculated and checked after SFNT reload.
+- The decomposed experimental path checks the same output LSB/control-box invariant rather than the invalid cross-format metric.
+- `tools/test_raw_glyf_bounds.py` explicitly tests a quadratic glyph whose actual curve xMin is 39 while an off-curve control point makes stored glyf xMin -72. It verifies the output LSB follows -72 and the rendered curve bounds remain stable after save/load.
+- The stress report schema is now `cff-conversion-stress-v3`. It keeps source curve/LSB offsets and geometric outliers as explicit diagnostics, requires raster evidence for flagged fonts, and separates those manual-review items from structural/runtime failures. The report explicitly sets `massConversionApproved: false`; a green automated stress job is not approval to activate or mass-convert the catalog.
+
+### New verification status
+
+At the time this note was written, font workflow [45402648301](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/actions/runs/45402648301) had passed:
+- syntax compilation of all font audit scripts;
+- the raw glyf bounds / off-curve LSB regression;
+- full core and extended catalog scan;
+- the seven-font WOFF2/CFF/variable-font pilot against the production parser and PDF subsetter.
+
+The 380-font stress step was still running. Its final report and artifact must be inspected before treating the new metric contract as fully verified.
+
+### Long-corpus layout-audit harness
+
+Commits `99a8c7cf5ea7d5ba1fde07f23e6d2f42726549a6` and `a23d64790efda0b50695c31521f3090bb121a2a6` changed only the live browser-audit harness: the long virtualized scan now runs asynchronously in the page and the shell polls it through short CDP evaluations, rather than awaiting the entire sweep in one `Runtime.evaluate`.
+
+Verification:
+- [CI run 45401243122](https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/actions/runs/45401243122): smoke 7/7 pages, long corpus 691/691 pages, both zero issues; the long sweep completed in 232 steps / about 31.8 seconds.
+- The same layout-audit job also passed on commit `18de329a`, including both the small and 691-page fixtures.
+- On `18de329a`, full-math-audit, preview-engine-parity and corpus-invariants succeeded. The three Node-version CI test jobs were still running when this note was written.
+
+### Remaining decision boundary
+
+The conversion pipeline is still proof-only. Do not add converted fonts to the active catalog, alter live renderer/layout behavior, or approve mass conversion until the final 380-font artifact is inspected, geometric outliers and raster evidence are reviewed, and the shaping/measurement integration is designed as a shared deterministic contract.
