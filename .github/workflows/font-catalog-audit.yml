@@ -45,6 +45,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: imud-font-catalog-audit-${{ github.sha }}
-          path: |\n            artifacts/font-catalog-audit/report.json\n            artifacts/font-conversion-proof/report.json
+          path: |
+            artifacts/font-catalog-audit/report.json
+            artifacts/font-conversion-proof/report.json
           if-no-files-found: ignore
           retention-days: 14
