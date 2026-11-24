@@ -177,6 +177,11 @@ def main():
             maximum_curve_bound_delta = 0.0
             maximum_control_bound_delta = 0.0
             glyph_extents_mismatch_examples = []
+            svg_path_bounds_matches = 0
+            svg_path_bounds_mismatches = 0
+            svg_path_bounds_missing = 0
+            maximum_svg_path_bounds_delta = 0.0
+            svg_path_bounds_mismatch_examples = []
             mismatch_examples = []
 
             for record_index, record in enumerate(records):
@@ -197,6 +202,53 @@ def main():
                 source_bounds_pen = BoundsPen(source_glyph_set)
                 source_glyph.draw(source_bounds_pen)
                 source_bounds = source_bounds_pen.bounds
+                exact_ink_bounds = record.get("exactInkBounds")
+                if source_bounds is None:
+                    if exact_ink_bounds is None:
+                        svg_path_bounds_matches += 1
+                    else:
+                        svg_path_bounds_mismatches += 1
+                        if len(svg_path_bounds_mismatch_examples) < 8:
+                            svg_path_bounds_mismatch_examples.append({
+                                "gid": gid,
+                                "glyphName": source_order[gid],
+                                "reason": "JavaScript reported bounds for an empty source outline",
+                                "javascriptBounds": exact_ink_bounds,
+                            })
+                elif exact_ink_bounds is None:
+                    svg_path_bounds_missing += 1
+                    svg_path_bounds_mismatches += 1
+                    if len(svg_path_bounds_mismatch_examples) < 8:
+                        svg_path_bounds_mismatch_examples.append({
+                            "gid": gid,
+                            "glyphName": source_order[gid],
+                            "reason": "JavaScript omitted exact bounds for a non-empty source outline",
+                            "sourceBounds": [float(value) for value in source_bounds],
+                        })
+                else:
+                    js_bounds = [
+                        float(exact_ink_bounds["xMin"]),
+                        float(exact_ink_bounds["yMin"]),
+                        float(exact_ink_bounds["xMax"]),
+                        float(exact_ink_bounds["yMax"]),
+                    ]
+                    path_bound_delta = max_delta(js_bounds, source_bounds)
+                    maximum_svg_path_bounds_delta = max(
+                        maximum_svg_path_bounds_delta, path_bound_delta
+                    )
+                    if path_bound_delta <= tolerance:
+                        svg_path_bounds_matches += 1
+                    else:
+                        svg_path_bounds_mismatches += 1
+                        if len(svg_path_bounds_mismatch_examples) < 8:
+                            svg_path_bounds_mismatch_examples.append({
+                                "gid": gid,
+                                "glyphName": source_order[gid],
+                                "reason": "Analytic JavaScript SVG bounds differ from source BoundsPen",
+                                "sourceBounds": [float(value) for value in source_bounds],
+                                "javascriptBounds": js_bounds,
+                                "maxDeltaFontUnits": path_bound_delta,
+                            })
                 source_control_pen = ControlBoundsPen(source_glyph_set)
                 source_glyph.draw(source_control_pen)
                 source_control_bounds = source_control_pen.bounds
@@ -368,6 +420,11 @@ def main():
                 "maxGlyphExtentsCurveBoundDeltaFontUnits": maximum_curve_bound_delta,
                 "maxGlyphExtentsControlBoundDeltaFontUnits": maximum_control_bound_delta,
                 "glyphExtentsMismatchExamples": glyph_extents_mismatch_examples,
+                "svgPathBoundsMatches": svg_path_bounds_matches,
+                "svgPathBoundsMismatches": svg_path_bounds_mismatches,
+                "svgPathBoundsMissing": svg_path_bounds_missing,
+                "maxSvgPathBoundsDeltaFontUnits": maximum_svg_path_bounds_delta,
+                "svgPathBoundsMismatchExamples": svg_path_bounds_mismatch_examples,
                 "normalizedRedundantCloseSegments": normalized_close_segments,
                 "toleranceFontUnits": tolerance,
                 "mismatchExamples": mismatch_examples,
@@ -411,6 +468,16 @@ def main():
         ),
         "maxGlyphExtentsControlBoundDeltaFontUnits": max(
             (x["maxGlyphExtentsControlBoundDeltaFontUnits"] for x in font_results), default=0.0
+        ),
+        "svgPathBoundsMatches": sum(x["svgPathBoundsMatches"] for x in font_results),
+        "svgPathBoundsMismatches": sum(x["svgPathBoundsMismatches"] for x in font_results),
+        "svgPathBoundsMissing": sum(x["svgPathBoundsMissing"] for x in font_results),
+        "maxSvgPathBoundsDeltaFontUnits": max(
+            (x["maxSvgPathBoundsDeltaFontUnits"] for x in font_results), default=0.0
+        ),
+        "svgPathBoundsComparisonMethod": (
+            "Analytic JavaScript cubic-Bezier SVG path extrema versus fontTools BoundsPen "
+            "on the original source WOFF2 glyph"
         ),
         "glyphExtentsComparisonMethod": (
             "HarfBuzz glyphExtents versus fontTools BoundsPen (true curve bounds) and "
