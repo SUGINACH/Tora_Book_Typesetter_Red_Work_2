@@ -56,9 +56,9 @@ def glyph_bounds(font: TTFont) -> dict[str, tuple[float, float, float, float] | 
     return result
 
 
-def convert_cff_to_glyf(font: TTFont, max_err: float) -> float:
+def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
     if "CFF " not in font:
-        return 0.0
+        return {"maxBoundsDeltaFontUnits": 0.0, "worstGlyph": None}
     if "CFF2" in font:
         raise ValueError("CFF2 conversion is not included in this proof; variable axes must be instantiated first")
 
@@ -111,15 +111,26 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> float:
 
     after = glyph_bounds(font)
     max_bbox_delta = 0.0
-    for name in names:
+    worst_glyph = None
+    for gid, name in enumerate(names):
         a, b = before[name], after[name]
         if a is None or b is None:
             if a != b:
-                raise ValueError(f"empty/non-empty outline changed for glyph {name}")
+                raise ValueError(f"empty/non-empty outline changed for GID {gid} ({name})")
             continue
         delta = max(abs(float(x) - float(y)) for x, y in zip(a, b))
-        max_bbox_delta = max(max_bbox_delta, delta)
-    return max_bbox_delta
+        if delta > max_bbox_delta:
+            max_bbox_delta = delta
+            worst_glyph = {
+                "gid": gid,
+                "name": name,
+                "sourceBounds": [float(v) for v in a],
+                "convertedBounds": [float(v) for v in b],
+                "deltaFontUnits": delta,
+                "deltaEm": delta / float(font["head"].unitsPerEm),
+                "deltaOverCu2QuTolerance": delta / max_err if max_err else None,
+            }
+    return {"maxBoundsDeltaFontUnits": max_bbox_delta, "worstGlyph": worst_glyph}
 
 
 def font_sample_text(font: TTFont, kind: str) -> str:
@@ -246,7 +257,12 @@ def main() -> int:
                 max_err = float(font["head"].unitsPerEm) * MAX_ERR_EM
                 row["cu2quMaxErrorEm"] = MAX_ERR_EM
                 row["cu2quMaxErrorFontUnits"] = max_err
-                row["maxGlyphBoundsDeltaFontUnits"] = convert_cff_to_glyf(font, max_err)
+                conversion_geometry = convert_cff_to_glyf(font, max_err)
+                row["maxGlyphBoundsDeltaFontUnits"] = conversion_geometry["maxBoundsDeltaFontUnits"]
+                row["worstGlyphBoundsDelta"] = conversion_geometry["worstGlyph"]
+                row["maxGlyphBoundsDeltaOverTolerance"] = (
+                    conversion_geometry["maxBoundsDeltaFontUnits"] / max_err if max_err else None
+                )
                 font.flavor = None
                 if "glyf" not in font or "loca" not in font or "CFF " in font:
                     raise ValueError("conversion did not produce TrueType glyf/loca outlines")
