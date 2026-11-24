@@ -611,7 +611,7 @@ audits/MEASURE_API_SAFETY_U11_U14_2026-11-20.md, audits/U15_HEADING_ALIGNMENT_20
 |---|---|---|---|---|
 | FNT-CFF-GEO-01 | גבוהה | **פתוח — סקירה גאומטרית** | Artifact v5 על ee5973e בדק 47 outlier fonts ב-137 Raster samples: 47 overall, 47 Hebrew-base, 43 Hebrew-mark; אפס failures או missing. IoU minima: 0.978857 (Skechers U+0035), 0.983736 (Kedem-Sans U+05D8), 0.982143 (Mixtape U+05BC). 130/137 images שונות פיקסלית. הדגימות נבחרות לפי max bounds delta בכל קטגוריה; לא כל 22,169 glyphs נבדקו. | סקירה ידנית ממוקדת של החריגים; הרחבת דגימות לפי ראיות; החלטה מתועדת. אין לשנות MAX_ERR_EM או לאשר המרה גורפת על בסיס ממוצע/חציון. דוח: audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md |
 | FNT-CFF-APPROVAL-01 | חוסם הפעלה גורפת | **פתוח — אין אישור mass conversion** | 380/380 המרות עברו מבחני מבנה/Runtime, אך אלה אינם מוכיחים נאמנות גאומטרית לכל glyph. הדוח משאיר manualReviewRequired=true ו-massConversionApproved=false. | להשלים בחינה מבוססת ראיות; לבנות pipeline+manifest דטרמיניסטיים; לבצע end-to-end validation לפני הפעלת התוצרים בקטלוג. |
-| TYP-SHAPING-01 | גבוהה | **פתוח — חוזה ארכיטקטוני** | MeasureAPI מודד תו-אחר-תו; DOM/HTML מבצעים shaping בדפדפן אחרי קביעת תיבות המודל; PDF ו-subsetter מתרגמים Unicode→GID לכל תו ואינם משמרים clusters/offsets. HarfBuzzJS 1.6.4 הוא ESM/WASM ואינו תואם ישירות ל-CJS classic-worker bundler הקיים. | חוזה ShapedRun/ShapedGlyph יחיד; הוכחת bundling/Node/Worker דטרמיניסטית; shaping לפני line-break; אותו glyph/position model בכל מקריני DOM/HTML/PDF. דוח: audits/SHAPING_CONTRACT_GAP_2026-11-24.md |
+| TYP-SHAPING-01 | גבוהה | **פתוח — חוזה shaping משותף; runtime PoC עבר** | HarfBuzzJS 1.6.4 / core 15.0.0 עבר PoC: ESM נטען ב-Node וב-classic Worker עם dynamic import + WASM; 11 font streams, 5 Hebrew-niqqud cases לכל stream, 449 glyph instances, exactNodeParity=true. 7 SFNT מקוריים (כולל wght=900) עם כיסוי מלא; 2 WOFF2 גולמיים אינם מפוענחים (42 GID0 לכל אחד); אותם קבצים אחרי fontTools/Brotli build-time normalization ל-SFNT מקבלים כיסוי מלא ו-parity מלא. אין integration ב-MeasureAPI/LineBreaker/PageModel/DOM/PDF. | חוזה ShapedRun/ShapedGlyph יחיד; shaping לפני line-break; אותו glyph/position model ב-DOM/HTML/PDF; להחליט ולממש font normalization קנוני ל-WOFF2; להוכיח Node/Worker/render/PDF parity מקצה לקצה. דוח: audits/SHAPING_CONTRACT_GAP_2026-11-24.md; run 45435545265 / artifact 14939779342 |
 | LAYOUT-F7-FRAGMENT-GAP-01 | גבוהה | **פתוח — ממתין ליציבות גופנים ו-shaping** | legacy-imud-flow מצמיד 7px לכל fragment של פסקה, גם ל-p-cut; DP pushLines מצמיד block gap רק לשורה הראשונה של קריאת בלוק, מדכא בראש טור/עמוד, ו-split שולח קטעים לקריאות נפרדות. יש להכריע האם gap הוא סמנטיקה של בלוק, fragment או פתיחת זרימה — לא לכפות 7px או מספר עמודים. | לחקור progress/fragment contract, findSplit/maxFit וגבולות split; להגדיר כלל יחיד לפי תחילת/המשך fragment ומצב הטור/עמוד; לבדוק פסקאות מפוצלות ולא מפוצלות בלי חריג מקומי. אין שינוי עד להשלמת שלבי הגופנים וה-shaping. |
 
 
@@ -645,3 +645,21 @@ severe LSB reviews; אפס diagnostic failures ואפס evidence missing.
 massConversionApproved=false; FNT-CFF-GEO-01 ו-FNT-CFF-APPROVAL-01
 נשארים פתוחים עד סקירה ידנית והוכחת pipeline/manifest מקצה לקצה.
 ראיות מלאות: audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md.
+
+
+### עדכון TYP-SHAPING-01 — הוכחת runtime ו-WOFF2 normalization (24.11.2026)
+
+Run 45435545265 / Artifact 14939779342 / commit ce660608e56b0ed1c1c9af45a2958fa68a6f58cd
+הסתיים success. HarfBuzzJS 1.6.4 נטען ב-Node וב-classic Worker (לא module
+Worker) באמצעות dynamic import; WASM נטען, וכל 11 ה-font streams הפיקו
+449 glyph instances זהים byte-for-byte בין Node ל-Worker.
+
+הוכחו TTF ו-variable SFNT (wght=900) עם כיסוי עברי מלא. WOFF2 גולמי אינו
+מתפענח במסלול HarfBuzzJS שנבדק: שני קבצים החזירו 42 GID0 כל אחד. נרמול
+אותם WOFF2 ל-SFNT באמצעות fontTools/Brotli ב-build-time נתן cmap עברי מלא,
+0 notdef ו-exact parity. התוצרים היו זמניים ב-GitHub Actions בלבד.
+
+ההוכחה סוגרת רק את שאלת Node/classic Worker/WASM loader. היא אינה סוגרת
+את חוזה shaping במנוע. FNT-CFF-GEO-01 ו-FNT-CFF-APPROVAL-01 נשארים
+כפי שהם; אין mass conversion, ואין שינוי ברינדור/עימוד. F7 נותר ממתין
+ליציבות גופנים ו-shaping. פרטי ראיות: audits/SHAPING_CONTRACT_GAP_2026-11-24.md.

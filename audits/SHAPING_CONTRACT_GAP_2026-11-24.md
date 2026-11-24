@@ -143,12 +143,24 @@ justify ופוזיציות glyphs צריכים להיגזר מאותו shaping r
   מספק loader ל-WASM חיצוני. אין בפרויקט כרגע שכבת runtime dependencies
   או תהליך build שמוכיח שילוב של ESM+WASM זה ב-Node וב-classic Worker.
 
-**הכרעה:** HarfBuzzJS הוא מועמד פונקציונלי ל-shaping, אך אינו תלות שניתן
-להוסיף ישירות לבאנדל הנוכחי. לפני שילוב נדרשת הוכחה קטנה ודטרמיניסטית של
-אותו font+text+axes+features ב-Node וב-classic Worker, כולל hash זהה של
-תוצאות shaping, טעינת WASM מקומית/מוטמעת, disposal וזיכרון. אם לא ניתן
-להוכיח זאת, יש לבחון build self-contained או חלופה אחרת. לא בוצעה התקנה
-או הוספת תלות ב-commit זה.
+**הכרעה מעודכנת לאחר PoC (24.11.2026):** HarfBuzzJS 1.6.4 הוכח
+כמועמד runtime תקין ל-Node ול-classic Worker: ESM נטען מתוך Worker קלאסי
+ב-`import()` דינמי, אתחול WASM הושלם, ו-JSON shaping זהה byte-for-byte
+לריצת Node על אותה חבילת ESM/WASM. לכן אין צורך להפוך את ה-Worker ל-module
+Worker ואין חסם עקרוני בעצם השימוש ב-ESM/WASM.
+
+עם זאת, זו הוכחת runtime מבודדת בלבד. לא בוצעה אינטגרציה ב-`MeasureAPI`,
+ב-LineBreaker, ב-PageModel או במקריני DOM/HTML/PDF; לא נבנה חוזה
+ShapedRun/ShapedGlyph בייצור; ולא נוספה תלות קבועה ל-`package.json`
+או ל-`build-worker-bundle.js`. שילוב מלא עדיין דורש חוזה משותף וראיות
+end-to-end בכל יעדי הפלט.
+
+נמצאה גם מגבלת קלט ממשית: HarfBuzzJS אינו מפענח WOFF2 גולמי בממשק Blob
+שנבדק. בשני קובצי WOFF2 עבריים התקבלו 42 מופעי GID 0 וללא cmap עברי.
+אותם קבצים, לאחר נרמול build-time ל-SFNT באמצעות fontTools/Brotli,
+עיצבו עברית מנוקדת בכיסוי מלא. אין להעביר WOFF2 גולמי ל-HarfBuzz כאילו
+הוא SFNT; יש לספק bytes מנורמלים/TTF או להוסיף decoder WOFF2 מוכח.
+לא בוצעה המרה או החלפה של נכסי הייצור ב-PoC.
 
 HarfBuzz מבצע shaping לריצות שסופקו לו; הוא אינו מחליף את אלגוריתם ה-bidi
 של הפסקה, סגמנטציית script/font, שבירת שורות או pagination. שלבים אלה
@@ -181,3 +193,84 @@ HarfBuzz מבצע shaping לריצות שסופקו לו; הוא אינו מחל
 - `red-build/src/engine/output/pdf-writer.js`
 - `tools/build-worker-bundle.js`
 - `red-build/package.json`
+
+
+## הוכחת runtime Node ↔ classic Worker והגבלת WOFF2 — 24.11.2026
+
+### סביבת הוכחה
+- HarfBuzzJS: `1.6.4`; HarfBuzz core: `15.0.0`.
+- Node: `v22.23.5`.
+- Classic Worker אמיתי, שנוצר ללא `{ type: 'module' }`.
+- ה-Worker טוען את קובץ ה-helper עם `importScripts()`, ואת HarfBuzz ESM
+  באמצעות `import()` דינמי; קובצי WASM/JS מוגשים מקומית מאותו עץ נכסים
+  שהועתק לחבילת הבדיקה.
+- אותה חבילת ESM/WASM משמשת גם את Node וגם את הדפדפן. לא הוכנסה תלות
+  לפרויקט המוצר ולא שונה ה-Worker הקיים.
+
+### תוצאת הריצה המאומתת
+- Workflow: `45435545265`; Artifact: `14939779342`;
+  commit: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
+- תוצאה: `passed_with_raw_woff2_limitations; normalized_sfnt_supported`.
+- 11 מופעי גופן (7 SFNT מקוריים — כולל variable —, 2 WOFF2 גולמיים,
+  ו-2 SFNT מנורמלים שנוצרו מהם); 5 מחרוזות עבריות מנוקדות לכל מופע;
+  449 מופעי glyph בסך הכול.
+- `exactNodeParity=true`; SHA-256 של תוצאת ה-Node:
+  `c6451373eb80366695d87c953b6594ab42d4f02ef9d278660f49b4ea6d903af4`.
+  הפלט כולל לכל glyph: GID, cluster, flags, x/y advances, x/y offsets
+  ו-outline path. בנוסף מושווים direction/script/language/features,
+  unitsPerEm, צירי variation ומצב coverage.
+- בכל ששת ה-TTF הסטטיים ובגופן DejaVu baseline: כיסוי עברי וניקוד מלא,
+  `notdefGlyphCount=0`.
+- Frank Ruhl Libre Variable: ציר `wght` קיים בטווח 300–900
+  (ברירת מחדל 400); ה-PoC יישם במפורש `wght=900`, עם כיסוי מלא
+  ו-`notdefGlyphCount=0`.
+
+### WOFF2 — raw מול normalized SFNT
+שני קובצי המקור שנבדקו:
+- `Ambivalenti-Regular.woff2` — raw: כיסוי עברי `none`, חסרים
+  12 אותיות בסיס ו-8 סימני ניקוד/טעם; 42 glyph results הם GID 0.
+- `FrankBasic-1-regular.woff2` — אותה תוצאה: raw WOFF2 לא חשף
+  cmap עברי, ו-42 glyph results הם GID 0.
+
+שני הקבצים נורמלו זמנית ב-build-time על-ידי
+`fontTools.ttLib.TTFont` עם `font.flavor=None` ו-Brotli decoder
+(אותה משפחת כלי-המרה שכבר קיימת בפרויקט):
+- Ambivalenti → `Ambivalenti-Regular.normalized.sfnt`, ‏50,440 bytes,
+  UPEM=1000; כיסוי מלא, 0 glyphs חסרים.
+- FrankBasic → `FrankBasic-1-regular.normalized.sfnt`, ‏51,140 bytes,
+  UPEM=2048; כיסוי מלא, 0 glyphs חסרים.
+
+כל שני ה-SFNT המנורמלים עוצבו עם רצפי GID/clusters/advances/offsets
+ו-outlines תקינים, וה-parity מול Node היה byte-for-byte. הנכסים המנורמלים
+נוצרו בתיקיית temp של GitHub Actions בלבד ונמחקו בסוף הריצה; לא הוכנסו
+לספריית הגופנים של RED.
+
+### מסקנות והשלכות ארכיטקטוניות
+1. הטעינה של HarfBuzzJS ESM/WASM מתוך classic Worker אפשרית ומוכחת;
+   אין הצדקה לשנות את ה-Worker ל-module Worker רק כדי לאפשר Shaping.
+2. HarfBuzzJS לא מפענח WOFF2 גולמי דרך Blob API שנבדק. כדי לתת shaping
+   אמיתי למשפחות WOFF2 יש לספק ל-HarfBuzz SFNT מנורמל/TTF, או לבנות
+   decoder WOFF2 עצמאי ומוכח. אין להסתמך על parity של GID 0.
+3. RED כבר מחזיק נתיב המרת WOFF2→TTF מבוסס fontTools/Brotli להכנת נכסים;
+   ה-PoC הוכיח שניתן להשתמש באותו עיקרון ב-build-time. עדיין לא הוחלט
+   אם הייצור יישען על TTF המוטמע הקיים, על SFNT נוסף ל-shaping, או על
+   normalization pipeline קנוני משותף.
+4. ה-PoC אינו הוכחת shaping של המנוע כולו: הוא אינו מזין shaped runs
+   לשבירת שורות, אינו משנה את PageModel, ואינו מוכיח ציור glyph positions
+   זהים ב-DOM/HTML/PDF. אין להתחיל מימוש renderer לפני חוזה
+   ShapedRun/ShapedGlyph ו-tests מקצה לקצה.
+5. HarfBuzz הוא shaping engine לריצות מוגדרות, לא bidi paragraph engine,
+   font fallback resolver, line breaker או paginator. סגמנטציית bidi/script/
+   font והחלטות line-break נשארות חלק מחוזה המנוע.
+
+### קובצי PoC
+- `tools/shaping-runtime-poc/shape-core.js`
+- `tools/shaping-runtime-poc/classic-worker.js`
+- `tools/shaping-runtime-poc/index.html`
+- `tools/shaping-runtime-poc/run.js`
+- `tools/shaping-runtime-poc/normalize_woff2.py`
+- `.github/workflows/shaping-runtime-poc.yml`
+
+ה-PoC נשאר harness בדיקה בלבד. אין `harfbuzzjs` ב-runtime dependencies,
+אין שינוי ב-`MeasureAPI`, ב-`build-worker-bundle.js), ב-PDF writer,
+ב-DOM renderer, ב-font registry, או בקובצי הקטלוג.

@@ -4678,3 +4678,58 @@ conversion או geometry. בנוסף נמצא שימוש בשם המשתנה ה�
 - Shaping משותף נשאר הפער הארכיטקטוני המרכזי; F7 נשאר ממתין ליציבות גופנים
   ו-shaping. לא שונו P6/P7, ערכת 40 או עיצובי השערים המקוריים.
 
+
+
+## 2026-11-24 — הוכחת HarfBuzzJS ב-Node וב-classic Worker; WOFF2 normalization
+
+HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
+
+### PoC וריצת GitHub Actions
+- HarfBuzzJS 1.6.4 / HarfBuzz core 15.0.0 / Node v22.23.5.
+- Run: `45435545265`; Artifact: `14939779342`; conclusion: success.
+- Classic Worker נבנה כ-Worker קלאסי (ללא module type), טוען helper עם
+  `importScripts()` ו-HarfBuzz ESM באמצעות dynamic `import()`; WASM init
+  הושלם בהצלחה.
+- Node ו-Worker משתמשים באותה חבילת ESM/WASM מקומית. תוצאת העיצוב זהה
+  byte-for-byte: `exactNodeParity=true`, SHA-256
+  `c6451373eb80366695d87c953b6594ab42d4f02ef9d278660f49b4ea6d903af4`.
+- 11 streams × 5 Hebrew niqqud fixtures = 449 glyph instances:
+  GID, cluster, flags, x/y advances, x/y offsets ו-SVG outline paths.
+- 6 TTF סטטיים + DejaVu baseline: coverage מלא, 0 missing, 0 notdef.
+- FrankRuhlLibre Variable: wght 300–900, נבדק במפורש wght=900;
+  coverage מלא, 0 notdef.
+- 2 raw WOFF2: Ambivalenti-Regular ו-FrankBasic-1 — HarfBuzzJS לא פענח
+  cmap עברי; 42 GID0 לכל אחד, missing 12 base + 8 marks.
+- אותם WOFF2 נורמלו זמנית ב-build-time עם fontTools/Brotli ל-SFNT:
+  Ambivalenti 50,440 bytes/UPEM 1000; FrankBasic 51,140 bytes/UPEM 2048.
+  שני התוצרים נרשמו ב-HarfBuzz עם כיסוי מלא, 0 notdef, ו-Node/Worker
+  parity מלא.
+- ה-SFNT המנורמלים היו ב-temp בלבד; אין שינוי בקטלוג או בנכסי production.
+- תוצאת הריצה: `passed_with_raw_woff2_limitations; normalized_sfnt_supported`.
+
+### מסקנות עבודה
+- ESM/WASM מתוך classic Worker הוכח; אין צורך לשנות Worker type.
+- WOFF2 raw אינו נתמך במסלול HarfBuzzJS שנבדק; נדרש SFNT/TTF
+  מנורמל. אפשר להשתמש בעיקרון fontTools/Brotli הקיים ב-build-time,
+  אך אין עדיין החלטה על pipeline קנוני או שילוב עם נכסי production.
+- אין עדיין ShapedRun ב-PageModel, shaping לפני line-break, או projection
+  משותף ל-DOM/HTML/PDF. אין לשנות MeasureAPI או renderer על סמך PoC זה בלבד.
+- לא נוספה runtime dependency ולא שונו engine code, bundle builder,
+  font loader, font catalog או PDF writer.
+
+### ריצות סביבת המוצר על אותו HEAD
+- Preview `45435545173`: completed success.
+- Corpus invariants `45435545093`: completed success.
+- Full Math `45435545150`: completed success.
+- Layout Audit ב-CI `45435545153`: completed success.
+- Node 18/20/22 ב-CI `45435545153`: עדיין in progress בעת כתיבת עדכון זה;
+  אין לדווח על CI מלא כ-green עד סיום שלושת ה-jobs.
+
+### הסדר הבא
+1. להחליט אם שכבת font normalization תהיה build-time asset pipeline קנוני
+   שממנו יצרכו גם font-metrics/PDF וגם HarfBuzz, או שנשתמש בקובצי TTF
+   המוטמעים שכבר קיימים.
+2. להגדיר ShapedRun/ShapedGlyph ויחסי source cluster/glyph לשבירת שורות.
+3. להוכיח shaping-before-line-break ו-consistent outlines/positions בכל
+   היעדים DOM/HTML/PDF, כולל PDF ToUnicode/ActualText.
+4. רק לאחר יציבות גופנים ו-shaping לפתוח את F7/fragment-flow correction.
