@@ -200,6 +200,40 @@ async function main() {
       const fontArrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
       expected.push(shapeCore.shapeWithHarfBuzz(hb, fontArrayBuffer, fixture));
     }
+    const utf16ClusterProbe = expected.find((item) => item.utf16ClusterProbe)?.utf16ClusterProbe || null;
+    if (!utf16ClusterProbe ||
+        utf16ClusterProbe.clustersUseUtf16CodeUnitOffsets !== true ||
+        utf16ClusterProbe.utf16Length !== 4 ||
+        utf16ClusterProbe.unicodeScalarCount !== 3 ||
+        JSON.stringify(utf16ClusterProbe.actualClusters) !== JSON.stringify([0, 1, 3])) {
+      throw new Error('UTF-16 source-cluster proof failed: ' + JSON.stringify(utf16ClusterProbe));
+    }
+    const shapedGlyphs = expected.flatMap((item) =>
+      item.cases.flatMap((testCase) => testCase.glyphs)
+    );
+    const outlinedGlyphs = shapedGlyphs.filter((glyph) => glyph.outline.length > 0);
+    const glyphsMissingInkExtents = outlinedGlyphs.filter((glyph) => !glyph.glyphExtents);
+    const invalidGlyphExtents = shapedGlyphs.filter((glyph) =>
+      glyph.glyphExtents && Object.values(glyph.glyphExtents).some((value) => !Number.isFinite(value))
+    );
+    if (glyphsMissingInkExtents.length || invalidGlyphExtents.length) {
+      throw new Error('HarfBuzz glyph-extents contract failed: ' + JSON.stringify({
+        shapedGlyphCount: shapedGlyphs.length,
+        outlinedGlyphCount: outlinedGlyphs.length,
+        missingInkExtents: glyphsMissingInkExtents.length,
+        invalidExtents: invalidGlyphExtents.length
+      }));
+    }
+    report.utf16ClusterProbe = utf16ClusterProbe;
+    report.glyphExtentsAudit = {
+      unit: 'font-units',
+      shapedGlyphCount: shapedGlyphs.length,
+      outlinedGlyphCount: outlinedGlyphs.length,
+      glyphsWithExtents: shapedGlyphs.filter((glyph) => glyph.glyphExtents).length,
+      glyphsWithoutExtents: shapedGlyphs.filter((glyph) => !glyph.glyphExtents).length,
+      outlinedGlyphsMissingExtents: glyphsMissingInkExtents.length,
+      invalidExtents: invalidGlyphExtents.length
+    };
     const cffOutlineInputs = expected.filter((item) => item.outlineSweep && item.outlineSweep.outlinePaths)
       .map((item) => {
         const normalizedFixture = shapeFixtures.find((candidate) => candidate.name === item.fontName);
@@ -270,6 +304,9 @@ async function main() {
         format: item.fontFormat,
         normalizedFrom: item.normalizedFrom,
         sourceOutlineFormat: item.sourceOutlineFormat,
+        utf16ClusterProbe: item.utf16ClusterProbe,
+        glyphExtentsCount: item.cases.reduce((count, testCase) =>
+          count + testCase.glyphs.filter((glyph) => glyph.glyphExtents).length, 0),
         outlineSweep: item.outlineSweep,
         unitsPerEm: item.unitsPerEm,
         variationMode: item.variationMode,

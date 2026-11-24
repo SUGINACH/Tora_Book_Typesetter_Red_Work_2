@@ -18,6 +18,59 @@
     return 'U+' + cp.toString(16).toUpperCase().padStart(4, '0');
   }
 
+  // JavaScript source ranges in the engine are UTF-16 code-unit offsets.
+  // HarfBuzzJS 1.6.4 Buffer.addText uses hb_buffer_add_utf16; pin that contract
+  // with one supplementary-plane scalar between two BMP characters.
+  const UTF16_CLUSTER_PROBE_TEXT = 'A\u{1F600}B';
+  function probeUtf16ClusterOffsets(hb, font, face, fixture) {
+    if (!fixture || fixture.name !== 'DejaVuSans.ttf') return null;
+    const expectedCodepoints = [0x41, 0x1F600, 0x42];
+    const supported = new Set(Array.from(face.collectUnicodes(), Number));
+    const missing = expectedCodepoints.filter((cp) => !supported.has(cp)).map(hexCodepoint);
+    if (missing.length) {
+      throw new Error('DejaVuSans UTF-16 cluster probe is missing codepoints: ' + missing.join(', '));
+    }
+    const expectedGlyphIds = expectedCodepoints.map((cp) => Number(font.glyph(cp)));
+    if (expectedGlyphIds.some((gid) => !Number.isInteger(gid) || gid <= 0)) {
+      throw new Error('DejaVuSans UTF-16 cluster probe resolved a missing glyph: ' + JSON.stringify(expectedGlyphIds));
+    }
+
+    const buffer = new hb.Buffer();
+    buffer.addText(UTF16_CLUSTER_PROBE_TEXT);
+    buffer.setDirection(hb.Direction.LTR);
+    buffer.setScript('Latn');
+    buffer.setLanguage('en');
+    buffer.setClusterLevel(hb.ClusterLevel.MONOTONE_GRAPHEMES);
+    hb.shape(font, buffer, []);
+
+    const infos = buffer.getGlyphInfos();
+    const actualClusters = infos.map((info) => Number(info.cluster));
+    const actualGlyphIds = infos.map((info) => Number(info.codepoint));
+    const expectedClusters = [0, 1, 3]; // A=0, supplementary scalar=1..2, B=3
+    if (infos.length !== expectedClusters.length ||
+        JSON.stringify(actualClusters) !== JSON.stringify(expectedClusters) ||
+        JSON.stringify(actualGlyphIds) !== JSON.stringify(expectedGlyphIds)) {
+      throw new Error('HarfBuzz UTF-16 cluster contract mismatch: ' + JSON.stringify({
+        text: UTF16_CLUSTER_PROBE_TEXT,
+        expectedClusters,
+        actualClusters,
+        expectedGlyphIds,
+        actualGlyphIds
+      }));
+    }
+    return {
+      text: UTF16_CLUSTER_PROBE_TEXT,
+      utf16Length: UTF16_CLUSTER_PROBE_TEXT.length,
+      unicodeScalarCount: Array.from(UTF16_CLUSTER_PROBE_TEXT).length,
+      expectedClusters,
+      actualClusters,
+      expectedGlyphIds,
+      actualGlyphIds,
+      clusterUnit: 'utf16-code-unit',
+      clustersUseUtf16CodeUnitOffsets: true
+    };
+  }
+
   function shapeWithHarfBuzz(hb, fontBytes, fixture) {
     if (!hb || typeof hb.shape !== 'function') throw new TypeError('HarfBuzz module is not initialized');
     if (!(fontBytes instanceof ArrayBuffer) && !ArrayBuffer.isView(fontBytes)) {
@@ -46,6 +99,7 @@
     }
 
     const supported = new Set(Array.from(face.collectUnicodes(), Number));
+    const utf16ClusterProbe = probeUtf16ClusterOffsets(hb, font, face, fixture);
     const textCodepoints = new Set();
     const baseCodepoints = new Set();
     const markCodepoints = new Set();
@@ -94,12 +148,22 @@
         const gid = Number(info.codepoint);
         const cluster = Number(info.cluster);
         const outline = font.glyphToPath(gid);
+        const rawExtents = font.glyphExtents(gid);
+        const glyphExtents = rawExtents ? {
+          xBearing: Number(rawExtents.xBearing),
+          yBearing: Number(rawExtents.yBearing),
+          width: Number(rawExtents.width),
+          height: Number(rawExtents.height)
+        } : null;
         if (gid === 0) notdefGlyphCount++;
         if (!Number.isInteger(gid) || gid < 0) throw new Error('Invalid glyph ID ' + gid);
         if (!Number.isInteger(cluster) || cluster < 0 || cluster >= text.length) {
           throw new Error('Invalid source cluster ' + cluster + ' for ' + JSON.stringify(text));
         }
         if (typeof outline !== 'string') throw new Error('Missing outline path for GID ' + gid);
+        if (glyphExtents && Object.values(glyphExtents).some((value) => !Number.isFinite(value))) {
+          throw new Error('Non-finite HarfBuzz glyph extents for GID ' + gid);
+        }
         return {
           gid,
           cluster,
@@ -108,6 +172,7 @@
           yAdvance: Number(position.yAdvance),
           xOffset: Number(position.xOffset),
           yOffset: Number(position.yOffset),
+          glyphExtents,
           outline
         };
       });
@@ -158,6 +223,7 @@
       fontFormat: fixture.format || 'unknown',
       normalizedFrom: fixture.normalizedFrom || null,
       sourceOutlineFormat: fixture.sourceOutlineFormat || null,
+      utf16ClusterProbe,
       outlineSweep,
       unitsPerEm: Number(face.upem),
       harfBuzzVersion: hb.versionString(),
@@ -180,5 +246,5 @@
     };
   }
 
-  return { CASES, FEATURE_TAGS, shapeWithHarfBuzz };
+  return { CASES, FEATURE_TAGS, UTF16_CLUSTER_PROBE_TEXT, shapeWithHarfBuzz };
 });

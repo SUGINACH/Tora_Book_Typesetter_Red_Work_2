@@ -51,6 +51,9 @@
               format: item.fontFormat,
               upem: item.unitsPerEm,
               axes: item.axisInfos,
+              utf16ClusterProbe: item.utf16ClusterProbe,
+              glyphExtentsCount: item.cases.reduce((count, testCase) =>
+                count + testCase.glyphs.filter((glyph) => glyph.glyphExtents).length, 0),
               outlineSweep: item.outlineSweep,
               variationMode: item.variationMode,
               coverageStatus: item.coverageStatus,
