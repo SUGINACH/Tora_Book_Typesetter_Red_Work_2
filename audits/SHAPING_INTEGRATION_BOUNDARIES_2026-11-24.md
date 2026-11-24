@@ -308,3 +308,68 @@ attachment. אין לנסות לפתור bidi על ידי היפוך מחרוז�
 - לא בוצעה שום אינטגרציה ב-production. `TYP-SHAPING-01` נשאר פתוח.
 - `FNT-CFF-GEO-01` / `FNT-CFF-APPROVAL-01` נשארים פתוחים; אין mass
   conversion approval. F7 נשאר ממתין לייצוב גופנים ו-shaping.
+
+
+## 12. PoC v10 — semantics של glyphExtents וגבולות הדיו (24.11.2026)
+
+### ריצה ו-Artifact
+- Commit: `a7db7e8b28e343bbf71bf6dd9eabf0f835e7a2ee`.
+- Run: `45467805796`; Artifact: `14955353770`; conclusion: success.
+- HarfBuzzJS 1.6.4 / HarfBuzz core 15.0.0.
+- השוואה מול fontTools בשני מדדים נפרדים לכל אחד מ-852 GIDs בשלושה
+  קובצי CFF מקוריים (Ambivalenti 444, Mixtape Bold 204, Mixtape Regular 204).
+
+### תוצאות מדויקות
+
+| מדד | תוצאה |
+|---|---:|
+| HB glyphExtents מול fontTools ControlBoundsPen | 852/852 התאמות |
+| control-bound mismatches | 0 |
+| סטיית control bounds מרבית | 0 font units |
+| HB glyphExtents מול fontTools BoundsPen (true curve bounds) | 433/852 התאמות |
+| true curve bound disagreements | 419 |
+| פער curve bounds מרבי | 56.1117434352 font units |
+| glyphs ריקים עם אפס-area agreement | 3 |
+| HB extents חסרים | 0 |
+
+פירוט לפי גופן:
+- Ambivalenti: control 444/444; true curve 430 התאמות ו-14 הבדלים;
+  max true-curve delta 56.1117434352.
+- Mixtape Bold: control 204/204; true curve 2 התאמות ו-202 הבדלים;
+  max true-curve delta 27.1715025721.
+- Mixtape Regular: control 204/204; true curve 1 התאמה ו-203 הבדלים;
+  max true-curve delta 27.6752283218.
+
+### מסקנה הנדסית — תיקון לחוזה ShapedGlyph הקודם
+HarfBuzzJS `glyphExtents` תואם בדיוק ל-control-point bounding box
+(`ControlBoundsPen`), לא ל-tight curve bounding box (`BoundsPen`).
+לכן אין לקרוא לערך זה `inkBounds` ואין להשתמש בו כאילו הוא גבול הדיו
+המדויק. הוא יכול לשמש `controlBounds` שמרני בלבד.
+
+בחוזה ShapedRun/ShapedGlyph יש להפריד:
+- `controlBounds`: תיבת נקודות הבקרה שמספקת HarfBuzz, עם provenance ברור.
+- `inkBounds`: גבול עקומה הדוק שייגזר מנתיב ה-outline באמצעות חישוב
+  extrema אנליטי של quadratic/cubic Bézier segments, כולל endpoints,
+  נגזרות, contours ו-transform/position של הגליף.
+- אם outline format/renderer אינו מספק נתיב שממנו אפשר לחשב bounds מדויקים,
+  `inkBounds` יסומן unavailable/diagnostic; אין להחליף אותו בשקט ב-control box.
+
+לפני שילוב production נדרש pure-JS deterministic path-bounds test ולהשוות
+מול fontTools BoundsPen לכל 852 GIDs, כולל empty outlines, quadratic/cubic
+curves, contours סגורים ו-extrema פנימיים. ה-PoC הנוכחי עדיין אינו מוכיח
+pen accumulation, signs ב-RTL, transformed run-level bounds או ink parity
+בין DOM/HTML/PDF.
+
+### חוזה source ranges — אימות נוסף
+- 75/75 מחרוזות RTL עם סדר clusters מונוטוני לא-עולה.
+- 617/617 glyphs עם absolute UTF-16 sourceRange תקין.
+- 345 clusters ייחודיים; 220 קבוצות multi-glyph cluster; 272 glyphs
+  החוזרים על cluster של glyph אחר.
+- אפס source-range errors, אפס surrogate-pair splits ואפס source-coverage gaps.
+- `A😀B`: clusters [0,1,3], source ranges [37,38), [38,40), [40,41).
+
+### גבול המסקנה
+הבדיקה מאשרת את semantics של `glyphExtents` בשלושת CFF fixtures ובגרסת
+HarfBuzz שנבדקה. אין להסיק ממנה שכל outline format או כל variation mode
+מחזירים אותן תכונות, ואין לראות בה מימוש של ink-bounds engine. ה-production
+engine לא שונה; `TYP-SHAPING-01` נשאר פתוח.
