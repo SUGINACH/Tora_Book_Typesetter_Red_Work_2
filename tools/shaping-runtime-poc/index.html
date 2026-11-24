@@ -18,12 +18,13 @@
       try {
         const expectedResponse = await fetch('/expected.json', { cache: 'no-store' });
         if (!expectedResponse.ok) throw new Error('could not fetch Node reference output');
-        const expected = await expectedResponse.json();
+        const expectedJson = await expectedResponse.text();
+        const expected = JSON.parse(expectedJson);
         const worker = new Worker('/classic-worker.js', { name: 'harfbuzz-classic-worker-poc' });
         const timer = setTimeout(() => {
           worker.terminate();
           finish({ state: 'failed', error: 'classic Worker shaping timed out' });
-        }, 60000);
+        }, 90000);
         worker.onmessage = (event) => {
           clearTimeout(timer);
           worker.terminate();
@@ -32,20 +33,29 @@
             finish({ state: 'failed', error: data.error || 'worker shaping failed' });
             return;
           }
-          const exactMatch = JSON.stringify(data.shape) === JSON.stringify(expected);
+          const actualJson = JSON.stringify(data.results);
+          const exactMatch = actualJson === expectedJson;
           finish({
             state: exactMatch && data.runtime && data.runtime.classicWorker && data.runtime.dynamicImport
               ? 'passed' : 'failed',
             classicWorker: data.runtime && data.runtime.classicWorker,
             dynamicImport: data.runtime && data.runtime.dynamicImport,
             wasmLoaded: data.runtime && data.runtime.wasmLoaded,
-            harfBuzzVersion: data.shape && data.shape.harfBuzzVersion,
-            caseCount: data.shape && data.shape.cases && data.shape.cases.length,
-            glyphCount: data.shape && data.shape.cases
-              ? data.shape.cases.reduce((sum, item) => sum + item.glyphs.length, 0) : 0,
-            exactNodeParity: exactMatch,
-            expected: expected,
-            actual: data.shape
+            harfBuzzVersion: data.results && data.results[0] && data.results[0].harfBuzzVersion,
+            fontCount: data.results && data.results.length,
+            caseCountPerFont: data.results && data.results[0] && data.results[0].cases.length,
+            glyphCount: data.results ? data.results.reduce((sum, item) =>
+              sum + item.cases.reduce((subtotal, testCase) => subtotal + testCase.glyphs.length, 0), 0) : 0,
+            fonts: data.results ? data.results.map(item => ({
+              name: item.fontName,
+              format: item.fontFormat,
+              upem: item.unitsPerEm,
+              axes: item.axisInfos,
+              variationMode: item.variationMode,
+              missingCodepoints: item.missingCodepoints,
+              glyphCount: item.cases.reduce((sum, testCase) => sum + testCase.glyphs.length, 0)
+            })) : [],
+            exactNodeParity: exactMatch
           });
         };
         worker.onerror = (event) => {
@@ -53,10 +63,16 @@
           worker.terminate();
           finish({ state: 'failed', error: event.message || 'classic Worker error' });
         };
+        const fonts = expected.map(item => ({
+          name: item.fontName,
+          format: item.fontFormat,
+          variationMode: item.variationMode,
+          url: '/fonts/' + item.fontName
+        }));
         worker.postMessage({
           type: 'shape',
           moduleUrl: new URL('/harfbuzzjs/dist/index.mjs', location.href).href,
-          fontUrl: '/fonts/DejaVuSans.ttf'
+          fonts
         });
       } catch (error) {
         finish({ state: 'failed', error: String(error && error.stack || error) });

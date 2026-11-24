@@ -14,20 +14,48 @@
   ]);
   const FEATURE_TAGS = Object.freeze(['kern', 'mark', 'mkmk', 'rlig']);
 
-  function shapeWithHarfBuzz(hb, fontBytes, texts = CASES) {
+  function hexCodepoint(cp) {
+    return 'U+' + cp.toString(16).toUpperCase().padStart(4, '0');
+  }
+
+  function shapeWithHarfBuzz(hb, fontBytes, fixture) {
     if (!hb || typeof hb.shape !== 'function') throw new TypeError('HarfBuzz module is not initialized');
     if (!(fontBytes instanceof ArrayBuffer) && !ArrayBuffer.isView(fontBytes)) {
       throw new TypeError('fontBytes must be an ArrayBuffer or typed array');
     }
-
+    fixture = fixture || {};
     const blob = new hb.Blob(fontBytes);
     const face = new hb.Face(blob, 0);
     const font = new hb.Font(face);
+    const axisInfos = face.getAxisInfos();
+    const axes = Object.keys(axisInfos).sort().map((tag) => ({
+      tag,
+      min: Number(axisInfos[tag].min),
+      default: Number(axisInfos[tag].default),
+      max: Number(axisInfos[tag].max)
+    }));
+    let appliedVariations = [];
+    if (fixture.variationMode === 'max') {
+      if (!axes.length) throw new Error('Expected a variable font with at least one axis: ' + fixture.name);
+      appliedVariations = axes.map((axis) => ({ tag: axis.tag, value: axis.max }));
+      font.setVariations(appliedVariations.map((item) => new hb.Variation(item.tag, item.value)));
+    } else if (fixture.variationMode === 'min') {
+      if (!axes.length) throw new Error('Expected a variable font with at least one axis: ' + fixture.name);
+      appliedVariations = axes.map((axis) => ({ tag: axis.tag, value: axis.min }));
+      font.setVariations(appliedVariations.map((item) => new hb.Variation(item.tag, item.value)));
+    }
+
+    const supported = new Set(Array.from(face.collectUnicodes(), Number));
+    const textCodepoints = new Set();
+    for (const text of CASES) for (const char of Array.from(text)) textCodepoints.add(char.codePointAt(0));
+    const missingCodepoints = Array.from(textCodepoints)
+      .filter((cp) => !supported.has(cp))
+      .sort((a, b) => a - b)
+      .map(hexCodepoint);
+
     const features = FEATURE_TAGS.map((tag) => new hb.Feature(tag, 1));
     const shapedCases = [];
-
-    for (const text of texts) {
-      if (typeof text !== 'string' || !text.length) throw new TypeError('shaping fixture text must be non-empty');
+    for (const text of CASES) {
       const buffer = new hb.Buffer();
       buffer.addText(text);
       buffer.setDirection(hb.Direction.RTL);
@@ -64,17 +92,23 @@
           outline
         };
       });
-
       shapedCases.push({ text, glyphs });
     }
 
     return {
+      fontName: fixture.name || 'unnamed',
+      fontFormat: fixture.format || 'unknown',
+      unitsPerEm: Number(face.upem),
       harfBuzzVersion: hb.versionString(),
       featureTags: FEATURE_TAGS.slice(),
       direction: 'rtl',
       script: 'Hebr',
       language: 'he',
       clusterLevel: 'MONOTONE_GRAPHEMES',
+      variationMode: fixture.variationMode || 'default',
+      axisInfos: axes,
+      appliedVariations,
+      missingCodepoints,
       cases: shapedCases
     };
   }

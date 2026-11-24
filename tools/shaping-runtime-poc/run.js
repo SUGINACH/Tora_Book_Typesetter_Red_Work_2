@@ -10,9 +10,20 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 
 const VERSION = '1.6.4';
-const FONT_SOURCE = process.env.HB_POC_FONT || '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
 const REPORT = process.env.HB_POC_REPORT || '/tmp/shaping-runtime-poc-report.json';
 const AGENT_BROWSER = process.env.AGENT_BROWSER || 'agent-browser';
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
+const FONT_DIR = path.join(REPO_ROOT, 'red-build', 'ui', 'assets', 'imud', 'fonts');
+const FONT_FIXTURES = [
+  { name: 'DejaVuSans.ttf', format: 'ttf', source: '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf' },
+  { name: 'FrankRuhlLibre-Regular.ttf', format: 'ttf', source: path.join(FONT_DIR, 'FrankRuhlLibre-Regular.ttf') },
+  { name: 'Frank-Re-Regular.ttf', format: 'ttf', source: path.join(FONT_DIR, 'Frank-Re-Regular.ttf') },
+  { name: 'DavidLibre-Regular.ttf', format: 'ttf', source: path.join(FONT_DIR, 'DavidLibre-Regular.ttf') },
+  { name: 'Guttman-Rashi-Normal.ttf', format: 'ttf', source: path.join(FONT_DIR, 'Guttman-Rashi-Normal.ttf') },
+  { name: 'Narkisim-Regular.ttf', format: 'ttf', source: path.join(FONT_DIR, 'Narkisim-Regular.ttf') },
+  { name: 'FrankRuhlLibre-VF.ttf', format: 'ttf-variable', source: path.join(FONT_DIR, 'FrankRuhlLibre-VF.ttf'), variationMode: 'max' },
+  { name: 'Ambivalenti-Regular.woff2', format: 'woff2', source: path.join(FONT_DIR, 'Ambivalenti-Regular.woff2') }
+];
 
 function runCommand(command, args, options = {}) {
   const result = spawnSync(command, args, { encoding: 'utf8', ...options });
@@ -70,15 +81,24 @@ function mimeType(file) {
     case '.json': return 'application/json; charset=utf-8';
     case '.wasm': return 'application/wasm';
     case '.ttf': return 'font/ttf';
+    case '.woff2': return 'font/woff2';
     default: return 'application/octet-stream';
   }
 }
 
 async function main() {
-  if (!fs.existsSync(FONT_SOURCE)) throw new Error('Required test font is missing: ' + FONT_SOURCE);
+  const missingFiles = FONT_FIXTURES.filter((fixture) => !fs.existsSync(fixture.source));
+  if (missingFiles.length) throw new Error('Missing repository font fixtures: ' +
+    missingFiles.map((fixture) => fixture.name + ' at ' + fixture.source).join(', '));
+
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'harfbuzz-runtime-poc-'));
   const site = path.join(temp, 'site');
-  const report = { package: 'harfbuzzjs@' + VERSION, nodeVersion: process.version, startedAt: new Date().toISOString() };
+  const report = {
+    package: 'harfbuzzjs@' + VERSION,
+    nodeVersion: process.version,
+    fixtures: FONT_FIXTURES.map(({ name, format, variationMode }) => ({ name, format, variationMode: variationMode || 'default' })),
+    startedAt: new Date().toISOString()
+  };
   let server;
   let browserOpened = false;
 
@@ -97,7 +117,9 @@ async function main() {
       }
     }
     fs.cpSync(dist, path.join(site, 'harfbuzzjs', 'dist'), { recursive: true });
-    fs.copyFileSync(FONT_SOURCE, path.join(site, 'fonts', 'DejaVuSans.ttf'));
+    for (const fixture of FONT_FIXTURES) {
+      fs.copyFileSync(fixture.source, path.join(site, 'fonts', fixture.name));
+    }
     for (const file of ['index.html', 'classic-worker.js', 'shape-core.js']) {
       fs.copyFileSync(path.join(__dirname, file), path.join(site, file));
     }
@@ -105,17 +127,32 @@ async function main() {
     const hbUrl = pathToFileURL(path.join(site, 'harfbuzzjs', 'dist', 'index.mjs')).href;
     const hb = await import(hbUrl);
     const shapeCore = require('./shape-core.js');
-    const fontBytes = fs.readFileSync(FONT_SOURCE);
-    const fontArrayBuffer = fontBytes.buffer.slice(fontBytes.byteOffset, fontBytes.byteOffset + fontBytes.byteLength);
-    const expected = shapeCore.shapeWithHarfBuzz(hb, fontArrayBuffer);
+    const expected = [];
+    for (const fixture of FONT_FIXTURES) {
+      const bytes = fs.readFileSync(fixture.source);
+      const fontArrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+      expected.push(shapeCore.shapeWithHarfBuzz(hb, fontArrayBuffer, fixture));
+    }
     const expectedJson = JSON.stringify(expected);
     report.nodeReference = {
-      harfBuzzVersion: expected.harfBuzzVersion,
-      caseCount: expected.cases.length,
-      glyphCount: expected.cases.reduce((sum, item) => sum + item.glyphs.length, 0),
+      harfBuzzVersion: expected[0].harfBuzzVersion,
+      fontCount: expected.length,
+      caseCountPerFont: expected[0].cases.length,
+      totalGlyphCount: expected.reduce((sum, item) =>
+        sum + item.cases.reduce((subtotal, testCase) => subtotal + testCase.glyphs.length, 0), 0),
       outputSha256: crypto.createHash('sha256').update(expectedJson).digest('hex'),
-      glyphIds: expected.cases.map(item => item.glyphs.map(glyph => glyph.gid)),
-      clusters: expected.cases.map(item => item.glyphs.map(glyph => glyph.cluster))
+      fonts: expected.map((item) => ({
+        name: item.fontName,
+        format: item.fontFormat,
+        unitsPerEm: item.unitsPerEm,
+        variationMode: item.variationMode,
+        axisInfos: item.axisInfos,
+        appliedVariations: item.appliedVariations,
+        missingCodepoints: item.missingCodepoints,
+        glyphCount: item.cases.reduce((sum, testCase) => sum + testCase.glyphs.length, 0),
+        glyphIds: item.cases.map((testCase) => testCase.glyphs.map((glyph) => glyph.gid)),
+        clusters: item.cases.map((testCase) => testCase.glyphs.map((glyph) => glyph.cluster))
+      }))
     };
     fs.writeFileSync(path.join(site, 'expected.json'), expectedJson, 'utf8');
 
@@ -141,6 +178,7 @@ async function main() {
       server.once('error', reject);
       server.listen(0, '127.0.0.1', resolve);
     });
+
     const address = server.address();
     await runAgent(['open', 'http://127.0.0.1:' + address.port + '/'], 60000);
     browserOpened = true;
@@ -148,21 +186,22 @@ async function main() {
 
     const started = Date.now();
     let browserResult = null;
-    while (Date.now() - started < 70000) {
+    while (Date.now() - started < 100000) {
       const raw = await runAgent(['eval', 'JSON.stringify(window.__hbPoc || {state:"missing"})'], 15000);
       const state = unwrapAgentJson(raw);
       if (state && typeof state === 'object' && state.state !== 'running') {
         browserResult = state;
         break;
       }
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
-    if (!browserResult) throw new Error('Timed out waiting for classic Worker ESM/WASM shaping');
+    if (!browserResult) throw new Error('Timed out waiting for multi-font classic Worker ESM/WASM shaping');
     report.browserWorker = browserResult;
     if (browserResult.state !== 'passed' || browserResult.exactNodeParity !== true ||
         browserResult.classicWorker !== true || browserResult.dynamicImport !== true ||
-        browserResult.wasmLoaded !== true) {
-      throw new Error('Classic Worker compatibility proof failed: ' + JSON.stringify(browserResult).slice(0, 5000));
+        browserResult.wasmLoaded !== true || browserResult.fontCount !== FONT_FIXTURES.length) {
+      throw new Error('Classic Worker multi-font compatibility proof failed: ' +
+        JSON.stringify(browserResult).slice(0, 5000));
     }
 
     report.result = 'passed';
@@ -181,7 +220,7 @@ async function main() {
     if (browserOpened) {
       try { await runAgent(['close'], 15000); } catch (_) { /* preserve primary result */ }
     }
-    if (server) await new Promise(resolve => server.close(resolve));
+    if (server) await new Promise((resolve) => server.close(resolve));
     fs.rmSync(temp, { recursive: true, force: true });
   }
 }
