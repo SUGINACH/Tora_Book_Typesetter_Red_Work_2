@@ -238,11 +238,10 @@ def main() -> int:
                     int(cp): int(font.getGlyphID(glyph_name))
                     for cp, glyph_name in (font.getBestCmap() or {}).items()
                 }
-                advances_before = {
-                    name: int(font["hmtx"].metrics[name][0])
+                advances_before = [
+                    int(font["hmtx"].metrics[name][0])
                     for name in glyph_order_before
-                    if name in font["hmtx"].metrics
-                }
+                ]
                 outline = "cff" if "CFF " in font else "glyf"
                 max_err = float(font["head"].unitsPerEm) * MAX_ERR_EM
                 row["cu2quMaxErrorEm"] = MAX_ERR_EM
@@ -253,6 +252,11 @@ def main() -> int:
                     raise ValueError("conversion did not produce TrueType glyf/loca outlines")
                 font.sfntVersion = "\x00\x01\x00\x00"
 
+                converted_order = list(font.getGlyphOrder())
+                converted_bounds_by_gid = [
+                    glyph_bounds(font).get(name)
+                    for name in converted_order
+                ]
                 out = temp / (src.stem + ".ttf")
                 font.save(str(out))
                 check = TTFont(str(out), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
@@ -273,13 +277,28 @@ def main() -> int:
                         if cmap_before.get(cp) != cmap_after.get(cp)
                     ][:8]
                     raise ValueError(f"Unicode-to-GID mapping changed during conversion: {changed}")
-                advances_after = {
-                    name: int(check["hmtx"].metrics[name][0])
-                    for name in glyph_order_before
-                    if name in check["hmtx"].metrics
-                }
+                advances_after = [
+                    int(check["hmtx"].metrics[name][0])
+                    for name in check.getGlyphOrder()
+                ]
                 if advances_after != advances_before:
-                    raise ValueError("glyph advance widths changed during outline conversion")
+                    raise ValueError("glyph advance widths changed by GID during outline conversion")
+                if len(check.getGlyphOrder()) != len(converted_order):
+                    raise ValueError("glyph-ID cardinality changed after SFNT round-trip")
+                saved_bounds = glyph_bounds(check)
+                max_roundtrip_bbox_delta = 0.0
+                for gid, saved_name in enumerate(check.getGlyphOrder()):
+                    before_bounds = converted_bounds_by_gid[gid]
+                    after_bounds = saved_bounds.get(saved_name)
+                    if before_bounds is None or after_bounds is None:
+                        if before_bounds != after_bounds:
+                            raise ValueError(f"empty/non-empty outline changed after save at GID {gid}")
+                        continue
+                    delta = max(abs(float(x) - float(y)) for x, y in zip(before_bounds, after_bounds))
+                    max_roundtrip_bbox_delta = max(max_roundtrip_bbox_delta, delta)
+                row["maxSaveRoundTripGlyphBoundsDeltaFontUnits"] = max_roundtrip_bbox_delta
+                if max_roundtrip_bbox_delta > 0.01:
+                    raise ValueError(f"glyph bounds changed during SFNT save/load: {max_roundtrip_bbox_delta}")
                 if len(check.getGlyphOrder()) != row["sourceGlyphCount"]:
                     raise ValueError("glyph count changed")
                 sample = font_sample_text(check, label)
