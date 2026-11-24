@@ -205,7 +205,7 @@ function normalizeBounds(input, code, label) {
   return out;
 }
 
-function normalizeGlyphs(input, sourceRange, graphemes) {
+function normalizeGlyphs(input, sourceRange, graphemes, direction) {
   if (!Array.isArray(input) || input.length === 0) {
     fail('empty-glyph-output', 'A non-shaping or empty run cannot be represented as ShapedRun');
   }
@@ -228,6 +228,16 @@ function normalizeGlyphs(input, sourceRange, graphemes) {
       inkBounds: normalizeBounds(glyph.inkBounds, 'invalid-glyph-bounds', 'glyphs[' + index + '].inkBounds')
     };
   });
+
+  for (let index = 1; index < glyphs.length; index++) {
+    const previous = glyphs[index - 1].cluster;
+    const current = glyphs[index].cluster;
+    const monotone = direction === 'rtl' ? current <= previous : current >= previous;
+    if (!monotone) {
+      fail('non-monotone-glyph-clusters',
+        'HarfBuzz MONOTONE_CHARACTERS output clusters must follow the visual run direction');
+    }
+  }
 
   const starts = Array.from(new Set(glyphs.map((glyph) => glyph.cluster))).sort((a, b) => a - b);
   if (starts[0] !== sourceRange.start) {
@@ -293,7 +303,7 @@ function createShapedRun(input) {
   const font = normalizeFont(data.font);
   const shaping = normalizeShaping(data.shaping);
   const graphemes = normalizeGraphemes(data.graphemes, sourceRange, text);
-  const normalizedGlyphs = normalizeGlyphs(data.glyphs, sourceRange, graphemes);
+  const normalizedGlyphs = normalizeGlyphs(data.glyphs, sourceRange, graphemes, shaping.direction);
   const advance = normalizedGlyphs.glyphs.reduce((sum, glyph) => ({
     x: sum.x + glyph.xAdvance,
     y: sum.y + glyph.yAdvance
@@ -327,6 +337,55 @@ function createShapedRun(input) {
   });
 }
 
+/**
+ * Slice an already-shaped run without reshaping. Both edges must be output
+ * cluster boundaries, not merely EGC boundaries: a ligature may own several
+ * adjacent EGCs and may not be divided between line/word items.
+ *
+ * BOT/EOT remain those of the original shaping context. A later line-break
+ * decision must call the shaper again with line-specific BOT/EOT.
+ */
+function sliceShapedRun(shapedRun, start, end, sliceId) {
+  if (!isShapedRun(shapedRun)) {
+    fail('not-shaped-run', 'sliceShapedRun requires an immutable ShapedRun');
+  }
+  requireInteger(start, shapedRun.sourceRange.start, 'invalid-shaped-slice', 'slice.start');
+  requireInteger(end, shapedRun.sourceRange.start + 1, 'invalid-shaped-slice', 'slice.end');
+  if (end <= start || start < shapedRun.sourceRange.start || end > shapedRun.sourceRange.end) {
+    fail('invalid-shaped-slice', 'slice range must be a non-empty subrange of the source ShapedRun');
+  }
+  if (!isShapedClusterBoundary(shapedRun, start) || !isShapedClusterBoundary(shapedRun, end)) {
+    fail('slice-splits-shaped-cluster',
+      'ShapedRun slices are legal only at output cluster boundaries; an EGC boundary inside a ligature is insufficient');
+  }
+
+  const clusters = shapedRun.clusters.filter((cluster) =>
+    cluster.start >= start && cluster.end <= end);
+  if (!clusters.length || clusters[0].start !== start || clusters[clusters.length - 1].end !== end) {
+    fail('incomplete-shaped-slice', 'selected clusters do not cover the complete requested slice');
+  }
+  const graphemeStart = clusters[0].graphemeStart;
+  const graphemeEnd = clusters[clusters.length - 1].graphemeEnd;
+  const graphemes = shapedRun.graphemes.slice(graphemeStart, graphemeEnd);
+  const glyphs = shapedRun.glyphs.filter((glyph) => glyph.cluster >= start && glyph.cluster < end);
+  if (!glyphs.length) fail('empty-shaped-slice', 'selected shaped clusters contain no glyphs');
+
+  const sourceOffset = start - shapedRun.sourceRange.start;
+  const text = shapedRun.text.slice(sourceOffset, end - shapedRun.sourceRange.start);
+  return createShapedRun({
+    id: sliceId == null
+      ? shapedRun.id + '#slice:' + start + '-' + end
+      : requireString(sliceId, 'invalid-shaped-slice', 'sliceId'),
+    text,
+    sourceRange: { ...shapedRun.sourceRange, start, end },
+    font: shapedRun.font,
+    shaping: shapedRun.shaping,
+    graphemes,
+    glyphs,
+    diagnostics: shapedRun.diagnostics
+  });
+}
+
 function isShapedRun(value) {
   return !!(value && value.kind === 'ShapedRun' &&
     value.contractVersion === SHAPED_RUN_CONTRACT_VERSION &&
@@ -347,6 +406,7 @@ module.exports = {
   SHAPED_RUN_CONTRACT_VERSION,
   CLUSTER_LEVEL,
   createShapedRun,
+  sliceShapedRun,
   isShapedRun,
   isShapedClusterBoundary
 };

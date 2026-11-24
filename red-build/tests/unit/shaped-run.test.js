@@ -6,6 +6,7 @@ const {
   SHAPED_RUN_CONTRACT_VERSION,
   CLUSTER_LEVEL,
   createShapedRun,
+  sliceShapedRun,
   isShapedRun,
   isShapedClusterBoundary
 } = require('../../src/engine/typography/shaped-run');
@@ -118,6 +119,53 @@ describe('ShapedRun v1 — source mapping, cluster safety and immutability', () 
     assert(!isShapedClusterBoundary(run, 103),
       'a break between graphemes merged into one ligature cluster is forbidden');
     assert(isShapedClusterBoundary(run, 104), 'next shaped cluster boundary is legal');
+  });
+
+  it('slices only at shaped-cluster boundaries and preserves original shaping context', () => {
+    const whole = createShapedRun(validInput());
+    const tail = sliceShapedRun(whole, 103, 107);
+    assertEq(tail.text, 'לוֹם');
+    assertEq(tail.sourceRange.start, 103);
+    assertEq(tail.sourceRange.end, 107);
+    assertEq(tail.glyphs.map((glyph) => glyph.cluster), [106, 104, 103],
+      'RTL visual order is preserved in the slice');
+    assertEq(tail.advance, { x: 1520, y: 0 });
+    assertEq(tail.shaping.bot, true,
+      'slice retains the original shaping-context BOT; it is not silently reshaped');
+    assertEq(tail.shaping.eot, true);
+    assertDeepFrozen(tail, 'ShapedRun slice');
+
+    const ligatureInput = validInput();
+    ligatureInput.glyphs = [
+      { gid: 40, cluster: 106, xAdvance: 520, yAdvance: 0, xOffset: 0, yOffset: 0 },
+      { gid: 30, cluster: 104, xAdvance: 500, yAdvance: 0, xOffset: 0, yOffset: 0 },
+      { gid: 11, cluster: 100, xAdvance: 900, yAdvance: 0, xOffset: 0, yOffset: 0 }
+    ];
+    const ligatureRun = createShapedRun(ligatureInput);
+    throwsCode(() => sliceShapedRun(ligatureRun, 100, 103),
+      'slice-splits-shaped-cluster',
+      'EGC boundary inside a ligature cluster is not a legal slice');
+    const safe = sliceShapedRun(ligatureRun, 100, 104);
+    assertEq(safe.text, 'שָׁל');
+    assertEq(safe.clusters.length, 1);
+    assertEq(safe.clusters[0].graphemeEnd - safe.clusters[0].graphemeStart, 2);
+  });
+
+  it('rejects non-monotone HarfBuzz output clusters in the selected run direction', () => {
+    const rtl = validInput();
+    rtl.glyphs = [
+      { gid: 10, cluster: 100, xAdvance: 530, yAdvance: 0, xOffset: 0, yOffset: 0 },
+      { gid: 40, cluster: 106, xAdvance: 520, yAdvance: 0, xOffset: 0, yOffset: 0 },
+      { gid: 30, cluster: 104, xAdvance: 500, yAdvance: 0, xOffset: 0, yOffset: 0 },
+      { gid: 20, cluster: 103, xAdvance: 500, yAdvance: 0, xOffset: 0, yOffset: 0 }
+    ];
+    throwsCode(() => createShapedRun(rtl), 'non-monotone-glyph-clusters', 'RTL cluster order');
+
+    const ltr = validInput();
+    ltr.shaping.direction = 'ltr';
+    ltr.shaping.bidiLevel = 0;
+    ltr.glyphs = ltr.glyphs.slice().reverse();
+    assert(isShapedRun(createShapedRun(ltr)), 'ascending LTR cluster order is accepted');
   });
 
   it('rejects clusters that split an extended grapheme or have incomplete source coverage', () => {
