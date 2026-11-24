@@ -295,6 +295,154 @@ async function main() {
         failures: sharedItemizationProbeFailures.map((x) => ({ fontName: x.fontName, probe: x.sharedItemizationProbe }))
       }));
     }
+    // Exercise the production FontResolver -> TextItemShapingPlan ->
+    // HarfBuzzShaper -> immutable ShapedRun chain with an actual RED font file.
+    // Compare its GIDs and positions with the already-passing direct POC path.
+    const productionFontName = 'DavidLibre-Regular.ttf';
+    const productionFontPath = path.join(FONT_DIR, productionFontName);
+    const productionFontBytes = new Uint8Array(fs.readFileSync(productionFontPath));
+    const fontResolver = require(path.join(REPO_ROOT, 'red-build', 'src', 'engine', 'typography', 'font-resolver'));
+    const { createTextItemShapingPlan } = require(path.join(REPO_ROOT, 'red-build', 'src', 'engine', 'typography', 'text-item-shaping-plan'));
+    const { createHarfBuzzShaper } = require(path.join(REPO_ROOT, 'red-build', 'src', 'engine', 'typography', 'harfbuzz-shaper'));
+    const { isShapedRun } = require(path.join(REPO_ROOT, 'red-build', 'src', 'engine', 'typography', 'shaped-run'));
+    fontResolver.clearFontResolver();
+    const productionRegistration = fontResolver.registerFont(
+      'David Libre', productionFontBytes, { source: 'shaping-runtime-production-adapter-proof' }
+    );
+    if (!productionRegistration.ok) {
+      throw new Error('Production FontResolver rejected ' + productionFontName + ': ' +
+        JSON.stringify(productionRegistration));
+    }
+    const productionFontRecord = productionRegistration.record;
+    const productionFontFace = new hb.Face(new hb.Blob(productionFontBytes), 0);
+    const productionVariationAxes = Object.entries(productionFontFace.getAxisInfos())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([tag, info]) => ({ tag, value: Number(info.default) }));
+    const productionSourceStart = 100;
+    const productionTextItem = {
+      id: 'production-shaper-proof-item',
+      kind: 'text',
+      sourceRange: {
+        coordinateSpace: 'document-utf16',
+        start: productionSourceStart,
+        end: productionSourceStart + sharedSourceText.length,
+        docId: 'shaping-runtime-proof',
+        blockId: 'mixed-level-hebrew-paragraph'
+      },
+      payload: {
+        text: sharedSourceText,
+        runs: [{
+          text: sharedSourceText,
+          sourceStart: 0,
+          sourceEnd: sharedSourceText.length,
+          fontFamily: 'David Libre'
+        }]
+      }
+    };
+    const productionPlan = createTextItemShapingPlan(productionTextItem, {
+      bidiRuntime,
+      fontResolver,
+      direction: 'rtl',
+      defaultFamily: 'David Libre',
+      languageByScript: { Hebr: 'he' },
+      featuresByScript: {
+        Hebr: FEATURE_TAGS.map((tag) => ({ tag, value: 1 }))
+      },
+      variationAxesByFontId: {
+        [productionRegistration.fontId]: productionVariationAxes
+      },
+      faceIndexByFontId: { [productionRegistration.fontId]: 0 }
+    });
+    const productionShaper = createHarfBuzzShaper({
+      hb,
+      fontResolver,
+      engineVersion: '15.0.0'
+    });
+    const productionShapedItem = productionShaper.shapeTextItemPlan(productionPlan);
+    const productionReference = expected.find((item) => item.fontName === productionFontName);
+    if (!productionReference || !productionReference.sharedItemizationProbe ||
+        productionReference.sharedItemizationProbe.status !== 'passed') {
+      throw new Error('No direct HarfBuzz reference result exists for ' + productionFontName);
+    }
+    const referenceRuns = productionReference.sharedItemizationProbe.shapedRuns;
+    const shapedRuns = productionShapedItem.shapedRuns;
+    const signature = (glyphs, clusterBase) => glyphs.map((glyph) => [
+      glyph.gid,
+      glyph.cluster - clusterBase,
+      glyph.xAdvance,
+      glyph.yAdvance,
+      glyph.xOffset,
+      glyph.yOffset
+    ]);
+    const productionRunComparisons = shapedRuns.map((run, index) => {
+      const referenceRun = referenceRuns[index];
+      const actualGlyphs = signature(run.glyphs, productionSourceStart);
+      const referenceGlyphs = signature(referenceRun.glyphs, 0);
+      return {
+        index,
+        sourceRange: [run.sourceRange.start, run.sourceRange.end],
+        bidiLevel: run.shaping.bidiLevel,
+        glyphCount: run.glyphs.length,
+        exactGidClusterPositionParity: JSON.stringify(actualGlyphs) === JSON.stringify(referenceGlyphs),
+        actual: actualGlyphs,
+        reference: referenceGlyphs
+      };
+    });
+    const productionShaperFailures = [];
+    if (productionShapedItem.kind !== 'ShapedTextItem' ||
+        productionShapedItem.shapedRuns.length !== 3 ||
+        productionShapedItem.nonShapingRuns.filter((run) => run.kind === 'bidi-control').length !== 2 ||
+        JSON.stringify(shapedRuns.map((run) => run.shaping.bidiLevel)) !== JSON.stringify([1, 3, 1]) ||
+        shapedRuns.some((run) => !isShapedRun(run)) ||
+        productionRunComparisons.some((item) => !item.exactGidClusterPositionParity)) {
+      productionShaperFailures.push({
+        kind: productionShapedItem.kind,
+        shapedRunCount: shapedRuns.length,
+        nonShapingRuns: productionShapedItem.nonShapingRuns,
+        bidiLevels: shapedRuns.map((run) => run.shaping.bidiLevel),
+        comparisons: productionRunComparisons
+      });
+    }
+    if (productionShaperFailures.length) {
+      throw new Error('Production HarfBuzzShaper does not match the proven direct HarfBuzz path: ' +
+        JSON.stringify(productionShaperFailures).slice(0, 5000));
+    }
+    report.productionShaperProof = {
+      status: 'passed',
+      fontName: productionFontName,
+      fontId: productionRegistration.fontId,
+      sourceHash: productionFontRecord.sourceHash,
+      unitsPerEm: productionFontRecord.unitsPerEm,
+      variationAxes: productionVariationAxes,
+      unicodeVersion: productionPlan.unicodeVersion,
+      sourceRange: [productionSourceStart, productionSourceStart + sharedSourceText.length],
+      shapedRuns: shapedRuns.map((run) => ({
+        id: run.id,
+        sourceRange: [run.sourceRange.start, run.sourceRange.end],
+        script: run.shaping.script,
+        language: run.shaping.language,
+        direction: run.shaping.direction,
+        bidiLevel: run.shaping.bidiLevel,
+        bot: run.shaping.bot,
+        eot: run.shaping.eot,
+        glyphCount: run.glyphs.length,
+        advance: run.advance,
+        clusters: run.glyphs.map((glyph) => glyph.cluster),
+        allInkBoundsExplicitlyUnknown: run.glyphs.every((glyph) => glyph.inkBounds === null)
+      })),
+      nonShapingRuns: productionShapedItem.nonShapingRuns,
+      diagnostics: productionShapedItem.diagnostics,
+      directPocParity: productionRunComparisons.map((item) => ({
+        runIndex: item.index,
+        bidiLevel: item.bidiLevel,
+        glyphCount: item.glyphCount,
+        exactGidClusterPositionParity: item.exactGidClusterPositionParity
+      })),
+      fontResolverSourceHashVerified: productionRegistration.record.sourceHash === productionPlan.scriptRuns[0].font.sourceHash,
+      complete: true
+    };
+    fontResolver.clearFontResolver();
+
     const utf16ClusterProbe = expected.find((item) => item.utf16ClusterProbe)?.utf16ClusterProbe || null;
     if (!utf16ClusterProbe ||
         utf16ClusterProbe.clustersUseUtf16CodeUnitOffsets !== true ||
