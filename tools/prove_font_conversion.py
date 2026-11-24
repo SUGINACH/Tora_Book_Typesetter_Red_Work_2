@@ -674,6 +674,21 @@ def main() -> int:
                     if max_phantom_delta > 0.500001:
                         raise ValueError(f"left phantom-point position changed by {max_phantom_delta} font units")
                     row["maxLeftPhantomPointDeltaFontUnits"] = max_phantom_delta
+                expected_hhea = conversion_geometry["hmetricsRemapping"]["hheaSummary"]
+                actual_hhea = {
+                    "advanceWidthMax": int(check["hhea"].advanceWidthMax),
+                    "minLeftSideBearing": int(check["hhea"].minLeftSideBearing),
+                    "minRightSideBearing": int(check["hhea"].minRightSideBearing),
+                    "xMaxExtent": int(check["hhea"].xMaxExtent),
+                }
+                if actual_hhea != expected_hhea:
+                    raise ValueError(f"hhea summary changed or stale: expected {expected_hhea}, got {actual_hhea}")
+                expected_head = conversion_geometry["hmetricsRemapping"]["headGlobalBounds"]
+                actual_head = [int(check["head"].xMin), int(check["head"].yMin), int(check["head"].xMax), int(check["head"].yMax)]
+                if actual_head != expected_head:
+                    raise ValueError(f"head global bounds changed or stale: expected {expected_head}, got {actual_head}")
+                row["hheaSummaryAfterReload"] = actual_hhea
+                row["headGlobalBoundsAfterReload"] = actual_head
                 if len(check.getGlyphOrder()) != len(converted_order):
                     raise ValueError("glyph-ID cardinality changed after SFNT round-trip")
                 saved_bounds = glyph_bounds(check)
