@@ -23,7 +23,9 @@ const FONT_FIXTURES = [
   { name: 'Narkisim-Regular.ttf', format: 'ttf', source: path.join(FONT_DIR, 'Narkisim-Regular.ttf') },
   { name: 'FrankRuhlLibre-VF.ttf', format: 'ttf-variable', source: path.join(FONT_DIR, 'FrankRuhlLibre-VF.ttf'), variationMode: 'max' },
   { name: 'Ambivalenti-Regular.woff2', format: 'woff2', source: path.join(FONT_DIR, 'Ambivalenti-Regular.woff2'), allowUnsupported: true },
-  { name: 'FrankBasic-1-regular.woff2', format: 'woff2', source: path.join(FONT_DIR, 'FrankBasic-1-regular.woff2'), allowUnsupported: true }
+  { name: 'FrankBasic-1-regular.woff2', format: 'woff2', source: path.join(FONT_DIR, 'FrankBasic-1-regular.woff2'), allowUnsupported: true },
+  { name: 'Mixtape-Bold.woff2', format: 'woff2', source: path.join(FONT_DIR, 'Mixtape-Bold.woff2'), allowUnsupported: true },
+  { name: 'Mixtape-Regular.woff2', format: 'woff2', source: path.join(FONT_DIR, 'Mixtape-Regular.woff2'), allowUnsupported: true }
 ];
 
 function runCommand(command, args, options = {}) {
@@ -118,25 +120,28 @@ async function main() {
         const normalizedName = fixture.name.replace(/\.woff2$/i, '') + '.normalized.sfnt';
         const normalizedPath = path.join(normalizedDir, normalizedName);
         const python = process.env.HB_POC_PYTHON || 'python3';
-        runCommand(python, [
+        const normalizationInfo = JSON.parse(runCommand(python, [
           path.join(__dirname, 'normalize_woff2.py'),
           fixture.source,
           normalizedPath
-        ]);
+        ]).split(/\r?\n/).at(-1));
         // Determinism gate: normalize the same source a second time and compare the
         // actual SFNT bytes, not just parsed metadata or glyph outputs.
         const repeatPath = path.join(normalizedDir, normalizedName + '.repeat');
-        runCommand(python, [
+        const repeatInfo = JSON.parse(runCommand(python, [
           path.join(__dirname, 'normalize_woff2.py'),
           fixture.source,
           repeatPath
-        ]);
+        ]).split(/\r?\n/).at(-1));
         const normalizedBytes = fs.readFileSync(normalizedPath);
         const repeatBytes = fs.readFileSync(repeatPath);
         const normalizedSha256 = crypto.createHash('sha256').update(normalizedBytes).digest('hex');
         const repeatSha256 = crypto.createHash('sha256').update(repeatBytes).digest('hex');
         const sourceSha256 = crypto.createHash('sha256').update(fs.readFileSync(fixture.source)).digest('hex');
-        if (normalizedSha256 !== repeatSha256 || !normalizedBytes.equals(repeatBytes)) {
+        if (normalizedSha256 !== repeatSha256 || !normalizedBytes.equals(repeatBytes) ||
+            normalizationInfo.outlineFormat !== repeatInfo.outlineFormat ||
+            normalizationInfo.glyphCount !== repeatInfo.glyphCount ||
+            normalizationInfo.unitsPerEm !== repeatInfo.unitsPerEm) {
           throw new Error('WOFF2 normalization is not byte-deterministic for ' + fixture.name +
             ': ' + normalizedSha256 + ' != ' + repeatSha256);
         }
@@ -146,6 +151,7 @@ async function main() {
           name: normalizedName,
           format: 'sfnt-normalized-from-woff2',
           normalizedFrom: fixture.name,
+          sourceOutlineFormat: normalizationInfo.outlineFormat,
           source: normalizedPath
         });
         report.normalization.push({
@@ -156,7 +162,15 @@ async function main() {
           sourceSha256,
           normalizedSha256,
           repeatSha256,
-          deterministicBytes: normalizedSha256 === repeatSha256
+          outlineFormat: normalizationInfo.outlineFormat,
+          tableTags: normalizationInfo.tableTags,
+          glyphCount: normalizationInfo.glyphCount,
+          unitsPerEm: normalizationInfo.unitsPerEm,
+          signatureHex: normalizationInfo.signatureHex,
+          deterministicBytes: normalizedSha256 === repeatSha256 &&
+            normalizationInfo.outlineFormat === repeatInfo.outlineFormat &&
+            normalizationInfo.glyphCount === repeatInfo.glyphCount &&
+            normalizationInfo.unitsPerEm === repeatInfo.unitsPerEm
         });
       }
     }
