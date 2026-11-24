@@ -559,6 +559,14 @@ def main() -> int:
                     raise ValueError("variable tables remain after full default instancing")
 
                 glyph_order_before = list(font.getGlyphOrder())
+                source_hmetrics = {
+                    name: (int(font["hmtx"].metrics[name][0]), int(font["hmtx"].metrics[name][1]))
+                    for name in glyph_order_before
+                }
+                source_bounds_by_gid = (
+                    [glyph_bounds(font, prefer_cff=True).get(name) for name in glyph_order_before]
+                    if "CFF " in font else [None] * len(glyph_order_before)
+                )
                 cmap_before = {
                     int(cp): int(font.getGlyphID(glyph_name))
                     for cp, glyph_name in (font.getBestCmap() or {}).items()
@@ -577,6 +585,7 @@ def main() -> int:
                 row["maxGlyphBoundsDeltaOverTolerance"] = (
                     conversion_geometry["maxBoundsDeltaFontUnits"] / max_err if max_err else None
                 )
+                row["hmetricsRemapping"] = conversion_geometry.get("hmetricsRemapping")
                 font.flavor = None
                 if "glyf" not in font or "loca" not in font or "CFF " in font:
                     raise ValueError("conversion did not produce TrueType glyf/loca outlines")
@@ -614,6 +623,22 @@ def main() -> int:
                 ]
                 if advances_after != advances_before:
                     raise ValueError("glyph advance widths changed by GID during outline conversion")
+                if "CFF " in (row["sourceOutline"] and font.keys()):
+                    max_phantom_delta = 0.0
+                    for gid, output_name in enumerate(check.getGlyphOrder()):
+                        source_box = source_bounds_by_gid[gid]
+                        if source_box is None:
+                            if int(check["hmtx"].metrics[output_name][1]) != 0:
+                                raise ValueError(f"empty glyph LSB must be zero at GID {gid}")
+                            continue
+                        source_lsb = source_hmetrics[glyph_order_before[gid]][1]
+                        source_pp1 = float(source_box[0]) - float(source_lsb)
+                        output_pp1 = float(check["glyf"][output_name].xMin) - float(check["hmtx"].metrics[output_name][1])
+                        delta = abs(source_pp1 - output_pp1)
+                        max_phantom_delta = max(max_phantom_delta, delta)
+                    if max_phantom_delta > 0.500001:
+                        raise ValueError(f"left phantom-point position changed by {max_phantom_delta} font units")
+                    row["maxLeftPhantomPointDeltaFontUnits"] = max_phantom_delta
                 if len(check.getGlyphOrder()) != len(converted_order):
                     raise ValueError("glyph-ID cardinality changed after SFNT round-trip")
                 saved_bounds = glyph_bounds(check)
