@@ -22,7 +22,8 @@ const FONT_FIXTURES = [
   { name: 'Guttman-Rashi-Normal.ttf', format: 'ttf', source: path.join(FONT_DIR, 'Guttman-Rashi-Normal.ttf') },
   { name: 'Narkisim-Regular.ttf', format: 'ttf', source: path.join(FONT_DIR, 'Narkisim-Regular.ttf') },
   { name: 'FrankRuhlLibre-VF.ttf', format: 'ttf-variable', source: path.join(FONT_DIR, 'FrankRuhlLibre-VF.ttf'), variationMode: 'max' },
-  { name: 'Ambivalenti-Regular.woff2', format: 'woff2', source: path.join(FONT_DIR, 'Ambivalenti-Regular.woff2') }
+  { name: 'Ambivalenti-Regular.woff2', format: 'woff2', source: path.join(FONT_DIR, 'Ambivalenti-Regular.woff2'), allowUnsupported: true },
+  { name: 'FrankBasic-1-regular.woff2', format: 'woff2', source: path.join(FONT_DIR, 'FrankBasic-1-regular.woff2'), allowUnsupported: true }
 ];
 
 function runCommand(command, args, options = {}) {
@@ -149,11 +150,53 @@ async function main() {
         axisInfos: item.axisInfos,
         appliedVariations: item.appliedVariations,
         missingCodepoints: item.missingCodepoints,
+        missingBaseCodepoints: item.missingBaseCodepoints,
+        missingMarkCodepoints: item.missingMarkCodepoints,
+        notdefGlyphCount: item.notdefGlyphCount,
+        coverageStatus: item.coverageStatus,
         glyphCount: item.cases.reduce((sum, testCase) => sum + testCase.glyphs.length, 0),
         glyphIds: item.cases.map((testCase) => testCase.glyphs.map((glyph) => glyph.gid)),
         clusters: item.cases.map((testCase) => testCase.glyphs.map((glyph) => glyph.cluster))
       }))
     };
+    const unsupportedFontFixtures = [];
+    const invalidCoverageFixtures = [];
+    for (let i = 0; i < expected.length; i++) {
+      const item = expected[i];
+      const fixture = FONT_FIXTURES[i];
+      if (item.unitsPerEm <= 0 || item.notdefGlyphCount > 0) {
+        if (fixture.format === 'woff2' && fixture.allowUnsupported && item.coverageStatus === 'none') {
+          unsupportedFontFixtures.push(item.fontName);
+        } else {
+          invalidCoverageFixtures.push({
+            font: item.fontName,
+            upem: item.unitsPerEm,
+            coverageStatus: item.coverageStatus,
+            notdefGlyphCount: item.notdefGlyphCount,
+            missingBaseCodepoints: item.missingBaseCodepoints
+          });
+        }
+      } else if (item.coverageStatus !== 'complete') {
+        invalidCoverageFixtures.push({
+          font: item.fontName,
+          coverageStatus: item.coverageStatus,
+          missingBaseCodepoints: item.missingBaseCodepoints,
+          missingMarkCodepoints: item.missingMarkCodepoints
+        });
+      }
+      if (fixture.variationMode && !item.appliedVariations.length) {
+        invalidCoverageFixtures.push({ font: item.fontName, error: 'variation axis was not applied' });
+      }
+    }
+    if (invalidCoverageFixtures.length) {
+      throw new Error('Unexpected incomplete Hebrew shaping fixtures: ' + JSON.stringify(invalidCoverageFixtures));
+    }
+    report.nodeReference.unsupportedFontFixtures = unsupportedFontFixtures;
+    report.nodeReference.unsupportedFontCount = unsupportedFontFixtures.length;
+    report.limitations = unsupportedFontFixtures.length
+      ? ['HarfBuzzJS@' + VERSION + ' did not expose Hebrew cmap coverage for these WOFF2 fonts: ' + unsupportedFontFixtures.join(', ') +
+         '. Node and Worker parity is not treated as successful shaping for these files; an explicit WOFF2-to-SFNT decoder or a build-time normalized SFNT font asset is required.']
+      : [];
     fs.writeFileSync(path.join(site, 'expected.json'), expectedJson, 'utf8');
 
     server = http.createServer((request, response) => {
@@ -204,7 +247,8 @@ async function main() {
         JSON.stringify(browserResult).slice(0, 5000));
     }
 
-    report.result = 'passed';
+    report.result = report.nodeReference.unsupportedFontCount
+      ? 'passed_with_declared_woff2_limitations' : 'passed';
     report.finishedAt = new Date().toISOString();
     fs.mkdirSync(path.dirname(REPORT), { recursive: true });
     fs.writeFileSync(REPORT, JSON.stringify(report, null, 2), 'utf8');
