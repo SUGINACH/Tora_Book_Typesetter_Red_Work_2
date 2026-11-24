@@ -207,7 +207,7 @@ def main():
             aligned_converted_bounds_by_gid=[aligned_converted_bounds.get(name) for name in converted_order]
             f.flavor=None; tmp=root/'artifacts/cff-conversion-stress/tmp'
             tmp.mkdir(parents=True,exist_ok=True); output=tmp/(hashlib.sha256(rel.encode()).hexdigest()+'.ttf'); f.save(str(output))
-            if rel == 'Ploni-Regular.ttf' and len(order) > 725:
+            if Path(rel).name == 'Ploni-Regular.ttf' and len(order) > 725:
                 target_gid = 725
                 target_name = order[target_gid]
                 raw_target = converted_bounds_by_gid[target_gid]
