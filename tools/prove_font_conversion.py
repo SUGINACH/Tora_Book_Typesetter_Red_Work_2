@@ -137,6 +137,32 @@ def reconcile_cff_metrics_for_glyf(
         if adjustment:
             changed += 1
             max_adjustment = max(max_adjustment, adjustment)
+
+    # hhea stores aggregate horizontal metrics derived from glyf bounds and
+    # hmtx. Recompute it after changing LSBs; leaving stale CFF-era values
+    # would make the new SFNT internally inconsistent.
+    font["hhea"].recalc(font)
+
+    # head's global bounding box must enclose the newly materialized glyf
+    # outlines. Recalculate every glyph (including composite bounds), then
+    # derive the global extrema from non-empty glyphs.
+    glyf = font["glyf"]
+    nonempty_bounds = []
+    for name in font.getGlyphOrder():
+        glyph = glyf[name]
+        if glyph.numberOfContours != 0:
+            glyph.recalcBounds(glyf)
+            if hasattr(glyph, "xMin"):
+                nonempty_bounds.append((glyph.xMin, glyph.yMin, glyph.xMax, glyph.yMax))
+    if nonempty_bounds:
+        font["head"].xMin = min(b[0] for b in nonempty_bounds)
+        font["head"].yMin = min(b[1] for b in nonempty_bounds)
+        font["head"].xMax = max(b[2] for b in nonempty_bounds)
+        font["head"].yMax = max(b[3] for b in nonempty_bounds)
+    else:
+        font["head"].xMin = font["head"].yMin = 0
+        font["head"].xMax = font["head"].yMax = 0
+
     return {
         "glyphCount": len(font.getGlyphOrder()),
         "lsbChangedGlyphCount": changed,
@@ -144,6 +170,16 @@ def reconcile_cff_metrics_for_glyf(
         "maxAbsoluteLsbAdjustmentFontUnits": max_adjustment,
         "maxLeftPhantomPointDeltaFontUnits": max_phantom_error,
         "preservedAdvanceWidths": True,
+        "hheaSummary": {
+            "advanceWidthMax": int(font["hhea"].advanceWidthMax),
+            "minLeftSideBearing": int(font["hhea"].minLeftSideBearing),
+            "minRightSideBearing": int(font["hhea"].minRightSideBearing),
+            "xMaxExtent": int(font["hhea"].xMaxExtent),
+        },
+        "headGlobalBounds": [
+            int(font["head"].xMin), int(font["head"].yMin),
+            int(font["head"].xMax), int(font["head"].yMax),
+        ],
     }
 
 
