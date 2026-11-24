@@ -15,6 +15,99 @@ def sha(path):
         for chunk in iter(lambda:f.read(1024*1024),b''): h.update(chunk)
     return h.hexdigest()
 
+def freetype_raster_comparison(
+    source_path: Path,
+    converted_path: Path,
+    gid: int,
+    codepoint: int,
+    source_lsb: int,
+    upem: int,
+    output_dir: Path,
+    label: str,
+) -> dict:
+    """Compare source CFF and converted glyf through FreeType/Pillow rasterization."""
+    from PIL import Image, ImageChops, ImageDraw, ImageFont
+    from fontTools.ttLib import TTFont
+
+    converted = TTFont(str(converted_path), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
+    glyph_name = converted.getGlyphOrder()[gid]
+    advance, converted_lsb = converted["hmtx"].metrics[glyph_name]
+    legacy_path = converted_path.with_name(converted_path.stem + ".legacy-lsb.ttf")
+    converted["hmtx"].metrics[glyph_name] = (int(advance), int(source_lsb))
+    converted.save(str(legacy_path))
+    converted.close()
+
+    layout = getattr(ImageFont, "Layout", None)
+    layout_arg = {"layout_engine": layout.BASIC} if layout is not None else {}
+    size = max(512, int(upem))
+    canvas = max(2048, int(size * 1.8))
+    anchor = (int(canvas * 0.25), int(canvas * 0.72))
+    character = chr(codepoint)
+
+    def render(path: Path):
+        font = ImageFont.truetype(str(path), size=size, **layout_arg)
+        image = Image.new("L", (canvas, canvas), 0)
+        ImageDraw.Draw(image).text(anchor, character, font=font, fill=255, anchor="ls")
+        return image, image.getbbox()
+
+    try:
+        source_image, source_bbox = render(source_path)
+        legacy_image, legacy_bbox = render(legacy_path)
+        converted_image, converted_bbox = render(converted_path)
+    finally:
+        legacy_path.unlink(missing_ok=True)
+
+    def binary(image):
+        return image.point(lambda value: 255 if value else 0)
+
+    def metrics(image_a, image_b):
+        a = binary(image_a)
+        b = binary(image_b)
+        inter = ImageChops.darker(a, b)
+        union = ImageChops.lighter(a, b)
+        intersection_pixels = sum(inter.histogram()[1:])
+        union_pixels = sum(union.histogram()[1:])
+        diff = ImageChops.difference(image_a, image_b)
+        diff_pixels = sum(1 for count in diff.histogram()[1:] if count)
+        total_diff_intensity = sum(index * count for index, count in enumerate(diff.histogram()))
+        return {
+            "intersectionOverUnion": intersection_pixels / union_pixels if union_pixels else 1.0,
+            "unionPixels": union_pixels,
+            "differingIntensityLevels": diff_pixels,
+            "absolutePixelDifference": total_diff_intensity,
+        }
+
+    image_path = output_dir / f"{label}-freetype.png"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    panel_gap = 24
+    panel_width = canvas
+    panel_height = canvas + 48
+    panel = Image.new("RGB", (panel_width * 4 + panel_gap * 5, panel_height), "white")
+    captions = ("Source CFF", "Copied source LSB", "Remapped LSB", "Source vs remapped diff")
+    images = (source_image, legacy_image, converted_image, ImageChops.difference(source_image, converted_image))
+    draw = ImageDraw.Draw(panel)
+    for index, (caption, image) in enumerate(zip(captions, images)):
+        x = panel_gap + index * (panel_width + panel_gap)
+        panel.paste(image.convert("RGB"), (x, 40))
+        draw.text((x + 8, 10), caption, fill="black")
+    panel.save(image_path)
+
+    return {
+        "status": "passed",
+        "codepoint": f"U+{codepoint:04X}",
+        "gid": gid,
+        "renderSize": size,
+        "sourceBoundsPx": list(source_bbox) if source_bbox else None,
+        "legacyCopiedLsbBoundsPx": list(legacy_bbox) if legacy_bbox else None,
+        "remappedLsbBoundsPx": list(converted_bbox) if converted_bbox else None,
+        "sourceVsLegacyCopiedLsb": metrics(source_image, legacy_image),
+        "sourceVsRemappedLsb": metrics(source_image, converted_image),
+        "sourceLsb": int(source_lsb),
+        "remappedLsb": int(converted_lsb),
+        "image": str(image_path),
+    }
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--repo-root',type=Path,default=Path(__file__).resolve().parents[1])
