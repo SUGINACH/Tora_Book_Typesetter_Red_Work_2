@@ -197,7 +197,7 @@ async function main() {
         latinArabicMarkGrapheme.scalars.length !== 2 ||
         !latinArabicMarkGrapheme.scalars[1].isMark ||
         latinArabicMarkGrapheme.script !== 'Latn' ||
-        latinArabicMarkGrapheme.status !== 'combining-sequence-base-script') {
+        latinArabicMarkGrapheme.status !== 'combining-sequence-script-inheritance') {
       throw new Error('Combining mark did not inherit the explicit base Script: ' +
         JSON.stringify(latinArabicMarkGrapheme));
     }
@@ -205,7 +205,7 @@ async function main() {
         dottedCircleHebrewMarkGrapheme.scalars.length !== 2 ||
         !dottedCircleHebrewMarkGrapheme.scalars[1].isMark ||
         dottedCircleHebrewMarkGrapheme.script !== 'Hebr' ||
-        dottedCircleHebrewMarkGrapheme.status !== 'combining-sequence-base-script') {
+        dottedCircleHebrewMarkGrapheme.status !== 'combining-sequence-script-inheritance') {
       throw new Error('Common base did not inherit the first explicit Hebrew Mark Script: ' +
         JSON.stringify(dottedCircleHebrewMarkGrapheme));
     }
@@ -458,11 +458,11 @@ async function main() {
       combiningMarksInheritBaseScript: latinArabicMark.graphemes.length === 1 &&
         latinArabicMarkGrapheme.scalars[1].isMark &&
         latinArabicMarkGrapheme.script === 'Latn' &&
-        latinArabicMarkGrapheme.status === 'combining-sequence-base-script',
+        latinArabicMarkGrapheme.status === 'combining-sequence-script-inheritance',
       commonBaseUsesFirstSpecificCombiningScript: dottedCircleHebrewMark.graphemes.length === 1 &&
         dottedCircleHebrewMarkGrapheme.scalars[1].isMark &&
         dottedCircleHebrewMarkGrapheme.script === 'Hebr' &&
-        dottedCircleHebrewMarkGrapheme.status === 'combining-sequence-base-script',
+        dottedCircleHebrewMarkGrapheme.status === 'combining-sequence-script-inheritance',
       commonBaseDoesNotGuessInheritedMarkScript: dottedCircleInheritedArabicMark.graphemes.length === 1 &&
         dottedCircleInheritedArabicMarkGrapheme.scalars[1].isMark &&
         dottedCircleInheritedArabicMarkGrapheme.script === null &&
