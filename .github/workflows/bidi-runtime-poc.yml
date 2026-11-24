@@ -34,6 +34,10 @@ jobs:
           cd /tmp/unicode-bidi
           python3 tools/generate.py
           grep -F 'pub const UNICODE_VERSION: (u64, u64, u64) = (18, 0, 0);' src/char_data/tables.rs
+          test "$(head -n 1 data/ucd/DerivedBidiClass.txt)" = "# DerivedBidiClass-18.0.0.txt"
+          test -s tests/data/BidiTest.txt
+          test -s tests/data/BidiCharacterTest.txt
+          wc -c data/ucd/DerivedBidiClass.txt tests/data/BidiTest.txt tests/data/BidiCharacterTest.txt
       - name: Run upstream Bidi conformance tests against Unicode 18.0.0
         run: cargo test --manifest-path /tmp/unicode-bidi/Cargo.toml -- --nocapture
       - name: Build pinned UTF-16 Bidi wrapper for wasm32
