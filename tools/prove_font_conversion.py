@@ -129,7 +129,11 @@ def reconcile_cff_metrics_for_glyf(
                     f"CFF curve xMin and hmtx LSB disagree by {source_pp1:.6f} units for {name}; "
                     "refusing to hide a source placement discrepancy in the CFF-to-glyf conversion"
                 )
-            target_lsb = int(round(float(glyph.xMin) - source_pp1))
+            # CFF outlines are already drawn in the glyph-origin coordinate
+            # system. Match that origin in glyf by setting LSB to the TrueType
+            # control-box xMin (the standard OTF-to-TTF mapping). The source
+            # CFF pp1 is expected to be zero within integer-metric rounding.
+            target_lsb = int(glyph.xMin)
             output_pp1 = float(glyph.xMin) - float(target_lsb)
             phantom_error = abs(output_pp1 - source_pp1)
             max_phantom_error = max(max_phantom_error, phantom_error)
