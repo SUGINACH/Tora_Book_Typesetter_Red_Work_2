@@ -1,7 +1,8 @@
 use core::ptr;
 use core::slice;
 
-use icu_properties::props::Script;
+use icu_properties::props::{IndicConjunctBreak, Script};
+use icu_properties::CodePointMapData;
 use icu_properties::script::ScriptWithExtensions;
 use icu_properties::PropertyNamesShort;
 use icu_segmenter::GraphemeClusterSegmenter;
@@ -34,6 +35,29 @@ fn icu_unicode_18_is_pinned() -> bool {
     icu_segmenter_data::unicode_tag!() == "18.0.0"
         && icu_properties_data::unicode_tag!() == "18.0.0"
         && icu_segmenter_data::unicode_tag!() == icu_properties_data::unicode_tag!()
+}
+
+// Unicode 18.0.0 UAX #29 revision 49, GB9c:
+// InCB=Linker InCB=Extend* × InCB=Consonant.
+// ICU4X's compiled grapheme rules can lag a corrected rule while its property
+// data already carries the matching Unicode version. Apply this one normative
+// rule over ICU4X's scalar boundaries instead of replacing the segmenter.
+fn is_unicode18_gb9c_no_break(
+    indic_breaks: &[IndicConjunctBreak],
+    scalar_boundary: usize,
+) -> bool {
+    if scalar_boundary == 0
+        || scalar_boundary >= indic_breaks.len()
+        || indic_breaks[scalar_boundary] != IndicConjunctBreak::Consonant
+    {
+        return false;
+    }
+
+    let mut cursor = scalar_boundary;
+    while cursor > 0 && indic_breaks[cursor - 1] == IndicConjunctBreak::Extend {
+        cursor -= 1;
+    }
+    cursor > 0 && indic_breaks[cursor - 1] == IndicConjunctBreak::Linker
 }
 
 fn script_tag(script: Script) -> u32 {
@@ -218,11 +242,47 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
     };
 
     let grapheme_segmenter = GraphemeClusterSegmenter::new();
-    let boundaries: Vec<usize> = grapheme_segmenter.segment_utf16(utf16).collect();
+    let icb_data = CodePointMapData::<IndicConjunctBreak>::new();
+    let mut scalar_utf16_offsets = Vec::<usize>::new();
+    let mut indic_breaks = Vec::<IndicConjunctBreak>::new();
+    let mut utf16_offset = 0usize;
+    for ch in text.chars() {
+        scalar_utf16_offsets.push(utf16_offset);
+        indic_breaks.push(icb_data.get(ch));
+        utf16_offset += ch.len_utf16();
+    }
+    if utf16_offset != length {
+        return ptr::null_mut();
+    }
+    scalar_utf16_offsets.push(length);
+
+    let icu_boundaries: Vec<usize> = grapheme_segmenter.segment_utf16(utf16).collect();
+    if icu_boundaries.first().copied() != Some(0)
+        || icu_boundaries.last().copied() != Some(length)
+        || icu_boundaries.windows(2).any(|pair| pair[0] >= pair[1])
+        || icu_boundaries.iter().any(|&offset| !is_utf16_boundary(utf16, offset))
+    {
+        return ptr::null_mut();
+    }
+
+    // Apply the Unicode 18 GB9c revision only where ICU's current rule
+    // boundary would otherwise split a Linker + Extend* + Consonant sequence.
+    // All offsets remain UTF-16 code-unit offsets; the lookup below also
+    // proves every ICU boundary coincides with a scalar boundary.
+    let mut boundaries = Vec::<usize>::with_capacity(icu_boundaries.len());
+    for boundary in icu_boundaries {
+        let scalar_boundary = match scalar_utf16_offsets.binary_search(&boundary) {
+            Ok(index) => index,
+            Err(_) => return ptr::null_mut(),
+        };
+        if is_unicode18_gb9c_no_break(&indic_breaks, scalar_boundary) {
+            continue;
+        }
+        boundaries.push(boundary);
+    }
     if boundaries.first().copied() != Some(0)
         || boundaries.last().copied() != Some(length)
         || boundaries.windows(2).any(|pair| pair[0] >= pair[1])
-        || boundaries.iter().any(|&offset| !is_utf16_boundary(utf16, offset))
     {
         return ptr::null_mut();
     }
