@@ -22,6 +22,7 @@ from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.basePen import DecomposingPen
+from fontTools.pens.filterPen import FilterPen
 from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.varLib.instancer import instantiateVariableFont
@@ -136,6 +137,11 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
 
 
 
+class _DecomposingFilterPen(DecomposingPen, FilterPen):
+    def __init__(self, out_pen, glyph_set):
+        DecomposingPen.__init__(self, glyph_set, out_pen, skipMissingComponents=False)
+
+
 def convert_cff_to_glyf_decomposed(font: TTFont, max_err: float) -> dict[str, Any]:
     """Experimental CFF conversion that decomposes component references before glyf creation."""
     if "CFF " not in font:
@@ -149,7 +155,7 @@ def convert_cff_to_glyf_decomposed(font: TTFont, max_err: float) -> dict[str, An
     for name in names:
         pen = TTGlyphPen(None)
         converter = Cu2QuPen(pen, max_err=max_err, reverse_direction=False, all_quadratic=True)
-        decomposer = DecomposingPen(converter, glyph_set)
+        decomposer = _DecomposingFilterPen(converter, glyph_set)
         glyph_set[name].draw(decomposer)
         glyphs[name] = pen.glyph()
 
