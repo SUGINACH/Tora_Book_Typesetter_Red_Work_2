@@ -150,8 +150,15 @@ function assignNumbers(pages, settings) {
     if (!counted) return { page: null, ordinal: null, display: '', shown: false, counted: false };
     ordinal++; // סוד העמוד הנספר (1 ואילך)
     const effective = ordinal - startIdx + initialValue;
-    // D-36: פתיחת פרק/סימן — נספר, לא מוצג; עמודי הערות לא מציגים כותרת עליונה ממילא
-    const suppressDisplay = p.chapterOpening === true;
+    // D-36: פתיחת פרק/סימן — נספר, לא מוצג (מוסכמת ספרים כללית; פרופיל DP);
+    // עמודי הערות לא מציגים כותרת עליונה ממילא.
+    // **Iteration-006 (F5/RC-F5b — התנהגות הייחוס בפרופיל IMUD):** פתיחות-סימן
+    // בייחוס מציגות גיליון (נמדד: p44 «מב», p57 «נה», p70 «סח», p87 «פה» —
+    // כל 88 פתיחות הייחוס עם פוליו; נמדדו גם בפורט המורשת). D-91: התנהגות
+    // המקור היא המפרס — הכותרות העליונות של הפתיחות הושבו כבר ב-03.11(ד)
+    // מאותו שורש; הפוליו מושב כאן. DP נשאר על D-36 (נעול ב-NC-04/s9).
+    const imud = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+    const suppressDisplay = p.chapterOpening === true && !imud;
     // D-62: show-numbering של עמודי תוכן־העניינים (מוחל רק כשנספרים)
     let showFlag = true;
     if (p.type === 'toc-general') showFlag = settings['general-toc-show-numbering'] !== false;

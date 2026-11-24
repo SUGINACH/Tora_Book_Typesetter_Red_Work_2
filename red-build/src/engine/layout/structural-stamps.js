@@ -340,6 +340,17 @@ function stampFolioGeometry(page, settings, measure) {
   const folioMeasure = (fam && familyFontKeyOf(fam)) ? measureOfFamily(measure, fam, settings) : measure;
   const geo = folioGeometry(page, settings, folioMeasure);
   if (!geo) return false;
+  // **Iteration-006 (F5/RC-F5a — עוגן העמודון בפרופיל IMUD):** הנוסחה הגנרית
+  // (bottom:25px מה-CSS) הנמיכה את הגיליון ב-36.8px מהייחוס (נמדד ב-PDF:
+  // y=818.8 מול 791.2). העוגן המכויל = GEO.FOLIO_BASELINE (1054.5px —
+  // «עמודון: y0=783.82pt בייחוס»; עם 11pt גיליון: glyph-top=791.2pt במדויק) —
+  // כמו HEADER_BASELINE לכותרת העליונה. ההיסט מוחל על y ו-baselineY כאחד.
+  const imudFolio = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  if (imudFolio && geo.baselineY != null) {
+    const { GEO } = require('../core/imud-geometry');
+    const dy = GEO.FOLIO_BASELINE - geo.baselineY;
+    if (Number.isFinite(dy) && dy !== 0) { geo.y += dy; geo.baselineY += dy; }
+  }
   const key = (fam && familyFontKeyOf(fam)) || null;
   const color = colorOfSetting(settings['page-num-color']);
   page.folioGeo = { ...geo, ...(key ? { fontKey: key } : {}), ...(color ? { color } : {}) };
