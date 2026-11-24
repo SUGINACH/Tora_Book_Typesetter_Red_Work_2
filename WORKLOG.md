@@ -4586,3 +4586,33 @@ HarfBuzzJS 1.6.4 מספק API shaping רלוונטי, אך הוא ESM עם top-l
 - ה-HEAD עבר מאז ל-commits תיעודיים `1528fab` ו-`b46973a`; יש לבדוק את ה-runs העדכניים שלהם לפני מסקנה סופית.
 
 **גבולות:** כל הכתיבות נעשו לענף המוגדר בלבד. לא בוצעו merge, force-push או פעולות destructive. לא שונו main/rescue/legacy. P6/P7 לא נכללו; ערכת 40 ועיצובי השער המקוריים לא שונו.
+
+
+### תוספת ראיות — Controlled LSB Artifact הושלם
+
+ריצת `font-catalog-audit` על `54e043c3699b2cbccc87345eb3a6e812ef892628`
+הסתיימה `completed / success`:
+- Run: `45411976892`; Artifact: `14929191082`.
+- 1,758 קובצי גופן בקטלוג; 380/380 המרות CFF עברו; אפס כשלי המרה.
+- 47/47 geometry raster comparisons הופקו; 54/54 severe LSB FreeType reviews הופקו.
+- ההשוואה הישירה `copiedSourceLsbVsRemappedLsb` הושלמה ב-54/54:
+  IoU חציוני 0.368832, ממוצע 0.332899; symmetric difference חציוני
+  0.631168, ממוצע 0.667101; אפס כשלי אבחון ואפס תוצאות חסרות.
+- זהו ניסוי מבוקר על אותו glyf, באותו FreeType/BASIC layout ובאותם תנאי
+  רינדור; המשתנה הוא LSB ב-hmtx. לכן יש ראיה ישירה לכך שה-LSB הישן
+  מזיז את הדיו בפועל.
+
+הדוח `audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md` עודכן עם
+Artifact מבוקר ועם כל המדדים. המצב נשאר `manualReviewRequired=true`,
+`massConversionApproved=false`; אין cutover ואין הפעלה בקטלוג.
+
+### עדכון מצב Actions
+
+- `54e043c`: Font Catalog Audit completed success; Preview, Corpus ו-Full
+  Math completed success; CI עדיין in_progress בבדיקה האחרונה (Layout Audit
+  success, מטריצת Node 18/20/22 טרם נסגרה באותה בדיקה).
+- `1528fab`: Full Math, Preview ו-Corpus success; CI in_progress.
+- HEAD התיעודי `ba3548a`: Corpus success; CI היה in_progress (Node 22/18
+  רצו, Node 20 queued, Layout Audit in_progress); Preview ו-Full Math queued.
+- אין להציג את ה-HEAD הנוכחי כ-CI ירוק לפני שכל הריצות על ה-HEAD הסופי
+  מסתיימות success.

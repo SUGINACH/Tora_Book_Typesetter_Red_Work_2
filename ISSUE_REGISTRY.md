@@ -614,3 +614,15 @@ audits/MEASURE_API_SAFETY_U11_U14_2026-11-20.md, audits/U15_HEADING_ALIGNMENT_20
 | TYP-SHAPING-01 | גבוהה | **פתוח — חוזה ארכיטקטוני** | MeasureAPI מודד תו-אחר-תו; DOM/HTML מבצעים shaping בדפדפן אחרי קביעת תיבות המודל; PDF ו-subsetter מתרגמים Unicode→GID לכל תו ואינם משמרים clusters/offsets. HarfBuzzJS 1.6.4 הוא ESM/WASM ואינו תואם ישירות ל-CJS classic-worker bundler הקיים. | חוזה ShapedRun/ShapedGlyph יחיד; הוכחת bundling/Node/Worker דטרמיניסטית; shaping לפני line-break; אותו glyph/position model בכל מקריני DOM/HTML/PDF. דוח: audits/SHAPING_CONTRACT_GAP_2026-11-24.md |
 | LAYOUT-F7-FRAGMENT-GAP-01 | גבוהה | **פתוח — ממתין ליציבות גופנים ו-shaping** | legacy-imud-flow מצמיד 7px לכל fragment של פסקה, גם ל-p-cut; DP pushLines מצמיד block gap רק לשורה הראשונה של קריאת בלוק, מדכא בראש טור/עמוד, ו-split שולח קטעים לקריאות נפרדות. יש להכריע האם gap הוא סמנטיקה של בלוק, fragment או פתיחת זרימה — לא לכפות 7px או מספר עמודים. | לחקור progress/fragment contract, findSplit/maxFit וגבולות split; להגדיר כלל יחיד לפי תחילת/המשך fragment ומצב הטור/עמוד; לבדוק פסקאות מפוצלות ולא מפוצלות בלי חריג מקומי. אין שינוי עד להשלמת שלבי הגופנים וה-shaping. |
 
+
+
+### עדכון ראיות LSB — 24.11.2026
+
+Run `45411976892` / Artifact `14929191082` על `54e043c` השלים
+54/54 השוואות מבוקרות של אותו glyf עם LSB ישן מול LSB remapped:
+IoU חציוני 0.368832, ממוצע 0.332899, symmetric-difference חציוני
+0.631168. אין כשלי אבחון או תוצאות חסרות. זה מאשר שה-LSB הישן מזיז את
+הדיו בפועל. מעמד `FNT-CFF-GEO-01` ו-`FNT-CFF-APPROVAL-01` נשאר פתוח:
+47 חריגי גאומטריה עדיין דורשים סקירה; `manualReviewRequired=true` ו-
+`massConversionApproved=false`. ראיות מלאות:
+`audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md`.
