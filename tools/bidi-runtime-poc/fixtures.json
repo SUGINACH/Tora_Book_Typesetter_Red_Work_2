@@ -1,0 +1,52 @@
+[
+  {
+    "id": "rtl-hebrew-latin-numbers",
+    "baseDirection": "auto",
+    "text": "שלום ABC 123 (45)."
+  },
+  {
+    "id": "ltr-paragraph-with-hebrew",
+    "baseDirection": "auto",
+    "text": "ABC שלום 123 (45)."
+  },
+  {
+    "id": "isolate-run-in-hebrew",
+    "baseDirection": "rtl",
+    "text": "פתיחה \u2066ABC 123\u2069 סיום"
+  },
+  {
+    "id": "nested-isolates",
+    "baseDirection": "auto",
+    "text": "\u2067שלום \u2066ABC\u2069 123\u2069 — end"
+  },
+  {
+    "id": "emoji-supplementary-and-brackets",
+    "baseDirection": "auto",
+    "text": "שלום 😀 (ABC-42) סוף"
+  },
+  {
+    "id": "arabic-latin-arabic-digits",
+    "baseDirection": "auto",
+    "text": "مرحبا World ١٢٣ (42)!"
+  },
+  {
+    "id": "paragraph-breaks-crlf-and-lf",
+    "baseDirection": "auto",
+    "text": "שורה ראשונה\r\nSecond line\nשורה שלישית"
+  },
+  {
+    "id": "neutrals-and-mixed-punctuation",
+    "baseDirection": "rtl",
+    "text": "() שלום — 12.5, ABC: 42!"
+  },
+  {
+    "id": "forced-ltr-base",
+    "baseDirection": "ltr",
+    "text": "(שלום) 123"
+  },
+  {
+    "id": "forced-rtl-base",
+    "baseDirection": "rtl",
+    "text": "ABC 123 (שלום)"
+  }
+]
