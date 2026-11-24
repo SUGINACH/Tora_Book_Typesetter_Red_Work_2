@@ -731,3 +731,18 @@ font catalog. TYP-SHAPING-01 נשאר פתוח עד שילוב ShapedRun/ShapedG
 
 על bdefac0: Full Math, Preview, Corpus ו-Layout Audit success; מטריצת
 Node 18/20/22 הייתה in_progress בעת עדכון זה. יש לבדוק מחדש לפי HEAD הסופי.
+
+
+### TYP-SHAPING-01 — PoC v10: control bounds אינם ink bounds (24.11.2026)
+
+Run `45467805796` / Artifact `14955353770` / commit `a7db7e8`
+הסתיים success. HarfBuzz glyphExtents תואם ל-ControlBoundsPen ב-852/852
+GIDs (max delta=0), אך רק 433/852 תואמים ל-BoundsPen של true curve;
+419 הבדלים, עד 56.111743 font units. לכן אין למפות glyphExtents ל-inkBounds.
+יש להחזיק controlBounds בנפרד ולחשב tight inkBounds מ-outline path
+באמצעות Bézier extrema; אין fallback שקט ל-control box.
+
+גם source mapping נבדק: 75/75 RTL cases מונוטוניים, 617/617 sourceRanges
+תקינים ב-UTF-16, 220 קבוצות multi-glyph cluster, אפס gaps/errors/surrogate
+splits. CFF outlines: 852/852 מתאימים למקור. TYP-SHAPING-01 נשאר פתוח
+עד שילוב מלא ב-LineItem/LineModel/PageModel/DOM/PDF ו-end-to-end parity.
