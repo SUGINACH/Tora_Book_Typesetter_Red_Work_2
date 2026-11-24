@@ -21,6 +21,7 @@ from typing import Any
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.varLib.instancer import instantiateVariableFont
 
@@ -133,6 +134,72 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
     return {"maxBoundsDeltaFontUnits": max_bbox_delta, "worstGlyph": worst_glyph}
 
 
+def glyph_svg_path(font: TTFont, glyph_name: str) -> str:
+    glyph_set = font.getGlyphSet()
+    pen = SVGPathPen(glyph_set)
+    glyph_set[glyph_name].draw(pen)
+    return pen.getCommands()
+
+
+def write_glyph_comparison(
+    source_path: Path,
+    converted_path: Path,
+    gid: int,
+    output_dir: Path,
+    label: str,
+) -> dict[str, str]:
+    import cairosvg
+
+    source = TTFont(str(source_path), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
+    converted = TTFont(str(converted_path), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
+    source_order = source.getGlyphOrder()
+    converted_order = converted.getGlyphOrder()
+    if gid >= len(source_order) or gid >= len(converted_order):
+        raise ValueError(f"visual GID {gid} is outside source/converted glyph order")
+    source_name = source_order[gid]
+    converted_name = converted_order[gid]
+    source_path_data = glyph_svg_path(source, source_name)
+    converted_path_data = glyph_svg_path(converted, converted_name)
+    source_bounds = glyph_bounds(source)[source_name]
+    converted_bounds = glyph_bounds(converted)[converted_name]
+    if source_bounds is None or converted_bounds is None:
+        raise ValueError(f"cannot create visual comparison for empty GID {gid}")
+    upem = float(source["head"].unitsPerEm)
+    min_x = min(source_bounds[0], converted_bounds[0])
+    min_y = min(source_bounds[1], converted_bounds[1])
+    max_x = max(source_bounds[2], converted_bounds[2])
+    max_y = max(source_bounds[3], converted_bounds[3])
+    pad = max(40.0, upem * 0.08)
+    cell_w = max_x - min_x + 2 * pad
+    cell_h = max_y - min_y + 2 * pad
+    gutter = pad
+    width = 2 * cell_w + gutter
+    height = cell_h + 2 * pad
+    tx = -min_x + pad
+    ty = max_y + pad
+    svg = f\'''<svg xmlns="http://www.w3.org/2000/svg" width="{width:.2f}" height="{height:.2f}" viewBox="0 0 {width:.2f} {height:.2f}">
+  <rect width="100%" height="100%" fill="#f5f5f5"/>
+  <g font-family="sans-serif" font-size="{upem * 0.035:.2f}" fill="#222">
+    <text x="{cell_w/2:.2f}" y="{pad*0.65:.2f}" text-anchor="middle">Source CFF · GID {gid} · {source_name}</text>
+    <text x="{cell_w + gutter + cell_w/2:.2f}" y="{pad*0.65:.2f}" text-anchor="middle">Converted glyf · GID {gid} · {converted_name}</text>
+  </g>
+  <g transform="translate(0,{pad:.2f})">
+    <g transform="translate({tx:.2f},{ty:.2f}) scale(1,-1)"><path d="{source_path_data}" fill="#111"/></g>
+  </g>
+  <g transform="translate({cell_w + gutter:.2f},{pad:.2f})">
+    <g transform="translate({tx:.2f},{ty:.2f}) scale(1,-1)"><path d="{converted_path_data}" fill="#111"/></g>
+  </g>
+</svg>\'''
+    output_dir.mkdir(parents=True, exist_ok=True)
+    svg_path = output_dir / f"{label}-gid-{gid}.svg"
+    png_path = output_dir / f"{label}-gid-{gid}.png"
+    svg_path.write_text(svg, encoding="utf-8")
+    cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=str(png_path), output_width=1600)
+    source.close()
+    converted.close()
+    return {"svg": str(svg_path), "png": str(png_path)}
+
+
 def font_sample_text(font: TTFont, kind: str) -> str:
     cmap = font.getBestCmap() or {}
     heb = "".join(ch for ch in HEBREW_LETTERS if ord(ch) in cmap)
@@ -196,6 +263,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--output", type=Path, default=Path("artifacts/font-conversion-proof/report.json"))
+    parser.add_argument("--visual-dir", type=Path, default=Path("artifacts/font-conversion-proof/visuals"))
     args = parser.parse_args()
     root = args.repo_root.resolve()
     results = []
@@ -319,6 +387,15 @@ def main() -> int:
                 if len(check.getGlyphOrder()) != row["sourceGlyphCount"]:
                     raise ValueError("glyph count changed")
                 sample = font_sample_text(check, label)
+                visual_artifacts = None
+                if row["sourceOutline"] == "cff" and row.get("worstGlyphBoundsDelta"):
+                    visual_artifacts = write_glyph_comparison(
+                        src,
+                        out,
+                        int(row["worstGlyphBoundsDelta"]["gid"]),
+                        args.visual_dir if args.visual_dir.is_absolute() else root / args.visual_dir,
+                        label,
+                    )
                 runtime = java_subset_check(root, out, sample)
                 row.update(
                     {
@@ -333,6 +410,7 @@ def main() -> int:
                         "GPOSPreserved": ("GPOS" in check) == row["sourceHasGPOS"],
                         "sampleText": sample,
                         "productionRuntimeValidation": runtime,
+                        "glyphComparisonArtifacts": visual_artifacts,
                         "status": "passed",
                     }
                 )
