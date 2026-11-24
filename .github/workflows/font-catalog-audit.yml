@@ -35,7 +35,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install font decoding and inspection libraries
-        run: python -m pip install --disable-pip-version-check fonttools==4.63.0 brotli==1.2.0
+        run: python -m pip install --disable-pip-version-check fonttools==4.63.0 brotli==1.2.0 cairosvg==2.8.2
       - name: Audit core and extended catalogs
         run: python tools/audit_font_catalog.py --output "$GITHUB_WORKSPACE/artifacts/font-catalog-audit/report.json"
       - name: Prove WOFF2, CFF and variable-font conversion against production parser/subsetter
@@ -48,5 +48,6 @@ jobs:
           path: |
             artifacts/font-catalog-audit/report.json
             artifacts/font-conversion-proof/report.json
+            artifacts/font-conversion-proof/visuals/
           if-no-files-found: ignore
           retention-days: 14
