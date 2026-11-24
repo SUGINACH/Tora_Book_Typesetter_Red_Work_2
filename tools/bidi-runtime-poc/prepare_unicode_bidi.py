@@ -132,10 +132,6 @@ def main() -> None:
 
     start_marker = "    # Default Bidi_Class for unassigned codepoints."
     end_marker = "    return (group_categories(bidi_class), on_decomps)"
-    start = generator.find(start_marker)
-    end = generator.find(end_marker, start)
-    if start < 0 or end < 0:
-        raise SystemExit("Could not locate upstream unassigned Bidi_Class generation block")
 
     replacement = r'''    # Unicode 18: use the versioned DerivedBidiClass.txt source of truth.
     # UnicodeData.txt above remains the source for assigned code points and
@@ -205,6 +201,11 @@ def main() -> None:
     if generator.count(helper_marker) != 1 or "load_derived_bidi_classes_for_generator" in generator:
         raise SystemExit("Unexpected upstream generator structure; refusing to patch")
     generator = generator.replace(helper_marker, helper + helper_marker, 1)
+    # Recalculate offsets after inserting the helper before load_unicode_data.
+    start = generator.find(start_marker)
+    end = generator.find(end_marker, start)
+    if start < 0 or end < 0:
+        raise SystemExit("Could not locate upstream unassigned Bidi_Class generation block")
     generator = generator[:start] + replacement + generator[end:]
     generator_path.write_text(generator, encoding="utf-8")
 
