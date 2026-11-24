@@ -240,11 +240,30 @@ def main():
                         if source_target and aligned_target else None
                     ),
                 }
+                visual_dir = args.visual_dir if args.visual_dir.is_absolute() else root / args.visual_dir
                 row['ploniGID725VisualComparison'] = write_glyph_comparison(
                     src, output, target_gid,
-                    args.visual_dir if args.visual_dir.is_absolute() else root / args.visual_dir,
+                    visual_dir,
                     'ploni-gid725-raw',
                 )
+                target_codepoints = sorted(cp for cp, mapped_gid in cmap0.items() if mapped_gid == target_gid)
+                preferred_codepoint = 0xFB4F if 0xFB4F in target_codepoints else (target_codepoints[0] if target_codepoints else None)
+                if preferred_codepoint is not None:
+                    try:
+                        row['ploniGID725FreeTypeRaster'] = freetype_raster_comparison(
+                            src, output, target_gid, preferred_codepoint, source_lsb,
+                            int(upem), visual_dir, 'ploni-gid725',
+                        )
+                    except Exception as raster_exc:
+                        row['ploniGID725FreeTypeRaster'] = {
+                            'status': 'diagnostic-failed',
+                            'error': f'{type(raster_exc).__name__}: {raster_exc}',
+                        }
+                else:
+                    row['ploniGID725FreeTypeRaster'] = {
+                        'status': 'skipped',
+                        'reason': 'no Unicode codepoint maps to GID 725',
+                    }
             f.close()
             out=TTFont(str(output),lazy=False,recalcBBoxes=False,recalcTimestamp=False)
             cmap1={int(cp):int(out.getGlyphID(n)) for cp,n in (out.getBestCmap() or {}).items()}
