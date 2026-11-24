@@ -7,6 +7,13 @@
 
   const BASE_DIRECTION = Object.freeze({ ltr: 0, rtl: 1, auto: 2 });
 
+  function directionCode(direction) {
+    if (!Object.prototype.hasOwnProperty.call(BASE_DIRECTION, direction)) {
+      throw new Error('Unknown paragraph base direction: ' + direction);
+    }
+    return BASE_DIRECTION[direction];
+  }
+
   function requireFunction(exports, name) {
     if (!exports || typeof exports[name] !== 'function') {
       throw new Error('Bidi WASM export missing: ' + name);
@@ -93,8 +100,11 @@
     }
 
     function resolve(text, baseDirection = 'auto') {
-      const base = BASE_DIRECTION[baseDirection];
-      if (base === undefined) throw new Error('Unknown paragraph base direction: ' + baseDirection);
+      const base = directionCode(baseDirection);
+      text = String(text);
+      if (text.length === 0) {
+        return { text, utf16Length: 0, levels: [], paragraphs: [] };
+      }
 
       return withInput(text, (pointer, units) => {
         const outputPointer = resolveRaw(pointer, units.length, base);
@@ -127,13 +137,19 @@
     }
 
     function lineVisualRuns(text, baseDirection, lineStart, lineEnd) {
-      const base = BASE_DIRECTION[baseDirection];
-      if (base === undefined) throw new Error('Unknown paragraph base direction: ' + baseDirection);
-      return withInput(text, (pointer, units) => {
-        if (!Number.isSafeInteger(lineStart) || !Number.isSafeInteger(lineEnd) ||
-            lineStart < 0 || lineEnd <= lineStart || lineEnd > units.length) {
-          throw new RangeError('Invalid UTF-16 line range: ' + lineStart + '..' + lineEnd);
+      const base = directionCode(baseDirection);
+      text = String(text);
+      if (!Number.isSafeInteger(lineStart) || !Number.isSafeInteger(lineEnd) ||
+          lineStart < 0 || lineEnd < lineStart || lineEnd > text.length) {
+        throw new RangeError('Invalid UTF-16 line range: ' + lineStart + '..' + lineEnd);
+      }
+      if (text.length === 0) {
+        if (lineStart !== 0 || lineEnd !== 0) {
+          throw new RangeError('Only the empty UTF-16 range is valid for empty text');
         }
+        return { lineStart: 0, lineEnd: 0, levels: [], visualRuns: [] };
+      }
+      return withInput(text, (pointer, units) => {
         if (!isUtf16Boundary(units, lineStart) || !isUtf16Boundary(units, lineEnd)) {
           throw new Error('Bidi line range splits a UTF-16 surrogate pair');
         }
