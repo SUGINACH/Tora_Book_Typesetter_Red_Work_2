@@ -4888,3 +4888,25 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
 - Actions על a7db7e8: PoC/Full Math/Preview/Corpus/Layout Audit success;
   Node 18/20/22 עדיין in_progress בעת הבדיקה. HEAD עבר לאחר מכן ל-doc-only
   commits; יש לבדוק את ה-runs החדשים על HEAD הסופי.
+
+
+## 2026-11-24 — HarfBuzz PoC v11: חישוב tight Bézier ink bounds
+
+- Commit של PoC: `cfba9e3b0668e49c36b9e6baa8ba0632e62985cb`.
+- Run `45474206847`, Artifact `14956464558`, conclusion success.
+- נוספה פונקציית JavaScript עצמאית שמחשבת tight axis-aligned bounds
+  מ-SVG M/L/C/Z. לכל cubic נפתרות אנליטית נגזרות X/Y; פקודות אחרות
+  נדחות מפורשות.
+- 7 unit tests עברו: extrema ב-X/Y, relative cubic, line/close, zero-area,
+  degenerate cubic, multi-contour; unsupported Q command נדחה.
+- השוואה מול fontTools BoundsPen של המקורות המקוריים: Ambivalenti 444/444,
+  Mixtape Bold 204/204, Mixtape Regular 204/204; 852/852 התאמות,
+  אפס mismatches/missing; max delta 2.2737367544323206e-13 font units.
+- glyphExtents נשאר controlBounds בלבד: 852/852 מול ControlBoundsPen,
+  אך 419 הבדלים מול tight curve bounds. חוזה ShapedRun/ShapedGlyph תוקן
+  להפרדת controlBounds ו-inkBounds.
+- Node/classic Worker, Corpus ו-Preview success על אותו commit.
+  CI מלא ו-Full Math עדיין in_progress בעת כתיבת הרשומה.
+- ההוכחה מוגבלת ל-CFF M/L/C/Z: אין עדיין Quadratic/glyf, pen accumulation,
+  glyph offsets, transformed run bounds, RTL coordinate projection או
+  renderer parity. Production engine לא שונה; TYP-SHAPING-01 נשאר פתוח.
