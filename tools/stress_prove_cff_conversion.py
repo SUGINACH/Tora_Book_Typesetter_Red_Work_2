@@ -111,6 +111,215 @@ def freetype_raster_comparison(
     }
 
 
+def outline_raster_metrics(alpha_source, alpha_converted, *, binary_threshold=128, difference_threshold=16) -> dict:
+    """Quantify differences between two same-sized glyph-outline alpha masks."""
+    from PIL import ImageChops
+
+    if alpha_source.mode != "L" or alpha_converted.mode != "L" or alpha_source.size != alpha_converted.size:
+        raise ValueError("outline raster masks must be same-sized 8-bit grayscale images")
+
+    source_binary = alpha_source.point(lambda value: 255 if value >= binary_threshold else 0)
+    converted_binary = alpha_converted.point(lambda value: 255 if value >= binary_threshold else 0)
+    intersection = ImageChops.darker(source_binary, converted_binary)
+    union = ImageChops.lighter(source_binary, converted_binary)
+
+    source_pixels = sum(source_binary.histogram()[1:])
+    converted_pixels = sum(converted_binary.histogram()[1:])
+    intersection_pixels = sum(intersection.histogram()[1:])
+    union_pixels = sum(union.histogram()[1:])
+    symmetric_difference_pixels = union_pixels - intersection_pixels
+
+    alpha_difference = ImageChops.difference(alpha_source, alpha_converted)
+    difference_histogram = alpha_difference.histogram()
+    nonzero_difference_pixels = sum(difference_histogram[1:])
+    threshold_difference_pixels = sum(difference_histogram[difference_threshold:])
+    absolute_alpha_difference = sum(value * count for value, count in enumerate(difference_histogram))
+    squared_alpha_difference = sum(value * value * count for value, count in enumerate(difference_histogram))
+    pixel_count = alpha_source.width * alpha_source.height
+
+    return {
+        "rasterWidth": alpha_source.width,
+        "rasterHeight": alpha_source.height,
+        "pixelCount": pixel_count,
+        "sourceInkPixels": source_pixels,
+        "convertedInkPixels": converted_pixels,
+        "intersectionPixels": intersection_pixels,
+        "unionPixels": union_pixels,
+        "binarySymmetricDifferencePixels": symmetric_difference_pixels,
+        "binarySymmetricDifferenceRatio": (
+            symmetric_difference_pixels / union_pixels if union_pixels else 0.0
+        ),
+        "intersectionOverUnion": (
+            intersection_pixels / union_pixels if union_pixels else 1.0
+        ),
+        "nonzeroAlphaDifferencePixels": nonzero_difference_pixels,
+        "alphaDifferencePixelsAtThreshold": threshold_difference_pixels,
+        "alphaDifferenceThreshold": difference_threshold,
+        "meanAbsoluteAlphaDifference": absolute_alpha_difference / (pixel_count * 255) if pixel_count else 0.0,
+        "rootMeanSquareAlphaDifference": (
+            (squared_alpha_difference / pixel_count) ** 0.5 / 255 if pixel_count else 0.0
+        ),
+        "binaryAlphaThreshold": binary_threshold,
+    }
+
+
+def verify_outline_raster_metric_contract() -> None:
+    """Small deterministic self-check for the raster-difference metric."""
+    from PIL import Image
+
+    baseline = Image.new("L", (8, 8), 0)
+    baseline.paste(255, (2, 2, 4, 4))
+    same = outline_raster_metrics(baseline, baseline.copy())
+    if same["intersectionOverUnion"] != 1.0 or same["binarySymmetricDifferencePixels"] != 0:
+        raise AssertionError(f"identical masks must have zero difference: {same}")
+    if same["nonzeroAlphaDifferencePixels"] != 0 or same["meanAbsoluteAlphaDifference"] != 0:
+        raise AssertionError(f"identical masks must have zero alpha error: {same}")
+
+    shifted = Image.new("L", (8, 8), 0)
+    shifted.paste(255, (3, 2, 5, 4))
+    shifted_metrics = outline_raster_metrics(baseline, shifted)
+    if shifted_metrics["intersectionPixels"] != 2 or shifted_metrics["unionPixels"] != 6:
+        raise AssertionError(f"shifted rectangle intersection/union mismatch: {shifted_metrics}")
+    if abs(shifted_metrics["intersectionOverUnion"] - (1 / 3)) > 1e-12:
+        raise AssertionError(f"shifted rectangle IoU mismatch: {shifted_metrics}")
+    if shifted_metrics["binarySymmetricDifferencePixels"] != 4:
+        raise AssertionError(f"shifted rectangle symmetric difference mismatch: {shifted_metrics}")
+
+
+def path_geometry_raster_comparison(
+    source_path: Path,
+    converted_path: Path,
+    gid: int,
+    output_dir: Path,
+    label: str,
+    *,
+    target_pixels_per_em: int = 3072,
+    max_render_dimension: int = 8192,
+) -> dict:
+    """Compare CFF/CFF2 and glyf outlines as same-viewBox alpha masks, without FreeType or shaping."""
+    from io import BytesIO
+    import cairosvg
+    from PIL import Image, ImageChops
+    from fontTools.pens.boundsPen import BoundsPen
+    from fontTools.pens.svgPathPen import SVGPathPen
+    from fontTools.ttLib import TTFont
+    from fontTools.varLib.instancer import instantiateVariableFont
+
+    source = TTFont(str(source_path), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
+    converted = TTFont(str(converted_path), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
+    try:
+        source_order = source.getGlyphOrder()
+        converted_order = converted.getGlyphOrder()
+        if gid < 0 or gid >= len(source_order) or gid >= len(converted_order):
+            raise ValueError(f"geometry raster GID {gid} is outside source/converted glyph order")
+        if len(source_order) != len(converted_order):
+            raise ValueError("source and converted glyph order cardinalities differ")
+        if "CFF " not in source and "CFF2" not in source:
+            raise ValueError("geometry raster source is not CFF/CFF2")
+        if "glyf" not in converted:
+            raise ValueError("geometry raster output does not contain TrueType glyf outlines")
+
+        # Match the stress runner's explicit default-axis instancing before conversion.
+        if "fvar" in source:
+            axes = {axis.axisTag: float(axis.defaultValue) for axis in source["fvar"].axes}
+            instantiateVariableFont(source, axes, inplace=True, updateFontNames=False, static=True)
+
+        source_name = source_order[gid]
+        converted_name = converted_order[gid]
+        if source_name != converted_name:
+            raise ValueError(
+                f"glyph name changed at GID {gid}: source={source_name!r}, converted={converted_name!r}"
+            )
+
+        source_glyph_set = source.getGlyphSet(preferCFF=True)
+        converted_glyph_set = converted.getGlyphSet(preferCFF=False)
+        source_pen = SVGPathPen(source_glyph_set)
+        converted_pen = SVGPathPen(converted_glyph_set)
+        source_glyph_set[source_name].draw(source_pen)
+        converted_glyph_set[converted_name].draw(converted_pen)
+        source_path_data = source_pen.getCommands()
+        converted_path_data = converted_pen.getCommands()
+
+        source_bounds_pen = BoundsPen(source_glyph_set)
+        converted_bounds_pen = BoundsPen(converted_glyph_set)
+        source_glyph_set[source_name].draw(source_bounds_pen)
+        converted_glyph_set[converted_name].draw(converted_bounds_pen)
+        source_bounds = source_bounds_pen.bounds
+        converted_bounds = converted_bounds_pen.bounds
+        if source_bounds is None or converted_bounds is None:
+            raise ValueError(f"cannot raster-compare empty outline at GID {gid}")
+        upem = int(source["head"].unitsPerEm)
+        if int(converted["head"].unitsPerEm) != upem:
+            raise ValueError("source and converted unitsPerEm differ")
+
+        min_x = min(float(source_bounds[0]), float(converted_bounds[0]))
+        min_y = min(float(source_bounds[1]), float(converted_bounds[1]))
+        max_x = max(float(source_bounds[2]), float(converted_bounds[2]))
+        max_y = max(float(source_bounds[3]), float(converted_bounds[3]))
+        padding = max(40.0, upem * 0.08)
+        view_x = min_x - padding
+        view_y = min_y - padding
+        view_width = max_x - min_x + 2 * padding
+        view_height = max_y - min_y + 2 * padding
+        if view_width <= 0 or view_height <= 0:
+            raise ValueError(f"invalid shared glyph viewBox dimensions: {view_width} x {view_height}")
+
+        scale = float(target_pixels_per_em) / upem
+        render_width = max(1, int(round(view_width * scale)))
+        render_height = max(1, int(round(view_height * scale)))
+        if max(render_width, render_height) > max_render_dimension:
+            scale *= max_render_dimension / max(render_width, render_height)
+            render_width = max(1, int(round(view_width * scale)))
+            render_height = max(1, int(round(view_height * scale)))
+
+        translate_x = -view_x
+        translate_y = max_y + padding
+
+        def render_path(path_data: str):
+            svg = (
+                f'<svg xmlns="http://www.w3.org/2000/svg" '
+                f'width="{view_width:.8f}" height="{view_height:.8f}" '
+                f'viewBox="{view_x:.8f} {view_y:.8f} {view_width:.8f} {view_height:.8f}">'
+                f'<g transform="translate({translate_x:.8f},{translate_y:.8f}) scale(1,-1)">'
+                f'<path d="{path_data}" fill="#000" fill-rule="nonzero"/>'
+                f'</g></svg>'
+            )
+            png_bytes = cairosvg.svg2png(
+                bytestring=svg.encode("utf-8"),
+                output_width=render_width,
+                output_height=render_height,
+            )
+            with Image.open(BytesIO(png_bytes)) as rendered:
+                return rendered.convert("RGBA").getchannel("A").copy()
+
+        source_alpha = render_path(source_path_data)
+        converted_alpha = render_path(converted_path_data)
+        metrics = outline_raster_metrics(source_alpha, converted_alpha)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        diff_path = output_dir / f"{label}-gid-{gid}-geometry-raster-diff.png"
+        alpha_difference = ImageChops.difference(source_alpha, converted_alpha)
+        alpha_difference.save(diff_path)
+
+        return {
+            "status": "generated",
+            "method": "same-viewBox CFF/CFF2-versus-glyf outline alpha-mask comparison; no FreeType, hinting, shaping, cmap, advance-width, or text-positioning stage",
+            "gid": gid,
+            "glyphName": source_name,
+            "sourceBounds": [float(value) for value in source_bounds],
+            "convertedBounds": [float(value) for value in converted_bounds],
+            "unitsPerEm": upem,
+            "targetPixelsPerEm": target_pixels_per_em,
+            "effectivePixelsPerEm": scale * upem,
+            "commonViewBox": [view_x, view_y, view_width, view_height],
+            "rasterizer": f"CairoSVG {getattr(cairosvg, '__version__', 'unknown')}",
+            "metrics": metrics,
+            "differenceImage": str(diff_path),
+        }
+    finally:
+        source.close()
+        converted.close()
+
+
 def decoded_cff_source_copy(source_path: Path, output_dir: Path, label: str) -> Path:
     """Decode a WOFF2/SFNT CFF source into a local SFNT for FreeType raster checks."""
     source = TTFont(str(source_path), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
@@ -131,7 +340,7 @@ def main():
     p.add_argument('--repo-root',type=Path,default=Path(__file__).resolve().parents[1])
     p.add_argument('--output',type=Path,default=Path('artifacts/cff-conversion-stress/report.json'))
     p.add_argument('--visual-dir',type=Path,default=Path('artifacts/cff-conversion-stress/visuals'))
-    args=p.parse_args(); root=args.repo_root.resolve(); assets=root/'red-build/ui/assets/imud'
+    args=p.parse_args(); verify_outline_raster_metric_contract(); root=args.repo_root.resolve(); assets=root/'red-build/ui/assets/imud'
     core=read_catalog(assets/'imud-fonts.json','core'); ext=read_catalog(assets/'fonts-extended.json','extended')
     families_by_file={}
     for entry in core+ext:
@@ -445,6 +654,27 @@ def main():
             row['placementOutlier'] = placement_outlier
             if visual_outlier:
                 label = 'outlier-' + Path(rel).stem.replace(' ', '-').replace('/', '-')
+                geometry_review_glyph = row.get('worstGlyph') or row.get('worstPlacementGlyph')
+                if geometry_review_glyph is not None:
+                    try:
+                        row['geometryRasterReview'] = path_geometry_raster_comparison(
+                            src,
+                            output,
+                            int(geometry_review_glyph['gid']),
+                            visual_dir,
+                            label,
+                        )
+                    except Exception as raster_exc:
+                        row['geometryRasterReview'] = {
+                            'status': 'diagnostic-failed',
+                            'gid': int(geometry_review_glyph['gid']),
+                            'error': f'{type(raster_exc).__name__}: {raster_exc}',
+                        }
+                else:
+                    row['geometryRasterReview'] = {
+                        'status': 'diagnostic-failed',
+                        'error': 'geometry outlier has no representative worst glyph',
+                    }
                 if row.get('worstGlyph'):
                     row['glyphComparisonArtifacts'] = write_glyph_comparison(
                         src, output, int(row['worstGlyph']['gid']), visual_dir, label + '-geometry'
@@ -558,8 +788,21 @@ def main():
         and not (x.get('sourceCurveLsbGlyphComparison') or {}).get('svg')
     ]
     geometry_outlier_rows=[x for x in cff_rows if x.get('conversionBoundsOutlier')]
+    geometry_raster_review_rows=[
+        x for x in geometry_outlier_rows
+        if (x.get('geometryRasterReview') or {}).get('status')=='generated'
+    ]
+    geometry_raster_diagnostic_failures=[
+        {'file':x['file'],'diagnostic':x.get('geometryRasterReview')}
+        for x in geometry_outlier_rows
+        if (x.get('geometryRasterReview') or {}).get('status')=='diagnostic-failed'
+    ]
+    geometry_raster_evidence_missing=[
+        x['file'] for x in geometry_outlier_rows
+        if (x.get('geometryRasterReview') or {}).get('status') != 'generated'
+    ]
     report={
-        'schema':'cff-conversion-stress-v3',
+        'schema':'cff-conversion-stress-v4',
         'catalogUniqueFiles':len(unique),
         'cffFontCount':len(cff_rows),
         'passed':sum(1 for x in cff_rows if x.get('status')=='passed'),
@@ -574,6 +817,10 @@ def main():
         'rasterDiagnosticFailures':raster_diagnostic_failures,
         'rasterEvidenceMissingFonts':raster_evidence_missing,
         'geometryOutlierFontCount':len(geometry_outlier_rows),
+        'geometryRasterComparisonCount':len(geometry_raster_review_rows),
+        'geometryRasterDiagnosticFailureCount':len(geometry_raster_diagnostic_failures),
+        'geometryRasterDiagnosticFailures':geometry_raster_diagnostic_failures,
+        'geometryRasterEvidenceMissingFonts':geometry_raster_evidence_missing,
         'maximumBoundsDelta':maximum,
         'manualReviewRequired':bool(curve_lsb_diagnostic_rows or geometry_outlier_rows),
         'manualReviewStatus':'required' if curve_lsb_diagnostic_rows or geometry_outlier_rows else 'none',
@@ -582,11 +829,11 @@ def main():
         'failures':failures,
     }
     output=args.output if args.output.is_absolute() else root/args.output; output.parent.mkdir(parents=True,exist_ok=True); output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    summary_keys=('cffFontCount','passed','failureCount','sourceCurveLsbDiagnosticFontCount','sourceCurveLsbDiagnosticGlyphCount','sourceCurveLsbRasterComparisonCount','sourceCurveLsbRasterDiagnosticFailureCount','severeSourceCurveLsbDiagnosticCount','geometryOutlierFontCount','maximumBoundsDelta','manualReviewRequired','massConversionApproved')
+    summary_keys=('cffFontCount','passed','failureCount','sourceCurveLsbDiagnosticFontCount','sourceCurveLsbDiagnosticGlyphCount','sourceCurveLsbRasterComparisonCount','sourceCurveLsbRasterDiagnosticFailureCount','severeSourceCurveLsbDiagnosticCount','geometryOutlierFontCount','geometryRasterComparisonCount','geometryRasterDiagnosticFailureCount','maximumBoundsDelta','manualReviewRequired','massConversionApproved')
     summary={k:report[k] for k in summary_keys}
     summary['report']=str(output)
     print(json.dumps(summary,ensure_ascii=False,indent=2))
     # Automated structure, parser, subset, round-trip and raster-diagnostic
     # execution gates are distinct from the remaining manual visual-review set.
-    return 1 if failures or report['passed']!=report['cffFontCount'] or raster_diagnostic_failures or raster_evidence_missing else 0
+    return 1 if failures or report['passed']!=report['cffFontCount'] or raster_diagnostic_failures or raster_evidence_missing or geometry_raster_diagnostic_failures or geometry_raster_evidence_missing else 0
 if __name__=='__main__': sys.exit(main())
