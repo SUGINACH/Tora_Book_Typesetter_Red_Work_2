@@ -62,3 +62,6 @@
 
 
 - [Shaping integration boundaries — 24.11.2026](../audits/SHAPING_INTEGRATION_BOUNDARIES_2026-11-24.md)
+
+
+- [Unicode 18 UTF-16 Bidi runtime POC — 24.11.2026](../audits/BIDI_UNICODE18_RUNTIME_2026-11-24.md)

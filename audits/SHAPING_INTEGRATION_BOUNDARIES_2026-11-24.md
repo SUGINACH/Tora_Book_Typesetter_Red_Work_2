@@ -433,3 +433,34 @@ engine לא שונה; `TYP-SHAPING-01` נשאר פתוח.
   baseline and RTL sign conventions ב-coordinate system של RED.
 - זהו PoC; production MeasureAPI/LineItem/LineModel/PageModel/DOM/PDF
   עדיין אינם מקבלים ShapedRun. אין לשנות את סטטוס TYP-SHAPING-01 ל-closed.
+
+
+## 14. Bidi runtime candidate — Unicode 18 UTF-16 proof (24.11.2026)
+
+A dedicated POC using `servo/unicode-bidi` 0.3.18 at pinned revision
+`9a8c7b03be01def5cf7014b89d5af90f7382fdad` passed against regenerated official
+Unicode 18.0.0 data:
+
+- 39/39 upstream library unit tests, 4/4 official Bidi conformance tests,
+  3/3 doc tests, wasm32 wrapper build and classic Worker all passed.
+- Ten fixtures produced 13 paragraphs, 44 logical embedding runs and 37
+  line-level visual-run probes.
+- Node/classic Worker output is byte-identical
+  (SHA-256 `cb2704eaeacde8aede3ceb7b33cae982767e9897137ded04b829a5c62c1bd24c`).
+- UTF-16 behavior covers supplementary characters, valid and invalid
+  surrogate boundaries, empty text/ranges, paragraph base direction and L1
+  trailing-whitespace reset.
+
+Full record: `audits/BIDI_UNICODE18_RUNTIME_2026-11-24.md`.
+
+### Integration boundary
+
+The upstream visual-run API implements the line-level L1/L2 stage. It does
+not perform L3 combining-mark sequence handling or L4 mirroring. This wrapper
+currently emits embedding-level logical runs and L1/L2 visual runs only;
+it does not yet itemize script/language/font/feature runs, choose fallback by
+grapheme, or pass glyph IDs to RED's line and output models.
+
+Therefore this is a validated Bidi runtime candidate, not production
+integration. L3/L4 and the complete ShapedRun path remain required before
+`TYP-SHAPING-01` can close.

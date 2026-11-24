@@ -4910,3 +4910,33 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
 - ההוכחה מוגבלת ל-CFF M/L/C/Z: אין עדיין Quadratic/glyf, pen accumulation,
   glyph offsets, transformed run bounds, RTL coordinate projection או
   renderer parity. Production engine לא שונה; TYP-SHAPING-01 נשאר פתוח.
+
+
+## 2026-11-24 — Unicode 18 UTF-16 Bidi runtime POC passed
+
+- Code commit: `96e357e74ac625f47bdb5844b8f2e310ec24b09f`.
+- Workflow `45480673152`, Artifact `14962026789`, conclusion success.
+- Runtime: `servo/unicode-bidi` 0.3.18, source revision
+  `9a8c7b03be01def5cf7014b89d5af90f7382fdad`; regenerated from official
+  Unicode 18.0.0 UCD in a disposable source checkout.
+- Results: 39/39 unit, 4/4 official Bidi conformance, 3/3 doc tests;
+  wasm32 wrapper, classic Worker and Node/classic Worker parity all passed.
+- Ten mixed-direction fixtures; 13 paragraphs; 44 logical bidi runs;
+  37 whole-line/synthetic-wrap probes. All 11 invariants passed.
+- Node and classic Worker output SHA-256 are identical:
+  `cb2704eaeacde8aede3ceb7b33cae982767e9897137ded04b829a5c62c1bd24c`.
+- UTF-16 contract: A😀B length 4; [1,3) emoji range valid; split-surrogate
+  boundary rejected; malformed high/low surrogate inputs rejected;
+  empty document and zero-length line handled; auto/forced direction and
+  UAX #9 L1 trailing-whitespace reset passed.
+- Unicode 18 assigns BN to noncharacters FDD0..FDEF and FFFE..FFFF. Six stale
+  unit-test expectations in upstream `char_data::tests::test_bmp` are patched
+  only in the temporary checkout (L -> BN). Official conformance data is
+  untouched and passes.
+- Audit:
+  `audits/BIDI_UNICODE18_RUNTIME_2026-11-24.md`.
+- Scope boundary: POC only. The visual-run API provides L1/L2; L3 mark ordering,
+  L4 mirroring, script/lang/font itemization, grapheme fallback, real RED
+  line-breaker integration, ShapedRun/LineModel/PageModel and DOM/PDF parity
+  remain open. No production engine code was changed.
+

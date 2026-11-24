@@ -764,3 +764,34 @@ differences. חוזה ShapedGlyph מפריד כעת controlBounds ו-inkBounds.
 pen offsets, run-level transforms ו-RTL coordinate projection עדיין פתוחים.
 לא נעשה שינוי production; TYP-SHAPING-01 נשאר פתוח עד שילוב מלא ב-LineItem,
 LineModel, PageModel, DOM/HTML ו-PDF עם end-to-end parity.
+
+
+### TYP-SHAPING-01 — Unicode 18 UTF-16 Bidi runtime POC passed (24.11.2026)
+
+- Runtime source: `servo/unicode-bidi` 0.3.18, pinned revision
+  `9a8c7b03be01def5cf7014b89d5af90f7382fdad`; tables regenerated from official
+  Unicode 18.0.0 UCD in a disposable checkout.
+- Workflow `45480673152`, Artifact `14962026789`, code commit
+  `96e357e74ac625f47bdb5844b8f2e310ec24b09f`: success.
+- 39/39 unit tests, 4/4 official Bidi conformance tests, 3/3 doc tests,
+  wasm32 wrapper build, browser classic Worker run all passed.
+- Ten fixtures: 13 paragraphs, 44 logical embedding runs, 37 line probes.
+  All 11 runtime invariants passed; Node/classic Worker exact JSON parity.
+  Both output SHA-256 values:
+  `cb2704eaeacde8aede3ceb7b33cae982767e9897137ded04b829a5c62c1bd24c`.
+- UTF-16 tests cover A😀B (four code units), valid emoji range [1,3),
+  surrogate-interior range rejection, unpaired surrogate rejection, empty
+  document/line, auto/forced base direction and L1 trailing whitespace.
+- For Unicode 18 the temporary upstream `test_bmp` expectations for
+  U+FDD0/U+FDD1/U+FDEE/U+FDEF/U+FFFE/U+FFFF were corrected from L to BN,
+  per the official DerivedBidiClass ranges FDD0..FDEF and FFFE..FFFF.
+  Only the disposable test checkout is modified; official conformance files
+  and RED production sources are unchanged.
+- Detailed record:
+  `audits/BIDI_UNICODE18_RUNTIME_2026-11-24.md`.
+
+**Boundary:** upstream visual-runs performs UAX #9 L1/L2 only. L3 combining
+mark order, L4 mirroring, script/language/font itemization and grapheme-level
+fallback still need to be integrated before shaping. Line probes are not RED
+line-breaker integration. No production Bidi or shaping code has been changed;
+`TYP-SHAPING-01` remains open.

@@ -564,3 +564,18 @@ clusters [0,1,3] ו-ranges [37,38), [38,40), [40,41).
 Node/classic Worker: `exactNodeParity=true`; 15 font streams,
 617 glyph instances, HarfBuzz core 15.0.0. CFF source outlines:
 852/852 operation+coordinate matches מול WOFF2 המקוריים; אפס mismatches.
+
+
+## Unicode 18 UTF-16 Bidi POC (24.11.2026)
+
+Workflow `45480673152`, Artifact `14962026789`, code commit
+`96e357e74ac625f47bdb5844b8f2e310ec24b09f` passed:
+39/39 library unit tests, 4/4 official Unicode 18 Bidi conformance tests,
+3/3 doc tests, WASM build, classic Worker execution and exact Node/Worker
+JSON parity. Ten mixed-direction fixtures generated 13 paragraphs, 44 logical
+runs and 37 line probes. UTF-16 surrogate, empty text, paragraph direction
+and L1 trailing whitespace probes passed. Full details:
+`audits/BIDI_UNICODE18_RUNTIME_2026-11-24.md`.
+
+This remains a POC: L3/L4, script/font itemization, grapheme fallback,
+RED line-breaker integration and renderer parity are still open.
