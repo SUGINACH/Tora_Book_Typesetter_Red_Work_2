@@ -275,6 +275,19 @@ def main():
             if metrics1!=converted_metrics_by_gid: raise ValueError('hmtx metrics changed during SFNT save/load')
             if [m[0] for m in metrics1] != [m[0] for m in metrics0]:
                 raise ValueError('advance widths changed')
+            expected_hhea = geom['hmetricsRemapping']['hheaSummary']
+            actual_hhea = {
+                'advanceWidthMax': int(out['hhea'].advanceWidthMax),
+                'minLeftSideBearing': int(out['hhea'].minLeftSideBearing),
+                'minRightSideBearing': int(out['hhea'].minRightSideBearing),
+                'xMaxExtent': int(out['hhea'].xMaxExtent),
+            }
+            if actual_hhea != expected_hhea:
+                raise ValueError(f'hhea summary changed or stale: expected {expected_hhea}, got {actual_hhea}')
+            expected_head = geom['hmetricsRemapping']['headGlobalBounds']
+            actual_head = [int(out['head'].xMin), int(out['head'].yMin), int(out['head'].xMax), int(out['head'].yMax)]
+            if actual_head != expected_head:
+                raise ValueError(f'head global bounds changed or stale: expected {expected_head}, got {actual_head}')
             if len(out.getGlyphOrder())!=len(order): raise ValueError('glyph count changed')
             bounds1=raw_glyf_bounds(out); maxround=0.0
             aligned_bounds1=glyph_bounds(out, prefer_cff=False); max_aligned_roundtrip=0.0
@@ -414,7 +427,7 @@ def main():
                 except Exception as alt_exc:
                     row['decomposedAlternative'] = {'status': 'failed', 'error': f'{type(alt_exc).__name__}: {alt_exc}'}
             runtime=java_subset_check(root,output,sample)
-            row.update({'roundTripBoundsDelta':maxround,'alignedRoundTripBoundsDelta':max_aligned_roundtrip,'runtimeSubset':runtime,'conversionBoundsOutlier':visual_outlier,'convertedBytes':output.stat().st_size,'convertedSha256':sha(output),'status':'passed'})
+            row.update({'roundTripBoundsDelta':maxround,'alignedRoundTripBoundsDelta':max_aligned_roundtrip,'hheaSummaryAfterReload':actual_hhea,'headGlobalBoundsAfterReload':actual_head,'runtimeSubset':runtime,'conversionBoundsOutlier':visual_outlier,'convertedBytes':output.stat().st_size,'convertedSha256':sha(output),'status':'passed'})
             out.close(); output.unlink(missing_ok=True)
         except Exception as e:
             row.update({'status':'failed','error':f'{type(e).__name__}: {e}'})
