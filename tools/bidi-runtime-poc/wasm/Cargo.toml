@@ -1,7 +1,7 @@
 [package]
 name = "red-bidi-runtime-poc"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 publish = false
 
 [lib]
@@ -9,6 +9,13 @@ crate-type = ["cdylib"]
 
 [dependencies]
 unicode-bidi = { path = "..", features = ["hardcoded-data"] }
+
+# ICU4X 2.4.0 is pinned to the release commit whose segmenter/properties data
+# packages declare Unicode 18.0.0. Avoid default segmenter "auto" (LSTM) in WASM.
+icu_segmenter = { git = "https://github.com/unicode-org/icu4x", rev = "031d9e89f6a3fd26a14491e090729d46094328fd", default-features = false, features = ["compiled_data"] }
+icu_properties = { git = "https://github.com/unicode-org/icu4x", rev = "031d9e89f6a3fd26a14491e090729d46094328fd", default-features = false, features = ["compiled_data"] }
+icu_segmenter_data = { git = "https://github.com/unicode-org/icu4x", rev = "031d9e89f6a3fd26a14491e090729d46094328fd" }
+icu_properties_data = { git = "https://github.com/unicode-org/icu4x", rev = "031d9e89f6a3fd26a14491e090729d46094328fd" }
 
 [profile.release]
 opt-level = "s"
