@@ -426,12 +426,8 @@ def convert_cff_to_glyf_decomposed(font: TTFont, max_err: float) -> dict[str, An
 
 
 def glyph_svg_path(font: TTFont, glyph_name: str) -> str:
-    if "glyf" in font and "CFF " not in font:
-        raw_set = _RawGlyfGlyphSet(font["glyf"])
-        pen = SVGPathPen(raw_set)
-        raw_set[glyph_name].draw(pen)
-        return pen.getCommands()
-    glyph_set = font.getGlyphSet(preferCFF=True)
+    """Draw the effective glyph path, including TrueType LSB placement."""
+    glyph_set = font.getGlyphSet(preferCFF=("CFF " in font))
     pen = SVGPathPen(glyph_set)
     glyph_set[glyph_name].draw(pen)
     return pen.getCommands()
@@ -456,8 +452,8 @@ def write_glyph_comparison(
     converted_name = converted_order[gid]
     source_path_data = glyph_svg_path(source, source_name)
     converted_path_data = glyph_svg_path(converted, converted_name)
-    source_bounds = glyph_bounds(source)[source_name]
-    converted_bounds = raw_glyf_bounds(converted)[converted_name]
+    source_bounds = glyph_bounds(source, prefer_cff=True)[source_name]
+    converted_bounds = glyph_bounds(converted, prefer_cff=False)[converted_name]
     if source_bounds is None or converted_bounds is None:
         raise ValueError(f"cannot create visual comparison for empty GID {gid}")
     upem = float(source["head"].unitsPerEm)
