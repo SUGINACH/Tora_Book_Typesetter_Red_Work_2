@@ -861,7 +861,7 @@ def main():
             if empty_marks:
                 row.setdefault('coverageWarnings', []).append('mapped Hebrew marks have empty outlines; these marks are excluded from the subset sample')
             if hebrew:
-                sample = hebrew + ''.join(chr(cp) for cp in supported_marks)
+                subset_sample = hebrew + ''.join(chr(cp) for cp in supported_marks)
             else:
                 latin = ''.join(ch for ch in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' if ord(ch) in cmap and bounds_by_name.get(cmap[ord(ch)]) is not None)
                 if not latin:
@@ -870,9 +870,11 @@ def main():
                     visible = [cp for cp in sorted(cmap) if bounds_by_name.get(cmap[cp]) is not None]
                     if not visible:
                         raise ValueError('no mapped non-empty Unicode glyph available for production subset check')
-                    sample = ''.join(chr(cp) for cp in visible[:16])
+                    subset_sample = ''.join(chr(cp) for cp in visible[:16])
                 else:
-                    sample = latin[:32]
+                    subset_sample = latin[:32]
+            if not isinstance(subset_sample, str) or not subset_sample:
+                raise TypeError('production subset sample must be a non-empty Unicode string')
             visual_dir = args.visual_dir if args.visual_dir.is_absolute() else root / args.visual_dir
             row['maxBoundsDeltaEm'] = row['maxBoundsDeltaFontUnits'] / upem
             row['maxBoundsDeltaOverTolerance'] = row['maxBoundsDeltaFontUnits'] / tol if tol else None
@@ -899,25 +901,25 @@ def main():
                         )
                     row['geometryRasterExpectedReviewCount'] = len(sample_specs)
                     row['geometryRasterReviews'] = []
-                    for sample in sample_specs:
-                        sample_label = label + '-' + sample['sampleKind']
-                        target_pixels = 3072 if sample['sampleKind'] == 'overall-worst-bounds' else 1536
+                    for geometry_sample in sample_specs:
+                        sample_label = label + '-' + geometry_sample['sampleKind']
+                        target_pixels = 3072 if geometry_sample['sampleKind'] == 'overall-worst-bounds' else 1536
                         try:
                             review = path_geometry_raster_comparison(
                                 src,
                                 output,
-                                int(sample['gid']),
+                                int(geometry_sample['gid']),
                                 visual_dir,
                                 sample_label,
                                 target_pixels_per_em=target_pixels,
                             )
-                            review['sampleKind'] = sample['sampleKind']
-                            review['selectionBoundsDeltaFontUnits'] = float(sample['boundsDeltaFontUnits'])
-                            review['selectionCodepoints'] = sample['sourceCodepoints']
+                            review['sampleKind'] = geometry_sample['sampleKind']
+                            review['selectionBoundsDeltaFontUnits'] = float(geometry_sample['boundsDeltaFontUnits'])
+                            review['selectionCodepoints'] = geometry_sample['sourceCodepoints']
                         except Exception as raster_exc:
                             review = {
                                 'status': 'diagnostic-failed',
-                                'sampleKind': sample['sampleKind'],
+                                'sampleKind': geometry_sample['sampleKind'],
                                 'gid': int(sample['gid']),
                                 'error': f'{type(raster_exc).__name__}: {raster_exc}',
                             }
@@ -1000,7 +1002,7 @@ def main():
                     alt_gid_delta = None
                     if source_worst_bounds is not None and alt_worst_bounds is not None:
                         alt_gid_delta = max(abs(float(x) - float(y)) for x, y in zip(source_worst_bounds, alt_worst_bounds))
-                    alt_sample = sample
+                    alt_sample = subset_sample
                     alt_runtime = java_subset_check(root, alt_f, alt_sample)
                     row['decomposedAlternative'] = {
                         'status': 'passed',
@@ -1017,7 +1019,7 @@ def main():
                     alt_f.unlink(missing_ok=True)
                 except Exception as alt_exc:
                     row['decomposedAlternative'] = {'status': 'failed', 'error': f'{type(alt_exc).__name__}: {alt_exc}'}
-            runtime=java_subset_check(root,output,sample)
+            runtime=java_subset_check(root,output,subset_sample)
             row.update({'roundTripBoundsDelta':maxround,'alignedRoundTripBoundsDelta':max_aligned_roundtrip,'hheaSummaryAfterReload':actual_hhea,'headGlobalBoundsAfterReload':actual_head,'runtimeSubset':runtime,'conversionBoundsOutlier':visual_outlier,'convertedBytes':output.stat().st_size,'convertedSha256':sha(output),'status':'passed'})
             out.close(); output.unlink(missing_ok=True)
         except Exception as e:
