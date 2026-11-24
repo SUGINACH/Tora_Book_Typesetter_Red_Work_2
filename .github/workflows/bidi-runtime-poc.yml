@@ -1,0 +1,63 @@
+name: bidi-runtime-poc
+
+on:
+  push:
+    branches: [ engine/legacy-parity-preview-20261119 ]
+    paths:
+      - 'tools/bidi-runtime-poc/**'
+      - '.github/workflows/bidi-runtime-poc.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unicode18-utf16-bidi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Checkout pinned unicode-bidi source
+        run: |
+          git clone https://github.com/servo/unicode-bidi.git /tmp/unicode-bidi
+          git -C /tmp/unicode-bidi checkout 9a8c7b03be01def5cf7014b89d5af90f7382fdad
+          git -C /tmp/unicode-bidi rev-parse HEAD
+      - name: Regenerate Bidi tables from versioned Unicode 18.0.0 UCD
+        run: |
+          python3 tools/bidi-runtime-poc/prepare_unicode_bidi.py /tmp/unicode-bidi
+          cd /tmp/unicode-bidi
+          python3 tools/generate.py
+          grep -F 'pub const UNICODE_VERSION: (u64, u64, u64) = (18, 0, 0);' src/char_data/tables.rs
+      - name: Run upstream Bidi conformance tests against Unicode 18.0.0
+        run: cargo test --manifest-path /tmp/unicode-bidi/Cargo.toml -- --nocapture
+      - name: Build pinned UTF-16 Bidi wrapper for wasm32
+        run: |
+          mkdir -p /tmp/unicode-bidi/bidi-runtime-poc-wrapper
+          cp tools/bidi-runtime-poc/wasm/Cargo.toml /tmp/unicode-bidi/bidi-runtime-poc-wrapper/Cargo.toml
+          mkdir -p /tmp/unicode-bidi/bidi-runtime-poc-wrapper/src
+          cp tools/bidi-runtime-poc/wasm/src/lib.rs /tmp/unicode-bidi/bidi-runtime-poc-wrapper/src/lib.rs
+          cd /tmp/unicode-bidi
+          RUSTFLAGS="-C link-arg=--export-memory" cargo build \
+            --manifest-path bidi-runtime-poc-wrapper/Cargo.toml \
+            --target wasm32-unknown-unknown --release
+          cp target/wasm32-unknown-unknown/release/red_bidi_runtime_poc.wasm \
+            "$GITHUB_WORKSPACE/tools/bidi-runtime-poc/bidi-runtime-poc.wasm"
+      - name: Install headless browser for classic Worker parity
+        run: |
+          npm install -g agent-browser@0.41.2
+          agent-browser install --with-deps
+      - name: Prove Node and classic Worker UTF-16 Bidi parity
+        run: node tools/bidi-runtime-poc/run.js tools/bidi-runtime-poc/bidi-runtime-poc.wasm
+      - name: Upload Unicode 18 Bidi runtime report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bidi-runtime-poc
+          path: /tmp/bidi-runtime-poc-report.json
+          if-no-files-found: ignore
