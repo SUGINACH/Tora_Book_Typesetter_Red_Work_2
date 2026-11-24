@@ -148,7 +148,9 @@ ShapedRun = {
   clusterLevel, shapingVersion, fontFallback: null | diagnostic,
   glyphs: [ShapedGlyph],
   advance: { x, y, unit: "font-units" },
-  inkBounds: { xMin, yMin, xMax, yMax, unit: "font-units" }
+  controlBounds: { xMin, yMin, xMax, yMax, unit: "font-units" } | null,
+  inkBounds: { xMin, yMin, xMax, yMax, unit: "font-units" } | null,
+  inkBoundsMethod: "analytic-bezier" | "unavailable"
 };
 
 ShapedGlyph = {
@@ -156,8 +158,9 @@ ShapedGlyph = {
   sourceRange: { start, end }, // UTF-16; כמה glyphs יכולים לחלוק cluster
   flags,
   xAdvance, yAdvance, xOffset, yOffset,
-  inkBounds: { xBearing, yBearing, width, height },
-  outlineRef // או outline path/cache key; מנגנון האחסון פתוח
+  controlBounds: { xMin, yMin, xMax, yMax, unit: "font-units" } | null,
+  inkBounds: { xMin, yMin, xMax, yMax, unit: "font-units" } | null,
+  outlineRef // outline path/cache key; exact ink bounds are derived from the path
 };
 ```
 
@@ -170,8 +173,11 @@ ShapedGlyph = {
   לטווח הבא; כמה glyphs יכולים לשתף את אותו cluster.
 - `MONOTONE_GRAPHEMES` לבדו אינו מחליף UAX #29 / script segmentation /
   bidi. אין לחתוך combining sequence, ligature או grapheme באמצע.
-- כל ink position נגזר מ-pen origin + offsets + extents באותו coordinate
-  convention. יש להוכיח סימני RTL ו-Y-axis במבחני יחידות לפני המרה ל-px.
+- `glyphExtents` של HarfBuzz הוא control-point bounding box, לא tight
+  curve bound. הוא נשמר כ-`controlBounds` בלבד. `inkBounds` נגזר מ-outline
+  path בחישוב analytic Bézier extrema; אין להסיק אותו מ-controlBounds.
+- כל ink position נגזר מ-pen origin + offsets + exact curve bounds באותו
+  coordinate convention. יש להוכיח סימני RTL ו-Y-axis לפני המרה ל-px.
 - Font fallback נבחר עבור grapheme שלם, לא תו בודד. אם אף גופן אינו מכיל
   base+marks ביחד, יש diagnostic או מדיניות קומפוזיציה מפורשת — לא פיצול שקט.
 - Cache key חייב לכלול לפחות: normalized fontId, faceIndex, canonical
@@ -373,3 +379,57 @@ pen accumulation, signs ב-RTL, transformed run-level bounds או ink parity
 HarfBuzz שנבדקה. אין להסיק ממנה שכל outline format או כל variation mode
 מחזירים אותן תכונות, ואין לראות בה מימוש של ink-bounds engine. ה-production
 engine לא שונה; `TYP-SHAPING-01` נשאר פתוח.
+
+
+## 13. PoC v11 — analytic cubic Bézier ink bounds (24.11.2026)
+
+### ריצה ו-Artifact
+- Code commit: `cfba9e3b0668e49c36b9e6baa8ba0632e62985cb`.
+- Shaping run: `45474206847`; Artifact: `14956464558`; conclusion: success.
+- HarfBuzzJS 1.6.4 / HarfBuzz core 15.0.0.
+- Node/classic Worker parity עבר; Corpus ו-Preview עברו על אותו commit.
+
+### שיטת החישוב
+- JavaScript parser עצמאי ל-SVG commands `M/m`, `L/l`, `C/c`, `Z/z`.
+- פקודה לא נתמכת (למשל `Q`) נדחית בכשל מפורש; אין bounds חלקיים.
+- לכל cubic Bézier מחושבים שורשי הנגזרת של X ושל Y בתחום הפתוח (0,1);
+  הערכת העקומה בנקודות הקיצון יחד עם endpoints נותנת tight axis-aligned bounds.
+- control points אינם נחשבים כנקודות דיו אלא אם הם endpoints/extrema בפועל.
+- 7 unit tests עברו: cubic Y-extremum, cubic X-extremum, relative cubic,
+  line/close contour, zero-area contour, degenerate cubic, multi-contour bounds.
+  בדיקת unsupported quadratic command עברה (הפקודה נדחתה).
+- ה-parser הופעל על כל 852 CFF glyph paths. כל path נתמך; empty outlines
+  הושוו כ-empty מול source BoundsPen.
+
+### השוואה למקור — כל 852 GIDs
+
+| גופן | GIDs | JS analytic bounds = BoundsPen | אי-התאמות |
+|---|---:|---:|---:|
+| Ambivalenti-Regular | 444 | 444 | 0 |
+| Mixtape Bold | 204 | 204 | 0 |
+| Mixtape Regular | 204 | 204 | 0 |
+| **סה"כ** | **852** | **852** | **0** |
+
+- `svgPathBoundsMatches=852`; mismatches=0; missing=0.
+- סטיית קואורדינטות מרבית: `2.2737367544323206e-13` font units
+  (דיוק floating-point; מתחת ל-`1e-5` tolerance).
+- במקביל, glyphExtents נשאר 852/852 מול ControlBoundsPen בלבד;
+  419/852 אינם tight BoundsPen. ההפרדה בין controlBounds ל-inkBounds
+  אומתה ונשמרה.
+- Vector path operations והקואורדינטות עדיין תואמים למקורות WOFF2 המקוריים
+  ב-852/852 GIDs.
+
+### מסקנה
+ה-PoC מכיל כעת חישוב tight ink bounds ב-JavaScript שאינו תלוי ב-fontTools,
+והושווה אל fontTools BoundsPen על כל 852 GIDs של שלושת מקורות ה-CFF.
+לכן ניתן להשתמש באלגוריתם זה כבסיס לחישוב `inkBounds` עבור outline paths
+במימוש המנוע, בעוד `glyphExtents` נשמר בנפרד כ-`controlBounds`.
+
+### גבולות שעדיין פתוחים
+- נבדקו פקודות SVG M/L/C/Z בקורפוס CFF זה בלבד. Quadratic paths (glyf/TrueType),
+  arcs, color glyphs ו-formats אחרים אינם נתמכים ע"י parser זה; הם חייבים
+  parser/algorithm ייעודי או diagnostic, לא fallback משוער.
+- עדיין אין pen accumulation כולל x/y offsets, run-level transformed bounds,
+  baseline and RTL sign conventions ב-coordinate system של RED.
+- זהו PoC; production MeasureAPI/LineItem/LineModel/PageModel/DOM/PDF
+  עדיין אינם מקבלים ShapedRun. אין לשנות את סטטוס TYP-SHAPING-01 ל-closed.
