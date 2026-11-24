@@ -1,0 +1,44 @@
+name: font-catalog-audit
+
+on:
+  push:
+    branches:
+      - engine/legacy-parity-preview-20261119
+    paths:
+      - '.github/workflows/font-catalog-audit.yml'
+      - 'tools/audit_font_catalog.py'
+      - 'red-build/ui/assets/imud/imud-fonts.json'
+      - 'red-build/ui/assets/imud/fonts-extended.json'
+      - 'red-build/ui/assets/imud/fonts/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    name: Audit all embedded IMUD font assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact branch commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install font decoding and inspection libraries
+        run: python -m pip install --disable-pip-version-check fonttools brotli
+      - name: Audit core and extended catalogs
+        run: python tools/audit_font_catalog.py --output "$GITHUB_WORKSPACE/artifacts/font-catalog-audit/report.json"
+      - name: Upload complete font audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: imud-font-catalog-audit-${{ github.sha }}
+          path: artifacts/font-catalog-audit/report.json
+          if-no-files-found: ignore
+          retention-days: 14
