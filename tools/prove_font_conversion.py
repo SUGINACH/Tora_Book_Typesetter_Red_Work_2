@@ -87,6 +87,12 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> float:
     del font["CFF "]
     font.sfntVersion = "\x00\x01\x00\x00"
     font["head"].indexToLocFormat = 1
+    # CFF OTFs commonly use post 3.0, which has no stored glyph-name array.
+    # FontTools may synthesize different glyph *names* from cmap after save;
+    # numeric GIDs remain stable. GID identity, not glyph-name spelling, is
+    # the contract for the converted outlines and PDF subset.
+    if "post" in font:
+        font["post"].formatType = 3.0
 
     maxp = font["maxp"]
     maxp.tableVersion = 0x00010000
@@ -228,7 +234,10 @@ def main() -> int:
                     raise ValueError("variable tables remain after full default instancing")
 
                 glyph_order_before = list(font.getGlyphOrder())
-                cmap_before = dict(font.getBestCmap() or {})
+                cmap_before = {
+                    int(cp): int(font.getGlyphID(glyph_name))
+                    for cp, glyph_name in (font.getBestCmap() or {}).items()
+                }
                 advances_before = {
                     name: int(font["hmtx"].metrics[name][0])
                     for name in glyph_order_before
@@ -251,10 +260,19 @@ def main() -> int:
                     raise ValueError("output is not TrueType-flavored SFNT")
                 if "glyf" not in check or "loca" not in check or "CFF " in check or "fvar" in check:
                     raise ValueError("output has unsupported outlines or residual variation")
-                if list(check.getGlyphOrder()) != glyph_order_before:
-                    raise ValueError("glyph order changed during conversion")
-                if dict(check.getBestCmap() or {}) != cmap_before:
-                    raise ValueError("Unicode cmap changed during conversion")
+                cmap_after = {
+                    int(cp): int(check.getGlyphID(glyph_name))
+                    for cp, glyph_name in (check.getBestCmap() or {}).items()
+                }
+                if len(check.getGlyphOrder()) != len(glyph_order_before):
+                    raise ValueError("glyph count/order cardinality changed during conversion")
+                if cmap_after != cmap_before:
+                    changed = [
+                        (cp, cmap_before.get(cp), cmap_after.get(cp))
+                        for cp in sorted(set(cmap_before) | set(cmap_after))
+                        if cmap_before.get(cp) != cmap_after.get(cp)
+                    ][:8]
+                    raise ValueError(f"Unicode-to-GID mapping changed during conversion: {changed}")
                 advances_after = {
                     name: int(check["hmtx"].metrics[name][0])
                     for name in glyph_order_before
