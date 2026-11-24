@@ -609,7 +609,7 @@ audits/MEASURE_API_SAFETY_U11_U14_2026-11-20.md, audits/U15_HEADING_ALIGNMENT_20
 
 | מזהה | חומרה | מצב | תיאור וראיות | תנאי סגירה |
 |---|---|---|---|---|
-| FNT-CFF-GEO-01 | גבוהה | **פתוח — סקירה גאומטרית** | 47 גופנים סומנו כחריגי Bounding Box. ב-Artifact v4 נוצרו 47 Raster comparisons; IoU חציוני 0.995055, אך המקסימום של הפרש סימטרי הוא כ-2.114% ב-Skechers-Regular.woff2 GID 32. בדיקת Raster כיסתה GID מייצג אחד בכל גופן, לא את כל הגליפים. | סקירה ידנית ממוקדת של החריגים; הרחבת דגימות לפי ראיות; החלטה מתועדת. אין לשנות MAX_ERR_EM או לאשר המרה גורפת על בסיס ממוצע/חציון. דוח: audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md |
+| FNT-CFF-GEO-01 | גבוהה | **פתוח — סקירה גאומטרית** | Artifact v5 על ee5973e בדק 47 outlier fonts ב-137 Raster samples: 47 overall, 47 Hebrew-base, 43 Hebrew-mark; אפס failures או missing. IoU minima: 0.978857 (Skechers U+0035), 0.983736 (Kedem-Sans U+05D8), 0.982143 (Mixtape U+05BC). 130/137 images שונות פיקסלית. הדגימות נבחרות לפי max bounds delta בכל קטגוריה; לא כל 22,169 glyphs נבדקו. | סקירה ידנית ממוקדת של החריגים; הרחבת דגימות לפי ראיות; החלטה מתועדת. אין לשנות MAX_ERR_EM או לאשר המרה גורפת על בסיס ממוצע/חציון. דוח: audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md |
 | FNT-CFF-APPROVAL-01 | חוסם הפעלה גורפת | **פתוח — אין אישור mass conversion** | 380/380 המרות עברו מבחני מבנה/Runtime, אך אלה אינם מוכיחים נאמנות גאומטרית לכל glyph. הדוח משאיר manualReviewRequired=true ו-massConversionApproved=false. | להשלים בחינה מבוססת ראיות; לבנות pipeline+manifest דטרמיניסטיים; לבצע end-to-end validation לפני הפעלת התוצרים בקטלוג. |
 | TYP-SHAPING-01 | גבוהה | **פתוח — חוזה ארכיטקטוני** | MeasureAPI מודד תו-אחר-תו; DOM/HTML מבצעים shaping בדפדפן אחרי קביעת תיבות המודל; PDF ו-subsetter מתרגמים Unicode→GID לכל תו ואינם משמרים clusters/offsets. HarfBuzzJS 1.6.4 הוא ESM/WASM ואינו תואם ישירות ל-CJS classic-worker bundler הקיים. | חוזה ShapedRun/ShapedGlyph יחיד; הוכחת bundling/Node/Worker דטרמיניסטית; shaping לפני line-break; אותו glyph/position model בכל מקריני DOM/HTML/PDF. דוח: audits/SHAPING_CONTRACT_GAP_2026-11-24.md |
 | LAYOUT-F7-FRAGMENT-GAP-01 | גבוהה | **פתוח — ממתין ליציבות גופנים ו-shaping** | legacy-imud-flow מצמיד 7px לכל fragment של פסקה, גם ל-p-cut; DP pushLines מצמיד block gap רק לשורה הראשונה של קריאת בלוק, מדכא בראש טור/עמוד, ו-split שולח קטעים לקריאות נפרדות. יש להכריע האם gap הוא סמנטיקה של בלוק, fragment או פתיחת זרימה — לא לכפות 7px או מספר עמודים. | לחקור progress/fragment contract, findSplit/maxFit וגבולות split; להגדיר כלל יחיד לפי תחילת/המשך fragment ומצב הטור/עמוד; לבדוק פסקאות מפוצלות ולא מפוצלות בלי חריג מקומי. אין שינוי עד להשלמת שלבי הגופנים וה-shaping. |
@@ -626,3 +626,22 @@ IoU חציוני 0.368832, ממוצע 0.332899, symmetric-difference חציונ�
 47 חריגי גאומטריה עדיין דורשים סקירה; `manualReviewRequired=true` ו-
 `massConversionApproved=false`. ראיות מלאות:
 `audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md`.
+
+
+### עדכון Artifact v5 והחלטת כלי האודיט — 24.11.2026
+
+Run 45421092959 / Artifact 14933789403 על ee5973e עבר success:
+380/380 CFF conversions; 137/137 geometry Raster comparisons; 54/54
+severe LSB reviews; אפס diagnostic failures ואפס evidence missing.
+בדיקת ה-CI הסופית על אותו commit (45421093007) עברה ב-Node 18/20/22
+וב-Layout Audit. Full Math, Preview ו-Corpus אף הם עברו.
+
+הכשל הקודם ב-run 45419183582 סווג ותוקן כבאג scope בכלי האודיט:
+רשומת geometry דרסה מחרוזת Unicode ל-runtime subset. לא היה זה כשל
+המרה/גופן; 137 תמונות ה-Raster נוצרו גם בריצה הכושלת. תיקוני scope ודיווח
+נשמרו ב-8341469 וב-ee5973e.
+
+החלטת האישור אינה משתנה: manualReviewRequired=true,
+massConversionApproved=false; FNT-CFF-GEO-01 ו-FNT-CFF-APPROVAL-01
+נשארים פתוחים עד סקירה ידנית והוכחת pipeline/manifest מקצה לקצה.
+ראיות מלאות: audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md.

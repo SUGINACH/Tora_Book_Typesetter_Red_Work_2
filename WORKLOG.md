@@ -4616,3 +4616,65 @@ Artifact מבוקר ועם כל המדדים. המצב נשאר `manualReviewReq
   רצו, Node 20 queued, Layout Audit in_progress); Preview ו-Full Math queued.
 - אין להציג את ה-HEAD הנוכחי כ-CI ירוק לפני שכל הריצות על ה-HEAD הסופי
   מסתיימות success.
+
+
+## 2026-11-24 — CFF v5: הרחבת דגימות עבריות ותיקון כלי האודיט
+
+HEAD לפני תיעוד זה: ee5973e3778eed39ea7978ba45b2e2c1506d4ccd.
+
+### רצף commits של כלי האודיט
+- 0243acb — הרחבת Raster sampling מגליף כללי אחד לכל גופן חריג,
+  לדגימה כללית + אות עברית בסיסית + ניקוד/טעם לפי סטיית bounds מרבית.
+- 8341469 — תיקון scope: הפרדת subset_sample (מחרוזת Unicode)
+  מ-geometry_sample (רשומת דגימת raster), והוספת בדיקת type לחוזה subset.
+- ee5973e — תיקון מזהה GID גם בנתיב except של Raster review.
+- לא שונו קוד מנוע העימוד, CSS, ספי CFF, MAX_ERR_EM או מדיניות אישור המרה.
+
+### כשל ביניים והכרעת שורש
+Run 45419183582 על 0243acb הסתיים failure. בדיקה ישירה של ה-Artifact
+14933832871 הראתה ש-137 דגימות Raster דווקא נוצרו בהצלחה, אך לולאת
+for sample in sample_specs דרסה את מחרוזת ה-Unicode sample ששימשה
+מאוחר יותר ל-runtime subset / DecomposingPen. לכן 47 שורות החריגה נכשלו
+ב-TypeError אחרי יצירת התמונות; זה היה באג scope בכלי הבדיקה, לא ממצא
+conversion או geometry. בנוסף נמצא שימוש בשם המשתנה הישן בנתיב ה-exception
+ונתקן ב-ee5973e. הבדיקות נשארו מחמירות ולא הוסרו.
+
+### Artifact v5 סופי — אומת ישירות
+- Run: 45421092959; Artifact: 14933789403; commit: ee5973e.
+- Schema: cff-conversion-stress-v5.
+- 1,758 קובצי גופן ייחודיים; 380 גופני CFF; 380/380 passed; failureCount=0.
+- Curve/LSB diagnostics: 46 גופנים, 1,285 גליפים.
+- Geometry outliers: 47; 137/137 Raster comparisons generated:
+  47 overall-worst-bounds, 47 Hebrew-base, 43 Hebrew-mark.
+- אפס diagnostic failures; אין fonts חסרים ב-geometryRasterEvidenceMissingFonts.
+- 137 תמונות, 130 שונות פיקסלית (כפילויות בין וריאציות גופן בלבד).
+- IoU median: overall 0.995055; Hebrew base 0.996169; Hebrew marks 0.995544.
+- IoU minima: overall 0.978857 (Skechers-Regular GID32/U+0035);
+  base 0.983736 (Kedem-Sans-Ultra-Light GID237/U+05D8);
+  mark 0.982143 (Mixtape-Bold GID200/U+05BC).
+- Severe LSB: 54/54 FreeType reviews; 54/54 direct same-glyf old-vs-remapped
+  LSB comparisons; אפס כשלי אבחון ואפס unmapped.
+  Direct old-vs-new LSB IoU median 0.368832, mean 0.332899; symmetric
+  difference median 0.631168. ממצא LSB נשאר מוכח ישירות.
+- manualReviewRequired=true; manualReviewStatus=required;
+  massConversionApproved=false. אין cutover ואין activation בקטלוג.
+
+### מצב Actions על HEAD הקוד ee5973e
+- Font Catalog Audit 45421092959: completed success.
+- CI 45421093007: completed success; Node 18/20/22 + Layout Audit.
+  בכל שלוש גרסאות Node עברו tests, determinism ו-cross-check.
+- Full Math 45421093122: completed success — 691/691 עמודים, 44,360 שורות,
+  360,356 מילים, problems=0, determinism IDENTICAL.
+- Preview 45421092974: success.
+- Corpus Invariants 45421092888: success.
+
+### סדר עבודה שנותר
+- FNT-CFF-GEO-01 נשאר פתוח: ה-Raster sampling התרחב ל-3 סוגי דגימות,
+  אך אינו מכסה את כל 22,169 הגליפים המצטברים ב-47 הגופנים החריגים ואינו
+  Hausdorff/vector proof.
+- FNT-CFF-APPROVAL-01 נשאר פתוח: יש להשלים סקירה ידנית מבוססת ראיות,
+  לבנות pipeline+manifest דטרמיניסטיים ולבצע end-to-end validation לפני
+  activation. אין לשנות MAX_ERR_EM או להפעיל המרה גורפת.
+- Shaping משותף נשאר הפער הארכיטקטוני המרכזי; F7 נשאר ממתין ליציבות גופנים
+  ו-shaping. לא שונו P6/P7, ערכת 40 או עיצובי השערים המקוריים.
+

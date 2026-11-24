@@ -5,15 +5,21 @@
 דוח זה מפריד בין תקינות מבנית של המרה, התאמה גאומטרית, ומיקום גליף בפועל.
 הוא אינו אישור להמרה גורפת.
 
-- קוד בדיקות Raster/FreeType: commit `797467f40c10fd2a2c94cce07b047d850af3db2c`.
-- Artifact שנבדק: run `45410445175`, artifact `14928151801`.
-- דוח המקור: `cff-conversion-stress/report.json`, schema
-  `cff-conversion-stress-v4`.
-- הקוד הוסיף בדיקות לכל 47 החריגים הגאומטריים ולכל 54 אבחוני LSB חמורים.
-- commit מאוחר יותר `54e043c3699b2cbccc87345eb3a6e812ef892628` הוסיף
-  השוואת FreeType מבוקרת ישירה בין אותו glyf עם LSB ישן ועם LSB remapped.
-  ריצת ה-CFF של commit זה הייתה פתוחה בעת כתיבת הדוח; התוצאה המבוקרת טרם
-  נכללה במסמך זה, ואין להניח שהיא עברה עד בדיקת ה-Artifact שלה.
+- קוד הרחבת הדגימות: commit 0243acb0fed70a5369b33c5ff18a7f914540177c.
+- תיקון scope של מחרוזת ה-subset: 8341469e54b3faa4d7bbfbc07b3c6fc6df867183;
+  תיקון שדה הדיווח בנתיב החריגה: ee5973e3778eed39ea7978ba45b2e2c1506d4ccd.
+- Artifact v5 הסופי: run 45421092959, artifact 14933789403, על
+  commit ee5973e; הדוח cff-conversion-stress/report.json, schema
+  cff-conversion-stress-v5.
+- Artifact v4 נשמר כ-baseline: run 45410445175, artifact 14928151801.
+- בדיקת LSB המבוקרת נשמרה גם ב-v5: 54 השוואות ישירות של אותו glyf עם
+  LSB ישן/חדש, ללא כשלי אבחון.
+- ריצת v5 ראשונה על 0243acb (45419183582) נכשלה בכל 47 שורות החריגה
+  בגלל shadowing של שם משתנה Python: לולאת geometry דרסה את מחרוזת ה-Unicode
+  ששימשה את בדיקת ה-subset. כל 137 תמונות ה-Raster הופקו; הכשל הופיע לאחר מכן
+  במסלול DecomposingPen/Runtime. הבעיה תוקנה בהפרדת subset_sample ו-
+  geometry_sample, ובתיקון מזהה GID ב-except; הריצה הסופית
+  45421092959 עברה 380/380. אין מדובר בכשל גופן או בהמרה.
 
 ## תקינות מבנית — קטלוג CFF
 
@@ -28,7 +34,7 @@
 | בדיקות FreeType מייצגות שנוצרו | 46 |
 | כשלי יצירת בדיקות FreeType מייצגות | 0 |
 | גופנים עם חריגת Bounding Box | 47 |
-| השוואות Raster גאומטריות שהופקו | 47 |
+| השוואות Raster גאומטריות שהופקו | 137 |
 | כשלי יצירת השוואת Raster | 0 |
 | LSB diagnostics חמורים (absolute delta ≥ 10 font units) | 54 |
 | בדיקות FreeType ל-LSB החמור | 54 |
@@ -54,49 +60,76 @@ phantom-point. אין להשתמש ב-LSB הישן כאשר הפלט TrueType ק
 - GID: `380`
 - `deltaEm = 0.0013171864592`
 
-## השוואת Raster של קווי המתאר — 47/47
+## השוואת Raster של קווי המתאר — 137/137 (Artifact v5)
 
-כל השוואה מציירת את עקומת CFF ואת מתאר ה-glyf של אותו GID במערכת
-viewBox משותפת, עם padding משותף והיפוך ציר Y, באמצעות CairoSVG. הרזולוציה
-היעדית היא 3,072 פיקסלים ל-em (עם תקרת מימד רסטר של 8,192 פיקסלים).
-ההשוואה מבוססת alpha masks ואינה משתמשת ב-FreeType, hinting, shaping,
-cmap או advance widths.
+הרחבת הדגימות ב-v5 בוחרת לכל אחד מ-47 הגופנים החריגים:
+1. גליף בעל סטיית Bounding Box המרבית בכל הגופן
+   (overall-worst-bounds, רזולוציה 3,072 px/em).
+2. גליף אות עברית בסיסית בעל סטיית Bounding Box המרבית בתחום U+05D0–U+05EA
+   (hebrew-base-max-bounds-delta, רזולוציה 1,536 px/em).
+3. גליף ניקוד/טעם בעל סטיית Bounding Box המרבית בתחום U+0591–U+05C7
+   (hebrew-mark-max-bounds-delta, רזולוציה 1,536 px/em), ככל שיש גליף
+   ממופה עם outline לא ריק.
 
-| מדד | מינימום | חציון | ממוצע | מקסימום |
-|---|---:|---:|---:|---:|
-| Intersection over Union (IoU) | 0.978857 | 0.995055 | 0.993949 | 0.998892 |
-| Binary symmetric-difference ratio | 0.001108 | 0.004945 | 0.006051 | 0.021143 |
-| Normalized alpha MAE | 0.000180 | 0.001071 | 0.001235 | 0.003253 |
-| Normalized alpha RMSE | 0.010998 | 0.027739 | 0.027772 | 0.041287 |
+הבחירה לפי GID יציבה, מסירה כפילויות GID בתוך גופן, ומצרפת את ה-codepoints
+מ-cmap. כל מקור ותוצר מצוירים באותו viewBox, עם padding משותף והיפוך ציר Y,
+באמצעות CairoSVG. ההשוואה היא alpha-mask ואינה משתמשת ב-FreeType, hinting,
+shaping, cmap או advance widths.
 
-הפער הגדול ביותר:
-- `Skechers-Regular.woff2`, GID `32`.
-- `IoU = 0.978857`; כ-2.114% מהפיקסלים במסכת האיחוד נמצאים בהפרש
-  סימטרי בין המסכות.
-- `normalized MAE = 0.003253`.
+| סוג דגימה | מספר | IoU מינימלי | חציון | ממוצע | מקסימום |
+|---|---:|---:|---:|---:|---:|
+| גליף כללי בעל סטיית bounds מרבית | 47 | 0.978857 | 0.995055 | 0.993949 | 0.998892 |
+| אות עברית בסיסית בעלת סטיית bounds מרבית | 47 | 0.983736 | 0.996169 | 0.994835 | 0.999320 |
+| ניקוד/טעם בעל סטיית bounds מרבית | 43 | 0.982143 | 0.995544 | 0.994955 | 0.999788 |
+| **סה"כ** | **137** | — | — | — | — |
 
-ל-`Shluk-Regular.woff2` GID 380, בעל סטיית גבולות המרבית, נמדד
-`IoU = 0.995887` ו-`symmetric-difference ratio = 0.004113`.
-מכאן שהמקרה בעל סטיית Bounding Box המרבית אינו המקרה בעל ההפרש הגאומטרי
-המרבי לפי Raster.
+מדדי ההפרש המרבי בכל סוג:
+- כללי: symmetric difference 2.1143%, normalized alpha MAE 0.003253,
+  normalized alpha RMSE 0.041287.
+- אות עברית בסיסית: symmetric difference 1.6264%, MAE 0.002747,
+  RMSE 0.034324.
+- ניקוד/טעם: symmetric difference 1.7857%, MAE 0.001187,
+  RMSE 0.023198.
 
-### פירוש ומגבלות
+### דגימות החריגה הבולטות
 
-1. זו השוואת Raster מספרית ברזולוציה גבוהה, לא Hausdorff distance ולא
-   הוכחה אנליטית לשוויון וקטורי של Bézier curves.
-2. ב-47 הקבצים נבדק ה-GID המייצג שנבחר כ-worst glyph (או worst placement
-   glyph, לפי נתון הדוח); לא בוצע Raster comparison לכל 1,285 הגליפים.
-3. רזולוציית Raster גבוהה מגלה הבדלים קטנים, אך התוצאה תלויה ברסטרייזר
-   ובאופן הטיפול ב-antialiasing. מדדי Alpha/IoU אינם שקולים למדידת דיו
-   ב-FreeType או בדפדפן.
-4. בדיקה חזותית של דגימות החריגים אינה תחליף למדד מספרי, ולהפך. לא נטען
-   שכל 1,285 הגליפים עברו בדיקה חזותית פרטנית.
-5. אין להסיק מאפס כשלים ביצירת ההשוואות שההמרה מאושרת. ההפרש המקסימלי של
-   Skechers נשאר נושא לסקירה ידנית ממוקדת.
+- **כללי:** Skechers-Regular.woff2, GID 32, U+0035 (ספרה 5):
+  IoU 0.978857 והפרש סימטרי 2.1143%. שם הגליף בקובץ המקור הוא
+  glyph 32, ואילו בתוצר הוא five; ההשוואה מבוססת GID ולא שם.
+- **אות עברית בסיסית:** Kedem-Sans-Ultra-Light.ttf, GID 237, U+05D8:
+  IoU 0.983736 והפרש סימטרי 1.6264%.
+- **ניקוד/טעם:** Mixtape-Bold.woff2, GID 200, U+05BC (דגש):
+  IoU 0.982143 והפרש סימטרי 1.7857%. אותו GID ב-
+  Mixtape-Regular.woff2 קיבל IoU 0.985141.
+
+### כיסוי, כפילויות ומגבלות
+
+- 47/47 גופני החריגה קיבלו את כל הדגימות שנבחרו; 137/137 תמונות נוצרו;
+  geometryRasterDiagnosticFailureCount=0,
+  geometryRasterEvidenceMissingFonts=[].
+- ארבעה גופנים לא סיפקו דגימת סימן עברי כשיר; לכן יש 43 דגימות marks.
+- מתוך 137 קובצי ההפרש, 130 תמונות שונות פיקסלית. שבעה קבצים הם כפילויות
+  מלאות בין וריאציות גופן: Frank-Re (4), Kedem Serif Ultra Light Italic
+  (2 קבוצות דגימה), ו-Noyland (2). הדמיון הפיקסלי חל על תמונת ההפרש של אותו
+  GID בלבד; אין להסיק מכך שכל קובצי הגופן או כל הגליפים שלהם זהים.
+- השוואות Full-size שנבדקו עבור Skechers GID 32, Kedem GID 258 ו-Mixtape GID 27
+  לא הראו עיוות גס גלוי. Contact sheets ברזולוציה מוגברת נבדקו עבור כל שלוש
+  קטגוריות הדגימה; זו סקירה חזותית ממוקדת, לא אישור פרטני לכל גליף.
+- דגימות ה-base וה-mark נבחרות לפי סטיית Bounding Box המרבית בכל קטגוריה,
+  ולא לפי Hausdorff distance או Raster IoU מקסימלי. לכן הן מייצגות כיסוי
+  עברי נוסף, אך אינן הוכחה שהן הגליפים בעלי סטיית העקומה הגדולה ביותר בכל
+  הקטגוריה.
+- 137 דגימות אינן מכסות את כל 22,169 הגליפים המצטברים ב-47 הגופנים החריגים.
+  לא בוצע Raster comparison לכל 1,285 הגליפים באבחוני Curve/LSB.
+- Raster Diff מבוסס CairoSVG ב-3,072/1,536 px/em; זו מדידה מספרית ברזולוציה
+  גבוהה, לא Hausdorff distance ולא הוכחה אנליטית לשוויון Bézier curves.
+  היא אינה מודדת shaping, hinting או rendering בדפדפן/FreeType.
+- אין להסיק מכך שאפס כשלי אבחון פירושו שההמרה מאושרת. Skechers, Kedem ו-
+  Mixtape נשארים מועמדים לסקירה ידנית ממוקדת.
 
 ## בדיקת השפעת LSB על מיקום הגליף — 54/54
 
-ב-Artifact v4 בוצעו שלושה רינדורים ב-FreeType לכל אחד מ-54 הגליפים:
+ב-Artifact v5 הסופי בוצעו שלושה רינדורים ב-FreeType לכל אחד מ-54 הגליפים:
 
 1. גופן המקור CFF.
 2. גופן TrueType מומר עם ה-LSB המקורי של CFF.
@@ -111,7 +144,7 @@ shaping של מחרוזות עבריות מלאות.
 | CFF מקור מול glyf עם LSB ישן | 0.000000 | 0.368336 | 0.332136 | 0.562197 |
 | CFF מקור מול glyf עם LSB remapped | 0.982911 | 0.994281 | 0.994015 | 1.000000 |
 
-הההשוואה הישירה נוספה ב-commit `54e043c3699b2cbccc87345eb3a6e812ef892628`
+הההשוואה הישירה נוספה ב-commit `54e043c3699b2cbccc87345eb3a6e812ef892628` ונכללה מחדש ב-Artifact v5
 ונבדקה מתוך run `45411976892`, Artifact `14929191082`. המדד
 `copiedSourceLsbVsRemappedLsb` משווה שתי גרסאות של אותו מתאר glyf:
 עותק אחד עם LSB המקור והעותק השני עם LSB שנגזר מ-`glyf.xMin`. שניהם
@@ -173,4 +206,8 @@ GID 0 התקבל IoU≈0.265957. זהו ניסוי מבוקר שמבודד את 
 - `tools/test_raw_glyf_bounds.py`
 - Baseline Artifact v4: `14928151801`, run `45410445175` (commit `797467f`).
 - Controlled LSB Artifact v4: `14929191082`, run `45411976892` (commit `54e043c`), completed success.
+- Expanded geometry + controlled LSB Artifact v5: `14933789403`, run `45421092959` (commit `ee5973e`), completed success.
+- CI on `ee5973e`: run `45421093007`; all four jobs (Node 18/20/22 and Layout Audit) completed success.
+- Full Math: run `45421093122` (691/691 pages, zero issues, determinism IDENTICAL).
+- Preview: run `45421092974` success; Corpus invariants: run `45421092888` success.
 
