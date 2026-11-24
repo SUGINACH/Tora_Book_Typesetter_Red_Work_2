@@ -118,11 +118,23 @@ def main() -> int:
         raw_after = raw_glyf_bounds(reloaded)["offcurve-test"]
         aligned_after = glyph_bounds(reloaded, prefer_cff=False)["offcurve-test"]
         lsb_after = int(reloaded["hmtx"].metrics["offcurve-test"][1])
+        hhea_after = (
+            int(reloaded["hhea"].advanceWidthMax),
+            int(reloaded["hhea"].minLeftSideBearing),
+            int(reloaded["hhea"].minRightSideBearing),
+            int(reloaded["hhea"].xMaxExtent),
+        )
+        head_after = (
+            int(reloaded["head"].xMin), int(reloaded["head"].yMin),
+            int(reloaded["head"].xMax), int(reloaded["head"].yMax),
+        )
         reloaded.close()
 
         assert raw_after == raw_remapped, (raw_remapped, raw_after)
         assert aligned_after == aligned_remapped, (aligned_remapped, aligned_after)
         assert lsb_after == remapped_lsb, (remapped_lsb, lsb_after)
+        assert hhea_after == (611, -72, 100, 500), hhea_after
+        assert head_after == (-72, 0, 500, 700), head_after
 
         report = {
             "status": "passed",
