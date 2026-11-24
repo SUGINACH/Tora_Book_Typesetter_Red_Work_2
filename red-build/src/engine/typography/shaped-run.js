@@ -66,7 +66,7 @@ function normalizeSourceRange(input, text) {
   }
   const out = { coordinateSpace: 'document-utf16', start, end };
   for (const key of ['docId', 'blockId', 'itemId']) {
-    if (range[key] != null) out[key] = requireString(String(range[key]), 'invalid-source-range', 'sourceRange.' + key);
+    if (range[key] != null) out[key] = requireString(range[key], 'invalid-source-range', 'sourceRange.' + key);
   }
   if (range.runIndex != null) {
     out.runIndex = requireInteger(range.runIndex, 0, 'invalid-source-range', 'sourceRange.runIndex');
@@ -124,7 +124,7 @@ function normalizeShaping(input) {
   if ((bidiLevel % 2 === 1) !== (direction === 'rtl')) {
     fail('bidi-level-direction-mismatch', 'Bidi level parity does not match shaping direction');
   }
-  const engine = requireString(shaping.engine || 'harfbuzz', 'invalid-shaping-context', 'shaping.engine');
+  const engine = requireString(shaping.engine, 'invalid-shaping-context', 'shaping.engine');
   const engineVersion = requireString(shaping.engineVersion, 'invalid-shaping-context', 'shaping.engineVersion');
   const unicodeVersion = requireString(shaping.unicodeVersion, 'invalid-shaping-context', 'shaping.unicodeVersion');
   if (shaping.bot !== true && shaping.bot !== false) {
@@ -138,7 +138,7 @@ function normalizeShaping(input) {
   }
 
   const variationAxes = normalizeTagValueList(
-    shaping.variationAxes == null ? [] : shaping.variationAxes,
+    shaping.variationAxes,
     'invalid-variation-axes',
     'shaping.variationAxes'
   );
@@ -312,14 +312,17 @@ function createShapedRun(input) {
     fail('invalid-run-advance', 'sum of shaped glyph advances must remain finite');
   }
 
-  const diagnostics = Array.isArray(data.diagnostics) ? data.diagnostics.map((item, index) => {
+  if (data.diagnostics != null && !Array.isArray(data.diagnostics)) {
+    fail('invalid-shaped-run-diagnostic', 'diagnostics must be an array when supplied');
+  }
+  const diagnostics = (data.diagnostics || []).map((item, index) => {
     const diagnostic = requireRecord(item, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + ']');
     return {
       code: requireString(diagnostic.code, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + '].code'),
       message: requireString(diagnostic.message, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + '].message'),
-      ...(diagnostic.severity != null ? { severity: String(diagnostic.severity) } : {})
+      ...(diagnostic.severity != null ? { severity: requireString(diagnostic.severity, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + '].severity') } : {})
     };
-  }) : [];
+  });
 
   return deepFreeze({
     kind: 'ShapedRun',
@@ -386,12 +389,20 @@ function sliceShapedRun(shapedRun, start, end, sliceId) {
   });
 }
 
+function isDeepFrozen(value, seen = new Set()) {
+  if (!value || typeof value !== 'object') return true;
+  if (seen.has(value)) return true;
+  seen.add(value);
+  if (!Object.isFrozen(value)) return false;
+  return Object.keys(value).every((key) => isDeepFrozen(value[key], seen));
+}
+
 function isShapedRun(value) {
   return !!(value && value.kind === 'ShapedRun' &&
     value.contractVersion === SHAPED_RUN_CONTRACT_VERSION &&
-    Object.isFrozen(value) &&
-    Object.isFrozen(value.glyphs) &&
-    Object.isFrozen(value.clusters));
+    isDeepFrozen(value) &&
+    Array.isArray(value.glyphs) &&
+    Array.isArray(value.clusters));
 }
 
 /** Only output-cluster boundaries are legal shaping/line-break slice points. */

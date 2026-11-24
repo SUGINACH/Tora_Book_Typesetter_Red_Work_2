@@ -20,8 +20,7 @@ function validInput(overrides = {}) {
     font: {
       fontId: 'fnt-1234567890abcd',
       faceIndex: 0,
-      unitsPerEm: 1000,
-      variationAxes: [{ tag: 'wght', value: 700 }]
+      unitsPerEm: 1000
     },
     shaping: {
       engine: 'harfbuzz',
@@ -212,6 +211,14 @@ describe('ShapedRun v1 — source mapping, cluster safety and immutability', () 
     const duplicateFeature = validInput();
     duplicateFeature.shaping.features = [{ tag: 'kern', value: 1 }, { tag: 'kern', value: 0 }];
     throwsCode(() => createShapedRun(duplicateFeature), 'invalid-open-type-features', 'duplicate feature');
+
+    const missingAxes = validInput();
+    delete missingAxes.shaping.variationAxes;
+    throwsCode(() => createShapedRun(missingAxes), 'invalid-variation-axes', 'missing explicit variation-axis array');
+
+    const malformedDiagnostics = validInput();
+    malformedDiagnostics.diagnostics = { code: 'ignored' };
+    throwsCode(() => createShapedRun(malformedDiagnostics), 'invalid-shaped-run-diagnostic', 'malformed diagnostics are not silently discarded');
 
     const run = createShapedRun(validInput());
     assertEq(run.font.faceIndex, 0, 'face-index default');
