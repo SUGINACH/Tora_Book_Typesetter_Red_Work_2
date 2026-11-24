@@ -533,7 +533,7 @@
         let expectedScalarStart = 0;
         let expectedExtensionStart = 0;
         for (let i = 0; i < scalarCount; i++) {
-          const offset = scalarTableStart + i * 5;
+          const offset = scalarTableStart + i * 6;
           const start = values[offset];
           const end = values[offset + 1];
           const script = scriptTagOf(values[offset + 2]);
