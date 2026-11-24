@@ -317,7 +317,7 @@ async function main() {
           sourceRuns: nestedHebrewEmbedding.sourceRuns,
           scriptRuns: nestedHebrewEmbedding.scriptRuns,
           rightToLeftMark,
-          joiner
+          joinerCharacters
         }));
     }
 
