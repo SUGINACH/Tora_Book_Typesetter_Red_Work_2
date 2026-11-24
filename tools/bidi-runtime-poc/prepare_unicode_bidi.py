@@ -255,6 +255,20 @@ def main() -> None:
     generator = generator[:start] + replacement + generator[end:]
     generator_path.write_text(generator, encoding="utf-8")
 
+    # The pinned crate's BMP unit test predates Unicode 18's explicit BN
+    # assignments for noncharacters. Patch only these six stale expectations
+    # in the disposable source checkout. The official UCD lists FDD0..FDEF
+    # and FFFE..FFFF as BN; the conformance suites remain entirely unchanged.
+    char_data_test_path = root / "src" / "char_data" / "mod.rs"
+    char_data_tests = char_data_test_path.read_text(encoding="utf-8")
+    for codepoint in ("FDD0", "FDD1", "FDEE", "FDEF", "FFFE", "FFFF"):
+        old = f"assert_eq!(bidi_class('\\\\u{{{codepoint}}}'), L);"
+        new = f"assert_eq!(bidi_class('\\\\u{{{codepoint}}}'), BN);"
+        if char_data_tests.count(old) != 1:
+            raise SystemExit(f"Could not uniquely locate stale Unicode 17 test expectation for U+{codepoint}")
+        char_data_tests = char_data_tests.replace(old, new, 1)
+    char_data_test_path.write_text(char_data_tests, encoding="utf-8")
+
     print({
         "crateVersion": EXPECTED_CRATE_VERSION,
         "sourceRevision": revision,
