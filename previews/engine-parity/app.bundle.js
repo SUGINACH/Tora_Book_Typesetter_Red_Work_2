@@ -3098,8 +3098,15 @@ function assignNumbers(pages, settings) {
     if (!counted) return { page: null, ordinal: null, display: '', shown: false, counted: false };
     ordinal++; // סוד העמוד הנספר (1 ואילך)
     const effective = ordinal - startIdx + initialValue;
-    // D-36: פתיחת פרק/סימן — נספר, לא מוצג; עמודי הערות לא מציגים כותרת עליונה ממילא
-    const suppressDisplay = p.chapterOpening === true;
+    // D-36: פתיחת פרק/סימן — נספר, לא מוצג (מוסכמת ספרים כללית; פרופיל DP);
+    // עמודי הערות לא מציגים כותרת עליונה ממילא.
+    // **Iteration-006 (F5/RC-F5b — התנהגות הייחוס בפרופיל IMUD):** פתיחות-סימן
+    // בייחוס מציגות גיליון (נמדד: p44 «מב», p57 «נה», p70 «סח», p87 «פה» —
+    // כל 88 פתיחות הייחוס עם פוליו; נמדדו גם בפורט המורשת). D-91: התנהגות
+    // המקור היא המפרס — הכותרות העליונות של הפתיחות הושבו כבר ב-03.11(ד)
+    // מאותו שורש; הפוליו מושב כאן. DP נשאר על D-36 (נעול ב-NC-04/s9).
+    const imud = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+    const suppressDisplay = p.chapterOpening === true && !imud;
     // D-62: show-numbering של עמודי תוכן־העניינים (מוחל רק כשנספרים)
     let showFlag = true;
     if (p.type === 'toc-general') showFlag = settings['general-toc-show-numbering'] !== false;
@@ -8546,6 +8553,17 @@ const H2_TITLE_Y_SPAN = 321.1; // עוגן כותרת ה-h2 (פתיחה עם spa
 // ל-391.45px (נמדד במאוחד לפני התיקון) ונוגע בשורת-הכותרת השנייה
 // (374.05–404.05px). מקור יחיד לשני המנועים.
 const H2_TITLE_LINE_PITCH_PX = 30;
+// **Iteration-006 (G6/RC-F1 — עוגני סלוטי-הצד בכותרת העליונה):** נמדד בייחוס
+// (old-engine.pdf, כל 678 עמודי התוכן — יציב ±0.1pt): מרכזי גליפי המילים —
+// «מקום» (ימין, 15pt) ב-566.8px = מרכז-העמוד+169.95; «בינה» (שמאל, 15pt)
+// ב-226.35px = מרכז−170.5. שלוש תיבות 33.33% על פס [141.5..652.2]px
+// (מרכז = מרכז העמוד, רוחב 510.7px) עם המילים ממורכזות בתיבות
+// (hdr-*-align=center בברירות המחדל של המקור) משחזרות את שני העוגנים
+// בדיוק ±0.3px. סלוט המרכז ממורכז במרכז העמוד — וכותרת-מרכז ארוכה נשארת
+// שורה אחת שחופפת בכוונה את מילות-הצד (בייחוס p647-653 — חפיפת bbox של
+// 1.6pt; חוזה המקור, לא כשל). עד כאן המאוחד הציב את הסלוטים הצדדיים
+// בקצוות העמוד (tpl.width−60−w / 60) — פער 116..153px מהייחוס.
+const HDR_SIDE_SLOT_CENTER_OFFSET_PX = 170.2; // ± ממרכז העמוד
 const H0_AREA_H = 249.2;    // זרימת ההקדמה מתחילה ב-356.4px (S4.19)
 const SINGLE_W = 552.3;     // .single-wide-col = 2×269.41+13.48 (grid)
 const TITLE_W_PCT = 0.6;    // תיבת כותרת 2/3 — 60% מרוחב הפס (S74)
@@ -8582,6 +8600,7 @@ module.exports = {
   FLOW_BOTTOM, H2_AREA_H, H0_AREA_H, SINGLE_W, TITLE_W_PCT, H23_TITLE_W,
   H2_SPAN_AREA_H, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN,
   H2_TITLE_LINE_PITCH_PX,
+  HDR_SIDE_SLOT_CENTER_OFFSET_PX,
   H0_LINE_H, H0_TITLE_Y,
   TOC_TITLE_BLOCK_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM,
   PAGE_STRETCH_MAX, JUSTIFY_MAX_GAP, JUSTIFY_MAX_LH_EXTRA, ORPHAN_RECLAIM_BUFFER, RECLAIM_BELOW_BASE,
@@ -10888,6 +10907,9 @@ function renderLegacyPage(pg, settings, doc) {
       if (sc) s.style.color = sc; // **S73:** צבע הסלוט מההגדרות
       s.style.position = 'absolute';
       s.style.lineHeight = '1';
+      // **Iteration-006 (G6/RC-F1):** סלוט כותרת = שורה אחת תמיד (חוזה הייחוס;
+      // כותרת-מרכז ארוכה נשארת שורה אחת גם כשהיא חופפת את מילות-הצד).
+      s.style.whiteSpace = 'nowrap';
       s.style.top = `${(HDR_BASELINE_Y - 52) - szPx * DLB_BASELINE_FACTOR}px`;
       // **S77:** תיבת הסלוט = רוחב% מהפס; היישור בתוכה מההגדרה. ברירות המחדל
       // (33% + right/center/left) משחזרות את העיגון הקודם: ימין צמוד ימינה,
@@ -13314,7 +13336,12 @@ function buildShaarBlocks(page, settings, metadata) {
     if (!imudProf) {
       B.push({ cls: 'bsd-header', text: 'בס״ד', sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 5 });
     }
-    B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']), ...(imudProf ? { yTop: PT(128.1) } : {}) });
+    // **Iteration-006 (G8/F11 — עוגן כותרת השער הראשי):** בייחוס עמ' 1 שורת
+    // הכותרת «מקום בינה» (46pt) ב-y=123.5pt; העוגן הקודם (PT(128.1)) הניח
+    // אותה ב-142.4pt — נמוכה ב-18.9pt. הותאם ב-−18.9pt (bbox השורה נבדק
+    // מול הייחוס ברגרסיה). שאר הבלוקים (משנה/תיאור/מהדורה/מחבר) נשארים
+    // על עוגניהם — הם כבר תואמים (נמדד: 236.3 מול 237.4; 420.3 מול 420.9).
+    B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']), ...(imudProf ? { yTop: PT(109.2) } : {}) });
     // **Iteration-003 (parity משקל):** בייחוס IMUD כותרת-המשנה ב-Livorna רגיל
     // (ToraEx6="Livorna", לא Bold) — ההדגשה נשארת לעיצוב DP בלבד.
     B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: !imudProf, ...(imudProf ? { yTop: PT(225.2), followGap: 25 } : {}) });
@@ -20667,6 +20694,10 @@ function renderModelPage(mp, settings, doc, opts = {}) {
       const span = doc.createElement('span');
       span.className = `rh rh--${s.pos}`;
       span.style.position = 'absolute';
+      // **Iteration-006 (G6/RC-F1):** סלוט כותרת = שורה אחת תמיד (חוזה הייחוס —
+      // כותרת-מרכז ארוכה נשארת שורה אחת וחופפת את מילות-הצד, p647-653). בלי
+      // nowrap הדפדפן שובר לשתי שורות בתיבת 14px ⇒ שורות מודבקות זו על זו.
+      span.style.whiteSpace = 'nowrap';
       if (s.x != null) { span.style.left = `${px2(s.x)}px`; span.style.right = 'auto'; }
       if (s.w != null) span.style.width = `${px2(s.w)}px`;
       if (s.align) span.style.textAlign = s.align;
@@ -22265,22 +22296,35 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
 
     // REQ-BAL-10: heading escort ≥2 שורות אחרי כותרת H1–H6 באותו טור.
     if (blk.kind === 'heading' && blk.level <= 6) {
-      const following = (next && next.lines) ? next.lines.length : 0;
+      // **Iteration-006 (G4/RC-D1 — הליווי רואה דרך בלוקי-צד):** בלוק הערת-צד
+      // (H7/asSideNote) שבין הכותרת לפסקה ריק את בדיקת הליווי — following=0 ⇒
+      // הכותרת הוצבה בלי ליווי ושורת הפסקה הראשונה נכנסה לבדה לתחתית הטור
+      // (נמדד: p50 — H4 t95, אחריו בלוק-צד t96, ואז פסקה t97 בת 14 שורות;
+      // שורה אחת נותרה עם הכותרת, 13 בעמוד הבא — הפרת "מנע-כותרת-יתומה לא
+      // ייצר אלמנת-גוף" מבעיה D). העוקב האמיתי לליווי = הבלוק הגופני הראשון
+      // אחרי בלוקי-צד/בלוקים ריקים.
+      let follower = null;
+      for (let fj = bi + 1; fj < blocks.length; fj++) {
+        const cand = blocks[fj];
+        const isSide = cand.asSideNote === true || (cand.kind === 'heading' && cand.level === 7);
+        if (!isSide && cand.lines && cand.lines.length) { follower = cand; break; }
+      }
+      const following = (follower && follower.lines) ? follower.lines.length : 0;
       if (following >= 1) {
         // **FX-1/FX-5 (דוח 06, שלב 5):** הבדיקה מודדת את המחסנית הפיזית האמיתית
         // (CM.escortStackHeightPx — גבהי הכותרת + פערי כניסה + שורות הליווי)
         // ותוצאתה מנוצלת להצבה מכוונת (escortLockCol/startCol) — בדיקה שאינה
         // קשורה להצבה יוצרת כותרות יתומות שאין להן תיקון (הוכח: FX-1 בדוח 06).
         const escortN = Math.min(CM.ESCORT_MIN_LINES, following);
-        let escortStack = CM.escortStackHeightPx(blk, next, () => blockGapPx(settings, lineH));
+        let escortStack = CM.escortStackHeightPx(blk, follower, () => blockGapPx(settings, lineH));
         // **Iteration-001 (escort×תקציב-הערות):** פסקת הליווי נושאת לעתים הערות
         // שיוקצו לתקציד המרזב בהצבה בפועל (FX-3 — reserveAtMarker לפני השורות).
         // בדיקת הליווי חייבת לראות את הקיבולת שאחרי ההקצאה: בלי זה נמדד
         // (very_long p43) כותרת-H4 מוצבת בתחתית הטור, התקציד מצטמצם, ושורת
         // הפתיחה של הפסקה נותרת בודדת (orphan-bottom שנסיגת האיזון נתקעה
         // עליו בתנודה). הערכה עליונה שמרנית — גובה ההערות החתום של הפסקה.
-        if (settings['footnotes-enabled'] && (next.notes || []).length) {
-          escortStack += next.notes.reduce((s, n) => s + noteHeight(n, settings, null), 0);
+        if (settings['footnotes-enabled'] && (follower.notes || []).length) {
+          escortStack += follower.notes.reduce((s, n) => s + noteHeight(n, settings, null), 0);
         }
         let pushed = false;
         let room = ensureRoomFor(escortStack);
