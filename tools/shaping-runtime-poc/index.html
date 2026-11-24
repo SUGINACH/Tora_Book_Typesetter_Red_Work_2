@@ -52,6 +52,10 @@
               upem: item.unitsPerEm,
               axes: item.axisInfos,
               variationMode: item.variationMode,
+              coverageStatus: item.coverageStatus,
+              missingBaseCodepoints: item.missingBaseCodepoints,
+              missingMarkCodepoints: item.missingMarkCodepoints,
+              notdefGlyphCount: item.notdefGlyphCount,
               missingCodepoints: item.missingCodepoints,
               glyphCount: item.cases.reduce((sum, testCase) => sum + testCase.glyphs.length, 0)
             })) : [],
