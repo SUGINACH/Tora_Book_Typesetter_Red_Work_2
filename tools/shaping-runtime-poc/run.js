@@ -213,6 +213,30 @@ async function main() {
       cffOutlineInputPath
     ]);
     report.cffSourceOutlineComparison = JSON.parse(outlineComparisonStdout.split(/\r?\n/).at(-1));
+    const cffComparison = report.cffSourceOutlineComparison;
+    const invalidCffComparisons = (cffComparison.fonts || []).filter((font) =>
+      font.operationSequenceMismatches !== 0 ||
+      font.coordinateMismatches !== 0 ||
+      font.coordinateMatchesWithinTolerance !== font.glyphCount ||
+      font.emptySourceOutlines !== font.emptyHarfBuzzOutlines ||
+      font.emptyOutlineAgreements !== font.emptySourceOutlines ||
+      font.maxCoordinateDeltaFontUnits > 1e-5
+    );
+    if (invalidCffComparisons.length ||
+        cffComparison.coordinateMismatches !== 0 ||
+        cffComparison.coordinateMatchesWithinTolerance !== cffComparison.glyphCount) {
+      throw new Error('CFF outlines do not match fontTools source geometry: ' +
+        JSON.stringify({
+          summary: {
+            glyphCount: cffComparison.glyphCount,
+            coordinateMatchesWithinTolerance: cffComparison.coordinateMatchesWithinTolerance,
+            coordinateMismatches: cffComparison.coordinateMismatches,
+            operationSequenceMismatches: cffComparison.operationSequenceMismatches
+          },
+          fonts: invalidCffComparisons
+        }));
+    }
+    report.cffSourceOutlineComparison.passed = true;
     const expectedJson = JSON.stringify(expected);
     report.nodeReference = {
       harfBuzzVersion: expected[0].harfBuzzVersion,

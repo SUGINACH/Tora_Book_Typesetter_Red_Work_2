@@ -74,6 +74,7 @@
           variationMode: item.variationMode,
           normalizedFrom: item.normalizedFrom,
           sourceOutlineFormat: item.sourceOutlineFormat,
+          captureOutlinePaths: !!(item.outlineSweep && Array.isArray(item.outlineSweep.outlinePaths)),
           url: '/fonts/' + item.fontName
         }));
         worker.postMessage({

@@ -35,6 +35,52 @@ def max_delta(left, right):
     return maximum
 
 
+def _point_equal(left, right, tolerance: float = 1e-9) -> bool:
+    return (
+        isinstance(left, (tuple, list))
+        and isinstance(right, (tuple, list))
+        and len(left) == len(right) == 2
+        and abs(float(left[0]) - float(right[0])) <= tolerance
+        and abs(float(left[1]) - float(right[1])) <= tolerance
+    )
+
+
+def canonicalize_closed_contours(operations):
+    """Normalize an explicit zero-length close edge to RecordingPen.closePath.
+
+    HarfBuzz's SVG serializer may emit L(startX,startY) Z while fontTools'
+    CFF RecordingPen emits closePath alone. These encode the same contour:
+    the explicit line reaches the contour start and Z closes an already closed
+    contour. Remove only that redundant final line. No curve, non-zero segment,
+    contour order, or winding is altered.
+    """
+    normalized = []
+    contour_start = None
+    removed = 0
+    for operation in operations:
+        name, points = operation
+        if name == "moveTo":
+            contour_start = points[0] if points else None
+            normalized.append(operation)
+            continue
+        if name in ("closePath", "endPath"):
+            if (
+                name == "closePath"
+                and contour_start is not None
+                and normalized
+                and normalized[-1][0] == "lineTo"
+            ):
+                previous_points = normalized[-1][1]
+                if previous_points and _point_equal(previous_points[-1], contour_start):
+                    normalized.pop()
+                    removed += 1
+            normalized.append(operation)
+            contour_start = None
+            continue
+        normalized.append(operation)
+    return normalized, removed
+
+
 def main():
     if len(sys.argv) != 2:
         raise SystemExit("usage: compare_cff_outlines.py cff-outline-reference-input.json")
@@ -63,6 +109,7 @@ def main():
         empty_harfbuzz = 0
         empty_agreement = 0
         maximum_delta = 0.0
+        normalized_close_segments = 0
         mismatch_examples = []
 
         for record in records:
@@ -83,15 +130,19 @@ def main():
             if not hb_ops and not source_ops:
                 empty_agreement += 1
 
+            hb_ops, hb_removed = canonicalize_closed_contours(hb_ops)
+            source_ops, source_removed = canonicalize_closed_contours(source_ops)
+            normalized_close_segments += hb_removed + source_removed
+
             if len(hb_ops) != len(source_ops) or any(a[0] != b[0] for a, b in zip(hb_ops, source_ops)):
                 operation_mismatch += 1
                 if len(mismatch_examples) < 8:
                     mismatch_examples.append({
                         "gid": gid,
                         "glyphName": glyph_order[gid],
-                        "reason": "operation-sequence",
-                        "harfbuzzOperations": [x[0] for x in hb_ops[:12]],
-                        "fontToolsOperations": [x[0] for x in source_ops[:12]],
+                        "reason": "operation-sequence-after-close-normalization",
+                        "harfbuzzOperations": [x[0] for x in hb_ops[:16]],
+                        "fontToolsOperations": [x[0] for x in source_ops[:16]],
                     })
                 continue
 
@@ -138,6 +189,7 @@ def main():
             "emptyHarfBuzzOutlines": empty_harfbuzz,
             "emptyOutlineAgreements": empty_agreement,
             "maxCoordinateDeltaFontUnits": maximum_delta,
+            "normalizedRedundantCloseSegments": normalized_close_segments,
             "toleranceFontUnits": tolerance,
             "mismatchExamples": mismatch_examples,
         })
@@ -150,7 +202,9 @@ def main():
         "glyphCount": sum(x["glyphCount"] for x in font_results),
         "operationSequenceMismatches": sum(x["operationSequenceMismatches"] for x in font_results),
         "coordinateMismatches": sum(x["coordinateMismatches"] for x in font_results),
+        "normalizedRedundantCloseSegments": sum(x["normalizedRedundantCloseSegments"] for x in font_results),
         "exactOperationAndCoordinateMatches": sum(x["exactOperationAndCoordinateMatches"] for x in font_results),
+        "canonicalization": "remove only a final lineTo to current contour start immediately before closePath",
         "coordinateMatchesWithinTolerance": sum(x["coordinateMatchesWithinTolerance"] for x in font_results),
         "fonts": font_results,
     }
