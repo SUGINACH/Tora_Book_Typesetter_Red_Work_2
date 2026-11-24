@@ -55,7 +55,30 @@ def main():
             metrics0=[tuple(int(v) for v in f['hmtx'].metrics[n]) for n in order]
             upem=float(f['head'].unitsPerEm)
             tol=upem*MAX_ERR_EM
-            geom=convert_cff_to_glyf(f,tol); row['maxBoundsDeltaFontUnits']=geom['maxBoundsDeltaFontUnits']; row['worstGlyph']=geom['worstGlyph']
+            geom=convert_cff_to_glyf(f,tol)
+            row['maxBoundsDeltaFontUnits']=geom['maxBoundsDeltaFontUnits']
+            row['worstGlyph']=geom['worstGlyph']
+            row['hmetricsRemapping']=geom['hmetricsRemapping']
+            converted_metrics_by_gid=[tuple(int(v) for v in f['hmtx'].metrics[n]) for n in order]
+            if [m[0] for m in converted_metrics_by_gid] != [m[0] for m in metrics0]:
+                raise ValueError('advance widths changed during CFF-to-glyf conversion')
+            max_phantom_delta=0.0
+            for gid,name in enumerate(order):
+                src_box=source_bounds_by_gid[gid]
+                glyph=f['glyf'][name]
+                out_lsb=converted_metrics_by_gid[gid][1]
+                if src_box is None:
+                    if out_lsb != 0:
+                        raise ValueError(f'empty glyph LSB must be zero at GID {gid}')
+                    continue
+                if not hasattr(glyph,'xMin'):
+                    raise ValueError(f'non-empty output glyph has no glyf xMin at GID {gid}')
+                source_pp1=float(src_box[0])-float(metrics0[gid][1])
+                output_pp1=float(glyph.xMin)-float(out_lsb)
+                max_phantom_delta=max(max_phantom_delta,abs(source_pp1-output_pp1))
+            if max_phantom_delta > 0.500001:
+                raise ValueError(f'left phantom-point preservation error {max_phantom_delta}')
+            row['maxLeftPhantomPointDeltaFontUnits']=max_phantom_delta
             if geom.get('worstGlyph'):
                 gid=int(geom['worstGlyph']['gid'])
                 row['worstGlyphHmtx']={'advanceWidth':metrics0[gid][0],'leftSideBearing':metrics0[gid][1]}
@@ -90,7 +113,10 @@ def main():
                 source_target = source_bounds_by_gid[target_gid]
                 aligned_target = glyph_bounds(f, prefer_cff=False).get(target_name)
                 stored_target = f['glyf'][target_name]
+                source_lsb = int(metrics0[target_gid][1])
                 target_lsb = int(f['hmtx'].metrics[target_name][1])
+                source_pp1 = float(source_target[0]) - source_lsb if source_target else None
+                output_pp1 = float(stored_target.xMin) - target_lsb if hasattr(stored_target, 'xMin') else None
                 row['ploniGID725Diagnostic'] = {
                     'gid': target_gid,
                     'glyphName': target_name,
@@ -98,8 +124,12 @@ def main():
                     'rawConvertedGlyfBounds': [float(v) for v in raw_target] if raw_target else None,
                     'glyphSetAlignedBounds': [float(v) for v in aligned_target] if aligned_target else None,
                     'advanceWidth': int(f['hmtx'].metrics[target_name][0]),
-                    'leftSideBearing': target_lsb,
+                    'sourceLeftSideBearing': source_lsb,
+                    'outputLeftSideBearing': target_lsb,
                     'storedGlyfXMin': int(stored_target.xMin) if hasattr(stored_target, 'xMin') else None,
+                    'sourceLeftPhantomPoint': source_pp1,
+                    'outputLeftPhantomPoint': output_pp1,
+                    'leftPhantomPointDelta': abs(source_pp1-output_pp1) if source_pp1 is not None and output_pp1 is not None else None,
                     'glyphSetHorizontalTranslation': (
                         target_lsb - int(stored_target.xMin) if hasattr(stored_target, 'xMin') else 0
                     ),
@@ -122,7 +152,9 @@ def main():
             cmap1={int(cp):int(out.getGlyphID(n)) for cp,n in (out.getBestCmap() or {}).items()}
             metrics1=[tuple(int(v) for v in out['hmtx'].metrics[n]) for n in out.getGlyphOrder()]
             if cmap1!=cmap0: raise ValueError('cmap-to-GID mapping changed')
-            if metrics1!=metrics0: raise ValueError('hmtx advance/sidebearing changed')
+            if metrics1!=converted_metrics_by_gid: raise ValueError('hmtx metrics changed during SFNT save/load')
+            if [m[0] for m in metrics1] != [m[0] for m in metrics0]:
+                raise ValueError('advance widths changed')
             if len(out.getGlyphOrder())!=len(order): raise ValueError('glyph count changed')
             bounds1=raw_glyf_bounds(out); maxround=0.0
             for gid,n in enumerate(out.getGlyphOrder()):
@@ -202,8 +234,19 @@ def main():
                     alt_check = TTFont(str(alt_f), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
                     alt_order = alt_check.getGlyphOrder()
                     alt_metrics = [tuple(int(v) for v in alt_check['hmtx'].metrics[n]) for n in alt_order]
-                    if alt_metrics != metrics0:
-                        raise ValueError('decomposed strategy changed hmtx advance/sidebearing')
+                    if [m[0] for m in alt_metrics] != [m[0] for m in metrics0]:
+                        raise ValueError('decomposed strategy changed advance widths')
+                    for alt_index, alt_glyph_name in enumerate(alt_order):
+                        source_box = alt_source_bounds.get(order[alt_index])
+                        alt_glyph = alt_check['glyf'][alt_glyph_name]
+                        if source_box is None:
+                            if alt_metrics[alt_index][1] != 0:
+                                raise ValueError(f'decomposed empty glyph LSB not zero at GID {alt_index}')
+                        else:
+                            before_pp1 = float(source_box[0]) - float(metrics0[alt_index][1])
+                            after_pp1 = float(alt_glyph.xMin) - float(alt_metrics[alt_index][1])
+                            if abs(before_pp1-after_pp1) > 0.500001:
+                                raise ValueError(f'decomposed left phantom point changed at GID {alt_index}')
                     if len(alt_order) != len(order):
                         raise ValueError('decomposed strategy changed glyph count')
                     alt_cmap = {int(cp): int(alt_check.getGlyphID(n)) for cp, n in (alt_check.getBestCmap() or {}).items()}
