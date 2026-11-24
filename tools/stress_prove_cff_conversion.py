@@ -920,7 +920,7 @@ def main():
                             review = {
                                 'status': 'diagnostic-failed',
                                 'sampleKind': geometry_sample['sampleKind'],
-                                'gid': int(sample['gid']),
+                                'gid': int(geometry_sample['gid']),
                                 'error': f'{type(raster_exc).__name__}: {raster_exc}',
                             }
                         row['geometryRasterReviews'].append(review)
