@@ -746,3 +746,21 @@ GIDs (max delta=0), אך רק 433/852 תואמים ל-BoundsPen של true curve;
 תקינים ב-UTF-16, 220 קבוצות multi-glyph cluster, אפס gaps/errors/surrogate
 splits. CFF outlines: 852/852 מתאימים למקור. TYP-SHAPING-01 נשאר פתוח
 עד שילוב מלא ב-LineItem/LineModel/PageModel/DOM/PDF ו-end-to-end parity.
+
+
+### TYP-SHAPING-01 — PoC v11: exact Bézier ink bounds (24.11.2026)
+
+Run `45474206847` / Artifact `14956464558` / code commit `cfba9e3`
+הסתיים success. נוסף חישוב analytic cubic Bézier bounds עצמאי ב-JavaScript
+ל-SVG `M/L/C/Z`; פקודה לא נתמכת נדחית בכשל מפורש. שבע בדיקות יחידה עברו.
+ההשוואה מול fontTools BoundsPen על המקורות WOFF2 המקוריים: Ambivalenti
+444/444, Mixtape Bold 204/204, Mixtape Regular 204/204 — סה"כ 852/852,
+0 mismatch, 0 missing; max delta `2.2737367544323206e-13` font units.
+Node/classic Worker, Corpus ו-Preview עברו על אותו commit.
+
+ממצא glyphExtents נשמר: 852/852 ControlBoundsPen, אך 419 true-curve
+differences. חוזה ShapedGlyph מפריד כעת controlBounds ו-inkBounds.
+הוכחת path bounds מכסה M/L/C/Z ב-CFF fixtures אלה בלבד; quadratic/glyf,
+pen offsets, run-level transforms ו-RTL coordinate projection עדיין פתוחים.
+לא נעשה שינוי production; TYP-SHAPING-01 נשאר פתוח עד שילוב מלא ב-LineItem,
+LineModel, PageModel, DOM/HTML ו-PDF עם end-to-end parity.
