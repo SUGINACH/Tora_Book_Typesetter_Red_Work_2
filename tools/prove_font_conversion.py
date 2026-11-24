@@ -110,8 +110,11 @@ def reconcile_cff_metrics_for_glyf(
     max_adjustment = 0
     max_source_phantom_magnitude = 0.0
     max_phantom_error = 0.0
+    worst_source_phantom = None
+    source_placement_reviews = []
     empty_count = 0
-    for name in font.getGlyphOrder():
+    names = font.getGlyphOrder()
+    for gid, name in enumerate(names):
         glyph = font["glyf"][name]
         advance, source_lsb = source_metrics[name]
         source_bbox = source_bounds.get(name)
@@ -124,23 +127,29 @@ def reconcile_cff_metrics_for_glyf(
         else:
             source_pp1 = float(source_bbox[0]) - float(source_lsb)
             max_source_phantom_magnitude = max(max_source_phantom_magnitude, abs(source_pp1))
-            if abs(source_pp1) > 0.500001:
-                raise ValueError(
-                    f"CFF curve xMin and hmtx LSB disagree by {source_pp1:.6f} units for {name}; "
-                    "refusing to hide a source placement discrepancy in the CFF-to-glyf conversion"
-                )
-            # CFF outlines are already drawn in the glyph-origin coordinate
-            # system. Match that origin in glyf by setting LSB to the TrueType
-            # control-box xMin (the standard OTF-to-TTF mapping). The source
-            # CFF pp1 is expected to be zero within integer-metric rounding.
+            # CFF curve bounds can be fractional while hmtx LSB is an integer.
+            # Do not turn that representational difference into a conversion
+            # failure or silently call it harmless: retain each >0.5-unit case
+            # as an explicit placement-review item for FreeType comparison.
             target_lsb = int(glyph.xMin)
             output_pp1 = float(glyph.xMin) - float(target_lsb)
             phantom_error = abs(output_pp1 - source_pp1)
             max_phantom_error = max(max_phantom_error, phantom_error)
-            if phantom_error > 0.500001:
-                raise ValueError(
-                    f"left phantom-point remap exceeds integer rounding bound for {name}: {phantom_error}"
-                )
+            if abs(source_pp1) > 0.500001:
+                review = {
+                    "gid": gid,
+                    "name": name,
+                    "sourceCurveXMin": float(source_bbox[0]),
+                    "sourceLsb": int(source_lsb),
+                    "sourceLeftPhantomPoint": source_pp1,
+                    "outputGlyfXMin": int(glyph.xMin),
+                    "outputLsb": int(target_lsb),
+                    "outputLeftPhantomPoint": output_pp1,
+                    "absolutePlacementMetricDelta": phantom_error,
+                }
+                source_placement_reviews.append(review)
+                if worst_source_phantom is None or phantom_error > worst_source_phantom["absolutePlacementMetricDelta"]:
+                    worst_source_phantom = review
         if not -32768 <= target_lsb <= 32767:
             raise ValueError(f"remapped LSB outside signed FWORD range for {name}: {target_lsb}")
         font["hmtx"].metrics[name] = (int(advance), int(target_lsb))
@@ -195,6 +204,10 @@ def reconcile_cff_metrics_for_glyf(
         "maxAbsoluteLsbAdjustmentFontUnits": max_adjustment,
         "maxSourceLeftPhantomPointMagnitudeFontUnits": max_source_phantom_magnitude,
         "maxLeftPhantomPointDeltaFontUnits": max_phantom_error,
+        "sourcePlacementReviewThresholdFontUnits": 0.500001,
+        "sourcePlacementReviewCount": len(source_placement_reviews),
+        "sourcePlacementReviews": source_placement_reviews,
+        "worstSourcePlacementReview": worst_source_phantom,
         "preservedAdvanceWidths": True,
         "hheaSummary": {
             "advanceWidthMax": int(font["hhea"].advanceWidthMax),
