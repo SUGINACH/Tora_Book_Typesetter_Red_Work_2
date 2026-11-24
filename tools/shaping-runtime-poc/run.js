@@ -202,9 +202,24 @@ async function main() {
     }
     const cffOutlineInputs = expected.filter((item) => item.outlineSweep && item.outlineSweep.outlinePaths)
       .map((item) => {
-        const fixture = shapeFixtures.find((candidate) => candidate.name === item.fontName);
-        if (!fixture) throw new Error('No source SFNT for CFF outline reference: ' + item.fontName);
-        return { fontName: item.fontName, fontPath: fixture.source, glyphPaths: item.outlineSweep.outlinePaths };
+        const normalizedFixture = shapeFixtures.find((candidate) => candidate.name === item.fontName);
+        if (!normalizedFixture) throw new Error('No normalized SFNT for CFF outline reference: ' + item.fontName);
+        const sourceFixture = normalizedFixture.normalizedFrom
+          ? shapeFixtures.find((candidate) =>
+              candidate.name === normalizedFixture.normalizedFrom && candidate.format === 'woff2')
+          : normalizedFixture;
+        if (!sourceFixture) {
+          throw new Error('No original font source for normalized CFF fixture: ' +
+            normalizedFixture.name + ' <- ' + normalizedFixture.normalizedFrom);
+        }
+        return {
+          fontName: item.fontName,
+          sourceFontName: sourceFixture.name,
+          sourceFontPath: sourceFixture.source,
+          normalizedFontName: normalizedFixture.name,
+          normalizedFontPath: normalizedFixture.source,
+          glyphPaths: item.outlineSweep.outlinePaths
+        };
       });
     const cffOutlineInputPath = path.join(temp, 'cff-outline-reference-input.json');
     fs.writeFileSync(cffOutlineInputPath, JSON.stringify(cffOutlineInputs), 'utf8');
@@ -215,6 +230,11 @@ async function main() {
     report.cffSourceOutlineComparison = JSON.parse(outlineComparisonStdout.split(/\r?\n/).at(-1));
     const cffComparison = report.cffSourceOutlineComparison;
     const invalidCffComparisons = (cffComparison.fonts || []).filter((font) =>
+      font.sourceReference !== 'original-source-font' ||
+      font.sourceGlyphOrderMatchesNormalized !== true ||
+      font.sourceOutlineFormat !== font.normalizedOutlineFormat ||
+      font.sourceGlyphCount !== font.normalizedGlyphCount ||
+      font.unitsPerEmMatches !== true ||
       font.operationSequenceMismatches !== 0 ||
       font.coordinateMismatches !== 0 ||
       font.coordinateMatchesWithinTolerance !== font.glyphCount ||
