@@ -122,6 +122,18 @@ async function main() {
       }));
     }
 
+    const emptyDocument = runtime.resolve('', 'auto');
+    const emptyDocumentLine = runtime.lineVisualRuns('', 'auto', 0, 0);
+    const emptyLine = runtime.lineVisualRuns(utf16ProbeText, 'ltr', 1, 1);
+    if (emptyDocument.utf16Length !== 0 || emptyDocument.levels.length !== 0 ||
+        emptyDocument.paragraphs.length !== 0 ||
+        emptyDocumentLine.levels.length !== 0 || emptyDocumentLine.visualRuns.length !== 0 ||
+        emptyLine.levels.length !== 0 || emptyLine.visualRuns.length !== 0) {
+      throw new Error('Empty document/line Bidi contract failed: ' + JSON.stringify({
+        emptyDocument, emptyDocumentLine, emptyLine
+      }));
+    }
+
     const l1ProbeText = 'אבג ABC   ';
     const l1Probe = runtime.lineVisualRuns(l1ProbeText, 'rtl', 0, l1ProbeText.length);
     const trailingL1Levels = l1Probe.levels.slice(-3);
@@ -138,7 +150,13 @@ async function main() {
         levelsLength: utf16Probe.levels.length,
         emojiLineRange: [1, 3],
         emojiLineRun: emojiOnlyLine.visualRuns[0],
-        surrogateSplitRejected
+        surrogateSplitRejected,
+        emptyDocument: {
+          utf16Length: emptyDocument.utf16Length,
+          paragraphCount: emptyDocument.paragraphs.length
+        },
+        emptyDocumentLineRunCount: emptyDocumentLine.visualRuns.length,
+        emptyLineWithinDocumentRunCount: emptyLine.visualRuns.length
       },
       paragraphBaseLevels: {
         autoRtl: autoRtl.level,
@@ -197,7 +215,10 @@ async function main() {
       autoDirectionChoosesBothParagraphDirections: autoRtl.level === 1 && autoLtr.level === 0,
       forcedDirectionControlsParagraphBase: forcedLtr.level === 0 && forcedRtl.level === 1,
       surrogatePairBoundariesAreEnforced: surrogateSplitRejected,
-      lineL1ResetsTrailingWhitespace: trailingL1Levels.every((level) => level === 1)
+      lineL1ResetsTrailingWhitespace: trailingL1Levels.every((level) => level === 1),
+      emptyTextAndLinesAreSupported: emptyDocument.levels.length === 0 &&
+        emptyDocument.paragraphs.length === 0 &&
+        emptyDocumentLine.visualRuns.length === 0 && emptyLine.visualRuns.length === 0
     };
     if (Object.values(report.invariants).some((passed) => passed !== true)) {
       throw new Error('Bidi UTF-16/run invariants failed: ' + JSON.stringify(report.invariants));
