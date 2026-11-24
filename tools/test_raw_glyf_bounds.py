@@ -32,7 +32,7 @@ def main() -> int:
 
     pen = TTGlyphPen(None)
     # The off-curve control x=-72 is outside the actual quadratic curve.
-    # Actual curve xMin is 25.5, but glyf's stored control-point xMin is -72.
+    # Actual curve xMin is 39, but glyf's stored control-point xMin is -72.
     pen.moveTo((150, 377))
     pen.qCurveTo((-72, 611), (150, 377))
     pen.closePath()
