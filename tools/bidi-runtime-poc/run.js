@@ -87,6 +87,71 @@ async function main() {
     const wasmBytes = fs.readFileSync(wasmPath);
     const runtime = await api.instantiate(wasmBytes);
     const fixtures = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures.json'), 'utf8'));
+
+    const utf16ProbeText = 'A😀B';
+    const utf16Probe = runtime.resolve(utf16ProbeText, 'ltr');
+    if (utf16Probe.utf16Length !== 4 || utf16Probe.levels.length !== 4) {
+      throw new Error('UTF-16 probe did not preserve four UTF-16 code units for A😀B');
+    }
+    const emojiOnlyLine = runtime.lineVisualRuns(utf16ProbeText, 'ltr', 1, 3);
+    if (emojiOnlyLine.levels.length !== 2 ||
+        emojiOnlyLine.visualRuns.length !== 1 ||
+        emojiOnlyLine.visualRuns[0].start !== 1 ||
+        emojiOnlyLine.visualRuns[0].end !== 3) {
+      throw new Error('UTF-16 emoji-only line range [1,3) was not preserved');
+    }
+    let surrogateSplitRejected = false;
+    try {
+      runtime.lineVisualRuns(utf16ProbeText, 'ltr', 2, 3);
+    } catch (error) {
+      surrogateSplitRejected = /surrogate pair/.test(error.message);
+    }
+    if (!surrogateSplitRejected) {
+      throw new Error('Bidi line API accepted an offset inside the A😀B surrogate pair');
+    }
+
+    const autoRtl = runtime.resolve('שלום ABC', 'auto').paragraphs[0];
+    const autoLtr = runtime.resolve('ABC שלום', 'auto').paragraphs[0];
+    const forcedLtr = runtime.resolve('שלום', 'ltr').paragraphs[0];
+    const forcedRtl = runtime.resolve('ABC', 'rtl').paragraphs[0];
+    if (autoRtl.level !== 1 || autoLtr.level !== 0 ||
+        forcedLtr.level !== 0 || forcedRtl.level !== 1) {
+      throw new Error('Bidi paragraph base-direction contract failed: ' + JSON.stringify({
+        autoRtl: autoRtl.level, autoLtr: autoLtr.level,
+        forcedLtr: forcedLtr.level, forcedRtl: forcedRtl.level
+      }));
+    }
+
+    const l1ProbeText = 'אבג ABC   ';
+    const l1Probe = runtime.lineVisualRuns(l1ProbeText, 'rtl', 0, l1ProbeText.length);
+    const trailingL1Levels = l1Probe.levels.slice(-3);
+    if (trailingL1Levels.length !== 3 || trailingL1Levels.some((level) => level !== 1)) {
+      throw new Error('UAX #9 L1 did not reset trailing whitespace to paragraph level: ' +
+        JSON.stringify(trailingL1Levels));
+    }
+
+    report.runtimeContractProbe = {
+      unicodeVersion: runtime.unicodeVersion,
+      utf16: {
+        text: utf16ProbeText,
+        utf16Length: utf16Probe.utf16Length,
+        levelsLength: utf16Probe.levels.length,
+        emojiLineRange: [1, 3],
+        emojiLineRun: emojiOnlyLine.visualRuns[0],
+        surrogateSplitRejected
+      },
+      paragraphBaseLevels: {
+        autoRtl: autoRtl.level,
+        autoLtr: autoLtr.level,
+        forcedLtr: forcedLtr.level,
+        forcedRtl: forcedRtl.level
+      },
+      lineL1: {
+        text: l1ProbeText,
+        trailingWhitespaceLevels: trailingL1Levels,
+        resetToParagraphLevel: trailingL1Levels.every((level) => level === 1)
+      }
+    };
     const nodeResult = runtime.analyzeFixtures(fixtures);
     const nodeJson = JSON.stringify(nodeResult);
     report.nodeReference = {
@@ -128,7 +193,11 @@ async function main() {
           para.logicalRuns.every((run) => run.direction === (run.level % 2 ? 'rtl' : 'ltr')) &&
           para.lines.every((line) =>
             line.visualRuns.every((run) => run.direction === (run.level % 2 ? 'rtl' : 'ltr'))))),
-      fixtureIdsUnique: new Set(nodeResult.fixtures.map((item) => item.id)).size === fixtures.length
+      fixtureIdsUnique: new Set(nodeResult.fixtures.map((item) => item.id)).size === fixtures.length,
+      autoDirectionChoosesBothParagraphDirections: autoRtl.level === 1 && autoLtr.level === 0,
+      forcedDirectionControlsParagraphBase: forcedLtr.level === 0 && forcedRtl.level === 1,
+      surrogatePairBoundariesAreEnforced: surrogateSplitRejected,
+      lineL1ResetsTrailingWhitespace: trailingL1Levels.every((level) => level === 1)
     };
     if (Object.values(report.invariants).some((passed) => passed !== true)) {
       throw new Error('Bidi UTF-16/run invariants failed: ' + JSON.stringify(report.invariants));
