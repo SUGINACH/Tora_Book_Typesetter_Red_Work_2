@@ -39,7 +39,10 @@ function makeResolver() {
   };
   return {
     resolveFont(alias, options) {
-      const actual = records[alias] ? alias : (options && options.defaultFamily);
+      const configuredFallback = options && Array.isArray(options.fallbacks)
+        ? options.fallbacks.find((family) => records[family])
+        : null;
+      const actual = records[alias] ? alias : (configuredFallback || (options && options.defaultFamily));
       if (!actual || !records[actual]) return { ok: false, code: 'font-unavailable', message: 'missing test font' };
       const fallbackUsed = actual !== alias;
       return { ok: true, fontId: records[actual].fontId, record: records[actual], fallbackUsed,
