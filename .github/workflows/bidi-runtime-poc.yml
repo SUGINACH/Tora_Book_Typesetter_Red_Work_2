@@ -53,9 +53,12 @@ jobs:
           cd /tmp/unicode-bidi
           RUSTFLAGS="-C link-arg=--export-memory" cargo build \
             --manifest-path bidi-runtime-poc-wrapper/Cargo.toml \
+            --target-dir /tmp/unicode-bidi/target \
             --target wasm32-unknown-unknown --release
-          cp target/wasm32-unknown-unknown/release/red_bidi_runtime_poc.wasm \
-            "$GITHUB_WORKSPACE/tools/bidi-runtime-poc/bidi-runtime-poc.wasm"
+          WASM_FILE=/tmp/unicode-bidi/target/wasm32-unknown-unknown/release/red_bidi_runtime_poc.wasm
+          test -s "$WASM_FILE"
+          file "$WASM_FILE"
+          cp "$WASM_FILE" "$GITHUB_WORKSPACE/tools/bidi-runtime-poc/bidi-runtime-poc.wasm"
       - name: Install headless browser for classic Worker parity
         run: |
           npm install -g agent-browser@0.41.2
