@@ -611,7 +611,7 @@ audits/MEASURE_API_SAFETY_U11_U14_2026-11-20.md, audits/U15_HEADING_ALIGNMENT_20
 |---|---|---|---|---|
 | FNT-CFF-GEO-01 | גבוהה | **פתוח — סקירה גאומטרית** | Artifact v5 על ee5973e בדק 47 outlier fonts ב-137 Raster samples: 47 overall, 47 Hebrew-base, 43 Hebrew-mark; אפס failures או missing. IoU minima: 0.978857 (Skechers U+0035), 0.983736 (Kedem-Sans U+05D8), 0.982143 (Mixtape U+05BC). 130/137 images שונות פיקסלית. הדגימות נבחרות לפי max bounds delta בכל קטגוריה; לא כל 22,169 glyphs נבדקו. | סקירה ידנית ממוקדת של החריגים; הרחבת דגימות לפי ראיות; החלטה מתועדת. אין לשנות MAX_ERR_EM או לאשר המרה גורפת על בסיס ממוצע/חציון. דוח: audits/CFF_GEOMETRY_AND_LSB_REVIEW_2026-11-24.md |
 | FNT-CFF-APPROVAL-01 | חוסם הפעלה גורפת | **פתוח — אין אישור mass conversion** | 380/380 המרות עברו מבחני מבנה/Runtime, אך אלה אינם מוכיחים נאמנות גאומטרית לכל glyph. הדוח משאיר manualReviewRequired=true ו-massConversionApproved=false. | להשלים בחינה מבוססת ראיות; לבנות pipeline+manifest דטרמיניסטיים; לבצע end-to-end validation לפני הפעלת התוצרים בקטלוג. |
-| TYP-SHAPING-01 | גבוהה | **פתוח — חוזה shaping משותף; runtime PoC ונרמול דטרמיניסטי עברו** | HarfBuzzJS 1.6.4 / core 15.0.0 עבר PoC ב-Node וב-classic Worker; dynamic ESM import + WASM; 11 font streams, 449 glyph instances, exactNodeParity=true. 7 SFNT מקוריים (כולל wght=900) בכיסוי מלא; 2 WOFF2 raw אינם נתמכים (42 GID0 כל אחד); אותם קבצים לאחר fontTools/Brotli normalization ל-SFNT בכיסוי מלא. שתי הרצות normalization לכל raw WOFF2 יצרו bytes זהים; fontTools==4.68.0 / brotli==1.2.1. | חוזה ShapedRun/ShapedGlyph יחיד; shaping לפני line-break; אותו glyph/position model ב-DOM/HTML/PDF; להחליט ולממש font normalization קנוני לכל קובצי הקטלוג; להוכיח Node/Worker/render/PDF parity מקצה לקצה. דוח: audits/SHAPING_CONTRACT_GAP_2026-11-24.md; run 45437827475 / artifact 14942416493 |
+| TYP-SHAPING-01 | גבוהה | **פתוח — runtime ו-CFF parsing הוכחו; חוזה משותף חסר** | HarfBuzzJS 1.6.4/core15.0.0 ב-Node+classic Worker: exactNodeParity=true על 15 streams ו-617 glyph instances. Mixtape Bold/Regular עברו normalization מ-WOFF2 ל-SFNT CFF (`OTTO`, CFF table), כל אחד 42 glyph instances/5 Hebrew-niqqud strings, full coverage, 0 notdef, exact positions/outlines parity. Raw WOFF2 נשאר unsupported. לא נבדקו כל 204 GIDs ולא נבנה integration ב-MeasureAPI/LineBreaker/PageModel/DOM/PDF. | חוזה ShapedRun/ShapedGlyph; shaping לפני line-break; font normalization קנוני; full glyph outline sweep לכל GID; parity מקצה לקצה בכל יעדי הפלט. דוח: audits/SHAPING_CONTRACT_GAP_2026-11-24.md; run 45439848821 / artifact 14942623161 |
 | LAYOUT-F7-FRAGMENT-GAP-01 | גבוהה | **פתוח — ממתין ליציבות גופנים ו-shaping** | legacy-imud-flow מצמיד 7px לכל fragment של פסקה, גם ל-p-cut; DP pushLines מצמיד block gap רק לשורה הראשונה של קריאת בלוק, מדכא בראש טור/עמוד, ו-split שולח קטעים לקריאות נפרדות. יש להכריע האם gap הוא סמנטיקה של בלוק, fragment או פתיחת זרימה — לא לכפות 7px או מספר עמודים. | לחקור progress/fragment contract, findSplit/maxFit וגבולות split; להגדיר כלל יחיד לפי תחילת/המשך fragment ומצב הטור/עמוד; לבדוק פסקאות מפוצלות ולא מפוצלות בלי חריג מקומי. אין שינוי עד להשלמת שלבי הגופנים וה-shaping. |
 
 
@@ -672,3 +672,12 @@ Run 45437827475 / Artifact 14942416493 / commit 61ed8c5 הסתיים success.
 לכל אחד משני קובצי WOFF2 הפיקו SFNT זהה byte-for-byte ו-SHA-256 זהה.
 הוכח עבור שני fixtures אלה בלבד; הרחבה לקטלוג כולו נותרה חלק מתכנון
 pipeline הנכסים. אין שינוי בחוזה ההפקה: raw WOFF2 עדיין לא נמסר ל-HarfBuzz.
+
+
+### הוכחת CFF shaping ל-Mixtape — 24.11.2026
+
+Run `45439848821` / Artifact `14942623161` / commit `a97ee12` עבר success.
+שני גופני Mixtape מתוך חריגי CFF v5 נורמלו ל-SFNT מסוג CFF, עברו shaping
+ב-HarfBuzz ב-Node וב-classic Worker עם exact parity; 42 glyph instances,
+coverage מלא ו-0 notdef לכל משקל. ההוכחה מוגבלת ל-5 מחרוזות לכל משקל ואינה
+סוגרת full-glyph audit או production integration. Raw WOFF2 נשאר unsupported.

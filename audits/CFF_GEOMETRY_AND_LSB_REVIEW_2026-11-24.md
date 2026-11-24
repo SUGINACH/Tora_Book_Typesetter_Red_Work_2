@@ -127,6 +127,16 @@ shaping, cmap או advance widths.
 - אין להסיק מכך שאפס כשלי אבחון פירושו שההמרה מאושרת. Skechers, Kedem ו-
   Mixtape נשארים מועמדים לסקירה ידנית ממוקדת.
 
+## הערת Shaping לחריגי Mixtape — 24.11.2026
+
+ה-WOFF2 המקורי של `Mixtape-Bold` ו-`Mixtape-Regular` אינו נקרא ישירות
+על ידי HarfBuzzJS 1.6.4; לאחר נרמול fontTools/Brotli ל-SFNT התוצרים זוהו
+כ-CFF (`OTTO`, טבלת `CFF `), ועוצבו בחמש מחרוזות עבריות מנוקדות לכל גופן
+עם 0 `.notdef` ו-Node/classic Worker parity מלא. Run `45439848821`,
+Artifact `14942623161`. זו הוכחת shaping למדגם מחרוזות בלבד; אין להסיק
+ממנה שכל 204 glyph outlines בכל משקל נבדקו, ואין שינוי בהחלטת CFF conversion:
+`massConversionApproved=false`, `manualReviewRequired=true`.
+
 ## בדיקת השפעת LSB על מיקום הגליף — 54/54
 
 ב-Artifact v5 הסופי בוצעו שלושה רינדורים ב-FreeType לכל אחד מ-54 הגליפים:

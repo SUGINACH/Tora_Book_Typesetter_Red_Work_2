@@ -208,14 +208,17 @@ HarfBuzz מבצע shaping לריצות שסופקו לו; הוא אינו מחל
   לפרויקט המוצר ולא שונה ה-Worker הקיים.
 
 ### תוצאת הריצה המאומתת
-- Workflow: `45437827475`; Artifact: `14942416493`;
-  commit: `61ed8c5c6a2133c6e0a28d375315fc5190b80b3a`.
+- Workflow: `45439848821`; Artifact: `14942623161`;
+  commit: `a97ee126d3f26b03a6a5ae37fd0fc7255cfd9ad1`.
 - תוצאה: `passed_with_raw_woff2_limitations; normalized_sfnt_supported`.
 - 11 מופעי גופן (7 SFNT מקוריים — כולל variable —, 2 WOFF2 גולמיים,
   ו-2 SFNT מנורמלים שנוצרו מהם); 5 מחרוזות עבריות מנוקדות לכל מופע;
   449 מופעי glyph בסך הכול.
-- `exactNodeParity=true`; SHA-256 של תוצאת ה-Node:
-  `c6451373eb80366695d87c953b6594ab42d4f02ef9d278660f49b4ea6d903af4`.
+- `exactNodeParity=true`; SHA-256 של תוצאת ה-Node ב-PoC v4:
+  `c1622f69841d6f50fb66678d29fb68cd4f85f9ed64f847f2d817bdea309a9695`.
+
+ה-PoC v4 הרחיב את ה-fixtures לשני גופני Mixtape המייצגים חריגי CFF
+בביקורת v5; פרטים מלאים להלן.
 - WOFF2 normalization toolchain ננעלה ל-`fontTools==4.68.0` ו-
   `brotli==1.2.1`; כל WOFF2 נורמל פעמיים לאותו קובץ פלט. שני ה-hashes
   זהים בכל זוג הרצות, עם `deterministicBytes=true`.
@@ -289,3 +292,57 @@ HarfBuzz מבצע shaping לריצות שסופקו לו; הוא אינו מחל
 כל תוצר; כל mismatch נכשל את ה-workflow. Artifact `14942416493` הראה
 `deterministicBytes=true` לשני המקורות שנבדקו. הרחבת ההוכחה לכל קטלוג WOFF2
 עדיין נדרשת לפני שהנרמול יוגדר כ-build pipeline קנוני.
+
+
+## הוכחת shaping לגופני CFF מייצגים (Mixtape) — 24.11.2026
+
+### תוצאת PoC v4
+- Workflow: `45439848821`; Artifact: `14942623161`; commit:
+  `a97ee126d3f26b03a6a5ae37fd0fc7255cfd9ad1`.
+- HarfBuzzJS `1.6.4`, HarfBuzz core `15.0.0`, Node `v22.23.5`.
+- 15 font streams; חמש מחרוזות עבריות מנוקדות לכל stream; 617 glyph instances.
+  `exactNodeParity=true`; SHA-256 של תוצאת Node:
+  `c1622f69841d6f50fb66678d29fb68cd4f85f9ed64f847f2d817bdea309a9695`.
+- ה-Worker הוא classic Worker, לא module Worker; `importScripts()` טוען helper,
+  `import()` דינמי טוען ESM, ו-WASM נטען. תוצאת Worker זהה byte-for-byte
+  ל-Node עבור GID, clusters, glyph flags, x/y advances, x/y offsets ו-outline paths.
+
+### Mixtape — הוכחת CFF ממשית
+שני קובצי ה-WOFF2 של Mixtape נורמלו ל-SFNT על ידי fontTools/Brotli, עם
+`fontTools==4.68.0` ו-`brotli==1.2.1`. בדיקת table tags וזיהוי SFNT signature
+הראו `CFF ` וחתימת `OTTO` — לא `glyf/loca`:
+
+| מקור | תוצר SFNT | גודל | Glyphs | UPEM | SHA-256 | Format |
+|---|---|---:|---:|---:|---|---|
+| Mixtape-Bold.woff2 | Mixtape-Bold.normalized.sfnt | 47,956 | 204 | 1000 | `41a60f8dc6b837bee17d662a2979dd4b3d5fee366be2b3e3b25bfd8ee1e90d76` | CFF |
+| Mixtape-Regular.woff2 | Mixtape-Regular.normalized.sfnt | 47,012 | 204 | 1000 | `e7c15710dfdb9c512d5eee0e9aa3deac5d1af43474aa3e51e8cd550177079819` | CFF |
+
+לכל תוצר בוצעו שתי המרות עצמאיות; ה-byte buffers וה-SHA-256 היו זהים
+(`deterministicBytes=true`). כל אחד משני משקלי Mixtape עוצב בחמש מחרוזות
+הבדיקה: 42 glyph instances, כיסוי מלא של אותיות וניקוד, `notdefGlyphCount=0`,
+ללא codepoints חסרים. HarfBuzz החזיר outlines לכל GID ברצפים אלה, ו-Worker
+החזיר אותם byte-for-byte כמו Node.
+
+### WOFF2 raw לעומת normalized
+- raw `Mixtape-Bold.woff2` ו-`Mixtape-Regular.woff2`: HarfBuzzJS Blob לא
+  מפענח WOFF2 גולמי; 42/42 glyph results לכל fixture היו GID 0, cmap עברי
+  לא נחשף. הם מסומנים `unsupported` ואינם נספרים כהצלחת shaping.
+- normalized SFNT של שני הקבצים: שניהם CFF, Hebrew/niqqud coverage מלא,
+  0 `.notdef`, ותוצאות shaping תקינות. לכן מגבלת WOFF2 היא decode/format
+  boundary ולא מגבלת HarfBuzz לעיבוד CFF outlines.
+- Ambivalenti normalized SFNT הוא גם CFF: 444 glyphs, UPEM 1000, 50,440 bytes,
+  SHA-256 `087d2a9edda23ae76163806838c508f14d658f283fb6dc8b3e09ba87eb0d1bf4`;
+  גם הוא עבר coverage מלא ו-Node/Worker parity.
+- FrankBasic normalized SFNT הוא glyf/loca: 440 glyphs, UPEM 2048,
+  51,140 bytes, SHA-256 `7a16211442d61632f124c99a00ff6f241c3d3fd109ae1968e5575e6d39226883`.
+
+### גבול ההוכחה
+- שתי משפחות Mixtape בלבד נבדקו עבור CFF; זו הוכחת CFF parsing/shaping עובדת
+  על fixtures אלה, לא הוכחה שכל קובצי CFF/WOFF2 בקטלוג תקינים.
+- בכל גופן נבדקו חמש מחרוזות בלבד (42 glyph instances), לא כל 204 ה-GIDs.
+  נדרשת בדיקה של glyph-to-path לכל GID בשני הקבצים לפני מסקנה על שלמות outlines
+  של הגופן כולו, ובנוסף בדיקות shaping corpus ייעודיות לרצפים נוספים.
+- אין עדיין integration ב-MeasureAPI/LineBreaker/PageModel/DOM/PDF; ה-PoC
+  אינו משנה font registry, asset pipeline, production bundles או renderer.
+- אין לאשר WOFF2 raw או להסתמך על raw `Blob` ל-shaping. יש לספק SFNT/TTF
+  מנורמל ב-build-time; נרמול קנוני לכל הקטלוג עדיין לא נבנה.

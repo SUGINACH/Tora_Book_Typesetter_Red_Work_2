@@ -4756,3 +4756,25 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
   עברו success על אותו HEAD. CI `45437827466`: Layout Audit עבר; Node 18/20/22
   עדיין רצו בעת כתיבת העדכון.
 
+
+
+## 2026-11-24 — PoC v4: HarfBuzz על CFF Mixtape מתוך חריגי גאומטריה
+
+- Run `45439848821`; Artifact `14942623161`; commit `a97ee126`.
+- 15 streams, 5 Hebrew-niqqud cases לכל stream, 617 glyph instances;
+  `exactNodeParity=true`; SHA-256 `c1622f69841d6f50fb66678d29fb68cd4f85f9ed64f847f2d817bdea309a9695`.
+- `Mixtape-Bold.woff2` ו-`Mixtape-Regular.woff2` raw: WOFF2 unsupported
+  ב-HarfBuzzJS Blob; 42 GID0 לכל fixture. אחרי normalization:
+  שני SFNT מסוג CFF (`CFF ` table + `OTTO` signature), עם 204 glyphs/UPEM1000.
+- Mixtape Bold normalized: 47,956 bytes, SHA-256
+  `41a60f8dc6b837bee17d662a2979dd4b3d5fee366be2b3e3b25bfd8ee1e90d76`.
+- Mixtape Regular normalized: 47,012 bytes, SHA-256
+  `e7c15710dfdb9c512d5eee0e9aa3deac5d1af43474aa3e51e8cd550177079819`.
+- שתי הרצות normalization לכל מקור נתנו bytes זהים. בכל אחד משני קובצי CFF
+  התקבלו 42 glyph instances על פני 5 fixtures, complete Hebrew/niqqud coverage,
+  0 notdef, ו-Node/classic Worker outlines/positions byte-for-byte.
+- ממצא זה מוכיח HarfBuzz CFF outlines לשני fixtures מייצגים; אינו מכסה את כל
+  204 GIDs או את כל גופני CFF בקטלוג. נדרש sweep של glyphToPath לכל GID.
+- אין integration ב-production; אין שינוי ב-MeasureAPI, linebreak, PageModel,
+  DOM/PDF או font catalog. WOFF2 raw אינו קלט תקין ל-HarfBuzzJS; SFNT מנורמל
+  נדרש ב-build-time. החלטת CFF mass-conversion לא השתנתה.
