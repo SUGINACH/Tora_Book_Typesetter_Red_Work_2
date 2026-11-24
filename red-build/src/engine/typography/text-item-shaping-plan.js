@@ -239,6 +239,23 @@ function createTextItemShapingPlan(item, options = {}) {
   const itemization = bidiRuntime.itemizeScripts(text, resolved);
   validateItemization(text, itemization);
 
+  // Validate all shaping policies before resolving or opening font faces.
+  // A malformed/missing language/feature policy must fail independently of
+  // whether the requested font is installed in this runtime.
+  const shapingConfigByScript = new Map();
+  for (const scriptRun of itemization.scriptRuns) {
+    if (!shapingConfigByScript.has(scriptRun.script)) {
+      const language = languageByScript[scriptRun.script];
+      if (typeof language !== 'string' || !language.trim()) {
+        fail('missing-script-language', 'No explicit language provided for Script ' + scriptRun.script);
+      }
+      shapingConfigByScript.set(scriptRun.script, {
+        language,
+        features: normalizeFeatures(featuresByScript[scriptRun.script], scriptRun.script)
+      });
+    }
+  }
+
   const graphemeStyleIndexes = itemization.graphemes.map((grapheme, graphemeIndex) => {
     const matches = styleRuns.filter((run) => run.localStart <= grapheme.start && grapheme.end <= run.localEnd);
     if (matches.length !== 1) {
@@ -284,11 +301,9 @@ function createTextItemShapingPlan(item, options = {}) {
   const plannedRuns = [];
   for (let scriptRunIndex = 0; scriptRunIndex < itemization.scriptRuns.length; scriptRunIndex++) {
     const scriptRun = itemization.scriptRuns[scriptRunIndex];
-    const language = languageByScript[scriptRun.script];
-    if (typeof language !== 'string' || !language.trim()) {
-      fail('missing-script-language', 'No explicit language provided for Script ' + scriptRun.script);
-    }
-    const features = normalizeFeatures(featuresByScript[scriptRun.script], scriptRun.script);
+    const shapingConfig = shapingConfigByScript.get(scriptRun.script);
+    const language = shapingConfig.language;
+    const features = shapingConfig.features;
     let group = null;
     const flush = () => {
       if (!group) return;

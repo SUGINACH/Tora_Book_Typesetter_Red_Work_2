@@ -34,8 +34,8 @@ function fakeItemizer(text, graphemes, scriptRuns, sourceRuns) {
 
 function makeResolver() {
   const records = {
-    'Frank Ruhl Libre': { fontId: 'fnt-11111111111111', unitsPerEm: 1000, font: { bytes: Uint8Array.from([1, 2, 3]) } },
-    'David Libre': { fontId: 'fnt-22222222222222', unitsPerEm: 2048, font: { bytes: Uint8Array.from([4, 5, 6]) } }
+    'Frank Ruhl Libre': { fontId: 'fnt-11111111111111', unitsPerEm: 1000, font: { unitsPerEm: 1000, bytes: Uint8Array.from([1, 2, 3]) } },
+    'David Libre': { fontId: 'fnt-22222222222222', unitsPerEm: 2048, font: { unitsPerEm: 2048, bytes: Uint8Array.from([4, 5, 6]) } }
   };
   return {
     resolveFont(alias, options) {
@@ -147,7 +147,7 @@ describe('TextItem Shaping Plan — paragraph itemization before word splitting'
   });
 
   it('keeps same-Script runs at different Bidi levels separate and preserves Bidi_Control source spans', () => {
-    const text = 'אב\\u202Bגד\\u202Cהו';
+    const text = String.fromCodePoint(0x05D0, 0x05D1, 0x202B, 0x05D2, 0x05D3, 0x202C, 0x05D4, 0x05D5);
     const graphemes = [];
     const add = (start, end, script, level, shapeable, isControl = false) => {
       graphemes.push({ start, end, text: text.slice(start, end), script, status: isControl ? 'bidi-control' : 'strong', direction: level % 2 ? 'rtl' : 'ltr', bidiLevel: level, shapeable, isBidiControl: isControl, containsBidiControl: isControl });
