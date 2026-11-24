@@ -140,3 +140,46 @@ Do not convert all fonts blindly yet. First implement a deterministic conversion
 - a Latin/symbol-only catalog entry.
 
 Only after the proof validates glyph outlines, metrics, shaping, PDF subset and three-renderer parity should the pipeline be expanded to all eligible assets.
+
+
+## 7. Conversion proof — current checkpoint (24.11.2026)
+
+### 7.1 First repository pilot
+
+The first seven-font proof run (commit `dbdb9e6777b7a4893f85b3805f97f65723319296`, Actions run `45360752254`) reported:
+
+- Passed: WOFF2/glyf full-Hebrew, SFNT variable/glyf, WOFF2 variable/glyf, Latin-only.
+- Failed: WOFF2/CFF full-Hebrew, SFNT/CFF full-Hebrew, partial-Hebrew CFF decorative.
+
+The initial failure was in the **proof's validation**, not the parser or PDF subsetter: CFF fonts commonly have `post` format 3.0, which does not store glyph names. After conversion, FontTools may reconstruct different glyph-name strings from the cmap while the numeric glyph IDs remain in the same order. Comparing source and output glyph-name strings incorrectly rejected a valid stable-GID conversion.
+
+### 7.2 Root-cause correction
+
+The proof now:
+- explicitly leaves converted CFF fonts with `post` format 3.0;
+- compares each Unicode codepoint's numeric GID before/after conversion;
+- compares hmtx advances by numeric GID, not by regenerated glyph-name strings;
+- compares glyph-outline bounding boxes by GID after save/load;
+- requires unchanged glyph count, cmap-to-GID mapping, advances and save/load bounds (0.01 font-unit tolerance).
+
+The first correction still exposed the same naming issue in hmtx validation; the subsequent correction changed that check to numeric GID order. A small O(n²) issue in the outline-bound audit was also removed by calculating the bounds table once.
+
+### 7.3 Independent local algorithm check
+
+Using the installed FontTools 4.63.0 and a local CFF OTF test font (not a repository asset), I reproduced the format-3 naming behavior and validated the corrected GID-based checks:
+
+- 1,122 source/output glyph slots;
+- 1,096 Unicode mappings preserved exactly by GID;
+- all hmtx advances preserved by GID;
+- maximum outline bounding-box difference after SFNT save/load: 0;
+- valid glyf/loca TrueType SFNT output.
+
+This validates the algorithmic correction on one CFF font, but does not substitute for the repository samples.
+
+### 7.4 Pending repository rerun
+
+The corrected seven-font repository proof, including the GID-based advances/bounds checks, is queued at Actions run `45361667245` for commit `347037b12fd5f9006183b4065aee99ebdb2777bc`. At the latest independent poll it had not started; therefore no pass/fail conclusion is recorded for the corrected repository pilot.
+
+The `preview-engine-parity` workflow for that same commit completed successfully. Other CI workflows were still queued at the latest poll.
+
+**No production font catalog, runtime loader, font bytes or PDF writer has been changed.** Mass conversion remains blocked until the corrected repository pilot passes and its output outlines are visually inspected at renderer level.
