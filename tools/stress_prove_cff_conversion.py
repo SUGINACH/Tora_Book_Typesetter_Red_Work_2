@@ -31,7 +31,7 @@ def main():
         src=assets/'fonts'/rel
         families=sorted(set(families_by_file.get(rel, [])))
         family_text=' '.join(families)
-        icon_or_symbol = bool(re.search(r'\b(icon|icons|symbol|symbols|logo|logos|pictogram)\b', family_text, re.I) or any(term in family_text for term in ('אייקון','סמל','לוגו')))
+        icon_or_symbol = bool(re.search(r'\b(icon|icons|symbol|symbols|logo|logos|pictogram)\b', family_text, re.I) or any(term in family_text for term in ('אייקונ','סמל','לוגו')))
         row={'file':rel,'catalogFamilies':families,'catalogUsageHint':'symbol-or-nontext' if icon_or_symbol else 'unspecified'}
         try:
             f=TTFont(str(src),lazy=False,recalcBBoxes=False,recalcTimestamp=False)
