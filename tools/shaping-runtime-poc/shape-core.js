@@ -47,14 +47,32 @@
 
     const supported = new Set(Array.from(face.collectUnicodes(), Number));
     const textCodepoints = new Set();
-    for (const text of CASES) for (const char of Array.from(text)) textCodepoints.add(char.codePointAt(0));
+    const baseCodepoints = new Set();
+    const markCodepoints = new Set();
+    for (const text of CASES) {
+      for (const char of Array.from(text)) {
+        const cp = char.codePointAt(0);
+        textCodepoints.add(cp);
+        if (cp >= 0x05D0 && cp <= 0x05EA) baseCodepoints.add(cp);
+        if (cp >= 0x0591 && cp <= 0x05C7) markCodepoints.add(cp);
+      }
+    }
     const missingCodepoints = Array.from(textCodepoints)
+      .filter((cp) => !supported.has(cp))
+      .sort((a, b) => a - b)
+      .map(hexCodepoint);
+    const missingBaseCodepoints = Array.from(baseCodepoints)
+      .filter((cp) => !supported.has(cp))
+      .sort((a, b) => a - b)
+      .map(hexCodepoint);
+    const missingMarkCodepoints = Array.from(markCodepoints)
       .filter((cp) => !supported.has(cp))
       .sort((a, b) => a - b)
       .map(hexCodepoint);
 
     const features = FEATURE_TAGS.map((tag) => new hb.Feature(tag, 1));
     const shapedCases = [];
+    let notdefGlyphCount = 0;
     for (const text of CASES) {
       const buffer = new hb.Buffer();
       buffer.addText(text);
@@ -76,6 +94,7 @@
         const gid = Number(info.codepoint);
         const cluster = Number(info.cluster);
         const outline = font.glyphToPath(gid);
+        if (gid === 0) notdefGlyphCount++;
         if (!Number.isInteger(gid) || gid < 0) throw new Error('Invalid glyph ID ' + gid);
         if (!Number.isInteger(cluster) || cluster < 0 || cluster >= text.length) {
           throw new Error('Invalid source cluster ' + cluster + ' for ' + JSON.stringify(text));
@@ -109,6 +128,12 @@
       axisInfos: axes,
       appliedVariations,
       missingCodepoints,
+      missingBaseCodepoints,
+      missingMarkCodepoints,
+      notdefGlyphCount,
+      coverageStatus: missingBaseCodepoints.length === baseCodepoints.size
+        ? 'none'
+        : (missingCodepoints.length ? 'partial' : 'complete'),
       cases: shapedCases
     };
   }
