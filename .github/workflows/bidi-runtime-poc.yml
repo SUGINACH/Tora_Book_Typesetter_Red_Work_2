@@ -8,6 +8,10 @@ on:
       - '.github/workflows/bidi-runtime-poc.yml'
   workflow_dispatch:
 
+concurrency:
+  group: bidi-runtime-poc-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
