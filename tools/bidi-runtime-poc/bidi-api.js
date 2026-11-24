@@ -329,11 +329,17 @@
           if (left === right && permits(left)) {
             chosen = left;
             status = 'context-both-sides';
-          } else if (left !== right && allowed.length) {
-            const leftAllowed = allowed.includes(left);
-            const rightAllowed = allowed.includes(right);
-            if (leftAllowed !== rightAllowed) {
-              chosen = leftAllowed ? left : right;
+          } else if (left !== right) {
+            const leftAllowed = permits(left);
+            const rightAllowed = permits(right);
+            // UAX #24 §5.1's simple Common-script heuristic prefers the
+            // preceding script. Script_Extensions narrows the choice where
+            // the character is limited to a set of scripts.
+            if (leftAllowed) {
+              chosen = left;
+              status = allowed.length ? 'script-extensions-context' : 'context-left-preferred';
+            } else if (rightAllowed) {
+              chosen = right;
               status = 'script-extensions-context';
             }
           }
@@ -341,7 +347,7 @@
           const neighbor = left || right;
           if (neighbor && permits(neighbor)) {
             chosen = neighbor;
-            status = 'context-one-side';
+            status = left ? 'context-left-preferred' : 'context-one-side';
           }
         }
 
@@ -353,6 +359,78 @@
           current.status = 'primary-script-fallback';
         }
       }
+    }
+
+    const PAIRED_PUNCTUATION = Object.freeze({
+      '(': ')', '[': ']', '{': '}', '<': '>',
+      '«': '»', '‹': '›',
+      '〈': '〉', '《': '》', '「': '」', '『': '』',
+      '【': '】', '〔': '〕', '〖': '〗', '〘': '〙', '〚': '〛'
+    });
+    const CLOSING_PUNCTUATION = Object.freeze(
+      Object.fromEntries(Object.entries(PAIRED_PUNCTUATION).map(([open, close]) => [close, open]))
+    );
+    const ALL_PAIRED_PUNCTUATION = new Set([
+      ...Object.keys(PAIRED_PUNCTUATION),
+      ...Object.values(PAIRED_PUNCTUATION)
+    ]);
+
+    function resolvePairedPunctuation(graphemes) {
+      const stack = [];
+      const pairs = [];
+      for (let i = 0; i < graphemes.length; i++) {
+        const value = graphemes[i].text;
+        if (Object.prototype.hasOwnProperty.call(PAIRED_PUNCTUATION, value)) {
+          stack.push({ value, index: i });
+          continue;
+        }
+        const opener = CLOSING_PUNCTUATION[value];
+        if (!opener) continue;
+        for (let j = stack.length - 1; j >= 0; j--) {
+          if (stack[j].value === opener) {
+            pairs.push({ open: stack[j].index, close: i });
+            stack.splice(j);
+            break;
+          }
+        }
+      }
+
+      const nearestScript = (from, to, step) => {
+        for (let i = from; i !== to; i += step) {
+          const grapheme = graphemes[i];
+          if (ALL_PAIRED_PUNCTUATION.has(grapheme.text)) continue;
+          if (grapheme.script) return grapheme.script;
+        }
+        return null;
+      };
+      const allowedBy = (grapheme, script) =>
+        !grapheme.candidates.length || grapheme.candidates.includes(script) ||
+        grapheme.primaryScripts.includes(script) || grapheme.fallbackScript === script;
+
+      for (const pair of pairs) {
+        const left = nearestScript(pair.open - 1, -1, -1);
+        const right = nearestScript(pair.close + 1, graphemes.length, 1);
+        let enclosing = null;
+        if (left && right && left === right) enclosing = left;
+        else if (left && right) enclosing = left; // outer run: preceding context wins
+        else enclosing = left || right;
+
+        // For a standalone pair, the enclosed run is the only available context.
+        if (!enclosing) {
+          enclosing = nearestScript(pair.open + 1, pair.close, 1);
+        }
+        if (!enclosing) continue;
+
+        const open = graphemes[pair.open];
+        const close = graphemes[pair.close];
+        if (!allowedBy(open, enclosing) || !allowedBy(close, enclosing)) continue;
+
+        open.script = enclosing;
+        close.script = enclosing;
+        open.status = 'paired-enclosing-context';
+        close.status = 'paired-enclosing-context';
+      }
+      return pairs.length;
     }
 
     function buildScriptRuns(graphemes) {
@@ -523,6 +601,7 @@
         }
 
         resolveCommonInherited(graphemes);
+        const pairedPunctuationPairCount = resolvePairedPunctuation(graphemes);
         const diagnostics = [];
         for (const grapheme of graphemes) {
           if (grapheme.status === 'mixed-grapheme') {
@@ -554,6 +633,7 @@
           unicodeVersion: itemizerUnicodeVersion.join('.'),
           graphemes,
           scriptRuns: buildScriptRuns(graphemes),
+          pairedPunctuationPairCount,
           diagnostics
         };
       });
