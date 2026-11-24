@@ -21,6 +21,7 @@ from typing import Any
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.pens.basePen import DecomposingPen
 from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.varLib.instancer import instantiateVariableFont
@@ -132,6 +133,69 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
                 "deltaOverCu2QuTolerance": delta / max_err if max_err else None,
             }
     return {"maxBoundsDeltaFontUnits": max_bbox_delta, "worstGlyph": worst_glyph}
+
+
+
+def convert_cff_to_glyf_decomposed(font: TTFont, max_err: float) -> dict[str, Any]:
+    """Experimental CFF conversion that decomposes component references before glyf creation."""
+    if "CFF " not in font:
+        return {"maxBoundsDeltaFontUnits": 0.0, "worstGlyph": None}
+    if "CFF2" in font:
+        raise ValueError("CFF2 conversion is not included in this proof")
+    names = font.getGlyphOrder()
+    glyph_set = font.getGlyphSet()
+    before = glyph_bounds(font)
+    glyphs = {}
+    for name in names:
+        pen = TTGlyphPen(None)
+        converter = Cu2QuPen(pen, max_err=max_err, reverse_direction=False, all_quadratic=True)
+        decomposer = DecomposingPen(converter, glyph_set)
+        glyph_set[name].draw(decomposer)
+        glyphs[name] = pen.glyph()
+
+    glyf = newTable("glyf")
+    glyf.glyphs = glyphs
+    glyf.setGlyphOrder(names)
+    for name in names:
+        glyf[name].recalcBounds(glyf)
+    font["glyf"] = glyf
+    font["loca"] = newTable("loca")
+    del font["CFF "]
+    font.sfntVersion = "\\x00\\x01\\x00\\x00"
+    font["head"].indexToLocFormat = 1
+    if "post" in font:
+        font["post"].formatType = 3.0
+    maxp = font["maxp"]
+    maxp.tableVersion = 0x00010000
+    for field, default in (
+        ("maxZones", 2), ("maxTwilightPoints", 0), ("maxStorage", 0),
+        ("maxFunctionDefs", 0), ("maxInstructionDefs", 0),
+        ("maxStackElements", 0), ("maxSizeOfInstructions", 0),
+    ):
+        if not hasattr(maxp, field):
+            setattr(maxp, field, default)
+    maxp.recalc(font)
+    after = glyph_bounds(font)
+    max_delta = 0.0
+    worst = None
+    for gid, name in enumerate(names):
+        a, b = before[name], after[name]
+        if a is None or b is None:
+            if a != b:
+                raise ValueError(f"empty/non-empty outline changed for GID {gid} ({name})")
+            continue
+        delta = max(abs(float(x) - float(y)) for x, y in zip(a, b))
+        if delta > max_delta:
+            max_delta = delta
+            worst = {
+                "gid": gid, "name": name,
+                "sourceBounds": [float(v) for v in a],
+                "convertedBounds": [float(v) for v in b],
+                "deltaFontUnits": delta,
+                "deltaEm": delta / float(font["head"].unitsPerEm),
+                "deltaOverCu2QuTolerance": delta / max_err if max_err else None,
+            }
+    return {"maxBoundsDeltaFontUnits": max_delta, "worstGlyph": worst}
 
 
 def glyph_svg_path(font: TTFont, glyph_name: str) -> str:
