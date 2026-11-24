@@ -4860,3 +4860,31 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
 - לא בוצעו שינויים ב-production engine; TYP-SHAPING-01 נשאר פתוח.
 - Actions על bdefac0: PoC/FullMath/Preview/Corpus/Layout Audit success;
   CI Node 18/20/22 in_progress בעת הכתיבה. יש לאמת שוב על HEAD הסופי.
+
+
+## 2026-11-24 — HarfBuzz PoC v10: control bounds לעומת true ink bounds
+
+- Baseline code commit: `a7db7e8b28e343bbf71bf6dd9eabf0f835e7a2ee`.
+- HarfBuzz run `45467805796`, Artifact `14955353770`, conclusion success.
+- HarfBuzzJS 1.6.4 / core 15.0.0; 15 font streams, 617 glyph instances.
+- Node/classic Worker exact parity=true; UTF-16 source ranges: 75/75 RTL
+  cases מונוטוניים, 617/617 glyph sourceRanges תקינים, 345 unique clusters,
+  220 multi-glyph cluster groups, אפס gaps/errors/surrogate splits.
+- Probe `A😀B`: clusters [0,1,3], absolute source ranges [37,38),
+  [38,40), [40,41).
+- CFF original-source vector proof: 852/852 GIDs, zero coordinate/
+  operation mismatches, max delta=0.
+- **glyphExtents semantics:** 852/852 התאמות ל-fontTools ControlBoundsPen,
+  אפס mismatches ו-max delta=0; רק 433/852 התאמות ל-BoundsPen של true
+  curve bounds; 419 disagreements, max 56.1117434352 font units.
+- מסקנה: HarfBuzz glyphExtents הוא control-point bounds ולא tight ink.
+  חוזה ShapedGlyph חייב להפריד controlBounds מ-inkBounds. inkBounds מדויק
+  ייגזר מ-outline path בחישוב Bézier extrema, אחרת יסומן unavailable;
+  אין fallback שקט ל-control bounds.
+- עודכנו `audits/SHAPING_INTEGRATION_BOUNDARIES_2026-11-24.md`,
+  `audits/SHAPING_CONTRACT_GAP_2026-11-24.md` ו-`ISSUE_REGISTRY.md`.
+- אין production engine changes. TYP-SHAPING-01 נשאר פתוח עד שילוב מלא
+  ובדיקות end-to-end.
+- Actions על a7db7e8: PoC/Full Math/Preview/Corpus/Layout Audit success;
+  Node 18/20/22 עדיין in_progress בעת הבדיקה. HEAD עבר לאחר מכן ל-doc-only
+  commits; יש לבדוק את ה-runs החדשים על HEAD הסופי.
