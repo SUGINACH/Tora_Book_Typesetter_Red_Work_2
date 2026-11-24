@@ -29,7 +29,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: pip
       - name: Install font decoding and inspection libraries
         run: python -m pip install --disable-pip-version-check fonttools brotli
       - name: Audit core and extended catalogs
