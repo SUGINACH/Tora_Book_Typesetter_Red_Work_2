@@ -681,10 +681,6 @@
                 ? cluster.status : 'bidi-level-conflict';
             }
           }
-          cluster.shapeable = Boolean(cluster.script) &&
-            !cluster.containsBidiControl &&
-            cluster.status !== 'mixed-grapheme' &&
-            cluster.status !== 'bidi-level-conflict';
           graphemes.push(cluster);
           expectedStart = end;
           expectedScalarIndex = scalarEnd;
@@ -695,6 +691,13 @@
 
         resolveCommonInherited(graphemes);
         const pairedPunctuationPairCount = resolvePairedPunctuation(graphemes);
+        for (const grapheme of graphemes) {
+          grapheme.shapeable = Boolean(grapheme.script) &&
+            !grapheme.containsBidiControl &&
+            grapheme.status !== 'mixed-grapheme' &&
+            grapheme.status !== 'bidi-level-conflict' &&
+            grapheme.status !== 'bidi-control-mixed-grapheme';
+        }
         const diagnostics = [];
         for (const grapheme of graphemes) {
           if (grapheme.status === 'bidi-control-mixed-grapheme') {
