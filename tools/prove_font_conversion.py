@@ -24,6 +24,7 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.basePen import DecomposingPen
 from fontTools.pens.filterPen import FilterPen
 from fontTools.pens.svgPathPen import SVGPathPen
+from fontTools.pens.recordingPen import RecordingPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.varLib.instancer import instantiateVariableFont
 
@@ -87,7 +88,6 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
         glyf[name].recalcBounds(glyf)
     font["glyf"] = glyf
     font["loca"] = newTable("loca")
-    del font["CFF "]
     font.sfntVersion = "\x00\x01\x00\x00"
     font["head"].indexToLocFormat = 1
     # CFF OTFs commonly use post 3.0, which has no stored glyph-name array.
@@ -133,6 +133,32 @@ def convert_cff_to_glyf(font: TTFont, max_err: float) -> dict[str, Any]:
                 "deltaEm": delta / float(font["head"].unitsPerEm),
                 "deltaOverCu2QuTolerance": delta / max_err if max_err else None,
             }
+    if worst_glyph is not None:
+        source_recording = RecordingPen()
+        glyph_set[worst_glyph["name"]].draw(source_recording)
+        worst_glyph["sourceCommandPreview"] = [
+            {"operation": operation, "arguments": repr(arguments)}
+            for operation, arguments in source_recording.value[:24]
+        ]
+        converted_glyph = glyphs[worst_glyph["name"]]
+        is_composite = bool(converted_glyph.isComposite())
+        worst_glyph["convertedGlyphKind"] = "composite" if is_composite else "simple"
+        if is_composite:
+            worst_glyph["convertedComponentsPreview"] = [
+                {
+                    "glyphName": component.glyphName,
+                    "x": getattr(component, "x", None),
+                    "y": getattr(component, "y", None),
+                    "transform": list(component.transform) if hasattr(component, "transform") else None,
+                }
+                for component in converted_glyph.components[:12]
+            ]
+        else:
+            worst_glyph["convertedPointsPreview"] = [
+                [int(point[0]), int(point[1])]
+                for point in list(converted_glyph.coordinates)[:24]
+            ]
+    del font["CFF "]
     return {"maxBoundsDeltaFontUnits": max_bbox_delta, "worstGlyph": worst_glyph}
 
 
