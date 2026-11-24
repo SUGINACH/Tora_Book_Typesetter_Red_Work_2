@@ -194,6 +194,38 @@ async function main() {
     const hbUrl = pathToFileURL(path.join(site, 'harfbuzzjs', 'dist', 'index.mjs')).href;
     const hb = await import(hbUrl);
     const shapeCore = require('./shape-core.js');
+    const pathBoundsUnitCases = [
+      { path: 'M0 0 C0 100 100 100 100 0', expected: { xMin: 0, yMin: 0, xMax: 100, yMax: 75 } },
+      { path: 'M0 0 C100 0 100 100 0 100', expected: { xMin: 0, yMin: 0, xMax: 75, yMax: 100 } },
+      { path: 'm0 0 c0 100 100 100 100 0', expected: { xMin: 0, yMin: 0, xMax: 100, yMax: 75 } },
+      { path: 'M1 2 L11 2 L11 12 Z', expected: { xMin: 1, yMin: 2, xMax: 11, yMax: 12 } },
+      { path: 'M5 5 Z', expected: { xMin: 5, yMin: 5, xMax: 5, yMax: 5 } },
+      { path: 'M0 0 C0 0 0 0 0 0', expected: { xMin: 0, yMin: 0, xMax: 0, yMax: 0 } },
+      { path: 'M10 -2.5 C10 20 30 20 30 -2.5 M40 0 L45 5', expected: { xMin: 10, yMin: -2.5, xMax: 45, yMax: 14.375 } }
+    ];
+    for (const testCase of pathBoundsUnitCases) {
+      const actual = shapeCore.pathBoundsFromSvgPath(testCase.path);
+      for (const key of ['xMin', 'yMin', 'xMax', 'yMax']) {
+        if (!actual || Math.abs(actual[key] - testCase.expected[key]) > 1e-10) {
+          throw new Error('Analytic SVG path-bounds unit test failed: ' +
+            JSON.stringify({ testCase, actual }));
+        }
+      }
+    }
+    let unsupportedSvgCommandRejected = false;
+    try {
+      shapeCore.pathBoundsFromSvgPath('M0 0 Q10 20 20 0');
+    } catch (error) {
+      unsupportedSvgCommandRejected = /Unsupported SVG path command/.test(error.message);
+    }
+    if (!unsupportedSvgCommandRejected) {
+      throw new Error('Analytic SVG path bounds did not reject unsupported quadratic command');
+    }
+    report.svgPathBoundsUnitTests = {
+      passed: pathBoundsUnitCases.length,
+      unsupportedQuadraticCommandRejected: unsupportedSvgCommandRejected,
+      algorithm: 'analytic-cubic-bezier-extrema-v1'
+    };
     const expected = [];
     for (const fixture of shapeFixtures) {
       const bytes = fs.readFileSync(fixture.source);
@@ -326,14 +358,22 @@ async function main() {
       font.glyphExtentsControlBoundMismatches !== 0 ||
       font.glyphExtentsMissingHarfBuzz !== 0 ||
       font.glyphExtentsControlBoundMatches !== font.glyphCount ||
-      font.maxGlyphExtentsControlBoundDeltaFontUnits > 1e-5
+      font.maxGlyphExtentsControlBoundDeltaFontUnits > 1e-5 ||
+      font.svgPathBoundsMismatches !== 0 ||
+      font.svgPathBoundsMissing !== 0 ||
+      font.svgPathBoundsMatches !== font.glyphCount ||
+      font.maxSvgPathBoundsDeltaFontUnits > 1e-5
     );
     if (invalidCffComparisons.length ||
         cffComparison.coordinateMismatches !== 0 ||
         cffComparison.coordinateMatchesWithinTolerance !== cffComparison.glyphCount ||
         cffComparison.glyphExtentsControlBoundMismatches !== 0 ||
         cffComparison.glyphExtentsMissingHarfBuzz !== 0 ||
-        cffComparison.glyphExtentsControlBoundMatches !== cffComparison.glyphCount) {
+        cffComparison.glyphExtentsControlBoundMatches !== cffComparison.glyphCount ||
+        cffComparison.svgPathBoundsMismatches !== 0 ||
+        cffComparison.svgPathBoundsMissing !== 0 ||
+        cffComparison.svgPathBoundsMatches !== cffComparison.glyphCount ||
+        cffComparison.maxSvgPathBoundsDeltaFontUnits > 1e-5) {
       throw new Error('CFF outlines do not match fontTools source geometry: ' +
         JSON.stringify({
           summary: {
@@ -346,7 +386,11 @@ async function main() {
             glyphExtentsControlBoundMatches: cffComparison.glyphExtentsControlBoundMatches,
             glyphExtentsControlBoundMismatches: cffComparison.glyphExtentsControlBoundMismatches,
             maxGlyphExtentsCurveBoundDeltaFontUnits: cffComparison.maxGlyphExtentsCurveBoundDeltaFontUnits,
-            maxGlyphExtentsControlBoundDeltaFontUnits: cffComparison.maxGlyphExtentsControlBoundDeltaFontUnits
+            maxGlyphExtentsControlBoundDeltaFontUnits: cffComparison.maxGlyphExtentsControlBoundDeltaFontUnits,
+            svgPathBoundsMatches: cffComparison.svgPathBoundsMatches,
+            svgPathBoundsMismatches: cffComparison.svgPathBoundsMismatches,
+            svgPathBoundsMissing: cffComparison.svgPathBoundsMissing,
+            maxSvgPathBoundsDeltaFontUnits: cffComparison.maxSvgPathBoundsDeltaFontUnits
           },
           fonts: invalidCffComparisons
         }));
