@@ -5,7 +5,7 @@ import argparse, json, hashlib, sys
 from pathlib import Path
 from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
-from prove_font_conversion import convert_cff_to_glyf, glyph_bounds, java_subset_check, write_glyph_comparison, MAX_ERR_EM
+from prove_font_conversion import convert_cff_to_glyf, convert_cff_to_glyf_decomposed, glyph_bounds, java_subset_check, write_glyph_comparison, MAX_ERR_EM
 from audit_font_catalog import read_catalog
 
 
@@ -37,7 +37,7 @@ def main():
                 instantiateVariableFont(f,axes,inplace=True,updateFontNames=False,static=True)
                 row['instancedAxes']=axes
             cmap0={int(cp):int(f.getGlyphID(n)) for cp,n in (f.getBestCmap() or {}).items()}
-            order=list(f.getGlyphOrder()); adv0=[int(f['hmtx'].metrics[n][0]) for n in order]
+            order=list(f.getGlyphOrder()); metrics0=[tuple(int(v) for v in f['hmtx'].metrics[n]) for n in order]
             tol=float(f['head'].unitsPerEm)*MAX_ERR_EM
             geom=convert_cff_to_glyf(f,tol); row['maxBoundsDeltaFontUnits']=geom['maxBoundsDeltaFontUnits']; row['worstGlyph']=geom['worstGlyph']
             if maximum is None or row['maxBoundsDeltaFontUnits']>maximum['delta']:
@@ -49,9 +49,9 @@ def main():
             tmp.mkdir(parents=True,exist_ok=True); output=tmp/(hashlib.sha256(rel.encode()).hexdigest()+'.ttf'); f.save(str(output)); f.close()
             out=TTFont(str(output),lazy=False,recalcBBoxes=False,recalcTimestamp=False)
             cmap1={int(cp):int(out.getGlyphID(n)) for cp,n in (out.getBestCmap() or {}).items()}
-            adv1=[int(out['hmtx'].metrics[n][0]) for n in out.getGlyphOrder()]
+            metrics1=[tuple(int(v) for v in out['hmtx'].metrics[n]) for n in out.getGlyphOrder()]
             if cmap1!=cmap0: raise ValueError('cmap-to-GID mapping changed')
-            if adv1!=adv0: raise ValueError('hmtx advances changed')
+            if metrics1!=metrics0: raise ValueError('hmtx advance/sidebearing changed')
             if len(out.getGlyphOrder())!=len(order): raise ValueError('glyph count changed')
             bounds1=glyph_bounds(out); maxround=0.0
             for gid,n in enumerate(out.getGlyphOrder()):
@@ -66,10 +66,18 @@ def main():
             bounds_by_name = glyph_bounds(out)
             mapped_letters = [cp for cp in range(0x05D0, 0x05EB) if cp in cmap]
             empty_letters = [cp for cp in mapped_letters if bounds_by_name.get(cmap[cp]) is None]
-            if empty_letters:
-                raise ValueError('Hebrew letters map to empty outlines: ' + ','.join(f'U+{cp:04X}' for cp in empty_letters))
-            hebrew = ''.join(chr(cp) for cp in mapped_letters)
             row['hebrewLettersMapped'] = len(mapped_letters)
+            row['hebrewLettersWithNonEmptyOutlines'] = len(mapped_letters) - len(empty_letters)
+            row['emptyMappedHebrewLetters'] = [f'U+{cp:04X}' for cp in empty_letters]
+            if empty_letters and len(empty_letters) != len(mapped_letters):
+                raise ValueError('mixed empty/non-empty Hebrew letter mappings: ' + ','.join(f'U+{cp:04X}' for cp in empty_letters))
+            if empty_letters:
+                row['coverageClass'] = 'symbol-or-nontext-font'
+                row['coverageWarnings'] = ['all mapped Hebrew letter codepoints have empty outlines; Hebrew text coverage is not claimed']
+                hebrew = ''
+            else:
+                hebrew = ''.join(chr(cp) for cp in mapped_letters)
+                row['coverageClass'] = 'full-hebrew' if len(mapped_letters) == 27 else ('partial-hebrew' if mapped_letters else 'non-hebrew')
             mapped_marks = [cp for cp in range(0x0591, 0x05C8) if cp in cmap]
             empty_marks = [cp for cp in mapped_marks if bounds_by_name.get(cmap[cp]) is None]
             supported_marks = [cp for cp in mapped_marks if cp not in empty_marks]
@@ -85,14 +93,65 @@ def main():
                 if not latin:
                     latin = ''.join(chr(cp) for cp in sorted(cmap) if 0x20 <= cp <= 0x7E and not chr(cp).isspace() and bounds_by_name.get(cmap[cp]) is not None)[:12]
                 if not latin:
-                    raise ValueError('no printable, non-empty Unicode sample available for production subset check')
-                sample = latin[:32]
+                    visible = [cp for cp in sorted(cmap) if bounds_by_name.get(cmap[cp]) is not None]
+                    if not visible:
+                        raise ValueError('no mapped non-empty Unicode glyph available for production subset check')
+                    sample = ''.join(chr(cp) for cp in visible[:16])
+                else:
+                    sample = latin[:32]
+            visual_dir = args.visual_dir if args.visual_dir.is_absolute() else root / args.visual_dir
             if row['maxBoundsDeltaFontUnits'] >= 20 and row.get('worstGlyph'):
                 label = 'outlier-' + Path(rel).stem.replace(' ', '-').replace('/', '-')
-                visual_dir = args.visual_dir if args.visual_dir.is_absolute() else root / args.visual_dir
                 row['glyphComparisonArtifacts'] = write_glyph_comparison(
                     src, output, int(row['worstGlyph']['gid']), visual_dir, label
                 )
+                # Experimental alternative: decompose CFF components before creating glyf contours.
+                try:
+                    alt_font = TTFont(str(src), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
+                    if 'fvar' in alt_font:
+                        alt_axes = {a.axisTag: float(a.defaultValue) for a in alt_font['fvar'].axes}
+                        instantiateVariableFont(alt_font, alt_axes, inplace=True, updateFontNames=False, static=True)
+                    alt_source_bounds = glyph_bounds(alt_font)
+                    alt_geometry = convert_cff_to_glyf_decomposed(alt_font, float(alt_font['head'].unitsPerEm) * MAX_ERR_EM)
+                    alt_gid = int(row['worstGlyph']['gid'])
+                    alt_name = alt_font.getGlyphOrder()[alt_gid]
+                    alt_after_bounds = glyph_bounds(alt_font)
+                    alt_f = tmp / (hashlib.sha256((rel + '|decomposed').encode()).hexdigest() + '.ttf')
+                    alt_font.flavor = None
+                    alt_font.save(str(alt_f))
+                    alt_font.close()
+                    alt_check = TTFont(str(alt_f), lazy=False, recalcBBoxes=False, recalcTimestamp=False)
+                    alt_order = alt_check.getGlyphOrder()
+                    alt_metrics = [tuple(int(v) for v in alt_check['hmtx'].metrics[n]) for n in alt_order]
+                    if alt_metrics != metrics0:
+                        raise ValueError('decomposed strategy changed hmtx advance/sidebearing')
+                    if len(alt_order) != len(order):
+                        raise ValueError('decomposed strategy changed glyph count')
+                    alt_cmap = {int(cp): int(alt_check.getGlyphID(n)) for cp, n in (alt_check.getBestCmap() or {}).items()}
+                    if alt_cmap != cmap0:
+                        raise ValueError('decomposed strategy changed cmap-to-GID mapping')
+                    alt_bounds = glyph_bounds(alt_check)
+                    alt_worst_bounds = alt_bounds.get(alt_order[alt_gid])
+                    source_worst_bounds = alt_source_bounds.get(order[alt_gid])
+                    alt_gid_delta = None
+                    if source_worst_bounds is not None and alt_worst_bounds is not None:
+                        alt_gid_delta = max(abs(float(x) - float(y)) for x, y in zip(source_worst_bounds, alt_worst_bounds))
+                    alt_sample = sample
+                    alt_runtime = java_subset_check(root, alt_f, alt_sample)
+                    row['decomposedAlternative'] = {
+                        'status': 'passed',
+                        'maxBoundsDeltaFontUnits': alt_geometry['maxBoundsDeltaFontUnits'],
+                        'worstGlyph': alt_geometry['worstGlyph'],
+                        'primaryWorstGlyphBoundsDelta': alt_gid_delta,
+                        'runtimeSubset': alt_runtime,
+                    }
+                    row['decomposedGlyphComparisonArtifacts'] = write_glyph_comparison(
+                        src, alt_f, alt_gid, visual_dir, label + '-decomposed'
+                    )
+                    alt_check.close()
+                    alt_f.unlink(missing_ok=True)
+                except Exception as alt_exc:
+                    row['decomposedAlternative'] = {'status': 'failed', 'error': f'{type(alt_exc).__name__}: {alt_exc}'}
             runtime=java_subset_check(root,output,sample)
             row.update({'roundTripBoundsDelta':maxround,'runtimeSubset':runtime,'conversionBoundsOutlier':row['maxBoundsDeltaFontUnits'] >= 20,'convertedBytes':output.stat().st_size,'convertedSha256':sha(output),'status':'passed'})
             out.close(); output.unlink(missing_ok=True)
