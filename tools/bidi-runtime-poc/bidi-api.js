@@ -248,9 +248,19 @@
     }
 
     function resolveGraphemeScript(grapheme, scalars) {
-      const primary = [...new Set(scalars.map((scalar) => scalar.script)
+      // UAX #24 §5.2: all marks in a combining sequence inherit the Script
+      // of the base. If the base is Common/Inherited, use the first later
+      // scalar with a specific Script. Mark Script values must not turn one
+      // combining grapheme into a mixed-script grapheme.
+      const isCombiningSequence = scalars.length > 1 &&
+        scalars.slice(1).every((scalar) => scalar.isMark);
+      const effectiveScalar = isCombiningSequence
+        ? scalars.find((scalar) => !NEUTRAL_SCRIPTS.has(scalar.script))
+        : null;
+      const scriptScalars = effectiveScalar ? [effectiveScalar] : scalars;
+      const primary = [...new Set(scriptScalars.map((scalar) => scalar.script)
         .filter((script) => !NEUTRAL_SCRIPTS.has(script)))].sort();
-      const extensionSets = scalars
+      const extensionSets = scriptScalars
         .map((scalar) => scalar.scriptExtensions.filter((script) => !NEUTRAL_SCRIPTS.has(script)))
         .filter((set) => set.length > 0);
       const candidates = intersectTags(extensionSets);
@@ -271,7 +281,7 @@
         }
         return {
           script: primary[0],
-          status: 'strong',
+          status: effectiveScalar ? 'combining-sequence-base-script' : 'strong',
           candidates: candidates.length ? candidates : [primary[0]],
           primaryScripts: primary,
           fallbackScript: null
@@ -513,11 +523,11 @@
           // header is fatal; preserving memory safety is preferable to guessing.
           throw new Error('Unicode 18 itemizer returned unsafe output dimensions');
         }
-        const outputLength = 4 + graphemeCount * 4 + scalarCount * 5 + extensionCount;
+        const outputLength = 4 + graphemeCount * 4 + scalarCount * 6 + extensionCount;
         const values = copyAndFreeOutput(outputPointer, outputLength);
         const graphemeTableStart = 4;
         const scalarTableStart = graphemeTableStart + graphemeCount * 4;
-        const extensionTableStart = scalarTableStart + scalarCount * 5;
+        const extensionTableStart = scalarTableStart + scalarCount * 6;
 
         const scalars = [];
         let expectedScalarStart = 0;
@@ -527,11 +537,13 @@
           const start = values[offset];
           const end = values[offset + 1];
           const script = scriptTagOf(values[offset + 2]);
-          const extensionStart = values[offset + 3];
-          const extensionLength = values[offset + 4];
+          const isMarkValue = values[offset + 3];
+          const extensionStart = values[offset + 4];
+          const extensionLength = values[offset + 5];
           if (start !== expectedScalarStart || end <= start || end > units.length ||
               (end - start !== 1 && end - start !== 2) ||
               !isUtf16Boundary(units, start) || !isUtf16Boundary(units, end) ||
+              (isMarkValue !== 0 && isMarkValue !== 1) ||
               extensionStart !== expectedExtensionStart ||
               extensionLength > extensionCount - extensionStart) {
             throw new Error('Unicode 18 itemizer returned an invalid scalar range at index ' + i);
@@ -549,7 +561,7 @@
           for (let j = 0; j < extensionLength; j++) {
             scriptExtensions.push(scriptTagOf(values[extensionTableStart + extensionStart + j]));
           }
-          scalars.push({ start, end, script, scriptExtensions });
+          scalars.push({ start, end, script, isMark: isMarkValue === 1, scriptExtensions });
           expectedScalarStart = end;
           expectedExtensionStart += extensionLength;
         }

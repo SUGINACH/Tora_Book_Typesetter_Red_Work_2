@@ -184,6 +184,29 @@ async function main() {
         JSON.stringify(firstHebrewGrapheme));
     }
 
+    const latinArabicMarkText = 'a\\u0650';
+    const latinArabicMark = runtime.itemizeScripts(latinArabicMarkText);
+    const latinArabicMarkGrapheme = latinArabicMark.graphemes[0];
+    const dottedCircleArabicMarkText = '\\u25CC\\u0650';
+    const dottedCircleArabicMark = runtime.itemizeScripts(dottedCircleArabicMarkText);
+    const dottedCircleArabicMarkGrapheme = dottedCircleArabicMark.graphemes[0];
+    if (!latinArabicMarkGrapheme || latinArabicMark.graphemes.length !== 1 ||
+        latinArabicMarkGrapheme.scalars.length !== 2 ||
+        !latinArabicMarkGrapheme.scalars[1].isMark ||
+        latinArabicMarkGrapheme.script !== 'Latn' ||
+        latinArabicMarkGrapheme.status !== 'combining-sequence-base-script') {
+      throw new Error('Combining mark did not inherit the explicit base Script: ' +
+        JSON.stringify(latinArabicMarkGrapheme));
+    }
+    if (!dottedCircleArabicMarkGrapheme || dottedCircleArabicMark.graphemes.length !== 1 ||
+        dottedCircleArabicMarkGrapheme.scalars.length !== 2 ||
+        !dottedCircleArabicMarkGrapheme.scalars[1].isMark ||
+        dottedCircleArabicMarkGrapheme.script !== 'Arab' ||
+        dottedCircleArabicMarkGrapheme.status !== 'combining-sequence-base-script') {
+      throw new Error('Common base did not inherit the first specific Script in its combining sequence: ' +
+        JSON.stringify(dottedCircleArabicMarkGrapheme));
+    }
+
     const familyEmoji = '👨‍👩‍👧‍👦';
     const familyItemization = runtime.itemizeScripts(familyEmoji);
     const flagItemization = runtime.itemizeScripts('🇮🇱');
@@ -302,6 +325,10 @@ async function main() {
         firstGrapheme: firstHebrewGrapheme,
         graphemeCount: hebrewMarked.graphemes.length
       },
+      combiningSequenceScriptInheritance: {
+        latinBaseWithArabicMark: latinArabicMarkGrapheme,
+        commonBaseWithArabicMark: dottedCircleArabicMarkGrapheme
+      },
       extendedGraphemes: {
         familyEmojiCount: familyItemization.graphemes.length,
         flagCount: flagItemization.graphemes.length,
@@ -414,6 +441,14 @@ async function main() {
       itemizerUsesUnicode18: hebrewMarked.unicodeVersion === '18.0.0',
       hebrewNiqqudStaysInOneGrapheme: firstHebrewGrapheme.scalars.length >= 2 &&
         firstHebrewGrapheme.script === 'Hebr',
+      combiningMarksInheritBaseScript: latinArabicMark.graphemes.length === 1 &&
+        latinArabicMarkGrapheme.scalars[1].isMark &&
+        latinArabicMarkGrapheme.script === 'Latn' &&
+        latinArabicMarkGrapheme.status === 'combining-sequence-base-script',
+      commonBaseUsesFirstSpecificCombiningScript: dottedCircleArabicMark.graphemes.length === 1 &&
+        dottedCircleArabicMarkGrapheme.scalars[1].isMark &&
+        dottedCircleArabicMarkGrapheme.script === 'Arab' &&
+        dottedCircleArabicMarkGrapheme.status === 'combining-sequence-base-script',
       extendedGraphemesRemainWhole: familyItemization.graphemes.length === 1 &&
         flagItemization.graphemes.length === 1 && combiningLatin.graphemes.length === 1,
       mixedScriptAndDirectionAreSeparated: seenScripts.has('Hebr') && seenScripts.has('Latn') &&

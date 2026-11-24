@@ -1,7 +1,8 @@
 use core::ptr;
 use core::slice;
 
-use icu_properties::props::Script;
+use icu_properties::props::{GeneralCategory, Script};
+use icu_properties::CodePointMapData;
 use icu_properties::script::ScriptWithExtensions;
 use icu_properties::PropertyNamesShort;
 use icu_segmenter::GraphemeClusterSegmenter;
@@ -234,15 +235,24 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
         start: usize,
         end: usize,
         script: u32,
+        is_mark: bool,
         extensions: Vec<u32>,
     }
 
     let script_data = ScriptWithExtensions::new();
+    let general_category_data = CodePointMapData::<GeneralCategory>::new();
     let mut scalars = Vec::<ScalarRecord>::new();
     let mut utf16_offset = 0usize;
     for ch in text.chars() {
         let width = ch.len_utf16();
         let script = script_tag(script_data.get_script_val(ch));
+        let general_category = general_category_data.get(ch);
+        let is_mark = matches!(
+            general_category,
+            GeneralCategory::NonspacingMark
+                | GeneralCategory::EnclosingMark
+                | GeneralCategory::SpacingMark
+        );
         let extensions = script_data
             .get_script_extensions_val(ch)
             .iter()
@@ -252,6 +262,7 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
             start: utf16_offset,
             end: utf16_offset + width,
             script,
+            is_mark,
             extensions,
         });
         utf16_offset += width;
@@ -287,7 +298,7 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
     }
 
     let extension_count: usize = scalars.iter().map(|scalar| scalar.extensions.len()).sum();
-    let mut scalar_table = Vec::<u32>::with_capacity(scalars.len() * 5);
+    let mut scalar_table = Vec::<u32>::with_capacity(scalars.len() * 6);
     let mut extension_values = Vec::<u32>::with_capacity(extension_count);
     for scalar in &scalars {
         let extension_start = extension_values.len();
@@ -295,6 +306,7 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
             scalar.start as u32,
             scalar.end as u32,
             scalar.script,
+            u32::from(scalar.is_mark),
             extension_start as u32,
             scalar.extensions.len() as u32,
         ]);
