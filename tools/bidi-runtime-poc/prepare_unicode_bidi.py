@@ -262,11 +262,14 @@ def main() -> None:
     char_data_test_path = root / "src" / "char_data" / "mod.rs"
     char_data_tests = char_data_test_path.read_text(encoding="utf-8")
     for codepoint in ("FDD0", "FDD1", "FDEE", "FDEF", "FFFE", "FFFF"):
-        old = f"assert_eq!(bidi_class('\\\\u{{{codepoint}}}'), L);"
-        new = f"assert_eq!(bidi_class('\\\\u{{{codepoint}}}'), BN);"
+        old = f"assert_eq!(bidi_class('\\u{{{codepoint}}}'), L);"
+        new = f"assert_eq!(bidi_class('\\u{{{codepoint}}}'), BN);"
         if char_data_tests.count(old) != 1:
             raise SystemExit(f"Could not uniquely locate stale Unicode 17 test expectation for U+{codepoint}")
         char_data_tests = char_data_tests.replace(old, new, 1)
+    if any(f"assert_eq!(bidi_class('\\u{{{codepoint}}}'), BN);" not in char_data_tests
+           for codepoint in ("FDD0", "FDD1", "FDEE", "FDEF", "FFFE", "FFFF")):
+        raise SystemExit("Unicode 18 BN noncharacter unit expectations were not all updated")
     char_data_test_path.write_text(char_data_tests, encoding="utf-8")
 
     print({
