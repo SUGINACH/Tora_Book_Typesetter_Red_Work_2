@@ -8,7 +8,11 @@ import sys
 from pathlib import Path
 
 EXPECTED_HEADER = "# GraphemeBreakTest-18.0.0.txt"
+EXPECTED_TEST_COUNT = 853
+EXPECTED_BOUNDARY_COUNT = 2400
+EXPECTED_SCALAR_COUNT = 2208
 SOURCE_COMMIT = "725fb6055cd42915c74bcf77b91aa8fb8ef18669"
+SOURCE_BLOB_SHA = "75196cefa5ad20776d7737fc9f3a37c53c87c231"
 SOURCE_PATH = "unicodetools/data/ucd/18.0.0/auxiliary/GraphemeBreakTest.txt"
 MARKERS = {"÷", "×"}
 
@@ -69,8 +73,14 @@ def main() -> None:
         case = parse_case(line, line_number)
         if case is not None:
             fixtures.append(case)
-    if len(fixtures) < 800:
-        raise SystemExit(f"Unexpectedly small Unicode 18 GraphemeBreakTest corpus: {len(fixtures)}")
+    boundary_count = sum(len(item["expectedBoundaries"]) for item in fixtures)
+    scalar_count = sum(len(item["text"]) for item in fixtures)
+    if len(fixtures) != EXPECTED_TEST_COUNT:
+        raise SystemExit(f"Unicode 18 test count mismatch: {len(fixtures)} != {EXPECTED_TEST_COUNT}")
+    if boundary_count != EXPECTED_BOUNDARY_COUNT:
+        raise SystemExit(f"Unicode 18 boundary count mismatch: {boundary_count} != {EXPECTED_BOUNDARY_COUNT}")
+    if scalar_count != EXPECTED_SCALAR_COUNT:
+        raise SystemExit(f"Unicode 18 scalar count mismatch: {scalar_count} != {EXPECTED_SCALAR_COUNT}")
     ids = [item["id"] for item in fixtures]
     if len(ids) != len(set(ids)):
         raise SystemExit("Duplicate test vector IDs")
@@ -80,7 +90,10 @@ def main() -> None:
         "sourceCommit": SOURCE_COMMIT,
         "sourcePath": SOURCE_PATH,
         "sourceHeader": EXPECTED_HEADER,
+        "sourceBlobSha": SOURCE_BLOB_SHA,
         "testCount": len(fixtures),
+        "boundaryCount": boundary_count,
+        "scalarCount": scalar_count,
         "fixtures": fixtures
     }
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -89,6 +102,9 @@ def main() -> None:
         "unicodeVersion": result["unicodeVersion"],
         "sourceCommit": SOURCE_COMMIT,
         "testCount": len(fixtures),
+        "boundaryCount": boundary_count,
+        "scalarCount": scalar_count,
+        "sourceBlobSha": SOURCE_BLOB_SHA,
         "outputBytes": target.stat().st_size
     }, sort_keys=True))
 

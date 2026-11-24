@@ -395,11 +395,18 @@
         }
       }
 
+      const contextualStatuses = new Set([
+        'context-both-sides', 'script-extensions-context',
+        'context-left-preferred', 'context-one-side',
+        'paired-enclosing-context'
+      ]);
       const nearestScript = (from, to, step) => {
         for (let i = from; i !== to; i += step) {
           const grapheme = graphemes[i];
           if (ALL_PAIRED_PUNCTUATION.has(grapheme.text)) continue;
-          if (grapheme.script) return grapheme.script;
+          if (grapheme.script && !contextualStatuses.has(grapheme.status)) {
+            return grapheme.script;
+          }
         }
         return null;
       };

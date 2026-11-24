@@ -62,8 +62,10 @@ function mimeType(file) {
 
 async function main() {
   const wasmPath = process.argv[2];
-  if (!wasmPath || !fs.existsSync(wasmPath)) {
-    throw new Error('usage: node tools/bidi-runtime-poc/run.js /path/to/red-bidi-runtime-poc.wasm');
+  const graphemeFixturesPath = process.argv[3];
+  if (!wasmPath || !fs.existsSync(wasmPath) ||
+      !graphemeFixturesPath || !fs.existsSync(graphemeFixturesPath)) {
+    throw new Error('usage: node tools/bidi-runtime-poc/run.js /path/to/red-bidi-runtime-poc.wasm /path/to/unicode18-grapheme-fixtures.json');
   }
   const site = fs.mkdtempSync(path.join(os.tmpdir(), 'red-bidi-runtime-poc-'));
   const report = {
@@ -87,10 +89,6 @@ async function main() {
     const wasmBytes = fs.readFileSync(wasmPath);
     const runtime = await api.instantiate(wasmBytes);
     const fixtures = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures.json'), 'utf8'));
-    const graphemeFixturesPath = process.argv[3];
-    if (!graphemeFixturesPath || !fs.existsSync(graphemeFixturesPath)) {
-      throw new Error('usage: node tools/bidi-runtime-poc/run.js /path/to/red-bidi-runtime-poc.wasm /path/to/unicode18-grapheme-fixtures.json');
-    }
     const graphemeFixtures = JSON.parse(fs.readFileSync(graphemeFixturesPath, 'utf8'));
     const graphemeResult = runtime.validateGraphemeFixtures(graphemeFixtures);
     const graphemeResultJson = JSON.stringify(graphemeResult);
@@ -253,6 +251,20 @@ async function main() {
         JSON.stringify({ openBracket, closeBracket, standaloneOpen, standaloneClose }));
     }
 
+    const hebrewPairedText = 'שלום (ABC) עולם';
+    const hebrewPairedItemization = runtime.itemizeScripts(
+      hebrewPairedText, runtime.resolve(hebrewPairedText, 'rtl')
+    );
+    const hebrewOpenBracket = hebrewPairedItemization.graphemes.find((item) => item.text === '(');
+    const hebrewCloseBracket = hebrewPairedItemization.graphemes.find((item) => item.text === ')');
+    if (!hebrewOpenBracket || !hebrewCloseBracket ||
+        hebrewOpenBracket.script !== 'Hebr' || hebrewCloseBracket.script !== 'Hebr' ||
+        hebrewOpenBracket.status !== 'paired-enclosing-context' ||
+        hebrewCloseBracket.status !== 'paired-enclosing-context') {
+      throw new Error('Paired punctuation in RTL Hebrew did not inherit the Hebrew enclosing script: ' +
+        JSON.stringify({ hebrewOpenBracket, hebrewCloseBracket }));
+    }
+
     const badFontBoundary = runtime.validateFontBoundaries(hebrewMarkedText, [
       { start: 0, end: 1, fontId: 'font-a' },
       { start: 1, end: hebrewMarked.utf16Length, fontId: 'font-b' }
@@ -307,6 +319,11 @@ async function main() {
         text: standalonePair,
         open: standaloneOpen,
         close: standaloneClose
+      },
+      hebrewPairedPunctuation: {
+        text: hebrewPairedText,
+        open: hebrewOpenBracket,
+        close: hebrewCloseBracket
       },
       arabicScriptExtensions: arabicCommaGrapheme,
       fontBoundaryProbe: { bad: badFontBoundary, good: goodFontBoundary },
@@ -412,7 +429,8 @@ async function main() {
         closeBracket.script === 'Latn' &&
         openBracket.status === 'paired-enclosing-context' &&
         closeBracket.status === 'paired-enclosing-context' &&
-        standaloneOpen.script === 'Grek' && standaloneClose.script === 'Grek',
+        standaloneOpen.script === 'Grek' && standaloneClose.script === 'Grek' &&
+        hebrewOpenBracket.script === 'Hebr' && hebrewCloseBracket.script === 'Hebr',
       fontRunCannotSplitGrapheme: !badFontBoundary.ok &&
         badFontBoundary.diagnostics.some((item) => item.code === 'font-boundary-splits-grapheme') &&
         goodFontBoundary.ok,

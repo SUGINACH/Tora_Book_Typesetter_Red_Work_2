@@ -59,14 +59,14 @@ jobs:
           test -s "$WASM_FILE"
           file "$WASM_FILE"
           cp "$WASM_FILE" "$GITHUB_WORKSPACE/tools/bidi-runtime-poc/bidi-runtime-poc.wasm"
-      - name: Checkout pinned Unicode 18 GraphemeBreakTest conformance data
+      - name: Download SHA-locked Unicode 18 GraphemeBreakTest conformance data
         run: |
-          git init /tmp/unicodetools
-          git -C /tmp/unicodetools remote add origin https://github.com/unicode-org/unicodetools.git
-          git -C /tmp/unicodetools fetch --depth=1 origin 725fb6055cd42915c74bcf77b91aa8fb8ef18669
-          git -C /tmp/unicodetools checkout FETCH_HEAD -- unicodetools/data/ucd/18.0.0/auxiliary/GraphemeBreakTest.txt
-          TEST_FILE=/tmp/unicodetools/unicodetools/data/ucd/18.0.0/auxiliary/GraphemeBreakTest.txt
+          TEST_FILE=/tmp/GraphemeBreakTest-18.0.0.txt
+          curl --fail --location --retry 3 --retry-delay 2 \
+            'https://raw.githubusercontent.com/unicode-org/unicodetools/725fb6055cd42915c74bcf77b91aa8fb8ef18669/unicodetools/data/ucd/18.0.0/auxiliary/GraphemeBreakTest.txt' \
+            --output "$TEST_FILE"
           test "$(head -n 1 "$TEST_FILE")" = "# GraphemeBreakTest-18.0.0.txt"
+          test "$(git hash-object "$TEST_FILE")" = "75196cefa5ad20776d7737fc9f3a37c53c87c231"
           python3 tools/bidi-runtime-poc/prepare_grapheme_fixtures.py "$TEST_FILE" /tmp/unicode18-grapheme-fixtures.json
       - name: Install headless browser for classic Worker parity
         run: |
