@@ -118,3 +118,22 @@ An alternative native-text implementation is acceptable only if it proves the sa
 Do **not** patch `renderModelLine` or `emitWord` separately to imitate each other. Do not alter word x-coordinates or add renderer-specific letter spacing. The root fix belongs in the single typography/shaping contract and its LineModel/PageModel representation.
 
 The current PageModel architecture is worth preserving; its text payload must be upgraded from text-only word fragments to shaped glyph runs. The project remains short of DOM/PDF/HTML ink parity until this contract is implemented and proven.
+
+
+## 7. Integration constraint: the current Worker bundler is CommonJS-only
+
+A second source audit found a concrete integration constraint for the proposed HarfBuzzJS candidate:
+
+- `red-build/package.json` explicitly describes the application as having zero runtime dependencies.
+- `tools/build-worker-bundle.js` is a custom CommonJS bundler. It discovers only static relative `require('./...')` calls, rejects non-relative package imports, wraps each source as a CommonJS module, and emits a classic Worker bundle.
+- The currently published `harfbuzzjs@1.6.4` package declares `"type": "module"`, exports `dist/index.mjs`, and its source entry performs top-level asynchronous WASM initialization (`init(await createHarfBuzz())`). It is not a drop-in CommonJS `require()` dependency for this bundler.
+- The shaping API itself is promising: Buffer supports explicit direction/script/language and returns glyph infos/positions; Font exposes glyph outlines and variation settings. But those APIs are not sufficient until module initialization, WASM loading, and Worker packaging are proven in this repository.
+
+**Do not add `require('harfbuzzjs')` to engine code.** Before integration, choose and test one packaging strategy:
+
+1. A deterministic build-time bundle of the pinned ESM package plus WASM, with license and source provenance retained; or
+2. A self-contained, version-pinned ESM/WASM asset loaded by the Worker using a deliberately asynchronous bootstrap, with typesetting messages gated until initialization succeeds.
+
+The chosen strategy must preserve the existing synchronous core pipeline after Worker initialization (or make any async boundary explicit at the Worker protocol). Node unit tests and browser Worker tests must use the same HarfBuzz version and font bytes. Do not create two shaper implementations for Node and browser.
+
+The proof must include clean offline startup after assets are served locally, WASM load failures, worker respawn, and repeated deterministic shaping. A failed HarfBuzz initialization must be a fatal, surfaced engine capability error; it must not fall back silently to table metrics or browser-native shaping.
