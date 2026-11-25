@@ -1,6 +1,7 @@
 // tests/unit/s3-assets.test.js — שלב 3: Asset Resolver קנוני (§3.1-1/2/3/11)
 'use strict';
 const fs = require('fs');
+const vm = require('vm');
 const path = require('path');
 const { describe, it, assert, assertEq, report } = require('../harness');
 
@@ -116,6 +117,35 @@ describe('שלב 3 — SHA-256 סביבת-אגנוסטי', () => {
       const buf = Buffer.alloc(n, 0x78);
       assertEq(sha256Hex(buf), crypto.createHash('sha256').update(buf).digest('hex'), `len ${n}`);
     }
+  });
+  it('browser Worker ignores the bundler crypto shim and hashes raw Uint8Array bytes', () => {
+    const source = fs.readFileSync(path.join(__dirname, '../../src/engine/assets/hash256.js'), 'utf8');
+    let shimCalls = 0;
+    const cryptoShim = {
+      createHash() {
+        shimCalls++;
+        return {
+          update(value) { this.value = String(value); return this; },
+          digest() { return 'bundler-shim-must-not-hash-byte-arrays'; }
+        };
+      }
+    };
+    const module = { exports: {} };
+    const context = {
+      module,
+      exports: module.exports,
+      require(name) {
+        if (name !== 'crypto') throw new Error('Unexpected browser require: ' + name);
+        return cryptoShim;
+      }
+      // Deliberately no process and no Buffer: this mirrors the classic Worker bundle.
+    };
+    vm.runInNewContext(source, context, { filename: 'hash256.browser-worker.test.js' });
+    const browserHash = module.exports.sha256Hex(Uint8Array.from([0, 1, 2, 127, 128, 255]));
+    const nodeHash = require('crypto').createHash('sha256')
+      .update(Buffer.from([0, 1, 2, 127, 128, 255])).digest('hex');
+    assertEq(browserHash, nodeHash, 'browser hash must cover exact bytes, not String(Uint8Array)');
+    assertEq(shimCalls, 0, 'browser must not mistake the bundler shim for Node crypto');
   });
   it('מחרוזת = UTF-8 מפורש (לא אפסים שקטים)', () => {
     assertEq(sha256Hex('abc'), sha256Hex(Buffer.from('abc', 'utf8')));
