@@ -87,6 +87,42 @@ async function ev(js) {
   try { return JSON.parse(out); } catch (e) { return out; }
 }
 
+/** Capture the browser/Worker state without changing the readiness acceptance gate. */
+async function captureReadinessDiagnostic(label, expectedGeneration, cause) {
+  try {
+    const snapshot = await ev(`(function() {
+      const app = window.__toraApp;
+      const state = app && typeof app.getState === 'function' ? app.getState() : null;
+      const status = document.querySelector('.status-strip');
+      const resources = performance.getEntriesByType('resource')
+        .filter((entry) => /engine-worker|shaping-runtime|harfbuzz|unicode18/.test(entry.name))
+        .slice(-30)
+        .map((entry) => ({
+          name: entry.name,
+          duration: entry.duration,
+          responseEnd: entry.responseEnd,
+          transferSize: entry.transferSize,
+          decodedBodySize: entry.decodedBodySize,
+          responseStatus: entry.responseStatus == null ? null : entry.responseStatus
+        }));
+      return {
+        label: ${JSON.stringify(label)},
+        expectedGeneration: ${JSON.stringify(expectedGeneration)},
+        appAvailable: !!app,
+        state,
+        statusText: status ? status.innerText : null,
+        visibleTextTail: String(document.body && document.body.innerText || '').slice(-3500),
+        documentReadyState: document.readyState,
+        fontsStatus: document.fonts ? document.fonts.status : null,
+        workerResources: resources
+      };
+    })()`);
+    return { snapshot, cause: cause ? String(cause && cause.message || cause) : null };
+  } catch (error) {
+    return { diagnosticError: String(error && error.message || error), cause: cause ? String(cause && cause.message || cause) : null };
+  }
+}
+
 // ── שרת מקומי (מצב local) ──
 let server = null;
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8' };
@@ -189,7 +225,11 @@ async function retypesetAndWait(label) {
       // unavailable") על eval מקביל — כשל תשתית חולף, לא כשל תוכן. ניסיון
       // חוזר במקום מוות הריצה; פסק הזמן הכללי (READY_TIMEOUT_MS) עדיין שומר
       // על החוזה. אותו דפוס עמידות כמו S4.14 ב-run.sh.
-      if (Date.now() - t0 > READY_TIMEOUT_MS) throw new Error(`${label}: פסק זמן לעימוד (כולל כשלי דמון: ${String(e && e.message || e).slice(0, 90)})`);
+      if (Date.now() - t0 > READY_TIMEOUT_MS) {
+        const diagnostic = await captureReadinessDiagnostic(label, gen0, e);
+        log(`${label}: LAYOUT_AUDIT_READINESS_DIAGNOSTIC=${JSON.stringify(diagnostic)}`);
+        throw new Error(`${label}: פסק זמן לעימוד (כולל כשלי דמון: ${String(e && e.message || e).slice(0, 90)})`);
+      }
       await sleep(3000);
       continue;
     }
@@ -199,7 +239,11 @@ async function retypesetAndWait(label) {
       await sleep(1200);
       return parseInt(String(st).slice(6), 10);
     }
-    if (Date.now() - t0 > READY_TIMEOUT_MS) throw new Error(`${label}: פסק זמן לעימוד`);
+    if (Date.now() - t0 > READY_TIMEOUT_MS) {
+      const diagnostic = await captureReadinessDiagnostic(label, gen0);
+      log(`${label}: LAYOUT_AUDIT_READINESS_DIAGNOSTIC=${JSON.stringify(diagnostic)}`);
+      throw new Error(`${label}: פסק זמן לעימוד`);
+    }
     await sleep(3000);
   }
 }
