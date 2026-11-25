@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   harfbuzz-node-classic-worker:
@@ -67,6 +67,75 @@ jobs:
           agent-browser install --with-deps
       - name: Prove Node and classic Worker shaping parity
         run: node tools/shaping-runtime-poc/run.js
+      - name: Verify and commit pinned runtime assets to the working branch
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/engine/legacy-parity-preview-20261119'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const crypto = require('crypto');
+          const root = '/tmp/shaping-runtime-poc-runtime';
+          const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
+          if (manifest.artifactKind !== 'staged-runtime-assets-not-production-enabled') {
+            throw new Error('Unexpected runtime artifact kind');
+          }
+          if (manifest.harfbuzz.package !== 'harfbuzzjs' || manifest.harfbuzz.version !== '1.6.4' ||
+              manifest.harfbuzz.license !== 'MIT') {
+            throw new Error('Unexpected HarfBuzz package identity/license');
+          }
+          if (manifest.unicode.version !== '18.0.0' ||
+              manifest.unicode.revision !== '9a8c7b03be01def5cf7014b89d5af90f7382fdad') {
+            throw new Error('Unexpected Unicode runtime identity');
+          }
+          const seen = new Set();
+          for (const file of manifest.files) {
+            if (seen.has(file.path)) throw new Error('Duplicate manifest path: ' + file.path);
+            seen.add(file.path);
+            const bytes = fs.readFileSync(path.join(root, file.path));
+            const hash = crypto.createHash('sha256').update(bytes).digest('hex');
+            if (bytes.length !== file.bytes || hash !== file.sha256) {
+              throw new Error('Runtime asset hash/size mismatch: ' + file.path);
+            }
+          }
+          const required = [
+            'harfbuzzjs/dist/index.mjs',
+            'harfbuzzjs/dist/harfbuzz.js',
+            'harfbuzzjs/dist/harfbuzz.wasm',
+            'harfbuzzjs/package.json',
+            'harfbuzzjs/LICENSE',
+            'unicode18-bidi-runtime.js',
+            'unicode18-bidi-runtime.wasm'
+          ];
+          for (const name of required) {
+            if (!seen.has(name)) throw new Error('Required runtime asset absent from manifest: ' + name);
+          }
+          if (!fs.existsSync(path.join(root, 'README.md'))) throw new Error('Runtime README missing');
+          if (!fs.existsSync(path.join(root, 'manifest.json'))) throw new Error('Runtime manifest missing');
+          NODE
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git fetch origin engine/legacy-parity-preview-20261119
+          remote_head="$(git rev-parse FETCH_HEAD)"
+          if [ "$remote_head" != "$GITHUB_SHA" ]; then
+            echo "::error::Working branch moved during runtime proof; refusing to publish assets."
+            exit 1
+          fi
+          target="red-build/ui/assets/shaping-runtime"
+          rm -rf "$target"
+          mkdir -p "$target"
+          cp -a /tmp/shaping-runtime-poc-runtime/. "$target/"
+          cmp -s red-build/src/engine/typography/unicode18-bidi-runtime.js "$target/unicode18-bidi-runtime.js"
+          git add -f "$target"
+          if git diff --cached --quiet; then
+            echo "Pinned runtime assets are already identical in the working branch."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "build(typography): vendor pinned shaping runtime assets"
+          git push origin "HEAD:refs/heads/engine/legacy-parity-preview-20261119"
       - name: Upload compatibility report
         if: always()
         uses: actions/upload-artifact@v4
