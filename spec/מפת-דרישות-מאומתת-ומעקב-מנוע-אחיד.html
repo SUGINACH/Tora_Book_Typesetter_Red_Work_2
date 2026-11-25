@@ -263,7 +263,7 @@ function download(blob,name){const u=URL.createObjectURL(blob),a=document.create
 $("#exportHtml").addEventListener("click",()=>{
  let source="<!doctype html>\n"+document.documentElement.outerHTML;
  const embedded=JSON.stringify(data).replace(/</g,"\\u003c");
- source=source.replace(/const BASE_DATA = \/\*__DATA_START__\*\/[\\s\\S]*?\/\*__DATA_END__\*\//,"const BASE_DATA = /*__DATA_START__*/"+embedded+"/*__DATA_END__*/");
+source=source.replace(/const BASE_DATA = \/\*__DATA_START__\*\/[\s\S]*?\/\*__DATA_END__\*\//,"const BASE_DATA = /*__DATA_START__*/"+embedded+"/*__DATA_END__*/");
  download(new Blob([source],{type:"text/html;charset=utf-8"}),"מפת-דרישות-RED-מעודכנת.html");
 });
 loadLocal();renderSources();render();
