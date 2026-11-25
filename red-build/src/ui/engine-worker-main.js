@@ -16,24 +16,58 @@ const { loadProductionTypographyRuntime } = require('../engine/typography/produc
 
 let cancelledJobs = new Set();
 
-// **שלב 3 (§3.1-2 — תיקון ביקורת PR #22):** מטמון נכסי מסמך בצד ה-Worker. אותו
-// transport (אותם מזהים+בתים) אינו מנותח מחדש ואינו מועבר שוב לפענוח בכל בקשה.
-// זהו cache טהור של ה-deserialization בלבד: מקור האמת הוא הזהות הכתובת-תוכן
-// שבהודעה עצמה — לא נוצר רישום נכסים מקבילי ולא נשמרים נתיבים מקומיים.
-// ה-fingerprint נגזר מהמזהים ואורכי הבתים — אין טחינת תוכן נוספת לכל בקשה.
+// **שלב 3 (§3.1-2 — תיקון ביקורת PR #22):** מטמון נכסי מסמך בצד ה-Worker.
+// Cache hit מחייב זהות של מזהים, מיפויי refs ותוכן bytes מלא. כך ה-deserialization
+// אינו חוזר על עצמו עבור transport זהה, אך אין דילוג על אימות בגלל hash מקוצר או
+// בגלל אותו אורך בתים. Transport שנדחה אינו נשמר במטמון.
 let _docAssetsCache = null; // { fingerprint, resolver }
+function _transportBytesView(value) {
+  if (typeof ArrayBuffer !== 'undefined' && value instanceof ArrayBuffer) return new Uint8Array(value);
+  if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView(value)) {
+    return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  }
+  return null;
+}
+function _transportRefs(asset) {
+  return (Array.isArray(asset && asset.refs) ? asset.refs : [])
+    .filter((ref) => typeof ref === 'string' && ref && !ref.startsWith('transport/'));
+}
+function _assetTransportFingerprint(assetsMsg) {
+  return JSON.stringify(assetsMsg.assets.map((asset) => {
+    const bytes = _transportBytesView(asset && asset.bytes);
+    return [asset && asset.assetId || null, bytes ? bytes.byteLength : null, _transportRefs(asset)];
+  }));
+}
+function _sameTransportBytesAsCache(assetsMsg, resolver) {
+  for (const asset of assetsMsg.assets) {
+    const incoming = _transportBytesView(asset && asset.bytes);
+    if (!incoming || !asset || typeof asset.assetId !== 'string') return false;
+    const resolved = resolver.resolveById(asset.assetId);
+    if (!resolved.ok || !resolved.asset || !resolved.asset.bytes || resolved.asset.bytes.length !== incoming.length) return false;
+    const cached = resolved.asset.bytes;
+    for (let i = 0; i < incoming.length; i++) {
+      if (incoming[i] !== cached[i]) return false;
+    }
+  }
+  return true;
+}
 function _resolverForAssets(assetsMsg) {
   if (!assetsMsg || !Array.isArray(assetsMsg.assets) || !assetsMsg.assets.length) return null;
-  const fp = assetsMsg.assets.map((a) => `${a && a.assetId}:${(a && a.bytes && a.bytes.byteLength) || 0}`).join('|');
-  if (_docAssetsCache && _docAssetsCache.fingerprint === fp) return _docAssetsCache.resolver;
+  const fp = _assetTransportFingerprint(assetsMsg);
+  if (_docAssetsCache && _docAssetsCache.fingerprint === fp &&
+      _sameTransportBytesAsCache(assetsMsg, _docAssetsCache.resolver)) {
+    return _docAssetsCache.resolver;
+  }
   const { AssetResolver } = require('../engine/assets/asset-resolver');
   const resolver = AssetResolver.fromTransport(assetsMsg);
   if (resolver.transportReport && resolver.transportReport.ok === false) {
     // פער הובלה אינו נבלע בשקט: נרשם לאבחון (הדחיות יצופו בדחיית מדידה מפורשת
     // של הפריטים שהתייחסו לנכסים החסרים — הכיסוי המלא נסגר בשער הצריכה של שלב 4).
     console.warn('[engine-worker] asset transport rejections:', JSON.stringify(resolver.transportReport.rejected));
+    _docAssetsCache = null;
+  } else {
+    _docAssetsCache = { fingerprint: fp, resolver };
   }
-  _docAssetsCache = { fingerprint: fp, resolver };
   return resolver;
 }
 

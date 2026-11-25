@@ -9,6 +9,7 @@ const { AssetResolver, normalizeRefPath, SUPPORTED_EXTENSIONS } = require('../..
 const { measureImageMeta } = require('../../src/engine/assets/image-meta');
 const { sha256Hex } = require('../../src/engine/assets/hash256');
 const { validateRequest } = require('../../src/ui/worker-protocol');
+const { createEngineWorkerMain } = require('../../src/ui/engine-worker-main');
 
 // ── פיקסטורות בינאריות בבנייה-עצמית (ללא קבצים חיצוניים — דטרמיניסטיות) ──
 function tinyPng(w, h) {
@@ -218,6 +219,78 @@ describe('שלב 3 — AssetResolver: זהות, בטיחות נתיבים ומק
     let threw = false;
     try { validateRequest({ type: 'typeset-request', jobId: 'j', text: 'x', settings: {}, assets: { schema: 'bogus', assets: [] } }); } catch (_) { threw = true; }
     assert(threw, 'סכמה שגויה נדחית');
+  });
+  it('Worker asset cache: same content with new refs must rebuild the reference map', () => {
+    const messages = [];
+    const handler = createEngineWorkerMain((message) => messages.push(message), {
+      typeset: (_text, settings, env) => {
+        const current = env.assets.resolve(settings.assetRef);
+        const previous = env.assets.resolve(settings.previousAssetRef);
+        return { currentOk: current.ok, previousOk: previous.ok, assetId: current.assetId || null };
+      },
+      serializeResult: (result) => result
+    });
+    const bytes = tinyPng(8, 12);
+    const first = new AssetResolver();
+    const firstAsset = first.addBytes('img/first-name.png', bytes);
+    const second = new AssetResolver();
+    const secondAsset = second.addBytes('img/second-name.png', bytes);
+    assertEq(firstAsset.assetId, secondAsset.assetId, 'content-addressed ID is unchanged');
+    const firstTransport = first.serializeForTransport();
+    const secondTransport = second.serializeForTransport();
+    assertEq(firstTransport.assets[0].bytes.length, secondTransport.assets[0].bytes.length, 'byte lengths are identical');
+    const send = (jobId, settings, assets) => {
+      handler({ type: 'typeset-request', jobId, text: 'asset-cache-test', settings, assets });
+      const response = messages.find((message) => message.jobId === jobId);
+      assert(response && response.type === 'typeset-result', 'typeset request completed: ' + jobId);
+      return response.result;
+    };
+    const firstResult = send('asset-cache-refs-a', {
+      assetRef: 'img/first-name.png', previousAssetRef: 'img/second-name.png'
+    }, firstTransport);
+    assertEq(firstResult.currentOk, true, 'first reference resolves');
+    const secondResult = send('asset-cache-refs-b', {
+      assetRef: 'img/second-name.png', previousAssetRef: 'img/first-name.png'
+    }, secondTransport);
+    assertEq(secondResult.currentOk, true, 'same bytes with a new reference must resolve');
+    assertEq(secondResult.previousOk, false, 'the previous document reference must not leak into the new resolver');
+    assertEq(secondResult.assetId, firstAsset.assetId, 'content identity remains stable');
+  });
+  it('Worker asset cache: changed bytes with the same declared ID and length are revalidated', () => {
+    const messages = [];
+    const handler = createEngineWorkerMain((message) => messages.push(message), {
+      typeset: (_text, settings, env) => {
+        const resolved = env.assets.resolve(settings.assetRef);
+        return {
+          assetOk: resolved.ok,
+          reportOk: env.assets.transportReport.ok,
+          rejectionCodes: env.assets.transportReport.rejected.map((entry) => entry.code)
+        };
+      },
+      serializeResult: (result) => result
+    });
+    const source = new AssetResolver();
+    source.addBytes('img/integrity.png', tinyPng(8, 12));
+    const validTransport = source.serializeForTransport();
+    const send = (jobId, assets) => {
+      handler({ type: 'typeset-request', jobId, text: 'asset-integrity-test', settings: { assetRef: 'img/integrity.png' }, assets });
+      const response = messages.find((message) => message.jobId === jobId);
+      assert(response && response.type === 'typeset-result', 'typeset request completed: ' + jobId);
+      return response.result;
+    };
+    const validResult = send('asset-cache-bytes-a', validTransport);
+    assertEq(validResult.assetOk, true, 'verified bytes resolve');
+    assertEq(validResult.reportOk, true, 'valid transport report');
+    const tamperedBytes = tinyPng(9, 12);
+    assertEq(tamperedBytes.length, validTransport.assets[0].bytes.length, 'tampered fixture keeps byte length');
+    const tamperedTransport = {
+      schema: validTransport.schema,
+      assets: validTransport.assets.map((asset) => ({ ...asset, bytes: tamperedBytes }))
+    };
+    const tamperedResult = send('asset-cache-bytes-b', tamperedTransport);
+    assertEq(tamperedResult.assetOk, false, 'changed bytes must not reuse the previous cached resolver');
+    assertEq(tamperedResult.reportOk, false, 'transport integrity mismatch must be reported');
+    assert(tamperedResult.rejectionCodes.includes('asset-id-mismatch'), 'integrity failure code is preserved');
   });
   it('זהות בין ריצות: resolver חדש מאותם בתים — אותם מזהים', () => {
     const a = new AssetResolver().addBytes('x.png', tinyPng(8, 12));
