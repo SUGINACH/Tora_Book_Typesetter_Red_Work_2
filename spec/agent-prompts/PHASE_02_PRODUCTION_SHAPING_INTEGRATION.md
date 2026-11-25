@@ -3,7 +3,7 @@
 # פרומפט לסוכן AI — שלב 2 מתוך 5
 ## Unicode 18, Bidi, HarfBuzz, FontResolver ו-ShapedRun במסלול הייצור
 
-אתה אותו סוכן יחיד שהשלים את שלב 1. אין ליצור סוכני משנה או ענפים מקבילים. לפני תחילת העבודה קרא את PHASE1_RUNTIME_TRUTH, PHASE1_SOURCE_RECONCILIATION ואת מפת הדרישות; אמת מחדש HEAD ו-working tree.
+אתה אותו סוכן יחיד שהשלים את שלב 1. אין ליצור סוכני משנה או ענפים מקבילים. לפני תחילת העבודה קרא את audits/PHASE1_RUNTIME_TRUTH_SNAPSHOT_2026-11-25.md, audits/PHASE1_SOURCE_RECONCILIATION_2026-11-25.md ואת מפת הדרישות; אמת מחדש HEAD ו-working tree.
 
 ### כללים מחייבים
 - לעבוד רק ב-engine/legacy-parity-preview-20261119. אין שינוי main/legacy branches, אין force-push.

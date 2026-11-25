@@ -68,14 +68,14 @@ Q12 (שכבת ברירת מחדל), Q13 (זהות Node↔Browser) ו-Q14 (איש
 
 **5. אודיט settings/Text IDs**
 - הפק inventory עדכני לכל parser IDs, prefixes, aliases, registry keys, labels, UI controls, defaults, imported defaults, fallbacks ו-hardcoded constants.
-- הקטלוג העדכני כולל 256 settings; אין להעתיק ספירות או ערכים מהאודיט ההיסטורי של 253 בלי בדיקה מחדש.
+- הקטלוג spec/קטלוג-רכיבי-מסמך-הגדרות-עימוד.data.json מתוארך ל-19.11 ומדווח 256 (stale). אודיט היסטורי ישן ספר 253. ב-HEAD bd5a6b76 ספירת הקוד היא 259 Registry definitions ו-259 generated bindings, בהתאמה מדויקת; ברירות המחדל המיובאות ב-IMUD הן 265 keys נפרדים. יש לחשב מחדש לכל HEAD ולא להעתיק ספירות.
 - בדוק אם קיים קובץ נפרד של Text ID → code identifier; אם לא, פתח דרישה/תוצר מפורש.
 - בדוק פונקציות layout שתלויות ישירות ב-H2/H3/H7; תעד hard-coded policies, אל תשנה אותן עדיין ללא תכנון.
 
 ### תוצרים
-1. audits/PHASE1_RUNTIME_TRUTH.md — מפת runtime, deployment provenance, hashes ו-zero legacy call trace.
-2. audits/PHASE1_BROWSER_ACCEPTANCE.md — תוצאות Browser E2E ו-artifacts.
-3. audits/PHASE1_SOURCE_RECONCILIATION.md — כל 20 נושאי המקור, מסמכים שהועלו, החלטות, סתירות ו-open questions.
+1. audits/PHASE1_RUNTIME_TRUTH_SNAPSHOT_2026-11-25.md — מפת runtime, deployment provenance, hashes ו-zero legacy call trace (ה-trace חסר עדיין; אין לטעון שהושלם).
+2. audits/PHASE1_BROWSER_ACCEPTANCE.md — תוצאות Browser E2E ו-artifacts; עד לביצוע browser run הקובץ/השער מסומנים NOT VERIFIED.
+3. audits/PHASE1_SOURCE_RECONCILIATION_2026-11-25.md — כל 20 נושאי המקור, מסמכים שהועלו, החלטות, סתירות ו-open questions; ה-review של כל candidate files עדיין חלקי.
 4. מפת HTML מעודכנת עם coverage matrix, מצב/ראיות נוכחיים ו-source inventory.
 5. baseline manifest: corpus hash, settings, fonts/assets, engine/build version.
 6. עדכון ISSUE_REGISTRY/WORKLOG/קטלוג באותו PR/commit לפי הצורך.

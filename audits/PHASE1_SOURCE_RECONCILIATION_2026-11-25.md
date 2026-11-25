@@ -63,7 +63,20 @@ Selected November 19–24 handoff/pasted files, the 12 November chat-history fil
 
 A historical transcript in the Library contains a string that looks like a GitHub Personal Access Token. It is intentionally omitted from this report and was not used. Revoke/rotate it if it may still be active.
 
-## 4. Twenty historical requirement topics — coverage map
+## 4. Test document and fixture-path audit
+
+D-98 is binding: `audits/very_long_test_text.txt` is the primary true long corpus; synthetic fixed/random documents are supplementary and must be structurally valid.
+
+- Canonical primary corpus: `audits/very_long_test_text.txt`, Git blob `aa70c076ae8ed8bde6b7585a6913016cca370098`.
+- `.github/workflows/ci.yml` explicitly sets `LAYOUT_AUDIT_FIXTURE=$PWD/audits/very_long_test_text.txt` for the 849-page browser-local Layout Audit. It first runs a small smoke fixture separately.
+- `.github/workflows/full-math-audit.yml` explicitly passes `audits/very_long_test_text.txt`; `tools/layout-audit/run-full-math.js` uses the same path as its default.
+- A second file, `red-build/tests/fixtures/real/very_long_test_text.txt`, exists with a different Git blob SHA `9c6d96f80464712a9bb7402bfe3fbb9a4c3e5b66`. Do not treat it as byte-identical to the canonical corpus. It needs an explicit provenance/diff decision before use as an equivalent.
+- `tools/layout-audit/run.sh` defaults to a small smoke fixture; the CI's second layout-audit step overrides it with the canonical 3.4MB audited corpus.
+- Full Math's expected-content oracle imports `tokenizeDoc`, `stripEditorialNotes` and `parseMetadata` from `legacy-imud-flow` to count/normalize expected source tokens. This is a test-side content oracle, not evidence that the product typeset path used legacy. Keep this distinction explicit in all runtime claims.
+- `red-build/src/ui/test-doc-generator.js` uses a fixed seed for fixed mode and generates a fresh seed for random mode. It contains local D-98 guards for some same-level H4–H6 heading sequences and avoids 6→6 escort. It does not export a general structural validator; current code inspection cannot prove that every seed/fixture satisfies the full rules.
+- Binding structural rules: no consecutive same-level headings without intervening body text; no heading containing only a footnote; hierarchy 1→2→3→4→5→6→7 is allowed, but the deepest/terminal heading must contain real text. Add a preflight validator to reject invalid synthetic documents before typesetting, with negative controls for each invalid case.
+
+## 5. Twenty historical requirement topics — coverage map
 
 | # | Historical topic | Current requirement IDs | Reconciliation finding |
 |---:|---|---|---|
@@ -88,7 +101,7 @@ A historical transcript in the Library contains a string that looks like a GitHu
 | 19 | HTML/PDF and execution environment | OUT-01..06 · TYP-03 · TST-05 · DEP-04 | One PageModel is present, but no shaped glyph identity/position parity yet; browser E2E missing. |
 | 20 | Cleanup, extensibility and recommendations | ARC-03/04 · TST-09 · EXT-01..08 | Remove duplicate paths only after proof; reconcile recommendation scope from historical sources. |
 
-## 5. Source hierarchy and authoritative decisions
+## 6. Source hierarchy and authoritative decisions
 
 1. Latest explicit user instruction takes precedence over old handoffs.
 2. Approved user decisions in `DECISIONS.md` remain binding until explicitly changed.
@@ -99,7 +112,7 @@ A historical transcript in the Library contains a string that looks like a GitHu
 
 Keep these boundaries: P6/P7 are out of scope; the old reference PDF is not a quality target; Kit 40 and original gates remain active by default; do not change font/geometry/defaults without authority; do not mass-convert fonts; keep F7 blocked until shaping/fonts stabilize; do not delete legacy code until the Unified path has been proven.
 
-## 6. Phase 1 gate
+## 7. Phase 1 gate
 
 **Passed:** automated CI, corpus invariants, local full-math, preview build/deploy and Git artifact identity.  
 **Partially evidenced:** Unified source-level dispatch and current settings/binding inventory.  
