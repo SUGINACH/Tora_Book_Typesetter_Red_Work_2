@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "staged-runtime-assets-not-production-enabled",
+  "harfbuzz": {
+    "package": "harfbuzzjs",
+    "version": "1.6.4",
+    "license": "MIT",
+    "packageEngines": null
+  },
+  "unicode": {
+    "version": "18.0.0",
+    "upstream": "servo/unicode-bidi",
+    "revision": "9a8c7b03be01def5cf7014b89d5af90f7382fdad",
+    "runtimeModule": "unicode18-bidi-runtime.js",
+    "wasmModule": "unicode18-bidi-runtime.wasm"
+  },
+  "files": [
+    {
+      "path": "harfbuzzjs/dist/harfbuzz.js",
+      "bytes": 32099,
+      "sha256": "28392846ce6accb53e34bdce197b8aa00721e84846ff4b2c0ccfad5137a0e699"
+    },
+    {
+      "path": "harfbuzzjs/dist/harfbuzz.wasm",
+      "bytes": 444394,
+      "sha256": "6eeed8e1bc9ad7773038e48ff8f9e07e0ad228572c594b45e5357e9c2f7a0b2e"
+    },
+    {
+      "path": "harfbuzzjs/dist/index.mjs",
+      "bytes": 85257,
+      "sha256": "16016989059a6600a1b82b42f61b494c776db02dec49bf645af65b8a5e599bf9"
+    },
+    {
+      "path": "harfbuzzjs/LICENSE",
+      "bytes": 1079,
+      "sha256": "5d09767b2cc476f08028b56d9384dc45061c5a3e90f9ad966e44addc8d26c8b1"
+    },
+    {
+      "path": "harfbuzzjs/package.json",
+      "bytes": 1112,
+      "sha256": "92200c5035787f530332dcf547b22fceace4d18ee9253995f213d49c09143cb4"
+    },
+    {
+      "path": "unicode18-bidi-runtime.js",
+      "bytes": 37186,
+      "sha256": "580685c67ffbadf68900ae152253ca9a9e1616a32d8a1864b306967d928009dc"
+    },
+    {
+      "path": "unicode18-bidi-runtime.wasm",
+      "bytes": 151361,
+      "sha256": "78e7681311db93a552c6ebb58e7e8f0797cf61b9b578897b0a6ae603872ce776"
+    }
+  ]
+}
