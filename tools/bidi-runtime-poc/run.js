@@ -784,26 +784,28 @@ async function main() {
     report.browserWorker = {
       state: browserResult.state,
       unicodeVersion: browserResult.unicodeVersion,
+      fixtureCount: browserResult.fixtureCount,
+      graphemeTestCount: browserResult.graphemeTestCount,
+      outputSha256: browserResult.reportSha256 || null,
+      graphemeOutputSha256: browserResult.graphemeSha256 || null,
+      hashMethod: 'SHA-256(UTF-8(JSON.stringify(original Worker-side result)))',
       error: browserResult.error || null
     };
-    if (browserResult.state !== 'passed' || !browserResult.report) {
-      throw new Error('Browser classic Worker Bidi execution failed: ' + JSON.stringify(browserResult).slice(0, 5000));
+    if (browserResult.state !== 'passed' ||
+        !/^[0-9a-f]{64}$/.test(report.browserWorker.outputSha256 || '') ||
+        !/^[0-9a-f]{64}$/.test(report.browserWorker.graphemeOutputSha256 || '')) {
+      throw new Error('Browser classic Worker Bidi execution or hash proof failed: ' +
+        JSON.stringify(report.browserWorker).slice(0, 5000));
     }
-    const browserJson = JSON.stringify(browserResult.report);
-    report.browserWorker.outputSha256 = crypto.createHash('sha256').update(browserJson).digest('hex');
-    const browserGraphemeJson = JSON.stringify(browserResult.graphemeResult);
-    report.browserWorker.graphemeOutputSha256 = crypto.createHash('sha256').update(browserGraphemeJson).digest('hex');
-    report.exactNodeParity = browserJson === nodeJson;
-    report.exactNodeGraphemeParity = browserGraphemeJson === graphemeResultJson;
-    report.browserWorker.firstJsonDifference = firstJsonDifference(nodeResult, browserResult.report) ||
-      (browserJson === nodeJson ? null : { path: '$', kind: 'json-serialization-only', nodeLength: nodeJson.length, workerLength: browserJson.length });
+    report.exactNodeParity = report.browserWorker.outputSha256 === report.nodeReference.outputSha256;
+    report.exactNodeGraphemeParity =
+      report.browserWorker.graphemeOutputSha256 === report.graphemeBreakConformance.outputSha256;
     if (!report.exactNodeParity || !report.exactNodeGraphemeParity) {
-      throw new Error('Node/classic Worker Bidi or GraphemeBreakTest output differs: ' + JSON.stringify({
+      throw new Error('Node/classic Worker Bidi or GraphemeBreakTest SHA-256 differs: ' + JSON.stringify({
         nodeSha256: report.nodeReference.outputSha256,
         workerSha256: report.browserWorker.outputSha256,
         nodeGraphemeSha256: report.graphemeBreakConformance.outputSha256,
-        workerGraphemeSha256: report.browserWorker.graphemeOutputSha256,
-        firstJsonDifference: report.browserWorker.firstJsonDifference
+        workerGraphemeSha256: report.browserWorker.graphemeOutputSha256
       }));
     }
     report.result = 'passed';

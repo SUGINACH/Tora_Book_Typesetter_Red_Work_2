@@ -20,6 +20,15 @@ self.onmessage = async function onMessage(event) {
     const runtime = await self.RedBidiRuntime.instantiate(wasmBytes);
     const report = runtime.analyzeFixtures(fixtures);
     const graphemeResult = runtime.validateGraphemeFixtures(graphemeFixtures);
+    // Hash the original Worker-side JSON before any browser automation/DevTools
+    // transport can decode and re-encode non-ASCII report strings.
+    const encoder = new TextEncoder();
+    const sha256Hex = async (json) => {
+      const digest = await crypto.subtle.digest('SHA-256', encoder.encode(json));
+      return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+    };
+    const reportSha256 = await sha256Hex(JSON.stringify(report));
+    const graphemeSha256 = await sha256Hex(JSON.stringify(graphemeResult));
     if (graphemeResult.failedCases !== 0 ||
         graphemeResult.passedCases !== graphemeResult.testCount) {
       throw new Error('Unicode 18 GraphemeBreakTest failed in Worker: ' + JSON.stringify(graphemeResult));
@@ -27,8 +36,10 @@ self.onmessage = async function onMessage(event) {
     self.postMessage({
       state: 'passed',
       unicodeVersion: runtime.unicodeVersion,
-      report,
-      graphemeResult
+      reportSha256,
+      graphemeSha256,
+      fixtureCount: report.fixtureCount,
+      graphemeTestCount: graphemeResult.testCount
     });
   } catch (error) {
     self.postMessage({
