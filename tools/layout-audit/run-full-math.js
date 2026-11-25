@@ -850,15 +850,28 @@ async function buildLocalBrowserBundles() {
     pages2 = await retypesetAndWait('הרצה-2');
     log(`עימוד הרצה-2: ${pages2.toLocaleString()} עמודים`);
     impactRun2 = await captureImpactSnapshot(pages2);
+    const allSettingKeys = Array.from(new Set([
+      ...Object.keys(impactRun1.settings.valueHashes || {}),
+      ...Object.keys(impactRun2.settings.valueHashes || {})
+    ])).sort();
+    const changedSettingKeys = allSettingKeys.filter((key) =>
+      (impactRun1.settings.valueHashes || {})[key] !== (impactRun2.settings.valueHashes || {})[key]
+    );
     modelDeterminism = {
       input: impactRun1.input.sha256 === impactRun2.input.sha256,
       settings: impactRun1.settings.sha256 === impactRun2.settings.sha256,
+      settingsByKey: changedSettingKeys.length === 0,
+      registryContract: impactRun1.settings.registryContractSha256 === impactRun2.settings.registryContractSha256,
       layout: impactRun1.state.layoutHash === impactRun2.state.layoutHash,
       geometry: impactRun1.model.geometryHash === impactRun2.model.geometryHash,
       content: impactRun1.model.contentHash === impactRun2.model.contentHash,
-      contentHashIn: impactRun1.model.contentHashIn === impactRun2.model.contentHashIn
+      contentHashIn: impactRun1.model.contentHashIn === impactRun2.model.contentHashIn,
+      changedSettingKeys
     };
-    modelDeterminism.identical = Object.values(modelDeterminism).every(Boolean);
+    modelDeterminism.identical = [
+      'input', 'settings', 'settingsByKey', 'registryContract',
+      'layout', 'geometry', 'content', 'contentHashIn'
+    ].every((key) => modelDeterminism[key] === true);
     if (!modelDeterminism.identical) {
       console.error('✗ PageModel impact signature changed between identical runs: ' + JSON.stringify(modelDeterminism));
     }
@@ -899,6 +912,11 @@ async function buildLocalBrowserBundles() {
     assets: impactRun1.assets,
     input: { browserText: impactRun1.input, fixture: impactRun1.fixture },
     settings: impactRun1.settings,
+    settingDelta: {
+      changedKeysBetweenRepeatedRuns: modelDeterminism ? modelDeterminism.changedSettingKeys : null,
+      registryContractSha256: impactRun1.settings.registryContractSha256,
+      registryContractSummary: impactRun1.settings.registryContractSummary
+    },
     run1: { state: impactRun1.state, model: impactRun1.model },
     run2: impactRun2 ? { state: impactRun2.state, model: impactRun2.model } : null,
     audit: {
