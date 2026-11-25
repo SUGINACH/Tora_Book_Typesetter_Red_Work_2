@@ -239,8 +239,14 @@ describe('TextItem Shaping Plan — paragraph itemization before word splitting'
     const plan = createTextItemShapingPlan(item, makeOptions(text, graphemes, scriptRuns, sourceRuns));
     assertEq(plan.scriptRuns.map((run) => run.bidiLevel), [1, 3, 1]);
     assertEq(plan.nonShapingRuns.map((run) => [run.start, run.end, run.kind]), [
-      [102, 103, 'bidi-control'], [105, 106, 'bidi-control']
-    ]);
+      [2, 3, 'bidi-control'], [5, 6, 'bidi-control']
+    ], 'non-shaping run ranges stay local to the TextItem UTF-16 buffer');
+    assertEq(plan.nonShapingRuns.map((run) => run.sourceRanges.map((range) => [
+      range.localRange.start, range.localRange.end,
+      range.sourceRange.start, range.sourceRange.end
+    ])), [
+      [[2, 3, 102, 103]], [[5, 6, 105, 106]]
+    ], 'document UTF-16 positions are carried separately in sourceRanges');
   });
 
   it('rejects missing language, feature or variation policies rather than guessing', () => {
