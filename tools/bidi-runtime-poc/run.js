@@ -66,7 +66,7 @@ function firstJsonDifference(left, right, path = '$') {
   if (leftType !== rightType) {
     return { path, kind: 'type', leftType, rightType, left: diagnosticValue(left), right: diagnosticValue(right) };
   }
-  if (leftType === 'null' || leftType !== 'object') {
+  if (leftType === 'null' || (leftType !== 'object' && leftType !== 'array')) {
     if (!Object.is(left, right)) {
       return { path, kind: 'value', left: diagnosticValue(left), right: diagnosticValue(right) };
     }
