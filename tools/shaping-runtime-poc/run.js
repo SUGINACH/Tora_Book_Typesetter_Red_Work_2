@@ -225,7 +225,7 @@ async function main() {
       '- Raw WOFF2 shaping remains unsupported; normalize to SFNT first.',
       '- Tight ink bounds are not included; control bounds must not be presented as ink bounds.',
       '- Current analytic outline proof covers cubic CFF M/L/C/Z; quadratic outlines remain unproven.', ''
-    ].join('\\n');
+    ].join(String.fromCharCode(10));
     fs.writeFileSync(path.join(runtimeDir, 'README.md'), runtimeReadme, 'utf8');
     const runtimeManifest = {
       schemaVersion: 1, artifactKind: 'staged-runtime-assets-not-production-enabled',
@@ -236,7 +236,7 @@ async function main() {
         runtimeModule: 'unicode18-bidi-runtime.js', wasmModule: 'unicode18-bidi-runtime.wasm' },
       files: stagedRuntimeFiles.sort((a, b) => a.path.localeCompare(b.path))
     };
-    fs.writeFileSync(path.join(runtimeDir, 'manifest.json'), JSON.stringify(runtimeManifest, null, 2) + '\\n', 'utf8');
+    fs.writeFileSync(path.join(runtimeDir, 'manifest.json'), JSON.stringify(runtimeManifest, null, 2) + String.fromCharCode(10), 'utf8');
     report.stagedRuntimeAssets = { status: 'passed', fileCount: stagedRuntimeFiles.length, files: runtimeManifest.files };
 
     for (const file of ['index.html', 'classic-worker.js', 'shape-core.js']) {

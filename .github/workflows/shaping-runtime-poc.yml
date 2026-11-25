@@ -73,11 +73,12 @@ jobs:
         with:
           name: shaping-runtime-poc
           path: /tmp/shaping-runtime-poc-report.json
+          if-no-files-found: ignore
+
       - name: Upload hash-locked runtime assets (staging only)
         if: always()
         uses: actions/upload-artifact@v4
-        with
+        with:
           name: shaping-runtime-assets
           path: /tmp/shaping-runtime-poc-runtime/
-          if-no-files-found: ignore
           if-no-files-found: ignore
