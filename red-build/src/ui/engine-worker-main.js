@@ -11,7 +11,8 @@
  */
 
 const { typeset } = require('../engine/core/pipeline');
-const { serializeTypesetResult, validateRequest, progressMessage } = require('./worker-protocol');
+const { serializeTypesetResult, validateRequest, validateTypographyRuntimeInitRequest, progressMessage } = require('./worker-protocol');
+const { loadProductionTypographyRuntime } = require('../engine/typography/production-typography-runtime');
 
 let cancelledJobs = new Set();
 
@@ -163,9 +164,72 @@ function createEngineWorkerMain(post) {
 }
 
 /** הרכבה עצמאית לסביבת Worker אמיתית (self.onmessage). */
-function bootWorkerContext(ctx) {
+function bootWorkerContext(ctx, options = {}) {
   const handler = createEngineWorkerMain((m) => ctx.postMessage(m));
-  ctx.onmessage = (ev) => handler(ev.data);
+  const loadRuntime = typeof options.loadTypographyRuntime === 'function'
+    ? options.loadTypographyRuntime
+    : loadProductionTypographyRuntime;
+  let runtimePromise = null;
+
+  const handleRuntimeInit = (msg) => {
+    try {
+      validateTypographyRuntimeInitRequest(msg);
+    } catch (error) {
+      ctx.postMessage({
+        type: 'typography-runtime-result',
+        jobId: msg && typeof msg.jobId === 'string' ? msg.jobId : null,
+        ok: false,
+        code: 'invalid-runtime-init-request',
+        message: error && error.message ? error.message : String(error)
+      });
+      return;
+    }
+
+    if (!runtimePromise) {
+      runtimePromise = Promise.resolve().then(() => {
+        const workerHref = ctx && ctx.location && ctx.location.href;
+        if (typeof workerHref !== 'string' || !workerHref) {
+          const error = new Error('Worker location.href is required to resolve local typography runtime assets');
+          error.code = 'worker-location-unavailable';
+          throw error;
+        }
+        const baseUrl = new URL('./assets/shaping-runtime/', workerHref).href;
+        return loadRuntime({ baseUrl });
+      });
+    }
+
+    const currentPromise = runtimePromise;
+    currentPromise.then((runtime) => {
+      ctx.postMessage({
+        type: 'typography-runtime-result',
+        jobId: msg.jobId,
+        ok: true,
+        harfbuzzPackageVersion: runtime.manifest.harfbuzz.version,
+        harfbuzzCoreVersion: runtime.harfbuzz.versionString(),
+        unicodeVersion: runtime.unicode.unicodeVersion,
+        assetCount: Object.keys(runtime.assetDigests).length,
+        assetDigests: { ...runtime.assetDigests }
+      });
+    }).catch((error) => {
+      if (runtimePromise === currentPromise) runtimePromise = null;
+      ctx.postMessage({
+        type: 'typography-runtime-result',
+        jobId: msg.jobId,
+        ok: false,
+        code: error && error.code ? error.code : 'runtime-initialization-failed',
+        message: error && error.message ? error.message : String(error)
+      });
+    });
+  };
+
+  ctx.onmessage = (ev) => {
+    const message = ev && ev.data;
+    if (message && message.type === 'typography-runtime-init') {
+      handleRuntimeInit(message);
+      return;
+    }
+    handler(message);
+  };
 }
 
 // ב־Worker אמיתי: self קיים ואין require/module (ה־bundle מספק אותם); ב־Node — לא.

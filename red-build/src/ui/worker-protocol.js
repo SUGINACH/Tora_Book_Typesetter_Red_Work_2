@@ -140,6 +140,25 @@ function validateRequest(msg) {
   throw new Error(`protocol: unknown message type ${msg && msg.type}`);
 }
 
+
+/**
+ * Validate the explicit, worker-context-only request to load the pinned local
+ * typography runtime. Kept separate from validateRequest so the in-process
+ * synchronous typesetting handler remains unchanged.
+ */
+function validateTypographyRuntimeInitRequest(msg) {
+  if (!msg || typeof msg !== 'object' || Array.isArray(msg)) {
+    throw new Error('protocol: typography runtime init message must be an object');
+  }
+  if (msg.type !== 'typography-runtime-init') {
+    throw new Error('protocol: typography runtime init type required');
+  }
+  if (typeof msg.jobId !== 'string' || !msg.jobId || msg.jobId.length > 128) {
+    throw new Error('protocol: typography runtime init jobId must be a non-empty string of at most 128 characters');
+  }
+  return true;
+}
+
 /** בניית הודעת התקדמות (worker-side). */
 function progressMessage(jobId, info) {
   return {
@@ -151,4 +170,4 @@ function progressMessage(jobId, info) {
   };
 }
 
-module.exports = { PROTOCOL_VERSION, serializeTypesetResult, serializePageModelTransport, validateRequest, progressMessage };
+module.exports = { PROTOCOL_VERSION, serializeTypesetResult, serializePageModelTransport, validateRequest, validateTypographyRuntimeInitRequest, progressMessage };
