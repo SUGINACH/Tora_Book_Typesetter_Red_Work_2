@@ -148,7 +148,7 @@ dialog::backdrop{background:#13263a88}.modalhead{background:var(--navy);color:#f
 <summary>מה נסרק ומה עדיין מחייב סריקה עמוקה</summary>
 <ul>
 <li>ענף העבודה נבדק ב-HEAD <code>be54c8bfec27c516bb627d7ce027a9c567f5b1ae</code>; עץ Git כולל כ-2,691 entries. בוצע inventory של כל העץ ושל קובצי מסמך/בדיקה/workflows; מסמכי הסמכות, מפרטי הדרישות, החלטות, אודיטים מרכזיים ונתיבי הקוד הקריטיים נפתחו ונבדקו. לא כל קובץ בינארי/fixture/לוג עצום נקרא בשלמותו; עומק הבדיקה מסומן במפת המקורות.</li>
-<li>ספריית הקבצים כללה 169 רשומות; 34 קבצים סווגו כמועמדים רלוונטיים לפרויקט, כולל כפילויות והדבקות. נקראו קובצי העברת־הקשר, סיכומי שיחות וקובצי handoff מרכזיים מ-19–24.11; חיפושי תוכן שימשו לאיתור דרישות נוספות.</li>
+<li>ספריית הקבצים כללה 169 רשומות; 34 קבצים סווגו כמועמדים רלוונטיים, לרבות תמלילים, handoff, מסמכי דרישות, pasted logs והעתקים כפולים. נבדקו סמנטית/נקראו קובצי העברת הקשר, סיכומי השיחות הגדולים, chat_history מ-12.11 והדבקות 19–24.11. לא כל אחד מהקבצים הללו נקרא כולו; עומק הבדיקה מתואר במפת המקורות.</li>
 <li>קובצי font, image, PDF, binary, artifacts ענקיים וכל שורות WORKLOG/ISSUE_REGISTRY לא נבדקו כולם בעומק שווה. הם רשומים כמקורות/ארכיון, אך טענה ספציפית מהם תסומן רק אחרי פתיחה ואימות ממוקדים.</li>
 <li><code>Coverage_Audit.xlsx</code> שנמצא בספרייה מתאר כיסוי פסקאות של כתב־יד בדיני שבת, ולא כיסוי דרישות של תוכנת RED; לכן לא הוכנס לדרישות המנוע.</li>
 <li>המפה מכסה את 20 תחומי דרישות המשתמש ואת מקורות הסמכות שאותרו. היא אינה טוענת שכל שורה בכל artifact/קובץ בינארי נותחה משפט-משפט; עומק הבדיקה מסומן בכל מקור.</li>
@@ -216,8 +216,9 @@ function renderSources(){
  const base="https://github.com/SUGINACH/Tora_Book_Typesetter_Red_Work_2/blob/engine/legacy-parity-preview-20261119/";
  $("#sources").innerHTML=sources.map(s=>{
   const parts=String(s[1]).split(" · ").map(v=>v.trim());
+  const rootFiles=new Set(["DECISIONS.md","OPEN_QUESTIONS.md","WORKLOG.md","ISSUE_REGISTRY.md","LAYOUT_DEPENDENCY_MAP.md"]);
   const links=parts.map(v=>{
-   if(v.startsWith("/")||v.includes("Pasted text")||v.includes("Pasted markdown")||v.includes("chat_history")||v.includes("handoff")||v.includes("סיכום שיחות")||v.includes("תכנית לתיקון")||v.includes("prompt-research")||v.includes("Coverage_Audit"))return '<span>'+esc(v)+'</span>';
+   if(v.startsWith("/")||v.includes("Pasted text")||v.includes("Pasted markdown")||v.includes("chat_history")||v.includes("handoff")||v.includes("סיכום שיחות")||v.includes("תכנית לתיקון")||v.includes("prompt-research")||v.includes("Coverage_Audit")||(!v.includes("/")&&!rootFiles.has(v)))return '<span>'+esc(v)+'</span>';
    return '<a href="'+esc(base+v.split(" ").join("%20"))+'" target="_blank" rel="noopener">'+esc(v)+'</a>';
   }).join("<br>");
   return '<div class="source"><b>'+esc(s[0])+'</b><div class="path">'+links+'</div><small>'+esc(s[2])+' · '+esc(s[3])+'</small></div>';
