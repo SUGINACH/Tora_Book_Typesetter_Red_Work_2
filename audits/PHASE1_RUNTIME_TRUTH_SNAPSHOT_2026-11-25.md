@@ -3,11 +3,11 @@
 **Checked:** 2026-11-25 (Asia/Jerusalem)  
 **Repository:** `SUGINACH/Tora_Book_Typesetter_Red_Work_2`  
 **Branch:** `engine/legacy-parity-preview-20261119`  
-**Source HEAD:** `a3ff4bd43f5fabf50a4c06d27a8b0ba5f83b29bb`  
-**gh-pages HEAD:** `921af83d1a965748e2c8a9f3914fd012f43a7292`  
+**Documentation HEAD:** `eef0b80ef4df08f21ed0da2bcc8d9496ed86b7c6` (production/POC code baseline `28a077c68749e86b1eac3614836193a3726235a2`).  
+**gh-pages HEAD:** `77b515e6172661fcd2311a4e59172cfe46c02e9a`  
 **Acceptance:** **OPEN** — live browser audit is now verified for the primary typeset/export path; zero-legacy call tracing, full interactive UI coverage, deep source reconciliation and glyph-level projection parity remain open.
 
-## 1. Workflow evidence on this exact source HEAD
+## 1. Historical engine-code baseline (a3ff4bd); current POC-only code baseline is 28a077c
 
 | Workflow | Run | Result | Verified scope |
 |---|---:|---|---|
@@ -119,3 +119,24 @@ The Worker loads and requires the Unicode 18 + HarfBuzz runtime before typesetti
 - DOM/HTML/PDF glyph-level and visual parity: **CONFIRMED DEFECT on FrankReal combining marks; architectural correction and regression remain OPEN**.
 - Deep historical/Library source reconciliation: **PARTIAL** (57 candidate Library items identified; not all were read fully).
 - Phase 1 acceptance: **OPEN**. Phase 2 production shaping work must not be declared complete or silently substituted for the remaining Phase 1 proof.
+
+
+## 7. Current POC-only code baseline and Phase 2 shaping evidence
+
+Production/POC code baseline: 28a077c68749e86b1eac3614836193a3726235a2. Current documentation-only HEAD: eef0b80ef4df08f21ed0da2bcc8d9496ed86b7c6. Public build-info reports the docs commit, profile=unified, builtAt 2026-11-25T21:50:52Z; the production engine source remains the code from 28a077c.
+
+| Workflow | Run | Result | Scope |
+|---|---:|---|---|
+| Shaping Runtime POC | 45705755555 | SUCCESS | Unicode18/HarfBuzz15; Node/classic Worker parity on 16 font instances and 659 glyphs; exact FrankReal שְׁמַע probe in Node. Artifact 15064788616. |
+| Full Math Audit | 45705755646 | SUCCESS | Local long-corpus audit on 28a077c. |
+| Corpus Invariants | 45705755521 | SUCCESS | Long-corpus invariants on 28a077c. |
+| Preview Engine Parity | 45705755578 | SUCCESS | Public-root live audit on 28a077c; artifact 15066330059. |
+| CI | 45705755567 | SUCCESS | Layout Audit; Node18/20/22 full suites; Determinism and Cross-check. |
+
+Each Node version passed test-doc-generator 14/14, s10-ui 45/45, s72-column-bottoms 15/15; scan-control-triggers recorded zero violations. The live Preview audit reported 691/691 pages, 44,360 lines, 360,356 words, zero findings, HTML/PDF 691 pages and deterministic IDENTICAL.
+
+The exact FrankReal probe produced six glyphs in three clusters. The three combining marks have HarfBuzz xAdvance=0; the three base letters sum to 3,275 units at UPEM 2048 = 28.78418pt at 18pt, matching live HTML (28.79297pt) within 0.009pt. Direct HarfBuzz and the production adapter matched every GID, cluster, advance and offset; ShapedRun/Glyphs were immutable. The exact case was Node-side; the classic Worker passed the broader 16-font/659-glyph suite.
+
+Critical distinction: HarfBuzz/Unicode runtime and ShapedRun construction are proven in the isolated POC, but pipeline.js still does not consume env.typographyRuntime; line-items.js still splits before shaping; LineModel/PageModel do not preserve glyph data; DOM/HTML and PDF do not yet project the same shaped positions. The production PDF mark defect remains open. Four raw WOFF2 fixtures require deterministic SFNT normalization; the POC used external fontTools/Brotli, not a browser Worker production solution.
+
+See audits/PHASE2_FRANKREAL_HARFBUZZ_PROBE_2026-11-25.md. Phase 1 remains open; Phase 2 production integration has not been completed.

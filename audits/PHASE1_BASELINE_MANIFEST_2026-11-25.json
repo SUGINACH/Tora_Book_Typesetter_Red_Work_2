@@ -1,14 +1,14 @@
 {
   "schema": "tora-red-phase1-baseline-v1",
-  "capturedAt": "2026-11-25T20:06:37Z",
+  "capturedAt": "2026-11-25T21:51:32Z",
   "repository": "SUGINACH/Tora_Book_Typesetter_Red_Work_2",
   "branch": "engine/legacy-parity-preview-20261119",
-  "sourceCommit": "a3ff4bd43f5fabf50a4c06d27a8b0ba5f83b29bb",
-  "pagesCommit": "921af83d1a965748e2c8a9f3914fd012f43a7292",
+  "sourceCommit": "28a077c68749e86b1eac3614836193a3726235a2",
+  "pagesCommit": "77b515e6172661fcd2311a4e59172cfe46c02e9a",
   "deployment": {
     "publicRoot": "https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/",
     "profile": "unified",
-    "builtAt": "2026-11-25T19:51:19Z",
+    "builtAt": "2026-11-25T21:50:52Z",
     "assetVersion": "2026-11-25-unified-settings-guard1",
     "mode": "direct-gh-pages-deploy-no-main-merge"
   },
@@ -94,22 +94,28 @@
     "inputSettingsRegistryLayoutGeometryContentAllIdentical": true
   },
   "workflowEvidence": {
-    "previewEngineParityRun": 45690980894,
-    "liveAuditJob": 139477030218,
-    "liveArtifactId": 15059331180,
-    "fullMathLocalRun": 45690980826,
-    "corpusInvariantsRun": 45690980724,
-    "ciRun": 45690980914
+    "previewEngineParityRun": 45705755578,
+    "liveAuditJob": 139527671188,
+    "liveArtifactId": 15066330059,
+    "fullMathLocalRun": 45705755646,
+    "corpusInvariantsRun": 45705755521,
+    "ciRun": 45705755567,
+    "shapingRuntimePocRun": 45705755555,
+    "shapingRuntimePocArtifactId": 15064788616
   },
   "acceptance": {
-    "liveRootTypesetAndExport": "verified_for_scoped_full_math_scenario",
-    "d65": "PASS on CI 45690980914 across Node18/20/22, determinism and cross-check",
-    "d98": "PASS on CI 45690980914; test-doc-generator 14/14 and s72-column-bottoms 15/15",
+    "liveRootTypesetAndExport": "verified_for_scoped_full_math_scenario_on_28a077c",
+    "d65": "PASS on 28a077c CI 45705755567 across Node18/20/22, Determinism and Cross-check",
+    "d98": "PASS on 28a077c CI 45705755567; test-doc-generator 14/14 and s72-column-bottoms 15/15",
     "zeroLegacyRuntimeTrace": "open",
     "fullInteractiveUiAndCompleteConsoleNetworkAudit": "open",
     "domHtmlPdfGlyphLevelParity": "CONFIRMED mark-advance/placement defect on FrankReal word שְׁמַע on PDF page577; architectural fix and regression remain open",
     "historicalLibraryReview": "partial",
-    "phase1": "open"
+    "phase1": "open",
+    "phase2ShapingPoc": "PASS isolated HarfBuzz15/Unicode18 POC; 16 font instances/659 glyphs Node↔classic Worker; exact FrankReal word ShapedRun parity in Node",
+    "productionShapingIntegration": "OPEN: pipeline does not call env.typographyRuntime; splitTextItem precedes shaping; LineModel/PageModel and projections do not carry/use authoritative shaped glyphs",
+    "woff2Normalization": "OPEN: four raw WOFF2 fixtures require deterministic SFNT normalization; POC used external fontTools/Brotli",
+    "currentDocsHeadGates": "new docs-only head pipelines triggered and in progress at capture"
   },
   "projectionParity": {
     "status": "confirmed_defect_sample",
@@ -173,5 +179,130 @@
       "conclusion": "intentional 3mm bleed; TrimBox remains A4"
     },
     "engineCodeChanged": false
+  },
+  "documentationHead": "eef0b80ef4df08f21ed0da2bcc8d9496ed86b7c6",
+  "shapingPoc": {
+    "run": 45705755555,
+    "artifactId": 15064788616,
+    "result": "passed_with_raw_woff2_limitations; normalized_sfnt_supported",
+    "harfBuzzJs": "1.6.4",
+    "harfBuzzCore": "15.0.0",
+    "unicodeVersion": "18.0.0",
+    "nodeClassicWorker": {
+      "exactParity": true,
+      "fontInstances": 16,
+      "standardCasesPerFont": 5,
+      "glyphs": 659,
+      "classicWorker": true
+    },
+    "frankReal": {
+      "fontName": "FrankReal-Bold.ttf",
+      "sourceSha256": "b90214b570d63f225282c4d3c3a5f023ad0d2d415043ae69926c0cc79ef2237a",
+      "upem": 2048,
+      "text": "שְׁמַע",
+      "utf16Range": [
+        500,
+        506
+      ],
+      "graphemes": [
+        [
+          "שְׁ",
+          500,
+          503
+        ],
+        [
+          "מַ",
+          503,
+          505
+        ],
+        [
+          "ע",
+          505,
+          506
+        ]
+      ],
+      "glyphs": [
+        {
+          "gid": 193,
+          "cluster": 505,
+          "sourceRange": [
+            505,
+            506
+          ],
+          "xAdvance": 972
+        },
+        {
+          "gid": 163,
+          "cluster": 503,
+          "sourceRange": [
+            503,
+            505
+          ],
+          "xAdvance": 0
+        },
+        {
+          "gid": 189,
+          "cluster": 503,
+          "sourceRange": [
+            503,
+            505
+          ],
+          "xAdvance": 1042
+        },
+        {
+          "gid": 156,
+          "cluster": 500,
+          "sourceRange": [
+            500,
+            503
+          ],
+          "xAdvance": 0
+        },
+        {
+          "gid": 172,
+          "cluster": 500,
+          "sourceRange": [
+            500,
+            503
+          ],
+          "xAdvance": 0
+        },
+        {
+          "gid": 200,
+          "cluster": 500,
+          "sourceRange": [
+            500,
+            503
+          ],
+          "xAdvance": 1261
+        }
+      ],
+      "baseAdvanceUnits": 3275,
+      "markAdvanceUnits": 0,
+      "totalAdvanceAt18pt": 28.7841796875,
+      "htmlMeasuredAt18Pt": 28.79296875,
+      "directVsProductionAdapterExact": true,
+      "immutableShapedRun": true,
+      "exactProbeRuntime": "Node"
+    },
+    "woff2": {
+      "rawUnsupported": [
+        "Ambivalenti-Regular.woff2",
+        "FrankBasic-1-regular.woff2",
+        "Mixtape-Bold.woff2",
+        "Mixtape-Regular.woff2"
+      ],
+      "normalizationMethod": "fontTools.ttLib.TTFont; flavor=None; Brotli decoder",
+      "normalizedBytesDeterministic": true,
+      "productionNormalizationIntegrated": false
+    },
+    "engineIntegration": {
+      "pipelineConsumesRuntime": false,
+      "shapesBeforeSplit": false,
+      "lineModelStoresGlyphRuns": false,
+      "pageModelStoresGlyphRuns": false,
+      "domHtmlConsumeGlyphRuns": false,
+      "pdfConsumesGlyphRuns": false
+    }
   }
 }
