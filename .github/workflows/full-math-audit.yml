@@ -66,7 +66,8 @@ jobs:
 
   # ── מצב חי: האתר הפרוס ב-GitHub Pages ──
   live:
-    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.target == 'live') || (github.event_name == 'push' && github.ref == 'refs/heads/engine/legacy-parity-preview-20261119') }}
+    # Push-triggered live acceptance runs after build-and-stage in preview-engine-parity.yml.
+    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.target == 'live') }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -86,14 +87,14 @@ jobs:
           EXPECTED_SHA=$(git rev-parse HEAD)
           BUILD_INFO_URL='https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/build-info.json'
           ACTUAL_SHA=''
-          for attempt in $(seq 1 120); do
+          for attempt in $(seq 1 180); do
             INFO=$(curl -fsSL -H 'Cache-Control: no-cache' "${BUILD_INFO_URL}?check=$(date +%s%N)" 2>/dev/null || true)
             ACTUAL_SHA=$(printf '%s' "$INFO" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).commit||"")}catch(e){console.log("")}})')
             if [ "$ACTUAL_SHA" = "$EXPECTED_SHA" ]; then
               echo "Pages serves expected commit $EXPECTED_SHA"
               exit 0
             fi
-            echo "Waiting for Pages: expected=$EXPECTED_SHA actual=${ACTUAL_SHA:-unavailable} attempt=$attempt/120"
+            echo "Waiting for Pages: expected=$EXPECTED_SHA actual=${ACTUAL_SHA:-unavailable} attempt=$attempt/180"
             sleep 5
           done
           echo "FATAL: Pages did not publish expected commit $EXPECTED_SHA (last actual: ${ACTUAL_SHA:-unavailable})"
