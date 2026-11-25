@@ -12,10 +12,10 @@ const FONT_ID = 'fnt-' + SOURCE_HASH.slice(0, 14);
 function makePlan(overrides = {}) {
   const text = 'שָׁלוֹם';
   const graphemes = [
-    { start: 100, end: 103, text: 'שָׁ', coverageCodePoints: [0x05E9, 0x05B8, 0x05C1] },
-    { start: 103, end: 104, text: 'ל', coverageCodePoints: [0x05DC] },
-    { start: 104, end: 106, text: 'וֹ', coverageCodePoints: [0x05D5, 0x05B9] },
-    { start: 106, end: 107, text: 'ם', coverageCodePoints: [0x05DD] }
+    { start: 100, end: 103, localRange: { start: 0, end: 3 }, text: 'שָׁ', coverageCodePoints: [0x05E9, 0x05B8, 0x05C1] },
+    { start: 103, end: 104, localRange: { start: 3, end: 4 }, text: 'ל', coverageCodePoints: [0x05DC] },
+    { start: 104, end: 106, localRange: { start: 4, end: 6 }, text: 'וֹ', coverageCodePoints: [0x05D5, 0x05B9] },
+    { start: 106, end: 107, localRange: { start: 6, end: 7 }, text: 'ם', coverageCodePoints: [0x05DD] }
   ];
   const scriptRun = {
     id: 'text-1#shape:100-107:' + FONT_ID,
@@ -30,7 +30,7 @@ function makePlan(overrides = {}) {
     eot: true,
     graphemeStart: 0,
     graphemeEnd: 4,
-    graphemes,
+    graphemes: graphemes.map((grapheme) => ({ ...grapheme, localRange: { ...grapheme.localRange } })),
     font: { fontId: FONT_ID, sourceHash: SOURCE_HASH, faceIndex: 0, unitsPerEm: 1000, variationAxes: [] },
     features: [{ tag: 'mark', value: 1 }, { tag: 'mkmk', value: 1 }, { tag: 'rlig', value: 1 }],
     styleRunIndexes: [0],
@@ -44,14 +44,13 @@ function makePlan(overrides = {}) {
     text,
     sourceRange: { coordinateSpace: 'document-utf16', start: 100, end: 107, docId: 'doc-1', blockId: 'block-1' },
     sourceSegments: [{ localRange: { start: 0, end: 7 }, sourceRange: { start: 100, end: 107 }, styleRunIndexes: [0] }],
-    graphemes: graphemes.map((grapheme, index) => ({
+    graphemes: graphemes.map((grapheme) => ({
       ...grapheme,
-      localRange: { start: [0, 3, 4, 6][index], end: [3, 4, 6, 7][index] },
+      localRange: { ...grapheme.localRange },
       shapeable: true
     })),
     unicodeVersion: '18.0.0',
     direction: 'rtl',
-    graphemes,
     scriptRuns: [scriptRun],
     nonShapingRuns: [],
     sourceRuns: [{
