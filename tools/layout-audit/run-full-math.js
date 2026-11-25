@@ -71,7 +71,7 @@ const EXPECTED_WORDS_MIN_RATIO = 0.98;
 let deployedAssetEvidence = null;
 
 async function captureImpactSnapshot(expectedPages) {
-  const snapshot = await ev(\`(async function () {
+  const snapshot = await ev(`(async function () {
     const app = window.__toraApp;
     if (!app || typeof app.getText !== 'function' || typeof app.getSettings !== 'function' ||
         typeof app.pageModel !== 'function' || typeof app.getState !== 'function') {
@@ -140,7 +140,7 @@ async function captureImpactSnapshot(expectedPages) {
     } catch (error) {
       buildInfo = { error: String(error && error.message || error) };
     }
-    const script = Array.from(document.scripts).find((item) => /app\\\\.bundle\\\\.js/.test(item.src));
+    const script = Array.from(document.scripts).find((item) => String(item.src).includes('app.bundle.js'));
     const appUrl = script ? script.src : null;
     const versionMatch = String(appUrl || '').match(/[?&]v=([^&]+)/);
     const assetVersion = versionMatch ? decodeURIComponent(versionMatch[1]) : null;
@@ -194,7 +194,7 @@ async function captureImpactSnapshot(expectedPages) {
         meta: model && model.meta || null
       }
     };
-  })()\`);
+  })()`);
 
   if (!snapshot || snapshot.ok !== true) {
     throw new Error('Impact snapshot failed: ' + JSON.stringify(snapshot));
@@ -617,10 +617,10 @@ async function buildLocalBrowserBundles() {
     const appPath = path.join(UI, 'app.bundle.js');
     const workerPath = path.join(UI, 'engine-worker.bundle.js');
     const entrySource = fs.readFileSync(path.join(ROOT, 'red-build', 'src', 'ui', 'browser-entry.js'), 'utf8');
-    const versionMatch = entrySource.match(/ASSET_VERSION\\s*=\\s*'([^']+)'/);
+    const versionMatch = entrySource.split("ASSET_VERSION = '")[1];
     deployedAssetEvidence = {
       mode: 'local-build',
-      assetVersion: versionMatch ? versionMatch[1] : null,
+      assetVersion: versionMatch ? versionMatch.split("'")[0] : null,
       app: { path: 'red-build/ui/app.bundle.js', sha256: crypto.createHash('sha256').update(fs.readFileSync(appPath)).digest('hex') },
       worker: { path: 'red-build/ui/engine-worker.bundle.js', sha256: crypto.createHash('sha256').update(fs.readFileSync(workerPath)).digest('hex') }
     };
@@ -772,7 +772,8 @@ async function buildLocalBrowserBundles() {
   log(`חלון מימין: ${JSON.stringify(st.windowDistFromRight)}`);
   log('─'.repeat(62));
 
-  let exportManifest = null;\n  if (URL && CAPTURE_EXPORTS) exportManifest = await captureLiveExports(pages1, impactRun1);
+  let exportManifest = null;
+  if (URL && CAPTURE_EXPORTS) exportManifest = await captureLiveExports(pages1, impactRun1);
 
   // דטרמיניזם
   let detIdentical = SKIP_DET;
