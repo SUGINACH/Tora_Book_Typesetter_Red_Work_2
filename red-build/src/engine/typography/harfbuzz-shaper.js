@@ -293,7 +293,7 @@ function createHarfBuzzShaper(options = {}) {
 
     const diagnostics = [];
     const glyphs = infos.map((info, index) => {
-      const gid = requireInteger(Number(info.codepoint), 0, 'invalid-harfbuzz-gid', 'HarfBuzz GID');
+      const gid = requireInteger(Number(info.codepoint), 1, 'missing-glyph-coverage', 'HarfBuzz GID (.notdef is not valid coverage)');
       const cluster = outputClusters[index];
       const position = positions[index];
       const controlBounds = normalizeExtents(instance.font.glyphExtents(gid), gid);
@@ -304,12 +304,9 @@ function createHarfBuzzShaper(options = {}) {
             variationAxes: planRun.font.variationAxes, gid
           })
         : null;
-      if (gid === 0) {
-        diagnostics.push({
-          code: 'notdef-glyph',
-          message: 'HarfBuzz emitted .notdef GID 0; the selected font does not cover at least one source grapheme',
-          severity: 'error'
-        });
+      if (requireInkBounds && inkBounds == null) {
+        fail('ink-bounds-unavailable',
+          'A required tight ink-bounds provider returned no bounds for font ' + planRun.font.fontId + ', GID ' + gid);
       }
       return {
         gid,

@@ -19,6 +19,7 @@ function validInput(overrides = {}) {
     sourceRange: { docId: 'doc-1', blockId: 'block-1', itemId: 'item-1', runIndex: 0, start: 100, end: 107 },
     font: {
       fontId: 'fnt-1234567890abcd',
+      sourceHash: 'a'.repeat(64),
       faceIndex: 0,
       unitsPerEm: 1000
     },
@@ -179,6 +180,12 @@ describe('ShapedRun v1 — source mapping, cluster safety and immutability', () 
     const badPartition = validInput();
     badPartition.graphemes[1].start = 102;
     throwsCode(() => createShapedRun(badPartition), 'invalid-grapheme-partition', 'overlapping graphemes');
+  });
+
+  it('rejects GID 0 because .notdef is not valid font coverage', () => {
+    const input = validInput();
+    input.glyphs[0].gid = 0;
+    throwsCode(() => createShapedRun(input), 'missing-glyph-coverage', 'GID 0 must not enter a canonical ShapedRun');
   });
 
   it('rejects invalid source, UTF-16, direction/level and glyph-position input', () => {

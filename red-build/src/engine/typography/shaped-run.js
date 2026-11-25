@@ -82,14 +82,15 @@ function normalizeFont(input) {
     : requireInteger(font.faceIndex, 0, 'invalid-font-identity', 'font.faceIndex');
   const unitsPerEm = requireInteger(font.unitsPerEm, 1, 'invalid-font-identity', 'font.unitsPerEm');
 
-  const out = { fontId, faceIndex, unitsPerEm };
-  for (const key of ['sourceHash', 'normalizedHash']) {
-    if (font[key] != null) {
-      if (typeof font[key] !== 'string' || !/^[0-9a-f]{64}$/i.test(font[key])) {
-        fail('invalid-font-hash', 'font.' + key + ' must be a 64-character hexadecimal SHA-256');
-      }
-      out[key] = font[key].toLowerCase();
+  if (typeof font.sourceHash !== 'string' || !/^[0-9a-f]{64}$/i.test(font.sourceHash)) {
+    fail('invalid-font-hash', 'font.sourceHash must be a 64-character hexadecimal SHA-256');
+  }
+  const out = { fontId, faceIndex, unitsPerEm, sourceHash: font.sourceHash.toLowerCase() };
+  if (font.normalizedHash != null) {
+    if (typeof font.normalizedHash !== 'string' || !/^[0-9a-f]{64}$/i.test(font.normalizedHash)) {
+      fail('invalid-font-hash', 'font.normalizedHash must be a 64-character hexadecimal SHA-256');
     }
+    out.normalizedHash = font.normalizedHash.toLowerCase();
   }
   return out;
 }
@@ -212,7 +213,7 @@ function normalizeGlyphs(input, sourceRange, graphemes, direction) {
   const graphemeStarts = new Set(graphemes.map((item) => item.start));
   const glyphs = input.map((item, index) => {
     const glyph = requireRecord(item, 'invalid-glyph', 'glyphs[' + index + ']');
-    const gid = requireInteger(glyph.gid, 0, 'invalid-glyph', 'glyphs[' + index + '].gid');
+    const gid = requireInteger(glyph.gid, 1, 'missing-glyph-coverage', 'glyphs[' + index + '].gid');
     const cluster = requireInteger(glyph.cluster, sourceRange.start, 'invalid-glyph-cluster', 'glyphs[' + index + '].cluster');
     if (cluster >= sourceRange.end || !graphemeStarts.has(cluster)) {
       fail('invalid-glyph-cluster', 'glyph cluster must be an absolute UTF-16 start of an input grapheme');

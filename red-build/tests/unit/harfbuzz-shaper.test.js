@@ -115,6 +115,7 @@ function makeFakeHarfBuzz(options = {}) {
       if (options.invalidCluster) clusters[0] += 1;
       if (options.nonMonotone && clusters.length > 1) [clusters[0], clusters[1]] = [clusters[1], clusters[0]];
       buffer.infos = clusters.map((cluster, index) => ({ codepoint: index + 10, cluster, flags: index ? 0 : 1 }));
+      if (options.notdef && buffer.infos.length) buffer.infos[0].codepoint = 0;
       buffer.positions = clusters.map(() => ({ xAdvance: 500, yAdvance: 0, xOffset: 0, yOffset: 0 }));
     }
   };
@@ -195,6 +196,27 @@ describe('HarfBuzzShaper — canonical plan to immutable ShapedRun', () => {
     assertEq(fake.state.variations, [[{ tag: 'wght', value: 700 }]]);
     assertEq(resolver.state.calls, 2, 'font bytes/hash are revalidated on every shaping call');
     assertEq(shaper.getFontCacheSize(), 1);
+  });
+
+  it('rejects GID 0 instead of returning a ShapedRun containing .notdef', () => {
+    const fake = makeFakeHarfBuzz({ notdef: true });
+    const shaper = makeShaper(fake, makeResolver());
+    let error;
+    try { shaper.shapeTextItemPlan(makePlan()); } catch (caught) { error = caught; }
+    assert(error instanceof Error);
+    assertEq(error.code, 'missing-glyph-coverage');
+  });
+
+  it('requires real ink bounds when requireInkBounds is enabled', () => {
+    const fake = makeFakeHarfBuzz();
+    const shaper = makeShaper(fake, makeResolver(), {
+      requireInkBounds: true,
+      inkBoundsProvider: () => null
+    });
+    let error;
+    try { shaper.shapeTextItemPlan(makePlan()); } catch (caught) { error = caught; }
+    assert(error instanceof Error);
+    assertEq(error.code, 'ink-bounds-unavailable');
   });
 
   it('rejects a variation axis that the font does not expose', () => {
