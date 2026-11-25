@@ -131,6 +131,11 @@ async function captureImpactSnapshot(expectedPages) {
     const settingsCanonical = JSON.stringify(normalize(settings, []));
     const inputDigest = await sha256(text);
     const settingsDigest = await sha256(settingsCanonical);
+    const settingValueHashes = {};
+    await Promise.all(settingsKeys.map(async (key) => {
+      const canonicalValue = JSON.stringify(normalize(settings[key], []));
+      settingValueHashes[key] = (await sha256(canonicalValue)).sha256;
+    }));
     const model = app.pageModel();
     const state = app.getState();
     let buildInfo = null;
@@ -172,6 +177,7 @@ async function captureImpactSnapshot(expectedPages) {
         canonicalBytes: settingsDigest.bytes,
         keyCount: settingsKeys.length,
         keys: settingsKeys,
+        valueHashes: settingValueHashes,
         forceUnified: settings['_engine-force-unified'] === true
       },
       state: {
@@ -238,6 +244,47 @@ async function captureImpactSnapshot(expectedPages) {
     browserTextMatchesNormalizedFixture: true
   };
   snapshot.assets = deployedAssetEvidence;
+  snapshot.source.workflow = {
+    commit: process.env.GITHUB_SHA || null,
+    ref: process.env.GITHUB_REF || null,
+    runId: process.env.GITHUB_RUN_ID || null,
+    runAttempt: process.env.GITHUB_RUN_ATTEMPT || null,
+    workflow: process.env.GITHUB_WORKFLOW || null
+  };
+
+  // Attach the authoritative Registry contract to each active setting.
+  // Imported/runtime keys outside the Registry are explicitly marked, never guessed.
+  const { getSettingDefs } = require(path.join(ROOT, 'red-build', 'src', 'engine', 'core', 'settings-registry'));
+  const { classifyChange } = require(path.join(ROOT, 'red-build', 'src', 'ui', 'retypeset-policy'));
+  const definitions = new Map(getSettingDefs().map((definition) => [definition.id, definition]));
+  const registryContract = {};
+  const contractSummary = { registered: 0, unregistered: 0, light: 0, heavy: 0 };
+  for (const key of snapshot.settings.keys) {
+    const definition = definitions.get(key);
+    if (!definition) {
+      registryContract[key] = { status: 'unregistered-runtime-or-imported', retypesetClass: 'not-classified' };
+      contractSummary.unregistered++;
+      continue;
+    }
+    const retypesetClass = classifyChange(key);
+    const defaultCanonical = JSON.stringify(definition.default === undefined ? null : definition.default);
+    registryContract[key] = {
+      status: 'registered',
+      type: definition.type || null,
+      panel: definition.panel || null,
+      control: definition.control || null,
+      consumers: Array.isArray(definition.consumers) ? definition.consumers : [],
+      effectTest: definition.effect_test || null,
+      defaultSha256: crypto.createHash('sha256').update(defaultCanonical, 'utf8').digest('hex'),
+      retypesetClass
+    };
+    contractSummary.registered++;
+    contractSummary[retypesetClass]++;
+  }
+  snapshot.settings.registryContract = registryContract;
+  snapshot.settings.registryContractSummary = contractSummary;
+  snapshot.settings.registryContractSha256 = crypto.createHash('sha256')
+    .update(JSON.stringify(registryContract), 'utf8').digest('hex');
   return snapshot;
 }
 
