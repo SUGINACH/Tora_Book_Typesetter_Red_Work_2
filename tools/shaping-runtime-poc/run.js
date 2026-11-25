@@ -19,6 +19,7 @@ const FONT_FIXTURES = [
   { name: 'DejaVuSans.ttf', format: 'ttf', source: '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf' },
   { name: 'FrankRuhlLibre-Regular.ttf', format: 'ttf', source: path.join(FONT_DIR, 'FrankRuhlLibre-Regular.ttf') },
   { name: 'Frank-Re-Regular.ttf', format: 'ttf', source: path.join(FONT_DIR, 'Frank-Re-Regular.ttf') },
+  { name: 'FrankReal-Bold.ttf', format: 'ttf', source: path.join(FONT_DIR, 'FrankReal-Bold.ttf') },
   { name: 'DavidLibre-Regular.ttf', format: 'ttf', source: path.join(FONT_DIR, 'DavidLibre-Regular.ttf') },
   { name: 'Guttman-Rashi-Normal.ttf', format: 'ttf', source: path.join(FONT_DIR, 'Guttman-Rashi-Normal.ttf') },
   { name: 'Narkisim-Regular.ttf', format: 'ttf', source: path.join(FONT_DIR, 'Narkisim-Regular.ttf') },
@@ -489,6 +490,191 @@ async function main() {
         exactGidClusterPositionParity: item.exactGidClusterPositionParity
       })),
       fontResolverSourceHashVerified: productionRegistration.record.sourceHash === productionPlan.scriptRuns[0].font.sourceHash,
+      complete: true
+    };
+
+    // Targeted live-regression oracle: the exact font and word that exposed
+    // PDF mark advances on page 577. Keep this in the compatibility POC until
+    // production layout and both renderers consume the same ShapedRun.
+    const frankRealMarkText = 'שְׁמַע';
+    const frankRealMarkCodePoints = Array.from(frankRealMarkText, (character) => character.codePointAt(0));
+    const expectedFrankRealMarkCodePoints = [0x05E9, 0x05C1, 0x05B0, 0x05DE, 0x05B7, 0x05E2];
+    if (frankRealMarkText.length !== 6 ||
+        JSON.stringify(frankRealMarkCodePoints) !== JSON.stringify(expectedFrankRealMarkCodePoints)) {
+      throw new Error('FrankReal mark probe source sequence is not the expected six UTF-16 Hebrew code points');
+    }
+    const frankRealMarkItemization = bidiRuntime.itemizeScripts(
+      frankRealMarkText, bidiRuntime.resolve(frankRealMarkText, 'rtl')
+    );
+    if (frankRealMarkItemization.scriptRuns.length !== 1 ||
+        frankRealMarkItemization.scriptRuns[0].text !== frankRealMarkText ||
+        frankRealMarkItemization.scriptRuns[0].script !== 'Hebr' ||
+        frankRealMarkItemization.scriptRuns[0].direction !== 'rtl' ||
+        frankRealMarkItemization.sourceRuns.some((run) => run.kind !== 'shape')) {
+      throw new Error('FrankReal mark probe must be one complete Hebrew RTL shaping run: ' +
+        JSON.stringify(frankRealMarkItemization));
+    }
+
+    const frankRealFontPath = path.join(FONT_DIR, 'FrankReal-Bold.ttf');
+    const frankRealFontBytes = new Uint8Array(fs.readFileSync(frankRealFontPath));
+    fontResolver.clearFontResolver();
+    const frankRealRegistration = fontResolver.registerFont(
+      'FrankReal', frankRealFontBytes, { source: 'shaping-runtime-frankreal-mark-probe' }
+    );
+    if (!frankRealRegistration.ok) {
+      throw new Error('Production FontResolver rejected FrankReal-Bold.ttf: ' +
+        JSON.stringify(frankRealRegistration));
+    }
+    const frankRealFace = new hb.Face(new hb.Blob(frankRealFontBytes), 0);
+    const frankRealFont = new hb.Font(frankRealFace);
+    frankRealFont.setScale(frankRealFace.upem, frankRealFace.upem);
+    const frankRealFeatures = shapeCore.FEATURE_TAGS.map((tag) => ({ tag, value: 1 }));
+    const frankRealDirect = shapeCore.shapeWithItemizedRuns(
+      hb, frankRealFont, frankRealMarkText, frankRealMarkItemization,
+      {
+        languageByScript: { Hebr: 'he' },
+        featureTagsByScript: { Hebr: shapeCore.FEATURE_TAGS.slice() }
+      }
+    );
+
+    const frankRealSourceStart = 500;
+    const frankRealTextItem = {
+      id: 'frankreal-mark-probe-item',
+      kind: 'text',
+      sourceRange: {
+        coordinateSpace: 'document-utf16',
+        start: frankRealSourceStart,
+        end: frankRealSourceStart + frankRealMarkText.length,
+        docId: 'shaping-runtime-frankreal-mark-probe',
+        blockId: 'frankreal-mark-positioning-regression'
+      },
+      payload: {
+        text: frankRealMarkText,
+        runs: [{
+          text: frankRealMarkText,
+          sourceStart: 0,
+          sourceEnd: frankRealMarkText.length,
+          fontFamily: 'FrankReal'
+        }]
+      }
+    };
+    const frankRealAxisInfos = frankRealFace.getAxisInfos();
+    const frankRealAxes = Object.entries(frankRealAxisInfos)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([tag, info]) => ({ tag, value: Number(info.default) }));
+    const frankRealPlan = createTextItemShapingPlan(frankRealTextItem, {
+      bidiRuntime,
+      fontResolver,
+      direction: 'rtl',
+      defaultFamily: 'FrankReal',
+      languageByScript: { Hebr: 'he' },
+      featuresByScript: { Hebr: frankRealFeatures },
+      variationAxesByFontId: { [frankRealRegistration.fontId]: frankRealAxes },
+      faceIndexByFontId: { [frankRealRegistration.fontId]: 0 }
+    });
+    const frankRealShaper = createHarfBuzzShaper({
+      hb, fontResolver, engineVersion: '15.0.0'
+    });
+    const frankRealShapedItem = frankRealShaper.shapeTextItemPlan(frankRealPlan);
+    const frankRealProductionRuns = frankRealShapedItem.shapedRuns;
+    if (frankRealShapedItem.kind !== 'ShapedTextItem' ||
+        frankRealProductionRuns.length !== 1 ||
+        !isShapedRun(frankRealProductionRuns[0]) ||
+        frankRealShapedItem.nonShapingRuns.length !== 0) {
+      throw new Error('FrankReal production shaping did not return one immutable ShapedRun: ' +
+        JSON.stringify({
+          kind: frankRealShapedItem.kind,
+          runCount: frankRealProductionRuns.length,
+          nonShapingRuns: frankRealShapedItem.nonShapingRuns
+        }));
+    }
+    const frankRealDirectRun = frankRealDirect.shapedRuns[0];
+    const frankRealProductionRun = frankRealProductionRuns[0];
+    const frankRealSignature = (glyphs, clusterBase) => glyphs.map((glyph) => [
+      glyph.gid,
+      glyph.cluster - clusterBase,
+      glyph.xAdvance,
+      glyph.yAdvance,
+      glyph.xOffset,
+      glyph.yOffset
+    ]);
+    const frankRealDirectSignature = frankRealSignature(frankRealDirectRun.glyphs, 0);
+    const frankRealProductionSignature = frankRealSignature(
+      frankRealProductionRun.glyphs, frankRealSourceStart
+    );
+    const exactFrankRealParity =
+      JSON.stringify(frankRealDirectSignature) === JSON.stringify(frankRealProductionSignature);
+    if (!exactFrankRealParity) {
+      throw new Error('FrankReal production ShapedRun differs from direct HarfBuzz output: ' +
+        JSON.stringify({
+          direct: frankRealDirectSignature,
+          production: frankRealProductionSignature
+        }));
+    }
+    const parsedFrankReal = frankRealRegistration.record.font;
+    const frankRealMarkGlyphIds = frankRealMarkCodePoints.slice(1, 3).concat(frankRealMarkCodePoints[4])
+      .map((codePoint) => {
+        const gid = parsedFrankReal.charToGlyph && typeof parsedFrankReal.charToGlyph.get === 'function'
+          ? parsedFrankReal.charToGlyph.get(codePoint)
+          : null;
+        if (!Number.isSafeInteger(gid) || gid <= 0) {
+          throw new Error('FrankReal source font does not map combining mark U+' +
+            codePoint.toString(16).toUpperCase() + ' to a non-notdef GID');
+        }
+        return { codePoint: 'U+' + codePoint.toString(16).toUpperCase(), gid };
+      });
+    const frankRealMarkGlyphIdSet = new Set(frankRealMarkGlyphIds.map((item) => item.gid));
+    const frankRealGlyphReport = frankRealProductionRun.glyphs.map((glyph) => ({
+      gid: glyph.gid,
+      cluster: glyph.cluster,
+      relativeCluster: glyph.cluster - frankRealSourceStart,
+      sourceRange: glyph.sourceRange,
+      isCombiningMarkGlyph: frankRealMarkGlyphIdSet.has(glyph.gid),
+      xAdvance: glyph.xAdvance,
+      yAdvance: glyph.yAdvance,
+      xOffset: glyph.xOffset,
+      yOffset: glyph.yOffset,
+      flags: glyph.flags,
+      controlBounds: glyph.controlBounds,
+      inkBounds: glyph.inkBounds
+    }));
+    const frankRealMarkGlyphs = frankRealGlyphReport.filter((glyph) => glyph.isCombiningMarkGlyph);
+    report.frankRealMarkProbe = {
+      status: 'passed',
+      fontName: 'FrankReal-Bold.ttf',
+      fontId: frankRealRegistration.fontId,
+      sourceHash: frankRealRegistration.record.sourceHash,
+      unitsPerEm: frankRealRegistration.record.unitsPerEm,
+      fontAxes: frankRealAxes,
+      text: frankRealMarkText,
+      codePoints: frankRealMarkCodePoints.map((codePoint) =>
+        'U+' + codePoint.toString(16).toUpperCase()),
+      bidiLevel: frankRealPlan.scriptRuns[0].bidiLevel,
+      sourceRange: [frankRealSourceStart, frankRealSourceStart + frankRealMarkText.length],
+      graphemes: frankRealPlan.scriptRuns[0].graphemes.map((grapheme) => ({
+        text: grapheme.text,
+        sourceRange: [grapheme.start, grapheme.end]
+      })),
+      features: frankRealPlan.scriptRuns[0].features,
+      markSourceGlyphIds: frankRealMarkGlyphIds,
+      exactDirectHarfBuzzVsProductionShaperParity: exactFrankRealParity,
+      glyphCount: frankRealGlyphReport.length,
+      glyphs: frankRealGlyphReport,
+      combiningMarkGlyphCount: frankRealMarkGlyphs.length,
+      combiningMarkAdvanceSum: frankRealMarkGlyphs.reduce((sum, glyph) => sum + glyph.xAdvance, 0),
+      combiningMarkPositioning: frankRealMarkGlyphs.map((glyph) => ({
+        gid: glyph.gid,
+        cluster: glyph.cluster,
+        xAdvance: glyph.xAdvance,
+        yAdvance: glyph.yAdvance,
+        xOffset: glyph.xOffset,
+        yOffset: glyph.yOffset
+      })),
+      directReferenceSourceCovered: frankRealDirect.sourceCoverageComplete,
+      productionFontSourceHashVerified:
+        frankRealRegistration.record.sourceHash === frankRealPlan.scriptRuns[0].font.sourceHash,
+      productionShapedRunImmutable: Object.isFrozen(frankRealProductionRun) &&
+        frankRealProductionRun.glyphs.every((glyph) => Object.isFrozen(glyph)),
       complete: true
     };
     fontResolver.clearFontResolver();
