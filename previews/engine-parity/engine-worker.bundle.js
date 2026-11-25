@@ -27776,6 +27776,15 @@ function normalizeExtents(raw, gid) {
   };
 }
 
+function validateCoverageCodePoints(value, label) {
+  if (!Array.isArray(value) || value.some((codePoint) =>
+    !Number.isSafeInteger(codePoint) || codePoint < 0 || codePoint > 0x10FFFF ||
+    (codePoint >= 0xD800 && codePoint <= 0xDFFF))) {
+    fail('invalid-planned-grapheme-coverage',
+      label + ' must retain the Unicode itemizer coverageCodePoints for the complete EGC');
+  }
+}
+
 function validatePlan(plan) {
   requireRecord(plan, 'invalid-text-item-shaping-plan', 'TextItemShapingPlan');
   if (plan.kind !== 'TextItemShapingPlan' || plan.version !== 'text-item-shaping-plan-v3-source-map') {
@@ -27877,6 +27886,7 @@ function validatePlan(plan) {
   for (let index = 0; index < plan.graphemes.length; index++) {
     const grapheme = plan.graphemes[index];
     requireRecord(grapheme, 'invalid-plan-grapheme', 'plan.graphemes[' + index + ']');
+    validateCoverageCodePoints(grapheme.coverageCodePoints, 'plan.graphemes[' + index + '].coverageCodePoints');
     const local = requireRecord(grapheme.localRange, 'invalid-plan-grapheme', 'grapheme.localRange');
     const localStart = requireInteger(local.start, 0, 'invalid-plan-grapheme', 'grapheme.localRange.start');
     const localEnd = requireInteger(local.end, localStart + 1, 'invalid-plan-grapheme', 'grapheme.localRange.end');
@@ -27885,9 +27895,6 @@ function validatePlan(plan) {
         localEnd - localStart !== grapheme.text.length || text.slice(localStart, localEnd) !== grapheme.text ||
         mapped.length !== 1 || grapheme.start !== mapped[0].sourceRange.start ||
         grapheme.end !== mapped[0].sourceRange.end ||
-        !Array.isArray(grapheme.coverageCodePoints) || grapheme.coverageCodePoints.some((codePoint) =>
-          !Number.isSafeInteger(codePoint) || codePoint < 0 || codePoint > 0x10FFFF ||
-          (codePoint >= 0xD800 && codePoint <= 0xDFFF)) ||
         typeof grapheme.shapeable !== 'boolean') {
       fail('invalid-plan-grapheme-source-map',
         'Plan graphemes must be exact local EGCs with one matching contiguous document source range at index ' + index);
@@ -27977,6 +27984,8 @@ function validatePlan(plan) {
     let sourceGraphemeEnd = start;
     for (let gi = 0; gi < run.graphemes.length; gi++) {
       const grapheme = run.graphemes[gi];
+      requireRecord(grapheme, 'invalid-planned-run-grapheme', 'run.graphemes[' + gi + ']');
+      validateCoverageCodePoints(grapheme.coverageCodePoints, 'run.graphemes[' + gi + '].coverageCodePoints');
       const localRange = requireRecord(grapheme.localRange, 'invalid-planned-run-grapheme', 'grapheme.localRange');
       const gs = requireInteger(localRange.start, localStart, 'invalid-planned-run-grapheme', 'grapheme.localRange.start');
       const ge = requireInteger(localRange.end, gs + 1, 'invalid-planned-run-grapheme', 'grapheme.localRange.end');
@@ -27984,10 +27993,7 @@ function validatePlan(plan) {
       if (gs !== graphemeLocal || ge > localEnd || ge - gs !== grapheme.text.length ||
           run.text.slice(gs - localStart, ge - localStart) !== grapheme.text ||
           gMapped.length !== 1 || grapheme.start !== gMapped[0].sourceRange.start ||
-          grapheme.end !== gMapped[0].sourceRange.end || grapheme.start !== sourceGraphemeEnd ||
-          !Array.isArray(grapheme.coverageCodePoints) || grapheme.coverageCodePoints.some((codePoint) =>
-            !Number.isSafeInteger(codePoint) || codePoint < 0 || codePoint > 0x10FFFF ||
-            (codePoint >= 0xD800 && codePoint <= 0xDFFF))) {
+          grapheme.end !== gMapped[0].sourceRange.end || grapheme.start !== sourceGraphemeEnd) {
         fail('invalid-planned-run-graphemes',
           'ScriptRun EGCs must form a local partition with matching contiguous source coordinates and coverage metadata at index ' + gi);
       }
