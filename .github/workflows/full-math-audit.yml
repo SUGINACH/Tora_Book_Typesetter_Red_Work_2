@@ -48,6 +48,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Build expected browser bundles from this exact source commit
+        run: |
+          node tools/build-worker-bundle.js
+          test -s red-build/ui/app.bundle.js
+          test -s red-build/ui/engine-worker.bundle.js
       # **S5.2 (P-11):** נעילת גרסה — 0.41.2 היא הגרסה האחרונה ב-npm (אין 1.x);
       # שדרוג לא מבוקר של ה-CLI יכול לשבור את חוזה ה-eval/פלט של האודיט.
       - name: Install agent-browser + headless browser
@@ -99,6 +104,12 @@ jobs:
           done
           echo "FATAL: Pages did not publish expected commit $EXPECTED_SHA (last actual: ${ACTUAL_SHA:-unavailable})"
           exit 1
+      - name: Build expected browser bundles from this exact source commit
+        run: |
+          node tools/build-worker-bundle.js
+          test -s red-build/ui/app.bundle.js
+          test -s red-build/ui/engine-worker.bundle.js
+
       - name: Install Poppler for exported PDF inspection
         run: sudo apt-get update && sudo apt-get install -y poppler-utils
 

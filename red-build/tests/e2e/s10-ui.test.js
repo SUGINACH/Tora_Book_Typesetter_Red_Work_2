@@ -755,6 +755,7 @@ describe('S10.2 שער 6 — שינוי קל ≤2s; כבד דורש ⚡; טבל�
     fire(app.editor.textarea, 'paste', { clipboardData: { getData: () => SMALL_DOC } });
     await waitFor(() => app.getState().hasResult && !!app.pageModel(), 30000, 'Unified SMALL_DOC baseline');
     const originalHash = app.getState().layoutHash;
+    const originalGeometryHash = app.pageModel().geometryHash;
     const originalGen = app.getState().gen;
     const originalRuleOps = app.pageModel().pages.flatMap(p => p.decorations || [])
       .filter(d => d.kind === 'fn-rule').map(d => JSON.stringify(d.pdfOps || []));
@@ -764,7 +765,7 @@ describe('S10.2 שער 6 — שינוי קל ≤2s; כבד דורש ⚡; טבל�
     assert(app.getState().lightDirty, 'background-color מסווג כקל');
     await waitFor(() => !app.getState().lightDirty, 3000, 'unified light background refresh');
     assertEq(app.getState().gen, originalGen, 'שינוי צבע אינו מריץ את המנוע מחדש');
-    assertEq(app.pageModel().geometryHash, app.pageModel().geometryHash, 'המודל נשאר זמין');
+    assertEq(app.pageModel().geometryHash, originalGeometryHash, 'שינוי צבע אינו משנה את הגיאומטריה הקנונית');
     const page0 = app.preview.root.querySelectorAll('.preview-page')[0];
     assert(page0.style.backgroundColor && page0.style.backgroundColor.startsWith('rgba(224'),
       'המקרין המאוחד מציג את הצבע החדש');
@@ -807,6 +808,16 @@ describe('S10.2 שער 6 — שינוי קל ≤2s; כבד דורש ⚡; טבל�
       .filter(d => d.kind === 'fn-rule').map(d => JSON.stringify(d.pdfOps || []));
     assert(circleOps.length > 0, 'סגנון circles מופיע בעיטורי המודל המאוחד');
     assert(JSON.stringify(circleOps) !== JSON.stringify(originalRuleOps), 'שינוי סגנון הקו משנה את ה־PageModel');
+
+    const circlesGen = app.getState().gen;
+    app.onSettingChanged('footnote-separator-rule', 'regular');
+    assert(app.getState().heavyDirty, 'גם שחזור סגנון הקו מחייב עימוד');
+    app.onExplicitRetypeset();
+    await waitFor(() => app.getState().gen > circlesGen && !app.getState().heavyDirty, 30000, 'footnote-separator-rule restore');
+    const finalRuleOps = app.pageModel().pages.flatMap(p => p.decorations || [])
+      .filter(d => d.kind === 'fn-rule').map(d => JSON.stringify(d.pdfOps || []));
+    assertEq(finalRuleOps, originalRuleOps, 'שחזור סגנון הקו מחזיר את פעולות הציור המקוריות');
+    assertEq(app.getState().layoutHash, originalHash, 'החזרת שתי ההגדרות משחזרת את אותו hash');
   });
 });
 

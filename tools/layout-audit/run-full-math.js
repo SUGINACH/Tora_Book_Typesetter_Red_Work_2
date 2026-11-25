@@ -712,10 +712,11 @@ async function buildLocalBrowserBundles() {
   }
   log(`אתר: ${targetUrl} | app: ${await ev(`(document.querySelector('script[src*="app.bundle.js"]') || {}).src || '—'`)}`);
 
-  // **S5.2 (פריסה מיושנת — אמת חמורה, מצב חי בלבד):** sha256 של הבאנדלים הפרוסים
-  // (נמשכים בעמוד עצמו עם cache:'reload') מול הבאנדלים בענף — אי-התאמה אחת
-  // משמעותה שהאודיט רץ נגד פריסה שאינה main. בנוסף ASSET_VERSION שבפועל
-  // במסמך (?v= ב-script src) מול הקבוע ב-red-build/src/ui/browser-entry.js.
+  // **S5.2 (פריסה מיושנת — אמת חמורה, מצב חי בלבד):** sha256 של הבאנדלים
+  // שהדפדפן טען בפועל מול הבנייה הדטרמיניסטית מה-source checkout של ה-commit
+  // שנבדק (אחרי tools/build-worker-bundle.js ב-workflow). אין השוואה ל-main:
+  // האתר נפרס במכוון מהענף הניסויי. בנוסף ASSET_VERSION שבפועל במסמך (?v=)
+  // מול הקבוע ב-red-build/src/ui/browser-entry.js.
   if (URL) {
     const deployed = await ev(`(async function () {
       const appSrc = (document.querySelector('script[src*="app.bundle.js"]') || {}).src || null;
@@ -745,14 +746,14 @@ async function buildLocalBrowserBundles() {
     const mV = entrySrc.match(/ASSET_VERSION\s*=\s*'([^']+)'/);
     const localVersion = mV ? mV[1] : null;
     log(`באנדלים (חי):  app ${String(deployed.appSha).slice(0, 16)}… | worker ${String(deployed.workerSha).slice(0, 16)}… | ASSET_VERSION ${deployed.assetVersion || '—'}`);
-    log(`באנדלים (main): app ${localAppSha.slice(0, 16)}… | worker ${localWorkerSha.slice(0, 16)}… | ASSET_VERSION ${localVersion || '—'}`);
+    log(`באנדלים (build מה-source checkout): app ${localAppSha.slice(0, 16)}… | worker ${localWorkerSha.slice(0, 16)}… | ASSET_VERSION ${localVersion || '—'}`);
     let stale = false;
     if (deployed.appSha !== localAppSha || deployed.workerSha !== localWorkerSha) {
-      console.error('✗ הפריסה החיה מיושנת — הבאנדל הפרוס אינו תואם ל-main');
+      console.error('✗ הפריסה החיה מיושנת — הבאנדל הפרוס אינו תואם לבנייה מה-source checkout');
       console.error(`  app.bundle.js:           פרוס ${deployed.appSha}`);
-      console.error(`                          main  ${localAppSha}`);
+      console.error(`                          build ${localAppSha}`);
       console.error(`  engine-worker.bundle.js: פרוס ${deployed.workerSha}`);
-      console.error(`                          main  ${localWorkerSha}`);
+      console.error(`                          build ${localWorkerSha}`);
       stale = true;
     }
     if (localVersion && deployed.assetVersion && deployed.assetVersion !== localVersion) {
@@ -762,7 +763,7 @@ async function buildLocalBrowserBundles() {
     if (!localVersion || !deployed.assetVersion) {
       log(`⚠ לא ניתן להשוות ASSET_VERSION (פרוס: ${deployed.assetVersion || '—'}, מקור: ${localVersion || '—'}) — ממשיכים על סמך sha256 בלבד`);
     }
-    if (stale) throw new Error('הפריסה החיה מיושנת — הבאנדל הפרוס אינו תואם ל-main (ראה טביעות sha256 למעלה)');
+    if (stale) throw new Error('הפריסה החיה מיושנת — הבאנדל הפרוס אינו תואם לבנייה מה-source checkout (ראה טביעות sha256 למעלה)');
     deployedAssetEvidence = {
       mode: 'live-http',
       assetVersion: deployed.assetVersion,
