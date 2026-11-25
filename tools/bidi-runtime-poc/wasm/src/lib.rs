@@ -1,7 +1,7 @@
 use core::ptr;
 use core::slice;
 
-use icu_properties::props::{BidiControl, GeneralCategory, Script};
+use icu_properties::props::{BidiControl, DefaultIgnorableCodePoint, GeneralCategory, Script};
 use icu_properties::{CodePointMapData, CodePointSetData};
 use icu_properties::script::ScriptWithExtensions;
 use icu_properties::PropertyNamesShort;
@@ -193,7 +193,7 @@ pub unsafe extern "C" fn bidi_line_visual_runs(
 // Itemization ABI layout:
 // [utf16_len, grapheme_count, scalar_count, extension_count,
 //  graphemes: (start,end,scalar_start,scalar_end)*,
-//  scalars: (start,end,script_tag,is_mark,is_bidi_control,extension_start,extension_count)*,
+//  scalars: (start,end,script_tag,is_mark,is_bidi_control,is_default_ignorable,extension_start,extension_count)*,
 //  extension_script_tags...]
 //
 // Script tags are packed ISO 15924 four-byte ASCII values (e.g. Hebr, Latn,
@@ -238,12 +238,14 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
         script: u32,
         is_mark: bool,
         is_bidi_control: bool,
+        is_default_ignorable: bool,
         extensions: Vec<u32>,
     }
 
     let script_data = ScriptWithExtensions::new();
     let general_category_data = CodePointMapData::<GeneralCategory>::new();
     let bidi_control_data = CodePointSetData::new::<BidiControl>();
+    let default_ignorable_data = CodePointSetData::new::<DefaultIgnorableCodePoint>();
     let mut scalars = Vec::<ScalarRecord>::new();
     let mut utf16_offset = 0usize;
     for ch in text.chars() {
@@ -257,6 +259,7 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
                 | GeneralCategory::SpacingMark
         );
         let is_bidi_control = bidi_control_data.contains(ch);
+        let is_default_ignorable = default_ignorable_data.contains(ch);
         let extensions = script_data
             .get_script_extensions_val(ch)
             .iter()
@@ -268,6 +271,7 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
             script,
             is_mark,
             is_bidi_control,
+            is_default_ignorable,
             extensions,
         });
         utf16_offset += width;
@@ -303,7 +307,7 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
     }
 
     let extension_count: usize = scalars.iter().map(|scalar| scalar.extensions.len()).sum();
-    let mut scalar_table = Vec::<u32>::with_capacity(scalars.len() * 7);
+    let mut scalar_table = Vec::<u32>::with_capacity(scalars.len() * 8);
     let mut extension_values = Vec::<u32>::with_capacity(extension_count);
     for scalar in &scalars {
         let extension_start = extension_values.len();
@@ -313,6 +317,7 @@ pub unsafe extern "C" fn bidi_grapheme_script_map(
             scalar.script,
             u32::from(scalar.is_mark),
             u32::from(scalar.is_bidi_control),
+            u32::from(scalar.is_default_ignorable),
             extension_start as u32,
             scalar.extensions.len() as u32,
         ]);

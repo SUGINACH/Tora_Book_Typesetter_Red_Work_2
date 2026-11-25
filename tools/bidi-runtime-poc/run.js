@@ -313,12 +313,22 @@ async function main() {
     const joinerItemization = runtime.itemizeScripts(joinerText, runtime.resolve(joinerText, 'rtl'));
     const joinerCharacters = [0x200D, 0x200C].map((codePoint) => {
       const text = String.fromCodePoint(codePoint);
+      const grapheme = joinerItemization.graphemes.find((item) => item.text.includes(text));
+      const scalar = grapheme && grapheme.scalars.find((item) =>
+        joinerItemization.text.slice(item.start, item.end) === text);
       return {
-        text,
-        grapheme: joinerItemization.graphemes.find((item) => item.text.includes(text)),
+        text, grapheme, scalar,
+        isDefaultIgnorable: !!(scalar && scalar.isDefaultIgnorable),
         retainedInShapeRun: joinerItemization.scriptRuns.some((item) => item.text.includes(text))
       };
     });
+    const heartVariationText = String.fromCodePoint(0x2764, 0xFE0F);
+    const heartVariationItemization = runtime.itemizeScripts(heartVariationText);
+    const variationSelectorScalar = heartVariationItemization.graphemes.length === 1
+      ? heartVariationItemization.graphemes[0].scalars.find((item) =>
+          heartVariationText.slice(item.start, item.end) === String.fromCodePoint(0xFE0F))
+      : null;
+    const variationSelectorIsDefaultIgnorable = !!(variationSelectorScalar && variationSelectorScalar.isDefaultIgnorable);
     if (nestedBidiControlGraphemes.length !== 2 ||
         nestedBidiControlGraphemes.some((item) => item.shapeable || !item.isBidiControl) ||
         nestedBidiControlRuns.length !== 2 ||
@@ -330,7 +340,9 @@ async function main() {
           item.grapheme.containsBidiControl ||
           item.grapheme.isBidiControl ||
           !item.grapheme.shapeable ||
-          !item.retainedInShapeRun)) {
+          !item.isDefaultIgnorable ||
+          !item.retainedInShapeRun) ||
+        !variationSelectorIsDefaultIgnorable) {
       throw new Error('Bidi control/non-shaping partition contract failed: ' +
         JSON.stringify({
           nestedBidiControlGraphemes,
@@ -338,7 +350,8 @@ async function main() {
           sourceRuns: nestedHebrewEmbedding.sourceRuns,
           scriptRuns: nestedHebrewEmbedding.scriptRuns,
           rightToLeftMark,
-          joinerCharacters
+          joinerCharacters,
+          variationSelectorScalar
         }));
     }
 
@@ -485,7 +498,9 @@ async function main() {
         scriptRunsExcludeBidiControls: nestedScriptRunsExcludeBidiControls,
         rightToLeftMark: rightToLeftMark,
         rightToLeftMarkIsNonShaping: rightToLeftMarkIsNonShaping,
-        joinersRemainShapeable: joinerCharacters
+        joinersRemainShapeable: joinerCharacters,
+        variationSelectorIsDefaultIgnorable,
+        variationSelectorScalar
       },
       commonWhitespace: mixedSpace,
       pairedPunctuation: {

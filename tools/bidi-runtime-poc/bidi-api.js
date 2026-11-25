@@ -570,29 +570,31 @@
           // header is fatal; preserving memory safety is preferable to guessing.
           throw new Error('Unicode 18 itemizer returned unsafe output dimensions');
         }
-        const outputLength = 4 + graphemeCount * 4 + scalarCount * 7 + extensionCount;
+        const outputLength = 4 + graphemeCount * 4 + scalarCount * 8 + extensionCount;
         const values = copyAndFreeOutput(outputPointer, outputLength);
         const graphemeTableStart = 4;
         const scalarTableStart = graphemeTableStart + graphemeCount * 4;
-        const extensionTableStart = scalarTableStart + scalarCount * 7;
+        const extensionTableStart = scalarTableStart + scalarCount * 8;
 
         const scalars = [];
         let expectedScalarStart = 0;
         let expectedExtensionStart = 0;
         for (let i = 0; i < scalarCount; i++) {
-          const offset = scalarTableStart + i * 7;
+          const offset = scalarTableStart + i * 8;
           const start = values[offset];
           const end = values[offset + 1];
           const script = scriptTagOf(values[offset + 2]);
           const isMarkValue = values[offset + 3];
           const isBidiControlValue = values[offset + 4];
-          const extensionStart = values[offset + 5];
-          const extensionLength = values[offset + 6];
+          const isDefaultIgnorableValue = values[offset + 5];
+          const extensionStart = values[offset + 6];
+          const extensionLength = values[offset + 7];
           if (start !== expectedScalarStart || end <= start || end > units.length ||
               (end - start !== 1 && end - start !== 2) ||
               !isUtf16Boundary(units, start) || !isUtf16Boundary(units, end) ||
               (isMarkValue !== 0 && isMarkValue !== 1) ||
               (isBidiControlValue !== 0 && isBidiControlValue !== 1) ||
+              (isDefaultIgnorableValue !== 0 && isDefaultIgnorableValue !== 1) ||
               extensionStart !== expectedExtensionStart ||
               extensionLength > extensionCount - extensionStart) {
             throw new Error('Unicode 18 itemizer returned an invalid scalar range at index ' + i);
@@ -614,6 +616,7 @@
             start, end, script,
             isMark: isMarkValue === 1,
             isBidiControl: isBidiControlValue === 1,
+            isDefaultIgnorable: isDefaultIgnorableValue === 1,
             scriptExtensions
           });
           expectedScalarStart = end;
