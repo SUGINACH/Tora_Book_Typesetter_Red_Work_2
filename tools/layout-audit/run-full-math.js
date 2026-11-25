@@ -258,7 +258,14 @@ async function captureImpactSnapshot(expectedPages) {
   const { classifyChange } = require(path.join(ROOT, 'red-build', 'src', 'ui', 'retypeset-policy'));
   const definitions = new Map(getSettingDefs().map((definition) => [definition.id, definition]));
   const registryContract = {};
-  const contractSummary = { registered: 0, unregistered: 0, light: 0, heavy: 0 };
+  const contractSummary = {
+    registered: 0,
+    unregistered: 0,
+    light: 0,
+    heavy: 0,
+    unifiedSupported: 0,
+    unifiedUnsupported: 0
+  };
   for (const key of snapshot.settings.keys) {
     const definition = definitions.get(key);
     if (!definition) {
@@ -268,6 +275,7 @@ async function captureImpactSnapshot(expectedPages) {
     }
     const retypesetClass = classifyChange(key);
     const defaultCanonical = JSON.stringify(definition.default === undefined ? null : definition.default);
+    const unifiedSupport = definition.unifiedSupport !== false;
     registryContract[key] = {
       status: 'registered',
       type: definition.type || null,
@@ -275,11 +283,13 @@ async function captureImpactSnapshot(expectedPages) {
       control: definition.control || null,
       consumers: Array.isArray(definition.consumers) ? definition.consumers : [],
       effectTest: definition.effect_test || null,
+      unifiedSupport,
       defaultSha256: crypto.createHash('sha256').update(defaultCanonical, 'utf8').digest('hex'),
       retypesetClass
     };
     contractSummary.registered++;
     contractSummary[retypesetClass]++;
+    contractSummary[unifiedSupport ? 'unifiedSupported' : 'unifiedUnsupported']++;
   }
   snapshot.settings.registryContract = registryContract;
   snapshot.settings.registryContractSummary = contractSummary;
