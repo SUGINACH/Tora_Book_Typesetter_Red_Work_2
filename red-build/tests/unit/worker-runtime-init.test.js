@@ -164,6 +164,7 @@ describe('Worker-only pinned typography runtime initialization', () => {
       type: 'typeset-request', jobId: 'cancel-during-init', text: 'שלום', settings: {}
     } });
     ctx.onmessage({ data: { type: 'cancel', jobId: 'cancel-during-init' } });
+    await nextTurn(); // allow ensureTypographyRuntime() to invoke the injected loader
     resolveRuntime(fakeRuntime());
     await nextTurn();
 
