@@ -106,10 +106,32 @@ jobs:
             test -d "$D/assets/imud/fonts" || { echo "FATAL: fonts dir missing in $D"; exit 1; }
             N_FONTS=$(ls "$D/assets/imud/fonts" | wc -l)
             test "$N_FONTS" -gt 1000 || { echo "FATAL: font catalog incomplete in $D ($N_FONTS)"; exit 1; }
+            # The pinned shaping runtime is loaded relative to the Worker URL.
+            # Verify every JS/WASM/metadata file at both deployment roots.
+            for f in \
+              manifest.json README.md \
+              harfbuzzjs/package.json harfbuzzjs/LICENSE \
+              harfbuzzjs/dist/index.mjs harfbuzzjs/dist/harfbuzz.js harfbuzzjs/dist/harfbuzz.wasm \
+              unicode18-bidi-runtime.js unicode18-bidi-runtime.wasm; do
+              test -s "$D/assets/shaping-runtime/$f" || {
+                echo "FATAL: missing shaping runtime asset $D/assets/shaping-runtime/$f"
+                exit 1
+              }
+            done
             grep -q '"profile":"unified"' "$D/build-info.json" || { echo "FATAL: $D is not marked unified"; exit 1; }
           done
           cmp -s gh-pages-checkout/app.bundle.js "$P/app.bundle.js" || { echo 'FATAL: root and preview app bundles differ'; exit 1; }
           cmp -s gh-pages-checkout/engine-worker.bundle.js "$P/engine-worker.bundle.js" || { echo 'FATAL: root and preview Worker bundles differ'; exit 1; }
+          for f in \
+            manifest.json README.md \
+            harfbuzzjs/package.json harfbuzzjs/LICENSE \
+            harfbuzzjs/dist/index.mjs harfbuzzjs/dist/harfbuzz.js harfbuzzjs/dist/harfbuzz.wasm \
+            unicode18-bidi-runtime.js unicode18-bidi-runtime.wasm; do
+            cmp -s "gh-pages-checkout/assets/shaping-runtime/$f" "$P/assets/shaping-runtime/$f" || {
+              echo "FATAL: root and preview shaping runtime asset differs: $f"
+              exit 1
+            }
+          done
           test -f gh-pages-checkout/.nojekyll || { echo 'FATAL: .nojekyll was lost'; exit 1; }
           echo "root size: $(du -sh gh-pages-checkout | cut -f1)"
           echo "preview size: $(du -sh $P | cut -f1)"
