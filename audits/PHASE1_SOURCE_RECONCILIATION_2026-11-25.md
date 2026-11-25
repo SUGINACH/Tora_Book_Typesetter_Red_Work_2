@@ -2,22 +2,29 @@
 
 **Repository:** `SUGINACH/Tora_Book_Typesetter_Red_Work_2`  
 **Branch:** `engine/legacy-parity-preview-20261119`  
-**HEAD audited:** `bd5a6b76b07ef3adc4ba0f66309c522d83b826b5`  
+**HEAD audited:** `51ee22e7af9b14cf7c2cb188dde454f7b3618b80`  
 **Date:** 2026-11-25  
 **Status:** partial reconciliation; Phase 1 acceptance remains open.
 
 ## 1. Current CI and deployment baseline
 
-- CI `45632270583`: success — Layout Audit, Node 18/20/22, 1,174 tests per matrix, Determinism and Cross-check.
-- Full Math Audit `45632270620`: success locally; live/browser audit skipped.
-- Corpus Invariants `45632270577`: success.
-- Preview Engine Parity `45632270612`: success.
-- Pages deployment `45632354037`: success.
-- `gh-pages` HEAD: `ab16c4f0c07f1e15749be13350b896dd18c90b3d`; `build-info.json` reports Unified from source `bd5a6b76b07ef3adc4ba0f66309c522d83b826b5`.
-- Git blob SHA equality for index, CSS, app bundle and Worker bundle is recorded in `audits/PHASE1_RUNTIME_TRUTH_SNAPSHOT_2026-11-25.md`.
-- Browser E2E, live HTTP/CDN verification, console/network/Worker trace, and zero-legacy runtime proof remain unverified.
+- Source HEAD: `51ee22e7af9b14cf7c2cb188dde454f7b3618b80`; branch remains `engine/legacy-parity-preview-20261119`.
+- Pages source/build-info identifies the same source commit; gh-pages HEAD at capture: `c354cd4e79dd665bebb364d1cc16e88367c14a21`.
+- CI run `45689205763`: **in progress at this report's capture**. Layout Audit succeeded; Node 18/20/22 full suite, determinism and cross-check had not yet completed. A green result must not be inferred.
+- Full Math Audit `45689205734`: success locally on this exact source commit — 691 pages, 44,360 lines, 360,356 words, 0 findings and identical determinism.
+- Corpus Invariants `45689205864`: success.
+- Preview Engine Parity `45689205743`: success, including actual public-root browser audit and export capture.
+- Layout Audit job `139469843641`: success, including the 849-page virtualization sweep.
+- Live audit job `139470102403` compared the public HTTP app and Worker SHA-256 values against independent builds from this exact source checkout. App: `f17bb4afe11ab245a4b29b998eb5fb010d3446cf4546a55441ad46706e506c02`; Worker: `b5f1217059041c22eba204d4b74f7523552c38d750170274935cf3d6f79b1540`. Both matched.
+- The deployed root served build-info with `profile=unified`, source commit `51ee22e7af9b14cf7c2cb188dde454f7b3618b80` and asset version `2026-11-25-unified-settings-guard1`.
+- D-65 root cause on the preceding HEAD was stale committed app/Worker bundles. The exact rebuilt outputs were captured in CI artifact evidence, then the two bundles were synchronized from the exact Preview build in commit `51ee22e`. No expected hash or D-65 assertion was edited. The strict D-65 gate is being rerun by CI run `45689205763`.
 
-## 2. Current source-code findings
+## 2. Current source-code findings (rechecked on 51ee22e7af9b14cf7c2cb188dde454f7b3618b80)
+
+### Live runtime evidence
+The public root URL was opened by real headless Chrome from the workflow. The browser loaded the real app/Worker, executed a typeset request with `forceUnified=true`, received `pagemodel-v1` with 691 pages and completed the full math/virtualization audit. Both exact source-build bundles matched live HTTP bytes. A second typeset was identical; HTML and PDF exports were both captured from the existing PageModel and did not mutate the layout. See `audits/PHASE1_BROWSER_ACCEPTANCE.md` and `audits/PHASE1_RUNTIME_TRUTH_SNAPSHOT_2026-11-25.md`.
+
+This closes the prior claim that no live browser E2E exists. It does **not** close the zero-legacy runtime-call trace, full manual UI coverage, complete DevTools console/network inventory, or glyph-level projection parity. The test-side content oracle imports helpers from `legacy-imud-flow` to compute expected source content; that test helper is not proof that the product typeset path invoked legacy.
 
 ### Unified dispatch and runtime
 The deployed source entry configures `BRANCH_ENGINE_PROFILE='unified'`; `app-shell.js` injects `_engine-force-unified=true`; the app rejects a returned legacy profile or missing PageModel. The general pipeline still supports legacy dispatch for other callers without that flag. A live browser trace is necessary to verify what the deployed browser actually calls.
@@ -68,13 +75,14 @@ A historical transcript in the Library contains a string that looks like a GitHu
 D-98 is binding: `audits/very_long_test_text.txt` is the primary true long corpus; synthetic fixed/random documents are supplementary and must be structurally valid.
 
 - Canonical primary corpus: `audits/very_long_test_text.txt`, Git blob `aa70c076ae8ed8bde6b7585a6913016cca370098`.
-- `.github/workflows/ci.yml` explicitly sets `LAYOUT_AUDIT_FIXTURE=$PWD/audits/very_long_test_text.txt` for the 849-page browser-local Layout Audit. It first runs a small smoke fixture separately.
-- `.github/workflows/full-math-audit.yml` explicitly passes `audits/very_long_test_text.txt`; `tools/layout-audit/run-full-math.js` uses the same path as its default.
-- A second file, `red-build/tests/fixtures/real/very_long_test_text.txt`, exists with a different Git blob SHA `9c6d96f80464712a9bb7402bfe3fbb9a4c3e5b66`. Do not treat it as byte-identical to the canonical corpus. It needs an explicit provenance/diff decision before use as an equivalent.
-- `tools/layout-audit/run.sh` defaults to a small smoke fixture; the CI's second layout-audit step overrides it with the canonical 3.4MB audited corpus.
-- Full Math's expected-content oracle imports `tokenizeDoc`, `stripEditorialNotes` and `parseMetadata` from `legacy-imud-flow` to count/normalize expected source tokens. This is a test-side content oracle, not evidence that the product typeset path used legacy. Keep this distinction explicit in all runtime claims.
-- `red-build/src/ui/test-doc-generator.js` uses a fixed seed for fixed mode and generates a fresh seed for random mode. It contains local D-98 guards for some same-level H4–H6 heading sequences and avoids 6→6 escort. It does not export a general structural validator; current code inspection cannot prove that every seed/fixture satisfies the full rules.
-- Binding structural rules: no consecutive same-level headings without intervening body text; no heading containing only a footnote; hierarchy 1→2→3→4→5→6→7 is allowed, but the deepest/terminal heading must contain real text. Add a preflight validator to reject invalid synthetic documents before typesetting, with negative controls for each invalid case.
+- CI Layout Audit uses the canonical 3.4MB corpus in its large run; Full Math uses the same path. The smoke fixture remains a separate fast preflight.
+- The second file `red-build/tests/fixtures/real/very_long_test_text.txt` has a different Git blob and is not assumed byte-identical.
+- The Full Math expected-content oracle imports tokenizer helpers from `legacy-imud-flow`; this is test-side accounting, not evidence that the product typeset request selected legacy.
+- Current `red-build/src/ui/test-doc-generator.js` exports `validateTestDocumentStructure`. It is a read-only validator over the supplied string: it does not edit or repair its input. It diagnoses footnote-only heading text, consecutive same-level headings without body, a deepest heading closed before body, and a terminal heading without body; endnotes and footnotes alone do not count as body.
+- `generateTestDocument` now validates its completed output before returning. The generator may insert real body text at generation points to construct a valid document; the validator itself only reports/errors and never mutates the document after generation.
+- `red-build/tests/unit/test-doc-generator.test.js` covers valid nested headings, each invalid structural case, deterministic fixed output, deterministic explicit random seeds, 256 seeded random documents, the full fixed stress document and unseeded random preflight.
+- `red-build/tests/e2e/s72-column-bottoms.test.js` expects the fixed valid stress document hash `legacy-c05df8cf2c698e4d`. The old `legacy-0861dbeab0401cf1` is retained in comments as the historical malformed-input hash, not the current acceptance baseline. This is the deliberate correction of the invalid test document; do not re-lock it to conceal a regression.
+- These D-98 assertions are source/test verified, but the full CI matrix on `51ee22e7af9b14cf7c2cb188dde454f7b3618b80` was still running at this report's capture. Do not report the tests as passed until CI completes.
 
 ## 5. Twenty historical requirement topics — coverage map
 
@@ -114,8 +122,9 @@ Keep these boundaries: P6/P7 are out of scope; the old reference PDF is not a qu
 
 ## 7. Phase 1 gate
 
-**Passed:** automated CI, corpus invariants, local full-math, preview build/deploy and Git artifact identity.  
-**Partially evidenced:** Unified source-level dispatch and current settings/binding inventory.  
-**Still open:** live browser runtime proof, zero-legacy trace, actual UI and export behavior, complete candidate-file content review, full scan of Text-ID coupling, and same-input DOM/HTML/PDF parity artifacts.
+**Verified on `51ee22e7af9b14cf7c2cb188dde454f7b3618b80`:** source branch and public Pages build identity; real browser execution on the ordinary public root for the scoped long-document typeset path; app/Worker live HTTP SHA equality with independent exact-source builds; Unified force flag and PageModel receipt; 691-page Full Math audit with 0 findings; 232-step virtualization sweep; HTML/PDF export from the existing PageModel; repeat-run determinism with zero page-geometry differences; current source registry/bindings and imported-default counts. Local Full Math, corpus invariants, Preview live audit and Layout Audit succeeded.
 
-Do not advance to Phase 2 acceptance until the remaining Phase 1 acceptance evidence exists. Shaping work can be specified and audited, but it must not be represented as production complete.
+**Pending / not yet verified at capture:** CI Node 18/20/22 matrix plus determinism/Cross-check (run `45689205763` was still in progress); explicit zero-legacy function-call trace; full manual UI/import/settings/TOC interactions; complete console/network/MIME/cache audit of every resource; direct glyph/line-position/visual comparison among DOM, standalone HTML and PDF; full read/reconciliation of the 57 historical Library candidate files; complete Text-ID coupling scan.
+
+**Shaping gap remains:** HarfBuzz and Unicode runtime availability in the Worker is not production Shaping. The production pipeline still splits word boxes before shaping and measures via the existing MeasureAPI; authoritative shaped GIDs/advances/offsets/clusters are not preserved through LineModel/PageModel/projections. Keep Phase 1 open for the outstanding acceptance evidence; do not claim Phase 2 production integration complete.
+

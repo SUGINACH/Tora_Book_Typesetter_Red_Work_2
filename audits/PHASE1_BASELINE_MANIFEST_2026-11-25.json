@@ -1,0 +1,114 @@
+{
+  "schema": "tora-red-phase1-baseline-v1",
+  "capturedAt": "2026-11-25T19:54:16Z",
+  "repository": "SUGINACH/Tora_Book_Typesetter_Red_Work_2",
+  "branch": "engine/legacy-parity-preview-20261119",
+  "sourceCommit": "51ee22e7af9b14cf7c2cb188dde454f7b3618b80",
+  "pagesCommit": "c354cd4e79dd665bebb364d1cc16e88367c14a21",
+  "deployment": {
+    "publicRoot": "https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/",
+    "profile": "unified",
+    "builtAt": "2026-11-25T19:51:19Z",
+    "assetVersion": "2026-11-25-unified-settings-guard1",
+    "mode": "direct-gh-pages-deploy-no-main-merge"
+  },
+  "artifacts": {
+    "appBundle": {
+      "path": "app.bundle.js",
+      "sha256": "f17bb4afe11ab245a4b29b998eb5fb010d3446cf4546a55441ad46706e506c02",
+      "sourceGitBlob": "9434faf54feb9eae378db8ff57c07baccbfe08f8"
+    },
+    "workerBundle": {
+      "path": "engine-worker.bundle.js",
+      "sha256": "b5f1217059041c22eba204d4b74f7523552c38d750170274935cf3d6f79b1540",
+      "sourceGitBlob": "1861b0dd897f332ec11e34fe5ef9f7499cd5ff1a"
+    },
+    "liveHttpMatchesExactSourceBuild": true
+  },
+  "fixture": {
+    "path": "audits/very_long_test_text.txt",
+    "rawBytes": 3403990,
+    "rawSha256": "f6c6b3aa0422fc621fb5827533770fc6fe7b170234382670690483e89cc6a1fc",
+    "crlfNormalizations": 5701,
+    "normalizedBrowserBytes": 3398289,
+    "normalizedBrowserSha256": "91fe1a2fd616e1fd344b8c62ac1a6349b1bcec424cf5745792ade2976b47b17e",
+    "browserTextMatchesNormalizedFixture": true
+  },
+  "settings": {
+    "forceUnified": true,
+    "keyCount": 264,
+    "canonicalSettingsSha256": "654391c7c2c61095c6ed7ef52d58511ace6774c861a6c39c042071822cc79686",
+    "registryRegistered": 259,
+    "registryUnregistered": 5,
+    "unifiedSupported": 255,
+    "unifiedUnsupported": 4
+  },
+  "pageModel": {
+    "schema": "pagemodel-v1",
+    "pages": 691,
+    "tokens": 5678,
+    "layoutHash": "51a476d5e13e20fc653117469146a8cb581a8e39721ac30758ae9d545e5a7d35",
+    "geometryHash": "b11bd54934b55627ae980262222632fe35d62cb5105a800171910e1fc17f8bee",
+    "contentHash": "e392b5e439f17e89b42960e2ddde3caf375238128cb4ab800207726eb7efee40",
+    "diagnostics": 0,
+    "materializationFallbacks": 0,
+    "unresolvedResources": 0
+  },
+  "liveMath": {
+    "pages": 691,
+    "slots": 691,
+    "totalLines": 44360,
+    "columnLines": 42103,
+    "spanningLines": 131,
+    "structuralLines": 2096,
+    "gateLines": 30,
+    "totalWords": 360356,
+    "bodyWords": 353400,
+    "findings": 0,
+    "headerPages": "672/672",
+    "rtlOkay": 634,
+    "rtlBad": 0,
+    "virtualizationSweepSteps": 232,
+    "virtualizationSweepMs": 22401
+  },
+  "exports": {
+    "fromExistingPageModel": true,
+    "layoutMutated": false,
+    "html": {
+      "pages": 691,
+      "bytes": 66072420,
+      "sha256": "739784babfd70dc139086af39df5a7f024bdb15a9493633c80b9429af91d24d8"
+    },
+    "pdf": {
+      "pages": 691,
+      "bytes": 21141875,
+      "sha256": "c273b8293f5c54e36364d89f5d06eb19a7f909361bf609ffb56752d080f028fa",
+      "extractedHebrewChars": 1507214
+    }
+  },
+  "determinism": {
+    "run1Pages": 691,
+    "run2Pages": 691,
+    "identical": true,
+    "pageGeometryDiffCount": 0,
+    "inputSettingsRegistryLayoutGeometryContentAllIdentical": true
+  },
+  "workflowEvidence": {
+    "previewEngineParityRun": 45689205743,
+    "liveAuditJob": 139470102403,
+    "fullMathLocalRun": 45689205734,
+    "corpusInvariantsRun": 45689205864,
+    "ciRun": 45689205763,
+    "ciStateAtCapture": "in_progress"
+  },
+  "acceptance": {
+    "liveRootTypesetAndExport": "verified_for_scoped_full_math_scenario",
+    "d65": "bundles_synchronized; ci_verification_pending",
+    "d98": "validator_and_tests_present; current_ci_verification_pending",
+    "zeroLegacyRuntimeTrace": "open",
+    "fullInteractiveUiAndCompleteConsoleNetworkAudit": "open",
+    "domHtmlPdfGlyphLevelParity": "open",
+    "historicalLibraryReview": "partial",
+    "phase1": "open"
+  }
+}
