@@ -9,6 +9,10 @@ const {
   loadProductionTypographyRuntime,
   EXPECTED_FILES
 } = require('../../src/engine/typography/production-typography-runtime');
+const { buildDocumentModel } = require('../../src/engine/model/document-model');
+const { createTextItemShapingPlan } = require('../../src/engine/typography/text-item-shaping-plan');
+const { isShapedRun } = require('../../src/engine/typography/shaped-run');
+const fontResolver = require('../../src/engine/typography/font-resolver');
 
 const RED_BUILD = path.join(__dirname, '..', '..');
 const ASSET_ROOT = path.join(RED_BUILD, 'ui', 'assets', 'shaping-runtime');
@@ -80,6 +84,90 @@ describe('Production typography runtime — pinned local assets', () => {
       return { ok: false, code: 'font-not-registered' };
     } });
     assertEq(typeof shaper.shapeTextItemPlan, 'function');
+  });
+
+
+  it('builds and shapes a source-mapped plan from a real DocumentModel inline-font TextItem', async () => {
+    const raw = 'כותרת 1 - חלק\\nש<Frank Ruhl Libre>לום</>\\n';
+    const model = buildDocumentModel(raw, {
+      inlineOptions: { knownFamilies: ['David Libre', 'Frank Ruhl Libre'] }
+    });
+    const paragraph = model.blocks.find((block) => block.kind === 'paragraph');
+    assert(paragraph, 'DocumentModel must produce the source paragraph');
+    const item = paragraph.items.find((entry) => entry.kind === 'text');
+    assert(item, 'DocumentModel must produce a canonical TextItem');
+    assertEq(item.payload.runs.map((run) => run.text), ['ש', 'לום']);
+    assertEq(item.payload.runs.map((run) => run.fontFamily), [null, 'Frank Ruhl Libre']);
+
+    fontResolver.clearFontResolver();
+    try {
+      const davidBytes = fs.readFileSync(path.join(RED_BUILD, 'ui', 'assets', 'imud', 'fonts', 'DavidLibre-Regular.ttf'));
+      const frankBytes = fs.readFileSync(path.join(RED_BUILD, 'ui', 'assets', 'imud', 'fonts', 'FrankRuhlLibre-Regular.ttf'));
+      const david = fontResolver.registerFont('David Libre', davidBytes, { source: 'document-model-source-map-proof' });
+      const frank = fontResolver.registerFont('Frank Ruhl Libre', frankBytes, { source: 'document-model-source-map-proof' });
+      assert(david.ok && frank.ok, 'both actual repository fonts must register in the canonical resolver');
+
+      const fetchState = createFetch();
+      const importState = { count: 0 };
+      const runtime = await loadProductionTypographyRuntime({
+        baseUrl: BASE_URL,
+        fetchImpl: fetchState.fetchImpl,
+        importModule: createImportModule(importState)
+      });
+      const plan = createTextItemShapingPlan(item, {
+        bidiRuntime: runtime.unicode,
+        fontResolver,
+        direction: 'rtl',
+        defaultFamily: 'David Libre',
+        languageByScript: { Hebr: 'he' },
+        featuresByScript: {
+          Hebr: [
+            { tag: 'kern', value: 1 },
+            { tag: 'mark', value: 1 },
+            { tag: 'mkmk', value: 1 },
+            { tag: 'rlig', value: 1 }
+          ]
+        },
+        variationAxesByFontId: {
+          [david.fontId]: [],
+          [frank.fontId]: []
+        }
+      });
+
+      assertEq(plan.text, 'שלום');
+      assertEq(plan.unicodeVersion, '18.0.0');
+      assertEq(plan.sourceSegments.length, 2, 'removed inline-font syntax must remain a source-map gap');
+      assertEq(plan.sourceSegments.map((segment) => segment.localRange), [
+        { start: 0, end: 1 }, { start: 1, end: 4 }
+      ]);
+      assertEq(plan.sourceSegments.map((segment) => [
+        segment.sourceRange.start, segment.sourceRange.end
+      ]), [
+        [raw.indexOf('ש'), raw.indexOf('ש') + 1],
+        [raw.indexOf('לום'), raw.indexOf('לום') + 3]
+      ]);
+      assert(plan.sourceSegments[1].sourceRange.start > plan.sourceSegments[0].sourceRange.end,
+        'the inline-font marker must be represented as a real source gap');
+      assertEq(plan.scriptRuns.map((run) => run.font.fontId), [david.fontId, frank.fontId]);
+      assertEq(plan.scriptRuns.map((run) => run.localRange), [
+        { start: 0, end: 1 }, { start: 1, end: 4 }
+      ]);
+
+      const shaped = runtime.createShaper(fontResolver).shapeTextItemPlan(plan);
+      assertEq(shaped.kind, 'ShapedTextItem');
+      assertEq(shaped.shapedRuns.length, 2, 'font identity and non-contiguous source mapping keep the shaping runs separate');
+      assert(shaped.shapedRuns.every(isShapedRun), 'every output run must satisfy the immutable ShapedRun contract');
+      assertEq(shaped.shapedRuns.map((run) => [
+        run.sourceRange.start, run.sourceRange.end, run.font.sourceHash
+      ]), plan.scriptRuns.map((run) => [
+        run.sourceRange.start, run.sourceRange.end, run.font.sourceHash
+      ]));
+      assert(shaped.shapedRuns.every((run) =>
+        run.glyphs.length > 0 && run.glyphs.every((glyph) => glyph.gid > 0)),
+      'real HarfBuzz output must contain covered GIDs for both source-mapped runs');
+    } finally {
+      fontResolver.clearFontResolver();
+    }
   });
 
   it('rejects a tampered WASM asset before importing or initializing HarfBuzz', async () => {
