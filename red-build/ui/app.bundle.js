@@ -531,7 +531,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-19-parity1'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-25-d98-valid-fixed1'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -2674,7 +2674,8 @@ function chapterLines(rng, opts, chapterIdx) {
     // ציר 1 — כותרת צד (H7) מובטחת בפרק הראשון (i=0 — לפני כל ענף כותרת אחר)
     if (docFirst && i === 0) {
       lines.push(`כותרת 7 - ${subHeadingText(rng, 7)}`);
-      // H7 חייב לקבל גוף לפני כותרת אחרת, גם כשה-H3 נורה באיטרציה הבאה.
+      // הכותרת העמוקה מקבלת גוף לפני כל כותרת עוקבת; התיקון דטרמיניסטי
+      // גם במסמך fixed ואינו תלוי במצב/זרע.
       lines.push(bodyParagraph(rng, 'short'));
       blocksSinceHeading++;
     }
@@ -2685,8 +2686,7 @@ function chapterLines(rng, opts, chapterIdx) {
       continue;
     }
     if (!h3AtTop && i === Math.floor(nBlocks / 4)) {
-      // אם איטרציה אקראית קודמת הסתיימה בכותרת עמוקה יותר, קודם סוגרים
-      // אותה בטקסט גוף לפני העלייה בהיררכיה ל-H3.
+      // סוגרים כותרת עמוקה לפני מעבר חזרה לרמת H3, בכל מצב יצירה.
       const previous = lastNumberedHeading(lines);
       if (previous && !hasBodyAfterLastHeading(lines)) {
         lines.push(bodyParagraph(rng, 'short'));
@@ -2746,7 +2746,7 @@ function chapterLines(rng, opts, chapterIdx) {
     blocksSinceHeading++;
   }
 
-  // סוגרים כותרת עמוקה אחרונה בטקסט גוף לפני אזור הערות-הסיום.
+  // סוגרים כותרת עמוקה לפני אזור הערות-הסיום, גם במסמך fixed.
   if (lastNumberedHeading(lines) && !hasBodyAfterLastHeading(lines)) {
     lines.push(paragraphText(rng, randInt(rng, 12, 25)));
   }
