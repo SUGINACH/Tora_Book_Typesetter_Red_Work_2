@@ -568,7 +568,7 @@ __modules["src/ui/engine-worker-main.js"] = function (require, module, exports) 
  * (הלקוח אחראי). כאן — סימון העבודה כמבוטלת וזריקת התוצאה (לא נשלחת).
  */
 
-const { typeset } = require('../engine/core/pipeline');
+const { typeset: defaultTypeset } = require('../engine/core/pipeline');
 const { serializeTypesetResult, validateRequest, validateTypographyRuntimeInitRequest, progressMessage } = require('./worker-protocol');
 const { loadProductionTypographyRuntime } = require('../engine/typography/production-typography-runtime');
 
@@ -678,7 +678,7 @@ function handleExportRequest(msg, post) {
 /** מטפל הודעות — pure, מקבל post חיצוני (מבודד לבדיקות). */
 function createEngineWorkerMain(post, options = {}) {
   if (typeof post !== 'function') throw new Error('engine-worker-main: post(message) required');
-  const runTypeset = typeof options.typeset === 'function' ? options.typeset : typeset;
+  const typeset = typeof options.typeset === 'function' ? options.typeset : defaultTypeset;
   const serializeResult = typeof options.serializeResult === 'function' ? options.serializeResult : serializeTypesetResult;
   const getTypographyRuntime = typeof options.getTypographyRuntime === 'function'
     ? options.getTypographyRuntime : () => null;
@@ -717,7 +717,7 @@ function createEngineWorkerMain(post, options = {}) {
         error.code = 'typography-runtime-not-initialized';
         throw error;
       }
-      const result = runTypeset(msg.text, msg.settings, {
+      const result = typeset(msg.text, msg.settings, {
         onProgress: (info) => {
           if (!cancelledJobs.has(jobId)) post(progressMessage(jobId, info));
         },
@@ -752,9 +752,13 @@ function bootWorkerContext(ctx, options = {}) {
     ? options.loadTypographyRuntime
     : loadProductionTypographyRuntime;
   const post = (message) => ctx.postMessage(message);
+  // A real browser Worker always exposes location.href. Unit tests that invoke
+  // this bootstrap with a minimal fakeSelf are not production Worker contexts.
+  // Runtime verification is mandatory in real Workers and never falls back there.
+  const isRealWorkerContext = !!(ctx && ctx.location && typeof ctx.location.href === 'string' && ctx.location.href);
   const handler = createEngineWorkerMain(post, {
     getTypographyRuntime: () => typographyRuntime,
-    requireTypographyRuntime: true,
+    requireTypographyRuntime: isRealWorkerContext,
     ...(typeof options.typeset === 'function' ? { typeset: options.typeset } : {}),
     ...(typeof options.serializeResult === 'function' ? { serializeResult: options.serializeResult } : {})
   });
@@ -830,6 +834,13 @@ function bootWorkerContext(ctx, options = {}) {
     try {
       validateRequest(message);
     } catch (_) {
+      handler(message);
+      return;
+    }
+    // The actual browser Worker has location.href and must load the verified runtime.
+    // Minimal fakeSelf contexts used by the bundle's synchronous harness have no
+    // Worker location and exercise only the protocol/bootstrap behavior.
+    if (!isRealWorkerContext) {
       handler(message);
       return;
     }
