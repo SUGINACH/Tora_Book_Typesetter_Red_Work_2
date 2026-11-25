@@ -3,10 +3,10 @@
 **Date:** 2026-11-25 (Asia/Jerusalem)  
 **Repository:** `SUGINACH/Tora_Book_Typesetter_Red_Work_2`  
 **Source branch:** `engine/legacy-parity-preview-20261119`  
-**Source commit:** `51ee22e7af9b14cf7c2cb188dde454f7b3618b80`  
+**Source commit:** `a3ff4bd43f5fabf50a4c06d27a8b0ba5f83b29bb`  
 **Public URL:** `https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/`  
-**Workflow:** `preview-engine-parity`, run `45689205743`, live-audit job `139470102403`  
-**Artifact:** `full-math-audit-live`, artifact ID `15058221803`  
+**Workflow:** `preview-engine-parity`, run `45690980894`, live-audit job `139477030218`  
+**Artifact:** `full-math-audit-live`, artifact ID `15059331180`  
 **Result:** **PASS for the scoped public-root typeset, PageModel, virtualization, HTML/PDF export and determinism path. Not full Phase 1 acceptance.**
 
 ## Test method
@@ -17,7 +17,7 @@ The URL contained a cache-busting timestamp only. The test did not rely on a pre
 
 ## Deployment and bundles
 
-Pages `build-info.json` identified source commit `51ee22e7af9b14cf7c2cb188dde454f7b3618b80`, branch `engine/legacy-parity-preview-20261119`, profile `unified`, build time `2026-11-25T19:51:19Z`. Pages branch HEAD at evidence capture: `c354cd4e79dd665bebb364d1cc16e88367c14a21`.
+Pages `build-info.json` identified source commit `a3ff4bd43f5fabf50a4c06d27a8b0ba5f83b29bb`, branch `engine/legacy-parity-preview-20261119`, profile `unified`, build time `2026-11-25T20:03:36Z`. Pages branch HEAD at evidence capture: `921af83d1a965748e2c8a9f3914fd012f43a7292`.
 
 | Asset | Live HTTP SHA-256 | Independent exact-source build SHA-256 |
 |---|---|---|
@@ -67,3 +67,12 @@ It proves that the normal public root route, at this commit, loaded the exact ap
 5. It does not close the partial review of the 57 historical Library candidate files.
 
 **Acceptance decision:** this is a verified live-browser milestone, not Phase 1 acceptance. Keep the remaining limitations open and do not report production Shaping or export parity as complete.
+
+
+## 8. Direct glyph-level comparison
+
+A same-source comparison was completed after clipping the PDF to its actual A4 TrimBox. The configured 3mm bleed expands the MediaBox/BleedBox to 216×303mm; TrimBox remains 210×297mm. This is intentional, not a page-size defect.
+
+On physical PDF page 577 / HTML `data-page-index=576`, the FrankReal window-emphasis word `שְׁמַע` is visibly different. HTML/Chromium measures the 24px span at 38.390625px (28.79297pt); the PDF ToraWin 18pt span is 44.56796pt. The 15.775pt difference matches the raw hmtx advances of the three marks (15.759pt). Unified MeasureAPI treats those combining marks as zero-advance, but the PDF subset/writer emits per-character CIDs using raw hmtx widths. The text extractor still returns the correct Unicode word. See `audits/PHASE1_DOM_HTML_PDF_GLYPH_PARITY_2026-11-25.md` for the full metric table and code trace.
+
+The embedded FrankReal source font has no GPOS/GSUB tables, so this particular case does not prove that subsetting removed a GPOS table. The exact browser-internal fallback placement is not isolated. The confirmed defect is the mismatch between browser-rendered mark placement/zero advance and PDF raw character advances. Do not patch with CSS or post-layout offsets.

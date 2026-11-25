@@ -2,21 +2,21 @@
 
 **Repository:** `SUGINACH/Tora_Book_Typesetter_Red_Work_2`  
 **Branch:** `engine/legacy-parity-preview-20261119`  
-**HEAD audited:** `51ee22e7af9b14cf7c2cb188dde454f7b3618b80`  
+**HEAD audited:** `a3ff4bd43f5fabf50a4c06d27a8b0ba5f83b29bb`  
 **Date:** 2026-11-25  
 **Status:** partial reconciliation; Phase 1 acceptance remains open.
 
 ## 1. Current CI and deployment baseline
 
 - Source HEAD: `51ee22e7af9b14cf7c2cb188dde454f7b3618b80`; branch remains `engine/legacy-parity-preview-20261119`.
-- Pages source/build-info identifies the same source commit; gh-pages HEAD at capture: `c354cd4e79dd665bebb364d1cc16e88367c14a21`.
-- CI run `45689205763`: **in progress at this report's capture**. Layout Audit succeeded; Node 18/20/22 full suite, determinism and cross-check had not yet completed. A green result must not be inferred.
-- Full Math Audit `45689205734`: success locally on this exact source commit — 691 pages, 44,360 lines, 360,356 words, 0 findings and identical determinism.
-- Corpus Invariants `45689205864`: success.
-- Preview Engine Parity `45689205743`: success, including actual public-root browser audit and export capture.
-- Layout Audit job `139469843641`: success, including the 849-page virtualization sweep.
-- Live audit job `139470102403` compared the public HTTP app and Worker SHA-256 values against independent builds from this exact source checkout. App: `f17bb4afe11ab245a4b29b998eb5fb010d3446cf4546a55441ad46706e506c02`; Worker: `b5f1217059041c22eba204d4b74f7523552c38d750170274935cf3d6f79b1540`. Both matched.
-- The deployed root served build-info with `profile=unified`, source commit `51ee22e7af9b14cf7c2cb188dde454f7b3618b80` and asset version `2026-11-25-unified-settings-guard1`.
+- Pages source/build-info identifies the same source commit; gh-pages HEAD at capture: `921af83d1a965748e2c8a9f3914fd012f43a7292`.
+- CI run `45690980914`: **SUCCESS** — Layout Audit, Node 18/20/22, Determinism and Cross-check. D-65 strict bundle reproducibility passed without changing its expected hashes; `test-doc-generator` 14/14, `s10-ui` 45/45 and `s72-column-bottoms` 15/15.
+- Full Math Audit `45690980826`: success locally on this exact source commit — 691 pages, 44,360 lines, 360,356 words, 0 findings and identical determinism.
+- Corpus Invariants `45690980724`: success.
+- Preview Engine Parity `45690980894`: success, including actual public-root browser audit and export capture.
+- Layout Audit job `139476029655`: success, including the 849-page virtualization sweep.
+- Live audit job `139477030218` compared the public HTTP app and Worker SHA-256 values against independent builds from this exact source checkout. App: `f17bb4afe11ab245a4b29b998eb5fb010d3446cf4546a55441ad46706e506c02`; Worker: `b5f1217059041c22eba204d4b74f7523552c38d750170274935cf3d6f79b1540`. Both matched.
+- The deployed root served build-info with `profile=unified`, source commit `a3ff4bd43f5fabf50a4c06d27a8b0ba5f83b29bb` and asset version `2026-11-25-unified-settings-guard1`.
 - D-65 root cause on the preceding HEAD was stale committed app/Worker bundles. The exact rebuilt outputs were captured in CI artifact evidence, then the two bundles were synchronized from the exact Preview build in commit `51ee22e`. No expected hash or D-65 assertion was edited. The strict D-65 gate is being rerun by CI run `45689205763`.
 
 ## 2. Current source-code findings (rechecked on 51ee22e7af9b14cf7c2cb188dde454f7b3618b80)
@@ -35,8 +35,7 @@ The runtime pins and loads Unicode 18 + HarfBuzz in a real Worker. That is a run
 2. `measure-api.js` measures text/characters via `measureTextWidth`, cmap/hmtx and limited kerning rather than HarfBuzz cluster advances.
 3. `LineModel` and `PageModel` do not preserve authoritative ShapedRun/individual GID/advance/offset/cluster positions.
 4. DOM/HTML rendering emits Unicode `textContent` for browser shaping.
-5. PDF export derives subset/CID mapping from Unicode characters (`glyphIdOf(font,ch)` / `cidOf(ch)`) rather than preserving shaped GIDs and positions.
-Consequently, the same PageModel currently shares layout decisions but not an authoritative shaped-glyph representation across DOM/HTML/PDF. This provides a strong structural explanation for the user's reported output differences, but does not replace a saved live comparison artifact.
+5. PDF export derives subset/CID mapping from Unicode characters (`glyphIdOf(font,ch)` / `cidOf(ch)`) rather than preserving shaped GIDs and positions. The live FrankReal Bold test demonstrates the resulting mismatch quantitatively: Unified measurement zeroes combining-mark advance, while the PDF `/W` array and `Tj` emission use raw hmtx advances. Consequently, the same PageModel shares layout decisions but not an authoritative shaped-glyph representation across DOM/HTML/PDF. The specific mark-placement defect is now reproduced, not only hypothesized.
 
 ### TOC requirements
 - General and detailed TOC have separate enable switches, but per-level visibility is not independent: both builders use shared `toc-level-N-show`.
@@ -60,7 +59,7 @@ A source-level reconciliation of the current registry and generated bindings was
 - TOC level visibility and inline/collapsed settings must be independent for general and detailed TOCs.
 - TOC inline rows: black heading, dark-grey page number, separator `|`.
 - TOC title: Heading 2-derived but isolated from unrelated H2 settings.
-- The user reported live DOM and exported HTML are inferior/different from PDF. Track separately from exact browser proof; the architectural shaping gap is evidenced, but no same-document live comparison artifacts were captured in this audit.
+- The user-reported DOM/HTML/PDF difference is now reproduced and measured on live artifacts. Physical page 577 / HTML `data-page-index=576`, word `שְׁמַע`: HTML width 38.390625px (28.79297pt); PDF ToraWin span width 44.56796pt; the 15.775pt difference matches the raw hmtx advances of the three combining marks (15.759pt). The PDF still extracts the correct Unicode word, but renders the marks incorrectly. See `audits/PHASE1_DOM_HTML_PDF_GLYPH_PARITY_2026-11-25.md`.
 
 ## 3. Library inventory and review depth
 
@@ -128,3 +127,10 @@ Keep these boundaries: P6/P7 are out of scope; the old reference PDF is not a qu
 
 **Shaping gap remains:** HarfBuzz and Unicode runtime availability in the Worker is not production Shaping. The production pipeline still splits word boxes before shaping and measures via the existing MeasureAPI; authoritative shaped GIDs/advances/offsets/clusters are not preserved through LineModel/PageModel/projections. Keep Phase 1 open for the outstanding acceptance evidence; do not claim Phase 2 production integration complete.
 
+
+
+## 8. Verified workflow and projection-parity update (2026-11-25)
+
+The latest source HEAD `a3ff4bd43f5fabf50a4c06d27a8b0ba5f83b29bb` passed CI run `45690980914` (Node 18/20/22, Determinism, Cross-check and Layout Audit), Full Math `45690980826`, Corpus Invariants `45690980724`, and Preview/live root audit `45690980894` (job `139477030218`). The public root build-info and exact-source app/Worker SHA check passed. D-65 and D-98 are verified on this HEAD.
+
+The direct DOM/HTML/PDF check identifies a confirmed mark-advance/placement defect on page 577, not a page-size defect. Full Phase 1 remains open for zero-legacy runtime trace, complete manual UI/console/network coverage, full glyph-level projection parity and outstanding deep-source review. No engine code, default, font, bleed or geometry value was changed by this forensic update.

@@ -3,29 +3,29 @@
 **Checked:** 2026-11-25 (Asia/Jerusalem)  
 **Repository:** `SUGINACH/Tora_Book_Typesetter_Red_Work_2`  
 **Branch:** `engine/legacy-parity-preview-20261119`  
-**Source HEAD:** `51ee22e7af9b14cf7c2cb188dde454f7b3618b80`  
-**gh-pages HEAD:** `c354cd4e79dd665bebb364d1cc16e88367c14a21`  
+**Source HEAD:** `a3ff4bd43f5fabf50a4c06d27a8b0ba5f83b29bb`  
+**gh-pages HEAD:** `921af83d1a965748e2c8a9f3914fd012f43a7292`  
 **Acceptance:** **OPEN** — live browser audit is now verified for the primary typeset/export path; zero-legacy call tracing, full interactive UI coverage, deep source reconciliation and glyph-level projection parity remain open.
 
 ## 1. Workflow evidence on this exact source HEAD
 
 | Workflow | Run | Result | Verified scope |
 |---|---:|---|---|
-| CI | 45689205763 | **IN PROGRESS at snapshot** | Layout Audit passed; Node 18/20/22 full test suite, determinism and cross-check were still running. Do not report CI green until the run is completed successfully. |
-| Full Math Audit | 45689205734 | **SUCCESS** | Local full-math on the exact source commit: 691/691 pages, 44,360 lines, 360,356 words, 0 problems, determinism IDENTICAL. |
-| Corpus Invariants | 45689205864 | **SUCCESS** | Canonical/long-corpus invariants on this HEAD. |
-| Preview Engine Parity | 45689205743 | **SUCCESS** | Full app/Worker build and deployment, then live browser acceptance on the public root URL. |
-| Layout Audit (CI job) | 139469843641 | **SUCCESS** | Smoke fixture and the large 849-page corpus virtualization sweep. |
+| CI | 45690980914 | **SUCCESS** | Layout Audit; Node 18/20/22 full suites; Determinism; Cross-check. D-65 passed; `test-doc-generator` 14/14, `s10-ui` 45/45 and `s72-column-bottoms` 15/15 in the matrix. |
+| Full Math Audit | 45690980826 | **SUCCESS** | Local full-math on the exact source commit: 691/691 pages, 44,360 lines, 360,356 words, 0 problems, determinism IDENTICAL. |
+| Corpus Invariants | 45690980724 | **SUCCESS** | Canonical/long-corpus invariants on this HEAD. |
+| Preview Engine Parity | 45690980894 | **SUCCESS** | Full app/Worker build and deployment, then live browser acceptance on the public root URL. |
+| Layout Audit (CI job) | 139476029655 | **SUCCESS** | Smoke fixture and the large 849-page corpus virtualization sweep. |
 
-The Preview workflow's `live-audit` job was `139470102403`. It waited until Pages HTTP served this exact source SHA, independently rebuilt both browser bundles from the checked-out source, then ran the full browser audit and export capture. The uploaded evidence artifact is `full-math-audit-live` (artifact ID `15058221803`).
+The Preview workflow's `live-audit` job was `139477030218`. It waited until Pages HTTP served this exact source SHA, independently rebuilt both browser bundles from the checked-out source, then ran the full browser audit and export capture. The uploaded evidence artifact is `full-math-audit-live` (artifact ID `15059331180`).
 
 ## 2. Pages source and browser-asset identity
 
 Public `build-info.json` reports:
 - `profile: unified`
 - `branch: engine/legacy-parity-preview-20261119`
-- `commit: 51ee22e7af9b14cf7c2cb188dde454f7b3618b80`
-- `builtAt: 2026-11-25T19:51:19Z`
+- `commit: a3ff4bd43f5fabf50a4c06d27a8b0ba5f83b29bb`
+- `builtAt: 2026-11-25T20:03:36Z`
 - `mode: direct-gh-pages-deploy-no-main-merge`
 
 The live audit accessed the ordinary root URL:
@@ -39,7 +39,7 @@ The real HTTP-delivered bytes matched an independent build of the exact source c
 | `app.bundle.js` | `f17bb4afe11ab245a4b29b998eb5fb010d3446cf4546a55441ad46706e506c02` | same | MATCH |
 | `engine-worker.bundle.js` | `b5f1217059041c22eba204d4b74f7523552c38d750170274935cf3d6f79b1540` | same | MATCH |
 
-`ASSET_VERSION=2026-11-25-unified-settings-guard1`. The source-branch bundles were synchronized in commit `51ee22e` from the already-built/deployed exact artifacts; the D-65 expected hashes and test assertions were not changed. Git blob identity is also synchronized between source branch and gh-pages:
+`ASSET_VERSION=2026-11-25-unified-settings-guard1`. The source-branch bundles were synchronized in commit `a3ff4bd` from the already-built/deployed exact artifacts; the D-65 expected hashes and test assertions were not changed. Git blob identity is also synchronized between source branch and gh-pages:
 - app blob: `9434faf54feb9eae378db8ff57c07baccbfe08f8`
 - Worker blob: `1861b0dd897f332ec11e34fe5ef9f7499cd5ff1a`
 
@@ -86,7 +86,11 @@ Two independent live typesets returned the same layout/content/geometry hashes a
 - identical input, settings, per-setting hashes, registry contract, layout, geometry and content
 - no changed setting keys.
 
-**Interpretation boundary:** the same PageModel, page count, geometry fingerprint and unchanged layout across exports do not prove identical glyph IDs, glyph offsets, ink bounds, line wrapping or visual pixels between DOM, standalone HTML and PDF. DOM/HTML still shape Unicode in the browser; PDF still uses character-based glyph/CID mapping. This remains a core Phase 4 gap and a plausible architectural source of the user's reported output differences. The paired live artifacts are now available for direct visual/structural comparison, but that comparison has not yet been completed.
+**Forensic result (see `audits/PHASE1_DOM_HTML_PDF_GLYPH_PARITY_2026-11-25.md`):** direct same-document comparison now confirms a real glyph-projection defect on physical PDF page 577 (HTML page index 576). The HTML span `שְׁמַע` is 38.390625 CSS px = 28.79297pt; the PDF span is 44.56796pt. The 15.775pt difference matches the combined raw hmtx advances of the three combining marks (15.759pt). Unified MeasureAPI treats these marks as zero-advance, but PDF subsetting/writer preserves and emits their per-character hmtx advances in a `Tj` sequence. The PDF text extractor still returns the correct Unicode string, while the rendered mark placement is visibly wrong.
+
+The PDF's 3mm expansion is intentional bleed: MediaBox/BleedBox are 216×303mm while TrimBox remains A4 (210×297mm). Do not treat the larger MediaBox as an incorrect page size.
+
+The exact browser-internal mark-placement algorithm for FrankReal is not established: its embedded source font has no GPOS/GSUB tables, so the code comments referring to GPOS must not be treated as proof that this specific font uses a GPOS lookup. The proven defect is that PDF does not consume the browser's resulting glyph placement and instead advances the marks using their nonzero hmtx widths. Page-level pixel identity across all 691 pages is not claimed.
 
 ## 5. Unified routing — verified and not verified
 
@@ -108,10 +112,10 @@ The Worker loads and requires the Unicode 18 + HarfBuzz runtime before typesetti
 ## 7. Acceptance status
 
 - D-65 bundle reproducibility: **source bundles synchronized from independently rebuilt live artifacts; verification is being rerun on CI run 45689205763.** Do not close until all Node matrix jobs, determinism and Cross-check succeed.
-- D-98 generator/validator: **implemented in source with unit/negative/seeded tests; current full-suite CI result still pending at this snapshot.**
+- D-98 generator/validator: **PASS** on CI run `45690980914`; unit/negative/seeded tests passed, including the structural preflight.
 - Live browser root typeset/export path: **VERIFIED for the scoped Full Math scenario** (Preview run 45689205743).
 - Zero-legacy runtime call trace: **OPEN**.
 - Complete manual UI/console/network acceptance: **OPEN**.
-- DOM/HTML/PDF glyph-level and visual parity: **OPEN**.
+- DOM/HTML/PDF glyph-level and visual parity: **CONFIRMED DEFECT on FrankReal combining marks; architectural correction and regression remain OPEN**.
 - Deep historical/Library source reconciliation: **PARTIAL** (57 candidate Library items identified; not all were read fully).
 - Phase 1 acceptance: **OPEN**. Phase 2 production shaping work must not be declared complete or silently substituted for the remaining Phase 1 proof.

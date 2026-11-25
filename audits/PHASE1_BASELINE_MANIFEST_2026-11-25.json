@@ -1,10 +1,10 @@
 {
   "schema": "tora-red-phase1-baseline-v1",
-  "capturedAt": "2026-11-25T19:54:16Z",
+  "capturedAt": "2026-11-25T20:06:37Z",
   "repository": "SUGINACH/Tora_Book_Typesetter_Red_Work_2",
   "branch": "engine/legacy-parity-preview-20261119",
-  "sourceCommit": "51ee22e7af9b14cf7c2cb188dde454f7b3618b80",
-  "pagesCommit": "c354cd4e79dd665bebb364d1cc16e88367c14a21",
+  "sourceCommit": "a3ff4bd43f5fabf50a4c06d27a8b0ba5f83b29bb",
+  "pagesCommit": "921af83d1a965748e2c8a9f3914fd012f43a7292",
   "deployment": {
     "publicRoot": "https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/",
     "profile": "unified",
@@ -94,21 +94,84 @@
     "inputSettingsRegistryLayoutGeometryContentAllIdentical": true
   },
   "workflowEvidence": {
-    "previewEngineParityRun": 45689205743,
-    "liveAuditJob": 139470102403,
-    "fullMathLocalRun": 45689205734,
-    "corpusInvariantsRun": 45689205864,
-    "ciRun": 45689205763,
-    "ciStateAtCapture": "in_progress"
+    "previewEngineParityRun": 45690980894,
+    "liveAuditJob": 139477030218,
+    "liveArtifactId": 15059331180,
+    "fullMathLocalRun": 45690980826,
+    "corpusInvariantsRun": 45690980724,
+    "ciRun": 45690980914
   },
   "acceptance": {
     "liveRootTypesetAndExport": "verified_for_scoped_full_math_scenario",
-    "d65": "bundles_synchronized; ci_verification_pending",
-    "d98": "validator_and_tests_present; current_ci_verification_pending",
+    "d65": "PASS on CI 45690980914 across Node18/20/22, determinism and cross-check",
+    "d98": "PASS on CI 45690980914; test-doc-generator 14/14 and s72-column-bottoms 15/15",
     "zeroLegacyRuntimeTrace": "open",
     "fullInteractiveUiAndCompleteConsoleNetworkAudit": "open",
-    "domHtmlPdfGlyphLevelParity": "open",
+    "domHtmlPdfGlyphLevelParity": "CONFIRMED mark-advance/placement defect on FrankReal word שְׁמַע on PDF page577; architectural fix and regression remain open",
     "historicalLibraryReview": "partial",
     "phase1": "open"
+  },
+  "projectionParity": {
+    "status": "confirmed_defect_sample",
+    "page": {
+      "pdfPhysicalPage": 577,
+      "htmlDataPageIndex": 576,
+      "word": "שְׁמַע"
+    },
+    "html": {
+      "fontFamily": "FrankReal",
+      "cssFontSizePx": 24,
+      "computedWeight": 900,
+      "spanWidthCssPx": 38.390625,
+      "spanWidthPt": 28.79296875
+    },
+    "pdf": {
+      "fontResource": "ToraWin",
+      "fontFace": "FrankReal Bold subset",
+      "fontSizePt": 18,
+      "spanWidthPt": 44.5679626465
+    },
+    "differencePt": 15.7749938965,
+    "fontUnitsPerEm": 2048,
+    "hmtxAdvances": {
+      "shin": 1261,
+      "shindot": 1247,
+      "sheva": 147,
+      "mem": 1042,
+      "patah": 399,
+      "ayin": 972
+    },
+    "markAdvanceUnits": 1793,
+    "markAdvancePtAt18": 15.7587890625,
+    "baseLetterAdvanceUnits": 3275,
+    "baseLetterAdvancePtAt18": 28.7841796875,
+    "allSixRawAdvanceUnits": 5068,
+    "allSixRawAdvancePtAt18": 44.54296875,
+    "measurement": "Unified MeasureAPI treats mapped combining marks as zero-advance under _marks-advance=combined",
+    "pdfProjection": "font-subset preserves raw hmtx advances; pdf-writer emits per-Unicode-character CID sequences with Tj and W widths from widthsUnits",
+    "fontTableCaveat": "FrankReal source itself lacks GPOS/GSUB; do not describe this sample as GPOS removed by subsetting. Browser-internal mark-placement fallback not isolated.",
+    "bleed": {
+      "exportBleedMm": 3,
+      "trimBoxPt": [
+        0,
+        0,
+        595.28,
+        841.89
+      ],
+      "mediaBoxPt": [
+        -8.5,
+        -8.5,
+        603.78,
+        850.39
+      ],
+      "bleedBoxPt": [
+        -8.5,
+        -8.5,
+        603.78,
+        850.39
+      ],
+      "conclusion": "intentional 3mm bleed; TrimBox remains A4"
+    },
+    "engineCodeChanged": false
   }
 }
