@@ -1,6 +1,6 @@
 // ui/engine-worker.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת ה־Worker (המנוע המלא — אין לטעון בחוט ה־UI)
-// מודולים: 96 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 100 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -294,6 +294,7 @@ function __resolve(from, name) {
 var __paths = {
   "src/ui/engine-worker-main.js|../engine/core/pipeline": "src/engine/core/pipeline.js",
   "src/ui/engine-worker-main.js|./worker-protocol": "src/ui/worker-protocol.js",
+  "src/ui/engine-worker-main.js|../engine/typography/production-typography-runtime": "src/engine/typography/production-typography-runtime.js",
   "src/ui/engine-worker-main.js|../engine/assets/asset-resolver": "src/engine/assets/asset-resolver.js",
   "src/ui/engine-worker-main.js|../engine/typography/font-resolver": "src/engine/typography/font-resolver.js",
   "src/ui/engine-worker-main.js|../engine/decoration/asset-registry": "src/engine/decoration/asset-registry.js",
@@ -487,6 +488,11 @@ var __paths = {
   "src/ui/worker-protocol.js|../audit/report-schema": "src/audit/report-schema.js",
   "src/audit/report-schema.js|../engine/layout/dp-planner": "src/engine/layout/dp-planner.js",
   "src/audit/report-schema.js|../engine/layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
+  "src/engine/typography/production-typography-runtime.js|../assets/hash256": "src/engine/assets/hash256.js",
+  "src/engine/typography/production-typography-runtime.js|./unicode18-bidi-runtime": "src/engine/typography/unicode18-bidi-runtime.js",
+  "src/engine/typography/production-typography-runtime.js|./harfbuzz-shaper": "src/engine/typography/harfbuzz-shaper.js",
+  "src/engine/typography/harfbuzz-shaper.js|../assets/hash256": "src/engine/assets/hash256.js",
+  "src/engine/typography/harfbuzz-shaper.js|./shaped-run": "src/engine/typography/shaped-run.js",
   "src/engine/assets/asset-resolver.js|./hash256": "src/engine/assets/hash256.js",
   "src/engine/assets/asset-resolver.js|./image-meta": "src/engine/assets/image-meta.js",
   "src/engine/assets/asset-resolver.js|../import/zip-reader": "src/engine/import/zip-reader.js",
@@ -563,7 +569,8 @@ __modules["src/ui/engine-worker-main.js"] = function (require, module, exports) 
  */
 
 const { typeset } = require('../engine/core/pipeline');
-const { serializeTypesetResult, validateRequest, progressMessage } = require('./worker-protocol');
+const { serializeTypesetResult, validateRequest, validateTypographyRuntimeInitRequest, progressMessage } = require('./worker-protocol');
+const { loadProductionTypographyRuntime } = require('../engine/typography/production-typography-runtime');
 
 let cancelledJobs = new Set();
 
@@ -715,9 +722,72 @@ function createEngineWorkerMain(post) {
 }
 
 /** הרכבה עצמאית לסביבת Worker אמיתית (self.onmessage). */
-function bootWorkerContext(ctx) {
+function bootWorkerContext(ctx, options = {}) {
   const handler = createEngineWorkerMain((m) => ctx.postMessage(m));
-  ctx.onmessage = (ev) => handler(ev.data);
+  const loadRuntime = typeof options.loadTypographyRuntime === 'function'
+    ? options.loadTypographyRuntime
+    : loadProductionTypographyRuntime;
+  let runtimePromise = null;
+
+  const handleRuntimeInit = (msg) => {
+    try {
+      validateTypographyRuntimeInitRequest(msg);
+    } catch (error) {
+      ctx.postMessage({
+        type: 'typography-runtime-result',
+        jobId: msg && typeof msg.jobId === 'string' ? msg.jobId : null,
+        ok: false,
+        code: 'invalid-runtime-init-request',
+        message: error && error.message ? error.message : String(error)
+      });
+      return;
+    }
+
+    if (!runtimePromise) {
+      runtimePromise = Promise.resolve().then(() => {
+        const workerHref = ctx && ctx.location && ctx.location.href;
+        if (typeof workerHref !== 'string' || !workerHref) {
+          const error = new Error('Worker location.href is required to resolve local typography runtime assets');
+          error.code = 'worker-location-unavailable';
+          throw error;
+        }
+        const baseUrl = new URL('./assets/shaping-runtime/', workerHref).href;
+        return loadRuntime({ baseUrl });
+      });
+    }
+
+    const currentPromise = runtimePromise;
+    currentPromise.then((runtime) => {
+      ctx.postMessage({
+        type: 'typography-runtime-result',
+        jobId: msg.jobId,
+        ok: true,
+        harfbuzzPackageVersion: runtime.manifest.harfbuzz.version,
+        harfbuzzCoreVersion: runtime.harfbuzz.versionString(),
+        unicodeVersion: runtime.unicode.unicodeVersion,
+        assetCount: Object.keys(runtime.assetDigests).length,
+        assetDigests: { ...runtime.assetDigests }
+      });
+    }).catch((error) => {
+      if (runtimePromise === currentPromise) runtimePromise = null;
+      ctx.postMessage({
+        type: 'typography-runtime-result',
+        jobId: msg.jobId,
+        ok: false,
+        code: error && error.code ? error.code : 'runtime-initialization-failed',
+        message: error && error.message ? error.message : String(error)
+      });
+    });
+  };
+
+  ctx.onmessage = (ev) => {
+    const message = ev && ev.data;
+    if (message && message.type === 'typography-runtime-init') {
+      handleRuntimeInit(message);
+      return;
+    }
+    handler(message);
+  };
 }
 
 // ב־Worker אמיתי: self קיים ואין require/module (ה־bundle מספק אותם); ב־Node — לא.
@@ -26278,6 +26348,25 @@ function validateRequest(msg) {
   throw new Error(`protocol: unknown message type ${msg && msg.type}`);
 }
 
+
+/**
+ * Validate the explicit, worker-context-only request to load the pinned local
+ * typography runtime. Kept separate from validateRequest so the in-process
+ * synchronous typesetting handler remains unchanged.
+ */
+function validateTypographyRuntimeInitRequest(msg) {
+  if (!msg || typeof msg !== 'object' || Array.isArray(msg)) {
+    throw new Error('protocol: typography runtime init message must be an object');
+  }
+  if (msg.type !== 'typography-runtime-init') {
+    throw new Error('protocol: typography runtime init type required');
+  }
+  if (typeof msg.jobId !== 'string' || !msg.jobId || msg.jobId.length > 128) {
+    throw new Error('protocol: typography runtime init jobId must be a non-empty string of at most 128 characters');
+  }
+  return true;
+}
+
 /** בניית הודעת התקדמות (worker-side). */
 function progressMessage(jobId, info) {
   return {
@@ -26289,7 +26378,7 @@ function progressMessage(jobId, info) {
   };
 }
 
-module.exports = { PROTOCOL_VERSION, serializeTypesetResult, serializePageModelTransport, validateRequest, progressMessage };
+module.exports = { PROTOCOL_VERSION, serializeTypesetResult, serializePageModelTransport, validateRequest, validateTypographyRuntimeInitRequest, progressMessage };
 
 };
 __modules["src/audit/report-schema.js"] = function (require, module, exports) {
@@ -26425,6 +26514,2021 @@ function tally(findings) {
 }
 
 module.exports = { GEOM_KIND_NAMES, NON_FINDINGS, buildReport, tally };
+
+};
+__modules["src/engine/typography/production-typography-runtime.js"] = function (require, module, exports) {
+// red-build/src/engine/typography/production-typography-runtime.js
+// Loads the pinned, locally vendored Unicode 18 + HarfBuzz runtime.
+// This module does not activate shaping in the layout pipeline by itself.
+'use strict';
+
+const { sha256Hex } = require('../assets/hash256');
+const { instantiate: instantiateUnicode18 } = require('./unicode18-bidi-runtime');
+const { createHarfBuzzShaper } = require('./harfbuzz-shaper');
+
+const RUNTIME_MANIFEST_SCHEMA = 1;
+const RUNTIME_ARTIFACT_KIND = 'staged-runtime-assets-not-production-enabled';
+const HARFBUZZ_PACKAGE = 'harfbuzzjs';
+const HARFBUZZ_PACKAGE_VERSION = '1.6.4';
+const HARFBUZZ_CORE_VERSION = '15.0.0';
+const UNICODE_VERSION = '18.0.0';
+const UNICODE_UPSTREAM_REVISION = '9a8c7b03be01def5cf7014b89d5af90f7382fdad';
+
+const EXPECTED_FILES = Object.freeze({
+  'harfbuzzjs/dist/harfbuzz.js': Object.freeze({
+    bytes: 32099,
+    sha256: '28392846ce6accb53e34bdce197b8aa00721e84846ff4b2c0ccfad5137a0e699'
+  }),
+  'harfbuzzjs/dist/harfbuzz.wasm': Object.freeze({
+    bytes: 444394,
+    sha256: '6eeed8e1bc9ad7773038e48ff8f9e07e0ad228572c594b45e5357e9c2f7a0b2e'
+  }),
+  'harfbuzzjs/dist/index.mjs': Object.freeze({
+    bytes: 85257,
+    sha256: '16016989059a6600a1b82b42f61b494c776db02dec49bf645af65b8a5e599bf9'
+  }),
+  'harfbuzzjs/LICENSE': Object.freeze({
+    bytes: 1079,
+    sha256: '5d09767b2cc476f08028b56d9384dc45061c5a3e90f9ad966e44addc8d26c8b1'
+  }),
+  'harfbuzzjs/package.json': Object.freeze({
+    bytes: 1112,
+    sha256: '92200c5035787f530332dcf547b22fceace4d18ee9253995f213d49c09143cb4'
+  }),
+  'unicode18-bidi-runtime.js': Object.freeze({
+    bytes: 37186,
+    sha256: '580685c67ffbadf68900ae152253ca9a9e1616a32d8a1864b306967d928009dc'
+  }),
+  'unicode18-bidi-runtime.wasm': Object.freeze({
+    bytes: 151361,
+    sha256: '78e7681311db93a552c6ebb58e7e8f0797cf61b9b578897b0a6ae603872ce776'
+  })
+});
+
+function fail(code, message, cause) {
+  const error = new Error(message);
+  error.code = code;
+  if (cause !== undefined) error.cause = cause;
+  throw error;
+}
+
+function isRecord(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function normalizeBaseUrl(value) {
+  if (typeof value !== 'string' || !value) {
+    fail('invalid-runtime-base-url', 'A local shaping-runtime base URL is required');
+  }
+  let base;
+  try {
+    base = new URL(value);
+  } catch (error) {
+    fail('invalid-runtime-base-url', 'The shaping-runtime base URL is invalid', error);
+  }
+  if (base.protocol !== 'https:' && base.protocol !== 'http:') {
+    fail('invalid-runtime-base-url', 'The shaping-runtime base URL must use HTTP(S)');
+  }
+  if (!base.pathname.endsWith('/')) base.pathname += '/';
+  base.search = '';
+  base.hash = '';
+  return base;
+}
+
+function validateManifest(manifest) {
+  if (!isRecord(manifest) ||
+      manifest.schemaVersion !== RUNTIME_MANIFEST_SCHEMA ||
+      manifest.artifactKind !== RUNTIME_ARTIFACT_KIND) {
+    fail('invalid-runtime-manifest', 'The shaping-runtime manifest schema or artifact kind is unsupported');
+  }
+  if (!isRecord(manifest.harfbuzz) ||
+      manifest.harfbuzz.package !== HARFBUZZ_PACKAGE ||
+      manifest.harfbuzz.version !== HARFBUZZ_PACKAGE_VERSION ||
+      manifest.harfbuzz.license !== 'MIT' ||
+      manifest.harfbuzz.packageEngines !== null) {
+    fail('invalid-runtime-manifest', 'The HarfBuzz package identity, version or license differs from the pinned runtime');
+  }
+  if (!isRecord(manifest.unicode) ||
+      manifest.unicode.version !== UNICODE_VERSION ||
+      manifest.unicode.upstream !== 'servo/unicode-bidi' ||
+      manifest.unicode.revision !== UNICODE_UPSTREAM_REVISION ||
+      manifest.unicode.runtimeModule !== 'unicode18-bidi-runtime.js' ||
+      manifest.unicode.wasmModule !== 'unicode18-bidi-runtime.wasm') {
+    fail('invalid-runtime-manifest', 'The Unicode runtime identity differs from the pinned Unicode 18 build');
+  }
+  if (!Array.isArray(manifest.files) || manifest.files.length !== Object.keys(EXPECTED_FILES).length) {
+    fail('invalid-runtime-manifest', 'The runtime manifest file list is incomplete or contains unexpected files');
+  }
+  const seen = new Set();
+  for (const entry of manifest.files) {
+    if (!isRecord(entry) || typeof entry.path !== 'string' || seen.has(entry.path)) {
+      fail('invalid-runtime-manifest', 'The runtime manifest contains an invalid or duplicate file path');
+    }
+    seen.add(entry.path);
+    const expected = EXPECTED_FILES[entry.path];
+    if (!expected || entry.bytes !== expected.bytes || entry.sha256 !== expected.sha256) {
+      fail('invalid-runtime-manifest', 'The runtime manifest record differs from the pinned file identity: ' + entry.path);
+    }
+  }
+  for (const path of Object.keys(EXPECTED_FILES)) {
+    if (!seen.has(path)) fail('invalid-runtime-manifest', 'The runtime manifest is missing ' + path);
+  }
+  return manifest;
+}
+
+async function readBytes(fetchImpl, url, pathLabel) {
+  let response;
+  try {
+    response = await fetchImpl(url, { credentials: 'same-origin', cache: 'force-cache' });
+  } catch (error) {
+    fail('runtime-asset-fetch-failed', 'Could not fetch runtime asset ' + pathLabel, error);
+  }
+  if (!response || response.ok !== true || typeof response.arrayBuffer !== 'function') {
+    fail('runtime-asset-fetch-failed', 'Runtime asset request failed: ' + pathLabel);
+  }
+  let buffer;
+  try {
+    buffer = await response.arrayBuffer();
+  } catch (error) {
+    fail('runtime-asset-read-failed', 'Could not read runtime asset ' + pathLabel, error);
+  }
+  return new Uint8Array(buffer);
+}
+
+async function loadProductionTypographyRuntime(options = {}) {
+  const baseUrl = normalizeBaseUrl(options.baseUrl);
+  const fetchImpl = options.fetchImpl || (typeof fetch === 'function' ? fetch.bind(globalThis) : null);
+  const importModule = options.importModule || ((specifier) => import(specifier));
+  if (typeof fetchImpl !== 'function') {
+    fail('runtime-fetch-unavailable', 'Fetch is required to load the pinned typography runtime');
+  }
+  if (typeof importModule !== 'function') {
+    fail('runtime-import-unavailable', 'Dynamic module import is required to load HarfBuzzJS');
+  }
+
+  const manifestUrl = new URL('manifest.json', baseUrl).href;
+  const manifestBytes = await readBytes(fetchImpl, manifestUrl, 'manifest.json');
+  if (manifestBytes.length === 0 || manifestBytes.length > 16384) {
+    fail('invalid-runtime-manifest', 'The shaping-runtime manifest is empty or exceeds its size limit');
+  }
+  let manifest;
+  try {
+    manifest = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(manifestBytes));
+  } catch (error) {
+    fail('invalid-runtime-manifest', 'The shaping-runtime manifest is not valid UTF-8 JSON', error);
+  }
+  validateManifest(manifest);
+
+  const verifiedBytes = Object.create(null);
+  const assetDigests = Object.create(null);
+  const filePaths = Object.keys(EXPECTED_FILES);
+  const fetched = await Promise.all(filePaths.map(async (path) => {
+    const url = new URL(path, baseUrl).href;
+    const bytes = await readBytes(fetchImpl, url, path);
+    const expected = EXPECTED_FILES[path];
+    if (bytes.length !== expected.bytes) {
+      fail('runtime-asset-size-mismatch', 'Runtime asset byte length differs from its pinned size: ' + path);
+    }
+    const digest = sha256Hex(bytes);
+    if (digest !== expected.sha256) {
+      fail('runtime-asset-hash-mismatch', 'Runtime asset SHA-256 differs from its pinned identity: ' + path);
+    }
+    return { path, bytes, digest };
+  }));
+  for (const item of fetched) {
+    verifiedBytes[item.path] = item.bytes;
+    assetDigests[item.path] = item.digest;
+  }
+
+  let packageMetadata;
+  try {
+    packageMetadata = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(verifiedBytes['harfbuzzjs/package.json']));
+  } catch (error) {
+    fail('invalid-harfbuzz-package-metadata', 'The pinned HarfBuzz package metadata is invalid', error);
+  }
+  if (!isRecord(packageMetadata) ||
+      packageMetadata.name !== HARFBUZZ_PACKAGE ||
+      packageMetadata.version !== HARFBUZZ_PACKAGE_VERSION ||
+      packageMetadata.license !== 'MIT') {
+    fail('invalid-harfbuzz-package-metadata', 'The fetched HarfBuzz package metadata does not match the pinned MIT package');
+  }
+
+  const harfbuzzUrl = new URL('harfbuzzjs/dist/index.mjs', baseUrl).href;
+  let harfbuzz;
+  try {
+    harfbuzz = await importModule(harfbuzzUrl);
+  } catch (error) {
+    fail('harfbuzz-runtime-import-failed', 'Could not import the pinned local HarfBuzzJS module', error);
+  }
+  if (!harfbuzz || typeof harfbuzz.versionString !== 'function' ||
+      typeof harfbuzz.shape !== 'function' || harfbuzz.versionString() !== HARFBUZZ_CORE_VERSION) {
+    fail('harfbuzz-runtime-version-mismatch', 'The imported HarfBuzz core version differs from the pinned 15.0.0 runtime');
+  }
+
+  let unicode;
+  try {
+    unicode = await instantiateUnicode18(verifiedBytes['unicode18-bidi-runtime.wasm']);
+  } catch (error) {
+    fail('unicode-runtime-instantiate-failed', 'Could not instantiate the pinned Unicode 18 WASM module', error);
+  }
+  if (!unicode || unicode.unicodeVersion !== UNICODE_VERSION ||
+      typeof unicode.resolve !== 'function' || typeof unicode.itemizeScripts !== 'function') {
+    fail('unicode-runtime-version-mismatch', 'The instantiated Unicode runtime does not satisfy the Unicode 18 itemization contract');
+  }
+
+  const frozenDigests = Object.freeze({ ...assetDigests });
+  const runtime = {
+    manifest,
+    baseUrl: baseUrl.href,
+    harfbuzz,
+    unicode,
+    assetDigests: frozenDigests,
+    itemize(text, baseDirection = 'auto') {
+      if (typeof text !== 'string') fail('invalid-itemization-source', 'TextItem source must be a string');
+      const bidi = unicode.resolve(text, baseDirection);
+      const itemization = unicode.itemizeScripts(text, bidi);
+      if (itemization.utf16Length !== text.length || itemization.unicodeVersion !== UNICODE_VERSION) {
+        fail('unicode-itemization-integrity-failure', 'Unicode itemization did not preserve the full UTF-16 source');
+      }
+      return Object.freeze({ bidi, itemization });
+    },
+    createShaper(fontResolver, shaperOptions = {}) {
+      if (!isRecord(shaperOptions)) fail('invalid-shaper-options', 'Shaper options must be a plain object');
+      return createHarfBuzzShaper({
+        ...shaperOptions,
+        hb: harfbuzz,
+        fontResolver,
+        engineVersion: harfbuzz.versionString()
+      });
+    }
+  };
+  return Object.freeze(runtime);
+}
+
+module.exports = {
+  RUNTIME_MANIFEST_SCHEMA,
+  HARFBUZZ_PACKAGE_VERSION,
+  HARFBUZZ_CORE_VERSION,
+  UNICODE_VERSION,
+  EXPECTED_FILES,
+  loadProductionTypographyRuntime
+};
+
+};
+__modules["src/engine/typography/unicode18-bidi-runtime.js"] = function (require, module, exports) {
+(function expose(root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.RedBidiRuntime = api;
+})(typeof self !== 'undefined' ? self : globalThis, function createModule() {
+  'use strict';
+
+  const BASE_DIRECTION = Object.freeze({ ltr: 0, rtl: 1, auto: 2 });
+  const NEUTRAL_SCRIPTS = new Set(['Zyyy', 'Zinh', 'Zzzz', 'Zxxx']);
+
+  function directionCode(direction) {
+    if (!Object.prototype.hasOwnProperty.call(BASE_DIRECTION, direction)) {
+      throw new Error('Unknown paragraph base direction: ' + direction);
+    }
+    return BASE_DIRECTION[direction];
+  }
+
+  function requireFunction(exports, name) {
+    if (!exports || typeof exports[name] !== 'function') {
+      throw new Error('Bidi WASM export missing: ' + name);
+    }
+    return exports[name].bind(exports);
+  }
+
+  function toUtf16Units(text) {
+    text = String(text);
+    const units = new Uint16Array(text.length);
+    for (let i = 0; i < text.length; i++) units[i] = text.charCodeAt(i);
+    for (let i = 0; i < units.length; i++) {
+      const unit = units[i];
+      if (unit >= 0xD800 && unit <= 0xDBFF) {
+        const next = units[i + 1];
+        if (next === undefined || next < 0xDC00 || next > 0xDFFF) {
+          throw new TypeError('Ill-formed UTF-16: unpaired high surrogate at code-unit offset ' + i);
+        }
+        i++;
+      } else if (unit >= 0xDC00 && unit <= 0xDFFF) {
+        throw new TypeError('Ill-formed UTF-16: unpaired low surrogate at code-unit offset ' + i);
+      }
+    }
+    return units;
+  }
+
+  function isUtf16Boundary(units, index) {
+    if (index <= 0 || index >= units.length) return true;
+    const previous = units[index - 1];
+    const current = units[index];
+    const previousHigh = previous >= 0xD800 && previous <= 0xDBFF;
+    const currentLow = current >= 0xDC00 && current <= 0xDFFF;
+    return !(previousHigh && currentLow);
+  }
+
+  function codePointBoundaries(text) {
+    const result = [0];
+    let offset = 0;
+    for (const value of String(text)) {
+      offset += value.length;
+      result.push(offset);
+    }
+    return result;
+  }
+
+  function createRuntime(wasmExports) {
+    const exports = wasmExports || {};
+    const memory = exports.memory;
+    if (!(memory instanceof WebAssembly.Memory)) {
+      throw new Error('Bidi WASM memory export is missing');
+    }
+
+    const allocInput = requireFunction(exports, 'bidi_alloc_u16');
+    const freeInput = requireFunction(exports, 'bidi_free_u16');
+    const freeOutput = requireFunction(exports, 'bidi_free_u32');
+    const resolveRaw = requireFunction(exports, 'bidi_resolve');
+    const visualRunsRaw = requireFunction(exports, 'bidi_line_visual_runs');
+    const graphemeScriptMapRaw = requireFunction(exports, 'bidi_grapheme_script_map');
+    const itemizerUnicodeVersion = [
+      requireFunction(exports, 'bidi_itemizer_unicode_version_major')(),
+      requireFunction(exports, 'bidi_itemizer_unicode_version_minor')(),
+      requireFunction(exports, 'bidi_itemizer_unicode_version_patch')()
+    ];
+    if (itemizerUnicodeVersion[0] !== 18 || itemizerUnicodeVersion[1] !== 0 ||
+        itemizerUnicodeVersion[2] !== 0) {
+      throw new Error('Grapheme/script data version must be Unicode 18.0.0; got ' +
+        itemizerUnicodeVersion.join('.'));
+    }
+    const unicodeVersion = [
+      requireFunction(exports, 'bidi_unicode_version_major')(),
+      requireFunction(exports, 'bidi_unicode_version_minor')(),
+      requireFunction(exports, 'bidi_unicode_version_patch')()
+    ];
+
+    if (unicodeVersion[0] !== 18) {
+      throw new Error('Bidi WASM Unicode data version must be 18.0.0; got ' + unicodeVersion.join('.'));
+    }
+
+    function withInput(text, callback) {
+      const units = toUtf16Units(text);
+      if (units.length === 0) throw new Error('Empty UTF-16 input is not supported by this POC ABI');
+      const pointer = allocInput(units.length);
+      if (!pointer) throw new Error('Bidi WASM failed to allocate UTF-16 input');
+      new Uint16Array(memory.buffer, pointer, units.length).set(units);
+      try {
+        return callback(pointer, units);
+      } finally {
+        freeInput(pointer, units.length);
+      }
+    }
+
+    function readOutput(pointer) {
+      if (!pointer) throw new Error('Bidi WASM rejected input or returned an invalid result pointer');
+      const header = new Uint32Array(memory.buffer, pointer, 2);
+      const first = header[0];
+      const second = header[1];
+      return { first, second };
+    }
+
+    function copyAndFreeOutput(pointer, outputLength) {
+      if (!pointer || !Number.isSafeInteger(outputLength) || outputLength < 2) {
+        throw new Error('Invalid Bidi WASM output buffer');
+      }
+      try {
+        return Array.from(new Uint32Array(memory.buffer, pointer, outputLength));
+      } finally {
+        freeOutput(pointer, outputLength);
+      }
+    }
+
+    function resolve(text, baseDirection = 'auto') {
+      const base = directionCode(baseDirection);
+      text = String(text);
+      if (text.length === 0) {
+        return { text, utf16Length: 0, levels: [], paragraphs: [] };
+      }
+
+      return withInput(text, (pointer, units) => {
+        const outputPointer = resolveRaw(pointer, units.length, base);
+        const header = readOutput(outputPointer);
+        const levelCount = header.first;
+        const paragraphCount = header.second;
+        const outputLength = 2 + levelCount + paragraphCount * 3;
+        const values = copyAndFreeOutput(outputPointer, outputLength);
+        if (levelCount !== units.length) {
+          throw new Error('Bidi WASM levels length differs from UTF-16 source length');
+        }
+
+        const levels = values.slice(2, 2 + levelCount);
+        const paragraphs = [];
+        let cursor = 2 + levelCount;
+        for (let i = 0; i < paragraphCount; i++) {
+          const start = values[cursor++];
+          const end = values[cursor++];
+          const level = values[cursor++];
+          if (start > end || end > units.length || level > 126) {
+            throw new Error('Bidi WASM returned an invalid paragraph range or embedding level');
+          }
+          if (!isUtf16Boundary(units, start) || !isUtf16Boundary(units, end)) {
+            throw new Error('Bidi paragraph range splits a UTF-16 surrogate pair');
+          }
+          paragraphs.push({ start, end, level });
+        }
+        return { text: String(text), utf16Length: units.length, levels, paragraphs };
+      });
+    }
+
+    function lineVisualRuns(text, baseDirection, lineStart, lineEnd) {
+      const base = directionCode(baseDirection);
+      text = String(text);
+      if (!Number.isSafeInteger(lineStart) || !Number.isSafeInteger(lineEnd) ||
+          lineStart < 0 || lineEnd < lineStart || lineEnd > text.length) {
+        throw new RangeError('Invalid UTF-16 line range: ' + lineStart + '..' + lineEnd);
+      }
+      if (text.length === 0) {
+        if (lineStart !== 0 || lineEnd !== 0) {
+          throw new RangeError('Only the empty UTF-16 range is valid for empty text');
+        }
+        return { lineStart: 0, lineEnd: 0, levels: [], visualRuns: [] };
+      }
+      return withInput(text, (pointer, units) => {
+        if (!isUtf16Boundary(units, lineStart) || !isUtf16Boundary(units, lineEnd)) {
+          throw new Error('Bidi line range splits a UTF-16 surrogate pair');
+        }
+        const outputPointer = visualRunsRaw(pointer, units.length, base, lineStart, lineEnd);
+        const header = readOutput(outputPointer);
+        const levelCount = header.first;
+        const runCount = header.second;
+        const outputLength = 2 + levelCount + runCount * 3;
+        const values = copyAndFreeOutput(outputPointer, outputLength);
+        if (levelCount !== lineEnd - lineStart) {
+          throw new Error('Bidi visual-run levels length differs from requested line length');
+        }
+
+        const levels = values.slice(2, 2 + levelCount);
+        const runs = [];
+        let cursor = 2 + levelCount;
+        for (let i = 0; i < runCount; i++) {
+          const start = values[cursor++];
+          const end = values[cursor++];
+          const level = values[cursor++];
+          if (start < lineStart || end <= start || end > lineEnd ||
+              !isUtf16Boundary(units, start) || !isUtf16Boundary(units, end)) {
+            throw new Error('Bidi returned an invalid visual run: ' + start + '..' + end);
+          }
+          if (level !== levels[start - lineStart]) {
+            throw new Error('Bidi visual run level differs from its L1-adjusted line level');
+          }
+          runs.push({
+            start,
+            end,
+            level,
+            direction: level % 2 ? 'rtl' : 'ltr'
+          });
+        }
+
+        const sourceOrdered = runs.slice().sort((a, b) => a.start - b.start);
+        let next = lineStart;
+        for (const run of sourceOrdered) {
+          if (run.start !== next) {
+            throw new Error('Bidi visual runs contain a source gap or overlap at ' + next);
+          }
+          next = run.end;
+        }
+        if (next !== lineEnd) throw new Error('Bidi visual runs do not cover the full line');
+        return { lineStart, lineEnd, levels, visualRuns: runs };
+      });
+    }
+
+    function scriptTagOf(value) {
+      const tag = String.fromCharCode(
+        (value >>> 24) & 0xFF,
+        (value >>> 16) & 0xFF,
+        (value >>> 8) & 0xFF,
+        value & 0xFF
+      );
+      if (!/^[A-Za-z]{4}$/.test(tag)) {
+        throw new Error('WASM returned an invalid ISO 15924 Script tag: ' + value);
+      }
+      return tag;
+    }
+
+    function intersectTags(sets) {
+      if (!sets.length) return [];
+      let result = new Set(sets[0]);
+      for (let i = 1; i < sets.length; i++) {
+        const allowed = new Set(sets[i]);
+        result = new Set([...result].filter((tag) => allowed.has(tag)));
+      }
+      return [...result].sort();
+    }
+
+    function resolveGraphemeScript(grapheme, scalars) {
+      const containsBidiControl = scalars.some((scalar) => scalar.isBidiControl);
+      if (containsBidiControl) {
+        return {
+          script: null,
+          status: scalars.every((scalar) => scalar.isBidiControl)
+            ? 'bidi-control'
+            : 'bidi-control-mixed-grapheme',
+          candidates: [],
+          primaryScripts: [],
+          fallbackScript: null
+        };
+      }
+      // UAX #24 §5.2: all marks in a combining sequence inherit the Script
+      // of the base. If the base is Common/Inherited, use the first later
+      // scalar with a specific Script. Mark Script values must not turn one
+      // combining grapheme into a mixed-script grapheme.
+      const isCombiningSequence = scalars.length > 1 &&
+        scalars.slice(1).every((scalar) => scalar.isMark);
+      const effectiveScalar = isCombiningSequence
+        ? scalars.find((scalar) => !NEUTRAL_SCRIPTS.has(scalar.script))
+        : null;
+      const scriptScalars = effectiveScalar ? [effectiveScalar] : scalars;
+      const primary = [...new Set(scriptScalars.map((scalar) => scalar.script)
+        .filter((script) => !NEUTRAL_SCRIPTS.has(script)))].sort();
+      const extensionSets = scriptScalars
+        .map((scalar) => scalar.scriptExtensions.filter((script) => !NEUTRAL_SCRIPTS.has(script)))
+        .filter((set) => set.length > 0);
+      const candidates = intersectTags(extensionSets);
+
+      if (primary.length === 1) {
+        // Script_Extensions may contain additional valid scripts even when
+        // Script has one primary value (for example U+096F). Let surrounding
+        // context choose a permitted alternative; use the primary only when
+        // no contextual resolution is possible.
+        if (candidates.length > 1 && candidates.includes(primary[0])) {
+          return {
+            script: null,
+            status: 'script-extension-contextual',
+            candidates,
+            primaryScripts: primary,
+            fallbackScript: primary[0]
+          };
+        }
+        return {
+          script: primary[0],
+          status: effectiveScalar ? 'combining-sequence-script-inheritance' : 'strong',
+          candidates: candidates.length ? candidates : [primary[0]],
+          primaryScripts: primary,
+          fallbackScript: null
+        };
+      }
+      if (primary.length > 1) {
+        return {
+          script: null,
+          status: 'mixed-grapheme',
+          candidates,
+          primaryScripts: primary,
+          fallbackScript: null
+        };
+      }
+      if (candidates.length === 1) {
+        return {
+          script: candidates[0],
+          status: 'script-extension-singleton',
+          candidates,
+          primaryScripts: [],
+          fallbackScript: null
+        };
+      }
+      return {
+        script: null,
+        status: 'unresolved-common-inherited',
+        candidates,
+        primaryScripts: [],
+        fallbackScript: null
+      };
+    }
+
+    function resolveCommonInherited(graphemes) {
+      // Only graphemes with a single, unambiguous primary Script seed the context.
+      // Mixed-script graphemes are kept unresolved and do not contaminate neighbors.
+      for (let i = 0; i < graphemes.length; i++) {
+        const current = graphemes[i];
+        if (current.status !== 'unresolved-common-inherited' &&
+            current.status !== 'script-extension-contextual') continue;
+
+        let left = null;
+        for (let j = i - 1; j >= 0; j--) {
+          if (graphemes[j].script) { left = graphemes[j].script; break; }
+        }
+        let right = null;
+        for (let j = i + 1; j < graphemes.length; j++) {
+          if (graphemes[j].script) { right = graphemes[j].script; break; }
+        }
+        const allowed = current.candidates;
+        const permits = (tag) => !allowed.length || allowed.includes(tag);
+        let chosen = null;
+        let status = null;
+
+        if (left && right) {
+          if (left === right && permits(left)) {
+            chosen = left;
+            status = 'context-both-sides';
+          } else if (left !== right) {
+            const leftAllowed = permits(left);
+            const rightAllowed = permits(right);
+            // UAX #24 §5.1's simple Common-script heuristic prefers the
+            // preceding script. Script_Extensions narrows the choice where
+            // the character is limited to a set of scripts.
+            if (leftAllowed) {
+              chosen = left;
+              status = allowed.length ? 'script-extensions-context' : 'context-left-preferred';
+            } else if (rightAllowed) {
+              chosen = right;
+              status = 'script-extensions-context';
+            }
+          }
+        } else {
+          const neighbor = left || right;
+          if (neighbor && permits(neighbor)) {
+            chosen = neighbor;
+            status = left ? 'context-left-preferred' : 'context-one-side';
+          }
+        }
+
+        if (chosen) {
+          current.script = chosen;
+          current.status = status;
+        } else if (current.fallbackScript) {
+          current.script = current.fallbackScript;
+          current.status = 'primary-script-fallback';
+        }
+      }
+    }
+
+    const PAIRED_PUNCTUATION = Object.freeze({
+      '(': ')', '[': ']', '{': '}', '<': '>',
+      '«': '»', '‹': '›',
+      '〈': '〉', '《': '》', '「': '」', '『': '』',
+      '【': '】', '〔': '〕', '〖': '〗', '〘': '〙', '〚': '〛'
+    });
+    const CLOSING_PUNCTUATION = Object.freeze(
+      Object.fromEntries(Object.entries(PAIRED_PUNCTUATION).map(([open, close]) => [close, open]))
+    );
+    const ALL_PAIRED_PUNCTUATION = new Set([
+      ...Object.keys(PAIRED_PUNCTUATION),
+      ...Object.values(PAIRED_PUNCTUATION)
+    ]);
+
+    function resolvePairedPunctuation(graphemes) {
+      const stack = [];
+      const pairs = [];
+      for (let i = 0; i < graphemes.length; i++) {
+        const value = graphemes[i].text;
+        if (Object.prototype.hasOwnProperty.call(PAIRED_PUNCTUATION, value)) {
+          stack.push({ value, index: i });
+          continue;
+        }
+        const opener = CLOSING_PUNCTUATION[value];
+        if (!opener) continue;
+        for (let j = stack.length - 1; j >= 0; j--) {
+          if (stack[j].value === opener) {
+            pairs.push({ open: stack[j].index, close: i });
+            stack.splice(j);
+            break;
+          }
+        }
+      }
+
+      const contextualStatuses = new Set([
+        'context-both-sides', 'script-extensions-context',
+        'context-left-preferred', 'context-one-side',
+        'paired-enclosing-context'
+      ]);
+      const nearestScript = (from, to, step) => {
+        for (let i = from; i !== to; i += step) {
+          const grapheme = graphemes[i];
+          if (ALL_PAIRED_PUNCTUATION.has(grapheme.text)) continue;
+          if (grapheme.script && !contextualStatuses.has(grapheme.status)) {
+            return grapheme.script;
+          }
+        }
+        return null;
+      };
+      const allowedBy = (grapheme, script) =>
+        !grapheme.candidates.length || grapheme.candidates.includes(script) ||
+        grapheme.primaryScripts.includes(script) || grapheme.fallbackScript === script;
+
+      for (const pair of pairs) {
+        const left = nearestScript(pair.open - 1, -1, -1);
+        const right = nearestScript(pair.close + 1, graphemes.length, 1);
+        let enclosing = null;
+        if (left && right && left === right) enclosing = left;
+        else if (left && right) enclosing = left; // outer run: preceding context wins
+        else enclosing = left || right;
+
+        // For a standalone pair, the enclosed run is the only available context.
+        if (!enclosing) {
+          enclosing = nearestScript(pair.open + 1, pair.close, 1);
+        }
+        if (!enclosing) continue;
+
+        const open = graphemes[pair.open];
+        const close = graphemes[pair.close];
+        if (!allowedBy(open, enclosing) || !allowedBy(close, enclosing)) continue;
+
+        open.script = enclosing;
+        close.script = enclosing;
+        open.status = 'paired-enclosing-context';
+        close.status = 'paired-enclosing-context';
+      }
+      return pairs.length;
+    }
+
+    function buildScriptRuns(sourceRuns) {
+      return sourceRuns.filter((run) => run.kind === 'shape').map((run) => ({
+        start: run.start,
+        end: run.end,
+        text: run.text,
+        script: run.script,
+        scriptStatus: run.status,
+        scriptCandidates: run.candidates.slice(),
+        direction: run.direction,
+        bidiLevel: run.bidiLevel,
+        graphemeStart: run.graphemeStart,
+        graphemeEnd: run.graphemeEnd
+      }));
+    }
+
+    // A lossless source partition distinguishes text that may be shaped from
+    // bidi controls and unresolved clusters that must not be sent to HarfBuzz.
+    function buildSourceRuns(graphemes) {
+      const runs = [];
+      for (let graphemeIndex = 0; graphemeIndex < graphemes.length; graphemeIndex++) {
+        const grapheme = graphemes[graphemeIndex];
+        const kind = grapheme.shapeable
+          ? 'shape'
+          : (grapheme.isBidiControl ? 'bidi-control' :
+            (grapheme.containsBidiControl ? 'non-shaping-bidi-mixed' : 'unresolved'));
+        const key = kind === 'shape'
+          ? [
+            kind,
+            grapheme.script || '?',
+            grapheme.direction || '?',
+            grapheme.bidiLevel == null ? '?' : grapheme.bidiLevel
+          ].join('|')
+          : [
+            kind,
+            grapheme.script || '?',
+            grapheme.direction || '?',
+            grapheme.bidiLevel == null ? '?' : grapheme.bidiLevel,
+            grapheme.status,
+            grapheme.candidates.join(',')
+          ].join('|');
+        const previous = runs[runs.length - 1];
+        if (previous && previous._key === key && previous.end === grapheme.start) {
+          previous.end = grapheme.end;
+          previous.graphemeEnd++;
+          previous.text += grapheme.text;
+          continue;
+        }
+        runs.push({
+          kind,
+          start: grapheme.start,
+          end: grapheme.end,
+          text: grapheme.text,
+          script: grapheme.script,
+          // Per-grapheme diagnostics remain on graphemes; a shape run is
+          // coalesced by Script/direction/Bidi level and therefore has one
+          // resolved run status even when its graphemes were resolved differently.
+          status: kind === 'shape' ? 'resolved' : grapheme.status,
+          candidates: kind === 'shape' ? [grapheme.script] : grapheme.candidates.slice(),
+          direction: grapheme.direction || null,
+          bidiLevel: grapheme.bidiLevel,
+          graphemeStart: graphemeIndex,
+          graphemeEnd: graphemeIndex + 1,
+          _key: key
+        });
+      }
+      for (const run of runs) delete run._key;
+      return runs;
+    }
+
+    function itemizeScripts(text, bidiResult = null) {
+      text = String(text);
+      const units = toUtf16Units(text);
+      if (bidiResult && (
+        bidiResult.utf16Length !== units.length ||
+        !Array.isArray(bidiResult.levels) ||
+        bidiResult.levels.length !== units.length
+      )) {
+        throw new Error('Bidi levels must describe the same UTF-16 source as script itemization');
+      }
+      if (units.length === 0) {
+        return {
+          text,
+          utf16Length: 0,
+          unicodeVersion: itemizerUnicodeVersion.join('.'),
+          graphemes: [],
+          scriptRuns: [],
+          nonShapingRuns: [],
+          sourceRuns: [],
+          diagnostics: []
+        };
+      }
+
+      return withInput(text, (pointer) => {
+        const outputPointer = graphemeScriptMapRaw(pointer, units.length);
+        if (!outputPointer) throw new Error('Unicode 18 grapheme/script itemizer rejected UTF-16 input');
+
+        const header = new Uint32Array(memory.buffer, outputPointer, 4);
+        const utf16Length = header[0];
+        const graphemeCount = header[1];
+        const scalarCount = header[2];
+        const extensionCount = header[3];
+        if (utf16Length !== units.length || graphemeCount > units.length ||
+            scalarCount > units.length || extensionCount > scalarCount * 64) {
+          // Do not free with an untrusted/partial length: bidi_free_u32 reconstructs
+          // a boxed slice and requires the exact allocation length. A malformed ABI
+          // header is fatal; preserving memory safety is preferable to guessing.
+          throw new Error('Unicode 18 itemizer returned unsafe output dimensions');
+        }
+        const outputLength = 4 + graphemeCount * 4 + scalarCount * 8 + extensionCount;
+        const values = copyAndFreeOutput(outputPointer, outputLength);
+        const graphemeTableStart = 4;
+        const scalarTableStart = graphemeTableStart + graphemeCount * 4;
+        const extensionTableStart = scalarTableStart + scalarCount * 8;
+
+        const scalars = [];
+        let expectedScalarStart = 0;
+        let expectedExtensionStart = 0;
+        for (let i = 0; i < scalarCount; i++) {
+          const offset = scalarTableStart + i * 8;
+          const start = values[offset];
+          const end = values[offset + 1];
+          const script = scriptTagOf(values[offset + 2]);
+          const isMarkValue = values[offset + 3];
+          const isBidiControlValue = values[offset + 4];
+          const isDefaultIgnorableValue = values[offset + 5];
+          const extensionStart = values[offset + 6];
+          const extensionLength = values[offset + 7];
+          if (start !== expectedScalarStart || end <= start || end > units.length ||
+              (end - start !== 1 && end - start !== 2) ||
+              !isUtf16Boundary(units, start) || !isUtf16Boundary(units, end) ||
+              (isMarkValue !== 0 && isMarkValue !== 1) ||
+              (isBidiControlValue !== 0 && isBidiControlValue !== 1) ||
+              (isDefaultIgnorableValue !== 0 && isDefaultIgnorableValue !== 1) ||
+              extensionStart !== expectedExtensionStart ||
+              extensionLength > extensionCount - extensionStart) {
+            throw new Error('Unicode 18 itemizer returned an invalid scalar range at index ' + i);
+          }
+          if (end - start === 1 && units[start] >= 0xD800 && units[start] <= 0xDFFF) {
+            throw new Error('Unicode 18 itemizer returned an isolated surrogate scalar');
+          }
+          if (end - start === 2 && !(
+            units[start] >= 0xD800 && units[start] <= 0xDBFF &&
+            units[start + 1] >= 0xDC00 && units[start + 1] <= 0xDFFF
+          )) {
+            throw new Error('Unicode 18 itemizer returned a non-scalar surrogate pair');
+          }
+          const scriptExtensions = [];
+          for (let j = 0; j < extensionLength; j++) {
+            scriptExtensions.push(scriptTagOf(values[extensionTableStart + extensionStart + j]));
+          }
+          scalars.push({
+            start, end, script,
+            isMark: isMarkValue === 1,
+            isBidiControl: isBidiControlValue === 1,
+            isDefaultIgnorable: isDefaultIgnorableValue === 1,
+            scriptExtensions
+          });
+          expectedScalarStart = end;
+          expectedExtensionStart += extensionLength;
+        }
+        if (expectedScalarStart !== units.length || expectedExtensionStart !== extensionCount) {
+          throw new Error('Unicode 18 scalar/property tables do not cover their full source');
+        }
+
+        const graphemes = [];
+        let expectedStart = 0;
+        let expectedScalarIndex = 0;
+        for (let i = 0; i < graphemeCount; i++) {
+          const offset = graphemeTableStart + i * 4;
+          const start = values[offset];
+          const end = values[offset + 1];
+          const scalarStart = values[offset + 2];
+          const scalarEnd = values[offset + 3];
+          if (start !== expectedStart || end <= start || end > units.length ||
+              !isUtf16Boundary(units, start) || !isUtf16Boundary(units, end) ||
+              scalarStart !== expectedScalarIndex || scalarEnd <= scalarStart ||
+              scalarEnd > scalarCount || scalars[scalarStart].start !== start ||
+              scalars[scalarEnd - 1].end !== end) {
+            throw new Error('Unicode 18 itemizer returned an invalid grapheme range at index ' + i);
+          }
+          const clusterScalars = scalars.slice(scalarStart, scalarEnd);
+          const scriptInfo = resolveGraphemeScript(null, clusterScalars);
+          const cluster = {
+            start,
+            end,
+            text: text.slice(start, end),
+            scalarStart,
+            scalarEnd,
+            scalars: clusterScalars,
+            script: scriptInfo.script,
+            status: scriptInfo.status,
+            candidates: scriptInfo.candidates,
+            primaryScripts: scriptInfo.primaryScripts,
+            containsBidiControl: clusterScalars.some((scalar) => scalar.isBidiControl),
+            isBidiControl: clusterScalars.every((scalar) => scalar.isBidiControl),
+            shapeable: false,
+            bidiLevel: null,
+            direction: null
+          };
+          if (bidiResult) {
+            const clusterLevels = [...new Set(bidiResult.levels.slice(start, end))];
+            if (clusterLevels.length === 1) {
+              cluster.bidiLevel = clusterLevels[0];
+              cluster.direction = cluster.bidiLevel % 2 ? 'rtl' : 'ltr';
+            } else {
+              cluster.status = cluster.status === 'mixed-grapheme'
+                ? cluster.status : 'bidi-level-conflict';
+            }
+          }
+          graphemes.push(cluster);
+          expectedStart = end;
+          expectedScalarIndex = scalarEnd;
+        }
+        if (expectedStart !== units.length || expectedScalarIndex !== scalarCount) {
+          throw new Error('Unicode 18 grapheme table does not cover its full source');
+        }
+
+        resolveCommonInherited(graphemes);
+        const pairedPunctuationPairCount = resolvePairedPunctuation(graphemes);
+        for (const grapheme of graphemes) {
+          grapheme.shapeable = Boolean(grapheme.script) &&
+            !grapheme.containsBidiControl &&
+            grapheme.status !== 'mixed-grapheme' &&
+            grapheme.status !== 'bidi-level-conflict' &&
+            grapheme.status !== 'bidi-control-mixed-grapheme';
+        }
+        const diagnostics = [];
+        for (const grapheme of graphemes) {
+          if (grapheme.status === 'bidi-control-mixed-grapheme') {
+            diagnostics.push({
+              code: 'bidi-control-shares-grapheme-with-text',
+              start: grapheme.start,
+              end: grapheme.end
+            });
+          } else if (grapheme.status === 'mixed-grapheme') {
+            diagnostics.push({
+              code: 'mixed-script-grapheme',
+              start: grapheme.start,
+              end: grapheme.end,
+              scripts: grapheme.primaryScripts
+            });
+          } else if (grapheme.status === 'bidi-level-conflict') {
+            diagnostics.push({
+              code: 'grapheme-bidi-level-conflict',
+              start: grapheme.start,
+              end: grapheme.end
+            });
+          } else if (!grapheme.script && !grapheme.isBidiControl) {
+            diagnostics.push({
+              code: 'script-context-unresolved',
+              start: grapheme.start,
+              end: grapheme.end,
+              candidates: grapheme.candidates
+            });
+          }
+        }
+
+        const sourceRuns = buildSourceRuns(graphemes);
+        return {
+          text,
+          utf16Length: units.length,
+          unicodeVersion: itemizerUnicodeVersion.join('.'),
+          graphemes,
+          scriptRuns: buildScriptRuns(sourceRuns),
+          sourceRuns,
+          nonShapingRuns: sourceRuns.filter((run) => run.kind !== 'shape'),
+          pairedPunctuationPairCount,
+          diagnostics
+        };
+      });
+    }
+
+    function validateFontBoundaries(text, fontRanges) {
+      text = String(text);
+      if (!Array.isArray(fontRanges)) throw new TypeError('Font ranges must be an array');
+      const itemization = itemizeScripts(text);
+      const boundaries = new Set([0, itemization.utf16Length]);
+      for (const grapheme of itemization.graphemes) {
+        boundaries.add(grapheme.start);
+        boundaries.add(grapheme.end);
+      }
+      const diagnostics = [];
+      for (let i = 0; i < fontRanges.length; i++) {
+        const range = fontRanges[i];
+        if (!range || !Number.isSafeInteger(range.start) ||
+            !Number.isSafeInteger(range.end) || range.start < 0 ||
+            range.end < range.start || range.end > itemization.utf16Length) {
+          diagnostics.push({
+            code: 'invalid-font-range',
+            index: i,
+            range: range || null
+          });
+          continue;
+        }
+        for (const edge of ['start', 'end']) {
+          const offset = range[edge];
+          if (!boundaries.has(offset)) {
+            const grapheme = itemization.graphemes.find((item) =>
+              offset > item.start && offset < item.end);
+            diagnostics.push({
+              code: 'font-boundary-splits-grapheme',
+              index: i,
+              edge,
+              offset,
+              grapheme: grapheme ? { start: grapheme.start, end: grapheme.end, text: grapheme.text } : null
+            });
+          }
+        }
+      }
+      return {
+        ok: diagnostics.length === 0,
+        diagnostics,
+        graphemeCount: itemization.graphemes.length
+      };
+    }
+
+    function validateGraphemeFixtures(data) {
+      if (!data || data.unicodeVersion !== '18.0.0' || !Array.isArray(data.fixtures) ||
+          !Number.isSafeInteger(data.testCount) || data.testCount !== data.fixtures.length ||
+          !data.sourceCommit || !data.sourcePath) {
+        throw new TypeError('Grapheme fixtures must be a versioned Unicode 18.0.0 conformance dataset');
+      }
+      const failures = [];
+      let checkedBoundaries = 0;
+      let passedCases = 0;
+      for (const fixture of data.fixtures) {
+        const text = String(fixture.text);
+        const expected = fixture.expectedBoundaries;
+        if (!Array.isArray(expected) || !expected.length ||
+            expected.some((value) => !Number.isSafeInteger(value) || value < 0 || value > text.length) ||
+            expected[0] !== 0 || expected[expected.length - 1] !== text.length ||
+            expected.some((value, index) => index > 0 && value <= expected[index - 1])) {
+          throw new Error('Malformed expected GraphemeBreakTest boundaries for ' + String(fixture.id));
+        }
+        const itemization = itemizeScripts(text);
+        const actual = [0, ...itemization.graphemes.map((grapheme) => grapheme.end)];
+        checkedBoundaries += expected.length;
+        const matches = actual.length === expected.length &&
+          actual.every((value, index) => value === expected[index]);
+        if (matches) {
+          passedCases++;
+        } else if (failures.length < 25) {
+          failures.push({
+            id: fixture.id,
+            sourceLine: fixture.sourceLine,
+            expected,
+            actual
+          });
+        }
+      }
+      return {
+        unicodeVersion: data.unicodeVersion,
+        sourceRepository: data.sourceRepository,
+        sourceCommit: data.sourceCommit,
+        sourcePath: data.sourcePath,
+        testCount: data.fixtures.length,
+        passedCases,
+        failedCases: data.fixtures.length - passedCases,
+        checkedBoundaries,
+        failureExamples: failures
+      };
+    }
+
+    function logicalRunsForParagraph(paragraph, levels, units) {
+      const runs = [];
+      let index = paragraph.start;
+      while (index < paragraph.end) {
+        const level = levels[index];
+        let end = index + 1;
+        while (end < paragraph.end && levels[end] === level) end++;
+        if (!isUtf16Boundary(units, index) || !isUtf16Boundary(units, end)) {
+          throw new Error('Logical bidi run boundary splits a surrogate pair');
+        }
+        runs.push({
+          start: index,
+          end,
+          level,
+          direction: level % 2 ? 'rtl' : 'ltr'
+        });
+        index = end;
+      }
+      return runs;
+    }
+
+    function pickLineSplit(text, start, end, boundaries) {
+      const middle = (start + end) / 2;
+      const candidates = boundaries.filter((offset) => offset > start && offset < end);
+      if (!candidates.length) return null;
+      const whitespaceCandidates = candidates.filter((offset) => /\s/u.test(text.slice(offset - 1, offset)));
+      const choices = whitespaceCandidates.length ? whitespaceCandidates : candidates;
+      choices.sort((a, b) => Math.abs(a - middle) - Math.abs(b - middle));
+      return choices[0];
+    }
+
+    function analyzeFixtures(fixtures) {
+      if (!Array.isArray(fixtures)) throw new TypeError('Bidi fixture list must be an array');
+      return {
+        unicodeVersion: unicodeVersion.join('.'),
+        fixtureCount: fixtures.length,
+        fixtures: fixtures.map((fixture) => {
+          const text = String(fixture.text);
+          const baseDirection = fixture.baseDirection || 'auto';
+          const units = toUtf16Units(text);
+          const resolved = resolve(text, baseDirection);
+          const boundaries = codePointBoundaries(text);
+          const paragraphResults = resolved.paragraphs.map((paragraph, paragraphIndex) => {
+            const logicalRuns = logicalRunsForParagraph(paragraph, resolved.levels, units);
+            const lines = [];
+            if (paragraph.end > paragraph.start) {
+              const whole = lineVisualRuns(text, baseDirection, paragraph.start, paragraph.end);
+              lines.push({ kind: 'whole-paragraph', ...whole });
+              const split = pickLineSplit(text, paragraph.start, paragraph.end, boundaries);
+              if (split !== null) {
+                lines.push({
+                  kind: 'line-wrap-probe-first',
+                  ...lineVisualRuns(text, baseDirection, paragraph.start, split)
+                });
+                lines.push({
+                  kind: 'line-wrap-probe-second',
+                  ...lineVisualRuns(text, baseDirection, split, paragraph.end)
+                });
+              }
+            }
+            return {
+              index: paragraphIndex,
+              start: paragraph.start,
+              end: paragraph.end,
+              baseLevel: paragraph.level,
+              logicalRuns,
+              lines
+            };
+          });
+          const itemization = itemizeScripts(text, resolved);
+          return {
+            id: fixture.id,
+            baseDirection,
+            text,
+            utf16Length: units.length,
+            levels: resolved.levels,
+            itemization,
+            paragraphs: paragraphResults
+          };
+        })
+      };
+    }
+
+    return {
+      unicodeVersion: unicodeVersion.join('.'),
+      resolve,
+      lineVisualRuns,
+      itemizeScripts,
+      validateFontBoundaries,
+      validateGraphemeFixtures,
+      analyzeFixtures
+    };
+  }
+
+  async function instantiate(bytes) {
+    const source = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    const result = await WebAssembly.instantiate(source, {});
+    return createRuntime(result.instance.exports);
+  }
+
+  return { BASE_DIRECTION, createRuntime, instantiate, toUtf16Units, isUtf16Boundary };
+});
+
+};
+__modules["src/engine/typography/harfbuzz-shaper.js"] = function (require, module, exports) {
+// red-build/src/engine/typography/harfbuzz-shaper.js
+// Production HarfBuzz adapter. It consumes a canonical TextItemShapingPlan;
+// it never resolves Bidi/Script/graphemes or measures Unicode independently.
+'use strict';
+
+const { sha256Hex } = require('../assets/hash256');
+const { createShapedRun } = require('./shaped-run');
+
+const SHAPED_TEXT_ITEM_VERSION = 'shaped-text-item-v1';
+const MAX_HARFBUZZ_CLUSTER = 0xFFFFFFFF;
+
+function fail(code, message) {
+  const error = new TypeError(message);
+  error.code = code;
+  throw error;
+}
+
+function isRecord(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+function requireRecord(value, code, label) {
+  if (!isRecord(value)) fail(code, label + ' must be a plain object');
+  return value;
+}
+
+function requireString(value, code, label) {
+  if (typeof value !== 'string' || !value.length) fail(code, label + ' must be a non-empty string');
+  return value;
+}
+
+function requireFinite(value, code, label) {
+  if (!Number.isFinite(value)) fail(code, label + ' must be finite');
+  return value;
+}
+
+function requireInteger(value, min, code, label) {
+  if (!Number.isSafeInteger(value) || value < min) fail(code, label + ' must be an integer >= ' + min);
+  return value;
+}
+
+function deepFreeze(value, seen = new Set()) {
+  if (!value || typeof value !== 'object' || seen.has(value)) return value;
+  seen.add(value);
+  for (const key of Object.keys(value)) deepFreeze(value[key], seen);
+  return Object.freeze(value);
+}
+
+function normalizeExtents(raw, gid) {
+  if (raw == null) return null;
+  const xBearing = requireFinite(Number(raw.xBearing), 'invalid-glyph-extents', 'glyph ' + gid + ' xBearing');
+  const yBearing = requireFinite(Number(raw.yBearing), 'invalid-glyph-extents', 'glyph ' + gid + ' yBearing');
+  const width = requireFinite(Number(raw.width), 'invalid-glyph-extents', 'glyph ' + gid + ' width');
+  const height = requireFinite(Number(raw.height), 'invalid-glyph-extents', 'glyph ' + gid + ' height');
+  const xOther = xBearing + width;
+  const yOther = yBearing + height;
+  return {
+    xMin: Math.min(xBearing, xOther),
+    yMin: Math.min(yBearing, yOther),
+    xMax: Math.max(xBearing, xOther),
+    yMax: Math.max(yBearing, yOther)
+  };
+}
+
+function validatePlan(plan) {
+  requireRecord(plan, 'invalid-text-item-shaping-plan', 'TextItemShapingPlan');
+  if (plan.kind !== 'TextItemShapingPlan' || plan.version !== 'text-item-shaping-plan-v2-grapheme-coverage') {
+    fail('invalid-text-item-shaping-plan', 'Unsupported TextItemShapingPlan kind/version');
+  }
+  const text = requireString(plan.text, 'invalid-text-item-shaping-plan', 'plan.text');
+  requireString(plan.itemId, 'invalid-text-item-shaping-plan', 'plan.itemId');
+  requireString(plan.unicodeVersion, 'invalid-text-item-shaping-plan', 'plan.unicodeVersion');
+  const sourceRange = requireRecord(plan.sourceRange, 'invalid-text-item-source-range', 'plan.sourceRange');
+  const sourceStart = requireInteger(sourceRange.start, 0, 'invalid-text-item-source-range', 'plan.sourceRange.start');
+  const sourceEnd = requireInteger(sourceRange.end, sourceStart + 1, 'invalid-text-item-source-range', 'plan.sourceRange.end');
+  if (sourceEnd - sourceStart !== text.length) {
+    fail('text-item-source-length-mismatch', 'TextItemShapingPlan sourceRange does not cover its text');
+  }
+  if (!Array.isArray(plan.scriptRuns) || !Array.isArray(plan.sourceRuns) ||
+      !Array.isArray(plan.nonShapingRuns)) {
+    fail('invalid-text-item-shaping-plan', 'Plan must provide ScriptRuns and lossless source projections');
+  }
+  let expected = sourceStart;
+  for (let index = 0; index < plan.sourceRuns.length; index++) {
+    const run = plan.sourceRuns[index];
+    if (!run || run.start !== expected || !Number.isSafeInteger(run.end) ||
+        run.end <= run.start || run.end > sourceEnd ||
+        run.text !== text.slice(run.start - sourceStart, run.end - sourceStart)) {
+      fail('invalid-plan-source-partition', 'Plan sourceRuns are not a contiguous source partition at index ' + index);
+    }
+    expected = run.end;
+  }
+  if (expected !== sourceEnd) fail('incomplete-plan-source-coverage', 'Plan sourceRuns do not cover the TextItem');
+
+  let previousEnd = sourceStart;
+  for (let index = 0; index < plan.scriptRuns.length; index++) {
+    const run = plan.scriptRuns[index];
+    requireRecord(run, 'invalid-planned-script-run', 'plan.scriptRuns[' + index + ']');
+    requireString(run.id, 'invalid-planned-script-run', 'run.id');
+    const range = requireRecord(run.sourceRange, 'invalid-planned-script-run', 'run.sourceRange');
+    const start = requireInteger(range.start, sourceStart, 'invalid-planned-script-run', 'run.sourceRange.start');
+    const end = requireInteger(range.end, start + 1, 'invalid-planned-script-run', 'run.sourceRange.end');
+    if (start < previousEnd || end > sourceEnd || end - start !== run.text.length ||
+        run.text !== text.slice(start - sourceStart, end - sourceStart)) {
+      fail('invalid-planned-script-run-range', 'Planned ScriptRuns overlap or do not match TextItem source at index ' + index);
+    }
+    if ((run.bot !== true && run.bot !== false) || (run.eot !== true && run.eot !== false) ||
+        run.bot !== (start === sourceStart) || run.eot !== (end === sourceEnd)) {
+      fail('invalid-planned-run-boundary-flags', 'BOT/EOT must describe actual TextItem boundaries at ScriptRun ' + index);
+    }
+    if (!Array.isArray(run.graphemes) || !run.graphemes.length) {
+      fail('invalid-planned-run-graphemes', 'Every shaping run must contain its canonical EGC slice');
+    }
+    let graphemeExpected = start;
+    for (let gi = 0; gi < run.graphemes.length; gi++) {
+      const grapheme = run.graphemes[gi];
+      if (!grapheme || grapheme.start !== graphemeExpected ||
+          !Number.isSafeInteger(grapheme.end) || grapheme.end <= grapheme.start ||
+          grapheme.end > end || grapheme.end - grapheme.start !== grapheme.text.length ||
+          grapheme.text !== run.text.slice(grapheme.start - start, grapheme.end - start)) {
+        fail('invalid-planned-run-graphemes', 'ScriptRun EGCs do not partition the run at index ' + gi);
+      }
+      if (!Array.isArray(grapheme.coverageCodePoints) || grapheme.coverageCodePoints.some((codePoint) =>
+          !Number.isSafeInteger(codePoint) || codePoint < 0 || codePoint > 0x10FFFF ||
+          (codePoint >= 0xD800 && codePoint <= 0xDFFF))) {
+        fail('invalid-planned-grapheme-coverage',
+          'Every planned EGC must retain its Unicode-scalar coverageCodePoints from the Unicode itemizer');
+      }
+      graphemeExpected = grapheme.end;
+    }
+    if (graphemeExpected !== end) {
+      fail('incomplete-planned-run-graphemes', 'ScriptRun EGCs do not cover the full shaping run');
+    }
+    requireRecord(run.font, 'invalid-planned-font', 'run.font');
+    requireString(run.font.fontId, 'invalid-planned-font', 'run.font.fontId');
+    if (!/^[0-9a-f]{64}$/i.test(run.font.sourceHash || '')) {
+      fail('invalid-planned-font-hash', 'run.font.sourceHash must be a full SHA-256');
+    }
+    requireInteger(run.font.faceIndex, 0, 'invalid-planned-font', 'run.font.faceIndex');
+    requireInteger(run.font.unitsPerEm, 1, 'invalid-planned-font', 'run.font.unitsPerEm');
+    if (!Array.isArray(run.font.variationAxes) || !Array.isArray(run.features)) {
+      fail('invalid-planned-font-policy', 'Variation axes and OpenType features must be explicit arrays');
+    }
+    if (!/^[A-Za-z]{4}$/.test(run.script || '') ||
+        !['ltr', 'rtl'].includes(run.direction) ||
+        !Number.isSafeInteger(run.bidiLevel) || run.bidiLevel < 0 ||
+        ((run.bidiLevel % 2 === 1) !== (run.direction === 'rtl'))) {
+      fail('invalid-planned-shaping-context', 'Script/direction/Bidi-level policy is invalid');
+    }
+    requireString(run.language, 'invalid-planned-shaping-context', 'run.language');
+    previousEnd = end;
+  }
+  return { text, sourceRange, sourceStart, sourceEnd };
+}
+
+function createHarfBuzzShaper(options = {}) {
+  const hb = options.hb;
+  const fontResolver = options.fontResolver;
+  const engineVersion = options.engineVersion;
+  const inkBoundsProvider = options.inkBoundsProvider || null;
+  const requireInkBounds = options.requireInkBounds === true;
+  if (!hb || typeof hb.shape !== 'function' || !hb.Blob || !hb.Face || !hb.Font ||
+      !hb.Buffer || !hb.Feature || !hb.Variation || !hb.ClusterLevel || !hb.BufferFlag || !hb.Direction) {
+    fail('harfbuzz-runtime-not-ready', 'A fully initialized HarfBuzzJS runtime is required');
+  }
+  if (!fontResolver || typeof fontResolver.resolveFontById !== 'function') {
+    fail('font-resolver-not-ready', 'Canonical FontResolver with resolveFontById is required');
+  }
+  requireString(engineVersion, 'missing-harfbuzz-version', 'engineVersion');
+  if (requireInkBounds && typeof inkBoundsProvider !== 'function') {
+    fail('ink-bounds-provider-required', 'Exact ink bounds were requested but no validated bounds provider was supplied');
+  }
+
+  const fontCache = new Map();
+
+  function resolveFontInstance(fontSpec) {
+    const resolution = fontResolver.resolveFontById(fontSpec.fontId);
+    if (!resolution || !resolution.ok || !resolution.record || !resolution.record.font) {
+      fail('font-id-not-resolved', 'FontResolver cannot resolve planned fontId ' + fontSpec.fontId);
+    }
+    const record = resolution.record;
+    if (record.sourceHash !== fontSpec.sourceHash) {
+      fail('font-source-hash-mismatch', 'FontResolver content hash changed after TextItem shaping plan creation');
+    }
+    const bytes = record.font.bytes;
+    if (!bytes || !bytes.length || sha256Hex(bytes) !== fontSpec.sourceHash) {
+      fail('font-bytes-integrity-failure', 'Font bytes no longer match their canonical SHA-256 identity');
+    }
+    if (record.unitsPerEm !== fontSpec.unitsPerEm || record.font.unitsPerEm !== fontSpec.unitsPerEm) {
+      fail('font-units-per-em-mismatch', 'Planned font UPEM differs from FontResolver parsed metrics');
+    }
+
+    const cacheKey = JSON.stringify([
+      fontSpec.fontId, fontSpec.sourceHash, fontSpec.faceIndex, fontSpec.variationAxes
+    ]);
+    const cached = fontCache.get(cacheKey);
+    if (cached) return cached;
+
+    const blob = new hb.Blob(bytes);
+    const face = new hb.Face(blob, fontSpec.faceIndex);
+    if (!Number.isSafeInteger(face.upem) || face.upem !== fontSpec.unitsPerEm) {
+      fail('harfbuzz-face-upem-mismatch', 'HarfBuzz Face UPEM differs from FontResolver parsed UPEM');
+    }
+    if (typeof face.getAxisInfos !== 'function') {
+      fail('harfbuzz-variation-api-missing', 'HarfBuzzJS Face.getAxisInfos is required for explicit axis validation');
+    }
+    const axisInfos = face.getAxisInfos();
+    const variations = fontSpec.variationAxes.map((axis) => {
+      const info = axisInfos && axisInfos[axis.tag];
+      if (!info) fail('unsupported-font-variation-axis', 'Font ' + fontSpec.fontId + ' has no variation axis ' + axis.tag);
+      if (!Number.isFinite(info.min) || !Number.isFinite(info.max) ||
+          axis.value < info.min || axis.value > info.max) {
+        fail('font-variation-axis-out-of-range',
+          'Variation axis ' + axis.tag + ' value ' + axis.value + ' is outside [' + info.min + ',' + info.max + ']');
+      }
+      return new hb.Variation(axis.tag, axis.value);
+    });
+    const font = new hb.Font(face);
+    // HarfBuzz positions are kept in font units; pixel scaling happens only at
+    // the layout boundary after the line-breaker has consumed these advances.
+    font.setScale(face.upem, face.upem);
+    if (variations.length) font.setVariations(variations);
+    const instance = { blob, face, font, sourceHash: fontSpec.sourceHash };
+    fontCache.set(cacheKey, instance);
+    return instance;
+  }
+
+  function shapeRun(planRun, plan) {
+    const instance = resolveFontInstance(planRun.font);
+    const inputCodepoints = [];
+    const graphemeStarts = [];
+    for (const grapheme of planRun.graphemes) graphemeStarts.push(grapheme.start);
+    const allowedStarts = new Set(graphemeStarts);
+    let offset = 0;
+    let graphemeIndex = 0;
+    while (offset < planRun.text.length) {
+      const absoluteOffset = planRun.sourceRange.start + offset;
+      while (graphemeIndex + 1 < planRun.graphemes.length &&
+          absoluteOffset >= planRun.graphemes[graphemeIndex].end) graphemeIndex++;
+      const codePoint = planRun.text.codePointAt(offset);
+      if (codePoint >= 0xD800 && codePoint <= 0xDFFF) {
+        fail('invalid-plan-utf16', 'TextItemShapingPlan contains an unpaired surrogate in a shaping run');
+      }
+      const cluster = graphemeStarts[graphemeIndex];
+      if (cluster > MAX_HARFBUZZ_CLUSTER) {
+        fail('harfbuzz-cluster-domain-overflow', 'Document UTF-16 offset exceeds HarfBuzz uint32 cluster domain');
+      }
+      inputCodepoints.push({ codePoint, cluster });
+      offset += codePoint > 0xFFFF ? 2 : 1;
+    }
+    if (!inputCodepoints.length || inputCodepoints[0].cluster !== planRun.sourceRange.start) {
+      fail('invalid-plan-codepoint-map', 'Shaping run does not begin with its first canonical grapheme cluster');
+    }
+
+    const buffer = new hb.Buffer();
+    for (const input of inputCodepoints) buffer.add(input.codePoint, input.cluster);
+    buffer.setDirection(planRun.direction === 'rtl' ? hb.Direction.RTL : hb.Direction.LTR);
+    buffer.setScript(planRun.script);
+    buffer.setLanguage(planRun.language);
+    buffer.setClusterLevel(hb.ClusterLevel.MONOTONE_CHARACTERS);
+    let flags = hb.BufferFlag.DEFAULT;
+    if (planRun.bot) flags |= hb.BufferFlag.BOT;
+    if (planRun.eot) flags |= hb.BufferFlag.EOT;
+    buffer.setFlags(flags);
+
+    const features = planRun.features.map((feature) => new hb.Feature(feature.tag, feature.value));
+    hb.shape(instance.font, buffer, features);
+    const infos = buffer.getGlyphInfos();
+    const positions = buffer.getGlyphPositions();
+    if (!Array.isArray(infos) || !Array.isArray(positions) || !infos.length || infos.length !== positions.length) {
+      fail('invalid-harfbuzz-output', 'HarfBuzz returned an empty or inconsistent glyph/position sequence');
+    }
+
+    const outputClusters = infos.map((info) => Number(info.cluster));
+    for (const cluster of outputClusters) {
+      if (!Number.isSafeInteger(cluster) || !allowedStarts.has(cluster)) {
+        fail('invalid-output-cluster', 'HarfBuzz output cluster is not a canonical EGC start: ' + cluster);
+      }
+    }
+    for (let i = 1; i < outputClusters.length; i++) {
+      const monotone = planRun.direction === 'rtl'
+        ? outputClusters[i] <= outputClusters[i - 1]
+        : outputClusters[i] >= outputClusters[i - 1];
+      if (!monotone) fail('non-monotone-glyph-clusters', 'HarfBuzz output clusters violate MONOTONE_CHARACTERS');
+    }
+
+    const sortedStarts = Array.from(new Set(outputClusters)).sort((a, b) => a - b);
+    if (sortedStarts[0] !== planRun.sourceRange.start) {
+      fail('incomplete-shaped-source-prefix',
+        'HarfBuzz emitted no cluster for the beginning of the shaping run; source mapping cannot be inferred safely');
+    }
+    const clusterEndByStart = new Map();
+    for (let i = 0; i < sortedStarts.length; i++) {
+      clusterEndByStart.set(sortedStarts[i],
+        i + 1 < sortedStarts.length ? sortedStarts[i + 1] : planRun.sourceRange.end);
+    }
+
+    const diagnostics = [];
+    const glyphs = infos.map((info, index) => {
+      const gid = requireInteger(Number(info.codepoint), 1, 'missing-glyph-coverage', 'HarfBuzz GID (.notdef is not valid coverage)');
+      const cluster = outputClusters[index];
+      const position = positions[index];
+      const controlBounds = normalizeExtents(instance.font.glyphExtents(gid), gid);
+      const inkBounds = typeof inkBoundsProvider === 'function'
+        ? inkBoundsProvider({
+            font: instance.font, face: instance.face, fontId: planRun.font.fontId,
+            sourceHash: planRun.font.sourceHash, faceIndex: planRun.font.faceIndex,
+            variationAxes: planRun.font.variationAxes, gid
+          })
+        : null;
+      if (requireInkBounds && inkBounds == null) {
+        fail('ink-bounds-unavailable',
+          'A required tight ink-bounds provider returned no bounds for font ' + planRun.font.fontId + ', GID ' + gid);
+      }
+      return {
+        gid,
+        cluster,
+        xAdvance: requireFinite(Number(position.xAdvance), 'invalid-harfbuzz-position', 'xAdvance'),
+        yAdvance: requireFinite(Number(position.yAdvance), 'invalid-harfbuzz-position', 'yAdvance'),
+        xOffset: requireFinite(Number(position.xOffset), 'invalid-harfbuzz-position', 'xOffset'),
+        yOffset: requireFinite(Number(position.yOffset), 'invalid-harfbuzz-position', 'yOffset'),
+        flags: requireInteger(Number(info.flags || 0), 0, 'invalid-harfbuzz-glyph-flags', 'glyph flags'),
+        controlBounds,
+        inkBounds
+      };
+    });
+    if (!inkBoundsProvider) {
+      diagnostics.push({
+        code: 'tight-ink-bounds-not-computed',
+        message: 'No validated ink-bounds provider was supplied; control bounds are preserved separately',
+        severity: 'warning'
+      });
+    }
+
+    return createShapedRun({
+      id: planRun.id,
+      text: planRun.text,
+      sourceRange: planRun.sourceRange,
+      font: planRun.font,
+      shaping: {
+        engine: 'harfbuzz',
+        engineVersion,
+        unicodeVersion: plan.unicodeVersion,
+        script: planRun.script,
+        language: planRun.language,
+        direction: planRun.direction,
+        bidiLevel: planRun.bidiLevel,
+        bot: planRun.bot,
+        eot: planRun.eot,
+        clusterLevel: 'monotone-characters',
+        variationAxes: planRun.font.variationAxes,
+        features: planRun.features
+      },
+      graphemes: planRun.graphemes,
+      glyphs,
+      diagnostics
+    });
+  }
+
+  function shapeTextItemPlan(plan) {
+    const validated = validatePlan(plan);
+    const shapedRuns = plan.scriptRuns.map((run) => shapeRun(run, plan));
+    const diagnostics = (Array.isArray(plan.diagnostics) ? plan.diagnostics.slice() : [])
+      .concat(...shapedRuns.map((run) => run.diagnostics));
+    return deepFreeze({
+      kind: 'ShapedTextItem',
+      version: SHAPED_TEXT_ITEM_VERSION,
+      itemId: plan.itemId,
+      text: validated.text,
+      sourceRange: { ...validated.sourceRange },
+      unicodeVersion: plan.unicodeVersion,
+      sourceRuns: plan.sourceRuns,
+      nonShapingRuns: plan.nonShapingRuns,
+      shapedRuns,
+      diagnostics
+    });
+  }
+
+  function clearFontCache() {
+    fontCache.clear();
+  }
+
+  return Object.freeze({
+    shapeTextItemPlan,
+    clearFontCache,
+    getFontCacheSize: () => fontCache.size
+  });
+}
+
+module.exports = { SHAPED_TEXT_ITEM_VERSION, createHarfBuzzShaper };
+
+};
+__modules["src/engine/typography/shaped-run.js"] = function (require, module, exports) {
+// red-build/src/engine/typography/shaped-run.js
+// Canonical immutable ShapedRun/ShapedGlyph contract — production model layer.
+'use strict';
+
+const SHAPED_RUN_CONTRACT_VERSION = 'shaped-run-v1';
+const CLUSTER_LEVEL = 'monotone-characters';
+
+function fail(code, message) {
+  const error = new TypeError(message);
+  error.code = code;
+  throw error;
+}
+
+function isRecord(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+function requireRecord(value, code, label) {
+  if (!isRecord(value)) fail(code, label + ' must be a plain object');
+  return value;
+}
+
+function requireString(value, code, label) {
+  if (typeof value !== 'string' || value.length === 0) {
+    fail(code, label + ' must be a non-empty string');
+  }
+  return value;
+}
+
+function requireInteger(value, min, code, label) {
+  if (!Number.isSafeInteger(value) || value < min) {
+    fail(code, label + ' must be an integer >= ' + min);
+  }
+  return value;
+}
+
+function requireFinite(value, code, label) {
+  if (!Number.isFinite(value)) fail(code, label + ' must be finite');
+  return value;
+}
+
+function assertWellFormedUtf16(text, label) {
+  for (let i = 0; i < text.length; i++) {
+    const unit = text.charCodeAt(i);
+    if (unit >= 0xD800 && unit <= 0xDBFF) {
+      if (i + 1 >= text.length) fail('invalid-utf16', label + ' ends with an unpaired high surrogate');
+      const next = text.charCodeAt(i + 1);
+      if (next < 0xDC00 || next > 0xDFFF) {
+        fail('invalid-utf16', label + ' contains an unpaired high surrogate at UTF-16 offset ' + i);
+      }
+      i++;
+    } else if (unit >= 0xDC00 && unit <= 0xDFFF) {
+      fail('invalid-utf16', label + ' contains an unpaired low surrogate at UTF-16 offset ' + i);
+    }
+  }
+}
+
+function normalizeSourceRange(input, text) {
+  const range = requireRecord(input, 'invalid-source-range', 'sourceRange');
+  const start = requireInteger(range.start, 0, 'invalid-source-range', 'sourceRange.start');
+  const end = requireInteger(range.end, 1, 'invalid-source-range', 'sourceRange.end');
+  if (end <= start || end - start !== text.length) {
+    fail('source-range-length-mismatch', 'sourceRange must cover the text exactly in UTF-16 code units');
+  }
+  const out = { coordinateSpace: 'document-utf16', start, end };
+  for (const key of ['docId', 'blockId', 'itemId']) {
+    if (range[key] != null) out[key] = requireString(range[key], 'invalid-source-range', 'sourceRange.' + key);
+  }
+  if (range.runIndex != null) {
+    out.runIndex = requireInteger(range.runIndex, 0, 'invalid-source-range', 'sourceRange.runIndex');
+  }
+  return out;
+}
+
+function normalizeFont(input) {
+  const font = requireRecord(input, 'invalid-font-identity', 'font');
+  const fontId = requireString(font.fontId, 'invalid-font-identity', 'font.fontId');
+  const faceIndex = font.faceIndex == null
+    ? 0
+    : requireInteger(font.faceIndex, 0, 'invalid-font-identity', 'font.faceIndex');
+  const unitsPerEm = requireInteger(font.unitsPerEm, 1, 'invalid-font-identity', 'font.unitsPerEm');
+
+  if (typeof font.sourceHash !== 'string' || !/^[0-9a-f]{64}$/i.test(font.sourceHash)) {
+    fail('invalid-font-hash', 'font.sourceHash must be a 64-character hexadecimal SHA-256');
+  }
+  const out = { fontId, faceIndex, unitsPerEm, sourceHash: font.sourceHash.toLowerCase() };
+  if (font.normalizedHash != null) {
+    if (typeof font.normalizedHash !== 'string' || !/^[0-9a-f]{64}$/i.test(font.normalizedHash)) {
+      fail('invalid-font-hash', 'font.normalizedHash must be a 64-character hexadecimal SHA-256');
+    }
+    out.normalizedHash = font.normalizedHash.toLowerCase();
+  }
+  return out;
+}
+
+function normalizeTagValueList(input, code, label) {
+  if (!Array.isArray(input)) fail(code, label + ' must be an array (use [] when empty)');
+  const seen = new Set();
+  return input.map((item, index) => {
+    const rec = requireRecord(item, code, label + '[' + index + ']');
+    const tag = requireString(rec.tag, code, label + '[' + index + '].tag');
+    if (!/^[A-Za-z0-9]{4}$/.test(tag)) {
+      fail(code, label + '[' + index + '].tag must be a four-character OpenType tag');
+    }
+    if (seen.has(tag)) fail(code, label + ' contains duplicate tag ' + tag);
+    seen.add(tag);
+    return { tag, value: requireFinite(rec.value, code, label + '[' + index + '].value') };
+  });
+}
+
+function normalizeShaping(input) {
+  const shaping = requireRecord(input, 'invalid-shaping-context', 'shaping');
+  const script = requireString(shaping.script, 'invalid-shaping-context', 'shaping.script');
+  if (!/^[A-Za-z]{4}$/.test(script)) {
+    fail('invalid-shaping-context', 'shaping.script must be a four-letter ISO 15924 tag');
+  }
+  const language = requireString(shaping.language, 'invalid-shaping-context', 'shaping.language');
+  const direction = shaping.direction;
+  if (direction !== 'ltr' && direction !== 'rtl') {
+    fail('invalid-shaping-context', 'shaping.direction must be ltr or rtl');
+  }
+  const bidiLevel = requireInteger(shaping.bidiLevel, 0, 'invalid-shaping-context', 'shaping.bidiLevel');
+  if ((bidiLevel % 2 === 1) !== (direction === 'rtl')) {
+    fail('bidi-level-direction-mismatch', 'Bidi level parity does not match shaping direction');
+  }
+  const engine = requireString(shaping.engine, 'invalid-shaping-context', 'shaping.engine');
+  const engineVersion = requireString(shaping.engineVersion, 'invalid-shaping-context', 'shaping.engineVersion');
+  const unicodeVersion = requireString(shaping.unicodeVersion, 'invalid-shaping-context', 'shaping.unicodeVersion');
+  if (shaping.bot !== true && shaping.bot !== false) {
+    fail('invalid-shaping-context', 'shaping.bot must be explicit boolean');
+  }
+  if (shaping.eot !== true && shaping.eot !== false) {
+    fail('invalid-shaping-context', 'shaping.eot must be explicit boolean');
+  }
+  if (shaping.clusterLevel !== CLUSTER_LEVEL) {
+    fail('invalid-cluster-level', 'ShapedRun requires MONOTONE_CHARACTERS cluster semantics');
+  }
+
+  const variationAxes = normalizeTagValueList(
+    shaping.variationAxes,
+    'invalid-variation-axes',
+    'shaping.variationAxes'
+  );
+  const features = normalizeTagValueList(
+    shaping.features,
+    'invalid-open-type-features',
+    'shaping.features'
+  );
+
+  return {
+    engine,
+    engineVersion,
+    unicodeVersion,
+    script,
+    language,
+    direction,
+    bidiLevel,
+    bot: shaping.bot,
+    eot: shaping.eot,
+    clusterLevel: CLUSTER_LEVEL,
+    variationAxes,
+    features
+  };
+}
+
+function normalizeGraphemes(input, sourceRange, text) {
+  if (!Array.isArray(input) || input.length === 0) {
+    fail('invalid-graphemes', 'graphemes must be a non-empty array from the canonical itemizer');
+  }
+  let expectedStart = sourceRange.start;
+  return input.map((item, index) => {
+    const grapheme = requireRecord(item, 'invalid-graphemes', 'graphemes[' + index + ']');
+    const start = requireInteger(grapheme.start, sourceRange.start, 'invalid-graphemes', 'graphemes[' + index + '].start');
+    const end = requireInteger(grapheme.end, sourceRange.start + 1, 'invalid-graphemes', 'graphemes[' + index + '].end');
+    const value = requireString(grapheme.text, 'invalid-graphemes', 'graphemes[' + index + '].text');
+    if (start !== expectedStart || end <= start || end > sourceRange.end ||
+        end - start !== value.length ||
+        value !== text.slice(start - sourceRange.start, end - sourceRange.start)) {
+      fail('invalid-grapheme-partition', 'graphemes must be an exact contiguous UTF-16 partition of the ShapedRun source');
+    }
+    assertWellFormedUtf16(value, 'graphemes[' + index + '].text');
+    expectedStart = end;
+    return { start, end, text: value };
+  }).map((grapheme, index, all) => {
+    if (index === all.length - 1 && grapheme.end !== sourceRange.end) {
+      fail('incomplete-grapheme-coverage', 'graphemes do not cover the complete ShapedRun source range');
+    }
+    return grapheme;
+  });
+}
+
+function normalizeBounds(input, code, label) {
+  if (input == null) return null;
+  const bounds = requireRecord(input, code, label);
+  const out = {
+    xMin: requireFinite(bounds.xMin, code, label + '.xMin'),
+    yMin: requireFinite(bounds.yMin, code, label + '.yMin'),
+    xMax: requireFinite(bounds.xMax, code, label + '.xMax'),
+    yMax: requireFinite(bounds.yMax, code, label + '.yMax')
+  };
+  if (out.xMax < out.xMin || out.yMax < out.yMin) {
+    fail(code, label + ' has inverted bounds');
+  }
+  return out;
+}
+
+function normalizeGlyphs(input, sourceRange, graphemes, direction) {
+  if (!Array.isArray(input) || input.length === 0) {
+    fail('empty-glyph-output', 'A non-shaping or empty run cannot be represented as ShapedRun');
+  }
+  const graphemeStarts = new Set(graphemes.map((item) => item.start));
+  const glyphs = input.map((item, index) => {
+    const glyph = requireRecord(item, 'invalid-glyph', 'glyphs[' + index + ']');
+    const gid = requireInteger(glyph.gid, 1, 'missing-glyph-coverage', 'glyphs[' + index + '].gid');
+    const cluster = requireInteger(glyph.cluster, sourceRange.start, 'invalid-glyph-cluster', 'glyphs[' + index + '].cluster');
+    if (cluster >= sourceRange.end || !graphemeStarts.has(cluster)) {
+      fail('invalid-glyph-cluster', 'glyph cluster must be an absolute UTF-16 start of an input grapheme');
+    }
+    const xAdvance = requireFinite(glyph.xAdvance, 'invalid-glyph-position', 'glyphs[' + index + '].xAdvance');
+    const yAdvance = requireFinite(glyph.yAdvance, 'invalid-glyph-position', 'glyphs[' + index + '].yAdvance');
+    const xOffset = requireFinite(glyph.xOffset, 'invalid-glyph-position', 'glyphs[' + index + '].xOffset');
+    const yOffset = requireFinite(glyph.yOffset, 'invalid-glyph-position', 'glyphs[' + index + '].yOffset');
+    const flags = glyph.flags == null ? 0 : requireInteger(glyph.flags, 0, 'invalid-glyph', 'glyphs[' + index + '].flags');
+    return {
+      gid, cluster, xAdvance, yAdvance, xOffset, yOffset, flags,
+      controlBounds: normalizeBounds(glyph.controlBounds, 'invalid-glyph-bounds', 'glyphs[' + index + '].controlBounds'),
+      inkBounds: normalizeBounds(glyph.inkBounds, 'invalid-glyph-bounds', 'glyphs[' + index + '].inkBounds')
+    };
+  });
+
+  for (let index = 1; index < glyphs.length; index++) {
+    const previous = glyphs[index - 1].cluster;
+    const current = glyphs[index].cluster;
+    const monotone = direction === 'rtl' ? current <= previous : current >= previous;
+    if (!monotone) {
+      fail('non-monotone-glyph-clusters',
+        'HarfBuzz MONOTONE_CHARACTERS output clusters must follow the visual run direction');
+    }
+  }
+
+  const starts = Array.from(new Set(glyphs.map((glyph) => glyph.cluster))).sort((a, b) => a - b);
+  if (starts[0] !== sourceRange.start) {
+    fail('incomplete-shaped-source-prefix', 'first shaped cluster must begin at the ShapedRun source start');
+  }
+  const graphemeIndexByStart = new Map(graphemes.map((item, index) => [item.start, index]));
+  const clusters = starts.map((start, index) => {
+    const end = index + 1 < starts.length ? starts[index + 1] : sourceRange.end;
+    const graphemeStart = graphemeIndexByStart.get(start);
+    const graphemeEnd = end === sourceRange.end
+      ? graphemes.length
+      : graphemeIndexByStart.get(end);
+    if (graphemeStart == null || graphemeEnd == null || graphemeEnd <= graphemeStart) {
+      fail('invalid-shaped-cluster-range', 'shaped cluster boundaries must align to canonical grapheme boundaries');
+    }
+    const glyphIndices = [];
+    for (let glyphIndex = 0; glyphIndex < glyphs.length; glyphIndex++) {
+      if (glyphs[glyphIndex].cluster === start) glyphIndices.push(glyphIndex);
+    }
+    if (!glyphIndices.length) fail('empty-shaped-cluster', 'every shaped cluster must reference at least one glyph');
+    return {
+      start, end,
+      text: graphemes.slice(graphemeStart, graphemeEnd).map((item) => item.text).join(''),
+      graphemeStart, graphemeEnd,
+      glyphIndices
+    };
+  });
+
+  const clusterByStart = new Map(clusters.map((cluster, index) => [cluster.start, { cluster, index }]));
+  const shapedGlyphs = glyphs.map((glyph) => {
+    const entry = clusterByStart.get(glyph.cluster);
+    if (!entry) fail('orphan-shaped-glyph', 'glyph references a missing shaped cluster');
+    return {
+      ...glyph,
+      sourceRange: { start: entry.cluster.start, end: entry.cluster.end },
+      clusterIndex: entry.index
+    };
+  });
+
+  return { clusters, glyphs: shapedGlyphs };
+}
+
+function deepFreeze(value, seen) {
+  if (!value || typeof value !== 'object') return value;
+  const visited = seen || new Set();
+  if (visited.has(value)) return value;
+  visited.add(value);
+  for (const key of Object.keys(value)) deepFreeze(value[key], visited);
+  return Object.freeze(value);
+}
+
+/**
+ * Create an immutable ShapedRun from actual HarfBuzz output plus canonical
+ * itemizer graphemes. Offsets and clusters use absolute document UTF-16 units;
+ * advances and bounds remain in font units.
+ */
+function createShapedRun(input) {
+  const data = requireRecord(input, 'invalid-shaped-run', 'ShapedRun input');
+  const id = requireString(data.id, 'invalid-shaped-run', 'ShapedRun.id');
+  const text = requireString(data.text, 'invalid-shaped-run', 'ShapedRun.text');
+  assertWellFormedUtf16(text, 'ShapedRun.text');
+  const sourceRange = normalizeSourceRange(data.sourceRange, text);
+  const font = normalizeFont(data.font);
+  const shaping = normalizeShaping(data.shaping);
+  const graphemes = normalizeGraphemes(data.graphemes, sourceRange, text);
+  const normalizedGlyphs = normalizeGlyphs(data.glyphs, sourceRange, graphemes, shaping.direction);
+  const advance = normalizedGlyphs.glyphs.reduce((sum, glyph) => ({
+    x: sum.x + glyph.xAdvance,
+    y: sum.y + glyph.yAdvance
+  }), { x: 0, y: 0 });
+  if (!Number.isFinite(advance.x) || !Number.isFinite(advance.y)) {
+    fail('invalid-run-advance', 'sum of shaped glyph advances must remain finite');
+  }
+
+  if (data.diagnostics != null && !Array.isArray(data.diagnostics)) {
+    fail('invalid-shaped-run-diagnostic', 'diagnostics must be an array when supplied');
+  }
+  const diagnostics = (data.diagnostics || []).map((item, index) => {
+    const diagnostic = requireRecord(item, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + ']');
+    return {
+      code: requireString(diagnostic.code, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + '].code'),
+      message: requireString(diagnostic.message, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + '].message'),
+      ...(diagnostic.severity != null ? { severity: requireString(diagnostic.severity, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + '].severity') } : {})
+    };
+  });
+
+  return deepFreeze({
+    kind: 'ShapedRun',
+    contractVersion: SHAPED_RUN_CONTRACT_VERSION,
+    id,
+    sourceRange,
+    text,
+    font,
+    shaping,
+    graphemes,
+    clusters: normalizedGlyphs.clusters,
+    glyphs: normalizedGlyphs.glyphs,
+    advance,
+    diagnostics
+  });
+}
+
+/**
+ * Slice an already-shaped run without reshaping. Both edges must be output
+ * cluster boundaries, not merely EGC boundaries: a ligature may own several
+ * adjacent EGCs and may not be divided between line/word items.
+ *
+ * BOT/EOT remain those of the original shaping context. A later line-break
+ * decision must call the shaper again with line-specific BOT/EOT.
+ */
+function sliceShapedRun(shapedRun, start, end, sliceId) {
+  if (!isShapedRun(shapedRun)) {
+    fail('not-shaped-run', 'sliceShapedRun requires an immutable ShapedRun');
+  }
+  requireInteger(start, shapedRun.sourceRange.start, 'invalid-shaped-slice', 'slice.start');
+  requireInteger(end, shapedRun.sourceRange.start + 1, 'invalid-shaped-slice', 'slice.end');
+  if (end <= start || start < shapedRun.sourceRange.start || end > shapedRun.sourceRange.end) {
+    fail('invalid-shaped-slice', 'slice range must be a non-empty subrange of the source ShapedRun');
+  }
+  if (!isShapedClusterBoundary(shapedRun, start) || !isShapedClusterBoundary(shapedRun, end)) {
+    fail('slice-splits-shaped-cluster',
+      'ShapedRun slices are legal only at output cluster boundaries; an EGC boundary inside a ligature is insufficient');
+  }
+
+  const clusters = shapedRun.clusters.filter((cluster) =>
+    cluster.start >= start && cluster.end <= end);
+  if (!clusters.length || clusters[0].start !== start || clusters[clusters.length - 1].end !== end) {
+    fail('incomplete-shaped-slice', 'selected clusters do not cover the complete requested slice');
+  }
+  const graphemeStart = clusters[0].graphemeStart;
+  const graphemeEnd = clusters[clusters.length - 1].graphemeEnd;
+  const graphemes = shapedRun.graphemes.slice(graphemeStart, graphemeEnd);
+  const glyphs = shapedRun.glyphs.filter((glyph) => glyph.cluster >= start && glyph.cluster < end);
+  if (!glyphs.length) fail('empty-shaped-slice', 'selected shaped clusters contain no glyphs');
+
+  const sourceOffset = start - shapedRun.sourceRange.start;
+  const text = shapedRun.text.slice(sourceOffset, end - shapedRun.sourceRange.start);
+  return createShapedRun({
+    id: sliceId == null
+      ? shapedRun.id + '#slice:' + start + '-' + end
+      : requireString(sliceId, 'invalid-shaped-slice', 'sliceId'),
+    text,
+    sourceRange: { ...shapedRun.sourceRange, start, end },
+    font: shapedRun.font,
+    shaping: shapedRun.shaping,
+    graphemes,
+    glyphs,
+    diagnostics: shapedRun.diagnostics
+  });
+}
+
+function isDeepFrozen(value, seen = new Set()) {
+  if (!value || typeof value !== 'object') return true;
+  if (seen.has(value)) return true;
+  seen.add(value);
+  if (!Object.isFrozen(value)) return false;
+  return Object.keys(value).every((key) => isDeepFrozen(value[key], seen));
+}
+
+function isShapedRun(value) {
+  return !!(value && value.kind === 'ShapedRun' &&
+    value.contractVersion === SHAPED_RUN_CONTRACT_VERSION &&
+    isDeepFrozen(value) &&
+    Array.isArray(value.glyphs) &&
+    Array.isArray(value.clusters));
+}
+
+/** Only output-cluster boundaries are legal shaping/line-break slice points. */
+function isShapedClusterBoundary(shapedRun, absoluteOffset) {
+  if (!isShapedRun(shapedRun) || !Number.isSafeInteger(absoluteOffset)) return false;
+  if (absoluteOffset === shapedRun.sourceRange.start || absoluteOffset === shapedRun.sourceRange.end) return true;
+  return shapedRun.clusters.some((cluster) =>
+    cluster.start === absoluteOffset || cluster.end === absoluteOffset);
+}
+
+module.exports = {
+  SHAPED_RUN_CONTRACT_VERSION,
+  CLUSTER_LEVEL,
+  createShapedRun,
+  sliceShapedRun,
+  isShapedRun,
+  isShapedClusterBoundary
+};
 
 };
 __modules["src/engine/assets/asset-resolver.js"] = function (require, module, exports) {
