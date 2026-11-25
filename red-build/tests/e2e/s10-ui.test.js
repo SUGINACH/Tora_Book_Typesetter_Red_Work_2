@@ -12,6 +12,7 @@ const { describe, it, assert, assertEq, report } = require('../harness');
 const { typeset } = require('../../src/engine/core/pipeline');
 const { getDefaultSettings, registry } = require('../../src/engine/core/settings-registry');
 const { renderPage } = require('../../src/engine/output/dom-renderer');
+const { renderModelPage } = require('../../src/engine/output/pagemodel-dom-renderer');
 const { buildReport } = require('../../src/audit/report-schema');
 const { scanConsumers } = require('../../src/audit/scanners');
 
@@ -685,34 +686,96 @@ describe('S10.2 שער 6 — שינוי קל ≤2s; כבד דורש ⚡; טבל�
     assert(!st.lightDirty, 'הדגל הקל נוקה');
   });
 
-  it('D-64 — מחלקת הקלים מוכחת שקולת־רינדור; כבדים אינם שקולים', () => {
+  it('D-64 — רק הגדרות שהמקרין המאוחד צורך ישירות נשארות קלות', () => {
     const CHANGES = {
       'background-color': '#eef2ff',
-      'background-opacity': 0.6,
-      'background-image': 'assets/bg.png',
-      'background-texture': 'assets/tex.png',
-      'background-inset-mm': 5,
-      'footnote-separator-rule': 'circles',
-      'body-last-line-align': 'right'
+      'background-opacity': 0.6
     };
-    assertEq(Object.keys(CHANGES).length, LIGHT_KEYS.size, 'המחלקה הקלה מכוסה במלואה');
-    const base = typeset(SMALL_DOC, getDefaultSettings());
+    assertEq(Object.keys(CHANGES).length, LIGHT_KEYS.size, 'רק שני מפתחות רקע גלובליים מוכחים כקלים');
+    const baseSettings = Object.assign({}, getDefaultSettings(), { '_engine-force-unified': true });
+    const base = typeset(SMALL_DOC, baseSettings);
+    assert(base.pageModel && base.pageModel.schema === 'pagemodel-v1', 'ההשוואה חייבת להשתמש ב־PageModel המאוחד');
+
     for (const [key, val] of Object.entries(CHANGES)) {
       assertEq(classifyChange(key), 'light', `${key} חייב להיות מסווג קל`);
-      const full = typeset(SMALL_DOC, Object.assign({}, getDefaultSettings(), { [key]: val }));
-      assertEq(full.layoutHash, base.layoutHash, `${key}: שינוי קל אסור שישנה פריסה`);
-      // שקילות רינדור: עמודי הבסיס + הגדרות חדשות === עמודי ריצה מלאה
-      for (let i = 0; i < base.pages.length; i++) {
+      const changedSettings = Object.assign({}, baseSettings, { [key]: val });
+      const full = typeset(SMALL_DOC, changedSettings);
+      assertEq(full.layoutHash, base.layoutHash, `${key}: שינוי תצוגה בלבד אינו משנה פריסה`);
+      assertEq(full.pageModel.geometryHash, base.pageModel.geometryHash, `${key}: הגיאומטריה הקנונית נשארת זהה`);
+      // שקילות רינדור בנתיב Unified: PageModel קיים + settings חדשים מול typeset מלא.
+      for (let i = 0; i < base.pageModel.pages.length; i++) {
         const d = makeDoc();
-        const lightRender = renderPage(base.pages[i], Object.assign({}, getDefaultSettings(), { [key]: val }), d);
-        const fullRender = renderPage(full.pages[i], Object.assign({}, getDefaultSettings(), { [key]: val }), d);
-        assertEq(lightRender.outerHTML(), fullRender.outerHTML(), `${key}: רינדור־קל שקול לריצה מלאה (עמוד ${i})`);
+        const lightRender = renderModelPage(base.pageModel.pages[i], changedSettings, d);
+        const fullRender = renderModelPage(full.pageModel.pages[i], changedSettings, d);
+        assertEq(lightRender.outerHTML(), fullRender.outerHTML(), `${key}: מקרין PageModel קל שקול לריצה מלאה (עמוד ${i})`);
       }
     }
-    // כבד לדוגמה: שינוי רוחב טור — הפריסה משתנה; רינדור־קל היה מטעה
-    const heavy = typeset(SMALL_DOC, Object.assign({}, getDefaultSettings(), { 'grid-col-width-pct': 55 }));
+
+    // שתי הגדרות שנראו בעבר "קלות" למעשה נצרכות ב־materialize ונכנסות למודל.
+    // לכן חייבים לבנות PageModel חדש ולא לרנדר את הישן עם settings חדשים.
+    const bodyRight = typeset(SMALL_DOC, Object.assign({}, baseSettings, { 'body-last-line-align': 'right' }));
+    assertEq(classifyChange('body-last-line-align'), 'heavy', 'יישור שורה אחרונה הוא חלק מנתוני LineModel');
+    const baseLastAlign = base.pageModel.pages.flatMap(p => p.lines).filter(l => l.isLast).map(l => l.align);
+    const rightLastAlign = bodyRight.pageModel.pages.flatMap(p => p.lines).filter(l => l.isLast).map(l => l.align);
+    assert(baseLastAlign.some((v, i) => v !== rightLastAlign[i]), 'השינוי חייב להגיע ל־LineModel.align');
+
+    const ruleNone = typeset(SMALL_DOC, Object.assign({}, baseSettings, { 'footnote-separator-rule': 'none' }));
+    const ruleCircles = typeset(SMALL_DOC, Object.assign({}, baseSettings, { 'footnote-separator-rule': 'circles' }));
+    assertEq(classifyChange('footnote-separator-rule'), 'heavy', 'חוט הערות השוליים הוא decoration של PageModel');
+    const ruleOps = (model) => model.pages.flatMap(p => p.decorations || [])
+      .filter(d => d.kind === 'fn-rule').map(d => JSON.stringify(d.pdfOps || []));
+    assert(ruleOps(ruleNone.pageModel).length === 0, 'none מסיר את עיטור קו ההערות מהמודל');
+    assert(ruleOps(ruleCircles.pageModel).length > 0, 'circles מוסיף עיטור קו למודל');
+    assert(JSON.stringify(ruleOps(ruleNone.pageModel)) !== JSON.stringify(ruleOps(ruleCircles.pageModel)),
+      'החלפת סגנון הקו משנה את פעולות הציור הקנוניות');
+
+    // שינוי גיאומטרי רגיל נשאר heavy; אין רינדור־קל שמסתיר אותו.
+    const heavy = typeset(SMALL_DOC, Object.assign({}, baseSettings, { 'grid-col-width-pct': 55 }));
     assert(heavy.layoutHash !== base.layoutHash, 'שינוי כבד חייב לשנות פריסה');
     assertEq(classifyChange('grid-col-width-pct'), 'heavy');
+  });
+
+  it('D-64 Unified UI — שינוי PageModel מחייב ⚡, והחזרה לערך המקורי משחזרת את אותו hash', async () => {
+    const doc = makeDoc();
+    const app = createApp(doc, {
+      transport: inlineTransport.createInlineTransport(),
+      branchEngineProfile: 'unified'
+    });
+    fire(app.editor.textarea, 'paste', { clipboardData: { getData: () => SMALL_DOC } });
+    await waitFor(() => app.getState().hasResult && !!app.pageModel(), 30000, 'Unified SMALL_DOC baseline');
+    const originalHash = app.getState().layoutHash;
+    const originalGen = app.getState().gen;
+    const originalRuleOps = app.pageModel().pages.flatMap(p => p.decorations || [])
+      .filter(d => d.kind === 'fn-rule').map(d => JSON.stringify(d.pdfOps || []));
+
+    app.onSettingChanged('body-last-line-align', 'right');
+    assert(app.getState().heavyDirty, 'שינוי body-last-line-align מסמן עימוד כבד');
+    await wait(120);
+    assertEq(app.getState().gen, originalGen, 'שינוי כבד לא מריץ מנוע אוטומטית');
+    app.onExplicitRetypeset();
+    await waitFor(() => app.getState().gen > originalGen && !app.getState().heavyDirty, 30000, 'body-last-line-align retypeset');
+    const rightAligns = app.pageModel().pages.flatMap(p => p.lines).filter(l => l.isLast).map(l => l.align);
+    assert(rightAligns.includes('right'), 'הערך החדש מגיע ל־PageModel אחרי ⚡');
+
+    const rightGen = app.getState().gen;
+    app.onSettingChanged('body-last-line-align', 'center');
+    assert(app.getState().heavyDirty, 'שחזור ערך מקורי דורש עימוד כבד');
+    app.onExplicitRetypeset();
+    await waitFor(() => app.getState().gen > rightGen && !app.getState().heavyDirty, 30000, 'body-last-line-align restore');
+    assertEq(app.getState().layoutHash, originalHash, 'החזרת הערך המקורי משחזרת hash פריסה');
+    const restoredRuleOps = app.pageModel().pages.flatMap(p => p.decorations || [])
+      .filter(d => d.kind === 'fn-rule').map(d => JSON.stringify(d.pdfOps || []));
+    assertEq(restoredRuleOps, originalRuleOps, 'שחזור הערך מחזיר את פעולות ציור הערות השוליים לזהות המקורית');
+
+    const restoredGen = app.getState().gen;
+    app.onSettingChanged('footnote-separator-rule', 'circles');
+    assert(app.getState().heavyDirty, 'שינוי footnote-separator-rule מסמן עימוד כבד');
+    app.onExplicitRetypeset();
+    await waitFor(() => app.getState().gen > restoredGen && !app.getState().heavyDirty, 30000, 'footnote-separator-rule retypeset');
+    const circleOps = app.pageModel().pages.flatMap(p => p.decorations || [])
+      .filter(d => d.kind === 'fn-rule').map(d => JSON.stringify(d.pdfOps || []));
+    assert(circleOps.length > 0, 'סגנון circles מופיע בעיטורי המודל המאוחד');
+    assert(JSON.stringify(circleOps) !== JSON.stringify(originalRuleOps), 'שינוי סגנון הקו משנה את ה־PageModel');
   });
 });
 
