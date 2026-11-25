@@ -189,6 +189,56 @@ async function main() {
       }
     }
     fs.cpSync(dist, path.join(site, 'harfbuzzjs', 'dist'), { recursive: true });
+    // Export exact runtime assets separately; this does not enable production shaping.
+    const runtimeDir = process.env.HB_POC_RUNTIME_DIR || '/tmp/shaping-runtime-poc-runtime';
+    fs.rmSync(runtimeDir, { recursive: true, force: true });
+    fs.mkdirSync(runtimeDir, { recursive: true });
+    const stagedRuntimeFiles = [];
+    const stageRuntimeFile = (source, relative) => {
+      const target = path.join(runtimeDir, relative);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.copyFileSync(source, target);
+      const bytes = fs.readFileSync(target);
+      stagedRuntimeFiles.push({ path: relative.split(path.sep).join('/'), bytes: bytes.length,
+        sha256: crypto.createHash('sha256').update(bytes).digest('hex') });
+    };
+    const harfbuzzPackageJson = JSON.parse(fs.readFileSync(path.join(temp, 'package', 'package.json'), 'utf8'));
+    if (harfbuzzPackageJson.name !== 'harfbuzzjs' || harfbuzzPackageJson.version !== VERSION) {
+      throw new Error('Unexpected extracted HarfBuzz package identity');
+    }
+    for (const file of ['index.mjs', 'harfbuzz.js', 'harfbuzz.wasm']) {
+      stageRuntimeFile(path.join(dist, file), path.join('harfbuzzjs', 'dist', file));
+    }
+    stageRuntimeFile(path.join(temp, 'package', 'package.json'), path.join('harfbuzzjs', 'package.json'));
+    const licenseCandidate = ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'COPYING'].find((name) =>
+      fs.existsSync(path.join(temp, 'package', name)));
+    if (licenseCandidate) stageRuntimeFile(path.join(temp, 'package', licenseCandidate), path.join('harfbuzzjs', licenseCandidate));
+    stageRuntimeFile(path.join(REPO_ROOT, 'red-build', 'src', 'engine', 'typography', 'unicode18-bidi-runtime.js'), 'unicode18-bidi-runtime.js');
+    stageRuntimeFile(BIDI_WASM_PATH, 'unicode18-bidi-runtime.wasm');
+    const runtimeReadme = [
+      '# RED shaping runtime assets', '',
+      'Hash-locked assets exported by the Node/classic-Worker compatibility build.',
+      'This staged artifact does not activate shaping in the RED production engine.', '',
+      '- HarfBuzzJS package: harfbuzzjs@' + VERSION + '; pinned dist files only.',
+      '- Unicode itemizer: Unicode 18.0.0 from servo/unicode-bidi revision 9a8c7b03be01def5cf7014b89d5af90f7382fdad.',
+      '- No fonts are included. Production FontResolver must supply bytes and verify full source hashes.',
+      '- Raw WOFF2 shaping remains unsupported; normalize to SFNT first.',
+      '- Tight ink bounds are not included; control bounds must not be presented as ink bounds.',
+      '- Current analytic outline proof covers cubic CFF M/L/C/Z; quadratic outlines remain unproven.', ''
+    ].join('\\n');
+    fs.writeFileSync(path.join(runtimeDir, 'README.md'), runtimeReadme, 'utf8');
+    const runtimeManifest = {
+      schemaVersion: 1, artifactKind: 'staged-runtime-assets-not-production-enabled',
+      harfbuzz: { package: harfbuzzPackageJson.name, version: harfbuzzPackageJson.version,
+        license: harfbuzzPackageJson.license || null, packageEngines: harfbuzzPackageJson.engines || null },
+      unicode: { version: '18.0.0', upstream: 'servo/unicode-bidi',
+        revision: '9a8c7b03be01def5cf7014b89d5af90f7382fdad',
+        runtimeModule: 'unicode18-bidi-runtime.js', wasmModule: 'unicode18-bidi-runtime.wasm' },
+      files: stagedRuntimeFiles.sort((a, b) => a.path.localeCompare(b.path))
+    };
+    fs.writeFileSync(path.join(runtimeDir, 'manifest.json'), JSON.stringify(runtimeManifest, null, 2) + '\\n', 'utf8');
+    report.stagedRuntimeAssets = { status: 'passed', fileCount: stagedRuntimeFiles.length, files: runtimeManifest.files };
+
     for (const file of ['index.html', 'classic-worker.js', 'shape-core.js']) {
       fs.copyFileSync(path.join(__dirname, file), path.join(site, file));
     }
