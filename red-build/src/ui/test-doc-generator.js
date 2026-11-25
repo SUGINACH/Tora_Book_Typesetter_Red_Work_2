@@ -72,7 +72,7 @@ function validateTestDocumentStructure(documentText) {
   for (let index = 0; index < lines.length; index++) {
     const lineNumber = index + 1;
     const trimmedLine = lines[index].trim();
-    if (/^הערות\\s+סיום\\s*[-–—:]/.test(trimmedLine)) {
+    if (/^הערות\s+סיום\s*[-–—:]/.test(trimmedLine)) {
       endnotesStarted = true;
       continue;
     }
