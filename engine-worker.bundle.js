@@ -27939,7 +27939,7 @@ function validatePlan(plan) {
   }
 
   let previousLocalEnd = 0;
-  let previousSourceEnd = sourceStart;
+  let previousScriptSourceEnd = sourceStart;
   const shapedGraphemeStarts = new Set();
   for (let index = 0; index < plan.scriptRuns.length; index++) {
     const run = plan.scriptRuns[index];
@@ -27955,7 +27955,7 @@ function validatePlan(plan) {
     if (localStart < previousLocalEnd || localEnd > text.length || end - start !== localEnd - localStart ||
         run.text !== text.slice(localStart, localEnd) || mapped.length !== 1 ||
         mapped[0].sourceRange.start !== start || mapped[0].sourceRange.end !== end ||
-        start < previousSourceEnd) {
+        start < previousScriptSourceEnd) {
       fail('invalid-planned-script-run-range',
         'Planned ScriptRuns must be non-overlapping local ranges with one length-preserving contiguous source range at index ' + index);
     }
@@ -28019,7 +28019,7 @@ function validatePlan(plan) {
     }
     requireString(run.language, 'invalid-planned-shaping-context', 'run.language');
     previousLocalEnd = localEnd;
-    previousSourceEnd = end;
+    previousScriptSourceEnd = end;
   }
   for (const start of shapeableGraphemes) {
     if (!shapedGraphemeStarts.has(start)) {
