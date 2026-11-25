@@ -188,19 +188,15 @@ describe('S77 בקשה 1 — שורת החיתוך מיושבת לשני הצד�
     const { generateTestDocument } = require('../../src/ui/test-doc-generator');
     const text = generateTestDocument({ mode: 'fixed' });
     const r = legacyTypeset(text, s, {});
-    // **R-03 (יובא מ-Red PR #48):** נעילות מחודשות בעקבות תיקון שורש דגלי-סוגריים-סמן-הערה: body-first legacy-6a06e→legacy-a0946; legacy-3ce38→legacy-1231b.
-    // **H3-CSS+F-BL2 (17.11, נעילה משולבת — שני תיקוני שורש):** H3-CSS
-    // (חוזה ה-CSS המקורי לכותרת 3; דוח audits/H3_SPACING_OLD_STYLE_PARITY_2026-11-17.md)
-    // + F-BL4 (סמן-הערה שנבלע בחיתוך המרזב — 4 סמנים שוחזרו; דוח
-    // audits/FULLMATH_FLOOR_ROOT_CLOSURE_2026-11-17.md). נעילות ביניים:
-    // H3 בלבד legacy-5f0dc · F-BL2 בלבד legacy-1457d · משולב legacy-0861db.
-    // **H3-CSS (17.11):** נעילה מחודשת legacy-a0946→legacy-5f0dc — חוזה ה-CSS
-    // המקורי לכותרת 3; ההצדקה ב-s72 וב-audits/H3_SPACING_OLD_STYLE_PARITY_2026-11-17.md.
-    assert(r.layoutHash.startsWith('legacy-0861db'),      `body-first נעול על ההאש של S76+R-03 — התקבל ${r.layoutHash.slice(0, 20)} (cutLast/centerLast אסור שיזיזו שורות)`);
+    // **D-98 (25.11):** ה-fixture fixed הקודם נפסל מבנית והוחלף במסמך
+    // fixed תקין ודטרמיניסטי. S72/S76 נעלו את אותו קלט תקין:
+    // body-first = legacy-c05df8cf2c698e4d; legacy = legacy-1d5c36e955ac7.
+    // הדגלים cutLast/centerLast הם נתוני הקרנה בלבד ואסור להם לשנות את פריסת הגוף.
+    assertEq(r.layoutHash, 'legacy-c05df8cf2c698e4d',
+      `body-first על המסמך הקבוע התקין השתנה — cutLast/centerLast אסור שיזיזו שורות; התקבל ${r.layoutHash}`);
     const rOld = legacyTypeset(text, { ...s, 'fn-placement-mode': 'legacy' }, {});
-    // **H3-CSS (17.11):** נעילה מחודשת legacy-1231b→legacy-8b344 — אותו חוזה במצב legacy.
-    assert(rOld.layoutHash.startsWith('legacy-8b3449320ba23'),
-      `legacy נשאר נעול על S74+R-03 — התקבל ${rOld.layoutHash.slice(0, 20)}`);
+    assert(rOld.layoutHash.startsWith('legacy-1d5c36e955ac7'),
+      `legacy על המסמך הקבוע התקין השתנה — התקבל ${rOld.layoutHash.slice(0, 20)}`);
   });
 });
 
