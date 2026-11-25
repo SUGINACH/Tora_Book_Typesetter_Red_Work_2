@@ -6,6 +6,11 @@ on:
     paths:
       - 'tools/shaping-runtime-poc/**'
       - 'tools/bidi-runtime-poc/**'
+      - 'red-build/src/engine/typography/**'
+      - 'red-build/tests/unit/shaped-run.test.js'
+      - 'red-build/tests/unit/text-item-shaping-plan.test.js'
+      - 'red-build/tests/unit/harfbuzz-shaper.test.js'
+      - 'red-build/tests/unit/s3-font-sync.test.js'
       - '.github/workflows/shaping-runtime-poc.yml'
   workflow_dispatch:
 
