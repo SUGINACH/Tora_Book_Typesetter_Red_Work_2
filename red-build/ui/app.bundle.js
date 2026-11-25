@@ -531,7 +531,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-25-d98-valid-fixed1'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-25-unified-settings-guard1'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -1259,6 +1259,12 @@ function createApp(doc, opts = {}) {
   // ================= מדיניות שינויי הגדרות (D-64) =================
 
   function onSettingChanged(key, value) {
+    const definition = findKey(key);
+    if (branchProfile === 'unified' && definition && definition.unifiedSupport === false) {
+      settingsPanel.refreshValues();
+      status.setNotice(`ההגדרה «${key}» עדיין אינה מחוברת למודל המאוחד; השינוי לא הוחל ולא ישנה את הפלט.`);
+      return;
+    }
     settings[key] = value;
     // **03.11 (EXT-14):** בחירת גופן מהספרייה — טעינה חיה (FontFace לתצוגה +
     // registerFont במנוע למדידת font-metrics ולייצוא PDF). כישלון טעינה אינו
@@ -1590,11 +1596,25 @@ function createApp(doc, opts = {}) {
       legacySettings = imp.settings; // כולל _legacy-ui-state (ערכי UI נשמרים)
     }
     const { merged, unknownKeys, issues } = mergeWithDefaults({ ...legacySettings, ...known });
+    const unsupportedUnifiedKeys = [];
+    if (branchProfile === 'unified') {
+      for (const definition of getSettingDefs()) {
+        if (definition.unifiedSupport === false
+          && Object.prototype.hasOwnProperty.call(merged, definition.id)
+          && JSON.stringify(merged[definition.id]) !== JSON.stringify(definition.default)) {
+          unsupportedUnifiedKeys.push(definition.id);
+          delete merged[definition.id];
+        }
+      }
+    }
     for (const [k, v] of Object.entries(merged)) settings[k] = v;
+    if (unsupportedUnifiedKeys.length) {
+      status.setNotice('התבנית כוללת הגדרות שעדיין אינן נתמכות בפרופיל המאוחד; הן לא הוחלו: ' + unsupportedUnifiedKeys.join(', '));
+    }
     settingsPanel.refreshValues();
     markHeavyDirty(); // הגדרות השתנו — המשתמש יחליט מתי לעמד (⚡)
     schedulePersistSettings(); // **פער 2 (S6.1):** טעינת תבנית = שינוי הגדרות — נשמר (SRS §17.1)
-    return { unknownKeys, issues };
+    return { unknownKeys, issues, unsupportedUnifiedKeys };
   }
 
   /** **S4.6:** גובה תיבת התוכן בפועל של הגדרות העמוד הנוכחיות — להמרות אחוז⇒פיקסל
@@ -1797,7 +1817,7 @@ const registry = [
   K('heading-0-body-font', 'font', 'Frank Ruhl Libre', P.TYPO, 'sel-h0-body-font', ['layout/legacy-imud-flow'], 'fx:h0-body-font', { note: 'S6.3: גוף ההקדמה — מדידה (prefaceApi) ורינדור באותו גופן' }),
   K('heading-0-body-size-pt', 'number', 11.5, P.TYPO, 'rng-h0-body-size', ['core/pipeline', 'layout/legacy-imud-flow'], 'fx:h0-body-size', { min: 6, max: 40, step: 0.5, note: 'RC-2a (i004): גודל גוף ההקדמה — המקור s-h0-body=11.5; הפיץ׳ 11.5×1.34×4/3 = H0_LINE_H. עד כאן לא מופוה ייבוא ⇒ ההקדמה זרמה ב-12pt' }),
   K('endnote-title-font', 'font', 'David Libre', P.NOTES, 'sel-endnote-title-font', ['layout/legacy-imud-flow'], 'fx:endnote-title-font', { note: 'S6.3: גופן כותרת עמודי הערות' }),
-  K('body-last-line-align', 'enum', 'center', P.TYPO, 'sel-last-line-align', ['output/dom-renderer'], 'fx:last-line-align', { enum: ['center', 'right', 'stretch'], note: 'wiring מ‑Orange ✓' }),
+  K('body-last-line-align', 'enum', 'center', P.TYPO, 'sel-last-line-align', ['core/materialize', 'core/page-model', 'output/pagemodel-dom-renderer', 'output/export-api'], 'fx:last-line-align', { enum: ['center', 'right', 'stretch'], note: 'Unified: נקבע ב-LineModel.align ומוקרן מה-PageModel; שינוי מחייב עימוד מחדש' }),
 
   // ---- כותרות 0–7 (HEADINGS) ----
   // **03.11(ד):** ברירות המחדל של המצבים נאמנות למקור: h3=span_1col ⇒ full-width
@@ -1855,7 +1875,7 @@ const registry = [
   K('footnote-marker-style', 'enum', 'hebrew-geresh', P.NOTES, 'sel-fn-marker', ['notes/markers'], 'fx:fn-marker', { enum: ['hebrew', 'hebrew-geresh', 'parenthesis', 'asterisk', 'decimal'], note: "Iteration-003: 'hebrew' = גימטריה+מפריד (כמו המקור — markerWord); 'hebrew-geresh' = מוסכמת הגיליון (בחירה מפורשת)" }),
   K('footnote-reset-policy', 'enum', 'section', P.NOTES, 'sel-fn-reset', ['notes/markers'], 'fx:fn-reset', { enum: ['continuous', 'page', 'section', 'part'], note: 'S4.26 (דיווח משתמש 05.11): ברירת המחדל איפוס פר-פרק (section/siman) — לא פר-עמוד' }),
   K('footnote-columns', 'number', 1, P.NOTES, 'sel-fn-cols', ['layout/footnote-budget'], 'fx:fn-cols', { enum: [1, 2] }),
-  K('footnote-separator-rule', 'enum', 'regular', P.NOTES, 'sel-fn-rule', ['output/dom-renderer'], 'fx:fn-rule', { enum: ['none', 'regular', 'circles', 'sparkle', 'star', 'diamond'] }),
+  K('footnote-separator-rule', 'enum', 'regular', P.NOTES, 'sel-fn-rule', ['core/materialize', 'core/page-model', 'output/pagemodel-dom-renderer', 'output/export-api'], 'fx:fn-rule', { enum: ['none', 'regular', 'circles', 'sparkle', 'star', 'diamond'], note: 'Unified: יוצר fn-rule decoration ו-pdfOps בתוך PageModel; שינוי מחייב עימוד מחדש' }),
   K('fn-layout-mode', 'enum', 'continuous', P.NOTES, 'sel-fn-layout', ['layout/dp-planner', 'output/dom-renderer'], 'fx:fn-layout', { enum: ['block', 'continuous'], note: 'S4.26 (דיווח משתמש 05.11): ברירת המחדל זרימה רציפה — הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה; block=כל הערה בלוק משלה' }),
   // **S75 (בקשה 1 — 12.11, בחירת מנגנון הצבת ההערות):** ברירת המחדל = המנגנון
   // החדש (body-first): הגוף ממלא את אזור הטקסט העיקרי תמיד; המרזב נכנס
@@ -1940,10 +1960,10 @@ const registry = [
   K('shaar-sub-image', 'string', '', P.THEMES, 'inp-shaar-sub-img', ['decoration/page-decorations'], 'fx:shaar-sub-img'),
   K('shaar-back-enabled', 'bool', true, P.THEMES, 'chk-shaar-back', ['decoration/page-decorations', 'decoration/shaar-pages'], 'fx:shaar-back', { note: 'PT-03: 4 מקטעים עצמאיים; כיבוי ראשי מבטל את כולם' }),
   // REQ-ORN-08: פאנל רקעים מוזג לתוך נושאים — 3 סוגי עמודים + color/texture/image + insets מ"מ
-  K('background-page-type', 'enum', 'regular', P.THEMES, 'sel-bg-page-type', ['decoration/page-decorations'], 'fx:bg-page-type', { enum: ['regular', 'preface-open', 'sign-open'], note: 'REQ-ORN-08: מחלקת העמוד שאליה הרקע מיועד (מיזוג פאנל רקע→נושאים)' }),
-  K('background-image', 'string', '', P.THEMES, 'inp-bg-image', ['decoration/page-decorations'], 'fx:bg-image'),
-  K('background-texture', 'string', '', P.THEMES, 'inp-bg-texture', ['decoration/page-decorations'], 'fx:bg-texture', { note: 'טקסטורה חוזרת (שכבת תשתית — פטורה מחפיפות באודיט)' }),
-  K('background-inset-mm', 'number', 0, P.THEMES, 'rng-bg-inset', ['decoration/page-decorations'], 'fx:bg-inset', { min: 0, max: 30, note: 'שקיעת הרקע משולי העמוד במ״מ' }),
+  K('background-page-type', 'enum', 'regular', P.THEMES, 'sel-bg-page-type', ['decoration/page-decorations'], 'fx:bg-page-type', { enum: ['regular', 'preface-open', 'sign-open'], unifiedSupport: false, note: 'REQ-ORN-08: נתמך במקרין Legacy בלבד; חיבור לרקעי PageModel/HTML/PDF עדיין פתוח — חסום בפרופיל Unified כדי למנוע שינוי ללא השפעה' }),
+  K('background-image', 'string', '', P.THEMES, 'inp-bg-image', ['decoration/page-decorations'], 'fx:bg-image', { unifiedSupport: false, note: 'Legacy-only כרגע; אין עדיין PageModel background decoration תואם DOM/HTML/PDF — חסום בפרופיל Unified' }),
+  K('background-texture', 'string', '', P.THEMES, 'inp-bg-texture', ['decoration/page-decorations'], 'fx:bg-texture', { unifiedSupport: false, note: 'Legacy-only כרגע; אין עדיין PageModel texture decoration תואם DOM/HTML/PDF — חסום בפרופיל Unified' }),
+  K('background-inset-mm', 'number', 0, P.THEMES, 'rng-bg-inset', ['decoration/page-decorations'], 'fx:bg-inset', { min: 0, max: 30, unifiedSupport: false, note: 'Legacy-only כרגע; inset ייכנס ל-PageModel יחד עם תמונת/טקסטורת הרקע — חסום בפרופיל Unified' }),
 
   // ---- נכסי הפרויקט המקורי IMUD_TORANI (03.11, EXT-14 — הטמעה) ----
   // הערכים הם הפניות 'imud:<collection>:<id>' — נפתרות בזמן רינדור דרך asset-registry.
@@ -25488,27 +25508,22 @@ __modules["src/ui/retypeset-policy.js"] = function (require, module, exports) {
 
 /**
  * **D-64 — מחלקת שינוי קל/כבד:**
- * - **קל (light):** מפתחות שנצרכים בזמן־רינדור בלבד (dom-renderer / planBackground ברינדר).
- *   שינוי קל ⇒ רינדור מחדש של התוצא הקיים **בלי הרצת מנוע** — מרוכז (debounce)
- *   לפי settings['debounce-light-change-ms'] (ברירת מחדל 350ms, Spec §5.3).
- * - **כבד (heavy):** כל השאר (פריסה/מדידה/מספור/כותרות/הערות/מבנה).
+ * - **קל (light):** מפתחות שה־PageModel הקיים נשאר תקף עבורם, והמקרין המאוחד
+ *   צורך אותם ישירות בזמן רינדור. שינוי קל ⇒ רינדור מחדש בלבד, ללא הרצת מנוע.
+ * - **כבד (heavy):** כל מפתח שמוטמע במדידה, בשורות, בעיטורים או ב־PageModel.
+ *   שינוי כזה מחייב יצירת PageModel חדש לפני שהמקרינים יכולים להציגו.
  *   שינוי כבד ⇒ **אין עימוד אוטומטי** (F-06) — כפתור ⚡ מהבהב; לחיצה = נתיב
  *   מיידי בלי debounce (Claude §6.2(7)).
  *
- * ההוכחה (בדיקת s10 'D-64 light class is render-equivalent'): לכל מפתח קל,
- * רינדור התוצא הישן עם ההגדרות החדשות === רינדור תוצאת מנוע מלא עם אותן
- * הגדרות (מילה־במילה ב־DOM). מפתח שלא עומד בשקילות אינו קל — גם אם נראה כך.
+ * הוכחת D-64 חייבת להתבצע מול renderModelPage במסלול Unified, לא מול renderPage
+ * של Legacy. הגדרה שמייצרת נתון ב־PageModel (למשל LineModel.align או fn-rule
+ * decoration) לעולם אינה יכולה להיות light, גם אם ה־DOM הישן ידע לצייר אותה.
  */
 
 /** מפתחות קלים — נצרפים בזמן־רינדור בלבד (הוכחת שקילות בבדיקה; ראו D-64). */
 const LIGHT_KEYS = new Set([
-  'background-color',        // renderPage: root.style.backgroundColor (rgba אמיתי — P0-5)
-  'background-opacity',      // renderPage: rgba()
-  'background-image',        // renderPageBackgroundAndShaar → planBackground בזמן רינדר
-  'background-texture',      // כנ"ל
-  'background-inset-mm',     // כנ"ל (מ״מ→px בזמן רינדר)
-  'footnote-separator-rule', // renderFootnoteArea: מחלקת fn-rule--*
-  'body-last-line-align'     // lastLineClass: מחלקת line--last-*
+  'background-color',        // renderModelPage: root.style.backgroundColor (rgba אמיתי — P0-5)
+  'background-opacity'       // renderModelPage: rgba() — שני המפתחות אינם משנים PageModel
 ]);
 
 /** @returns {'light'|'heavy'} מחלקת השינוי של מפתח הגדרה */

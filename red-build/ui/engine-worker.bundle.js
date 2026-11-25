@@ -944,7 +944,7 @@ __modules["src/engine/core/pipeline.js"] = function (require, module, exports) {
  *  - P1-1: AQ/מצבי סוף־פרק/מילה־נופלת מחוברים לצינור בפועל.
  */
 
-const { getDefaultSettings, derivePlacementFlags } = require('./settings-registry');
+const { getDefaultSettings, getSettingDefs, derivePlacementFlags } = require('./settings-registry');
 // **חוזה H3 (D-S2H3/CSS parity):** line-height 1.22 של ה-CSS המקורי — מקור
 // יחיד המשותף למדידת הכותרות כאן, לפס ה-H3 ב-planner ולמנוע המורשת.
 const { h3LineHeightPx } = require('./h3-contract');
@@ -1043,6 +1043,19 @@ function typeset(rawText, settingsIn, env = {}) {
   const forceUnifiedImud = (!!(typeof process !== 'undefined' && process.env
     && String(process.env.RED_UNIFIED_IMUD) === '1'))
     || !!(settingsIn && settingsIn['_engine-force-unified'] === true);
+  if (forceUnifiedImud && settingsIn) {
+    const unsupported = getSettingDefs()
+      .filter((definition) => definition.unifiedSupport === false
+        && Object.prototype.hasOwnProperty.call(settingsIn, definition.id)
+        && JSON.stringify(settingsIn[definition.id]) !== JSON.stringify(definition.default))
+      .map((definition) => definition.id);
+    if (unsupported.length) {
+      const error = new Error('unified-unsupported-settings: הגדרות אלו עדיין אינן מחוברות ל-PageModel המאוחד: ' + unsupported.join(', '));
+      error.code = 'unified-unsupported-settings';
+      error.settingKeys = unsupported;
+      throw error;
+    }
+  }
   if (!forceUnifiedImud && settingsIn && settingsIn['_layout-profile'] === 'imud' && settingsIn._imudRaw) {
     const { legacyTypeset } = require('../layout/legacy-imud-flow');
     return legacyTypeset(rawText, settingsIn, env);
@@ -2547,7 +2560,7 @@ const registry = [
   K('heading-0-body-font', 'font', 'Frank Ruhl Libre', P.TYPO, 'sel-h0-body-font', ['layout/legacy-imud-flow'], 'fx:h0-body-font', { note: 'S6.3: גוף ההקדמה — מדידה (prefaceApi) ורינדור באותו גופן' }),
   K('heading-0-body-size-pt', 'number', 11.5, P.TYPO, 'rng-h0-body-size', ['core/pipeline', 'layout/legacy-imud-flow'], 'fx:h0-body-size', { min: 6, max: 40, step: 0.5, note: 'RC-2a (i004): גודל גוף ההקדמה — המקור s-h0-body=11.5; הפיץ׳ 11.5×1.34×4/3 = H0_LINE_H. עד כאן לא מופוה ייבוא ⇒ ההקדמה זרמה ב-12pt' }),
   K('endnote-title-font', 'font', 'David Libre', P.NOTES, 'sel-endnote-title-font', ['layout/legacy-imud-flow'], 'fx:endnote-title-font', { note: 'S6.3: גופן כותרת עמודי הערות' }),
-  K('body-last-line-align', 'enum', 'center', P.TYPO, 'sel-last-line-align', ['output/dom-renderer'], 'fx:last-line-align', { enum: ['center', 'right', 'stretch'], note: 'wiring מ‑Orange ✓' }),
+  K('body-last-line-align', 'enum', 'center', P.TYPO, 'sel-last-line-align', ['core/materialize', 'core/page-model', 'output/pagemodel-dom-renderer', 'output/export-api'], 'fx:last-line-align', { enum: ['center', 'right', 'stretch'], note: 'Unified: נקבע ב-LineModel.align ומוקרן מה-PageModel; שינוי מחייב עימוד מחדש' }),
 
   // ---- כותרות 0–7 (HEADINGS) ----
   // **03.11(ד):** ברירות המחדל של המצבים נאמנות למקור: h3=span_1col ⇒ full-width
@@ -2605,7 +2618,7 @@ const registry = [
   K('footnote-marker-style', 'enum', 'hebrew-geresh', P.NOTES, 'sel-fn-marker', ['notes/markers'], 'fx:fn-marker', { enum: ['hebrew', 'hebrew-geresh', 'parenthesis', 'asterisk', 'decimal'], note: "Iteration-003: 'hebrew' = גימטריה+מפריד (כמו המקור — markerWord); 'hebrew-geresh' = מוסכמת הגיליון (בחירה מפורשת)" }),
   K('footnote-reset-policy', 'enum', 'section', P.NOTES, 'sel-fn-reset', ['notes/markers'], 'fx:fn-reset', { enum: ['continuous', 'page', 'section', 'part'], note: 'S4.26 (דיווח משתמש 05.11): ברירת המחדל איפוס פר-פרק (section/siman) — לא פר-עמוד' }),
   K('footnote-columns', 'number', 1, P.NOTES, 'sel-fn-cols', ['layout/footnote-budget'], 'fx:fn-cols', { enum: [1, 2] }),
-  K('footnote-separator-rule', 'enum', 'regular', P.NOTES, 'sel-fn-rule', ['output/dom-renderer'], 'fx:fn-rule', { enum: ['none', 'regular', 'circles', 'sparkle', 'star', 'diamond'] }),
+  K('footnote-separator-rule', 'enum', 'regular', P.NOTES, 'sel-fn-rule', ['core/materialize', 'core/page-model', 'output/pagemodel-dom-renderer', 'output/export-api'], 'fx:fn-rule', { enum: ['none', 'regular', 'circles', 'sparkle', 'star', 'diamond'], note: 'Unified: יוצר fn-rule decoration ו-pdfOps בתוך PageModel; שינוי מחייב עימוד מחדש' }),
   K('fn-layout-mode', 'enum', 'continuous', P.NOTES, 'sel-fn-layout', ['layout/dp-planner', 'output/dom-renderer'], 'fx:fn-layout', { enum: ['block', 'continuous'], note: 'S4.26 (דיווח משתמש 05.11): ברירת המחדל זרימה רציפה — הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה; block=כל הערה בלוק משלה' }),
   // **S75 (בקשה 1 — 12.11, בחירת מנגנון הצבת ההערות):** ברירת המחדל = המנגנון
   // החדש (body-first): הגוף ממלא את אזור הטקסט העיקרי תמיד; המרזב נכנס
@@ -2690,10 +2703,10 @@ const registry = [
   K('shaar-sub-image', 'string', '', P.THEMES, 'inp-shaar-sub-img', ['decoration/page-decorations'], 'fx:shaar-sub-img'),
   K('shaar-back-enabled', 'bool', true, P.THEMES, 'chk-shaar-back', ['decoration/page-decorations', 'decoration/shaar-pages'], 'fx:shaar-back', { note: 'PT-03: 4 מקטעים עצמאיים; כיבוי ראשי מבטל את כולם' }),
   // REQ-ORN-08: פאנל רקעים מוזג לתוך נושאים — 3 סוגי עמודים + color/texture/image + insets מ"מ
-  K('background-page-type', 'enum', 'regular', P.THEMES, 'sel-bg-page-type', ['decoration/page-decorations'], 'fx:bg-page-type', { enum: ['regular', 'preface-open', 'sign-open'], note: 'REQ-ORN-08: מחלקת העמוד שאליה הרקע מיועד (מיזוג פאנל רקע→נושאים)' }),
-  K('background-image', 'string', '', P.THEMES, 'inp-bg-image', ['decoration/page-decorations'], 'fx:bg-image'),
-  K('background-texture', 'string', '', P.THEMES, 'inp-bg-texture', ['decoration/page-decorations'], 'fx:bg-texture', { note: 'טקסטורה חוזרת (שכבת תשתית — פטורה מחפיפות באודיט)' }),
-  K('background-inset-mm', 'number', 0, P.THEMES, 'rng-bg-inset', ['decoration/page-decorations'], 'fx:bg-inset', { min: 0, max: 30, note: 'שקיעת הרקע משולי העמוד במ״מ' }),
+  K('background-page-type', 'enum', 'regular', P.THEMES, 'sel-bg-page-type', ['decoration/page-decorations'], 'fx:bg-page-type', { enum: ['regular', 'preface-open', 'sign-open'], unifiedSupport: false, note: 'REQ-ORN-08: נתמך במקרין Legacy בלבד; חיבור לרקעי PageModel/HTML/PDF עדיין פתוח — חסום בפרופיל Unified כדי למנוע שינוי ללא השפעה' }),
+  K('background-image', 'string', '', P.THEMES, 'inp-bg-image', ['decoration/page-decorations'], 'fx:bg-image', { unifiedSupport: false, note: 'Legacy-only כרגע; אין עדיין PageModel background decoration תואם DOM/HTML/PDF — חסום בפרופיל Unified' }),
+  K('background-texture', 'string', '', P.THEMES, 'inp-bg-texture', ['decoration/page-decorations'], 'fx:bg-texture', { unifiedSupport: false, note: 'Legacy-only כרגע; אין עדיין PageModel texture decoration תואם DOM/HTML/PDF — חסום בפרופיל Unified' }),
+  K('background-inset-mm', 'number', 0, P.THEMES, 'rng-bg-inset', ['decoration/page-decorations'], 'fx:bg-inset', { min: 0, max: 30, unifiedSupport: false, note: 'Legacy-only כרגע; inset ייכנס ל-PageModel יחד עם תמונת/טקסטורת הרקע — חסום בפרופיל Unified' }),
 
   // ---- נכסי הפרויקט המקורי IMUD_TORANI (03.11, EXT-14 — הטמעה) ----
   // הערכים הם הפניות 'imud:<collection>:<id>' — נפתרות בזמן רינדור דרך asset-registry.
