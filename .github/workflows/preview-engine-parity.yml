@@ -170,7 +170,7 @@ jobs:
       - name: Checkout the exact deployed source commit
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
@@ -183,16 +183,16 @@ jobs:
           BUILD_INFO_URL='https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/build-info.json'
           ACTUAL_SHA=''
           for attempt in $(seq 1 180); do
-            INFO=$(curl -fsSL -H 'Cache-Control: no-cache' "\${BUILD_INFO_URL}?check=$(date +%s%N)" 2>/dev/null || true)
+            INFO=$(curl -fsSL -H 'Cache-Control: no-cache' "${BUILD_INFO_URL}?check=$(date +%s%N)" 2>/dev/null || true)
             ACTUAL_SHA=$(printf '%s' "$INFO" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).commit||"")}catch(e){console.log("")}})')
             if [ "$ACTUAL_SHA" = "$EXPECTED_SHA" ]; then
               echo "Pages serves expected commit $EXPECTED_SHA"
               exit 0
             fi
-            echo "Waiting for Pages: expected=$EXPECTED_SHA actual=\${ACTUAL_SHA:-unavailable} attempt=$attempt/180"
+            echo "Waiting for Pages: expected=$EXPECTED_SHA actual=${ACTUAL_SHA:-unavailable} attempt=$attempt/180"
             sleep 5
           done
-          echo "FATAL: Pages did not publish expected commit $EXPECTED_SHA (last actual: \${ACTUAL_SHA:-unavailable})"
+          echo "FATAL: Pages did not publish expected commit $EXPECTED_SHA (last actual: ${ACTUAL_SHA:-unavailable})"
           exit 1
 
       - name: Install agent-browser + headless browser
@@ -205,9 +205,7 @@ jobs:
 
       - name: Full math audit — exact public Pages build (DOM + HTML/PDF + impact signature)
         run: |
-          node tools/layout-audit/run-full-math.js --tag live \\
-            --url https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/ \\
-            --fixture audits/very_long_test_text.txt --capture-exports
+          node tools/layout-audit/run-full-math.js --tag live --url https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/ --fixture audits/very_long_test_text.txt --capture-exports
 
       - name: Upload live acceptance evidence
         if: always()
