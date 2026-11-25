@@ -676,8 +676,13 @@ function handleExportRequest(msg, post) {
 }
 
 /** מטפל הודעות — pure, מקבל post חיצוני (מבודד לבדיקות). */
-function createEngineWorkerMain(post) {
+function createEngineWorkerMain(post, options = {}) {
   if (typeof post !== 'function') throw new Error('engine-worker-main: post(message) required');
+  const runTypeset = typeof options.typeset === 'function' ? options.typeset : typeset;
+  const serializeResult = typeof options.serializeResult === 'function' ? options.serializeResult : serializeTypesetResult;
+  const getTypographyRuntime = typeof options.getTypographyRuntime === 'function'
+    ? options.getTypographyRuntime : () => null;
+  const requireTypographyRuntime = options.requireTypographyRuntime === true;
   return function onMessage(msg) {
     try {
       validateRequest(msg);
@@ -687,6 +692,10 @@ function createEngineWorkerMain(post) {
     }
     if (msg.type === 'cancel') {
       cancelledJobs.add(msg.jobId);
+      return;
+    }
+    if (msg.type === 'typeset-request' && cancelledJobs.has(msg.jobId)) {
+      cancelledJobs.delete(msg.jobId);
       return;
     }
     if (msg.type === 'register-font') { handleRegisterFont(msg, post); return; }
@@ -699,11 +708,21 @@ function createEngineWorkerMain(post) {
       // תיקון ביקורת PR #22: ההודעה מגיעה מהלקוח החי (requestTypeset.assets) ולא
       // רק תיאורטית; ה-resolver משוחזר במטמון לפי זהות ה-transport (בלי פענוח חוזר).
       const docAssets = _resolverForAssets(msg.assets);
-      const result = typeset(msg.text, msg.settings, {
+      const typographyRuntime = getTypographyRuntime();
+      if (requireTypographyRuntime && (!typographyRuntime ||
+          !typographyRuntime.unicode || typographyRuntime.unicode.unicodeVersion !== '18.0.0' ||
+          !typographyRuntime.harfbuzz || typeof typographyRuntime.harfbuzz.shape !== 'function' ||
+          typeof typographyRuntime.createShaper !== 'function')) {
+        const error = new Error('Pinned Unicode 18 + HarfBuzz typography runtime is not initialized in this Worker');
+        error.code = 'typography-runtime-not-initialized';
+        throw error;
+      }
+      const result = runTypeset(msg.text, msg.settings, {
         onProgress: (info) => {
           if (!cancelledJobs.has(jobId)) post(progressMessage(jobId, info));
         },
-        assets: docAssets
+        assets: docAssets,
+        typographyRuntime
       });
       if (cancelledJobs.has(jobId)) {
         cancelledJobs.delete(jobId); // העבודה בוטלה — התוצאה נזרקת בזמן שנותרה מסומנת
@@ -713,36 +732,35 @@ function createEngineWorkerMain(post) {
       // (כולל pageModel שלא עובר ב-audit) נשמרת לבקשת ייצוא מהמודל — הייצוא
       // בפרופיל המאוחד צורך את אותו מודל בדיוק שנשלח ל-UI (אין עימוד שני).
       _lastTypesetResult = result;
-      post({ type: 'typeset-result', jobId, result: serializeTypesetResult(result) });
+      post({ type: 'typeset-result', jobId, result: serializeResult(result) });
     } catch (e) {
       if (cancelledJobs.has(jobId)) { cancelledJobs.delete(jobId); return; }
-      post({ type: 'typeset-error', jobId, message: e && e.message ? e.message : String(e) });
+      post({
+        type: 'typeset-error', jobId,
+        code: e && e.code ? e.code : null,
+        message: e && e.message ? e.message : String(e)
+      });
     }
   };
 }
 
 /** הרכבה עצמאית לסביבת Worker אמיתית (self.onmessage). */
 function bootWorkerContext(ctx, options = {}) {
-  const handler = createEngineWorkerMain((m) => ctx.postMessage(m));
+  let typographyRuntime = null;
+  let runtimePromise = null;
   const loadRuntime = typeof options.loadTypographyRuntime === 'function'
     ? options.loadTypographyRuntime
     : loadProductionTypographyRuntime;
-  let runtimePromise = null;
+  const post = (message) => ctx.postMessage(message);
+  const handler = createEngineWorkerMain(post, {
+    getTypographyRuntime: () => typographyRuntime,
+    requireTypographyRuntime: true,
+    ...(typeof options.typeset === 'function' ? { typeset: options.typeset } : {}),
+    ...(typeof options.serializeResult === 'function' ? { serializeResult: options.serializeResult } : {})
+  });
 
-  const handleRuntimeInit = (msg) => {
-    try {
-      validateTypographyRuntimeInitRequest(msg);
-    } catch (error) {
-      ctx.postMessage({
-        type: 'typography-runtime-result',
-        jobId: msg && typeof msg.jobId === 'string' ? msg.jobId : null,
-        ok: false,
-        code: 'invalid-runtime-init-request',
-        message: error && error.message ? error.message : String(error)
-      });
-      return;
-    }
-
+  function ensureTypographyRuntime() {
+    if (typographyRuntime) return Promise.resolve(typographyRuntime);
     if (!runtimePromise) {
       runtimePromise = Promise.resolve().then(() => {
         const workerHref = ctx && ctx.location && ctx.location.href;
@@ -753,37 +771,94 @@ function bootWorkerContext(ctx, options = {}) {
         }
         const baseUrl = new URL('./assets/shaping-runtime/', workerHref).href;
         return loadRuntime({ baseUrl });
+      }).then((runtime) => {
+        if (!runtime || !runtime.unicode || runtime.unicode.unicodeVersion !== '18.0.0' ||
+            !runtime.harfbuzz || typeof runtime.harfbuzz.shape !== 'function' ||
+            typeof runtime.createShaper !== 'function' || !runtime.assetDigests) {
+          const error = new Error('Loaded typography runtime does not satisfy the pinned Unicode 18/HarfBuzz contract');
+          error.code = 'invalid-typography-runtime';
+          throw error;
+        }
+        typographyRuntime = runtime;
+        return runtime;
+      }).catch((error) => {
+        runtimePromise = null;
+        throw error;
       });
     }
+    return runtimePromise;
+  }
 
-    const currentPromise = runtimePromise;
-    currentPromise.then((runtime) => {
-      ctx.postMessage({
-        type: 'typography-runtime-result',
-        jobId: msg.jobId,
-        ok: true,
-        harfbuzzPackageVersion: runtime.manifest.harfbuzz.version,
-        harfbuzzCoreVersion: runtime.harfbuzz.versionString(),
-        unicodeVersion: runtime.unicode.unicodeVersion,
-        assetCount: Object.keys(runtime.assetDigests).length,
-        assetDigests: { ...runtime.assetDigests }
-      });
+  function runtimeResult(jobId, runtime) {
+    post({
+      type: 'typography-runtime-result',
+      jobId,
+      ok: true,
+      harfbuzzPackageVersion: runtime.manifest.harfbuzz.version,
+      harfbuzzCoreVersion: runtime.harfbuzz.versionString(),
+      unicodeVersion: runtime.unicode.unicodeVersion,
+      assetCount: Object.keys(runtime.assetDigests).length,
+      assetDigests: { ...runtime.assetDigests }
+    });
+  }
+
+  function failedRuntimeResult(jobId, error) {
+    post({
+      type: 'typography-runtime-result',
+      jobId,
+      ok: false,
+      code: error && error.code ? error.code : 'runtime-initialization-failed',
+      message: error && error.message ? error.message : String(error)
+    });
+  }
+
+  function handleRuntimeInit(message) {
+    try {
+      validateTypographyRuntimeInitRequest(message);
+    } catch (error) {
+      failedRuntimeResult(message && typeof message.jobId === 'string' ? message.jobId : null, error);
+      return;
+    }
+    ensureTypographyRuntime().then(
+      (runtime) => runtimeResult(message.jobId, runtime),
+      (error) => failedRuntimeResult(message.jobId, error)
+    );
+  }
+
+  function handleTypesetRequest(message) {
+    // Validate before loading assets; malformed requests keep the protocol's normal error path.
+    try {
+      validateRequest(message);
+    } catch (_) {
+      handler(message);
+      return;
+    }
+    ensureTypographyRuntime().then(() => {
+      // A cancel may arrive while asset verification and module loading are pending.
+      handler(message);
     }).catch((error) => {
-      if (runtimePromise === currentPromise) runtimePromise = null;
-      ctx.postMessage({
-        type: 'typography-runtime-result',
-        jobId: msg.jobId,
-        ok: false,
+      if (cancelledJobs.has(message.jobId)) {
+        cancelledJobs.delete(message.jobId);
+        return;
+      }
+      post({
+        type: 'typeset-error',
+        jobId: message.jobId,
         code: error && error.code ? error.code : 'runtime-initialization-failed',
-        message: error && error.message ? error.message : String(error)
+        message: 'Typography runtime initialization failed; typesetting was not started: ' +
+          (error && error.message ? error.message : String(error))
       });
     });
-  };
+  }
 
   ctx.onmessage = (ev) => {
     const message = ev && ev.data;
     if (message && message.type === 'typography-runtime-init') {
       handleRuntimeInit(message);
+      return;
+    }
+    if (message && message.type === 'typeset-request') {
+      handleTypesetRequest(message);
       return;
     }
     handler(message);
