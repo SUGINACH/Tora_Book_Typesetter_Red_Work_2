@@ -50,6 +50,57 @@ function unwrapAgentJson(output) {
   return value;
 }
 
+
+function diagnosticValue(value, maxLength = 500) {
+  if (typeof value === 'string') return value.length > maxLength ? value.slice(0, maxLength) + '…' : value;
+  const json = JSON.stringify(value);
+  if (json == null) return json;
+  return json.length > maxLength ? json.slice(0, maxLength) + '…' : value;
+}
+
+// Find the first JSON-relevant difference without normalizing away object-key
+// order: exact JSON byte parity remains the acceptance condition.
+function firstJsonDifference(left, right, path = '$') {
+  const leftType = left === null ? 'null' : Array.isArray(left) ? 'array' : typeof left;
+  const rightType = right === null ? 'null' : Array.isArray(right) ? 'array' : typeof right;
+  if (leftType !== rightType) {
+    return { path, kind: 'type', leftType, rightType, left: diagnosticValue(left), right: diagnosticValue(right) };
+  }
+  if (leftType === 'null' || leftType !== 'object') {
+    if (!Object.is(left, right)) {
+      return { path, kind: 'value', left: diagnosticValue(left), right: diagnosticValue(right) };
+    }
+    return null;
+  }
+  if (Array.isArray(left)) {
+    if (left.length !== right.length) {
+      return { path, kind: 'array-length', left: left.length, right: right.length };
+    }
+    for (let index = 0; index < left.length; index++) {
+      const difference = firstJsonDifference(left[index], right[index], path + '[' + index + ']');
+      if (difference) return difference;
+    }
+    return null;
+  }
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  const rightKeySet = new Set(rightKeys);
+  const leftKeySet = new Set(leftKeys);
+  const missingFromRight = leftKeys.filter((key) => !rightKeySet.has(key));
+  const missingFromLeft = rightKeys.filter((key) => !leftKeySet.has(key));
+  if (missingFromRight.length || missingFromLeft.length) {
+    return { path, kind: 'object-keys', missingFromRight, missingFromLeft };
+  }
+  if (leftKeys.some((key, index) => key !== rightKeys[index])) {
+    return { path, kind: 'object-key-order', left: leftKeys, right: rightKeys };
+  }
+  for (const key of leftKeys) {
+    const difference = firstJsonDifference(left[key], right[key], path + '.' + key);
+    if (difference) return difference;
+  }
+  return null;
+}
+
 function mimeType(file) {
   switch (path.extname(file).toLowerCase()) {
     case '.html': return 'text/html; charset=utf-8';
@@ -718,12 +769,15 @@ async function main() {
     report.browserWorker.graphemeOutputSha256 = crypto.createHash('sha256').update(browserGraphemeJson).digest('hex');
     report.exactNodeParity = browserJson === nodeJson;
     report.exactNodeGraphemeParity = browserGraphemeJson === graphemeResultJson;
+    report.browserWorker.firstJsonDifference = firstJsonDifference(nodeResult, browserResult.report) ||
+      (browserJson === nodeJson ? null : { path: '$', kind: 'json-serialization-only', nodeLength: nodeJson.length, workerLength: browserJson.length });
     if (!report.exactNodeParity || !report.exactNodeGraphemeParity) {
       throw new Error('Node/classic Worker Bidi or GraphemeBreakTest output differs: ' + JSON.stringify({
         nodeSha256: report.nodeReference.outputSha256,
         workerSha256: report.browserWorker.outputSha256,
         nodeGraphemeSha256: report.graphemeBreakConformance.outputSha256,
-        workerGraphemeSha256: report.browserWorker.graphemeOutputSha256
+        workerGraphemeSha256: report.browserWorker.graphemeOutputSha256,
+        firstJsonDifference: report.browserWorker.firstJsonDifference
       }));
     }
     report.result = 'passed';
