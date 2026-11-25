@@ -15840,6 +15840,105 @@ function resolveFont(alias, opts = {}) {
   return hit;
 }
 
+
+/**
+ * Resolve a font for one complete extended grapheme.
+ *
+ * requiredCodePoints must come from the pinned Unicode itemizer after
+ * excluding Unicode Default_Ignorable_Code_Point scalars. Coverage is checked
+ * for every remaining scalar against this exact registered font's cmap.
+ * No codepoint-level splitting or implicit measure fallback is permitted.
+ */
+function resolveFontForGrapheme(alias, requiredCodePoints, opts = {}) {
+  if (!Array.isArray(requiredCodePoints)) {
+    return { ok: false, code: 'invalid-grapheme-codepoints', message: 'Required grapheme code points must be an array', fallbackChain: [], diagnostics: [] };
+  }
+  const codePoints = Array.from(new Set(requiredCodePoints));
+  if (codePoints.some((cp) => !Number.isSafeInteger(cp) || cp < 0 || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF))) {
+    return { ok: false, code: 'invalid-grapheme-codepoints', message: 'Required grapheme code points must be Unicode scalar values', fallbackChain: [], diagnostics: [] };
+  }
+  if (opts.fallbacks != null && !Array.isArray(opts.fallbacks)) {
+    return { ok: false, code: 'invalid-font-fallback-list', message: 'Explicit font fallbacks must be an array', fallbackChain: [], diagnostics: [] };
+  }
+  const requestedAlias = alias == null
+    ? (opts.defaultFamily == null ? null : String(opts.defaultFamily))
+    : String(alias);
+  const candidates = [];
+  const seen = new Set();
+  const addCandidate = (value, reason) => {
+    if (value == null) return;
+    if (typeof value !== 'string' || !value.trim()) {
+      throw new TypeError('Font fallback aliases must be non-empty strings');
+    }
+    if (seen.has(value)) return;
+    seen.add(value);
+    candidates.push({ alias: value, reason });
+  };
+  try {
+    addCandidate(requestedAlias, 'direct');
+    for (const fallback of (opts.fallbacks || [])) addCandidate(fallback, 'stack-fallback');
+    if (opts.defaultFamily != null && String(opts.defaultFamily) !== requestedAlias) {
+      addCandidate(String(opts.defaultFamily), 'settings-default');
+    }
+  } catch (error) {
+    return { ok: false, code: 'invalid-font-fallback-list', message: error.message, fallbackChain: [], diagnostics: [] };
+  }
+
+  const fallbackChain = [];
+  const diagnostics = [];
+  for (const candidate of candidates) {
+    const fontId = _aliases.get(candidate.alias);
+    const record = fontId == null ? null : _fonts.get(fontId);
+    if (!record) {
+      fallbackChain.push({ alias: candidate.alias, fontId: null, chosen: false, reason: 'not-registered' });
+      diagnostics.push({ code: 'font-not-registered', alias: candidate.alias, message: "The font alias is not registered" });
+      continue;
+    }
+    const cmap = record.font && record.font.charToGlyph;
+    const missingCodePoints = codePoints.filter((codePoint) => {
+      if (!cmap || typeof cmap.get !== 'function') return true;
+      const gid = cmap.get(codePoint);
+      return !Number.isSafeInteger(gid) || gid <= 0 || gid >= record.numGlyphs;
+    });
+    if (missingCodePoints.length) {
+      fallbackChain.push({
+        alias: candidate.alias, fontId, chosen: false,
+        reason: 'missing-grapheme-coverage', missingCodePoints
+      });
+      diagnostics.push({
+        code: 'font-missing-grapheme-coverage',
+        alias: candidate.alias,
+        fontId,
+        missingCodePoints
+      });
+      continue;
+    }
+    fallbackChain.push({
+      alias: candidate.alias, fontId, chosen: true,
+      reason: candidate.reason === 'direct' ? 'direct' : 'grapheme-coverage-fallback'
+    });
+    return {
+      ok: true,
+      fontId,
+      record,
+      requestedAlias,
+      chosenAlias: candidate.alias,
+      fallbackUsed: candidate.alias !== requestedAlias,
+      fallbackChain,
+      diagnostics
+    };
+  }
+  return {
+    ok: false,
+    code: 'grapheme-font-coverage-unavailable',
+    alias: requestedAlias,
+    requiredCodePoints: codePoints,
+    message: 'No configured font covers every required scalar in the complete grapheme',
+    fallbackChain,
+    diagnostics
+  };
+}
+
 /** פתרון לפי זהות (מהמודל הקנוני — styleRef/fontId). */
 function resolveFontById(fontId) {
   const rec = _fonts.get(String(fontId));
@@ -15899,7 +15998,7 @@ function fontCount() { return _fonts.size; }
 function aliasCount() { return _aliases.size; }
 
 module.exports = {
-  registerFont, resolveFont, resolveFontById, fontOf, fontIdOfAlias,
+  registerFont, resolveFont, resolveFontForGrapheme, resolveFontById, fontOf, fontIdOfAlias,
   clearFontResolver, unregisterAlias, fontCount, aliasCount
 };
 
