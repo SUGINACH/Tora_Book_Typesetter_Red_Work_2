@@ -2391,6 +2391,114 @@ function mulberry32(seed) {
 /** הזרע הקבוע של מצב "קבוע" — אף פעם לא משתנה (נעילת הדטרמיניזם בין גרסאות פריסה). */
 const FIXED_SEED = 0x54F2A17;
 
+/**
+ * Strip footnote notation before deciding whether a heading/body line contains
+ * actual prose. Note text alone never satisfies a body-text requirement.
+ */
+function stripFootnoteOnlyContent(value) {
+  return String(value == null ? '' : value).replace(/\[[^\]\r\n]*\]/g, '').trim();
+}
+
+function matchNumberedHeading(line) {
+  const match = /^\s*כותרת\s+([1-7])\s*[-–—:]\s*(.*?)\s*$/.exec(String(line || ''));
+  return match ? { level: Number(match[1]), text: match[2] } : null;
+}
+
+function isStructuralBodyLine(line) {
+  const text = stripFootnoteOnlyContent(line);
+  if (!text) return false;
+  if (/^הערות?\s+סיום\s*[-–—:]/.test(text)) return false;
+  if (/^הערת\s+סיום(?:[-\s]\d+)?\s*[-–—:]/.test(text)) return false;
+  return true;
+}
+
+function validateTestDocumentStructure(documentText) {
+  const errors = [];
+  if (typeof documentText !== 'string') {
+    return { valid: false, errors: [{ code: 'document-not-string', line: 0, message: 'קלט המסמך חייב להיות מחרוזת.' }] };
+  }
+
+  const lines = documentText.split(/\r?\n/);
+  let previousHeading = null;
+  let hasBodyAfterPreviousHeading = false;
+  let endnotesStarted = false;
+
+  for (let index = 0; index < lines.length; index++) {
+    const lineNumber = index + 1;
+    const trimmedLine = lines[index].trim();
+    if (/^הערות\s+סיום\s*[-–—:]/.test(trimmedLine)) {
+      endnotesStarted = true;
+      continue;
+    }
+    if (endnotesStarted) continue;
+    const heading = matchNumberedHeading(lines[index]);
+
+    if (heading) {
+      if (!stripFootnoteOnlyContent(heading.text)) {
+        errors.push({
+          code: 'heading-only-footnote',
+          line: lineNumber,
+          level: heading.level,
+          message: 'כותרת ברמה ' + heading.level + ' מכילה הערת שוליים בלבד וללא טקסט כותרת.'
+        });
+      }
+
+      if (previousHeading && !hasBodyAfterPreviousHeading) {
+        if (heading.level === previousHeading.level) {
+          errors.push({
+            code: 'same-level-headings-without-body',
+            line: lineNumber,
+            previousLine: previousHeading.line,
+            level: heading.level,
+            message: 'שתי כותרות ברמה ' + heading.level + ' מופיעות ברצף ללא טקסט גוף ביניהן.'
+          });
+        } else if (heading.level < previousHeading.level) {
+          errors.push({
+            code: 'deepest-heading-without-body',
+            line: lineNumber,
+            previousLine: previousHeading.line,
+            level: previousHeading.level,
+            message: 'הכותרת העמוקה ברמה ' + previousHeading.level + ' נסגרת ללא טקסט גוף.'
+          });
+        }
+      }
+
+      previousHeading = { ...heading, line: lineNumber };
+      hasBodyAfterPreviousHeading = false;
+      continue;
+    }
+
+    if (previousHeading && isStructuralBodyLine(lines[index])) {
+      hasBodyAfterPreviousHeading = true;
+    }
+  }
+
+  if (previousHeading && !hasBodyAfterPreviousHeading) {
+    errors.push({
+      code: 'terminal-heading-without-body',
+      line: previousHeading.line,
+      level: previousHeading.level,
+      message: 'הכותרת האחרונה ברמה ' + previousHeading.level + ' אינה מכילה טקסט גוף אחריה.'
+    });
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+function lastNumberedHeading(lines) {
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const heading = matchNumberedHeading(lines[i]);
+    if (heading) return { ...heading, index: i };
+  }
+  return null;
+}
+
+function hasBodyAfterLastHeading(lines) {
+  const last = lastNumberedHeading(lines);
+  return !!last && lines.slice(last.index + 1).some(isStructuralBodyLine);
+}
+
+
 /** מאגרי מילים — עברית אמיתית באורכים מגוונים (2–11 תווים) לריאליזם טיפוגרפי. */
 const WORDS = [
   'תורה', 'הלכה', 'סוגיה', 'שיעור', 'דין', 'טעם', 'פשט', 'דרש', 'רמז', 'סוד',
@@ -2566,7 +2674,9 @@ function chapterLines(rng, opts, chapterIdx) {
     // ציר 1 — כותרת צד (H7) מובטחת בפרק הראשון (i=0 — לפני כל ענף כותרת אחר)
     if (docFirst && i === 0) {
       lines.push(`כותרת 7 - ${subHeadingText(rng, 7)}`);
-      // נופל להמשך — H7 תמיד לפני פסקה
+      // H7 חייב לקבל גוף לפני כותרת אחרת, גם כשה-H3 נורה באיטרציה הבאה.
+      lines.push(bodyParagraph(rng, 'short'));
+      blocksSinceHeading++;
     }
 
     if (h3AtTop && i === 1) {
@@ -2575,6 +2685,13 @@ function chapterLines(rng, opts, chapterIdx) {
       continue;
     }
     if (!h3AtTop && i === Math.floor(nBlocks / 4)) {
+      // אם איטרציה אקראית קודמת הסתיימה בכותרת עמוקה יותר, קודם סוגרים
+      // אותה בטקסט גוף לפני העלייה בהיררכיה ל-H3.
+      const previous = lastNumberedHeading(lines);
+      if (previous && !hasBodyAfterLastHeading(lines)) {
+        lines.push(bodyParagraph(rng, 'short'));
+        blocksSinceHeading++;
+      }
       lines.push(`כותרת 3 - ${subHeadingText(rng, 3)}`);
       blocksSinceHeading = 0;
       continue;
@@ -2586,8 +2703,8 @@ function chapterLines(rng, opts, chapterIdx) {
       // בשורה הקודמת; אם האיטרציה הקודמת הסתיימה בכותרת מאותה רמה (מוגרלת
       // או escort), נוצר רצף מאותה רמה ללא טקסט גוף — מבנה שאינו קיים באף
       // קורפוס אמיתי. מפרידים פסקת גוף קצרה; הכיסוי המובטח של הרמה נשמר.
-      const lastGuar = lines[lines.length - 1] || '';
-      if (lastGuar.startsWith(`כותרת ${guaranteedLvl} - `)) {
+      const previous = lastNumberedHeading(lines);
+      if (previous && !hasBodyAfterLastHeading(lines) && guaranteedLvl <= previous.level) {
         lines.push(paragraphText(rng, randInt(rng, 12, 25)));
       }
       lines.push(`כותרת ${guaranteedLvl} - ${subHeadingText(rng, guaranteedLvl)}`);
@@ -2627,6 +2744,11 @@ function chapterLines(rng, opts, chapterIdx) {
       : (pr < 0.08 ? 'tiny' : pr < 0.20 ? 'short' : pr < 0.50 ? 'long' : 'medium');
     lines.push(bodyParagraph(rng, kind));
     blocksSinceHeading++;
+  }
+
+  // סוגרים כותרת עמוקה אחרונה בטקסט גוף לפני אזור הערות-הסיום.
+  if (lastNumberedHeading(lines) && !hasBodyAfterLastHeading(lines)) {
+    lines.push(paragraphText(rng, randInt(rng, 12, 25)));
   }
 
   // הערות סיום בחלק מהפרקים
@@ -2681,10 +2803,26 @@ function generateTestDocument(opts = {}) {
   out.push('הערות סיום - הערות המחבר');
   out.push(paragraphText(rng, randInt(rng, 10, 20)));
 
-  return out.join('\n');
+  const documentText = out.join('\n');
+  const validation = validateTestDocumentStructure(documentText);
+  if (!validation.valid) {
+    const details = validation.errors.map((error) =>
+      'line ' + error.line + ' [' + error.code + ']: ' + error.message
+    ).join('\n');
+    const failure = new Error('מחולל מסמך הבדיקה יצר מבנה לא תקין:\n' + details);
+    failure.code = 'invalid-test-document-structure';
+    failure.validation = validation;
+    throw failure;
+  }
+  return documentText;
 }
 
-module.exports = { generateTestDocument, FIXED_SEED, mulberry32 };
+module.exports = {
+  generateTestDocument,
+  validateTestDocumentStructure,
+  FIXED_SEED,
+  mulberry32
+};
 
 };
 __modules["src/ui/settings-persistence.js"] = function (require, module, exports) {
