@@ -5,6 +5,7 @@ on:
     branches: [ engine/legacy-parity-preview-20261119 ]
     paths:
       - 'tools/bidi-runtime-poc/**'
+      - 'red-build/src/engine/typography/unicode18-bidi-runtime.js'
       - '.github/workflows/bidi-runtime-poc.yml'
   workflow_dispatch:
 

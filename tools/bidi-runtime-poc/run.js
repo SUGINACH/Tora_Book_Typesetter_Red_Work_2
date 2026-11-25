@@ -158,11 +158,13 @@ async function main() {
 
   try {
     for (const file of ['index.html', 'bidi-api.js', 'bidi-worker.js']) {
-      fs.copyFileSync(path.join(__dirname, file), path.join(site, file));
+      fs.copyFileSync(file === 'bidi-api.js'
+        ? path.join(REPO_ROOT, 'red-build', 'src', 'engine', 'typography', 'unicode18-bidi-runtime.js')
+        : path.join(__dirname, file), path.join(site, file));
     }
     fs.copyFileSync(wasmPath, path.join(site, 'bidi-runtime.wasm'));
 
-    const api = require('./bidi-api.js');
+    const api = require('../../red-build/src/engine/typography/unicode18-bidi-runtime.js');
     const wasmBytes = fs.readFileSync(wasmPath);
     const runtime = await api.instantiate(wasmBytes);
     const fixtures = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures.json'), 'utf8'));

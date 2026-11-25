@@ -192,13 +192,13 @@ async function main() {
     for (const file of ['index.html', 'classic-worker.js', 'shape-core.js']) {
       fs.copyFileSync(path.join(__dirname, file), path.join(site, file));
     }
-    fs.copyFileSync(path.join(REPO_ROOT, 'tools', 'bidi-runtime-poc', 'bidi-api.js'), path.join(site, 'bidi-api.js'));
+    fs.copyFileSync(path.join(REPO_ROOT, 'red-build', 'src', 'engine', 'typography', 'unicode18-bidi-runtime.js'), path.join(site, 'bidi-api.js'));
     fs.copyFileSync(BIDI_WASM_PATH, path.join(site, 'bidi-runtime.wasm'));
 
     const hbUrl = pathToFileURL(path.join(site, 'harfbuzzjs', 'dist', 'index.mjs')).href;
     const hb = await import(hbUrl);
     const shapeCore = require('./shape-core.js');
-    const bidiApi = require('../bidi-runtime-poc/bidi-api.js');
+    const bidiApi = require(path.join(REPO_ROOT, 'red-build', 'src', 'engine', 'typography', 'unicode18-bidi-runtime.js'));
     const bidiRuntime = await bidiApi.instantiate(fs.readFileSync(BIDI_WASM_PATH));
     if (bidiRuntime.unicodeVersion !== '18.0.0') throw new Error('Expected Unicode 18 itemizer; got ' + bidiRuntime.unicodeVersion);
     const sharedSourceText = String.fromCodePoint(
