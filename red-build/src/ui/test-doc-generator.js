@@ -67,9 +67,16 @@ function validateTestDocumentStructure(documentText) {
   const lines = documentText.split(/\r?\n/);
   let previousHeading = null;
   let hasBodyAfterPreviousHeading = false;
+  let endnotesStarted = false;
 
   for (let index = 0; index < lines.length; index++) {
     const lineNumber = index + 1;
+    const trimmedLine = lines[index].trim();
+    if (/^הערות\\s+סיום\\s*[-–—:]/.test(trimmedLine)) {
+      endnotesStarted = true;
+      continue;
+    }
+    if (endnotesStarted) continue;
     const heading = matchNumberedHeading(lines[index]);
 
     if (heading) {

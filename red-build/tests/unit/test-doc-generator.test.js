@@ -53,6 +53,17 @@ describe('D-98 test-document structural validator', () => {
       'explicit missing body diagnostic');
   });
 
+  it('does not count the document endnotes section as body text under the last heading', () => {
+    const result = validateTestDocumentStructure([
+      'כותרת 4 - כותרת אחרונה',
+      'הערות סיום - הערות המחבר',
+      'טקסט של הערת סיום בלבד.'
+    ].join('\n'));
+    assert(!result.valid, 'endnotes must not satisfy the final heading body requirement');
+    assert(result.errors.some((error) => error.code === 'terminal-heading-without-body'),
+      'explicit terminal heading diagnostic');
+  });
+
   it('rejects a terminal heading with no following body paragraph', () => {
     const result = validateTestDocumentStructure('כותרת 5 - הכותרת האחרונה');
     assert(!result.valid, 'terminal heading must own real body text');
