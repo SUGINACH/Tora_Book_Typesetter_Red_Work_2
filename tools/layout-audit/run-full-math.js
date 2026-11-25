@@ -21,7 +21,7 @@
  *
  * שימוש:
  *   node tools/layout-audit/run-full-math.js [--fixture <path>] [--url <url>]
- *        [--tag <name>] [--out <dir>] [--skip-determinism]
+ *        [--tag <name>] [--out <dir>] [--skip-determinism] [--capture-exports]
  * דוגמאות:
  *   node tools/layout-audit/run-full-math.js                      # מקומי + very_long
  *   node tools/layout-audit/run-full-math.js --url https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/ --tag live
@@ -48,6 +48,7 @@ const URL = argOf('--url', null);
 const TAG = argOf('--tag', URL ? 'live' : 'local');
 const OUT = path.resolve(argOf('--out', path.join(ROOT, 'red-build', 'tests', 'artifacts', 'full-math-audit')));
 const SKIP_DET = args.includes('--skip-determinism');
+const CAPTURE_EXPORTS = args.includes('--capture-exports');
 const PORT = 8932;
 const B64_CHUNK = 100_000;
 const READY_TIMEOUT_MS = 900_000;
@@ -195,6 +196,104 @@ async function fetchBigVar(name) {
   const s = parts.join('');
   if (s.length !== len) throw new Error(`שליפת ${name}: אורך ${s.length} ≠ ${len}`);
   return s;
+}
+
+
+async function runProcess(command, argv, timeoutMs = 120000) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, argv, { stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '', stderr = '';
+    const timer = setTimeout(() => { child.kill('SIGKILL'); reject(new Error(command + ' timeout after ' + timeoutMs + 'ms')); }, timeoutMs);
+    child.stdout.on('data', (chunk) => { stdout += chunk; });
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    child.on('error', (error) => { clearTimeout(timer); reject(new Error(command + ' could not start: ' + error.message)); });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      if (code !== 0) reject(new Error(command + ' failed (' + code + '): ' + stderr.slice(0, 1200)));
+      else resolve({ stdout, stderr });
+    });
+  });
+}
+
+/** Export HTML and PDF from the already-typeset immutable PageModel and preserve both artifacts. */
+async function captureLiveExports(expectedPages) {
+  const before = await ev("(function(){const a=window.__toraApp;const m=a&&a.pageModel&&a.pageModel();const s=a&&a.getState&&a.getState();return {hasApp:!!a,schema:m&&m.schema||null,modelPages:m&&Array.isArray(m.pages)?m.pages.length:0,layoutHash:s&&s.layoutHash||null,pages:s&&s.pages||0,dirty:!!(s&&(s.lightDirty||s.heavyDirty))};})()");
+  if (!before || !before.hasApp || before.schema !== 'pagemodel-v1' || before.modelPages !== expectedPages ||
+      before.pages !== expectedPages || before.dirty || !before.layoutHash) {
+    throw new Error('LIVE export audit: PageModel/state mismatch before export: ' + JSON.stringify(before));
+  }
+
+  const htmlMeta = await ev("(function(){const a=window.__toraApp;const r=a&&a.exportRequest('html');if(!r||r.ok!==true||typeof r.data!=='string')return {ok:false,reason:r&&(r.error||r.reason)||'HTML export did not return a string'};window.__liveExportHtml=r.data;return {ok:true,chars:r.data.length};})()");
+  if (!htmlMeta || htmlMeta.ok !== true) throw new Error('LIVE HTML export failed: ' + JSON.stringify(htmlMeta));
+  const htmlRaw = await fetchBigVar('__liveExportHtml');
+  const htmlPath = path.join(OUT, TAG + '-book.html');
+  fs.writeFileSync(htmlPath, htmlRaw, 'utf8');
+  const htmlBytes = Buffer.byteLength(htmlRaw, 'utf8');
+  const htmlSha = crypto.createHash('sha256').update(htmlRaw, 'utf8').digest('hex');
+  const htmlPages = (htmlRaw.match(/class=["'][^"']*\bpage\b[^"']*["']/g) || []).length;
+  if (!/<html\b/i.test(htmlRaw) || !/<\/html>/i.test(htmlRaw) || htmlPages !== expectedPages) {
+    throw new Error('LIVE HTML page count/standalone structure mismatch: ' + JSON.stringify({ htmlPages, expectedPages, htmlBytes }));
+  }
+
+  await ev("(function(){if(!window.__liveOriginalCreateObjectURL){window.__liveOriginalCreateObjectURL=URL.createObjectURL.bind(URL);URL.createObjectURL=function(blob){if(blob&&blob.type==='application/pdf')window.__livePdfBlob=blob;return window.__liveOriginalCreateObjectURL(blob);};}window.__livePdfBlob=null;window.__livePdfB64=null;return 'PDF_CAPTURE_READY';})()");
+  const pdfStart = await ev("(function(){const r=window.__toraApp.exportRequest('pdf');return r?{ok:!!r.ok,pending:!!r.pending,reason:r.reason||null,error:r.error||null}:null;})()");
+  if (!pdfStart || pdfStart.ok !== true || pdfStart.pending !== true) {
+    throw new Error('LIVE PDF export request not accepted by Worker: ' + JSON.stringify(pdfStart));
+  }
+
+  const pdfStartTime = Date.now();
+  let pdfState = 'WAIT';
+  while (Date.now() - pdfStartTime < 12 * 60 * 1000) {
+    pdfState = await ev("(function(){if(window.__livePdfBlob)return 'READY';const e=document.querySelector('.status-strip');const t=e?String(e.innerText||''):'';return t.includes('ייצוא PDF נכשל')?'ERROR:'+t:'WAIT';})()");
+    if (pdfState === 'READY') break;
+    if (typeof pdfState === 'string' && pdfState.indexOf('ERROR:') === 0) throw new Error(pdfState);
+    await sleep(1500);
+  }
+  if (pdfState !== 'READY') throw new Error('LIVE PDF export timed out waiting for Worker Blob');
+
+  const pdfMeta = await ev("(async function(){const b=window.__livePdfBlob;if(!b||b.type!=='application/pdf')return {ok:false,reason:'PDF Blob missing or wrong MIME'};const u=new Uint8Array(await b.arrayBuffer());let b64='';const n=24576;for(let i=0;i<u.length;i+=n){const p=u.subarray(i,Math.min(u.length,i+n));let z='';for(let j=0;j<p.length;j++)z+=String.fromCharCode(p[j]);b64+=btoa(z);}window.__livePdfB64=b64;return {ok:true,type:b.type,size:u.length,signature:String.fromCharCode(u[0],u[1],u[2],u[3],u[4]),base64Length:b64.length};})()");
+  if (!pdfMeta || pdfMeta.ok !== true || pdfMeta.signature !== '%PDF-') {
+    throw new Error('LIVE PDF Blob invalid: ' + JSON.stringify(pdfMeta));
+  }
+  const pdfB64 = await fetchBigVar('__livePdfB64');
+  const pdfBytes = Buffer.from(pdfB64, 'base64');
+  const pdfPath = path.join(OUT, TAG + '-book.pdf');
+  fs.writeFileSync(pdfPath, pdfBytes);
+  const pdfSha = crypto.createHash('sha256').update(pdfBytes).digest('hex');
+  if (pdfBytes.length !== pdfMeta.size || pdfBytes.subarray(0, 5).toString('ascii') !== '%PDF-') {
+    throw new Error('LIVE PDF bytes changed during transfer');
+  }
+
+  const pdfInfo = await runProcess('pdfinfo', [pdfPath], 120000);
+  const pageMatch = /^Pages:\s+(\d+)/m.exec(pdfInfo.stdout);
+  const pdfPages = pageMatch ? Number(pageMatch[1]) : 0;
+  if (pdfPages !== expectedPages) {
+    throw new Error('LIVE PDF page count differs from PageModel: ' + JSON.stringify({ pdfPages, expectedPages, pdfinfo: pdfInfo.stdout.slice(0, 1000) }));
+  }
+
+  const textPath = path.join(OUT, TAG + '-book-extracted.txt');
+  await runProcess('pdftotext', ['-layout', pdfPath, textPath], 180000);
+  const extractedText = fs.readFileSync(textPath, 'utf8');
+  const hebrewChars = (extractedText.match(/[\u0590-\u05ff]/g) || []).length;
+  if (hebrewChars < 100) throw new Error('LIVE PDF extraction returned too little Hebrew text: ' + hebrewChars);
+
+  const after = await ev("(function(){const a=window.__toraApp;const m=a&&a.pageModel&&a.pageModel();const s=a&&a.getState&&a.getState();return {modelPages:m&&Array.isArray(m.pages)?m.pages.length:0,layoutHash:s&&s.layoutHash||null,pages:s&&s.pages||0,dirty:!!(s&&(s.lightDirty||s.heavyDirty))};})()");
+  if (!after || after.layoutHash !== before.layoutHash || after.pages !== before.pages || after.modelPages !== before.modelPages || after.dirty) {
+    throw new Error('LIVE export mutated the typeset result: ' + JSON.stringify({ before, after }));
+  }
+
+  const manifest = {
+    sourceUrl: await ev('location.href'),
+    layoutHash: before.layoutHash,
+    pageModelSchema: before.schema,
+    pageModelPages: before.modelPages,
+    html: { file: path.basename(htmlPath), bytes: htmlBytes, sha256: htmlSha, pages: htmlPages },
+    pdf: { file: path.basename(pdfPath), bytes: pdfBytes.length, sha256: pdfSha, pages: pdfPages, extractedTextFile: path.basename(textPath), extractedHebrewChars: hebrewChars },
+    exportDidNotMutateLayout: true
+  };
+  fs.writeFileSync(path.join(OUT, TAG + '-export-audit.json'), JSON.stringify(manifest, null, 2), 'utf8');
+  log('LIVE exports: PageModel=' + expectedPages + ' | HTML=' + htmlPages + ' | PDF=' + pdfPages + ' | Hebrew chars=' + hebrewChars);
+  return manifest;
 }
 
 async function retypesetAndWait(label) {
@@ -489,6 +588,8 @@ async function buildLocalBrowserBundles() {
   log(`פער דיו ימין: ${JSON.stringify(st.bodyGapRight)}`);
   log(`חלון מימין: ${JSON.stringify(st.windowDistFromRight)}`);
   log('─'.repeat(62));
+
+  if (URL && CAPTURE_EXPORTS) await captureLiveExports(pages1);
 
   // דטרמיניזם
   let detIdentical = SKIP_DET;

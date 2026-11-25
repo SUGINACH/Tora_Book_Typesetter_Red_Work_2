@@ -98,11 +98,14 @@ jobs:
           done
           echo "FATAL: Pages did not publish expected commit $EXPECTED_SHA (last actual: ${ACTUAL_SHA:-unavailable})"
           exit 1
-      - name: Full math audit — LIVE site (fixture injected via base64)
+      - name: Install Poppler for exported PDF inspection
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
+      - name: Full math audit — LIVE site (DOM + HTML/PDF export + determinism)
         run: |
           node tools/layout-audit/run-full-math.js --tag live \
             --url https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/ \
-            --fixture audits/very_long_test_text.txt
+            --fixture audits/very_long_test_text.txt --capture-exports
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
