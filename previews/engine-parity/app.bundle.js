@@ -25488,16 +25488,16 @@ __modules["src/ui/retypeset-policy.js"] = function (require, module, exports) {
 
 /**
  * **D-64 — מחלקת שינוי קל/כבד:**
- * - **קל (light):** מפתחות שנצרכים בזמן־רינדור בלבד (dom-renderer / planBackground ברינדר).
- *   שינוי קל ⇒ רינדור מחדש של התוצא הקיים **בלי הרצת מנוע** — מרוכז (debounce)
- *   לפי settings['debounce-light-change-ms'] (ברירת מחדל 350ms, Spec §5.3).
- * - **כבד (heavy):** כל השאר (פריסה/מדידה/מספור/כותרות/הערות/מבנה).
+ * - **קל (light):** מפתחות שה־PageModel הקיים נשאר תקף עבורם, והמקרין המאוחד
+ *   צורך אותם ישירות בזמן רינדור. שינוי קל ⇒ רינדור מחדש בלבד, ללא הרצת מנוע.
+ * - **כבד (heavy):** כל מפתח שמוטמע במדידה, בשורות, בעיטורים או ב־PageModel.
+ *   שינוי כזה מחייב יצירת PageModel חדש לפני שהמקרינים יכולים להציגו.
  *   שינוי כבד ⇒ **אין עימוד אוטומטי** (F-06) — כפתור ⚡ מהבהב; לחיצה = נתיב
  *   מיידי בלי debounce (Claude §6.2(7)).
  *
- * ההוכחה (בדיקת s10 'D-64 light class is render-equivalent'): לכל מפתח קל,
- * רינדור התוצא הישן עם ההגדרות החדשות === רינדור תוצאת מנוע מלא עם אותן
- * הגדרות (מילה־במילה ב־DOM). מפתח שלא עומד בשקילות אינו קל — גם אם נראה כך.
+ * הוכחת D-64 חייבת להתבצע מול renderModelPage במסלול Unified, לא מול renderPage
+ * של Legacy. הגדרה שמייצרת נתון ב־PageModel (למשל LineModel.align או fn-rule
+ * decoration) לעולם אינה יכולה להיות light, גם אם ה־DOM הישן ידע לצייר אותה.
  */
 
 /** מפתחות קלים — נצרפים בזמן־רינדור בלבד (הוכחת שקילות בבדיקה; ראו D-64). */
@@ -25506,9 +25506,7 @@ const LIGHT_KEYS = new Set([
   'background-opacity',      // renderPage: rgba()
   'background-image',        // renderPageBackgroundAndShaar → planBackground בזמן רינדר
   'background-texture',      // כנ"ל
-  'background-inset-mm',     // כנ"ל (מ״מ→px בזמן רינדר)
-  'footnote-separator-rule', // renderFootnoteArea: מחלקת fn-rule--*
-  'body-last-line-align'     // lastLineClass: מחלקת line--last-*
+  'background-inset-mm'      // ממתין לחיבור PageModel — לא נחשב הוכחת אפקט בפני עצמו
 ]);
 
 /** @returns {'light'|'heavy'} מחלקת השינוי של מפתח הגדרה */
