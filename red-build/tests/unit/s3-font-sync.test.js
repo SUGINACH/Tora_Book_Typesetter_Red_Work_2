@@ -62,6 +62,46 @@ describe('שלב 3 — רישום גופנים: מקור סמכות יחיד ו�
     assertEq(fontResolver.fontCount(), 1, 'רשומת גופן אחת — שני כינויים');
     assertEq(fontResolver.aliasCount(), 2, 'שני כינויים רשומים');
   });
+
+  it('resolves fallback only when one font covers every scalar in the complete EGC', () => {
+    fontResolver.clearFontResolver();
+    try {
+      const primary = fontResolver.registerFont('CoveragePrimary', bytesOf('Frank Ruhl Libre'));
+      const fallback = fontResolver.registerFont('CoverageFallback', bytesOf('David Libre'));
+      assert(primary.ok && fallback.ok, 'both test fonts must register');
+
+      const sharedHebrewMark = Array.from({ length: 0x05C7 - 0x0591 + 1 }, (_, i) => 0x0591 + i)
+        .find((cp) => primary.record.font.charToGlyph.has(cp) && fallback.record.font.charToGlyph.has(cp));
+      assert(Number.isSafeInteger(sharedHebrewMark), 'both actual font cmaps must share a Hebrew mark for the controlled coverage probe');
+
+      // Simulate a primary font missing one mark in an EGC while preserving the
+      // fallback font's real parsed cmap. The resolver must not split base+mark.
+      primary.record.font.charToGlyph.delete(sharedHebrewMark);
+      const result = fontResolver.resolveFontForGrapheme(
+        'CoveragePrimary', [0x05D0, sharedHebrewMark], { fallbacks: ['CoverageFallback'] }
+      );
+      assert(result.ok, result.message);
+      assertEq(result.fontId, fallback.fontId);
+      assert(result.fallbackUsed, 'the whole grapheme must move to the covering font');
+      assertEq(result.fallbackChain[0].reason, 'missing-grapheme-coverage');
+      assertEq(result.fallbackChain[0].missingCodePoints, [sharedHebrewMark]);
+      assertEq(result.fallbackChain[1].chosen, true);
+
+      const direct = fontResolver.resolveFontForGrapheme('CoveragePrimary', [0x05D0], {
+        fallbacks: ['CoverageFallback']
+      });
+      assert(direct.ok && !direct.fallbackUsed, 'primary remains valid for a fully covered grapheme');
+
+      const uncovered = fontResolver.resolveFontForGrapheme('CoveragePrimary', [0x10FFFF], {
+        fallbacks: ['CoverageFallback']
+      });
+      assert(!uncovered.ok);
+      assertEq(uncovered.code, 'grapheme-font-coverage-unavailable');
+    } finally {
+      fontResolver.clearFontResolver();
+    }
+  });
+
   it('רישום מחדש אחרי respawn/ניקוי משחזר את אותה זהות ואת אותה מדידה', () => {
     fontResolver.clearFontResolver();
     const r1 = fontResolver.registerFont('TempFont', bytesOf('David Libre'));
