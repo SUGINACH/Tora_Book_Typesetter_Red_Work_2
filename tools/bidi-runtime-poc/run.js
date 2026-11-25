@@ -60,7 +60,27 @@ function diagnosticValue(value, maxLength = 500) {
 
 // Find the first JSON-relevant difference without normalizing away object-key
 // order: exact JSON byte parity remains the acceptance condition.
-function firstJsonDifference(left, right, path = '$') {
+function diagnosticGraphemeContext(value) {
+  if (!value || typeof value !== 'object' || !Number.isSafeInteger(value.start) ||
+      !Number.isSafeInteger(value.end)) return null;
+  const text = typeof value.text === 'string' ? value.text : '';
+  return {
+    start: value.start,
+    end: value.end,
+    scalarStart: Number.isSafeInteger(value.scalarStart) ? value.scalarStart : null,
+    scalarEnd: Number.isSafeInteger(value.scalarEnd) ? value.scalarEnd : null,
+    text: diagnosticValue(text),
+    codePoints: Array.from(text, (character) => character.codePointAt(0).toString(16).toUpperCase()),
+    utf16Units: Array.from({ length: text.length }, (_, index) => text.charCodeAt(index).toString(16).toUpperCase().padStart(4, '0')),
+    scalars: Array.isArray(value.scalars) ? value.scalars.map((scalar) => ({
+      start: scalar.start, end: scalar.end, script: scalar.script,
+      isMark: scalar.isMark, isBidiControl: scalar.isBidiControl,
+      isDefaultIgnorable: scalar.isDefaultIgnorable
+    })) : null
+  };
+}
+
+function firstJsonDifference(left, right, path = '$', leftParent = null, rightParent = null) {
   const leftType = left === null ? 'null' : Array.isArray(left) ? 'array' : typeof left;
   const rightType = right === null ? 'null' : Array.isArray(right) ? 'array' : typeof right;
   if (leftType !== rightType) {
@@ -68,7 +88,13 @@ function firstJsonDifference(left, right, path = '$') {
   }
   if (leftType === 'null' || (leftType !== 'object' && leftType !== 'array')) {
     if (!Object.is(left, right)) {
-      return { path, kind: 'value', left: diagnosticValue(left), right: diagnosticValue(right) };
+      return {
+        path, kind: 'value', left: diagnosticValue(left), right: diagnosticValue(right),
+        leftCodePoints: typeof left === 'string' ? Array.from(left, (character) => character.codePointAt(0).toString(16).toUpperCase()) : null,
+        rightCodePoints: typeof right === 'string' ? Array.from(right, (character) => character.codePointAt(0).toString(16).toUpperCase()) : null,
+        leftParent: diagnosticGraphemeContext(leftParent),
+        rightParent: diagnosticGraphemeContext(rightParent)
+      };
     }
     return null;
   }
@@ -77,7 +103,7 @@ function firstJsonDifference(left, right, path = '$') {
       return { path, kind: 'array-length', left: left.length, right: right.length };
     }
     for (let index = 0; index < left.length; index++) {
-      const difference = firstJsonDifference(left[index], right[index], path + '[' + index + ']');
+      const difference = firstJsonDifference(left[index], right[index], path + '[' + index + ']', left, right);
       if (difference) return difference;
     }
     return null;
@@ -95,7 +121,7 @@ function firstJsonDifference(left, right, path = '$') {
     return { path, kind: 'object-key-order', left: leftKeys, right: rightKeys };
   }
   for (const key of leftKeys) {
-    const difference = firstJsonDifference(left[key], right[key], path + '.' + key);
+    const difference = firstJsonDifference(left[key], right[key], path + '.' + key, left, right);
     if (difference) return difference;
   }
   return null;
