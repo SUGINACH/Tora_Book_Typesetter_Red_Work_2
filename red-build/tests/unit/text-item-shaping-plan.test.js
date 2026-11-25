@@ -62,7 +62,7 @@ function fakeItemizer(text, graphemes, scriptRuns, sourceRuns) {
 }
 
 function makeResolver(options = {}) {
-  const coveredCodePoints = Array.from(new Set(Array.from('שָׁלוֹםאב').map((character) => character.codePointAt(0))));
+  const coveredCodePoints = Array.from({ length: 0x05EA - 0x0591 + 1 }, (_, index) => 0x0591 + index);
   const createRecord = (family, fontId, sourceHash, unitsPerEm, bytes) => {
     const charToGlyph = new Map(coveredCodePoints.map((codePoint, index) => [codePoint, index + 1]));
     for (const codePoint of (options.missingByFamily && options.missingByFamily[family]) || []) {
@@ -342,7 +342,7 @@ describe('TextItem Shaping Plan — paragraph itemization before word splitting'
   });
 
   it('excludes Default_Ignorable ZWJ from cmap coverage without removing it from the shaped source', () => {
-    const text = 'א\\u200D';
+    const text = 'א\u200D';
     const graphemes = [
       { start: 0, end: text.length, text, script: 'Hebr', status: 'strong', direction: 'rtl', bidiLevel: 1, shapeable: true }
     ];
