@@ -77,7 +77,7 @@ dialog::backdrop{background:#13263a88}.modalhead{background:var(--navy);color:#f
 <span class="chip">תאריך בסיס: 25.11.2026</span>
 <span class="chip">ענף: engine/legacy-parity-preview-20261119</span>
 <span class="chip">Engine baseline: be54c8b</span>
-<span class="chip">Evidence snapshot: 5b99f5e</span>
+<span class="chip">Verified source snapshot: 98e04f2</span>
 <span class="chip">gh-pages: f7f6832</span>
 <span class="chip">סוג מסמך: דרישות + ראיות + בדיקות קבלה</span>
 </div>
@@ -85,8 +85,8 @@ dialog::backdrop{background:#13263a88}.modalhead{background:var(--navy);color:#f
 
 <main class="wrap">
 <section class="alert">
-<strong>מצב האתר החי: פריסת GitHub Pages מוגדרת ל־Unified כברירת מחדל; אימות Browser E2E עדיין חסר.</strong>
-<p>בדיקת הקוד בענף ובאותו commit שנבנה ל־Pages מראה: <code>browser-entry.js</code> מגדיר <code>BRANCH_ENGINE_PROFILE='unified'</code>; <code>app-shell.js</code> מזריק <code>_engine-force-unified=true</code> לכל בקשת עימוד; וה־UI מציג שגיאה אם ה־Worker מחזיר <code>legacyProfile</code> או אם חסר <code>PageModel</code> — אין fallback שקט. <code>build-info.json</code> בשורש מציין <code>profile=unified</code>, ענף <code>engine/legacy-parity-preview-20261119</code> ו־source commit <code>f79e7326e7cdbbb2e961014385403b448fe56607</code>. הפריסה האחרונה (run <code>45617779772</code>) עדיין queued; הקודמים כוללים run <code>45617416133</code> שהסתיים success. לכן הממצא הקודם שלפיו דף השורש בוחר legacy כברירת מחדל היה שגוי ותוקן במפה. מה שעדיין חסר הוא Browser E2E/trace על הכתובת הרגילה. בנוסף, "Unified" מתאר את מנוע ה־PageModel/DP הפעיל; שילוב HarfBuzz ShapedRun במדידה ובפיצול שורות עדיין אינו מלא, כמפורט בדרישות TYP-01–TYP-06.</p>
+<strong>מצב אימות עדכני ל־25.11.2026 16:14: האתר מוגדר ומקבצי Git מאומתים כ־Unified, אך הוכחת Runtime בדפדפן עדיין חסרה.</strong>
+<p>Branch HEAD בתחילת Phase 1: <code>98e04f2e94d7770278a8972e0e62c250972fc63c</code>. CI, Layout Audit, Node 18/20/22, Preview Engine Parity, Corpus Invariants ו־Full Math Audit עברו על HEAD זה. gh-pages HEAD נבדק: <code>c0054a6d63c12ebf960a25d92d281dc198627ddd</code>. build-info.json ב־Git מדווח profile=unified ומקור commit זה; Git blob SHA של index.html, app bundle ו־Worker bundle זהים בין gh-pages לבין red-build/ui בענף. עם זאת, לא נבדק Browser E2E או runtime trace בפועל, HTTP/CDN cache, פעולות משתמש או exports; לכן אפס קריאות legacy באתר החי עדיין לא הוכח. גם סריקת 20 נושאי המקור וביקורת settings/Text IDs עדיין פתוחות. קובץ audit זמני: <code>audits/PHASE1_RUNTIME_TRUTH_SNAPSHOT_2026-11-25.md</code>.</p>
 </section>
 
 <div class="stats" id="stats"></div>
@@ -157,7 +157,7 @@ dialog::backdrop{background:#13263a88}.modalhead{background:var(--navy);color:#f
 </details>
 
 <div class="foot">
-מסמך זה עודכן מול branch HEAD be54c8bfec27c516bb627d7ce027a9c567f5b1ae ו-gh-pages 910c95ab2b162a53ae57f96623963b898feea56c ב-25.11.2026. עריכות נשמרות בדפדפן המקומי (localStorage); ליצירת קובץ נייד ומעודכן השתמש ב"הורד HTML מעודכן", או שמור גיבוי JSON. עדכון בקובץ המקומי אינו משנה אוטומטית את הקובץ שב-GitHub.
+מפת הדרישות הוותיקה עודכנה לאחרונה מול snapshot קודם. אימות Phase 1 הנוכחי: branch source HEAD 98e04f2e94d7770278a8972e0e62c250972fc63c; gh-pages HEAD c0054a6d63c12ebf960a25d92d281dc198627ddd; audit snapshot נכתב ב־25.11.2026. ראיות מפורטות וגבולות אימות נמצאים ב־audits/PHASE1_RUNTIME_TRUTH_SNAPSHOT_2026-11-25.md. עריכות נשמרות בדפדפן המקומי (localStorage); ליצירת קובץ נייד ומעודכן השתמש ב"הורד HTML מעודכן", או שמור גיבוי JSON. עדכון בקובץ המקומי אינו משנה אוטומטית את הקובץ שב-GitHub.
 <br>מטרה ניהולית: להפוך כל דרישה גלויה, ניתנת לאימות, עם מקור, ממצא ומבחן קבלה — ולמנוע סגירות על סמך הנחות.
 </div>
 </main>
