@@ -200,11 +200,26 @@ async function captureImpactSnapshot(expectedPages) {
     throw new Error('Impact snapshot failed: ' + JSON.stringify(snapshot));
   }
   const fixtureBytes = fs.readFileSync(FIXTURE);
-  const fixtureSha256 = crypto.createHash('sha256').update(fixtureBytes).digest('hex');
-  if (snapshot.input.sha256 !== fixtureSha256) {
-    throw new Error('Impact input hash differs from the fixture: ' + JSON.stringify({
-      fixture: fixtureSha256, browser: snapshot.input.sha256,
-      fixtureBytes: fixtureBytes.length, browserBytes: snapshot.input.bytes
+  const fixtureText = fixtureBytes.toString('utf8');
+  // HTML textarea normalizes CRLF/lone CR to LF before the editor receives text.
+  // Keep the raw source hash and compare against that exact input boundary.
+  const crlfCount = (fixtureText.match(/\r\n/g) || []).length;
+  const loneCrCount = (fixtureText.match(/\r(?!\n)/g) || []).length;
+  const normalizedFixtureText = fixtureText.replace(/\r\n?/g, '\n');
+  const normalizedFixtureBytes = Buffer.from(normalizedFixtureText, 'utf8');
+  const rawFixtureSha256 = crypto.createHash('sha256').update(fixtureBytes).digest('hex');
+  const normalizedFixtureSha256 = crypto.createHash('sha256').update(normalizedFixtureBytes).digest('hex');
+  if (snapshot.input.sha256 !== normalizedFixtureSha256 ||
+      snapshot.input.bytes !== normalizedFixtureBytes.length) {
+    throw new Error('Impact input hash differs from normalized fixture: ' + JSON.stringify({
+      rawFixtureSha256, normalizedFixtureSha256, browser: snapshot.input.sha256,
+      rawFixtureBytes: fixtureBytes.length, normalizedFixtureBytes: normalizedFixtureBytes.length,
+      browserBytes: snapshot.input.bytes, crlfCount, loneCrCount
+    }));
+  }  if (snapshot.settings.forceUnified !== true ||
+      (snapshot.source.buildInfo && snapshot.source.buildInfo.profile && snapshot.source.buildInfo.profile !== 'unified')) {
+    throw new Error('Impact snapshot did not prove the Unified profile: ' + JSON.stringify({
+      forceUnified: snapshot.settings.forceUnified, buildInfo: snapshot.source.buildInfo
     }));
   }
   if (snapshot.model.schema !== 'pagemodel-v1' || snapshot.model.pages !== expectedPages ||
@@ -215,9 +230,12 @@ async function captureImpactSnapshot(expectedPages) {
   }
   snapshot.fixture = {
     path: path.relative(ROOT, FIXTURE).split(path.sep).join('/'),
-    bytes: fixtureBytes.length,
-    sha256: fixtureSha256,
-    browserTextMatchesFixture: true
+    rawBytes: fixtureBytes.length,
+    rawSha256: rawFixtureSha256,
+    normalizedInputBytes: normalizedFixtureBytes.length,
+    normalizedInputSha256: normalizedFixtureSha256,
+    newlineNormalization: { crlfCount, loneCrCount, totalLineEndingChanges: crlfCount + loneCrCount },
+    browserTextMatchesNormalizedFixture: true
   };
   snapshot.assets = deployedAssetEvidence;
   return snapshot;
@@ -832,7 +850,7 @@ async function buildLocalBrowserBundles() {
     tag: TAG,
     source: impactRun1.source,
     assets: impactRun1.assets,
-    input: impactRun1.fixture,
+    input: { browserText: impactRun1.input, fixture: impactRun1.fixture },
     settings: impactRun1.settings,
     run1: { state: impactRun1.state, model: impactRun1.model },
     run2: impactRun2 ? { state: impactRun2.state, model: impactRun2.model } : null,
