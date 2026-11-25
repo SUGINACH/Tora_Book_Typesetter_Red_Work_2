@@ -47,12 +47,14 @@ jobs:
           git status --short -- red-build/src red-build/ui
           echo '--- tracked source diff ---'
           git diff --stat HEAD -- red-build/src
-      - name: Upload D-65 rebuilt app bundle on failure
+      - name: Upload D-65 rebuilt browser bundles on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: d65-rebuilt-app-bundle-node-${{ matrix.node }}
-          path: red-build/ui/app.bundle.js
+          name: d65-rebuilt-browser-bundles-node-${{ matrix.node }}
+          path: |
+            red-build/ui/app.bundle.js
+            red-build/ui/engine-worker.bundle.js
           if-no-files-found: error
       - name: Determinism check
         run: cd red-build && npm run test:determinism
