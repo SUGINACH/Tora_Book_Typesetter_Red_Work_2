@@ -6582,8 +6582,12 @@ function sha256Hex(bytes) {
   if (typeof bytes === 'string') {
     bytes = typeof TextEncoder !== 'undefined' ? new TextEncoder().encode(bytes) : Buffer.from(bytes, 'utf8');
   }
-  // Node fast-path — פלט זהה ביט-לביט (נעול בבדיקה)
-  if (typeof require === 'function') {
+  // Node fast-path — browser bundle require('crypto') is a shim, not Node crypto.
+  // Use the fast path only in a real Node process; browser Workers hash raw bytes
+  // through the environment-independent implementation below.
+  const isNodeRuntime = typeof process === 'object' && process !== null &&
+    process.versions && typeof process.versions.node === 'string';
+  if (isNodeRuntime && typeof require === 'function') {
     try {
       const crypto = require('crypto');
       if (crypto && crypto.createHash) return crypto.createHash('sha256').update(bytes).digest('hex');
