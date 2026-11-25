@@ -208,8 +208,12 @@ describe('S76 — נייטרליות legacy מלאה (התיקונים ב-body-f
     // line-height 1.22 של ה-CSS המקורי חל על שני מצבי הצבת ההערות כאחד
     // (הכותרת אינה תלויה במצב ההערות); אותה הצדקה ואותו דוח כמו s72.
     // הקודם: legacy-1231b1b7e15cb.
-    assert(r.layoutHash.startsWith('legacy-8b3449320ba23'),
-      `legacy אינו נייטרלי — התקבל ${r.layoutHash.slice(0, 20)} (צפוי נעילת S74+R-03+H3-CSS)`);
+    // D-98 (25.11): המסמך הקבוע הקודם נפסל מבנית (כותרות עמוקות ללא גוף).
+    // נעילת S74 הישנה מתייחסת לקלט אחר; זו נעילת legacy נפרדת למסמך התקין.
+    assert(r.layoutHash.startsWith('legacy-1d5c36e955ac7'),
+      `legacy על המסמך הקבוע התקין השתנה — התקבל ${r.layoutHash.slice(0, 20)}`);
+    const r2 = legacyTypeset(text, { ...imudSettings(), 'fn-placement-mode': 'legacy' }, {});
+    assertEq(r.layoutHash, r2.layoutHash, 'legacy על הקלט התקין דטרמיניסטי');
   });
 
   it('body-first במסמך הבדיקה הקבוע: ההאש החדש של S76 (שינוי מכוון, מתועד ב-s72)', () => {
@@ -225,7 +229,8 @@ describe('S76 — נייטרליות legacy מלאה (התיקונים ב-body-f
     // **H3-CSS (17.11):** נעילה מחודשת legacy-a0946→legacy-5f0dc — חוזה
     // ה-CSS המקורי (pitch 1.22, ריפודים 8/4/4); ההצדקה המלאה ב-s72
     // וב-audits/H3_SPACING_OLD_STYLE_PARITY_2026-11-17.md. הקודם: legacy-a0946f99c7c197bd.
-    assert(r.layoutHash.startsWith('legacy-0861db'),      `body-first נעול על ההאש החדש — התקבל ${r.layoutHash.slice(0, 20)}`);
+    assertEq(r.layoutHash, 'legacy-c05df8cf2c698e4d',
+      `body-first על המסמך הקבוע התקין השתנה — התקבל ${r.layoutHash}`);
     assertEq(r.contentPreserved, true, 'שימור תוכן');
   });
 });

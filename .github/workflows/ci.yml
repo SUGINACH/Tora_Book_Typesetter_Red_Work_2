@@ -34,7 +34,7 @@ jobs:
       # **שלב 5 פרוסה 2 (דיוק דיווח — §3.3 בביקורת):** התווית מתעדכנת למספרים
       # בפועל בכל שינוי מהותי במספר הבדיקות (נכון לשלב ShapedRun/Itemizer: 1162 בדיקות ·
       # 67 קבצי סוויטה + scan-control-triggers; הקודם ציין 1130/66 — פרוסה 2).
-      - name: Run full test suite (1174 tests · 72 suite files + scan-control-triggers, zero deps)
+      - name: Run full test suite (108 test files + scan-control-triggers, zero deps)
         run: cd red-build && npm test
       # D-65 diagnostics: preserve the exact rebuilt bundle when the strict
       # reproducibility assertion fails. This does not alter or bypass the gate.
