@@ -2,7 +2,7 @@
 // Paragraph-level itemization + font/style run projection, before word splitting.
 'use strict';
 
-const PLAN_VERSION = 'text-item-shaping-plan-v1';
+const PLAN_VERSION = 'text-item-shaping-plan-v2-grapheme-coverage';
 
 function fail(code, message) {
   const error = new TypeError(message);
@@ -103,6 +103,56 @@ function normalizeStyleRuns(item, text) {
   });
 }
 
+
+function codePointForScalarRange(text, start, end, label) {
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) ||
+      start < 0 || end <= start || end > text.length) {
+    fail('invalid-grapheme-scalar-partition', label + ' has an invalid UTF-16 scalar range');
+  }
+  const codePoint = text.codePointAt(start);
+  const expectedWidth = codePoint > 0xFFFF ? 2 : 1;
+  if (end - start !== expectedWidth) {
+    fail('invalid-grapheme-scalar-partition', label + ' does not describe exactly one Unicode scalar');
+  }
+  const scalarText = text.slice(start, end);
+  if (scalarText.length !== expectedWidth ||
+      (expectedWidth === 2 && !(scalarText.charCodeAt(0) >= 0xD800 && scalarText.charCodeAt(0) <= 0xDBFF &&
+        scalarText.charCodeAt(1) >= 0xDC00 && scalarText.charCodeAt(1) <= 0xDFFF)) ||
+      (expectedWidth === 1 && scalarText.charCodeAt(0) >= 0xD800 && scalarText.charCodeAt(0) <= 0xDFFF)) {
+    fail('invalid-grapheme-scalar-partition', label + ' contains an invalid or split UTF-16 scalar');
+  }
+  return codePoint;
+}
+
+function requiredCodePointsForGrapheme(text, grapheme, graphemeIndex) {
+  if (!Array.isArray(grapheme.scalars) || !grapheme.scalars.length) {
+    fail('missing-grapheme-scalars',
+      'Unicode itemizer must provide scalar-level Default_Ignorable_Code_Point data for EGC ' + graphemeIndex);
+  }
+  const required = [];
+  let expected = grapheme.start;
+  for (let scalarIndex = 0; scalarIndex < grapheme.scalars.length; scalarIndex++) {
+    const scalar = grapheme.scalars[scalarIndex];
+    if (!scalar || scalar.start !== expected || !Number.isSafeInteger(scalar.end) ||
+        scalar.end <= scalar.start || scalar.end > grapheme.end ||
+        typeof scalar.isDefaultIgnorable !== 'boolean') {
+      fail('invalid-grapheme-scalar-partition',
+        'Unicode scalar records are not an exact contiguous partition of EGC ' + graphemeIndex +
+        ' at scalar ' + scalarIndex);
+    }
+    const codePoint = codePointForScalarRange(
+      text, scalar.start, scalar.end, 'EGC ' + graphemeIndex + ' scalar ' + scalarIndex
+    );
+    if (scalar.isDefaultIgnorable !== true) required.push(codePoint);
+    expected = scalar.end;
+  }
+  if (expected !== grapheme.end) {
+    fail('invalid-grapheme-scalar-partition',
+      'Unicode scalar records do not cover the complete EGC ' + graphemeIndex);
+  }
+  return required;
+}
+
 function validateItemization(text, result) {
   if (!result || result.text !== text || result.utf16Length !== text.length ||
       !Array.isArray(result.graphemes) || !Array.isArray(result.scriptRuns) ||
@@ -116,6 +166,7 @@ function validateItemization(text, result) {
         g.end > text.length || g.text !== text.slice(g.start,g.end) || typeof g.shapeable !== 'boolean') {
       fail('invalid-grapheme-partition', 'Itemizer graphemes are not an exact contiguous UTF-16 partition at index ' + index);
     }
+    requiredCodePointsForGrapheme(text, g, index);
     if (g.shapeable && (g.containsBidiControl || g.isBidiControl)) {
       fail('invalid-shapeable-bidi-control', 'Bidi_Control grapheme cannot be shapeable');
     }
@@ -207,8 +258,8 @@ function createTextItemShapingPlan(item, options = {}) {
     fail('missing-unicode-runtime', 'Pinned Bidi/Grapheme runtime is required');
   }
   const fontResolver = options.fontResolver;
-  if (!fontResolver || typeof fontResolver.resolveFont !== 'function') {
-    fail('missing-font-resolver', 'Canonical fontResolver is required');
+  if (!fontResolver || typeof fontResolver.resolveFontForGrapheme !== 'function') {
+    fail('missing-font-resolver', 'Canonical fontResolver with whole-grapheme coverage resolution is required');
   }
 
   const runs = item.payload && item.payload.runs;
@@ -269,34 +320,56 @@ function createTextItemShapingPlan(item, options = {}) {
     }
     return matches[0].index;
   });
-  // Only style runs that own shapeable graphemes need a registered font.
-  const requiredStyleRunIndexes = new Set();
-  for (let gi=0;gi<itemization.graphemes.length;gi++) {
-    if (itemization.graphemes[gi].shapeable) requiredStyleRunIndexes.add(graphemeStyleIndexes[gi]);
-  }
-  const resolvedStyleRuns = new Array(styleRuns.length).fill(null);
-  for (const styleRunIndex of requiredStyleRunIndexes) {
-    const styleRun=styleRuns[styleRunIndex];
-    const requestedFamily=styleRun.fontFamily||options.defaultFamily||null;
-    const fallbacks=requestedFamily&&Array.isArray(fallbacksByFamily[requestedFamily])?fallbacksByFamily[requestedFamily]:[];
-    const resolution=fontResolver.resolveFont(requestedFamily,{defaultFamily:options.defaultFamily||null,fallbacks});
-    if(!resolution.ok||!resolution.record||!resolution.record.font||
-       !resolution.record.font.bytes||!resolution.record.font.bytes.length){
-      fail('font-unavailable-for-shaping','Cannot create a ShapedRun for inline style run '+styleRun.index+': '+(resolution.message||'font bytes are unavailable'));
+  // Resolve each shapeable EGC independently. A font transition may occur only
+  // between EGCs; no base/mark/ZWJ sequence is ever split to satisfy cmap.
+  const resolvedGraphemeFonts = new Array(itemization.graphemes.length).fill(null);
+  for (let graphemeIndex = 0; graphemeIndex < itemization.graphemes.length; graphemeIndex++) {
+    const grapheme = itemization.graphemes[graphemeIndex];
+    if (!grapheme.shapeable) continue;
+    const styleRunIndex = graphemeStyleIndexes[graphemeIndex];
+    const styleRun = styleRuns[styleRunIndex];
+    const requestedFamily = styleRun.fontFamily || options.defaultFamily || null;
+    const configuredFallbacks = requestedFamily == null ? null : fallbacksByFamily[requestedFamily];
+    if (configuredFallbacks != null && !Array.isArray(configuredFallbacks)) {
+      fail('invalid-font-fallback-map', 'Fallbacks for family ' + requestedFamily + ' must be an ordered array');
     }
-    const fontId=requireString(resolution.fontId,'invalid-resolved-font','resolved fontId');
-    const sourceHash=requireString(resolution.record.sourceHash,'missing-font-source-hash','resolved font SHA-256');
-    if(!/^[0-9a-f]{64}$/i.test(sourceHash)) fail('invalid-font-source-hash','Resolved font sourceHash must be a 64-character SHA-256');
-    const unitsPerEm=requireRange(resolution.record.unitsPerEm,'resolved font unitsPerEm',1);
-    if(resolution.record.font.unitsPerEm!==unitsPerEm)
-      fail('font-units-per-em-mismatch','FontResolver record and parsed font UPEM disagree for '+fontId);
-    const variationAxes=normalizeAxes(variationAxesByFontId[fontId],fontId);
-    const faceIndex=faceIndexByFontId[fontId]==null?0:requireRange(faceIndexByFontId[fontId],'faceIndexByFontId.'+fontId);
-    resolvedStyleRuns[styleRunIndex]={
-      ...styleRun,requestedFamily,fontId,sourceHash:sourceHash.toLowerCase(),faceIndex,unitsPerEm,variationAxes,
-      fallbackUsed:!!resolution.fallbackUsed,
-      fallbackChain:resolution.fallbackChain||[],
-      diagnostics:resolution.diagnostics||[]
+    const fallbacks = configuredFallbacks || [];
+    const coverageCodePoints = requiredCodePointsForGrapheme(text, grapheme, graphemeIndex);
+    const resolution = fontResolver.resolveFontForGrapheme(requestedFamily, coverageCodePoints, {
+      defaultFamily: options.defaultFamily || null,
+      fallbacks
+    });
+    if (!resolution.ok || !resolution.record || !resolution.record.font ||
+        !resolution.record.font.bytes || !resolution.record.font.bytes.length) {
+      fail('font-unavailable-for-grapheme',
+        'No registered font covers every required scalar in EGC ' + graphemeIndex +
+        ' [' + (sourceStart + grapheme.start) + ',' + (sourceStart + grapheme.end) + '): ' +
+        (resolution.message || 'font bytes are unavailable'));
+    }
+    const fontId = requireString(resolution.fontId, 'invalid-resolved-font', 'resolved fontId');
+    const sourceHash = requireString(resolution.record.sourceHash, 'missing-font-source-hash', 'resolved font SHA-256');
+    if (!/^[0-9a-f]{64}$/i.test(sourceHash)) {
+      fail('invalid-font-source-hash', 'Resolved font sourceHash must be a 64-character SHA-256');
+    }
+    const unitsPerEm = requireRange(resolution.record.unitsPerEm, 'resolved font unitsPerEm', 1);
+    if (resolution.record.font.unitsPerEm !== unitsPerEm) {
+      fail('font-units-per-em-mismatch', 'FontResolver record and parsed font UPEM disagree for ' + fontId);
+    }
+    const variationAxes = normalizeAxes(variationAxesByFontId[fontId], fontId);
+    const faceIndex = faceIndexByFontId[fontId] == null
+      ? 0 : requireRange(faceIndexByFontId[fontId], 'faceIndexByFontId.' + fontId);
+    resolvedGraphemeFonts[graphemeIndex] = {
+      styleRunIndex,
+      requestedFamily,
+      fontId,
+      sourceHash: sourceHash.toLowerCase(),
+      faceIndex,
+      unitsPerEm,
+      variationAxes,
+      coverageCodePoints,
+      fallbackUsed: resolution.fallbackUsed === true,
+      fallbackChain: resolution.fallbackChain || [],
+      diagnostics: resolution.diagnostics || []
     };
   }
 
@@ -337,7 +410,8 @@ function createTextItemShapingPlan(item, options = {}) {
         graphemes: itemization.graphemes.slice(group.graphemeStart, group.graphemeEnd).map((grapheme) => ({
           start: sourceStart + grapheme.start,
           end: sourceStart + grapheme.end,
-          text: grapheme.text
+          text: grapheme.text,
+          coverageCodePoints: requiredCodePointsForGrapheme(text, grapheme, group.graphemeStart + itemization.graphemes.slice(group.graphemeStart, group.graphemeEnd).indexOf(grapheme))
         })),
         font: {
           fontId: group.fontId,
@@ -354,34 +428,38 @@ function createTextItemShapingPlan(item, options = {}) {
     };
 
     for (let graphemeIndex = scriptRun.graphemeStart; graphemeIndex < scriptRun.graphemeEnd; graphemeIndex++) {
-      const styleRunIndex = graphemeStyleIndexes[graphemeIndex];
-      const styleRun = resolvedStyleRuns[styleRunIndex];
-      if (!styleRun) fail('missing-font-for-shapeable-grapheme',
+      const resolvedFont = resolvedGraphemeFonts[graphemeIndex];
+      if (!resolvedFont) fail('missing-font-for-shapeable-grapheme',
         'A shapeable grapheme has no resolved font identity at index ' + graphemeIndex);
       const canMerge = group &&
         group.graphemeEnd === graphemeIndex &&
-        group.fontId === styleRun.fontId &&
-        group.sourceHash === styleRun.sourceHash &&
-        group.faceIndex === styleRun.faceIndex &&
-        JSON.stringify(group.variationAxes) === JSON.stringify(styleRun.variationAxes);
+        group.fontId === resolvedFont.fontId &&
+        group.sourceHash === resolvedFont.sourceHash &&
+        group.faceIndex === resolvedFont.faceIndex &&
+        JSON.stringify(group.variationAxes) === JSON.stringify(resolvedFont.variationAxes);
       if (!canMerge) {
         flush();
         group = {
-          styleRunIndexes: [styleRunIndex],
-          fontId: styleRun.fontId, sourceHash: styleRun.sourceHash,
-          faceIndex: styleRun.faceIndex, unitsPerEm: styleRun.unitsPerEm,
-          variationAxes: styleRun.variationAxes,
-          fallbackUsed: styleRun.fallbackUsed,
-          fallbackChains: styleRun.fallbackUsed ? [styleRun.fallbackChain] : [],
-          graphemeStart: graphemeIndex, graphemeEnd: graphemeIndex + 1
+          styleRunIndexes: [resolvedFont.styleRunIndex],
+          fontId: resolvedFont.fontId,
+          sourceHash: resolvedFont.sourceHash,
+          faceIndex: resolvedFont.faceIndex,
+          unitsPerEm: resolvedFont.unitsPerEm,
+          variationAxes: resolvedFont.variationAxes,
+          fallbackUsed: resolvedFont.fallbackUsed,
+          fallbackChains: resolvedFont.fallbackUsed ? [resolvedFont.fallbackChain] : [],
+          graphemeStart: graphemeIndex,
+          graphemeEnd: graphemeIndex + 1
         };
       } else {
         group.graphemeEnd = graphemeIndex + 1;
-        if (!group.styleRunIndexes.includes(styleRunIndex)) group.styleRunIndexes.push(styleRunIndex);
-        if (styleRun.fallbackUsed) group.fallbackUsed = true;
-        if (styleRun.fallbackUsed &&
-            !group.fallbackChains.some((chain) => JSON.stringify(chain) === JSON.stringify(styleRun.fallbackChain))) {
-          group.fallbackChains.push(styleRun.fallbackChain);
+        if (!group.styleRunIndexes.includes(resolvedFont.styleRunIndex)) {
+          group.styleRunIndexes.push(resolvedFont.styleRunIndex);
+        }
+        if (resolvedFont.fallbackUsed) group.fallbackUsed = true;
+        if (resolvedFont.fallbackUsed &&
+            !group.fallbackChains.some((chain) => JSON.stringify(chain) === JSON.stringify(resolvedFont.fallbackChain))) {
+          group.fallbackChains.push(resolvedFont.fallbackChain);
         }
       }
     }
@@ -389,12 +467,20 @@ function createTextItemShapingPlan(item, options = {}) {
   }
 
   const diagnostics = [];
-  for (const run of resolvedStyleRuns) {
-    if (run && run.fallbackUsed) {
+  for (let graphemeIndex = 0; graphemeIndex < resolvedGraphemeFonts.length; graphemeIndex++) {
+    const resolvedFont = resolvedGraphemeFonts[graphemeIndex];
+    if (resolvedFont && resolvedFont.fallbackUsed) {
+      const grapheme = itemization.graphemes[graphemeIndex];
       diagnostics.push({
-        code: 'font-fallback', itemId: item.id, styleRunIndex: run.index,
-        requestedFamily: run.requestedFamily, fontId: run.fontId,
-        fallbackChain: run.fallbackChain
+        code: 'font-fallback',
+        itemId: item.id,
+        styleRunIndex: resolvedFont.styleRunIndex,
+        graphemeRange: { start: sourceStart + grapheme.start, end: sourceStart + grapheme.end },
+        graphemeText: grapheme.text,
+        requiredCodePoints: resolvedFont.coverageCodePoints,
+        requestedFamily: resolvedFont.requestedFamily,
+        fontId: resolvedFont.fontId,
+        fallbackChain: resolvedFont.fallbackChain
       });
     }
   }
@@ -427,7 +513,16 @@ function createTextItemShapingPlan(item, options = {}) {
       bidiLevel: grapheme.bidiLevel,
       shapeable: grapheme.shapeable === true,
       containsBidiControl: !!grapheme.containsBidiControl,
-      isBidiControl: !!grapheme.isBidiControl
+      isBidiControl: !!grapheme.isBidiControl,
+      coverageCodePoints: requiredCodePointsForGrapheme(text, grapheme, itemization.graphemes.indexOf(grapheme)),
+      font: resolvedGraphemeFonts[itemization.graphemes.indexOf(grapheme)]
+        ? {
+            fontId: resolvedGraphemeFonts[itemization.graphemes.indexOf(grapheme)].fontId,
+            sourceHash: resolvedGraphemeFonts[itemization.graphemes.indexOf(grapheme)].sourceHash,
+            faceIndex: resolvedGraphemeFonts[itemization.graphemes.indexOf(grapheme)].faceIndex,
+            variationAxes: resolvedGraphemeFonts[itemization.graphemes.indexOf(grapheme)].variationAxes
+          }
+        : null
     })),
     scriptRuns: plannedRuns,
     nonShapingRuns,

@@ -4,6 +4,32 @@
 const { describe, it, assert, assertEq, report } = require('../harness');
 const { createTextItemShapingPlan } = require('../../src/engine/typography/text-item-shaping-plan');
 
+
+const DEFAULT_IGNORABLE_FOR_FIXTURES = new Set([
+  0x00AD, 0x034F, 0x061C, 0x115F, 0x1160, 0x17B4, 0x17B5,
+  0x180B, 0x180C, 0x180D, 0x180E, 0x200B, 0x200C, 0x200D,
+  0x200E, 0x200F, 0x202A, 0x202B, 0x202C, 0x202D, 0x202E,
+  0x2060, 0x2061, 0x2062, 0x2063, 0x2064, 0x2066, 0x2067,
+  0x2068, 0x2069, 0xFE00, 0xFE01, 0xFE02, 0xFE03, 0xFE04,
+  0xFE05, 0xFE06, 0xFE07, 0xFE08, 0xFE09, 0xFE0A, 0xFE0B,
+  0xFE0C, 0xFE0D, 0xFE0E, 0xFE0F, 0xFEFF, 0xE0100
+]);
+function scalarRecordsOf(grapheme) {
+  let offset = grapheme.start;
+  return Array.from(grapheme.text, (character) => {
+    const start = offset;
+    offset += character.length;
+    const codePoint = character.codePointAt(0);
+    return {
+      start, end: offset,
+      isDefaultIgnorable: DEFAULT_IGNORABLE_FOR_FIXTURES.has(codePoint),
+      isBidiControl: (codePoint >= 0x202A && codePoint <= 0x202E) ||
+        (codePoint >= 0x2066 && codePoint <= 0x2069) ||
+        codePoint === 0x061C || codePoint === 0x200E || codePoint === 0x200F
+    };
+  });
+}
+
 function fakeItemizer(text, graphemes, scriptRuns, sourceRuns) {
   return {
     unicodeVersion: '18.0.0',
@@ -25,29 +51,63 @@ function fakeItemizer(text, graphemes, scriptRuns, sourceRuns) {
           graphemeEnd: scriptRun.graphemeEnd
         } : sourceRun;
       });
-      return { text, utf16Length: text.length, graphemes, scriptRuns,
+      const withScalars = graphemes.map((grapheme) => ({
+        ...grapheme, scalars: grapheme.scalars || scalarRecordsOf(grapheme)
+      }));
+      return { text, utf16Length: text.length, graphemes: withScalars, scriptRuns,
         sourceRuns: enrichedSourceRuns,
         nonShapingRuns: enrichedSourceRuns.filter((run) => run.kind !== 'shape') };
     }
   };
 }
 
-function makeResolver() {
+function makeResolver(options = {}) {
+  const coveredCodePoints = Array.from(new Set(Array.from('שָׁלוֹםאב').map((character) => character.codePointAt(0))));
+  const createRecord = (family, fontId, sourceHash, unitsPerEm, bytes) => {
+    const charToGlyph = new Map(coveredCodePoints.map((codePoint, index) => [codePoint, index + 1]));
+    for (const codePoint of (options.missingByFamily && options.missingByFamily[family]) || []) {
+      charToGlyph.delete(codePoint);
+    }
+    return {
+      fontId, sourceHash, unitsPerEm, numGlyphs: 128,
+      font: { unitsPerEm, bytes: Uint8Array.from(bytes), charToGlyph }
+    };
+  };
   const records = {
-    'Frank Ruhl Libre': { fontId: 'fnt-11111111111111', sourceHash: '1'.repeat(64), unitsPerEm: 1000, font: { unitsPerEm: 1000, bytes: Uint8Array.from([1, 2, 3]) } },
-    'David Libre': { fontId: 'fnt-22222222222222', sourceHash: '2'.repeat(64), unitsPerEm: 2048, font: { unitsPerEm: 2048, bytes: Uint8Array.from([4, 5, 6]) } }
+    'Frank Ruhl Libre': createRecord('Frank Ruhl Libre', 'fnt-11111111111111', '1'.repeat(64), 1000, [1, 2, 3]),
+    'David Libre': createRecord('David Libre', 'fnt-22222222222222', '2'.repeat(64), 2048, [4, 5, 6])
   };
   return {
-    resolveFont(alias, options) {
-      const configuredFallback = options && Array.isArray(options.fallbacks)
-        ? options.fallbacks.find((family) => records[family])
-        : null;
-      const actual = records[alias] ? alias : (configuredFallback || (options && options.defaultFamily));
-      if (!actual || !records[actual]) return { ok: false, code: 'font-unavailable', message: 'missing test font' };
-      const fallbackUsed = actual !== alias;
-      return { ok: true, fontId: records[actual].fontId, record: records[actual], fallbackUsed,
-        fallbackChain: [{ alias, chosen: false }, { alias: actual, chosen: true }],
-        diagnostics: fallbackUsed ? [{ code: 'font-not-registered', alias }] : [] };
+    resolveFontForGrapheme(alias, requiredCodePoints, resolverOptions) {
+      const candidates = [];
+      const seen = new Set();
+      const add = (family) => {
+        if (family != null && !seen.has(family)) { seen.add(family); candidates.push(family); }
+      };
+      add(alias);
+      for (const family of (resolverOptions && resolverOptions.fallbacks) || []) add(family);
+      add(resolverOptions && resolverOptions.defaultFamily);
+      const fallbackChain = [];
+      for (const family of candidates) {
+        const record = records[family];
+        if (!record) {
+          fallbackChain.push({ alias: family, fontId: null, chosen: false, reason: 'not-registered' });
+          continue;
+        }
+        const missingCodePoints = requiredCodePoints.filter((codePoint) => !record.font.charToGlyph.has(codePoint));
+        if (missingCodePoints.length) {
+          fallbackChain.push({ alias: family, fontId: record.fontId, chosen: false, reason: 'missing-grapheme-coverage', missingCodePoints });
+          continue;
+        }
+        fallbackChain.push({ alias: family, fontId: record.fontId, chosen: true, reason: family === alias ? 'direct' : 'grapheme-coverage-fallback' });
+        return {
+          ok: true, fontId: record.fontId, record,
+          fallbackUsed: family !== alias,
+          fallbackChain,
+          diagnostics: fallbackChain.slice(0, -1).map((entry) => ({ code: 'font-missing-grapheme-coverage', ...entry }))
+        };
+      }
+      return { ok: false, code: 'grapheme-font-coverage-unavailable', message: 'no test font covers the complete EGC', fallbackChain, diagnostics: [] };
     }
   };
 }
@@ -212,7 +272,7 @@ describe('TextItem Shaping Plan — paragraph itemization before word splitting'
       { kind: 'bidi-control', start: 0, end: 1, text: text[0] },
       { kind: 'bidi-control', start: 1, end: 2, text: text[1] }
     ], {
-      fontResolver: { resolveFont() { resolveCalls++; return { ok: false, code: 'font-unavailable' }; } },
+      fontResolver: { resolveFontForGrapheme() { resolveCalls++; return { ok: false, code: 'font-unavailable' }; } },
       variationAxesByFontId: {}
     });
     const plan = createTextItemShapingPlan(item, options);
@@ -235,6 +295,65 @@ describe('TextItem Shaping Plan — paragraph itemization before word splitting'
     catch (caught) { error = caught; }
     assert(error instanceof Error);
     assertEq(error.code, 'invalid-script-run');
+  });
+
+
+  it('chooses fallback for the complete Hebrew EGC when the primary font lacks one niqqud scalar', () => {
+    const text = 'שָׁ';
+    const graphemes = [
+      { start: 0, end: text.length, text, script: 'Hebr', status: 'combining-sequence-script-inheritance', direction: 'rtl', bidiLevel: 1, shapeable: true }
+    ];
+    const scriptRuns = [{ start: 0, end: text.length, text, script: 'Hebr', direction: 'rtl', bidiLevel: 1, graphemeStart: 0, graphemeEnd: 1 }];
+    const sourceRuns = [{ kind: 'shape', start: 0, end: text.length, text }];
+    const item = baseItem([{ text, sourceStart: 100, sourceEnd: 100 + text.length, fontFamily: 'Frank Ruhl Libre' }], text);
+    const options = makeOptions(text, graphemes, scriptRuns, sourceRuns, {
+      fontResolver: makeResolver({ missingByFamily: { 'Frank Ruhl Libre': [0x05C1] } }),
+      fallbacksByFamily: { 'Frank Ruhl Libre': ['David Libre'] }
+    });
+    const plan = createTextItemShapingPlan(item, options);
+    const expectedCoverage = [0x05E9, 0x05B8, 0x05C1];
+    assertEq(plan.graphemes[0].coverageCodePoints, expectedCoverage);
+    assertEq(plan.graphemes[0].font.fontId, 'fnt-22222222222222');
+    assertEq(plan.scriptRuns.length, 1, 'one EGC remains one ShapedRun');
+    assertEq(plan.scriptRuns[0].graphemes[0].coverageCodePoints, expectedCoverage);
+    assertEq(plan.diagnostics[0].graphemeRange, { start: 100, end: 103 });
+    assertEq(plan.diagnostics[0].requiredCodePoints, expectedCoverage);
+    assertEq(plan.diagnostics[0].fallbackChain[0].missingCodePoints, [0x05C1]);
+  });
+
+  it('rejects a grapheme when no configured font covers all of its required scalars', () => {
+    const text = 'שָׁ';
+    const graphemes = [
+      { start: 0, end: text.length, text, script: 'Hebr', status: 'strong', direction: 'rtl', bidiLevel: 1, shapeable: true }
+    ];
+    const scriptRuns = [{ start: 0, end: text.length, text, script: 'Hebr', direction: 'rtl', bidiLevel: 1, graphemeStart: 0, graphemeEnd: 1 }];
+    const sourceRuns = [{ kind: 'shape', start: 0, end: text.length, text }];
+    const item = baseItem([{ text, sourceStart: 100, sourceEnd: 103, fontFamily: 'Frank Ruhl Libre' }], text);
+    const options = makeOptions(text, graphemes, scriptRuns, sourceRuns, {
+      fontResolver: makeResolver({
+        missingByFamily: { 'Frank Ruhl Libre': [0x05C1], 'David Libre': [0x05C1] }
+      }),
+      fallbacksByFamily: { 'Frank Ruhl Libre': ['David Libre'] }
+    });
+    let error;
+    try { createTextItemShapingPlan(item, options); } catch (caught) { error = caught; }
+    assert(error instanceof Error);
+    assertEq(error.code, 'font-unavailable-for-grapheme');
+  });
+
+  it('excludes Default_Ignorable ZWJ from cmap coverage without removing it from the shaped source', () => {
+    const text = 'א\\u200D';
+    const graphemes = [
+      { start: 0, end: text.length, text, script: 'Hebr', status: 'strong', direction: 'rtl', bidiLevel: 1, shapeable: true }
+    ];
+    const scriptRuns = [{ start: 0, end: text.length, text, script: 'Hebr', direction: 'rtl', bidiLevel: 1, graphemeStart: 0, graphemeEnd: 1 }];
+    const sourceRuns = [{ kind: 'shape', start: 0, end: text.length, text }];
+    const item = baseItem([{ text, sourceStart: 200, sourceEnd: 200 + text.length, fontFamily: 'Frank Ruhl Libre' }], text, 200);
+    const plan = createTextItemShapingPlan(item, makeOptions(text, graphemes, scriptRuns, sourceRuns));
+    assertEq(plan.graphemes[0].coverageCodePoints, [0x05D0]);
+    assertEq(plan.graphemes[0].text, text);
+    assertEq(plan.scriptRuns[0].text, text);
+    assertEq(plan.scriptRuns[0].graphemes[0].coverageCodePoints, [0x05D0]);
   });
 
   it('retains an explicit diagnostic when the font resolver uses its configured fallback', () => {
