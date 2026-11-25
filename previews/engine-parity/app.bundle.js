@@ -2674,9 +2674,12 @@ function chapterLines(rng, opts, chapterIdx) {
     // ציר 1 — כותרת צד (H7) מובטחת בפרק הראשון (i=0 — לפני כל ענף כותרת אחר)
     if (docFirst && i === 0) {
       lines.push(`כותרת 7 - ${subHeadingText(rng, 7)}`);
-      // H7 חייב לקבל גוף לפני כותרת אחרת, גם כשה-H3 נורה באיטרציה הבאה.
-      lines.push(bodyParagraph(rng, 'short'));
-      blocksSinceHeading++;
+      // בתיעוד אקראי בלבד משלימים את הכותרת מיד; במסמך fixed שומרים
+      // על byte identity של מסמך הייחוס, וה-validator מאמת אותו בנפרד.
+      if (opts.ensureValidStructure) {
+        lines.push(bodyParagraph(rng, 'short'));
+        blocksSinceHeading++;
+      }
     }
 
     if (h3AtTop && i === 1) {
@@ -2685,12 +2688,13 @@ function chapterLines(rng, opts, chapterIdx) {
       continue;
     }
     if (!h3AtTop && i === Math.floor(nBlocks / 4)) {
-      // אם איטרציה אקראית קודמת הסתיימה בכותרת עמוקה יותר, קודם סוגרים
-      // אותה בטקסט גוף לפני העלייה בהיררכיה ל-H3.
-      const previous = lastNumberedHeading(lines);
-      if (previous && !hasBodyAfterLastHeading(lines)) {
-        lines.push(bodyParagraph(rng, 'short'));
-        blocksSinceHeading++;
+      // בריצה אקראית סוגרים כותרת עמוקה לפני מעבר חזרה לרמת H3.
+      if (opts.ensureValidStructure) {
+        const previous = lastNumberedHeading(lines);
+        if (previous && !hasBodyAfterLastHeading(lines)) {
+          lines.push(bodyParagraph(rng, 'short'));
+          blocksSinceHeading++;
+        }
       }
       lines.push(`כותרת 3 - ${subHeadingText(rng, 3)}`);
       blocksSinceHeading = 0;
@@ -2703,9 +2707,17 @@ function chapterLines(rng, opts, chapterIdx) {
       // בשורה הקודמת; אם האיטרציה הקודמת הסתיימה בכותרת מאותה רמה (מוגרלת
       // או escort), נוצר רצף מאותה רמה ללא טקסט גוף — מבנה שאינו קיים באף
       // קורפוס אמיתי. מפרידים פסקת גוף קצרה; הכיסוי המובטח של הרמה נשמר.
-      const previous = lastNumberedHeading(lines);
-      if (previous && !hasBodyAfterLastHeading(lines) && guaranteedLvl <= previous.level) {
-        lines.push(paragraphText(rng, randInt(rng, 12, 25)));
+      if (opts.ensureValidStructure) {
+        const previous = lastNumberedHeading(lines);
+        if (previous && !hasBodyAfterLastHeading(lines) && guaranteedLvl <= previous.level) {
+          lines.push(paragraphText(rng, randInt(rng, 12, 25)));
+        }
+      } else {
+        // נעילת מסמך fixed ההיסטורית נשמרת ביט-לביט.
+        const lastGuar = lines[lines.length - 1] || '';
+        if (lastGuar.startsWith(`כותרת ${guaranteedLvl} - `)) {
+          lines.push(paragraphText(rng, randInt(rng, 12, 25)));
+        }
       }
       lines.push(`כותרת ${guaranteedLvl} - ${subHeadingText(rng, guaranteedLvl)}`);
       // **D-98 (מבנה ריאליסטי — אין רצף מאותה רמה):** רצף כותרות (עקת escort)
@@ -2746,8 +2758,8 @@ function chapterLines(rng, opts, chapterIdx) {
     blocksSinceHeading++;
   }
 
-  // סוגרים כותרת עמוקה אחרונה בטקסט גוף לפני אזור הערות-הסיום.
-  if (lastNumberedHeading(lines) && !hasBodyAfterLastHeading(lines)) {
+  // בריצה אקראית סוגרים כותרת עמוקה לפני אזור הערות-הסיום.
+  if (opts.ensureValidStructure && lastNumberedHeading(lines) && !hasBodyAfterLastHeading(lines)) {
     lines.push(paragraphText(rng, randInt(rng, 12, 25)));
   }
 
@@ -2794,7 +2806,10 @@ function generateTestDocument(opts = {}) {
   const nChapters = scale === 'small' ? 3 : randInt(rng, 48, 56);
   for (let c = 1; c <= nChapters; c++) {
     out.push(`כותרת 2 - ${chapterTitle(rng, c)}`);
-    for (const line of chapterLines(rng, { compact: scale === 'small' }, c)) out.push(line);
+    for (const line of chapterLines(rng, {
+      compact: scale === 'small',
+      ensureValidStructure: mode === 'random'
+    }, c)) out.push(line);
     if (c < nChapters) out.push('');
   }
 
