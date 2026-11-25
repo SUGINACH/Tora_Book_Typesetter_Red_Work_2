@@ -88,7 +88,7 @@ describe('Production typography runtime — pinned local assets', () => {
 
 
   it('builds and shapes a source-mapped plan from a real DocumentModel inline-font TextItem', async () => {
-    const raw = 'כותרת 1 - חלק\\nש<Frank Ruhl Libre>לום</>\\n';
+    const raw = 'כותרת 1 - חלק\nש<Frank Ruhl Libre>לום</>\n';
     const model = buildDocumentModel(raw, {
       inlineOptions: { knownFamilies: ['David Libre', 'Frank Ruhl Libre'] }
     });
