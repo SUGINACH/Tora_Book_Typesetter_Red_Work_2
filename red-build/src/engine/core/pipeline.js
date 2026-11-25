@@ -23,7 +23,7 @@
  *  - P1-1: AQ/מצבי סוף־פרק/מילה־נופלת מחוברים לצינור בפועל.
  */
 
-const { getDefaultSettings, derivePlacementFlags } = require('./settings-registry');
+const { getDefaultSettings, getSettingDefs, derivePlacementFlags } = require('./settings-registry');
 // **חוזה H3 (D-S2H3/CSS parity):** line-height 1.22 של ה-CSS המקורי — מקור
 // יחיד המשותף למדידת הכותרות כאן, לפס ה-H3 ב-planner ולמנוע המורשת.
 const { h3LineHeightPx } = require('./h3-contract');
@@ -122,6 +122,19 @@ function typeset(rawText, settingsIn, env = {}) {
   const forceUnifiedImud = (!!(typeof process !== 'undefined' && process.env
     && String(process.env.RED_UNIFIED_IMUD) === '1'))
     || !!(settingsIn && settingsIn['_engine-force-unified'] === true);
+  if (forceUnifiedImud && settingsIn) {
+    const unsupported = getSettingDefs()
+      .filter((definition) => definition.unifiedSupport === false
+        && Object.prototype.hasOwnProperty.call(settingsIn, definition.id)
+        && JSON.stringify(settingsIn[definition.id]) !== JSON.stringify(definition.default))
+      .map((definition) => definition.id);
+    if (unsupported.length) {
+      const error = new Error('unified-unsupported-settings: הגדרות אלו עדיין אינן מחוברות ל-PageModel המאוחד: ' + unsupported.join(', '));
+      error.code = 'unified-unsupported-settings';
+      error.settingKeys = unsupported;
+      throw error;
+    }
+  }
   if (!forceUnifiedImud && settingsIn && settingsIn['_layout-profile'] === 'imud' && settingsIn._imudRaw) {
     const { legacyTypeset } = require('../layout/legacy-imud-flow');
     return legacyTypeset(rawText, settingsIn, env);

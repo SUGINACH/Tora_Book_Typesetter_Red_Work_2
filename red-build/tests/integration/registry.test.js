@@ -9,6 +9,18 @@ const { scanConsumers } = require('../../src/audit/scanners');
 const SRC_ROOT = path.join(__dirname, '..', '..', 'src');
 
 describe('registry self-validation', () => {
+  it('Unified support status is explicit for settings not yet projected from PageModel', () => {
+    const defs = getSettingDefs();
+    for (const id of ['background-page-type', 'background-image', 'background-texture', 'background-inset-mm']) {
+      const row = defs.find(r => r.id === id);
+      assert(row && row.unifiedSupport === false, id + ': unifiedSupport=false is required until PageModel projection exists');
+    }
+    for (const id of ['body-last-line-align', 'footnote-separator-rule']) {
+      const row = defs.find(r => r.id === id);
+      assert(row && row.unifiedSupport !== false, id + ': supported PageModel effect must not be marked unavailable');
+    }
+  });
+
   it('every row has id/type/default/panel/control/consumers/effect_test', () => {
     for (const r of registry) {
       assert(typeof r.id === 'string' && r.id.length > 0, `row missing id: ${JSON.stringify(r)}`);

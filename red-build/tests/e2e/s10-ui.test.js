@@ -729,10 +729,21 @@ describe('S10.2 שער 6 — שינוי קל ≤2s; כבד דורש ⚡; טבל�
     assert(JSON.stringify(ruleOps(ruleNone.pageModel)) !== JSON.stringify(ruleOps(ruleCircles.pageModel)),
       'החלפת סגנון הקו משנה את פעולות הציור הקנוניות');
 
+    // רקעי תמונה/טקסטורה עדיין אינם מוקרנים מתוך PageModel. הם לא נשארים
+    // בקטגוריית light, וה-Registry מסמן אותם כלא זמינים בפרופיל Unified.
+    for (const key of ['background-image', 'background-texture', 'background-inset-mm', 'background-page-type']) {
+      assertEq(classifyChange(key), 'heavy', key + ' אינו render-only ב-Unified');
+      const definition = registry.find(row => row.id === key);
+      assert(definition && definition.unifiedSupport === false, key + ' חייב להיות מסומן כלא נתמך ב-Unified עד לחיבורו');
+    }
+
     // שינוי גיאומטרי רגיל נשאר heavy; אין רינדור־קל שמסתיר אותו.
     const heavy = typeset(SMALL_DOC, Object.assign({}, baseSettings, { 'grid-col-width-pct': 55 }));
     assert(heavy.layoutHash !== base.layoutHash, 'שינוי כבד חייב לשנות פריסה');
     assertEq(classifyChange('grid-col-width-pct'), 'heavy');
+
+    throws(() => typeset(SMALL_DOC, Object.assign({}, baseSettings, { 'background-image': 'assets/bg.png' })),
+      /unified-unsupported-settings/);
   });
 
   it('D-64 Unified UI — שינוי PageModel מחייב ⚡, והחזרה לערך המקורי משחזרת את אותו hash', async () => {
@@ -747,6 +758,26 @@ describe('S10.2 שער 6 — שינוי קל ≤2s; כבד דורש ⚡; טבל�
     const originalGen = app.getState().gen;
     const originalRuleOps = app.pageModel().pages.flatMap(p => p.decorations || [])
       .filter(d => d.kind === 'fn-rule').map(d => JSON.stringify(d.pdfOps || []));
+
+    // צבע ואטימות רקע הם קלים ב-Unified כי המקרין צורך אותם ישירות.
+    app.onSettingChanged('background-color', '#e0e0e0');
+    assert(app.getState().lightDirty, 'background-color מסווג כקל');
+    await waitFor(() => !app.getState().lightDirty, 3000, 'unified light background refresh');
+    assertEq(app.getState().gen, originalGen, 'שינוי צבע אינו מריץ את המנוע מחדש');
+    assertEq(app.pageModel().geometryHash, app.pageModel().geometryHash, 'המודל נשאר זמין');
+    const page0 = app.preview.root.querySelectorAll('.preview-page')[0];
+    assert(page0.style.backgroundColor && page0.style.backgroundColor.startsWith('rgba(224'),
+      'המקרין המאוחד מציג את הצבע החדש');
+
+    // שדות רקע שאינם מחוברים ל-PageModel חסומים ומוחזרים לערך הקודם.
+    const previousBackgroundImage = app.getSettings()['background-image'];
+    app.onSettingChanged('background-image', 'assets/bg.png');
+    assertEq(app.getSettings()['background-image'], previousBackgroundImage, 'שדה רקע לא נתמך אינו נשמר בהגדרות');
+    assert(app.root.textContent.includes('אינה מחוברת למודל המאוחד'), 'המשתמש מקבל הודעה מפורשת במקום שינוי שקט');
+
+    // החזרת הצבע לערכו המקורי לפני בדיקות השינויים הכבדים.
+    app.onSettingChanged('background-color', '#ffffff');
+    await waitFor(() => !app.getState().lightDirty, 3000, 'unified light background restore');
 
     app.onSettingChanged('body-last-line-align', 'right');
     assert(app.getState().heavyDirty, 'שינוי body-last-line-align מסמן עימוד כבד');

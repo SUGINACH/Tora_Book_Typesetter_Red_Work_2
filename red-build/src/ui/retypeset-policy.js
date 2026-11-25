@@ -17,11 +17,8 @@
 
 /** מפתחות קלים — נצרפים בזמן־רינדור בלבד (הוכחת שקילות בבדיקה; ראו D-64). */
 const LIGHT_KEYS = new Set([
-  'background-color',        // renderPage: root.style.backgroundColor (rgba אמיתי — P0-5)
-  'background-opacity',      // renderPage: rgba()
-  'background-image',        // renderPageBackgroundAndShaar → planBackground בזמן רינדר
-  'background-texture',      // כנ"ל
-  'background-inset-mm'      // ממתין לחיבור PageModel — לא נחשב הוכחת אפקט בפני עצמו
+  'background-color',        // renderModelPage: root.style.backgroundColor (rgba אמיתי — P0-5)
+  'background-opacity'       // renderModelPage: rgba() — שני המפתחות אינם משנים PageModel
 ]);
 
 /** @returns {'light'|'heavy'} מחלקת השינוי של מפתח הגדרה */

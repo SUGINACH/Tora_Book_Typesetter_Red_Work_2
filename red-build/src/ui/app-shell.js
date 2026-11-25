@@ -573,6 +573,12 @@ function createApp(doc, opts = {}) {
   // ================= מדיניות שינויי הגדרות (D-64) =================
 
   function onSettingChanged(key, value) {
+    const definition = findKey(key);
+    if (branchProfile === 'unified' && definition && definition.unifiedSupport === false) {
+      settingsPanel.refreshValues();
+      status.setNotice(`ההגדרה «${key}» עדיין אינה מחוברת למודל המאוחד; השינוי לא הוחל ולא ישנה את הפלט.`);
+      return;
+    }
     settings[key] = value;
     // **03.11 (EXT-14):** בחירת גופן מהספרייה — טעינה חיה (FontFace לתצוגה +
     // registerFont במנוע למדידת font-metrics ולייצוא PDF). כישלון טעינה אינו
@@ -904,11 +910,25 @@ function createApp(doc, opts = {}) {
       legacySettings = imp.settings; // כולל _legacy-ui-state (ערכי UI נשמרים)
     }
     const { merged, unknownKeys, issues } = mergeWithDefaults({ ...legacySettings, ...known });
+    const unsupportedUnifiedKeys = [];
+    if (branchProfile === 'unified') {
+      for (const definition of getSettingDefs()) {
+        if (definition.unifiedSupport === false
+          && Object.prototype.hasOwnProperty.call(merged, definition.id)
+          && JSON.stringify(merged[definition.id]) !== JSON.stringify(definition.default)) {
+          unsupportedUnifiedKeys.push(definition.id);
+          delete merged[definition.id];
+        }
+      }
+    }
     for (const [k, v] of Object.entries(merged)) settings[k] = v;
+    if (unsupportedUnifiedKeys.length) {
+      status.setNotice('התבנית כוללת הגדרות שעדיין אינן נתמכות בפרופיל המאוחד; הן לא הוחלו: ' + unsupportedUnifiedKeys.join(', '));
+    }
     settingsPanel.refreshValues();
     markHeavyDirty(); // הגדרות השתנו — המשתמש יחליט מתי לעמד (⚡)
     schedulePersistSettings(); // **פער 2 (S6.1):** טעינת תבנית = שינוי הגדרות — נשמר (SRS §17.1)
-    return { unknownKeys, issues };
+    return { unknownKeys, issues, unsupportedUnifiedKeys };
   }
 
   /** **S4.6:** גובה תיבת התוכן בפועל של הגדרות העמוד הנוכחיות — להמרות אחוז⇒פיקסל
