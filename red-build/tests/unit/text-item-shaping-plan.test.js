@@ -298,6 +298,63 @@ describe('TextItem Shaping Plan — paragraph itemization before word splitting'
   });
 
 
+  it('preserves discontinuous inline-font source ranges without shifting local UTF-16 clusters', () => {
+    const text = 'אבגד';
+    const graphemes = Array.from(text, (character, index) => ({
+      start: index, end: index + 1, text: character,
+      script: 'Hebr', status: 'strong', direction: 'rtl', bidiLevel: 1, shapeable: true
+    }));
+    const scriptRuns = [{
+      start: 0, end: text.length, text, script: 'Hebr', direction: 'rtl', bidiLevel: 1,
+      graphemeStart: 0, graphemeEnd: text.length
+    }];
+    const sourceRuns = [{
+      kind: 'shape', start: 0, end: text.length, text, script: 'Hebr',
+      direction: 'rtl', bidiLevel: 1, graphemeStart: 0, graphemeEnd: text.length
+    }];
+    const item = {
+      id: 'gapped-source-item',
+      kind: 'text',
+      sourceRange: { start: 100, end: 116, docId: 'doc-1', blockId: 'block-1' },
+      payload: {
+        text,
+        runs: [
+          { text: 'אב', sourceStart: 10, sourceEnd: 12, fontFamily: 'Frank Ruhl Libre' },
+          { text: 'ג', sourceStart: 20, sourceEnd: 21, fontFamily: 'David Libre' },
+          { text: 'ד', sourceStart: 25, sourceEnd: 26, fontFamily: 'Frank Ruhl Libre' }
+        ]
+      }
+    };
+    const plan = createTextItemShapingPlan(item, makeOptions(text, graphemes, scriptRuns, sourceRuns));
+    assertEq(plan.version, 'text-item-shaping-plan-v3-source-map');
+    assertEq(plan.sourceSegments, [
+      { localRange: { start: 0, end: 2 }, sourceRange: { start: 100, end: 102 }, styleRunIndexes: [0] },
+      { localRange: { start: 2, end: 3 }, sourceRange: { start: 110, end: 111 }, styleRunIndexes: [1] },
+      { localRange: { start: 3, end: 4 }, sourceRange: { start: 115, end: 116 }, styleRunIndexes: [2] }
+    ]);
+    assertEq(plan.graphemes.map((grapheme) => ({
+      local: grapheme.localRange, source: [grapheme.start, grapheme.end]
+    })), [
+      { local: { start: 0, end: 1 }, source: [100, 101] },
+      { local: { start: 1, end: 2 }, source: [101, 102] },
+      { local: { start: 2, end: 3 }, source: [110, 111] },
+      { local: { start: 3, end: 4 }, source: [115, 116] }
+    ]);
+    assertEq(plan.scriptRuns.map((run) => ({
+      local: run.localRange, source: [run.sourceRange.start, run.sourceRange.end],
+      text: run.text, fontId: run.font.fontId
+    })), [
+      { local: { start: 0, end: 2 }, source: [100, 102], text: 'אב', fontId: 'fnt-11111111111111' },
+      { local: { start: 2, end: 3 }, source: [110, 111], text: 'ג', fontId: 'fnt-22222222222222' },
+      { local: { start: 3, end: 4 }, source: [115, 116], text: 'ד', fontId: 'fnt-11111111111111' }
+    ]);
+    assertEq(plan.sourceRuns[0].sourceRanges, [
+      { localRange: { start: 0, end: 2 }, sourceRange: { start: 100, end: 102 } },
+      { localRange: { start: 2, end: 3 }, sourceRange: { start: 110, end: 111 } },
+      { localRange: { start: 3, end: 4 }, sourceRange: { start: 115, end: 116 } }
+    ]);
+  });
+
   it('chooses fallback for the complete Hebrew EGC when the primary font lacks one niqqud scalar', () => {
     const text = 'שָׁ';
     const graphemes = [

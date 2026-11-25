@@ -39,19 +39,26 @@ function makePlan(overrides = {}) {
   };
   return {
     kind: 'TextItemShapingPlan',
-    version: 'text-item-shaping-plan-v2-grapheme-coverage',
+    version: 'text-item-shaping-plan-v3-source-map',
     itemId: 'text-1',
     text,
     sourceRange: { coordinateSpace: 'document-utf16', start: 100, end: 107, docId: 'doc-1', blockId: 'block-1' },
+    sourceSegments: [{ localRange: { start: 0, end: 7 }, sourceRange: { start: 100, end: 107 }, styleRunIndexes: [0] }],
+    graphemes: graphemes.map((grapheme, index) => ({
+      ...grapheme,
+      localRange: { start: [0, 3, 4, 6][index], end: [3, 4, 6, 7][index] },
+      shapeable: true
+    })),
     unicodeVersion: '18.0.0',
     direction: 'rtl',
     graphemes,
     scriptRuns: [scriptRun],
     nonShapingRuns: [],
     sourceRuns: [{
-      kind: 'shape', start: 100, end: 107, text,
+      kind: 'shape', start: 0, end: 7, text,
       script: 'Hebr', direction: 'rtl', bidiLevel: 1,
-      graphemeStart: 0, graphemeEnd: 4
+      graphemeStart: 0, graphemeEnd: 4,
+      sourceRanges: [{ localRange: { start: 0, end: 7 }, sourceRange: { start: 100, end: 107 } }]
     }],
     diagnostics: [],
     ...overrides
@@ -273,9 +280,16 @@ describe('HarfBuzzShaper — canonical plan to immutable ShapedRun', () => {
     const control = String.fromCodePoint(0x202B);
     base.text = control;
     base.sourceRange = { coordinateSpace: 'document-utf16', start: 100, end: 101, docId: 'doc-1' };
-    base.graphemes = [{ start: 100, end: 101, text: control, shapeable: false, isBidiControl: true, containsBidiControl: true }];
+    base.sourceSegments = [{ localRange: { start: 0, end: 1 }, sourceRange: { start: 100, end: 101 } }];
+    base.graphemes = [{
+      start: 100, end: 101, localRange: { start: 0, end: 1 }, text: control,
+      shapeable: false, isBidiControl: true, containsBidiControl: true, coverageCodePoints: [0x202B]
+    }];
     base.scriptRuns = [];
-    base.sourceRuns = [{ kind: 'bidi-control', start: 100, end: 101, text: control }];
+    base.sourceRuns = [{
+      kind: 'bidi-control', start: 0, end: 1, text: control,
+      sourceRanges: [{ localRange: { start: 0, end: 1 }, sourceRange: { start: 100, end: 101 } }]
+    }];
     base.nonShapingRuns = base.sourceRuns.slice();
     const resolver = makeResolver();
     const result = makeShaper(makeFakeHarfBuzz(), resolver).shapeTextItemPlan(base);

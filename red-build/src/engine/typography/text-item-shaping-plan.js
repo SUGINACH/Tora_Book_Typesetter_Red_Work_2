@@ -2,7 +2,7 @@
 // Paragraph-level itemization + font/style run projection, before word splitting.
 'use strict';
 
-const PLAN_VERSION = 'text-item-shaping-plan-v2-grapheme-coverage';
+const PLAN_VERSION = 'text-item-shaping-plan-v3-source-map';
 
 function fail(code, message) {
   const error = new TypeError(message);
@@ -66,43 +66,89 @@ function normalizeAxes(value, fontId) {
   });
 }
 
-function normalizeStyleRuns(item, text) {
+function normalizeStyleRuns(item, text, sourceRange) {
   const input = item.payload && item.payload.runs;
   if (!Array.isArray(input) || !input.length) {
     fail('text-item-no-style-runs', 'TextItem must contain one or more inline style/font runs');
   }
   if (!isRecord(input[0])) fail('invalid-inline-style-run', 'payload.runs[0] must be a plain object');
-  const firstSourceStart = input[0].sourceStart == null ? 0 : requireRange(input[0].sourceStart, 'run.sourceStart');
-  let expectedLocalStart = 0;
-  return input.map((entry, index) => {
+  const firstSourceStart = input[0].sourceStart == null
+    ? 0 : requireRange(input[0].sourceStart, 'run.sourceStart');
+  const documentBase = sourceRange.start - firstSourceStart;
+  let localCursor = 0;
+  let previousSourceEnd = firstSourceStart;
+  const normalized = input.map((entry, index) => {
     const run = requireRecord(entry, 'invalid-inline-style-run', 'payload.runs[' + index + ']');
     if (typeof run.text !== 'string') fail('invalid-inline-style-run-text', 'Inline style run text must be a string');
     const runText = run.text;
     if (!runText.length) fail('empty-inline-style-run', 'Empty inline style runs are not valid in a TextItem');
-    const sourceStart = run.sourceStart == null ? firstSourceStart + expectedLocalStart : requireRange(run.sourceStart, 'run.sourceStart');
-    const sourceEnd = run.sourceEnd == null ? sourceStart + runText.length : requireRange(run.sourceEnd, 'run.sourceEnd', 1);
-    const localStart = sourceStart - firstSourceStart;
-    const localEnd = sourceEnd - firstSourceStart;
-    if (localStart !== expectedLocalStart || localEnd - localStart !== runText.length ||
-        text.slice(localStart, localEnd) !== runText) {
-      fail('inline-style-source-partition', 'Inline style runs must form an exact ordered partition of TextItem.text');
+    const sourceStart = run.sourceStart == null
+      ? previousSourceEnd : requireRange(run.sourceStart, 'run.sourceStart');
+    const sourceEnd = run.sourceEnd == null
+      ? sourceStart + runText.length : requireRange(run.sourceEnd, 'run.sourceEnd', 1);
+    if (sourceStart < previousSourceEnd || sourceEnd - sourceStart !== runText.length ||
+        text.slice(localCursor, localCursor + runText.length) !== runText) {
+      fail('inline-style-source-partition',
+        'Inline style runs must form an ordered local-text partition with monotone, length-preserving source ranges');
     }
-    expectedLocalStart = localEnd;
+    const localStart = localCursor;
+    const localEnd = localStart + runText.length;
+    const absoluteStart = documentBase + sourceStart;
+    const absoluteEnd = documentBase + sourceEnd;
+    if (absoluteStart < sourceRange.start || absoluteEnd > sourceRange.end) {
+      fail('inline-style-source-outside-item',
+        'Inline style source range falls outside the TextItem source envelope at run ' + index);
+    }
+    localCursor = localEnd;
+    previousSourceEnd = sourceEnd;
     return {
-      index,
-      localStart,
-      localEnd,
+      index, localStart, localEnd,
+      sourceRange: { start: absoluteStart, end: absoluteEnd },
       text: runText,
       fontFamily: run.fontFamily == null ? null : requireString(run.fontFamily, 'invalid-font-family', 'fontFamily')
     };
-  }).map((run, index, all) => {
-    if (index === all.length - 1 && run.localEnd !== text.length) {
-      fail('inline-style-incomplete-coverage', 'Inline style runs do not cover TextItem.text');
-    }
-    return run;
   });
+  if (localCursor !== text.length) {
+    fail('inline-style-incomplete-coverage', 'Inline style runs do not cover TextItem.text');
+  }
+  return normalized;
 }
 
+function mapLocalRangeToSourceSegments(styleRuns, localStart, localEnd) {
+  if (!Number.isSafeInteger(localStart) || !Number.isSafeInteger(localEnd) ||
+      localStart < 0 || localEnd <= localStart) {
+    fail('invalid-local-source-map-range', 'Local source-map range must be a non-empty UTF-16 range');
+  }
+  const mapped = [];
+  let expectedLocal = localStart;
+  for (const run of styleRuns) {
+    const start = Math.max(localStart, run.localStart);
+    const end = Math.min(localEnd, run.localEnd);
+    if (end <= start) continue;
+    if (start !== expectedLocal) {
+      fail('incomplete-local-source-map', 'Inline style runs leave a local source-map gap at ' + expectedLocal);
+    }
+    const sourceStart = run.sourceRange.start + (start - run.localStart);
+    const sourceEnd = run.sourceRange.start + (end - run.localStart);
+    const previous = mapped[mapped.length - 1];
+    if (previous && previous.localRange.end === start && previous.sourceRange.end === sourceStart) {
+      previous.localRange.end = end;
+      previous.sourceRange.end = sourceEnd;
+      previous.styleRunIndexes.push(run.index);
+    } else {
+      mapped.push({
+        localRange: { start, end },
+        sourceRange: { start: sourceStart, end: sourceEnd },
+        styleRunIndexes: [run.index]
+      });
+    }
+    expectedLocal = end;
+  }
+  if (expectedLocal !== localEnd) {
+    fail('incomplete-local-source-map', 'Inline style runs do not map the complete local range');
+  }
+  return mapped;
+}
 
 function codePointForScalarRange(text, start, end, label) {
   if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) ||
@@ -268,11 +314,17 @@ function createTextItemShapingPlan(item, options = {}) {
   const source = requireRecord(item.sourceRange, 'invalid-text-item-source-range', 'TextItem.sourceRange');
   const sourceStart = requireRange(source.start, 'TextItem.sourceRange.start');
   const sourceEnd = requireRange(source.end, 'TextItem.sourceRange.end', 1);
-  if (sourceEnd - sourceStart !== text.length) {
-    fail('text-item-source-length-mismatch', 'TextItem sourceRange must cover its concatenated inline runs in UTF-16 units');
+  if (sourceEnd <= sourceStart) {
+    fail('text-item-source-length-mismatch', 'TextItem sourceRange must be a non-empty document UTF-16 envelope');
   }
 
-  const styleRuns = normalizeStyleRuns(item, text);
+  const styleRuns = normalizeStyleRuns(item, text, source);
+  const sourceSegments = styleRuns.map((run) => ({
+    localRange: { start: run.localStart, end: run.localEnd },
+    sourceRange: { ...run.sourceRange },
+    styleRunIndexes: [run.index]
+  }));
+  const mapLocalRange = (start, end) => mapLocalRangeToSourceSegments(styleRuns, start, end);
   const direction = options.direction;
   if (direction !== 'ltr' && direction !== 'rtl') {
     fail('missing-base-direction', 'Base paragraph direction must be explicit (ltr or rtl)');
@@ -320,6 +372,19 @@ function createTextItemShapingPlan(item, options = {}) {
     }
     return matches[0].index;
   });
+  const graphemeSourceRanges = itemization.graphemes.map((grapheme, graphemeIndex) => {
+    const mapped = mapLocalRange(grapheme.start, grapheme.end);
+    if (mapped.length !== 1) {
+      fail('grapheme-source-range-discontiguous',
+        'A single EGC must map to one contiguous document source range; grapheme ' + graphemeIndex);
+    }
+    return {
+      localRange: { start: grapheme.start, end: grapheme.end },
+      sourceRange: { ...mapped[0].sourceRange },
+      styleRunIndexes: mapped[0].styleRunIndexes.slice()
+    };
+  });
+
   // Resolve each shapeable EGC independently. A font transition may occur only
   // between EGCs; no base/mark/ZWJ sequence is ever split to satisfy cmap.
   const resolvedGraphemeFonts = new Array(itemization.graphemes.length).fill(null);
@@ -343,7 +408,7 @@ function createTextItemShapingPlan(item, options = {}) {
         !resolution.record.font.bytes || !resolution.record.font.bytes.length) {
       fail('font-unavailable-for-grapheme',
         'No registered font covers every required scalar in EGC ' + graphemeIndex +
-        ' [' + (sourceStart + grapheme.start) + ',' + (sourceStart + grapheme.end) + '): ' +
+        ' [' + graphemeSourceRanges[graphemeIndex].sourceRange.start + ',' + graphemeSourceRanges[graphemeIndex].sourceRange.end + '): ' +
         (resolution.message || 'font bytes are unavailable'));
     }
     const fontId = requireString(resolution.fontId, 'invalid-resolved-font', 'resolved fontId');
@@ -359,6 +424,8 @@ function createTextItemShapingPlan(item, options = {}) {
     const faceIndex = faceIndexByFontId[fontId] == null
       ? 0 : requireRange(faceIndexByFontId[fontId], 'faceIndexByFontId.' + fontId);
     resolvedGraphemeFonts[graphemeIndex] = {
+      localRange: graphemeSourceRanges[graphemeIndex].localRange,
+      sourceRange: graphemeSourceRanges[graphemeIndex].sourceRange,
       styleRunIndex,
       requestedFamily,
       fontId,
@@ -382,16 +449,18 @@ function createTextItemShapingPlan(item, options = {}) {
     let group = null;
     const flush = () => {
       if (!group) return;
-      const first = itemization.graphemes[group.graphemeStart];
-      const last = itemization.graphemes[group.graphemeEnd - 1];
-      const localStart = first.start;
-      const localEnd = last.end;
+      const first = resolvedGraphemeFonts[group.graphemeStart];
+      const last = resolvedGraphemeFonts[group.graphemeEnd - 1];
+      const localStart = first.localRange.start;
+      const localEnd = last.localRange.end;
+      const absoluteStart = first.sourceRange.start;
+      const absoluteEnd = last.sourceRange.end;
       plannedRuns.push({
-        id: item.id + '#shape:' + (sourceStart + localStart) + '-' + (sourceStart + localEnd) + ':' + group.fontId,
+        id: item.id + '#shape:' + absoluteStart + '-' + absoluteEnd + ':' + group.fontId,
         sourceRange: {
           coordinateSpace: 'document-utf16',
-          start: sourceStart + localStart,
-          end: sourceStart + localEnd,
+          start: absoluteStart,
+          end: absoluteEnd,
           ...(source.docId != null ? { docId: source.docId } : {}),
           ...(source.blockId != null ? { blockId: source.blockId } : {}),
           itemId: item.id
@@ -407,12 +476,18 @@ function createTextItemShapingPlan(item, options = {}) {
         eot: localEnd === text.length,
         graphemeStart: group.graphemeStart,
         graphemeEnd: group.graphemeEnd,
-        graphemes: itemization.graphemes.slice(group.graphemeStart, group.graphemeEnd).map((grapheme) => ({
-          start: sourceStart + grapheme.start,
-          end: sourceStart + grapheme.end,
-          text: grapheme.text,
-          coverageCodePoints: requiredCodePointsForGrapheme(text, grapheme, group.graphemeStart + itemization.graphemes.slice(group.graphemeStart, group.graphemeEnd).indexOf(grapheme))
-        })),
+        graphemes: Array.from({ length: group.graphemeEnd - group.graphemeStart }, (_, index) => {
+          const graphemeIndex = group.graphemeStart + index;
+          const grapheme = itemization.graphemes[graphemeIndex];
+          const resolved = resolvedGraphemeFonts[graphemeIndex];
+          return {
+            start: resolved.sourceRange.start,
+            end: resolved.sourceRange.end,
+            localRange: { ...resolved.localRange },
+            text: grapheme.text,
+            coverageCodePoints: resolved.coverageCodePoints.slice()
+          };
+        }),
         font: {
           fontId: group.fontId,
           sourceHash: group.sourceHash,
@@ -426,13 +501,13 @@ function createTextItemShapingPlan(item, options = {}) {
       });
       group = null;
     };
-
     for (let graphemeIndex = scriptRun.graphemeStart; graphemeIndex < scriptRun.graphemeEnd; graphemeIndex++) {
       const resolvedFont = resolvedGraphemeFonts[graphemeIndex];
       if (!resolvedFont) fail('missing-font-for-shapeable-grapheme',
         'A shapeable grapheme has no resolved font identity at index ' + graphemeIndex);
       const canMerge = group &&
         group.graphemeEnd === graphemeIndex &&
+        group.lastSourceEnd === resolvedFont.sourceRange.start &&
         group.fontId === resolvedFont.fontId &&
         group.sourceHash === resolvedFont.sourceHash &&
         group.faceIndex === resolvedFont.faceIndex &&
@@ -449,10 +524,12 @@ function createTextItemShapingPlan(item, options = {}) {
           fallbackUsed: resolvedFont.fallbackUsed,
           fallbackChains: resolvedFont.fallbackUsed ? [resolvedFont.fallbackChain] : [],
           graphemeStart: graphemeIndex,
-          graphemeEnd: graphemeIndex + 1
+          graphemeEnd: graphemeIndex + 1,
+          lastSourceEnd: resolvedFont.sourceRange.end
         };
       } else {
         group.graphemeEnd = graphemeIndex + 1;
+        group.lastSourceEnd = resolvedFont.sourceRange.end;
         if (!group.styleRunIndexes.includes(resolvedFont.styleRunIndex)) {
           group.styleRunIndexes.push(resolvedFont.styleRunIndex);
         }
@@ -475,7 +552,7 @@ function createTextItemShapingPlan(item, options = {}) {
         code: 'font-fallback',
         itemId: item.id,
         styleRunIndex: resolvedFont.styleRunIndex,
-        graphemeRange: { start: sourceStart + grapheme.start, end: sourceStart + grapheme.end },
+        graphemeRange: { ...resolvedFont.sourceRange },
         graphemeText: grapheme.text,
         requiredCodePoints: resolvedFont.coverageCodePoints,
         requestedFamily: resolvedFont.requestedFamily,
@@ -484,16 +561,15 @@ function createTextItemShapingPlan(item, options = {}) {
       });
     }
   }
-  const nonShapingRuns = itemization.nonShapingRuns.map((run) => ({
+  const projectSourceRun = (run) => ({
     ...run,
-    start: sourceStart + run.start,
-    end: sourceStart + run.end
-  }));
-  const sourceRuns = itemization.sourceRuns.map((run) => ({
-    ...run,
-    start: sourceStart + run.start,
-    end: sourceStart + run.end
-  }));
+    sourceRanges: mapLocalRange(run.start, run.end).map((segment) => ({
+      localRange: { ...segment.localRange },
+      sourceRange: { ...segment.sourceRange }
+    }))
+  });
+  const nonShapingRuns = itemization.nonShapingRuns.map(projectSourceRun);
+  const sourceRuns = itemization.sourceRuns.map(projectSourceRun);
 
   return deepFreeze({
     kind: 'TextItemShapingPlan',
@@ -501,11 +577,13 @@ function createTextItemShapingPlan(item, options = {}) {
     itemId: item.id,
     text,
     sourceRange: { ...source, coordinateSpace: 'document-utf16' },
+    sourceSegments,
     unicodeVersion: itemization.unicodeVersion,
     direction,
-    graphemes: itemization.graphemes.map((grapheme) => ({
-      start: sourceStart + grapheme.start,
-      end: sourceStart + grapheme.end,
+    graphemes: itemization.graphemes.map((grapheme, index) => ({
+      start: graphemeSourceRanges[index].sourceRange.start,
+      end: graphemeSourceRanges[index].sourceRange.end,
+      localRange: { ...graphemeSourceRanges[index].localRange },
       text: grapheme.text,
       script: grapheme.script || null,
       status: grapheme.status,
@@ -514,13 +592,13 @@ function createTextItemShapingPlan(item, options = {}) {
       shapeable: grapheme.shapeable === true,
       containsBidiControl: !!grapheme.containsBidiControl,
       isBidiControl: !!grapheme.isBidiControl,
-      coverageCodePoints: requiredCodePointsForGrapheme(text, grapheme, itemization.graphemes.indexOf(grapheme)),
-      font: resolvedGraphemeFonts[itemization.graphemes.indexOf(grapheme)]
+      coverageCodePoints: requiredCodePointsForGrapheme(text, grapheme, index),
+      font: resolvedGraphemeFonts[index]
         ? {
-            fontId: resolvedGraphemeFonts[itemization.graphemes.indexOf(grapheme)].fontId,
-            sourceHash: resolvedGraphemeFonts[itemization.graphemes.indexOf(grapheme)].sourceHash,
-            faceIndex: resolvedGraphemeFonts[itemization.graphemes.indexOf(grapheme)].faceIndex,
-            variationAxes: resolvedGraphemeFonts[itemization.graphemes.indexOf(grapheme)].variationAxes
+            fontId: resolvedGraphemeFonts[index].fontId,
+            sourceHash: resolvedGraphemeFonts[index].sourceHash,
+            faceIndex: resolvedGraphemeFonts[index].faceIndex,
+            variationAxes: resolvedGraphemeFonts[index].variationAxes
           }
         : null
     })),
