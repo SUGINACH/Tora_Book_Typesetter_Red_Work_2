@@ -98,6 +98,11 @@ case "$READINESS" in
   READY_*) : ;;
   *)
     echo "✗ האפליקציה לא התמודדה בזמן ($READY_TIMEOUT_MS ms) — פלט: $READINESS"
+    # Diagnostic only: preserve the readiness timeout and acceptance gate.
+    # Expose the actual app state and visible Worker/runtime failure so an
+    # initialization failure is not confused with a layout geometry regression.
+    DIAGNOSTIC="$(agent-browser eval "(function(){ const a=window.__toraApp; const s=a&&typeof a.getState==='function'?a.getState():null; const t=document.body&&document.body.innerText||''; return JSON.stringify({appAvailable:!!a,state:s,visibleText:t.slice(-5000),workerResources:performance.getEntriesByType('resource').filter(x=>/engine-worker|shaping-runtime|harfbuzz/.test(x.name)).map(x=>({name:x.name,responseEnd:x.responseEnd,duration:x.duration})).slice(-30)}); })()" 2>&1 || true)"
+    echo "LAYOUT_AUDIT_READINESS_DIAGNOSTIC=$DIAGNOSTIC"
     exit 2
     ;;
 esac
