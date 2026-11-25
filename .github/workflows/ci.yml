@@ -36,6 +36,24 @@ jobs:
       # 67 קבצי סוויטה + scan-control-triggers; הקודם ציין 1130/66 — פרוסה 2).
       - name: Run full test suite (1174 tests · 72 suite files + scan-control-triggers, zero deps)
         run: cd red-build && npm test
+      # D-65 diagnostics: preserve the exact rebuilt bundle when the strict
+      # reproducibility assertion fails. This does not alter or bypass the gate.
+      - name: Capture D-65 rebuilt bundle diagnostics
+        if: failure()
+        run: |
+          echo '--- rebuilt bundle SHA-256 ---'
+          sha256sum red-build/ui/app.bundle.js red-build/ui/engine-worker.bundle.js
+          echo '--- changed source files ---'
+          git status --short -- red-build/src red-build/ui
+          echo '--- tracked source diff ---'
+          git diff --stat HEAD -- red-build/src
+      - name: Upload D-65 rebuilt app bundle on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d65-rebuilt-app-bundle-node-${{ matrix.node }}
+          path: red-build/ui/app.bundle.js
+          if-no-files-found: error
       - name: Determinism check
         run: cd red-build && npm run test:determinism
       # **S71 (הצלבה שיטתית מקומי↔CI↔חי):** אותן נעילות, אותו כלי, אותה פקודה —
