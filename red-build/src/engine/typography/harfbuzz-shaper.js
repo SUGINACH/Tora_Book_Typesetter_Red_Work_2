@@ -66,7 +66,7 @@ function normalizeExtents(raw, gid) {
 
 function validatePlan(plan) {
   requireRecord(plan, 'invalid-text-item-shaping-plan', 'TextItemShapingPlan');
-  if (plan.kind !== 'TextItemShapingPlan' || plan.version !== 'text-item-shaping-plan-v1') {
+  if (plan.kind !== 'TextItemShapingPlan' || plan.version !== 'text-item-shaping-plan-v2-grapheme-coverage') {
     fail('invalid-text-item-shaping-plan', 'Unsupported TextItemShapingPlan kind/version');
   }
   const text = requireString(plan.text, 'invalid-text-item-shaping-plan', 'plan.text');
@@ -121,6 +121,12 @@ function validatePlan(plan) {
           grapheme.end > end || grapheme.end - grapheme.start !== grapheme.text.length ||
           grapheme.text !== run.text.slice(grapheme.start - start, grapheme.end - start)) {
         fail('invalid-planned-run-graphemes', 'ScriptRun EGCs do not partition the run at index ' + gi);
+      }
+      if (!Array.isArray(grapheme.coverageCodePoints) || grapheme.coverageCodePoints.some((codePoint) =>
+          !Number.isSafeInteger(codePoint) || codePoint < 0 || codePoint > 0x10FFFF ||
+          (codePoint >= 0xD800 && codePoint <= 0xDFFF))) {
+        fail('invalid-planned-grapheme-coverage',
+          'Every planned EGC must retain its Unicode-scalar coverageCodePoints from the Unicode itemizer');
       }
       graphemeExpected = grapheme.end;
     }

@@ -12,10 +12,10 @@ const FONT_ID = 'fnt-' + SOURCE_HASH.slice(0, 14);
 function makePlan(overrides = {}) {
   const text = 'שָׁלוֹם';
   const graphemes = [
-    { start: 100, end: 103, text: 'שָׁ' },
-    { start: 103, end: 104, text: 'ל' },
-    { start: 104, end: 106, text: 'וֹ' },
-    { start: 106, end: 107, text: 'ם' }
+    { start: 100, end: 103, text: 'שָׁ', coverageCodePoints: [0x05E9, 0x05B8, 0x05C1] },
+    { start: 103, end: 104, text: 'ל', coverageCodePoints: [0x05DC] },
+    { start: 104, end: 106, text: 'וֹ', coverageCodePoints: [0x05D5, 0x05B9] },
+    { start: 106, end: 107, text: 'ם', coverageCodePoints: [0x05DD] }
   ];
   const scriptRun = {
     id: 'text-1#shape:100-107:' + FONT_ID,
@@ -39,7 +39,7 @@ function makePlan(overrides = {}) {
   };
   return {
     kind: 'TextItemShapingPlan',
-    version: 'text-item-shaping-plan-v1',
+    version: 'text-item-shaping-plan-v2-grapheme-coverage',
     itemId: 'text-1',
     text,
     sourceRange: { coordinateSpace: 'document-utf16', start: 100, end: 107, docId: 'doc-1', blockId: 'block-1' },
@@ -180,6 +180,26 @@ describe('HarfBuzzShaper — canonical plan to immutable ShapedRun', () => {
     assertEq(fake.state.buffers[0].level, fake.hb.ClusterLevel.MONOTONE_CHARACTERS);
     assertEq(fake.state.buffers[0].flags, fake.hb.BufferFlag.BOT | fake.hb.BufferFlag.EOT);
     assertEq(run.shaping.engineVersion, '15.0.0');
+  });
+
+  it('rejects the superseded v1 plan contract rather than silently accepting missing grapheme coverage', () => {
+    const fake = makeFakeHarfBuzz();
+    const plan = makePlan();
+    plan.version = 'text-item-shaping-plan-v1';
+    let error;
+    try { makeShaper(fake, makeResolver()).shapeTextItemPlan(plan); } catch (caught) { error = caught; }
+    assert(error instanceof Error);
+    assertEq(error.code, 'invalid-text-item-shaping-plan');
+  });
+
+  it('rejects a shaping EGC whose required coverage metadata was dropped', () => {
+    const fake = makeFakeHarfBuzz();
+    const plan = makePlan();
+    delete plan.scriptRuns[0].graphemes[0].coverageCodePoints;
+    let error;
+    try { makeShaper(fake, makeResolver()).shapeTextItemPlan(plan); } catch (caught) { error = caught; }
+    assert(error instanceof Error);
+    assertEq(error.code, 'invalid-planned-grapheme-coverage');
   });
 
   it('applies validated variable-font axes and caches one face/font per content identity and instance', () => {
