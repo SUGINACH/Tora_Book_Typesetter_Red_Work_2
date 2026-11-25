@@ -28,7 +28,7 @@ permissions:
 
 concurrency:
   group: preview-engine-parity
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-and-stage:
@@ -159,3 +159,60 @@ jobs:
           Both URLs must be verified in a browser with an actual typeset request, Worker, fonts and PDF export.
           The Pages deployment is an experimental presentation of Unified, not a declaration that all parity audits passed.
           EOF
+
+  # Run the public-site acceptance only after this exact commit has been built
+  # and staged to gh-pages. This removes the race between parallel push workflows.
+  live-audit:
+    needs: build-and-stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout the exact deployed source commit
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Wait for Pages HTTP to serve this exact commit
+        run: |
+          EXPECTED_SHA=$(git rev-parse HEAD)
+          BUILD_INFO_URL='https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/build-info.json'
+          ACTUAL_SHA=''
+          for attempt in $(seq 1 180); do
+            INFO=$(curl -fsSL -H 'Cache-Control: no-cache' "\${BUILD_INFO_URL}?check=$(date +%s%N)" 2>/dev/null || true)
+            ACTUAL_SHA=$(printf '%s' "$INFO" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).commit||"")}catch(e){console.log("")}})')
+            if [ "$ACTUAL_SHA" = "$EXPECTED_SHA" ]; then
+              echo "Pages serves expected commit $EXPECTED_SHA"
+              exit 0
+            fi
+            echo "Waiting for Pages: expected=$EXPECTED_SHA actual=\${ACTUAL_SHA:-unavailable} attempt=$attempt/180"
+            sleep 5
+          done
+          echo "FATAL: Pages did not publish expected commit $EXPECTED_SHA (last actual: \${ACTUAL_SHA:-unavailable})"
+          exit 1
+
+      - name: Install agent-browser + headless browser
+        run: |
+          npm install -g agent-browser@0.41.2
+          agent-browser install --with-deps
+
+      - name: Install Poppler for exported PDF inspection
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
+      - name: Full math audit — exact public Pages build (DOM + HTML/PDF + impact signature)
+        run: |
+          node tools/layout-audit/run-full-math.js --tag live \\
+            --url https://suginach.github.io/Tora_Book_Typesetter_Red_Work_2/ \\
+            --fixture audits/very_long_test_text.txt --capture-exports
+
+      - name: Upload live acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-math-audit-live
+          path: red-build/tests/artifacts/full-math-audit/
+          if-no-files-found: ignore
