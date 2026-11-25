@@ -193,7 +193,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const clone = x => JSON.parse(JSON.stringify(x));
 function saveLocal(){try{localStorage.setItem(STORE_KEY,JSON.stringify(data));}catch(e){console.warn("localStorage unavailable",e);}}
-function loadLocal(){try{const raw=localStorage.getItem(STORE_KEY);if(raw){const v=JSON.parse(raw);if(Array.isArray(v))data=v;}}catch(e){}}
+function loadLocal(){try{const raw=localStorage.getItem(STORE_KEY);if(raw){const v=JSON.parse(raw);if(Array.isArray(v)){const merged=new Map(BASE_DATA.map(item=>[item.id,item]));for(const item of v){if(item&&item.id)merged.set(item.id,item);}data=Array.from(merged.values());if(data.length!==v.length)saveLocal();}}}catch(e){console.warn("could not restore local edits",e);}}
 function renderStats(){
  const total=data.length, count=s=>data.filter(x=>x.status===s).length;
  const values=[
