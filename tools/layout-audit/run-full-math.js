@@ -64,6 +64,165 @@ const READY_TIMEOUT_MS = 900_000;
 const EXPECTED_PAGES_MIN = 680;
 const EXPECTED_WORDS_MIN_RATIO = 0.98;
 
+
+// One impact signature ties the exact input, effective settings, PageModel and
+// projections together. It reuses existing engine hashes; it does not change
+// layout behavior or create a second source of truth.
+let deployedAssetEvidence = null;
+
+async function captureImpactSnapshot(expectedPages) {
+  const snapshot = await ev(\`(async function () {
+    const app = window.__toraApp;
+    if (!app || typeof app.getText !== 'function' || typeof app.getSettings !== 'function' ||
+        typeof app.pageModel !== 'function' || typeof app.getState !== 'function') {
+      return { ok: false, reason: 'app impact API incomplete' };
+    }
+
+    function normalize(value, stack) {
+      if (value === null || typeof value === 'string' || typeof value === 'boolean') return value;
+      if (typeof value === 'number') return Number.isFinite(value) ? value : String(value);
+      if (typeof value === 'undefined') return null;
+      if (typeof value === 'bigint') return String(value);
+      if (typeof value === 'function') return '[Function]';
+      if (typeof value === 'symbol') return String(value);
+      if (stack.indexOf(value) >= 0) return '[Circular]';
+      stack.push(value);
+      let result;
+      if (Array.isArray(value)) {
+        result = value.map((item) => normalize(item, stack));
+      } else if (value instanceof Map) {
+        const entries = Array.from(value.entries()).map(([k, v]) => [
+          normalize(k, stack), normalize(v, stack)
+        ]);
+        entries.sort((a, b) => JSON.stringify(a[0]).localeCompare(JSON.stringify(b[0])));
+        result = { __type: 'Map', entries };
+      } else if (value instanceof Set) {
+        const values = Array.from(value.values()).map((item) => normalize(item, stack));
+        values.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+        result = { __type: 'Set', values };
+      } else if (ArrayBuffer.isView(value)) {
+        result = { __type: value.constructor && value.constructor.name || 'TypedArray',
+          values: Array.from(value) };
+      } else if (value instanceof ArrayBuffer) {
+        result = { __type: 'ArrayBuffer', values: Array.from(new Uint8Array(value)) };
+      } else if (value instanceof Date) {
+        result = { __type: 'Date', value: value.toISOString() };
+      } else {
+        result = {};
+        Object.keys(value).sort().forEach((key) => {
+          result[key] = normalize(value[key], stack);
+        });
+      }
+      stack.pop();
+      return result;
+    }
+
+    async function sha256(text) {
+      const bytes = new TextEncoder().encode(text);
+      const digest = await crypto.subtle.digest('SHA-256', bytes);
+      let hex = '';
+      for (const byte of new Uint8Array(digest)) hex += byte.toString(16).padStart(2, '0');
+      return { sha256: hex, bytes: bytes.length };
+    }
+
+    const text = app.getText();
+    const settings = app.getSettings() || {};
+    const settingsKeys = Object.keys(settings).sort();
+    const settingsCanonical = JSON.stringify(normalize(settings, []));
+    const inputDigest = await sha256(text);
+    const settingsDigest = await sha256(settingsCanonical);
+    const model = app.pageModel();
+    const state = app.getState();
+    let buildInfo = null;
+    try {
+      const response = await fetch(new URL('build-info.json', location.href).href, { cache: 'no-store' });
+      if (response.ok) buildInfo = await response.json();
+    } catch (error) {
+      buildInfo = { error: String(error && error.message || error) };
+    }
+    const script = Array.from(document.scripts).find((item) => /app\\\\.bundle\\\\.js/.test(item.src));
+    const appUrl = script ? script.src : null;
+    const versionMatch = String(appUrl || '').match(/[?&]v=([^&]+)/);
+    const assetVersion = versionMatch ? decodeURIComponent(versionMatch[1]) : null;
+    const workerUrl = new URL('engine-worker.bundle.js' +
+      (assetVersion ? '?v=' + encodeURIComponent(assetVersion) : ''), location.href).href;
+    const diagnostics = model && Array.isArray(model.diagnostics) ? model.diagnostics : [];
+    const diagnosticKinds = {};
+    for (const item of diagnostics) {
+      const kind = String(item && (item.kind || item.code || item.type) || 'unspecified');
+      diagnosticKinds[kind] = (diagnosticKinds[kind] || 0) + 1;
+    }
+
+    return {
+      ok: true,
+      source: {
+        pageUrl: location.href,
+        buildInfo,
+        assetVersion,
+        appUrl,
+        workerUrl
+      },
+      input: {
+        sha256: inputDigest.sha256,
+        chars: text.length,
+        bytes: inputDigest.bytes
+      },
+      settings: {
+        sha256: settingsDigest.sha256,
+        canonicalBytes: settingsDigest.bytes,
+        keyCount: settingsKeys.length,
+        keys: settingsKeys,
+        forceUnified: settings['_engine-force-unified'] === true
+      },
+      state: {
+        layoutHash: state && state.layoutHash || null,
+        pages: state && state.pages || 0,
+        generation: state && state.gen,
+        lightDirty: !!(state && state.lightDirty),
+        heavyDirty: !!(state && state.heavyDirty)
+      },
+      model: {
+        schema: model && model.schema || null,
+        pages: model && Array.isArray(model.pages) ? model.pages.length : 0,
+        geometryHash: model && model.geometryHash || null,
+        contentHash: model && model.contentHash || null,
+        contentHashIn: model && model.document && model.document.contentHashIn || null,
+        tokensCount: model && model.document && model.document.tokensCount,
+        plannedPages: model && model.document && model.document.plannedPages,
+        diagnosticsCount: diagnostics.length,
+        diagnosticKinds,
+        meta: model && model.meta || null
+      }
+    };
+  })()\`);
+
+  if (!snapshot || snapshot.ok !== true) {
+    throw new Error('Impact snapshot failed: ' + JSON.stringify(snapshot));
+  }
+  const fixtureBytes = fs.readFileSync(FIXTURE);
+  const fixtureSha256 = crypto.createHash('sha256').update(fixtureBytes).digest('hex');
+  if (snapshot.input.sha256 !== fixtureSha256) {
+    throw new Error('Impact input hash differs from the fixture: ' + JSON.stringify({
+      fixture: fixtureSha256, browser: snapshot.input.sha256,
+      fixtureBytes: fixtureBytes.length, browserBytes: snapshot.input.bytes
+    }));
+  }
+  if (snapshot.model.schema !== 'pagemodel-v1' || snapshot.model.pages !== expectedPages ||
+      snapshot.state.pages !== expectedPages || !snapshot.model.geometryHash ||
+      !snapshot.model.contentHash || !snapshot.state.layoutHash ||
+      snapshot.state.lightDirty || snapshot.state.heavyDirty) {
+    throw new Error('Impact snapshot model/state mismatch: ' + JSON.stringify(snapshot));
+  }
+  snapshot.fixture = {
+    path: path.relative(ROOT, FIXTURE).split(path.sep).join('/'),
+    bytes: fixtureBytes.length,
+    sha256: fixtureSha256,
+    browserTextMatchesFixture: true
+  };
+  snapshot.assets = deployedAssetEvidence;
+  return snapshot;
+}
+
 const log = (m) => console.log(m);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -216,7 +375,7 @@ async function runProcess(command, argv, timeoutMs = 120000) {
 }
 
 /** Export HTML and PDF from the already-typeset immutable PageModel and preserve both artifacts. */
-async function captureLiveExports(expectedPages) {
+async function captureLiveExports(expectedPages, impactSnapshot) {
   const before = await ev("(function(){const a=window.__toraApp;const m=a&&a.pageModel&&a.pageModel();const s=a&&a.getState&&a.getState();return {hasApp:!!a,schema:m&&m.schema||null,modelPages:m&&Array.isArray(m.pages)?m.pages.length:0,layoutHash:s&&s.layoutHash||null,pages:s&&s.pages||0,dirty:!!(s&&(s.lightDirty||s.heavyDirty))};})()");
   if (!before || !before.hasApp || before.schema !== 'pagemodel-v1' || before.modelPages !== expectedPages ||
       before.pages !== expectedPages || before.dirty || !before.layoutHash) {
@@ -287,6 +446,7 @@ async function captureLiveExports(expectedPages) {
     layoutHash: before.layoutHash,
     pageModelSchema: before.schema,
     pageModelPages: before.modelPages,
+    impact: impactSnapshot || null,
     html: { file: path.basename(htmlPath), bytes: htmlBytes, sha256: htmlSha, pages: htmlPages },
     pdf: { file: path.basename(pdfPath), bytes: pdfBytes.length, sha256: pdfSha, pages: pdfPages, extractedTextFile: path.basename(textPath), extractedHebrewChars: hebrewChars },
     exportDidNotMutateLayout: true
@@ -454,6 +614,16 @@ async function buildLocalBrowserBundles() {
   // לפני שהשרת מתחיל להגיש קבצים. במצב --url נבדק אתר מרוחק ולכן לא בונים כאן.
   if (!URL) {
     await buildLocalBrowserBundles();
+    const appPath = path.join(UI, 'app.bundle.js');
+    const workerPath = path.join(UI, 'engine-worker.bundle.js');
+    const entrySource = fs.readFileSync(path.join(ROOT, 'red-build', 'src', 'ui', 'browser-entry.js'), 'utf8');
+    const versionMatch = entrySource.match(/ASSET_VERSION\\s*=\\s*'([^']+)'/);
+    deployedAssetEvidence = {
+      mode: 'local-build',
+      assetVersion: versionMatch ? versionMatch[1] : null,
+      app: { path: 'red-build/ui/app.bundle.js', sha256: crypto.createHash('sha256').update(fs.readFileSync(appPath)).digest('hex') },
+      worker: { path: 'red-build/ui/engine-worker.bundle.js', sha256: crypto.createHash('sha256').update(fs.readFileSync(workerPath)).digest('hex') }
+    };
     await startServer();
   }
 
@@ -501,7 +671,7 @@ async function buildLocalBrowserBundles() {
       const appSha = await sha(appSrc || (location.href.replace(/[?#].*$/, '') + 'app.bundle.js'));
       const workerUrl = new URL('engine-worker.bundle.js' + (v ? '?v=' + v : ''), location.href).href;
       const workerSha = await sha(workerUrl);
-      return { appSrc, assetVersion: v, appSha, workerSha };
+      return { appSrc, workerUrl, assetVersion: v, appSha, workerSha };
     })()`);
     const shaFile = (p) => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
     const localAppSha = shaFile(path.join(UI, 'app.bundle.js'));
@@ -528,6 +698,14 @@ async function buildLocalBrowserBundles() {
       log(`⚠ לא ניתן להשוות ASSET_VERSION (פרוס: ${deployed.assetVersion || '—'}, מקור: ${localVersion || '—'}) — ממשיכים על סמך sha256 בלבד`);
     }
     if (stale) throw new Error('הפריסה החיה מיושנת — הבאנדל הפרוס אינו תואם ל-main (ראה טביעות sha256 למעלה)');
+    deployedAssetEvidence = {
+      mode: 'live-http',
+      assetVersion: deployed.assetVersion,
+      app: { url: deployed.appSrc, deployedSha256: deployed.appSha, expectedSha256: localAppSha },
+      worker: { url: deployed.workerUrl, deployedSha256: deployed.workerSha, expectedSha256: localWorkerSha },
+      match: deployed.appSha === localAppSha && deployed.workerSha === localWorkerSha &&
+        (!localVersion || !deployed.assetVersion || deployed.assetVersion === localVersion)
+    };
   }
 
   // במצב חי: הזרקת ה-fixture ב-base64 (לשרת החי אין את הקובץ)
@@ -547,6 +725,11 @@ async function buildLocalBrowserBundles() {
 
   const pages1 = await retypesetAndWait('הרצה-1');
   log(`עימוד הרצה-1: ${pages1.toLocaleString()} עמודים`);
+  const impactRun1 = await captureImpactSnapshot(pages1);
+  log('Impact signature: input=' + impactRun1.input.sha256.slice(0, 16) +
+    ' settings=' + impactRun1.settings.sha256.slice(0, 16) +
+    ' geometry=' + impactRun1.model.geometryHash.slice(0, 16) +
+    ' content=' + impactRun1.model.contentHash.slice(0, 16));
   await gotoView();
 
   log('האודיט המתמטי המלא רץ — סריקת גלילה של כל הספר...');
@@ -589,15 +772,30 @@ async function buildLocalBrowserBundles() {
   log(`חלון מימין: ${JSON.stringify(st.windowDistFromRight)}`);
   log('─'.repeat(62));
 
-  if (URL && CAPTURE_EXPORTS) await captureLiveExports(pages1);
+  let exportManifest = null;\n  if (URL && CAPTURE_EXPORTS) exportManifest = await captureLiveExports(pages1, impactRun1);
 
   // דטרמיניזם
   let detIdentical = SKIP_DET;
   let pages2 = null;
+  let impactRun2 = null;
+  let modelDeterminism = null;
   if (!SKIP_DET) {
     log('דטרמיניזם: מריץ עימוד מחדש...');
     pages2 = await retypesetAndWait('הרצה-2');
     log(`עימוד הרצה-2: ${pages2.toLocaleString()} עמודים`);
+    impactRun2 = await captureImpactSnapshot(pages2);
+    modelDeterminism = {
+      input: impactRun1.input.sha256 === impactRun2.input.sha256,
+      settings: impactRun1.settings.sha256 === impactRun2.settings.sha256,
+      layout: impactRun1.state.layoutHash === impactRun2.state.layoutHash,
+      geometry: impactRun1.model.geometryHash === impactRun2.model.geometryHash,
+      content: impactRun1.model.contentHash === impactRun2.model.contentHash,
+      contentHashIn: impactRun1.model.contentHashIn === impactRun2.model.contentHashIn
+    };
+    modelDeterminism.identical = Object.values(modelDeterminism).every(Boolean);
+    if (!modelDeterminism.identical) {
+      console.error('✗ PageModel impact signature changed between identical runs: ' + JSON.stringify(modelDeterminism));
+    }
     await gotoView();
     await injectB64Var(DET_JS, '__detSrc');
     await runScriptVar('__detSrc', '__det', '__detErr', 1_200_000);
@@ -617,14 +815,50 @@ async function buildLocalBrowserBundles() {
         if (diffs.length >= 20) break;
       }
     } else diffs.push({ pageSet: 'different' });
-    detIdentical = diffs.length === 0;
+    detIdentical = diffs.length === 0 && !!(modelDeterminism && modelDeterminism.identical);
     fs.writeFileSync(path.join(OUT, `${TAG}-determinism-result.json`),
-      JSON.stringify({ pagesRun1: pages1, pagesRun2: pages2, identical: detIdentical, diffCount: diffs.length, diffs }, null, 2), 'utf8');
+      JSON.stringify({ pagesRun1: pages1, pagesRun2: pages2, identical: detIdentical,
+        pageGeometryDiffCount: diffs.length, diffs, modelDeterminism }, null, 2), 'utf8');
     log(`דטרמיניזם: ${detIdentical ? 'זהה לחלוטין ✔' : diffs.length + ' הבדלים ✗'} (עמודים ${pages1}/${pages2})`);
   }
 
   try { await ab(['close']); } catch (e) {}
   if (server) server.close();
+
+  const impactManifest = {
+    schema: 'tora-typeset-impact-v1',
+    capturedAt: new Date().toISOString(),
+    tag: TAG,
+    source: impactRun1.source,
+    assets: impactRun1.assets,
+    input: impactRun1.fixture,
+    settings: impactRun1.settings,
+    run1: { state: impactRun1.state, model: impactRun1.model },
+    run2: impactRun2 ? { state: impactRun2.state, model: impactRun2.model } : null,
+    audit: {
+      report: TAG + '-full-math-audit.json',
+      reportSha256: crypto.createHash('sha256').update(reportRaw, 'utf8').digest('hex'),
+      pages: s.pages,
+      slots: s.slots,
+      problems: s.problems,
+      totalLines: s.totalLines,
+      totalWords: s.totalWords,
+      bodyWords: s.bodyWords,
+      summary: s,
+      counts: st.counts || {}
+    },
+    exports: exportManifest || { captured: false, reason: 'not a live export run' },
+    determinism: {
+      enabled: !SKIP_DET,
+      pagesRun1: pages1,
+      pagesRun2: pages2,
+      pageGeometryIdentical: detIdentical && !!modelDeterminism,
+      model: modelDeterminism
+    }
+  };
+  const impactPath = path.join(OUT, TAG + '-impact-manifest.json');
+  fs.writeFileSync(impactPath, JSON.stringify(impactManifest, null, 2), 'utf8');
+  log('Impact manifest: ' + impactPath);
 
   const ok = s.problems === 0 && detIdentical && s.pages === s.slots;
   console.log('');
