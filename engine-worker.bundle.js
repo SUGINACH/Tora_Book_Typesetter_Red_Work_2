@@ -1194,19 +1194,27 @@ function typeset(rawText, settingsIn, env = {}) {
   // H7 margin headings are measured with the same font that the legacy DOM
   // has always rendered (heading-7-font). Info boxes retain their independent
   // s-note-body-font path through measureWithImpl.
-  const h7NoteFont = String(settings['heading-7-font'] || settings['body-font'] || '').trim();
-  const h7NoteSettings = h7NoteFont && h7NoteFont !== settings['body-font']
-    ? { ...settings, 'body-font': h7NoteFont }
-    : settings;
-  const h7NoteApi = h7NoteSettings === settings
-    ? api
-    : new MeasureAPI(h7NoteSettings, resolveMeasureImpl(h7NoteSettings));
-  const measureH7Notes = (text, sizePt) => h7NoteApi.measureTextWidth(text, sizePt);
-  measureH7Notes.impl = h7NoteApi.impl;
-  if (paragraphShaper) {
-    measureH7Notes.paragraphShaper = paragraphShaper;
-    measureH7Notes.paragraphDirection = paragraphDirection || 'rtl';
-  }
+  const measureForNoteFamily = (family) => {
+    const selectedFont = String(family || settings['body-font'] || '').trim();
+    const selectedSettings = selectedFont && selectedFont !== settings['body-font']
+      ? { ...settings, 'body-font': selectedFont }
+      : settings;
+    const selectedApi = selectedSettings === settings
+      ? api
+      : new MeasureAPI(selectedSettings, resolveMeasureImpl(selectedSettings));
+    const measure = (text, sizePt) => selectedApi.measureTextWidth(text, sizePt);
+    measure.impl = selectedApi.impl;
+    if (paragraphShaper) {
+      measure.paragraphShaper = paragraphShaper;
+      measure.paragraphDirection = paragraphDirection || 'rtl';
+    }
+    return measure;
+  };
+  // H7 marginalia follows heading-7-font; information boxes are an independent
+  // content role and follow s-note-body-font. Both use the same measurement
+  // implementation and shaping service as their eventual rendered font.
+  const measureH7Notes = measureForNoteFamily(settings['heading-7-font']);
+  const measureInfoBoxes = measureForNoteFamily(settings['s-note-body-font']);
   // **שלב 3 (§3.1-2) → מקטע ב׳ (הוראה §6):** נכסי המסמך שהגיעו מה-Worker
   // כבר חוברו לבניית המודל וזורמים למדידה דרך ctx.assetResolver של הגשר
   // (אותן זהויות בדיוק). האירוע מתעד את הקליטה; אין עוד צריכה תלוית-סביבה.
@@ -1874,7 +1882,9 @@ function typeset(rawText, settingsIn, env = {}) {
   const { placeSideNotes, verifyH7Conversion } = require('../layout/side-notes');
   for (const pg of pages) pg.isRecto = pg.index % 2 === 0;
   const sideNotePlacement = placeSideNotes(pages, settings, measureWithImpl, {
-    ledger, eventLog, trace: plannerTrace, heading7Measure: measureH7Notes
+    ledger, eventLog, trace: plannerTrace,
+    heading7Measure: measureH7Notes,
+    infoBoxMeasure: measureInfoBoxes
   });
 
   // **S8 — פאס העיטורים (L5):** כל העיטורים overlay-rects על העמודים;
@@ -22959,8 +22969,9 @@ function placeSideNotes(pages, settings, measureFn, hooks = {}) {
       const noteFontName = isInfoBox
         ? (settings['s-note-body-font'] || settings['body-font'] || null)
         : (settings['heading-7-font'] || settings['s-note-body-font'] || settings['body-font'] || null);
-      const noteMeasure = !isInfoBox && typeof hooks.heading7Measure === 'function'
-        ? hooks.heading7Measure : measureFn;
+      const noteMeasure = isInfoBox
+        ? (typeof hooks.infoBoxMeasure === 'function' ? hooks.infoBoxMeasure : measureFn)
+        : (typeof hooks.heading7Measure === 'function' ? hooks.heading7Measure : measureFn);
       if (!stampIsValid(sn) || !sn.stampCtx || sn.stampCtx.fontName !== noteFontName) {
         stampNote(sn, settings, noteMeasure, NOTE_KINDS.SIDE_NOTE, {
           widthPx: sn.boxSpec && sn.boxSpec.widthPx ? sn.boxSpec.widthPx : undefined,
