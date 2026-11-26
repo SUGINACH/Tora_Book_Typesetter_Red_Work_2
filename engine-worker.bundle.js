@@ -35998,7 +35998,9 @@ function parsePdfImageAsset(asset) {
   if (!source || typeof source.length !== 'number' || source.length === 0) {
     return { ok: false, code: 'empty-image-bytes' };
   }
-  const bytes = Buffer.from(source.buffer || source, source.byteOffset || 0, source.byteLength || source.length);
+  // Buffer.from(Uint8Array) copies exactly the view, including any byteOffset
+  // and byteLength; do not pass its larger backing ArrayBuffer to the Worker shim.
+  const bytes = Buffer.from(source);
   const measured = asset.measured || {};
   if (Number(measured.orientation || 1) !== 1) {
     return { ok: false, code: 'jpeg-exif-orientation-unsupported', message: 'תמונות עם EXIF orientation שאינו 1 דורשות נרמול כיוון לפני הטמעה' };
