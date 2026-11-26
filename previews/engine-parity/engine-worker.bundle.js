@@ -25419,6 +25419,7 @@ function stampTocLayout(page, settings, measure) {
   const tpl = page.template;
   const imud = !!(tpl && tpl.imud);
   const layout = [];
+  const leaders = [];
 
   if (imud) {
     const first = page.toc.isFirst === true;
@@ -25470,13 +25471,14 @@ function stampTocLayout(page, settings, measure) {
       rowHeights.forEach(h => { rowYs.push(y); y += h; });
     }
 
-    const makeWords = (text, sizePt, family) => {
+    const makeWords = (text, sizePt, family, color) => {
       const m = family ? measureOfFamily(measure, family, settings) : measure;
       const fontKey = family ? familyFontKeyOf(family) : null;
       const words = String(text || '').split(/\s+/).filter(Boolean).map(word => ({
         text: scrubPUAText(word),
         w: m.measureTextWidth(scrubPUAText(word), sizePt, 0),
-        ...(fontKey ? { fontKey } : {})
+        ...(fontKey ? { fontKey } : {}),
+        ...(color ? { color } : {})
       }));
       return { words, spaceW: m.measureTextWidth(' ', sizePt, 0), fontKey };
     };
@@ -25501,17 +25503,39 @@ function stampTocLayout(page, settings, measure) {
       let y = rowY;
       lineTexts.forEach((lineText, li) => {
         const h = li === 0 ? firstLineH : 26;
-        const measured = makeWords(lineText, sizePt, family);
+        const rowColor = colorOfSetting(settings[`heading-${level}-color`] || '#000000');
+        const measured = makeWords(lineText, sizePt, family, rowColor);
         layout.push({
           x, y, w, h, words: measured.words, spaceW: measured.spaceW,
           align: 'right', kind: 'toc-row', sizePt, fontKey: measured.fontKey,
           targetPage: row.targetPage != null ? row.targetPage : null
         });
+        if (li === 0 && labelText) {
+          // The title ends at the left edge of its measured RTL word run.
+          // Reserve a dotted leader between that edge and the page-label box.
+          const titleAdvance = measured.words.reduce((sum, word) => sum + word.w, 0)
+            + Math.max(0, measured.words.length - 1) * measured.spaceW;
+          const titleLeft = x + w - titleAdvance;
+          const labelRight = GEO.TOC_NUM_X + labelW - 8;
+          const leaderX = labelRight + 6;
+          const leaderW = titleLeft - leaderX - 6;
+          if (leaderW >= DOTS_MIN_PX) {
+            leaders.push({
+              x: leaderX,
+              y: rowY + firstLineH - 4,
+              w: leaderW,
+              h: 0,
+              color: [0, 0, 0],
+              style: 'dotted'
+            });
+          }
+        }
         y += h;
       });
       if (labelText) {
         const labelSize = Number(SZ_CORE.tocNum) || 10.5;
-        const measured = makeWords(labelText, labelSize, family);
+        const labelColor = colorOfSetting('#444444');
+        const measured = makeWords(labelText, labelSize, family, labelColor);
         layout.push({
           x: GEO.TOC_NUM_X, y: rowY, w: labelW - 8, h: firstLineH,
           words: measured.words, spaceW: measured.spaceW,
@@ -25533,7 +25557,7 @@ function stampTocLayout(page, settings, measure) {
       };
     }
     page.tocLayout = {
-      schema: 'toc-layout-v2', rows: layout, title,
+      schema: 'toc-layout-v2', rows: layout, title, leaders,
       firstTop: top, stretchBottom: bottom, pageWidth: tpl.width
     };
     return true;
@@ -27219,6 +27243,25 @@ function projectPage(page, settings, apiOrOpts) {
       for (const row of page.tocLayout.rows) {
         out.lines.push(stampedRowLine(row, row.sizePt || page.tocLayout.sizePt || 12, row.kind || 'toc-row', row.fontKey));
       }
+      // Dotted leaders are structural TOC ink: planned with the same row
+      // geometry, then projected to DOM and PDF from this single model.
+      for (const leader of (page.tocLayout.leaders || [])) {
+        const pxToPt = 72 / 96;
+        const yPt = out.height * pxToPt - leader.y * pxToPt;
+        const xPt = leader.x * pxToPt;
+        const wPt = leader.w * pxToPt;
+        const pdfOps = [
+          `0 0 0 RG 0.75 w [1 1.5] 0 d ${Math.round(xPt * 100) / 100} ${Math.round(yPt * 100) / 100} m ${Math.round((xPt + wPt) * 100) / 100} ${Math.round(yPt * 100) / 100} l S [] 0 d`
+        ];
+        if (!out.decorations) out.decorations = [];
+        out.decorations.push({
+          x: leader.x, y: leader.y, w: leader.w, h: 0,
+          kind: 'toc-leader', slot: 'toc', kindStyle: 'dotted',
+          inkType: 'rule',
+          ink: { type: 'rule', style: 'dotted', color: leader.color || [0, 0, 0], width: 0.75 },
+          pdfOps
+        });
+      }
     } else {
       materializeFallbacks.push({ kind: 'materialize-fallback-toc-stamp', page: page.index });
       if (!production) { // **§3.1:** compat בלבד; בייצור — diagnostic מזוהה, אין השחזור/מדידה
@@ -28470,7 +28513,11 @@ function stampedRowLine(row, pt, kind, fontKey) {
   let cursor = align === 'center' ? row.x + (row.w + totalWordsWidth) / 2 : row.x + row.w;
   for (const wd of words) {
     cursor -= wd.w;
-    wordPos.push({ text: wd.text, x: cursor, w: wd.w, sizePt: pt, ...(fontKey ? { fontKey } : {}) });
+    wordPos.push({
+      text: wd.text, x: cursor, w: wd.w, sizePt: pt,
+      ...(fontKey ? { fontKey } : {}),
+      ...(wd.color != null ? { color: wd.color } : {})
+    });
     cursor -= (row.spaceW || 0);
   }
   return { x: row.x, y: row.y, w: row.w, h: row.h, words: wordPos, align, kind: kind || 'toc-row', level: null, isLast: false, sizePt: pt, bold: row.bold === true, baselineY: null, tokenId: null };
@@ -34571,7 +34618,8 @@ function nonBlack(c) {
     const rgb = c.map(value => Number(value));
     if (!rgb.every(value => Number.isFinite(value) && value >= 0 && value <= 1)) return null;
     const channels = rgb.map(value => Math.round(value * 255));
-    if (channels.every(value => value === 0)) return null;
+    // An explicit RGB triplet is a deliberate model color, including black;
+    // null/undefined (not an array) is the only "inherit" state.
     return `rgb(${channels.join(', ')})`;
   }
   if (typeof c !== 'string' || !c) return null;
@@ -34885,7 +34933,13 @@ function renderModelDecoration(d, doc, diags) {
     el.style.backgroundPosition = 'center center';
     el.style.backgroundRepeat = 'no-repeat';
   } else if (ink && ink.type === 'rule') {
-    el.style.borderTop = '0.75px solid #000';
+    const style = ink.style === 'dotted' ? 'dotted' : 'solid';
+    const channels = Array.isArray(ink.color) && ink.color.length === 3
+      ? ink.color.map(value => Math.round(Math.max(0, Math.min(1, Number(value))) * 255))
+      : [0, 0, 0];
+    const color = `rgb(${channels.join(', ')})`;
+    const width = Number.isFinite(ink.width) && ink.width > 0 ? ink.width : 0.75;
+    el.style.borderTop = `${width}px ${style} ${color}`;
     el.style.height = '0px';
   } else if (ink && ink.type === 'rect' && ink.color) {
     el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;

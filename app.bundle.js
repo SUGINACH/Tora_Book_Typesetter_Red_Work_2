@@ -20634,7 +20634,8 @@ function nonBlack(c) {
     const rgb = c.map(value => Number(value));
     if (!rgb.every(value => Number.isFinite(value) && value >= 0 && value <= 1)) return null;
     const channels = rgb.map(value => Math.round(value * 255));
-    if (channels.every(value => value === 0)) return null;
+    // An explicit RGB triplet is a deliberate model color, including black;
+    // null/undefined (not an array) is the only "inherit" state.
     return `rgb(${channels.join(', ')})`;
   }
   if (typeof c !== 'string' || !c) return null;
@@ -20948,7 +20949,13 @@ function renderModelDecoration(d, doc, diags) {
     el.style.backgroundPosition = 'center center';
     el.style.backgroundRepeat = 'no-repeat';
   } else if (ink && ink.type === 'rule') {
-    el.style.borderTop = '0.75px solid #000';
+    const style = ink.style === 'dotted' ? 'dotted' : 'solid';
+    const channels = Array.isArray(ink.color) && ink.color.length === 3
+      ? ink.color.map(value => Math.round(Math.max(0, Math.min(1, Number(value))) * 255))
+      : [0, 0, 0];
+    const color = `rgb(${channels.join(', ')})`;
+    const width = Number.isFinite(ink.width) && ink.width > 0 ? ink.width : 0.75;
+    el.style.borderTop = `${width}px ${style} ${color}`;
     el.style.height = '0px';
   } else if (ink && ink.type === 'rect' && ink.color) {
     el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;
