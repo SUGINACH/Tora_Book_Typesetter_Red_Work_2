@@ -36989,9 +36989,9 @@ function writePdf(opts) {
     const decodeParms = image.decodeParms ? ' ' + image.decodeParms : '';
     const dictionary = `<< /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace ${image.colorSpace} /BitsPerComponent ${image.bitsPerComponent} /Filter ${image.filter}${decodeParms} /Length ${image.bytes.length} >>`;
     pdf.put(image.objectId, Buffer.concat([
-      Buffer.from(dictionary + '\\nstream\\n', 'latin1'),
+      Buffer.from(dictionary + '\nstream\n', 'latin1'),
       image.bytes,
-      Buffer.from('\\nendstream', 'latin1')
+      Buffer.from('\nendstream', 'latin1')
     ]));
   }
 
