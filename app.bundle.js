@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 76 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 77 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -423,6 +423,7 @@ var __paths = {
   "src/engine/output/export-api.js|./pagemodel-dom-renderer": "src/engine/output/pagemodel-dom-renderer.js",
   "src/engine/output/export-api.js|../layout/page-templates": "src/engine/layout/page-templates.js",
   "src/engine/output/export-api.js|../import/zip-reader": "src/engine/import/zip-reader.js",
+  "src/engine/output/export-api.js|./pdf-mark-policy": "src/engine/output/pdf-mark-policy.js",
   "src/engine/output/export-api.js|./legacy-projector": "src/engine/output/legacy-projector.js",
   "src/engine/output/legacy-projector.js|../layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
   "src/engine/output/legacy-projector.js|./line-font": "src/engine/output/line-font.js",
@@ -25917,6 +25918,15 @@ const { buildStandaloneHtml } = require('./html-export');
 const { renderModelPage } = require('./pagemodel-dom-renderer');
 const { PAGE_SIZES, MM_TO_PX } = require('../layout/page-templates');
 const { utf8Decode } = require('../import/zip-reader'); // פענוח UTF-8 סביבת-אגנוסטי (רשומות zip = Uint8Array)
+// **S74 (תיקון שורש גרסה 3, 26.11 — הקרנת מדיניות הניקוד לכותב ה-PDF):** מקור
+// יחיד לצד הייצוא — משקף את מדידת המנוע המאוחד (RC-M4: סימן משולב ב-advance 0
+// כש-_marks-advance=combined). ההקרנה ב-/W בלבד — הגליפים וה-hmtx המוטמע אינם
+// משתנים. הוחזר לפעולה לאחר שסביבת שער s74 תוקנה (דין וחשבון 26.11): בגרסה 2
+// השער מדד קונפליקט גופנים של סביבת הבדיקה (מודל במימוש-טבלה מול FrankReal
+// אמיתי בייצוא) — החיווט עצמו הוכח בטוח על 107 הסוויטות בריצת dac8df1.
+// **המורשת מוגנת:** legacy מודד ומצייר ב-hmtx מופרד (חוזה הייחוס) ואינו עובר
+// דרך המדיניות — נעילות המורשת לא נגעות.
+const { applyCombinedMarkPolicy } = require('./pdf-mark-policy');
 
 /** טעינה עצלה של נתיבי Node (מוגנת) — מחזירה null בסביבה בלי Buffer. */
 function nodeOnly(loader) {
@@ -26043,7 +26053,7 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
   try {
     const font = reg.profile;
     // **סדר הפעולות (תיקון שורש):** עימוד → הקרנה → מלאי מ**כל הטקסט שמצויר
-    // בפועל** (גוף+פסים+TOC+מרזב+גיליון+כותרות) → מצמום → כתיבה.
+    // בפועל** (גוף+פסים+TOC+מרזב+גיליון+כותרות) → מצווץ → כתיבה.
     // בעבר נבנה המלאי מטקסט המקור בלבד — וגרשיים נגזרים (גיליון כ״ב, תוויות
     // TOC) הושמטו בשקט מהגופן ⇒ אובדן תוכן בייצוא.
     const settings = {
@@ -26052,7 +26062,7 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
       'measure-impl': 'font-metrics'
     };
     const result = typeset(text, settings, { noRecommendations: true, ...(env || {}) });
-    // **S4.9:** פרופיל IMUD — הקרנה ממקרן ה-legacy (גיאומטריה מפורשת מהייחוס)
+    // **S4.9:** פרופיל IMUD — הקרנה ממקרין ה-legacy (גיאומטריה מפורשת מהייחוס)
     // **S71.1 (double-check — projection measurement consistency):** the
     // projection must measure with the SAME impl that built the model
     // (impl B — registered-font metrics). Until now projectDocument built
@@ -26359,16 +26369,21 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
           ? Math.abs(profile.descender) / profile.unitsPerEm : 0.2
       });
     }
+    // **S74 (גרסה 3):** בפרופיל המאוחד המדידה מאפסת ניקוד משולב (combined —
+    // pipeline קובע על ההגדרות הפנימיות) — הכותב מקרין את אותה החלטה ב-/W.
+    // המורשת (legacyProfile) מודדת ומציירת ב-hmtx מופרד כמו מנוע המקור
+    // (הוכח מהייחוס) — המדיניות אינה חלה עליה; נעילות המורשת שמורות.
+    const mp = result.legacyProfile ? (f) => f : applyCombinedMarkPolicy;
     const bytes = writePdf({
       pages: projected.pages,
       pageSizeMm,
-      font: fontForWriter,
-      font2: fontForWriter2,
-      font3: fontForWriter3,
-      font4: fontForWriter4,
-      font5: fontForWriter5,
-      font6: fontForWriter6,
-      extraFonts,
+      font: mp(fontForWriter),
+      font2: mp(fontForWriter2),
+      font3: mp(fontForWriter3),
+      font4: mp(fontForWriter4),
+      font5: mp(fontForWriter5),
+      font6: mp(fontForWriter6),
+      extraFonts: extraFonts.map(e => ({ ...e, font: mp(e.font) })),
       settings,
       outline,
       tocLinks
@@ -26450,7 +26465,11 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
     const f1Inventory = inventory.filter(ch => glyphIdOf(font, ch) !== 0);
     const subset = buildSubset(font, f1Inventory);
     if (!subset.ok) return { ok: false, error: `subset:${subset.error}` };
-    const mkFont = (sub) => {
+    // **S74 (גרסה 3):** נתיב המודל הוא פרופיל מאוחד תמיד (PageModel ממוקם-
+    // מוחלט; המדידה combined מאפסת ניקוד) — המדיניות חלה על כל גופני הכותב
+    // שנבנים כאן (F1..F6 + משפחות): ה-/W משקף את החלטת המדידה, הגליפים
+    // וה-hmtx המוטמע אינם משתנים.
+    const mkFontRaw = (sub) => {
       const c2g = subsetNewCmap(sub);
       return {
         subsetBytes: sub.bytes, widthsUnits: sub.widthsUnits, unitsPerEm: sub.unitsPerEm,
@@ -26458,6 +26477,7 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
         charToGidEntries: () => [...c2g.entries()]
       };
     };
+    const mkFont = (sub) => applyCombinedMarkPolicy(mkFontRaw(sub));
     const fontForWriter = mkFont(subset);
     // ---- גופני-תפקידים מהמודל (window/heading/fnbody/margin) + משפחות רשודות ----
     // **Iteration-003 (תיקון שורש — תצוגה=ייצוא):** מילות המודל נושאות את
@@ -26901,6 +26921,69 @@ function escapeHtml(s) {
 }
 
 module.exports = { buildStandaloneHtml, assertOfflineSafe, BASE_CSS };
+
+};
+__modules["src/engine/output/pdf-mark-policy.js"] = function (require, module, exports) {
+// src/engine/output/pdf-mark-policy.js — **S74 (פורנזי 25.11 §6-§7): מדיניות הצבת ניקוד משולב ב-PDF**
+'use strict';
+
+/**
+ * מקור הסמכות למדידת ניקוד משולב הוא המנוע (measure-api, RC-M4): בפרופיל המאוחד
+ * ('_marks-advance'='combined' — pipeline.js קובע זאת) סימן משולב (Mn) נמדד
+ * ב-advance 0 — הדפדפן מציב אותו ב-GPOS mark-to-base וה-PageModel ממוקם-מוחלט
+ * על בסיס מדידה זו. ה-PDF חייב להקרין את **אותה החלטה** ולא לבנות את המילה מחדש
+ * ב-hmtx גולמי (הפגם המתועד: שְׁמַע ב-PDF 44.57pt מול המודל 28.79pt — הפרש
+ * 15.77pt = בדיוק שלושת הניקודים; שער s74 נועל זאת).
+ *
+ * אופן ההקרנה: הכותב מצייר מילה בסדר ויזואלי בפעולת Tj אחת, ומיקום העט מתקדם
+ * לפי מערך הרוחבים /W (שמגיע מ-widthsUnits של תת-הגופן). איפוס רוחב הניקוד ב-/W
+ * ⇒ העט אינו מתקדם על ניקוד ⇒ רוחב המילה ב-PDF = רוחב המילה שהמודל תכנן.
+ * תת-הגופן עצמו (hmtx מוטמע) אינו משתנה — /W גובר עליו בציור CID; בדיקת
+ * ה-tofu של buildSubset משווה hmtx מול hmtx ואינה מושפעת.
+ *
+ * **סנכרון רשימת הטווחים:** זהו עותק ביט-לביט של COMBINING_MARK_RE מ-
+ * measure-api (RC-M4) — שינוי באחד מהם הוא שינוי חוזה שחייב להיכנס באותו
+ * קומיט; סוויטת s74 נועלת את ההתאמה על ניקודי שְׁמַע (שווא/פתח/שין-סין).
+ * מודול זה טהור לחלוטין (אפס תלות) ובטוח-דפדפן.
+ */
+
+const COMBINING_MARK_RE = /[\u0300-\u036F\u0483-\u0489\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u0711\u0730-\u074A\u07A6-\u07B0\u0816-\u082D\u0859-\u085B\u08E3-\u0903]/;
+
+/** האם התו סימן משולב (Mn) — אותה סמכות סיווג של המדידה (measure-api). */
+function isCombiningMark(ch) {
+  return COMBINING_MARK_RE.test(ch);
+}
+
+/**
+ * החלת מדיניות combined על גופן-כותב (אובייקט החוזה של export-api לכותב:
+ * widthsUnits:Map(gid→units), charToGidEntries:()=>[ch,gid][], unitsPerEm).
+ *
+ * מאפס ב-widthsUnits את הרוחב של כל גליף שמקורו בסימן משולב — לפי מיפוי
+ * התו→גליף של **אותו גופן-כותב** (אותה זהות גליפים שהכותב מצייר בפועל,
+ * כולל המספור החדש של תת-הגופן). טהור: האובייקט המקורי אינו משתנה.
+ *
+ * @param {object} fontForWriter — אובייקט גופן-כותב (או null)
+ * @returns {object} אותו אובייקט כשאין סימנים או כשהחוזה חסר (אפס תקורה);
+ *                   עותק עם widthsUnits מאופס כשיש סימנים.
+ */
+function applyCombinedMarkPolicy(fontForWriter) {
+  const f = fontForWriter;
+  if (!f || typeof f.charToGidEntries !== 'function' || !f.widthsUnits) return f;
+  const markGids = new Set();
+  for (const entry of f.charToGidEntries()) {
+    const ch = entry && entry[0];
+    const gid = entry && entry[1];
+    if (gid != null && COMBINING_MARK_RE.test(ch)) markGids.add(gid);
+  }
+  if (!markGids.size) return f;
+  const widthsUnits = new Map(f.widthsUnits);
+  for (const g of markGids) {
+    if (widthsUnits.has(g)) widthsUnits.set(g, 0);
+  }
+  return { ...f, widthsUnits };
+}
+
+module.exports = { COMBINING_MARK_RE, isCombiningMark, applyCombinedMarkPolicy };
 
 };
 __modules["src/engine/output/legacy-projector.js"] = function (require, module, exports) {
