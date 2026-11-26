@@ -6,7 +6,7 @@
  *  - exportHtml(result, settings, doc): HTML עצמאי חד־קובץ (dir=rtl, @page, offline);
  *  - exportPdf(text, settings, fontBytes): PDF עם טקסט אמיתי + סימניות + קישורי TOC
  *    + סימני חיתוך. **מסלול מדידה עקבי:** העימוד לייצוא רץ עם measure-impl=font-metrics
- *    והגופן המוטמע — שבירות השורות והרוחבים בפועל מאותו גופ�ן (מקור גיאומטריה יחיד);
+ *    והגופן המוטמע — שבירות השורות והרוחבים בפועל מאותו גופן (מקור גיאומטריה יחיד);
  *  - exportProjectZip / importProjectZip: חבילת פרויקט ZIP מובנית (JSON — לא תבניות מחרוזות).
  *
  * דטרמיניזם בכל הנתיבים: אין Date.now; סדר קבוע; ייצוא כפול ⇒ בתים זהים.
@@ -26,6 +26,10 @@ const { buildStandaloneHtml } = require('./html-export');
 const { renderModelPage } = require('./pagemodel-dom-renderer');
 const { PAGE_SIZES, MM_TO_PX } = require('../layout/page-templates');
 const { utf8Decode } = require('../import/zip-reader'); // פענוח UTF-8 סביבת-אגנוסטי (רשומות zip = Uint8Array)
+// **S74 (תיקון שורש — הקרנת מדיניות הניקוד לכותב ה-PDF):** מקור יחיד לצד
+// הייצוא — משקף את מדידת המנוע המאוחד (RC-M4: סימן משולב ב-advance 0).
+// ראה pdf-mark-policy.js; שער הרגרסיה s74 נועל את ההקרנה מול רוחב המודל.
+const { applyCombinedMarkPolicy } = require('./pdf-mark-policy');
 
 /** טעינה עצלה של נתיבי Node (מוגנת) — מחזירה null בסביבה בלי Buffer. */
 function nodeOnly(loader) {
@@ -230,7 +234,8 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
     }
 
     const pageSizeMm = pageMmOf(settings);
-    const fontForWriter = {
+    // **S74:** let — המדיניות מוחלת להלן בנתיב המאוחד (רוחבי הניקוד ב-/W מאופסים).
+    let fontForWriter = {
       subsetBytes: subset.bytes,
       widthsUnits: subset.widthsUnits,
       unitsPerEm: subset.unitsPerEm,
@@ -329,7 +334,7 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
           // **S5.1 (תיקון C3):** הגיליון וסלוטי הכותרת העליונה לא נסרקו —
           // תו שחסר בגוף ומופיע רק שם היה נעלם מה-PDF (ה-DOM הציג אותו).
           if (pg.folio && pg.folio.text) scan([{ words: [{ text: pg.folio.text }] }]);
-          if (pg.header) for (const s of (pg.header.slots || [])) if (s && s.text) scan([{ words: [{ text: s.text }] }]);
+          if (pg.header) for (const s of pg.header.slots || []) if (s && s.text) scan([{ words: [{ text: s.text }] }]);
         }
         if (missingChars.size) {
           const punctSubset = buildSubset(frlProfile, charInventory([...missingChars].join('')));
@@ -468,6 +473,23 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
           ? Math.abs(profile.descender) / profile.unitsPerEm : 0.2
       });
     }
+    // **S74 (תיקון שורש — סמכות אחת למדידת ניקוד, 25.11):** המנוע המאוחד מודד
+    // סימנים משולבים ב-advance 0 ('_marks-advance=combined' — נקבע בתוך typeset
+    // על ההגדרות הפנימיות; RC-M4 ב-measure-api). ה-PDF מקרין את אותה החלטה:
+    // גליפי ניקוד ברוחב 0 במערך /W של כל גופן-כותב ⇒ רוחב המילה ב-PDF =
+    // רוחב המילה שהמודל תכנן. נתיב המורשת (legacyProfile) מודד hmtx בהפרדה
+    // כמו מנוע המקור שייצר את הייחוס — ואינו מושפע (בתים זהים; שער s73 נשאר).
+    if (!result.legacyProfile) {
+      fontForWriter = applyCombinedMarkPolicy(fontForWriter);
+      fontForWriter2 = applyCombinedMarkPolicy(fontForWriter2);
+      fontForWriter3 = applyCombinedMarkPolicy(fontForWriter3);
+      fontForWriter4 = applyCombinedMarkPolicy(fontForWriter4);
+      fontForWriter5 = applyCombinedMarkPolicy(fontForWriter5);
+      fontForWriter6 = applyCombinedMarkPolicy(fontForWriter6);
+      for (let i = 0; i < extraFonts.length; i++) {
+        extraFonts[i] = { ...extraFonts[i], font: applyCombinedMarkPolicy(extraFonts[i].font) };
+      }
+    }
     const bytes = writePdf({
       pages: projected.pages,
       pageSizeMm,
@@ -559,13 +581,18 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
     const f1Inventory = inventory.filter(ch => glyphIdOf(font, ch) !== 0);
     const subset = buildSubset(font, f1Inventory);
     if (!subset.ok) return { ok: false, error: `subset:${subset.error}` };
+    // **S74 (תיקון שורש — הקרנת מדיניות הניקוד):** נתיב המודל הוא נתיב המנוע
+    // המאוחד בלבד (pagemodel-v1), והמנוע המאוחד מודד סימנים משולבים ב-advance 0
+    // (RC-M4). כל גופן-כותב שנבנה כאן מקרין את אותה החלטה — גליפי ניקוד ברוחב 0
+    // ב-/W ⇒ רוחב המילה ב-PDF = רוחב המילה שהמודל תכנן. (שער s74 נועל זאת מול
+    // רוחב המילה ב-PageModel.)
     const mkFont = (sub) => {
       const c2g = subsetNewCmap(sub);
-      return {
+      return applyCombinedMarkPolicy({
         subsetBytes: sub.bytes, widthsUnits: sub.widthsUnits, unitsPerEm: sub.unitsPerEm,
         cidOf: (ch) => { const g = c2g.get(ch); return g != null ? g : glyphIdOf(parseSubsetCache(sub), ch); },
         charToGidEntries: () => [...c2g.entries()]
-      };
+      });
     };
     const fontForWriter = mkFont(subset);
     // ---- גופני-תפקידים מהמודל (window/heading/fnbody/margin) + משפחות רשודות ----
@@ -655,7 +682,7 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
           scan(pg.lines || []);
           for (const fn of (pg.footnotes || [])) scan([{ words: fn.words || [] }]);
           if (pg.folio && pg.folio.text) scan([{ words: [{ text: pg.folio.text }] }]);
-          if (pg.header) for (const s of (pg.header.slots || [])) if (s && s.text) scan([{ words: [{ text: s.text }] }]);
+          if (pg.header) for (const s of pg.header.slots || []) if (s && s.text) scan([{ words: [{ text: s.text }] }]);
         }
         if (missingChars.size) {
           const punctSubset = buildSubset(frlProfile, charInventory([...missingChars].join('')));
