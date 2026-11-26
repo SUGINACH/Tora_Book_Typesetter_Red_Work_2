@@ -1,0 +1,127 @@
+ * @returns {{ok, sequences:[{blockId, blockKind, semantic, items}], rejected, stats, contractVersion, measureLog?}}
+ */
+function buildLineSequences(model, ctx = {}) {
+  if (!model || !Array.isArray(model.blocks)) {
+    return { ok: false, sequences: [], rejected: [{ code: 'no-model', message: 'buildLineSequences: מודל חסר' }], stats: { blocks: 0, items: 0 }, contractVersion: LINE_ITEM_CONTRACT_VERSION };
+  }
+  const settings = ctx.settings || {};
+  const base = {
+    bodySize: Number.isFinite(settings['body-font-size-pt']) ? settings['body-font-size-pt'] : 12,
+    lineHeight: Number.isFinite(settings['body-line-height']) ? settings['body-line-height'] : 1.34,
+    fnSize: Number.isFinite(settings['f-note-body-size-pt']) ? settings['f-note-body-size-pt'] : 8,
+    defaultFamily: settings['body-font'] || null
+  };
+  const sequences = [];
+  const rejected = [];
+  let itemCount = 0;
+
+  for (const blk of model.blocks) {
+    // סמנטיקה של כותרת 3 (§21 בהוראה): פריט סמנטי אחד — הרווח התחתון שייך לכולו.
+    let semantic = null;
+    if (blk.kind === 'heading' && blk.level === 3) {
+      const pitch3 = h3PitchOf(settings);
+      semantic = {
+        kind: 'heading3', itemId: blk.id,
+        linePitchPx: pitch3, lastBandPx: pitch3 + H3_BOTTOM_PAD_PX,
+        trailingSpacePx: H3_BOTTOM_PAD_PX,
+        rule: 'bottom-space-once-after-last-fragment'
+      };
+    }
+    const seq = buildContainerSequence(
+      { ...blk, item0Kind: blk.items && blk.items[0] ? blk.items[0].kind : 'text' },
+      ctx, { base, semantic }
+    );
+    if (seq) { sequences.push(seq); itemCount += seq.items.length; }
+    for (const r of seq ? seq.rejected : []) rejected.push(r);
+  }
+  // גופי הערות שוברים באותו מנוע (§4.1-2: אין breaker נוסף להערות)
+  // במודל שלב 2 גוף ההערה = פריט noteBody עם runs ב-payload; מוזר לכרטוס טקסט בסגנון רישום.
+  const fnBase = {
+    bodySize: Number.isFinite(settings['f-note-body-size-pt']) ? settings['f-note-body-size-pt'] : 8,
+    lineHeight: 1.2,
+    fnSize: Number.isFinite(settings['f-note-body-size-pt']) ? settings['f-note-body-size-pt'] : 8,
+    defaultFamily: settings['f-note-body-font'] || settings['body-font'] || null
+  };
+  for (const note of (model.notes || [])) {
+    const noteItems = (note.items && note.items.length)
+      ? note.items
+      : (note.kind === 'noteBody' && note.payload && Array.isArray(note.payload.runs) && note.payload.runs.length
+        ? [{ id: `${note.id}#body`, kind: 'text', payload: { runs: note.payload.runs }, sourceRange: note.sourceRange, constraints: note.constraints }]
+        : []);
+    if (!noteItems.length) continue;
+    const seq = buildContainerSequence(
+      { id: note.id, kind: 'note', items: noteItems, item0Kind: 'text' },
+      ctx, { base: fnBase, semantic: null }
+    );
+    if (seq) { sequences.push(seq); itemCount += seq.items.length; }
+    for (const r of seq ? seq.rejected : []) rejected.push(r);
+  }
+  const out = {
+    ok: rejected.length === 0,
+    sequences, rejected,
+    stats: { blocks: model.blocks.length + (model.notes || []).length, items: itemCount },
+    contractVersion: LINE_ITEM_CONTRACT_VERSION
+  };
+  if (ctx.instrument && ctx.__measureLog) out.measureLog = ctx.__measureLog;
+  return out;
+}
+
+/**
+ * **מקטע ב׳ (הוראה §5/§10):** בניית רצף פריטי-שורה של מיכל יחיד — הכניסה
+ * היחידה של ה-pipeline למנוע (אותו קוד שמשמש את buildLineSequences; אין מסלול
+ * שני). המיכל: { id, kind, items, item0Kind?, baseStyle?, wordStyleOf?, semantic? }.
+ * @returns {{blockId, blockKind, semantic, items, rejected}|null}
+ */
+function buildContainerSequence(cont, ctx = {}, opts = {}) {
+  const settings = ctx.settings || {};
+  const dir = ctx.direction || 'rtl';
+  const lang = ctx.language || 'he';
+  const constraints = ctx.constraints || null;
+  const constraintsKey = constraints ? `w${constraints.availableWidthPx || 'auto'}` : '';
+  const base = opts.base || {
+    bodySize: Number.isFinite(settings['body-font-size-pt']) ? settings['body-font-size-pt'] : 12,
+    lineHeight: Number.isFinite(settings['body-line-height']) ? settings['body-line-height'] : 1.34,
+    fnSize: Number.isFinite(settings['f-note-body-size-pt']) ? settings['f-note-body-size-pt'] : 8,
+    defaultFamily: settings['body-font'] || null
+  };
+  const blockId = cont.id;
+  const env = {
+    dir, lang, constraints, constraintsKey, ctx, blockId,
+    base,
+    baseStyle: cont.baseStyle || null,
+    wordStyleOf: typeof cont.wordStyleOf === 'function' ? cont.wordStyleOf : null
+  };
+  const items = (cont.items || []).length ? cont.items : [];
+  if (!items.length) return null;
+
+  // ── שלב (א): הכנה — פיצול לתיבות עם זהות ומקור (בלי מדידה) ──
+  const boxes = [];
+  const rejected = [];
+  for (const it of items) {
+    if (it.kind === 'text') {
+      splitTextItem(it, env, boxes, rejected);
+    } else if (it.kind === 'noteMarker' || it.kind === 'image' || it.kind === 'atomicToken' || it.kind === 'anchor' || it.kind === 'glue' || it.kind === 'penalty' || (it.kind && (it.kind === 'custom' || it.kind.startsWith('custom:')))) {
+      boxes.push({ source: it, word: null, joinedToPrev: false });
+    } else {
+      rejected.push({ itemId: it.id, kind: it.kind, code: 'unsupported-in-line-sequence', message: `פריט לא נתמך ברצף שורות: ${it.kind}` });
+    }
+  }
+
+  // ── שלב (ב): מדידה קנונית אחת — כל תיבה נמדדת בדיוק פעם אחת ──
+  for (const b of boxes) {
+    b._item = boxItemFor(b, env); // מודד דרך measureItem היחיד ומקפיא את הקישור
+  }
+
+  // ── שלב (ג): הזרמה — צמידות (לפי המדידות) ואז glue/penalty ──
+  applyMarkerJoins(boxes, env);
+  const out = [];
+  let prev = null;
+  for (const b of boxes) {
+    if (prev && !b.joinedToPrev) {
+      out.push(glueItemFor(prev, b, env));
+    } else if (prev && b.joinedToPrev) {
+      out.push(internalGlueFor(prev, b, env));
+      out.push({
+        role: 'penalty', penaltyType: 'forbidden', cost: Number.POSITIVE_INFINITY,
+        itemId: `${b.source.id}#join@${boxDocStart(b)}-${boxDocEnd(b)}`,
+        kind: 'penalty', contractVersion: LINE_ITEM_CONTRACT_VERSION,

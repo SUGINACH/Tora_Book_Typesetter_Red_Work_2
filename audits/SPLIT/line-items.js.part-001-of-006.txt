@@ -1,0 +1,115 @@
+// src/engine/line/line-items.js — LineItem contract קנוני + בנאי הרצף (שלב 4, §4.1-1..3)
+'use strict';
+
+/**
+ * **חוזה:** spec/00 §4.1-1 — "Line Item contract אחיד: box/glue/penalty או ייצוג
+ * שקול, עם קישור ל-MeasuredItem ול-source identity." §4.1-3 — "לשמר fragments
+ * של מילה אחת כאשר היא כוללת כמה משפחות גופן או סגנונות. שבירה אינה רשאית
+ * למזג אותם למחרוזת שטוחה."
+ *
+ * **שלב 4 מקטע ב׳ — גבול מדידה יחיד (הוראה §5):** הבנייה מפורקת לשלושה שלבים
+ * מחייבים: (א) הכנת הרצף — פיצול מילים/ריצות/glue/penalties/תמונות ופריטים
+ * אטומיים תוך שמירת מקור וזהות; (ב) **מדידה קנונית אחת** לכל פריט שורה —
+ * מעבר אחד, כל תיבה נמדדת בדיוק פעם אחת דרך measureItem היחיד, והתוצאה
+ * הקפואה נקשרת לפריט; (ג) הזרמה — glue/penalty לפי הצמדות, והעברה ל-LineModel
+ * ול-Planner בלי מדידה נוספת. אין כאן API מדידה שני ואין מדידת פסקה-ואז-מילה:
+ * measureDocumentModel (measure-model) הוא מתזמר על אותם שלבים בדיוק.
+ *
+ * **זהות נגזרת-מקור (§3.5 בהוראה, תיקון שורש):** מזהי מילים/רווחים נגזרים
+ * מזהות פריט המקור ומטווח המקור המוחלט שלהם — `#w@<docStart>-<docEnd>` /
+ * `#g@<docStart>-<docEnd>` — ולא ממונה רץ. אותו מסמך ⇒ אותם מזהים בכל בנייה;
+ * שינוי תוכן באותו טווח אינו יוצר התנגשות (מפתח המדידה של שלב 3 כולל טביעת
+ * payload מלאה). sourceRange ממופה לקואורדינטות המסמך הקנוניות (לא אינדקס
+ * מקומי בריצה), ו-blockId ממולא תמיד כשהוא ידוע.
+ *
+ * **שכבת סגנון פר-מילה (הוראה §7 — סגנון אמת):** המיכל יכול לשאת `baseStyle`
+ * (גודל/גובה-שורה/משפחה/פקטור משפחה — לכותרות לפי רמה, לגוף, להערות) ופונקציית
+ * `wordStyleOf(docStart, docEnd)` שמחזירה שכבת-על למילה (advanceFactor לסוגריים/
+ * סגנון inline). ההחלטות מגיעות מה-pipeline (בלוק-לפני-מדידה — דפוס D-42) ואין
+ * כאן שום החלטת פריסה.
+ *
+ * **תמונות (הוראה §6):** תמונה נמדדת דרך AssetResolver (ctx.assetResolver).
+ * תמונה שלא נפתרה (אין resolver/נכס) אינה נעלמת ואינה מתרחבת לאפס בשקט:
+ * היא נמדדת ברוחב טקסט המקור שלה (התנהגות המוצר הקיימת — ה-syntax מוצג כטקסט)
+ * עם אבחון מפורש `image-unresolved-text-fallback` — לא פלובק שקט.
+ */
+
+const { measureItem, familyWidthProfileOf } = require('../typography/measure-api');
+const fontResolver = require('../typography/font-resolver');
+const { splitWordsOfRun } = require('./breaks');
+
+/** פתרון סגנון פריט — מקור יחיד (הועבר לכאן בשלב 4 מקטע ב׳ כדי לנתק תלות
+ * מעגלית measure-model ⇄ line-items): מזהי גופן לפי ריצה (מה-resolver), גודל
+ * לפי סוג הפריט. measure-model מייצא הלאה לצרכנים קיימים — אותה פונקציה.
+ * **§7 (סגנון אמת):** כשהמיכל מביא baseStyle מפורש (כותרות לפי רמה, גוף,
+ * הערות) — הוא גובר; זהו הנתיב של ה-pipeline ממקטע ב׳. */
+function resolveStyleFor(item, container, base) {
+  const sizePt = item.kind === 'noteMarker' ? base.fnSize : base.bodySize;
+  const fontIds = [];
+  if (item.kind === 'text' && item.payload && Array.isArray(item.payload.runs)) {
+    for (const run of item.payload.runs) {
+      const fid = fontResolver.fontIdOfAlias(run.fontFamily) || fontResolver.fontIdOfAlias(base.defaultFamily);
+      fontIds.push(fid);
+    }
+  } else if (base.defaultFamily) {
+    fontIds.push(fontResolver.fontIdOfAlias(base.defaultFamily));
+  }
+  return {
+    sizePt,
+    lineHeight: item.kind === 'noteMarker' ? 1.2 : base.lineHeight,
+    fontIds,
+    family: (item.payload && item.payload.runs && item.payload.runs[0] && item.payload.runs[0].fontFamily) || base.defaultFamily,
+    defaultFamily: base.defaultFamily
+  };
+}
+
+/** בסיס סגנון לפי הגדרות — כולל פתרון פרופיל הרוחב למשפחה שאינה רשומה (§7).
+ * משמש את ה-pipeline (baseStyle לכותרות) ואת buildLineSequences (ברירת מחדל). */
+function baseStyleOf(settings, kind, level) {
+  const s = settings || {};
+  let sizePt = Number.isFinite(s['body-font-size-pt']) ? s['body-font-size-pt'] : 12;
+  let family = s['body-font'] || null;
+  if (kind === 'heading' && level != null && Number.isFinite(s[`heading-${level}-size-pt`])) {
+    sizePt = s[`heading-${level}-size-pt`];
+    family = s[`heading-${level}-font`] || family;
+  }
+  const prof = familyWidthProfileOf(family, s);
+  return {
+    sizePt,
+    // **חוזה H3 (D-S2H3/CSS parity):** שורות כותרת 3 ב-line-height 1.22 של
+    // ה-CSS המקורי — לא body-line-height הכללי. מקור יחיד: core/h3-contract.
+    lineHeight: (kind === 'heading' && level === 3)
+      ? H3_CONTRACT_LINE_HEIGHT
+      : (Number.isFinite(s['body-line-height']) ? s['body-line-height'] : 1.34),
+    fnSize: Number.isFinite(s['f-note-body-size-pt']) ? s['f-note-body-size-pt'] : 8,
+    family,
+    defaultFamily: s['body-font'] || null,
+    ...(prof ? { familyFactor: prof.factor, familyUnknownFloor: prof.floor } : {})
+  };
+}
+
+/** גרסת חוזה פריט-השורה — חלק מזהות הרצף ומהאבחון.
+ * v2: זהות נגזרת-מקור (ביטול המונה הרץ), sourceRange מוחלט + blockId,
+ * מפרידים מדויקים בין פריטים (פער מקור), תיקון carry חוצה-ריצות.
+ * v2.1 (מקטע ב׳): גבול מדידה יחיד — הכנה → מדידה אחת → הזרמה; baseStyle
+ * ו-wordStyleOf לסגנון האמיתי; פלובק תמונה מאובחן. */
+const LINE_ITEM_CONTRACT_VERSION = 'line-item-v2.1(single-measurement-boundary)';
+
+/** קבועי כותרת 3 (חוזה H3 — core/h3-contract.js, D-S2H3/CSS parity): pitch
+ * בין-שורות = line-height 1.22 של ה-CSS המקורי (גודל×96/72×1.22 — 21.96px
+ * בברירת המחדל 13.5pt), הפס האחרון = pitch+ריפוד תחתון 4, הרווח שאחרי
+ * ה-fragment האחרון = 4. ה-renderer אינו מוסיף ואינו מתקן. (הערכים
+ * הישנים 34/38 שיקפו גובה שורה שכלל בטעות את הריפוד העליון.) */
+const { H3_LINE_HEIGHT: H3_CONTRACT_LINE_HEIGHT, h3LineHeightPx, H3_BOTTOM_PAD_PX } = require('../core/h3-contract');
+const H3_DEFAULT_SIZE_PT = 13.5;
+const h3PitchOf = (settings) => h3LineHeightPx(
+  (settings && Number.isFinite(settings['heading-3-size-pt'])) ? settings['heading-3-size-pt'] : H3_DEFAULT_SIZE_PT
+);
+const H3_LINE_PITCH_PX = h3LineHeightPx(H3_DEFAULT_SIZE_PT);
+const H3_LAST_BAND_PX = H3_LINE_PITCH_PX + H3_BOTTOM_PAD_PX;
+
+/**
+ * בניית רצף פריטי-שורה של מסמך שלם.
+ * @param {object} model — פלט buildDocumentModel
+ * @param {object} ctx — { settings, assetResolver, direction, language, constraints,
+ *                         instrument?:boolean }

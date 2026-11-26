@@ -1,0 +1,128 @@
+    else if (j + 1 < words.length) gapDead[j] = true;
+  }
+  const liveGaps = gapDead.reduce((s, d) => s + (d ? 0 : 1), 0);
+  const sumW = widths.reduce((s, w) => s + w, 0);
+  const gaps = liveGaps;
+
+  // רוחב רווחים: שורת יישור מלאה מפרשת לרוחב הטור (לפחות רווח בסיס);
+  // שורה אחרונה — רווח בסיס.
+  // **EXT-20:** ה-AQ כבר אינו מוחל כאן — מקדם המתיחה הוא אנכי (גובה שורה)
+  // ומיושם בלולאת ה-y של הטור; כאן רווחים גיאוגטריים בלבד.
+  let gapW = spaceW;
+  if (align === 'justify' && gaps > 0 && sumW + gaps * spaceW < colW) {
+    gapW = (colW - sumW) / gaps;
+  }
+
+  const lineW = sumW + gaps * gapW;
+  let xRight; // הקצה הימני של השורה
+  if (align === 'center') xRight = colX + (colW + lineW) / 2;
+  else if (align === 'right') xRight = colX + colW;
+  else xRight = colX + colW; // justify: מילה ראשונה נצמדת לימין, האחרונה לשמאל
+
+  const wordPos = [];
+  let cursor = xRight;
+  // **פרוסה 3 (סמן מודבק — פיצול בסמכות ההקרנה):** מילה שטוחה "מילה+סמן הערה"
+  // נמדדה בשני גדלים (גוף + גודל הרישום) אך הוקרנה כמילה אחת בגודל השורה —
+  // הסמן הוצג גדול מכפי שנמדד וגלש מהטור (נמדד +8px; ברינדור הזרימה הישן
+  // נבלע בשבירת-שורה שקטה בתוך תיבת השורה). כאן היא מפוצלת לפי מבנה
+  // הפרגמנטים: חלק הטקסט בגודל השורה, הסמן בגודל הרישום — כפי שנמדד.
+  const fnSizePt = Number(settings['f-note-body-size-pt']) || 8;
+  const emitWord = (text, w, eff, extra) => {
+    wordPos.push({
+      text, x: cursor, w,
+      ...(eff !== sizePt ? { sizePt: eff } : {}),
+      ...(hFontKey ? { fontKey: hFontKey } : {}),
+      ...(hColor ? { color: hColor } : {}),
+      ...(!hColor && bodyColor ? { color: bodyColor } : {}),
+      ...(extra || {})
+    });
+  };
+  for (let i = 0; i < words.length; i++) {
+    const eff = effSizeOf(i);
+    const frags = (lm && lm.wordFrags && lm.wordFrags[i]) || null;
+    // **U-17/U-16 (ביקורת שלמות 20.11 — סמן בכל מוקד במילה):** עד כאן זוהה
+    // הסמן רק כשהיה הפרגמנט ה**אחרון** של מילה מודבקת "מילה+סמן". בפועל
+    // נמדדו ב-very_long שלוש צורות נוספות שבהן זהות הסמן אבדה בהקרנה —
+    // הסמן הוצג כמילת גוף בגודל השורה (12pt במקום 8pt, בלי .w--fnmarker):
+    //   (א) [סמן] בלבד — סמנים עוקבים שלא הוצמדו (עמ' 877: "א״ד","א״ה" נפרדות;
+    //       MARKER_NOTE_MATCH — פתיחת-הערה בלי סמן-גוף);
+    //   (ב) [סמן, סמן] — פסקה שנפתחת בשתי הערות (עמ' 879: "א״ט א״י" — רק
+    //       האחרון סומן; הראשון הוצג כטקסט 12pt ⇒ אסימטריית דיו 7.1px);
+    //   (ג) [סמן, טקסט] — סמן מוביל שהוצמד למילה הבאה (עמ' 77/80: "ג׳ .",
+    //       "ו׳ ." — הנקודה אחרי הסמן ⇒ אסימטריה 6.7–6.9px).
+    // הכלל הכללי: כל פרגמנט noteMarker במילה מוקרן כחלק-סמן בגודל הרישום
+    // (fnSizePt) עם דגל mk — לפי הרוחב שנמדד בפועל לאותו פרגמנט. הפיצול
+    // לפי מספר הפיסות (המודבקות מופרדות ב-NBSP⇒רווח לאחר ה-scrub) עם נפילה
+    // מוגנת להתנהגות הקודמת כשאין התאמת מספרים.
+    const mkFragCount = frags ? frags.reduce((s, f) => s + (f.kind === 'noteMarker' && f.advance > 0 ? 1 : 0), 0) : 0;
+    let handled = false;
+    if (frags && mkFragCount >= 1) {
+      const pieces = String(words[i]).split(' ');
+      if (pieces.length === frags.length && pieces.every(p => p.length > 0)) {
+        for (let j = 0; j < frags.length; j++) {
+          const f = frags[j];
+          cursor -= f.advance;
+          if (f.kind === 'noteMarker' && f.advance > 0) {
+            emitWord(pieces[j], f.advance, fnSizePt, { mk: true });
+          } else {
+            emitWord(pieces[j], f.advance, eff, null);
+          }
+        }
+        handled = true;
+      }
+    }
+    if (!handled) {
+      const mkFrag = frags && frags.length >= 2 ? frags[frags.length - 1] : null;
+      if (mkFrag && mkFrag.kind === 'noteMarker' && mkFrag.advance > 0 && widths[i] > mkFrag.advance) {
+        // פיצול: [טקסט ..., סמן] — הסמן החלק האחרון (מודבק אחרי המילה)
+        const mkW = mkFrag.advance;
+        const txtW = widths[i] - mkW;
+        const raw = String(words[i]);
+        const sp = raw.lastIndexOf(' ');
+        const mkTxt = sp >= 0 ? raw.slice(sp + 1) : raw;
+        const txtTxt = sp >= 0 ? raw.slice(0, sp) : raw;
+        cursor -= txtW;
+        emitWord(txtTxt, txtW, eff, null);
+        cursor -= mkW;
+        emitWord(mkTxt, mkW, fnSizePt, { mk: true });
+      } else {
+        cursor -= widths[i];
+        // **S68:** סמן גודל פר-מילה רק כשהוא שונה מגודל השורה — שורות רגילות
+        // (ברירת מחדל, בלי סוגריים/סגנון) נשארות בדיוק כפי שהיו (נייטרליות).
+        emitWord(words[i], widths[i], eff, null);
+      }
+    }
+    // **U-16:** רווח חי רק בין מילים ששתיהן גלויות (מילת-כיוון נבלעה בשכנה)
+    if (i < words.length - 1 && !gapDead[i]) cursor -= gapW;
+  }
+
+  return {
+    x: colX, y, w: colW, h: (ln.heightPx || 0) * (ln.aqStretch || 1),
+    words: wordPos, align, kind: ln.kind || 'paragraph',
+    level: ln.level, isLast: !!ln.isLast, sizePt,
+    tokenId: ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId),
+    // **S12 (parity):** קו בסיס לפי מודל תיבת השורה של CSS —
+    // half-leading + ascent (מפרופיל הגופן/מכויל) — אותו חוזה ל־PDF ולרסטר.
+    baselineY: null
+  };
+}
+
+/** השלמת baselineY לכל שורות העמוד (לאחר ההקרנה) — מקור מדידה אחד. */
+function attachBaselines(page, settings, measure) {
+  const ascent = measure.ascentEm(), descent = measure.descentEm();
+  // **S71.1:** גובה cap לפי מדד אמת (OS/2 sCapHeight ב-impl B; 0.70 בטבלה) —
+  // כמו ב-dropword. אותיות עברית/לטינית מגיעות לקו ה-cap, לא ל-ascender
+  // (למעט למ"ד/גרשיים) — חיזוי ראש הדיו לפי ascent מנפח בכותרות.
+  const capEm = measure.capHeightEm ? measure.capHeightEm() : 0.7;
+  for (const ln of [...(page.spanning ? page.spanning.lines : []), ...page.lines]) {
+    const sizePx = ln.sizePt * (96 / 72);
+    const contentH = (ascent + descent) * sizePx;
+    const halfLeading = (ln.h - contentH) / 2;
+    ln.baselineY = ln.y + Math.max(0, halfLeading) + ascent * sizePx;
+    ln.ascentPx = ascent * sizePx;
+    ln.descentPx = descent * sizePx;
+    ln.capPx = capEm * sizePx;
+  }
+  if (page.footnotes) {
+    // **S5.4:** להערה עם מילים יש כבר בסיס פר-מילה מההקרנה; הנוסחה נשארת
+    // כנפילה בלבד להערות בלי מילים.

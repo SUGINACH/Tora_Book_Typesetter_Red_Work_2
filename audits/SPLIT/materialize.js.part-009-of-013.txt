@@ -1,0 +1,124 @@
+    if (st.scaleX) { const cx = (x1 + x2) / 2; x1 = cx - (spec.w * st.scaleX) / 2; x2 = cx + (spec.w * st.scaleX) / 2; }
+    emit(x1, spec.y, x2, spec.y);
+    if (st.double) emit(x1, spec.y + st.double, x2, spec.y + st.double);
+    inkX = x1;
+    inkW = x2 - x1;
+    inkH = Math.max(0.75, st.w * (96 / 72) + (st.double ? st.double : 0));
+  }
+  if (!out.decorations) out.decorations = [];
+  out.decorations.push({
+    x: inkX, y: inkY, w: inkW, h: Math.max(0.75, inkH),
+    kind: spec.kind, slot: null, kindStyle: null,
+    inkType: 'rule', inkUri: null, paint: null, pdfOps: ops
+  });
+}
+
+/** יישור שורה בודדת — **מקור הסמכות היחיד להחלטת היישור** (U-15, ביקורת שלמות 20-21.11).
+ * חוזה יישור הכותרות — כל שורות הכותרת ממורכזות, בכל מסלול (טור/פס חוצה־טורים),
+ * בלי תלות ב-isLast. חמש רשויות מסכימות: המקרן הישן (dom-renderer renderLine —
+ * text-align:center לכל kind='heading'), המקרן של המורשת (legacy-projector:407 —
+ * `ln.kind === 'heading' ? 'center'`), הפסים במורשת (legacy-projector:238 — placeWords
+ * 'center'; נמדד h0/h2/h3: Lgap=Rgap בדיוק), BASE_CSS (.line--heading מוחרג
+ * מ-text-align-last:justify — "ממורכזות מטבען") ומפרט האודיט (סעיף 8 — "כותרת:
+ * ממורכזת, לא מתוחה").
+ * **הכשל שנסגר:** לפני U-15 הוחזר 'justify' לכל שורה שאינה-אחרונה גם לכותרות
+ * ⇒ שורות המשך של כותרות מרובות-שורות נמתחו מקצה לקצה בגיאומטריית המילים
+ * (gapW=(colW−sumW)/gaps ב-projectLine) — לא רק ב-CSS. נמדד ב-very_long:
+ * ‏28 ממצאי HEAD_JUSTIFIED ב-Full Math (sign-open 22/preface 5/regular 1),
+ * בכולן הדיו פרוש בדיוק על רוחב התיבה (inkL=x, inkR=x+w). בנוסף נמצא
+ * הכפל שני באותו שורש: שורות הפס החוצה־טורים קיבלו 'right' קבוע (H2/H3 —
+ * ‏340 שורות צמודות-ימין ב-very_long, אסימטריה 170–222px ממרכז הפס) בניגוד
+ * למורשת שממרכזת אותן. שני המסלולים מנותבים כעת דרך פונקציה זו — החלטה אחת.
+ * (מיזוג 21.11: תיקון העמית c45467a — כותרות ממורכזות בנתיב הטור, שינוי השם
+ * ‏lastAlignOf→lineAlignOf — מאומץ כאן; ההשלמה: ניתוב הפס החוצה-טורים.) */
+function lineAlignOf(ln, settings) {
+  if (ln && ln.kind === 'heading') return 'center';
+  if (!ln.isLast) return 'justify';
+  const mode = settings['body-last-line-align'] || 'center';
+  return mode === 'stretch' ? 'justify' : mode; // stretch בשורה האחרונה = יישור מלא כמו רגילה
+}
+/**
+ * הקרנת שורה בודדת: מילים עם מיקומי x מפורשים (RTL — מימין לשמאל).
+ * @param {string} align — 'justify' | 'right' | 'center'
+ */
+/** **S68 (R2-M6):** מפת גורמי גודל של סגנונות inline מותאמים — עם מטמון
+ *  פר-settings (WeakMap) כדי שלא לפרסר את ה-JSON בכל שורה מוקרנת.
+ *  אותו חישוב כמו בפענוח (pipeline→inlineSizeFactor) — מקור יחיד לגורם. */
+const _csFactorCache = new WeakMap();
+function customFactorMapOf(settings) {
+  if (!settings || !settings._customStyles) return null;
+  let m = _csFactorCache.get(settings);
+  if (!m) {
+    m = new Map();
+    try {
+      const { parseCustomStyles } = require('../extensions/style-schema');
+      const { inlineSizeFactor } = require('../extensions/apply-styles');
+      const res = parseCustomStyles(settings._customStyles);
+      for (const st of (res.styles || [])) {
+        const f = inlineSizeFactor(st.style, settings['body-font-size-pt']);
+        if (Number.isFinite(f) && f > 0) m.set(st.id, f);
+      }
+    } catch (e) { /* סגנונות שבורים — גורם 1 במקום קריסה */ }
+    _csFactorCache.set(settings, m);
+  }
+  return m;
+}
+
+/**
+ * **שלב 8 (§4.1):** רוחבי מילות השורה מה-LineModel — מיפוי זהה ל-legacyViewOfLines
+ * (הליכה על ה-flow; צבירת measuredAdvance של הפרגמנטים לפי יחידות מילה), בתוספת
+ * רוחב הרווח מה-glue החיצוני הראשון (naturalPx — הרווח שנמדד בזמן השבירה).
+ * מחזיר null כשאין LineModel/flow (שורה סינתטית) — הנפילה מדווחת ב-projectLine.
+ */
+function lineWidthsFromModel(ln) {
+  const lm = ln && ln.lineModel;
+  if (!lm) return null;
+  // **פרוסה 2 (§4.2):** שורת תמונת בלוק/ממורכזת — אין לה flow; הרוחב הוא
+  // measuredAdvance של הפרגמנט (רוחב התצוגה של התמונה) — נתון מודל, לא מדידה.
+  if (!Array.isArray(lm.flow) && Array.isArray(lm.fragments) && lm.fragments.length) {
+    const widths = lm.fragments.map(f => Number(f.measuredAdvance) || 0);
+    return { widths, spaceW: 0 };
+  }
+  if (!Array.isArray(lm.flow) || !Array.isArray(lm.fragments)) return null;
+  const fragById = new Map((lm.fragments || []).map(f => [f.itemId, f]));
+  const widths = [];
+  // **פרוסה 3 (סמן מודבק — פיצול בסמכות):** מלאי הפרגמנטים של כל מילה שטוחה
+  // (סוג+רוחב) — לפיו מפצלת ההקרנה מילה מורכבת "מילה+סמן" לשני חלקים בגדלים
+  // שנמדדו בפועל (הסמן נמדד בגודל הרישום). בלי זה הסמן מוצג בגודל השורה
+  // וגולש מהטור (נמדד: +8px; ברינדור זרימה נבלע בשבירה שקטה).
+  const wordFrags = [];
+  let curFrags = null;
+  let curW = null;
+  let spaceW = null;
+  const flushWord = () => {
+    if (curW !== null) { widths.push(curW); wordFrags.push(curFrags || []); }
+    curW = null; curFrags = null;
+  };
+  for (const step of lm.flow) {
+    if (step.type === 'glue') {
+      if (step.internal) continue; // יחידה צמודה — אין גבול מילה
+      if (step.breakGlue) continue; // דבק נקודת-החיתוך — מחוץ לרוחב השורה
+      flushWord();
+      continue;
+    }
+    const f = fragById.get(step.itemId);
+    if (!f) continue;
+    const adv = Number(f.measuredAdvance) || 0;
+    if (curFrags === null) curFrags = [];
+    curFrags.push({ kind: f.kind || 'text', advance: adv });
+    curW = curW === null ? adv : curW + adv;
+  }
+  flushWord();
+  // רוחב הרווח — מה-glue החיצוני הראשון של השורה (naturalPx: הרווח שנמדד
+  // בזמן השבירה, לא כאן)
+  if (Array.isArray(lm.glue) && lm.glue.length && lm.glue[0].naturalPx != null) {
+    spaceW = lm.glue[0].naturalPx;
+  }
+  return { widths, spaceW, wordFrags };
+}
+
+function projectLine(ln, colX, y, colW, settings, measure, align, production) {
+  const sizePt = lineFontSizePt(ln, settings);
+  // **פרוסה 2 (§4.2):** שורת תמונת בלוק/ממורכזת — יישור מרכז לפי האילוץ שבמודל
+  // (lm.constraints.align; breakReason 'image-block'). שורות רגילות אינן מושפעות.
+  if (ln && ln.lineModel && ln.lineModel.constraints

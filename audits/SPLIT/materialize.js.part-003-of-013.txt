@@ -1,0 +1,113 @@
+        if (cls.includes('back-shaar-text-line') || cls.includes('back-shaar-copyright-header')) return colorOfSetting(settings['shaar-back-text-color']);
+        return null;
+      };
+      const shaarMeasureOf = (fam) => {
+        const { registeredFonts: rf } = require('../typography/measure-api');
+        return (fam && rf.has(fam))
+          ? new MeasureAPI({ ...settings, 'body-font': fam }, 'font-metrics')
+          : measure;
+      };
+      const blocks = model.blocks.map(bl => {
+        if (bl.graphic) return { ...bl, lines: [], h: 24 };
+        const blFam = shaarFontOf(bl.cls, settings) || null;
+        const blMeasure = shaarMeasureOf(blFam);
+        const words = String(bl.text || '').split(/\s+/).filter(Boolean);
+        const lines = [];
+        let cur = [], curW = 0;
+        for (const w of words) {
+          const ww = blMeasure.measureTextWidth(w, bl.sizePt, 0);
+          const add = cur.length ? blMeasure.measureTextWidth(' ', bl.sizePt, 0) + ww : ww;
+          if (cur.length && curW + add > boxW) { lines.push(cur); cur = [w]; curW = ww; }
+          else { cur.push(w); curW += add; }
+        }
+        if (cur.length) lines.push(cur);
+        const lh = Math.max(12, Math.round((bl.sizePt * (96 / 72)) * 1.25));
+        return { ...bl, lines, h: lines.length * lh, _fam: blFam, _measure: blMeasure };
+      });
+      let y;
+      if (model.mode === 'between') {
+        const total = blocks.reduce((a2, b2) => a2 + b2.h, 0);
+        const gaps = Math.max(0, blocks.length - 1);
+        const gap = gaps ? Math.max(0, (boxH - total) / gaps) : 0;
+        y = boxY;
+        for (const bl of blocks) {
+          if (bl.lines && bl.lines.length) pushCentered(bl, y);
+          y += bl.h + gap;
+        }
+      } else {
+        const total = blocks.reduce((a2, b2) => a2 + b2.h, 0);
+        y = boxY + Math.max(0, (boxH - total) / 2);
+        for (const bl of blocks) {
+          if (bl.lines && bl.lines.length) pushCentered(bl, y);
+          y += bl.h;
+        }
+      }
+      function pushCentered(bl, yTop) {
+        const lh = bl.h / bl.lines.length;
+        const fk = familyFontKeyOf(bl._fam);
+        const color = shaarColorOf(bl.cls);
+        bl.lines.forEach((words, li) => {
+          const text = words.join(' ');
+          const lineH = Math.max(12, Math.round((bl.sizePt * (96 / 72)) * 1.25));
+          out.lines.push(centeredLine(text, boxX, yTop + li * lh, boxW, lineH, bl.sizePt, bl._measure, bl.cls, fk, color));
+        });
+      }
+    }
+    } // סוף שמירת compat
+  }
+
+  // **S5.4 (P-5 — עמודי endnotes ריקים):** לעמודי הערות-הסיום יש מודל משלהם —
+  // ה"טורים" שלהם מכילים אובייקטי הערה (marker/text/heightPx/colIdx), לא
+  // שורות. הלולאה הכללית הקרינה אותם כשורות בלי מילים ⇒ עמודים ריקים לחלוטין
+  // ב-PDF. הקרנה ייעודית: כותרת + הערות בטורי המודל.
+  if (page.type === 'endnotes') {
+    projectEndnotePage(page, settings, measure, out, production);
+  } else {
+    // טורים ושורות הגוף
+    page.columns.forEach((colLines, ci) => {
+      const col = tpl.columns[ci] || { x: 0, w: 0 };
+      let y = tpl.contentBox.top + spanOffset;
+      for (const ln of colLines) {
+        // **FX-6 (פרוסה 2 — הפער מהחוזה הגיאומטרי):** התקדמות ה-y כוללת את
+        // פער הבלוקים מהחותמת שנקבעה בתכנון (gapBeforePx) — בדיוק כמו
+        // margin-top ב-DOM. מקור יחיד: אין כאן חישוב פער עצמאי ואין כפילה.
+        y += ln.gapBeforePx || 0;
+        // **Iteration-001 (legacy parity — פס H3 באמצע עמוד):** רשומת-צל/זנב —
+        // רזרבציה ללא טקסט בטור המשני וגיאומטריית הזנב של הפס. אינן מוקרנות
+        // כשורות כלל (אין דיו); ה-y מתקדם בגובהן, וה-PageModel מסמן אותן
+        // כ-projected:false (מיפוי 1:1 של שורות-התוכנית נשמר שם — ראה page-model.js).
+        if (ln.h3BandShadow || ln.h3BandTail) {
+          y += (ln.heightPx || 0) * (ln.aqStretch || 1);
+          continue;
+        }
+        // **Iteration-001:** רשומת-פס — שורת כותרת H3 שהוצבה באמצע העמוד.
+        // מוקרנת ברוחב כל הטורים וממורכזת (כמו שורות הפס העליון — אותו
+        // lineAlignOf); הגובה הוא lineHeightPx המקורי (טוהר מדידה — הזנב
+        // הוא רשומה נפרדת), והתקדמות ה-y על גובה הרשומה כמו שהיא.
+        if (ln.h3Band) {
+          const bLeft = Math.min(...tpl.columns.map(c => c.x));
+          const bRight = Math.max(...tpl.columns.map(c => c.x + c.w));
+          const bandProj = projectLine(ln, bLeft, y, bRight - bLeft, settings, measure, lineAlignOf(ln, settings), production);
+          bandProj.midBand = true; // **Iteration-001:** גיאומטריית עמוד (רוחב כל הטורים) — מרונדר ברמת העמוד
+          out.lines.push(bandProj);
+          y += (ln.heightPx || 0) * (ln.aqStretch || 1);
+          continue;
+        }
+        // **Iteration-003 (מילת-חלון):** שורות 0–1 של פסקת-חלון נמדדו ברוחב
+        // מוקטן — התיבה מוזזת מעבר לחלון בצד ימין (RTL) ומילת החלון
+        // נפלטת בשפה בגודל 1.5× בגופן החלון (window — FrankReal-Bold),
+        // בסיס +2px מתחת לבסיס השורה (כמו winBase במקרן המורשת וב-DOM).
+        const winShift = ln.window && Number.isFinite(ln.windowW) ? ln.windowW : 0;
+        // **RTL:** השפה הימנית של תיבת השורה זזה שמאלה מעבר לחלון (כמו
+        // right=windowW ב-DOM) — השפה השמאלית נשארת בשפת הטור.
+        const lnProj = projectLine(ln, col.x, y, col.w - winShift, settings, measure, lineAlignOf(ln, settings), production);
+        // **Iteration-006 (RC-W1 — דגלי חלון בהקרנה):** הפרופיל המאוחד מצר את
+        // שתי השורות הראשונות של פסקת-חלון וממקם את מילת-החלון מחוץ לתיבה —
+        // אך הדגלים (window/windowW/windowWords) נשארו על שורת התוכנית ולא
+        // עברו להקרנה ולמודל. בלי זה המקרין החי (PageModel) לא יכול היה לסמן
+        // את שורת ההמשך line--window-wrap — והאודיט החי דיווח INK_NOT_JUSTIFIED
+        // על שורה שמוצרת בכוונה (חוזה המקור: החלון מרחף height:1.25em על שתי
+        // השורות; הייחוס p44: שורה 2 מסתיימת ב-472 מול קצה טור 513 = רוחב
+        // החלון). אותה החלטה כבר קיימת במקרין המורשת (dom-renderer: S4.26).
+        if (ln.window && Number.isFinite(ln.windowW)) {
+          lnProj.window = true;

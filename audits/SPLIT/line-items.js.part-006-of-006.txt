@@ -1,0 +1,95 @@
+  const spaceW = glueSpaceWidth(env);
+  return (wa + spaceW + wb) <= maxW;
+}
+
+/** רוחב תיבה — מהמדידה הקפואה שלה (שלב ב׳; אין מדידה בזמן הצמדה). */
+function advanceOf(b) {
+  if (b._adv != null) return b._adv;
+  const it = b._item;
+  b._adv = it && it.measured && it.measured.ok ? it.measured.advance : 0;
+  return b._adv;
+}
+
+/** רוחב רווח הדבק הפנימי — מדידה דרך measureItem היחיד (מטומן לפי מפתח שלב 3). */
+function glueSpaceWidth(env) {
+  const style = styleForContainer(env, null);
+  const m = measuredVia({ id: '#join-space', kind: 'glue', payload: { text: ' ' } }, style, env);
+  return m && m.ok ? m.advance : 0;
+}
+
+/** סגנון המיכל — baseStyle מפורש (הוראה §7) או resolveStyleFor המשותף. */
+function styleForContainer(env, box) {
+  if (env.baseStyle) {
+    // סמן הערה נמדד בגודל הרישום גם כשהמיכל בסגנון אחר (חוזה שלב 3)
+    if (box && box.source && box.source.kind === 'noteMarker' && env.baseStyle.fnSize != null) {
+      return { ...env.baseStyle, sizePt: env.baseStyle.fnSize, lineHeight: 1.2 };
+    }
+    return env.baseStyle;
+  }
+  return resolveStyleFor((box && box.source && box.source.kind) || 'text', box && box.source ? box.source : { kind: 'text' }, {
+    bodySize: env.base.bodySize, lineHeight: env.base.lineHeight,
+    fnSize: env.base.fnSize, defaultFamily: env.base.defaultFamily
+  });
+}
+
+/** סגנון מילה: fontIds לפי הריצות של אותה מילה בלבד. **familyOverridesRuns
+ * (§7/§12):** בכותרות המוצר מודד ומציג את השורה בגופן הרמה (S4.26) — ריצות
+ * inline אינן גוברות במדידה; family המקורי נשמר בפרגמנט (אין אובדן נתון). */
+function wordStyleFor(style, fragments) {
+  const base0 = (style && style.fontIds && style.fontIds[0]) || null;
+  const ids = fragments.map((f) => {
+    if (style && style.familyOverridesRuns) {
+      return fontResolver.fontIdOfAlias(style.family || '') || base0;
+    }
+    return fontResolver.fontIdOfAlias(f.fontFamily || (style && style.family) || '') || base0;
+  });
+  return { ...style, fontIds: ids };
+}
+
+/** הרכבת LineItem סופי — כל שדות החוזה מולאו; הקישור ל-MeasuredItem שלם. */
+function lineItemOf(base) {
+  const m = base.measured;
+  const ok = !!(m && m.ok);
+  return {
+    contractVersion: LINE_ITEM_CONTRACT_VERSION,
+    role: base.role,                 // 'box' | 'glue' | 'penalty'
+    kind: base.kind,                 // text/noteMarker/image/atomicToken/anchor/glue/penalty
+    itemId: base.itemId,
+    sourceItemId: base.sourceItemId != null ? base.sourceItemId : base.itemId,
+    sourceRange: base.sourceRange || null,
+    sourceAnchor: base.sourceAnchor || null,
+    fontId: ok && m.segments && m.segments[0] ? (m.segments[0].fontId || null) : null,
+    styleRef: base.styleRef || null,
+    atomic: !!base.atomic,
+    // קישור למדידה (§4.1-1): ה-MeasuredItem הקפוא עצמו + השדות שחייבים להישמר ישירות
+    measured: m || null,
+    measuredAdvance: ok ? m.advance : 0,
+    inkBounds: ok ? m.inkBounds : null,
+    breakOpportunities: ok ? m.breakOpportunities : [],
+    constraints: base.constraints || null,
+    diagnostics: ok ? (m.diagnostics || []) : [{ code: m && m.code, message: m && m.message, measureFailed: true }],
+    // פרגמנטים (§4.1-3): מילה מרובת גופנים — לעולם לא מחרוזת שטוחה
+    fragments: base.fragments || [],
+    // טקסט מקור של פריט שלם (תמונה/אטום) — לתצוגת המוצר עד שלב 8
+    sourceText: base.sourceText != null ? base.sourceText : null,
+    // **שלב 8 פרוסה 2 (§4.2):** הצהרת התמונה (assetId/מידות/fit/placement) —
+    // מועברת מהמודל לפריט השורה; ה-LineModel יאסוף אותה ל-assets של השורה.
+    image: base.image || null,
+    // שכבת-על של סגנון המילה (§7: סוגריים/סגנון inline) — נשמרת על הפריט
+    // ומועברת לפרגמנטים של ה-LineModel (לזיהוי span-ים בגזירת התצוגה)
+    overlay: base.overlay || null,
+    // glue/penalty semantics
+    sep: base.sep != null ? base.sep : null,
+    gapChars: base.gapChars != null ? base.gapChars : null, // המפריד המקורי המדויק (לשחזור §22)
+    internal: !!base.internal,
+    noteRef: base.noteRef || null,   // זהות העוגן של יחידה צמודה (סמן הערה)
+    penaltyType: base.penaltyType || null,
+    cost: base.cost != null ? base.cost : 0
+  };
+}
+
+module.exports = {
+  LINE_ITEM_CONTRACT_VERSION, buildLineSequences, buildContainerSequence,
+  resolveStyleFor, baseStyleOf,
+  H3_LINE_PITCH_PX, H3_LAST_BAND_PX, h3PitchOf, H3_BOTTOM_PAD_PX
+};

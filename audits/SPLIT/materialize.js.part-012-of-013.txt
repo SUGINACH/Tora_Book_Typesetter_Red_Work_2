@@ -1,0 +1,107 @@
+    for (const fn of page.footnotes) { if (!fn.words || !fn.words.length) fn.baselineY = fn.y + ascent * 11 * (96 / 72); }
+  }
+  if (page.folio) page.folio.baselineY = page.folio.baselineY != null ? page.folio.baselineY : page.folio.y + 10; // **S69:** נוסחת הנפילה רק אם לא חושב בקרן
+  // **Iteration-003 (legacy parity):** כמו הפוליו — הבסיס המכויל מהחותמת
+  // (headerSlotGeo.baselineY — GEO.HEADER_BASELINE בפרופיל IMUD) גובר;
+  // הנוסחה y+10 היא נפילה בלבד. עד כאן הדריסה הזיזה את הכותרת ~20pt מדי
+  // נמוך מהייחוס (נמדד: בסיס 99.2px מול 71.9 המכויל).
+  if (page.header) page.header.baselineY = page.header.baselineY != null ? page.header.baselineY : page.header.y + 10;
+}
+
+/** שורה מלאכותית (TOC/עזר) — מילה אחת מימין לשמאל; מיקום מפורש. */
+/** **03.11(ד):** שורת שער ממורכזת — מילים ממוקמות מהמרכז החוצה (RTL). */
+/* **S5.4 (P-5):** fakeLine הורחבה — sizePt/fontKey/kind נתונים לכותרת עמודי
+   ההערות (1.2× הגוף, /F3) בלי לשנות את הקריאות הקיימות. */
+/* **S73:** centeredLine — גופן (fontKey משפחה) וצבע פר-בלוק כמו ה-DOM. */
+function centeredLine(text, x, y, w, h, sizePt, measure, cls, fontKey, color) {
+  const words = String(text || '').split(/\s+/).filter(Boolean).map(w2 => scrubPUAText(w2));
+  const widths = words.map(w2 => measure.measureTextWidth(w2, sizePt, 0));
+  const gapW = measure.measureTextWidth(' ', sizePt, 0);
+  const totalW = widths.reduce((a, b2) => a + b2, 0) + gapW * Math.max(0, words.length - 1);
+  // RTL: המילה הראשונה בקצה הימני של הטקסט הממורכז, והשאר משמאל לה
+  let cursor = x + (w + totalW) / 2; // הקצה הימני של הטקסט
+  const wordPos = [];
+  for (let i = 0; i < words.length; i++) {
+    cursor -= widths[i];
+    wordPos.push({ text: words[i], x: cursor, w: widths[i], ...(fontKey ? { fontKey } : {}), ...(color ? { color } : {}) });
+    cursor -= gapW;
+  }
+  return { x, y, w, h, words: wordPos, align: 'center', kind: 'shaar-content', level: null, isLast: false, sizePt, baselineY: null, tokenId: null, cls: cls || '' };
+}
+
+/** **שלב 8 (§4.1):** שורת שער מהחותמת — מילים {text,w} ממוקמות מהמרכז החוצה (RTL); אפס מדידה. */
+function centeredStampedLine(stampedWords, spaceW, x, y, w, h, sizePt, cls, fontKey, color, styleOpts) {
+  const totalW = stampedWords.reduce((a, b2) => a + b2.w, 0) + (spaceW || 0) * Math.max(0, stampedWords.length - 1);
+  let cursor = x + (w + totalW) / 2; // הקצה הימני של הטקסט הממורכז
+  const wordPos = [];
+  for (const wd of stampedWords) {
+    cursor -= wd.w;
+    wordPos.push({ text: wd.text, x: cursor, w: wd.w, ...(fontKey ? { fontKey } : {}), ...(color ? { color } : {}) });
+    cursor -= (spaceW || 0);
+  }
+  return {
+    x, y, w, h, words: wordPos, align: 'center', kind: 'shaar-content', level: null, isLast: false, sizePt, baselineY: null, tokenId: null,
+    cls: cls || '',
+    // **פרוסה 3 (§2.2):** מאפייני עיצוב מהבלוק — עוברים למודל (המקרין קורא).
+    ...(styleOpts && styleOpts.bold ? { bold: true } : {}),
+    ...(styleOpts && styleOpts.letterSpacingPx ? { letterSpacingPx: styleOpts.letterSpacingPx } : {})
+  };
+}
+
+/** **שלב 8 (§4.1):** שורת TOC מהחותמת — מילים {text,w} מימין לשמאל; אפס מדידה.
+ * **ביקורת §3.2:** fontKey אופציונלי — כותרת עמוד ההערות נושאת את מפתח הגופן
+ * שלה מהחותמת ('heading' ⇒ ‏/F3), כמו בנתיב ה-fakeLine הישן (תצוגה=ייצוא). */
+function stampedRowLine(row, pt, kind, fontKey) {
+  const align = row.align || 'right';
+  const wordPos = [];
+  const words = row.words || [];
+  const totalWordsWidth = words.reduce((sum, wd) => sum + wd.w, 0) + Math.max(0, words.length - 1) * (row.spaceW || 0);
+  let cursor = align === 'center' ? row.x + (row.w + totalWordsWidth) / 2 : row.x + row.w;
+  for (const wd of words) {
+    cursor -= wd.w;
+    wordPos.push({ text: wd.text, x: cursor, w: wd.w, sizePt: pt, ...(fontKey ? { fontKey } : {}) });
+    cursor -= (row.spaceW || 0);
+  }
+  return { x: row.x, y: row.y, w: row.w, h: row.h, words: wordPos, align, kind: kind || 'toc-row', level: null, isLast: false, sizePt: pt, bold: row.bold === true, baselineY: null, tokenId: null };
+}
+
+function fakeLine(text, x, y, w, h, settings, measure, sizePt, fontKey, kind) {
+  const pt = sizePt || 12;
+  const words = String(text || '').split(/\s+/).filter(Boolean).map(w2 => scrubPUAText(w2));
+  const widths = words.map(w2 => measure.measureTextWidth(w2, pt, 0));
+  const gapW = measure.measureTextWidth(' ', pt, 0);
+  let cursor = x + w;
+  const wordPos = [];
+  for (let i = 0; i < words.length; i++) {
+    cursor -= widths[i];
+    wordPos.push({ text: words[i], x: cursor, w: widths[i], sizePt: pt, fontKey: fontKey || null });
+    cursor -= gapW;
+  }
+  return { x, y, w, h, words: wordPos, align: 'right', kind: kind || 'toc-row', level: null, isLast: false, sizePt: pt, baselineY: null, tokenId: null };
+}
+
+/**
+ * הקרנת מסמך שלם (כל העמודים) + תיבת דיו (ink bbox) לכל עמוד —
+ * לבדיקת ה־parity (raster מול מודל).
+ */
+function projectDocument(result, settings, apiOrOpts) {
+  const runOpts = resolveRunOpts(apiOrOpts);
+  const production = runOpts.production;
+  // **שלב 8 (§4.1):** הכניסה — materialization חד-פעמי. מונה הנפילות מאופס
+  // בכל הרצה ומוחזר בפלט (חשבונאות גלויה: 0 במסלול המוצר — ה-pipeline מטביע
+  // חותמות; >0 רק בקלטים סינתטיים/ישנים, תמיד עם diagnostic לכל נפילה).
+  materializeFallbacks = [];
+  const pages = result.pages.map(p => projectPage(p, settings, { measure: runOpts.measure, ...(production ? { mode: 'production' } : {}) }));
+  const fallbacks = materializeFallbacks;
+  materializeFallbacks = null;
+  const profile = runOpts.measure || new MeasureAPI(settings, 'table'); // פרופיל בסיסים בלבד
+  const ascent = profile.ascentEm();
+  const descent = profile.descentEm();
+  const inkBounds = pages.map(pg => {
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    const acc = (x, y, w, h) => {
+      if (x < minX) minX = x; if (x + w > maxX) maxX = x + w;
+      if (y < minY) minY = y; if (y + h > maxY) maxY = y + h;
+    };
+    for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) {
+      for (const w of ln.words) {

@@ -1,0 +1,112 @@
+          slots: slots.map(s => {
+            const t = scrubPUAText(String(s.text || ''));
+            const sKey = familyFontKeyOf(s.font);
+            const sMeasure = sKey && sKey !== 'heading' && sKey !== 'fnbody' && sKey !== 'margin' && sKey !== 'window'
+              ? new MeasureAPI({ ...settings, 'body-font': s.font }, 'font-metrics') : measure;
+            const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, 9)));
+            const x = s.pos === 'right' ? tpl.width - 60 - w : s.pos === 'center' ? Math.round((tpl.width - w) / 2) : 60;
+            return { pos: s.pos, align: s.align, text: t, x, w, sizePt: 9, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
+          })
+        };
+      }
+      } // סוף שמירת compat
+    }
+  }
+
+  // **EXT-4 (הדיו):** הקרנת העיטורים — ה-rect מהתוכנית + הדיו הפתוח
+  // (מקור יחיד: ornament-ink). ה-PDF וה-DOM צורכים את אותה רשימה; לאלה
+  // שאין להם דיו (image חיצוני) — ה-rect עובר כרקע בלבד.
+  if (page.decorations && page.decorations.length) {
+    const hPt = out.height * (72 / 96);
+    const PX_TO_PT = 72 / 96;
+    const r2 = (v) => Math.round(v * 100) / 100;
+    // **Iteration-003 (תיקון שורח חבוי):** ההקרנה מוסיפה לרשימה — אינה מחליפה
+    // אותה. עדכני out.decorations כבר הכיל את העיטורים של הערות-הצד/תיבות
+    // המידע (מוקרנים לפני כן), והמיפוי מעל תוכנית העמוד מחק אותם בכל עמוד
+    // שיש לו עיטורי תוכנית (למשל כלל כותרת) — תיבת המידע נעלמה מה-PDF.
+    out.decorations = [...(out.decorations || []), ...page.decorations.map((d) => {
+      const ink = d.image ? { type: 'image', uri: d.image } : ornamentInk(d.kindStyle);
+      let paint = null;
+      let pdfOps = null;
+      if (ink && ink.type === 'svg') {
+        paint = parseSvgPaint(ink.svg);
+        // **EXT-4:** פעולות הציור נחשבות כאן — ה-pdf-writer חף-תלויות
+        // (אוסף אובייקטים טהור) ורק מקבל את הפעולות מוכנות (מקור יחיד).
+        if (paint) pdfOps = svgToPdfOps(paint, d, hPt, PX_TO_PT);
+      } else if (ink && ink.type === 'rect') {
+        // **Iteration-003 (legacy parity — D-89):** מלבן בצבע אחיד (פאנלי שער,
+        // מסגרות, כלל כותרת) — אותו דיו כמו legacy-projector (§713): צבע
+        // ה-rect מה-kindStyle, לא שחור קבוע. **תיקון המשך:** parseColor מחזיר
+        // ערכים מנורמלים 0–1 — החלוקה ב-255 כאן איפסה את הצבע (0.957/255≈0)
+        // וכל הרקעים נצבעו שחור ב-PDF.
+        const yTopR = hPt - (d.y + d.h) * PX_TO_PT;
+        pdfOps = [`${r2(ink.color[0])} ${r2(ink.color[1])} ${r2(ink.color[2])} rg ${r2(d.x * PX_TO_PT)} ${r2(yTopR)} ${r2(d.w * PX_TO_PT)} ${r2(d.h * PX_TO_PT)} re f`];
+      } else if (ink && ink.type === 'rule') {
+        const yTop = hPt - (d.y + d.h) * PX_TO_PT;
+        pdfOps = [`0 0 0 rg ${r2(d.x * PX_TO_PT)} ${r2(yTop)} ${r2(d.w * PX_TO_PT)} ${Math.max(0.5, r2(d.h * PX_TO_PT))} re f`];
+      }
+      return {
+        x: d.x, y: d.y, w: d.w, h: d.h,
+        kind: d.kind || null, slot: d.slot || null, kindStyle: d.kindStyle || null,
+        inkType: ink ? ink.type : null, inkUri: ink && ink.uri ? ink.uri : null,
+        // **פרוסה 3 (§2.2 — הדיו מגיע מהמודל):** מטען הדיו בשלמותו (svg/image-
+        // ref/rule) עובר להקרנה — המקרין ה-DOM של ה-PageModel קורא ואינו פותר
+        // מחדש את הספרייה (אין חישוב מקביל ברנדרר).
+        ...(ink ? { ink } : {}),
+        paint, pdfOps,
+        // **השלמת חוזה העיטורים (שלב 6):** ההצהרה מהתוכנית עוברת בשלמותה —
+        // ההקרנה מוסיפה אריזת-ציור (paint/pdfOps) ואינה מפילה נתוני חוזה.
+        ...(d.ornId ? { ornId: d.ornId } : {}),
+        ...(d.source != null ? { source: d.source } : {}),
+        ...(d.image ? { image: d.image } : {}),
+        ...(d.ink ? { ink: { ...d.ink } } : {}),
+        ...(d.inkMissing ? { inkMissing: true } : {}),
+        ...(d.natural ? { natural: { w: d.natural.w, h: d.natural.h } } : {}),
+        ...(d.scale != null ? { scale: d.scale } : {}),
+        ...(d.fit ? { fit: { ...d.fit } } : {}),
+        ...(d.anchor ? { anchor: { ...d.anchor } } : {}),
+        ...(d.clip ? { clip: { ...d.clip } } : {}),
+        ...(d.zOrder ? { zOrder: d.zOrder } : {}),
+        ...(d.reservation ? { reservation: { ...d.reservation } } : {}),
+        ...(d.constraints ? { constraints: { ...d.constraints } } : {}),
+        ...(d.cssClass ? { cssClass: d.cssClass } : {})
+      };
+    })];
+  }
+
+  // **S12 (parity):** בסיסי שורות/מרזב/גיליון/כותרת — מודל תיבת שורה אחיד
+  attachBaselines(out, settings, measure);
+  // **Iteration-003 (מילת-חלון):** בסיס מילת החלון — 2px מתחת לבסיס שורת
+  // הטקסט (כמו winBase=baseY+2 במקרן המורשת; נמדע בייחוס: חלון 155.25
+  // מול שורה 153.75). נקבע כאן — אחרי שבסיסי השורות חושבו.
+  for (const ln of (out.lines || [])) {
+    if (!ln.words) continue;
+    for (const w of ln.words) {
+      if (w.__window && ln.baselineY != null) w.baselineY = ln.baselineY + 2;
+    }
+  }
+
+  return out;
+}
+
+function colLeftOf(tpl) { return Math.min(...tpl.columns.map(c => c.x)); }
+function colWidthOf(tpl) {
+  const left = Math.min(...tpl.columns.map(c => c.x));
+  const right = Math.max(...tpl.columns.map(c => c.x + c.w));
+  return right - left;
+}
+
+// ============ S5.4 (P-5) — הקרנת הערות-שוליים / עמודי-הערות / הערות-צד / מפרידים ============
+// **שלב 6 פרוסה 2 (§9):** המקרינים צורכים את חותמת המדידה בלבד — שורות,
+// רוחבי מילים, סמן/המשך/מונה, רווח ופיץ' — הכול מה-notes-model. אין מדידת
+// מילים, אין שבירה עצמאית ואין נוסחת גובה נפרדת: תקציב = הצבה = הקרנה.
+// חותמת חסרה/פגומה ⇒ diagnostic מפורש (out.diagnostics) — לא מדידה חלופית שקטה.
+
+/** גודל גוף הערה — 0.8× הגוף (כמו .footnotes{font-size:.8em} ו-noteHeight בתקציב). */
+function fnNoteSizePt(settings) {
+  // **Iteration-003 (legacy parity):** בפרופיל IMUD גודל גוף ההערה מהמקור
+  // (s-note-body=9 — SZ.fnBody של המורשת); מחוץ ל-IMUD — 0.8× הגוף כמקודם.
+  if (settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw)) {
+    const rawFn = Number(settings._imudRaw && settings._imudRaw['s-note-body']);
+    if (Number.isFinite(rawFn) && rawFn > 0) return rawFn;
+  }

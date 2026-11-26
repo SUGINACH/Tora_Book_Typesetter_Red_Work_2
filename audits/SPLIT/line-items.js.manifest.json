@@ -1,0 +1,32 @@
+{
+  "source": "red-build/src/engine/line/line-items.js",
+  "branch": "engine/legacy-parity-preview-20261119",
+  "totalChars": 34115,
+  "sha256": "a134ad09c62a29ded3d817dbcf810f9664d8bbdcf47a63949cbea23309106bc7",
+  "parts": [
+    {
+      "file": "line-items.js.part-001-of-006.txt",
+      "chars": 5938
+    },
+    {
+      "file": "line-items.js.part-002-of-006.txt",
+      "chars": 5984
+    },
+    {
+      "file": "line-items.js.part-003-of-006.txt",
+      "chars": 5946
+    },
+    {
+      "file": "line-items.js.part-004-of-006.txt",
+      "chars": 6000
+    },
+    {
+      "file": "line-items.js.part-005-of-006.txt",
+      "chars": 5990
+    },
+    {
+      "file": "line-items.js.part-006-of-006.txt",
+      "chars": 4257
+    }
+  ]
+}

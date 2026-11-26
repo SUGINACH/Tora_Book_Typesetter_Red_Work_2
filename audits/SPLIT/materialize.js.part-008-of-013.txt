@@ -1,0 +1,126 @@
+      y += (n.heightPx || pitch); // לפי גובה ההערה במודל — כמו הקיבולת שנקבעה
+    }
+  }
+}
+
+/**
+ * **S5.4 (P-5 — הערות-צד חסרות) + שלב 6 פרוסה 2 (§§9-10):** הקרנת הערות-הצד
+ * לפי ה-placement — אותו מיקום מוחלט כמו ה-aside ב-DOM (x/yTop/colWidth),
+ * והשורות/רוחבי המילים/הפיץ' **מהחותמת** (מדידה אחת ביצירת הפריט ב-DP) —
+ * המקרין אינו מודד ואינו שובר שוב. תיבת מידע: רקע/מסגרת מהחוזה (styleSpec +
+ * boxChrome) והטקסט בתוך הריפוד — אותה גיאומטריה שהוקצתה (§11).
+ */
+function projectSideNotes(page, settings, measure, out) {
+  for (const sn of page.sideNotes) {
+    if (sn.yTop == null) continue; // רק המוקמות בפועל (placeSideNotes)
+    // גודל הגוף מהחותמת (פריט עוגן מורחב יכול להצהיר גודל משלו — §11)
+    const sizePt = (sn.stampCtx && Number(sn.stampCtx.sizePt) > 0) ? sn.stampCtx.sizePt : settings['body-font-size-pt'] * 0.75;
+    const isBox = sn.itemKind === 'info-box';
+    const chrome = sn.boxChrome || { pad: 0, border: 0 };
+    const boxW = (sn.boxSpec && Number(sn.boxSpec.widthPx) > 0) ? sn.boxSpec.widthPx : sn.colWidth;
+    if (isBox) {
+      // רקע ומסגרת התיבה — מהחוזה בלבד, באותו ערוץ עיטורים של ה-PDF
+      const hPt = out.height * (72 / 96);
+      const PX_TO_PT = 72 / 96;
+      const r2 = (v) => Math.round(v * 100) / 100;
+      const yTopPt = hPt - (sn.yTop + sn.heightPx) * PX_TO_PT;
+      const ops = [];
+      const bg = sn.styleSpec && sn.styleSpec.background ? hexColorToRgb(sn.styleSpec.background) : null;
+      if (bg) {
+        ops.push(`${r2(bg[0])} ${r2(bg[1])} ${r2(bg[2])} rg ${r2(sn.x * PX_TO_PT)} ${r2(yTopPt)} ${r2(boxW * PX_TO_PT)} ${r2(sn.heightPx * PX_TO_PT)} re f`);
+      }
+      if (chrome.border > 0) {
+        ops.push(`0 0 0 RG ${r2(0.75)} w ${r2(sn.x * PX_TO_PT)} ${r2(yTopPt)} ${r2(boxW * PX_TO_PT)} ${r2(sn.heightPx * PX_TO_PT)} re S`);
+      }
+      if (ops.length) {
+        if (!out.decorations) out.decorations = [];
+        out.decorations.push({
+          x: sn.x, y: sn.yTop, w: boxW, h: sn.heightPx,
+          kind: 'info-box', slot: 'margin', kindStyle: null,
+          inkType: 'rule', inkUri: null, paint: null, pdfOps: ops
+        });
+      }
+    }
+    const rec = projectStampedRows(sn, sn.x, boxW, sn.yTop, {
+      sizePt, fontKey: 'margin',
+      color: colorOfSetting(settings['s-note-body-color']), measure,
+      padPx: isBox ? chrome.pad + chrome.border : 0,
+      align: 'center' // **G4/RC-4d:** הערות-צד ממורכזות כמו המקור (מרזב: יישור מלא)
+    });
+    if (!rec) { pushStampDiagnostic(out, 'side-note', page, sn); continue; } // §9.8
+    rec.lines.forEach((line) => {
+      out.lines.push({
+        x: sn.x, y: line.y, w: boxW, h: sn.lineH,
+        words: line.words.map(wd => ({ text: wd.text, x: wd.x, w: wd.w, sizePt: wd.sizePt, fontKey: wd.fontKey })),
+        align: 'right', kind: isBox ? 'info-box' : 'side-note', level: sn.level != null ? sn.level : null,
+        isLast: true, sizePt, baselineY: null,
+        tokenId: sn.anchorToken != null ? sn.anchorToken : (sn.ownToken != null ? sn.ownToken : null)
+      });
+    });
+  }
+}
+
+/**
+ * **S5.4 (P-5 — מפריד חסר):** חוט מפריד בין הטורים — קו אנכי במרכז המרזב, גובה
+ * Math.min(טורים)−8px (כלל V4) — בדיוק כמו renderColumnDivider ב-DOM. מוקרן
+ * כעיטור rule: מצויר ב-PDF (pdfOps) ונצבר בתיבת הדיו (parity) באותו ערוץ.
+ */
+function projectColumnDivider(page, settings, out) {
+  const style = settings['column-divider-style'];
+  if (!style || style === 'none' || !page.template || (page.columns || []).length < 2) return;
+  const tpl = page.template;
+  // **FX-6 (פרוסה 2):** גובה כולל פערי בלוקים — כמו renderColumnDivider ב-DOM
+  // (תצוגה = ייצוא; אותה נוסחה בדיוק).
+  const used = page.columns.map(col => col.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1) + (ln.gapBeforePx || 0), 0));
+  const h = Math.max(0, Math.min(...used) - 8);
+  if (h <= 0) return;
+  const c1 = tpl.columns[1];
+  if (!c1) return;
+  const x = c1.x + c1.w + (tpl.gutter || 0) / 2;
+  pushRuleDecoration(out, tpl, { kind: 'col-divider', style: String(style), x, y: tpl.contentBox.top, h, vertical: true });
+}
+
+/** הגדרות קו לפי ה-CSS: עובי (pt), צבע RGB 0..1, מקף (px), כפול (px), צמצום רוחב. */
+const RULE_STYLES = {
+  'fn-rule': {
+    regular: { w: 0.75, color: [0, 0, 0] },
+    circles: { w: 1.1, color: [0, 0, 0], dash: [0.75, 1.7] },
+    sparkle: { w: 1.1, color: [0.42, 0.42, 0.42], dash: [2.25, 2.25] },
+    star: { w: 0.75, color: [0.29, 0.29, 0.29], double: 1.5 },
+    diamond: { w: 1.1, color: [0, 0, 0], scaleX: 0.6 }
+  },
+  'col-divider': {
+    thin: { w: 0.75, color: [0.6, 0.6, 0.6] },
+    dashed: { w: 0.75, color: [0.6, 0.6, 0.6], dash: [2.25, 2.25] },
+    double: { w: 0.75, color: [0.6, 0.6, 0.6], double: 1.5 }
+  }
+};
+
+/**
+ * הוספת קו (אופקי/אנכי) כעיטור rule — מצויר ב-PDF דרך pdfOps ונצבר בתיבת הדיו
+ * במלואו (אותו ערוץ כמו עיטורי המנוע). מרכז הדיו על הקו עצמו.
+ */
+function pushRuleDecoration(out, tpl, spec) {
+  const table = RULE_STYLES[spec.kind] || {};
+  const st = table[spec.style] || { w: 0.75, color: [0, 0, 0] };
+  const PX_TO_PT = 72 / 96;
+  const hPt = tpl.height * PX_TO_PT;
+  const r2 = (v) => Math.round(v * 100) / 100;
+  const col = st.color;
+  const ops = [];
+  const emit = (x1, y1, x2, y2) => {
+    ops.push(`${r2(col[0])} ${r2(col[1])} ${r2(col[2])} RG`);
+    if (st.dash) ops.push(`[${st.dash.map(r2).join(' ')}] 0 d`);
+    ops.push(`${r2(st.w)} w`);
+    ops.push(`${r2(x1 * PX_TO_PT)} ${r2(hPt - y1 * PX_TO_PT)} m ${r2(x2 * PX_TO_PT)} ${r2(hPt - y2 * PX_TO_PT)} l S`);
+    if (st.dash) ops.push('[] 0 d');
+  };
+  let inkX = spec.x, inkY = spec.y, inkW = spec.w || 0, inkH = spec.h != null ? spec.h : 1;
+  if (spec.vertical) {
+    emit(spec.x, spec.y, spec.x, spec.y + spec.h);
+    if (st.double) emit(spec.x + st.double, spec.y, spec.x + st.double, spec.y + spec.h);
+    const strokePx = st.w * (96 / 72) + (st.double ? st.double : 0);
+    inkX = spec.x - strokePx / 2;
+    inkW = Math.max(0.75, strokePx);
+  } else {
+    let x1 = spec.x, x2 = spec.x + (spec.w || 0);

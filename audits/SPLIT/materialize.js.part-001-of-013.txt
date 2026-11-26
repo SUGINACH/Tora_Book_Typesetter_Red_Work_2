@@ -1,0 +1,106 @@
+// src/engine/core/materialize.js — **שלב 8 (§4.1): materialization חד-פעמי של הגאומטריה**
+'use strict';
+
+/**
+ * **מקור גיאומטריה יחיד:** הרנדרר החי (DOM) ממקם שורות בזרימת CSS; הפרויקטור
+ * מחשב את אותן מיקומים **מפורש** ממודל CP5 (pages/lines/heightPx/columns) —
+ * כך שההדפסה (PDF) והייצוא מקרינים מאותו מקור בלבד (הורג את מחלקת
+ * live≠export של כל הגרסאות הקודמות).
+ *
+ * חוזה מיקום (תואם dom-renderer): טור = תיבה absolute מ־template.columns;
+ * שורות נערמות מ־contentBox.top + spanOffset; גובה שורה = ln.heightPx.
+ * מילים: RTL — יישור לפי המחלקות (right לשורה רגילה; שורה אחרונה לפי
+ * body-last-line-align; קריעה/AQ ברווחים). PUA נאסף לפני הפלט (BRZ-13).
+ */
+
+const { scrubPUAText } = require('./pua-text'); // **ביקורת §3.1:** מודול ניטרלי — הליבה אינה מייבאת מהרנדרר עוד
+const { MeasureAPI } = require('../typography/measure-api'); // פרופיל גופן (ascent/descent) — לא מדידת טקסט ב-production
+const { familyFontKeyOf } = require('../typography/font-keys'); // **ביקורת §3.1:** מקור יחיד למיפוי משפחה→מפתח (היה כפול בין כאן ל-structural-stamps)
+const { folioGeometry: folioGeoOf, headerGeometry: headerGeoOf } = require('../layout/furniture-geometry'); // **שלב 6:** גיאומטריית ריהוט — מקור יחיד ל-DOM ול-PDF
+const NM = require('../layout/notes-model'); // **שלב 6 פרוסה 2 (§9):** חותמות ההערות — המקרינים צורכים ואינם מודדים
+const { markerForSettings } = require('../notes/markers');
+const { lineFontSizePt, hexColorToRgb } = require('../output/line-font'); // **03.11(ג):** מקור יחיד — נצרך גם ע"י dom-renderer (תצוגה חיה + ייצוא); מיוצא הלאה לצרכנים קיימים
+// **S73:** גופן השערים לפי מחלקת בלוק — מקור יחיד לשני הנתיבים (DOM+PDF)
+const { buildShaarBlocks, shaarFontOf } = require('../output/shaar-content');
+const { ornamentInk, parseSvgPaint, svgToPdfOps, svgInkBBox } = require('../decoration/ornament-ink'); // **EXT-4:** הדיו — מקור יחיד לכל הנתיבים // **03.11(ד):** תוכן השערים — אותו מודל כמו ה-DOM
+const { assignFootnoteLanes } = require('../layout/footnote-lanes'); // **שלב 5:** מקור-אמת יחיד לחלוקת נתיבי המרזב
+
+/** מונה נפילות materialization — מאופס בכל הרצה; לעולם לא שקט (diagnostics בפלט). */
+let materializeFallbacks = null;
+
+/** **S73 (צבע פר-גופן — גישה מילולית לסורק phantom-key):** '#RRGGBB' → [r,g,b]
+ * או null (=שחור — ברירת המחדל של כל הגדרות הצבע; אפס אופרטורי rg ב-PDF). */
+function colorOfSetting(hex) {
+  return hex ? hexColorToRgb(hex) : null;
+}
+
+/** פענוח ארגומנט שלישי: API ישירות (compat) או אובייקט אפשרויות {measure, mode}. */
+function resolveRunOpts(apiOrOpts) {
+  if (apiOrOpts && typeof apiOrOpts.measureTextWidth === 'function') {
+    return { measure: apiOrOpts, production: false };
+  }
+  const o = (apiOrOpts && typeof apiOrOpts === 'object') ? apiOrOpts : {};
+  return { measure: o.measure || null, production: o.mode === 'production' };
+}
+
+/**
+ * הקרנת עמוד בודד לגיאומטריה מפורשת.
+ * @param {object} page — עמוד CP5
+ * @param {object} settings — הגדרות ממוזגות
+ * @param {MeasureAPI} [api] — מדידה (נבנה אם לא הוזרק)
+ * @returns {{width, height, contentBox, lines:Array, footnotes, folio, header, spanning}}
+ */
+function projectPage(page, settings, apiOrOpts) {
+  const runOpts = resolveRunOpts(apiOrOpts);
+  const production = runOpts.production;
+  // פרופיל גופן לבסיסים בלבד (ascent/descent/cap — נתוני טבלה סטטיים); מדידת
+  // טקסט אסורה ב-production — מוכח בבדיקת s8b (patch ל-prototype שזורק).
+  const measure = runOpts.measure || new MeasureAPI(settings, 'table');
+  const tpl = page.template;
+  const spanOffset = page.spanning ? page.spanning.heightPx : 0;
+
+  const out = {
+    width: tpl.width,
+    height: tpl.height,
+    contentBox: { ...tpl.contentBox },
+    columns: tpl.columns.map(c => ({ ...c })),
+    lines: [],        // {x, y, w, h, words:[{text,x,w}], align, kind, level, isLast}
+    footnotes: [],    // {y, marker, text}
+    folio: null,      // {y, text}
+    header: null,     // {y, parts}
+    spanning: null
+  };
+
+  // פס חוצה־טורים — שורותיו ברוחב הפס (מעל הטורים)
+  if (page.spanning && page.spanning.lines.length) {
+    const left = Math.min(...tpl.columns.map(c => c.x));
+    const right = Math.max(...tpl.columns.map(c => c.x + c.w));
+    const band = { x: left, y: tpl.contentBox.top, w: right - left, h: page.spanning.heightPx, lines: [] };
+    // **חוזה H3 + הזמנות עיטור (D-S2H3/F-08):** שורות הפס מתחילות אחרי הריפוד
+    // העליון שהוזמן בתכנון — titleTopPadPx (ריפוד 8px של פס H3 לפי ה-CSS המקורי,
+    // או הזמנת עיטור-H2). ornament-plan כבר מניח הנחה זו (titleTop); עד כאן
+    // ההקרנה התעלמה ממנה ושורות הפס עלו על שטח ההזמנה.
+    const topPad = page.spanning.titleTopPadPx || 0;
+    // **Iteration-003 (legacy parity — פסים ממוקמים בעוגן מכויל):** לפסי
+    // פתיחת-הסימן/ההקדמה יש עוגן אנכי מכויל (bandTopPx) בתוך השטח השמור
+    // של התבנית — לא בראש תיבת התוכן; שורה עם yPx משלה נעוצה בו.
+    let y = (page.spanning.bandTopPx != null ? page.spanning.bandTopPx : tpl.contentBox.top) + topPad;
+    for (const ln of page.spanning.lines) {
+      if (ln.yPx != null) y = ln.yPx;
+      // **U-15:** אותו מקור סמכות ליישור בפס החוצה־טורים — בעבר 'right' קבוע
+      // לכל שורות הפס (כותרות H2/H3–H6 ו-callouts) ⇒ כותרות צמודות-ימין
+      // (נמדד: אסימטריה 170–222px ממרכז הפס) בניגוד לחוזה המרכוז של המורשת
+      // ושל המקרן הישן. כותרת ⇒ center; שורת callout שאינה-אחרונה ⇒ justify —
+      // בדיוק כמו renderLine הישן שרינדר את שורות הפס באותה החלטה.
+      band.lines.push(projectLine(ln, band.x, y, band.w, settings, measure, lineAlignOf(ln, settings), production));
+      y += ln.heightPx || 0;
+    }
+    out.spanning = band;
+  }
+
+  // **Iteration-003 (legacy parity — פס הסימן):** חותמת h2-siman מהתכנון —
+  // שורה ממורכזת בעוגן המכויל, מילים נמדדות בהטבעה (אין מדידה כאן).
+  if (page.simanBand && page.simanBand.words && page.simanBand.words.length) {
+    const sb = page.simanBand;
+    // **G3/RC-3 (i004) — איחוד הטורים, לא החיתוך:** עד כאן חושב min(x+w)−max(x) —
+    // חפיפת הטורים — שלילית בגריד דו-טורי (390−404=−14px) ⇒ שורת הסימן

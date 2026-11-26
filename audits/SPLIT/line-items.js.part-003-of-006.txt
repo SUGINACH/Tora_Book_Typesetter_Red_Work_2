@@ -1,0 +1,129 @@
+        sourceItemId: b.source.id, sourceRange: null, measured: null, measuredAdvance: 0,
+        fragments: [], breakOpportunities: [], constraints: null, diagnostics: []
+      });
+    }
+    out.push(b._item);
+    prev = b;
+  }
+  if (!out.length) return null;
+  out.push({ role: 'penalty', penaltyType: 'final', cost: 0, itemId: `${blockId}#end` });
+  return {
+    blockId, blockKind: cont.kind, semantic: opts.semantic || null,
+    items: out, rejected
+  };
+}
+
+/**
+ * פיצול פריט טקסט למילים — כל מילה שומרת fragments פר-ריצה (§4.1-3).
+ * **תיקון שורש (§3.5):** מילה חוצת-ריצות ממשיכה רק כשהריצה הבאה פותחת
+ * בהמשך המילה עצמו (תו ראשון, בלי רווח מוביל ובלי מפריד שנצבר). ריצה
+ * שפותחת ברווח — סוגרת את המילה הפתוחה עם המפריד המדויק; בעבר המילים
+ * התמזגו והרווח ביניהן אבד ("אחר בסוף" ⇒ "אחרבסוף" — הפרת §22).
+ */
+function splitTextItem(item, env, boxes, rejected) {
+  const runs = (item.payload && item.payload.runs) || [];
+  if (!runs.length) { rejected.push({ itemId: item.id, kind: 'text', code: 'text-no-runs', message: 'פריט טקסט ללא ריצות' }); return; }
+  // היסט מוחלט של כל ריצה בקואורדינטות המסמך הקנוניות: sourceRange של הפריט
+  // = canonicalBase + הריצה הראשונה; כל ריצה מוסטת לפי sourceStart שלה עצמה.
+  const run0 = runs[0];
+  const itemAbsStart = item.sourceRange && Number.isFinite(item.sourceRange.start) ? item.sourceRange.start : 0;
+  const runDocOffset = (ri) => itemAbsStart + (Number.isFinite(runs[ri].sourceStart) ? runs[ri].sourceStart : 0) - (Number.isFinite(run0.sourceStart) ? run0.sourceStart : 0);
+  const words = []; // {fragments, sep, sepRange} — sep = המפריד אחרי המילה (מדויק)
+  let carry = null;        // מילה פתוחה שנמשכת לריצה הבאה
+  let pendingSep = null;   // {text, fromRun, fromStart, toRun, toEnd} — מפריד שנצבר מסוף המילה האחרונה
+  const addPending = (text, ri, start, end) => {
+    if (!text) return;
+    if (pendingSep) { pendingSep.text += text; pendingSep.toRun = ri; pendingSep.toEnd = end; }
+    else pendingSep = { text, fromRun: ri, fromStart: start, toRun: ri, toEnd: end };
+  };
+  const flushSepToLastWord = () => {
+    if (pendingSep && words.length) {
+      const w = words[words.length - 1];
+      w.sep = pendingSep.text; w.sepRange = pendingSep;
+      pendingSep = null;
+    }
+  };
+  for (let ri = 0; ri < runs.length; ri++) {
+    const runText = String(runs[ri].text == null ? '' : runs[ri].text);
+    const parts = splitWordsOfRun(runText);
+    if (!parts.length) {
+      // ריצת רווחים בלבד (או ריקה): רווחים שבה נצברים למפריד — לא אובדים.
+      if (runText.length) addPending(runText, ri, 0, runText.length);
+      continue;
+    }
+    for (let pi = 0; pi < parts.length; pi++) {
+      const p = parts[pi];
+      // מפריד בתוך הריצה: בין חלק k לחלק k+1 עומד בדיוק ה-sepAfter של חלק k
+      // (splitWordsOfRun מבטיח רצף) — אין חישוב נוסף ואין ספירה כפולה.
+      // רק בפתיחת ריצה (pi===0) ייתכנו רווחים מובילים של הריצה עצמה — הם
+      // נצברים למפריד שבין המילים (מצטברים עם סוף-הריצה הקודמת, בלי כפילות).
+      if (pi === 0 && p.start > 0) {
+        addPending(runText.slice(0, p.start), ri, 0, p.start);
+      }
+      if (pi === 0 && carry !== null && p.start === 0 && pendingSep === null) {
+        // המשך מילה מריצה קודמת — fragment נוסף של אותה מילה (גופן שונה באמצע מילה)
+        words[carry].fragments.push({
+          runIndex: ri, text: p.text, start: p.start, end: p.end,
+          docStart: runDocOffset(ri) + p.start, docEnd: runDocOffset(ri) + p.end,
+          fontFamily: runs[ri].fontFamily || null
+        });
+        if (p.sepAfter != null) {
+          addPending(p.sepAfter, ri, p.end, p.end + p.sepAfter.length);
+          carry = null;
+        }
+        // p.sepAfter === null ⇒ המילה ממשיכה גם לריצה הבאה — ה-carry נשאר פתוח
+        continue;
+      }
+      if (carry !== null) {
+        // מילה פתוחה שלא הומשכה (רווח מוביל/מפריד שנצבר) — נסגרת עם המפריד שנצבר
+        if (pendingSep) { words[carry].sep = pendingSep.text; words[carry].sepRange = pendingSep; pendingSep = null; }
+        carry = null;
+      }
+      if (words.length === 0 && pendingSep) {
+        // רווחים מובילים של הפריט לפני המילה הראשונה — הטוקנייזר מסיר אותם
+        // (blk.source.rawLead); אין לייחס אותם כמפריד שאחרי המילה הראשונה.
+        pendingSep = null;
+      }
+      flushSepToLastWord();
+      words.push({
+        fragments: [{
+          runIndex: ri, text: p.text, start: p.start, end: p.end,
+          docStart: runDocOffset(ri) + p.start, docEnd: runDocOffset(ri) + p.end,
+          fontFamily: runs[ri].fontFamily || null
+        }],
+        sep: null, sepRange: null // יוקצו כשהמילה הבאה תיפתח (המפריד המדויק שנצבר)
+      });
+      if (p.sepAfter != null) {
+        addPending(p.sepAfter, ri, p.end, p.end + p.sepAfter.length);
+      } else if (pi === parts.length - 1) {
+        carry = words.length - 1; // המילה נמשכת לריצה הבאה
+      }
+    }
+  }
+  // המפריד שנצבר בסוף הפריט ולא נצרך — שייך בין תיבה אחרונה לבאה אחריה (מועבר ב-trailingSep)
+  for (const w of words) {
+    boxes.push({ source: item, word: w, joinedToPrev: false });
+  }
+  if (words.length && pendingSep) {
+    boxes[boxes.length - 1].trailingSep = pendingSep; // בין פריט זה לפריט הבא (רווחי סוף-ריצה)
+  }
+}
+
+/** מדידה דרך measureItem היחיד — עם ספירת-הוכחה לבדיקות (גבול מדידה יחיד, §5). */
+function measuredVia(item, style, env) {
+  if (env.ctx && env.ctx.instrument) {
+    if (!env.ctx.__measureLog) env.ctx.__measureLog = new Map();
+    const k = String(item.id);
+    env.ctx.__measureLog.set(k, (env.ctx.__measureLog.get(k) || 0) + 1);
+  }
+  return measureItem(item, style, env.ctx);
+}
+
+/** הזרמת תיבה אחת לרצף: בניית פריט-מילה קנוני + מדידה דרך measureItem היחיד.
+ * הסגנון נפתר מהמיכל (baseStyle או resolveStyleFor המשותף) + שכבת-על פר-מילה. */
+function boxItemFor(b, env) {
+  const src = b.source;
+  let style = styleForContainer(env, b);
+  // שכבת-על פר-מילה (§7): סוגריים/סגנון inline — advanceFactor על הרוחב בלבד.
+  if (env.wordStyleOf && b.word) {
+    const f0 = b.word.fragments[0];

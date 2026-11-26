@@ -1,0 +1,114 @@
+    const fN = b.word.fragments[b.word.fragments.length - 1];
+    const ov = env.wordStyleOf(f0.docStart, fN.docEnd);
+    if (ov) {
+      b._overlay = ov;
+      if (Number.isFinite(ov.advanceFactor) && ov.advanceFactor > 0 && ov.advanceFactor !== 1) {
+        style = { ...style, advanceFactor: ov.advanceFactor };
+      }
+    }
+  }
+  if (b.word) {
+    // פריט-מילה: kind 'text' עם ריצות-הפרגמנטים — נמדד כמכלול (advance = Σ פרגמנטים)
+    const f0 = b.word.fragments[0];
+    const fN = b.word.fragments[b.word.fragments.length - 1];
+    const docStart = f0.docStart, docEnd = fN.docEnd;
+    const wordItemId = `${src.id}#w@${docStart}-${docEnd}`;
+    const runsPayload = b.word.fragments.map((f) => ({ text: f.text, fontFamily: f.fontFamily || (style && style.family) || undefined }));
+    const measureStyle = wordStyleFor(style, b.word.fragments);
+    const m = measuredVia({ id: wordItemId, kind: 'text', payload: { runs: runsPayload } }, measureStyle, env);
+    const fragments = b.word.fragments.map((f, k) => ({
+      itemId: wordItemId,
+      runIndex: f.runIndex,
+      text: f.text,
+      start: f.start, end: f.end,
+      docStart: f.docStart, docEnd: f.docEnd,
+      fontId: (m.ok && m.segments && m.segments[k] && m.segments[k].fontId) || null,
+      fontFamily: f.fontFamily || null,
+      advancePx: (m.ok && m.segments && m.segments[k] && m.segments[k].advancePx) || 0
+    }));
+    return lineItemOf({
+      role: 'box', kind: 'text', itemId: wordItemId, sourceItemId: src.id,
+      fragments,
+      measured: m,
+      overlay: b._overlay || null,
+      sourceRange: {
+        blockId: env.blockId, itemId: src.id,
+        runIndex: f0.runIndex,
+        start: docStart, end: docEnd,
+        runLocal: { start: f0.start, end: fN.end }
+      },
+      constraints: (src.constraints && { ...src.constraints }) || null
+    });
+  }
+  // פריט מודל שלם (noteMarker/image/atomic/...) — תיבה בפני עצמה
+  let m = measuredVia(src, style, env);
+  // **תמונה שלא נפתרה (§6):** מדידת טקסט-המקור המאובחנת — התנהגות המוצר
+  // הקיימת (ה-syntax מוצג כטקסט) + אבחון מפורש. אין פלובק שקט ואין אפס-רוחב.
+  if (!m.ok && src.kind === 'image' && src.sourceText) {
+    const fb = measuredVia(
+      { id: `${src.id}#text-fallback`, kind: 'atomicToken', payload: { text: src.sourceText } },
+      style, env
+    );
+    if (fb.ok) {
+      m = {
+        ...fb, kind: 'image', itemId: src.id,
+        diagnostics: [...(fb.diagnostics || []), {
+          code: 'image-unresolved-text-fallback',
+          assetId: src.payload && src.payload.assetId,
+          resourcePath: src.payload && src.payload.resourcePath,
+          reason: m.code || 'asset-measure-failed',
+          message: `תמונה לא נפתרה (${m.code || 'asset-measure-failed'}) — נמדדה כטקסט המקור שלה (התנהגות המוצר; אבחון מפורש, לא שקט)`
+        }]
+      };
+    }
+  }
+  const sr = src.sourceRange || null;
+  const itemNoteRef = (src.payload && src.payload.noteRef) || null;
+  // **שלב 8 פרוסה 2 (§4.2 — תמונות פריטים ממדרגה ראשונה):** זהות הנכס וההצהרה
+  // עולות מה-payload אל פריט השורה — כך שה-LineModel (וה-PageModel אחריו)
+  // נושאים assetId/מידות-טבעיות/fit/placement בלי שהמקרינים יחפשו אותם מחדש.
+  const imgPayload = src.kind === 'image' && src.payload ? {
+    // **פרוסה 2 (תיקון שורש — זהות קנונית):** כשה-resolver פתר את הנכס,
+    // הזהות היא ה-id מכתובת-התוכן (contentAssetId — מה ש-resolvedAssetIds
+    // מחזיר); ה-id על בסיס הנתיב נשמר כ-declaredAssetId לעקיבות.
+    assetId: src.payload.contentAssetId != null ? src.payload.contentAssetId
+      : (src.payload.assetId != null ? src.payload.assetId : null),
+    ...(src.payload.contentAssetId != null && src.payload.assetId != null
+      ? { declaredAssetId: src.payload.assetId } : {}),
+    resourcePath: src.payload.resourcePath != null ? src.payload.resourcePath : null,
+    align: src.payload.align != null ? src.payload.align : null,
+    widthPct: src.payload.widthPct != null ? src.payload.widthPct : null,
+    natural: (src.payload.naturalWidth != null && src.payload.naturalHeight != null)
+      ? { w: src.payload.naturalWidth, h: src.payload.naturalHeight,
+          ...(src.payload.aspectRatio != null ? { aspectRatio: src.payload.aspectRatio } : {}) }
+      : null,
+    fit: src.payload.fit != null ? { ...src.payload.fit } : null,
+    altText: src.payload.altText != null ? src.payload.altText : null
+  } : null;
+  return lineItemOf({
+    role: 'box', kind: src.kind, itemId: src.id, sourceItemId: src.id,
+    fragments: (m.ok && m.segments ? m.segments.map((s) => ({ itemId: src.id, runIndex: 0, text: s.text, start: 0, end: String(s.text || '').length, docStart: sr ? sr.start : null, docEnd: sr ? sr.end : null, fontId: s.fontId, fontFamily: s.family || null, advancePx: s.advancePx })) : []),
+    measured: m,
+    overlay: b._overlay || null,
+    sourceText: src.sourceText != null ? src.sourceText : null, // תמונות/אטומים — טקסט המקור לתצוגת המוצר
+    image: imgPayload, // **§4.2:** ההצהרה המלאה של התמונה — מהמודל, בלי חישוב במקרינים
+    sourceRange: { blockId: env.blockId, itemId: src.id, runIndex: 0, start: sr ? sr.start : null, end: sr ? sr.end : null },
+    sourceAnchor: itemNoteRef,
+    noteRef: itemNoteRef,
+    constraints: (src.constraints && { ...src.constraints }) || null,
+    atomic: src.kind !== 'text' // כל פריט שאינו מילת-טקסט — אטום ברצף (§4.1-5)
+  });
+}
+
+/**
+ * המפריד המדויק בין שתי תיבות עוקבות (§3.1/§22 — שחזור מלא של המקור):
+ * (א) שתי מילים מאותו פריט טקסט — ה-sep שנצבר בפיצול (מחרוזת מדויקת, כולל
+ *     רווחים מרובים וריצות-רווח שלמות שביניהן).
+ * (ב) תיבות מפריטים שונים — רווחי סוף-הפריט שנצברו + הפער המוחלט במקור
+ *     (nextStart − prevEnd ברווחים; תחביר סמנים שייך לטווח הפריט עצמו ואינו
+ *     נכנס לפער). מדויק לחלוטין עבור המודל הקנוני של שלב 2.
+ */
+function separatorOf(prevBox, nextBox) {
+  const prevSrc = prevBox.source, nextSrc = nextBox.source;
+  const sameItem = prevSrc === nextSrc || (prevSrc.id != null && prevSrc.id === nextSrc.id);
+  if (sameItem && prevBox.word && nextBox.word && prevBox.word.sep != null) {

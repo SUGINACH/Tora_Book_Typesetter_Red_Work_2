@@ -1,0 +1,118 @@
+    const r = prevBox.word.sepRange || { fromRun: 0, fromStart: 0, toRun: 0, toEnd: prevBox.word.sep.length };
+    return { sep: prevBox.word.sep, range: r, owner: prevSrc };
+  }
+  // בין פריטים (או מילה-אחרונה בפריט): רווחי סוף + הפער המוחלט
+  const tail = (prevBox.word && prevBox.trailingSep) ? prevBox.trailingSep.text : '';
+  const prevEnd = boxDocEnd(prevBox);
+  const nextStart = boxDocStart(nextBox);
+  const gap = (Number.isFinite(prevEnd) && Number.isFinite(nextStart)) ? Math.max(0, nextStart - prevEnd) : 1;
+  const sep = tail + ' '.repeat(gap);
+  const r = (prevBox.word && prevBox.trailingSep) ? prevBox.trailingSep : { fromRun: 0, fromStart: 0, toRun: 0, toEnd: 0 };
+  return {
+    sep, owner: prevSrc,
+    range: { fromRun: r.fromRun, fromStart: r.fromStart, toRun: r.toRun, toEnd: r.toEnd + gap },
+    crossItem: !sameItem
+  };
+}
+
+/** המיקום המוחלט של תחילת/סיום תיבה בקואורדינטות המסמך הקנוניות. */
+function boxDocStart(b) {
+  if (b.word && b.word.fragments[0]) return b.word.fragments[0].docStart;
+  const sr = b.source && b.source.sourceRange;
+  return sr && Number.isFinite(sr.start) ? sr.start : 0;
+}
+function boxDocEnd(b) {
+  if (b.word) {
+    const fN = b.word.fragments[b.word.fragments.length - 1];
+    return fN ? fN.docEnd : 0;
+  }
+  const sr = b.source && b.source.sourceRange;
+  return sr && Number.isFinite(sr.end) ? sr.end : 0;
+}
+
+/** היסט מוחלט של טווח מפריד (מריצות הפריט שבבעלותו). */
+function sepRangeAbs(range, owner) {
+  const runs = (owner.payload && owner.payload.runs) || [];
+  const run0 = runs[0];
+  const itemAbsStart = owner.sourceRange && Number.isFinite(owner.sourceRange.start) ? owner.sourceRange.start : 0;
+  const off = (ri) => itemAbsStart + (runs[ri] && Number.isFinite(runs[ri].sourceStart) ? runs[ri].sourceStart : 0) - (run0 && Number.isFinite(run0.sourceStart) ? run0.sourceStart : 0);
+  return {
+    start: off(range.fromRun) + range.fromStart,
+    end: off(range.toRun) + range.toEnd
+  };
+}
+
+/** glue בין שתי תיבות — המפריד המקורי המדויק נשמר (sep + gapChars) לשחזור מלא.
+ * **מקטע ב׳ (המדידה = הדיו):** רוחב השבירה של ה-glue הוא רוחב הצורה
+ * **המרונדרת** — מרווח בודד (הרנדררים מצמצמים רצפי רווחים: white-space:normal
+ * ב-DOM, gapW בודד במקרן ה-PDF; כך גם נהג הנתיב החי — split(/\s+/)). אין למדוד
+ * רצף-רווחים מלא כרוחב שהדיו לעולם אינו מציג; המקור המדויק נשמר ב-gapChars
+ * לשחזור ביט-לביט (§22). */
+function glueItemFor(prevBox, nextBox, env) {
+  const style = styleForContainer(env, prevBox);
+  const { sep, range, owner } = separatorOf(prevBox, nextBox);
+  const abs = sepRangeAbs(range, owner);
+  const glueItemId = `${owner.id}#g@${abs.start}-${abs.end}`;
+  const m = measuredVia({ id: glueItemId, kind: 'glue', payload: { text: ' ' } }, style, env);
+  return lineItemOf({
+    role: 'glue', kind: 'glue', itemId: glueItemId, sourceItemId: owner.id,
+    sep, gapChars: sep,
+    measured: m,
+    sourceRange: { blockId: env.blockId, itemId: owner.id, runIndex: range.fromRun, start: abs.start, end: abs.end },
+    constraints: null
+  });
+}
+
+/** glue פנימי של יחידה צמודה (מקביל פנימי ל-NBSP במנוע הקיים): רוחב רווח לצורך
+ * הפריסה (זהה לנתיב החי — bindMarkersToNeighbors מדביק ב-NBSP), פנימי —
+ * אסור לדלג בפתיחת שורה ואסור לחתוך בו (ה-penalty האסור שאחריו מבטיח זאת).
+ * הקישור מבוסס noteRef — זהות העוגן נשמרת על ה-glue לשלבי התכנון. */
+function internalGlueFor(prevBox, nextBox, env) {
+  const style = styleForContainer(env, prevBox);
+  const { sep, range, owner } = separatorOf(prevBox, nextBox);
+  const abs = sepRangeAbs(range, owner);
+  const glueItemId = `${nextBox.source.id}#j@${abs.start}-${abs.end}`;
+  // המדידה ברוחב רווח (כמו המנוע הקיים: NBSP מוצג ברוחב רווח)
+  const m = measuredVia({ id: glueItemId, kind: 'glue', payload: { text: ' ' } }, style, env);
+  const noteRef = (nextBox.source.kind === 'noteMarker' && nextBox.source.payload && nextBox.source.payload.noteRef)
+    || (prevBox.source.kind === 'noteMarker' && prevBox.source.payload && prevBox.source.payload.noteRef) || null;
+  return lineItemOf({
+    role: 'glue', kind: 'glue', itemId: glueItemId, sourceItemId: owner.id,
+    sep: '\u00A0', internal: true, gapChars: sep, noteRef,
+    measured: m,
+    sourceRange: { blockId: env.blockId, itemId: owner.id, runIndex: range.fromRun, start: abs.start, end: abs.end },
+    constraints: null
+  });
+}
+
+/** צמידת סמני הערה לעוגן — לפי הכללים התקפים (P1-3/BRZ-11), מנוסח פעם אחת.
+ * הקישור מותר לפריט עם זהות עוגן (noteRef) ואילוץ bindToNeighbor — סמן
+ * הערה של המודל, ו-placeholder inline מסונתז (D-30). **מקטע ב׳:** פועל
+ * אחרי המדידה — הרוחבים מהמדידות הקפואות (אין מדידה כפולה). */
+function applyMarkerJoins(boxes, env) {
+  for (let i = 0; i < boxes.length; i++) {
+    const b = boxes[i];
+    if (!b.source) continue;
+    const bindable = (b.source.kind === 'noteMarker')
+      || (b.source.kind === 'atomicToken' && b.source.constraints && b.source.constraints.bindToNeighbor);
+    if (!bindable) continue;
+    if (!(b.source.payload && b.source.payload.noteRef)) continue; // בלי זהות עוגן — אין צמידה
+    const prev = i > 0 ? boxes[i - 1] : null;
+    const next = i + 1 < boxes.length ? boxes[i + 1] : null;
+    if (prev && !prev.joinedToPrev && !(prev.source && (prev.source.kind === 'noteMarker' || (prev.source.kind === 'atomicToken' && prev.source.constraints && prev.source.constraints.bindToNeighbor)))) {
+      if (unitFits(prev, b, env)) { b.joinedToPrev = true; continue; }
+    }
+    if (!prev && next) {
+      if (unitFits(b, next, env)) { next.joinedToPrev = true; continue; }
+    }
+  }
+}
+
+/** בדיקת התאמת יחידה צמודה לרוחב — כולל רוחב הדבק הפנימי (רוחב רווח, כמו
+ * ה-NBSP בנתיב החי). יחידה חורגת ⇒ הצמדה מתבטלת והטיפול עובר לערוץ
+ * ה-overflow המפורש של המנוע (לא גלישה שקטה). */
+function unitFits(a, b, env) {
+  const maxW = env.constraints && Number.isFinite(env.constraints.availableWidthPx) ? env.constraints.availableWidthPx : null;
+  const wa = advanceOf(a);
+  const wb = advanceOf(b);
+  if (maxW == null) return true; // אין אילוץ ידוע — הצמדה נשמרת (ההחלטה הסופית ב-KP)

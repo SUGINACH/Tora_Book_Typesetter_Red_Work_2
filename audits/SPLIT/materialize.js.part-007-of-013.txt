@@ -1,0 +1,116 @@
+    // **שלב 8 (§4.1):** חלוקת הנתיבים מהחותמת שהוטבעה בזמן התכנון — אותה
+    // חלוקה שהתקציב קבע (footnote-lanes, מקור-אמת יחיד), מוטבעת פעם אחת;
+    // ההקרנה צורכת ואינה מחלקת שוב.
+    for (const li of [0, 1]) lanes[li] = page.footnoteLanes.lanes[li].map(i => notes[i]).filter(Boolean);
+  } else {
+    materializeFallbacks.push({ kind: 'materialize-fallback-fn-lanes', page: page.index });
+    if (production) {
+      // **§3.1:** בייצור — חותמה חסרה ⇒ נתיב אחד בלבד (מדווח); אין חלוקה מחדש במקרין.
+      lanes[0] = notes.slice();
+    } else {
+      const { lanes: idxLanes } = assignFootnoteLanes(notes);
+      for (const li of [0, 1]) lanes[li] = idxLanes[li].map(i => notes[i]);
+    }
+  }
+  const reserved = page.fnReservedHeightPx > 0
+    ? page.fnReservedHeightPx
+    : notes.reduce((s, n) => s + (n.heightPx || 0), 0);
+  const gutterTop = tpl.contentBox.bottom - reserved;
+  const laneX = twoLanes ? [fullX + laneW + (tpl.gutter || 0), fullX] : [fullX, fullX]; // RTL: הנתיב הראשון מימין
+  let inkTop = Infinity;
+  lanes.forEach((laneNotes, li) => {
+    let y = gutterTop;
+    for (const n of laneNotes) {
+      const pitch = n.lineH || Math.round(fnSize * (96 / 72) * 1.25);
+      const marker = noteMarkerOf(n, settings);
+      const rec = projectStampedRows(n, laneX[li], laneW, y, {
+        sizePt: fnSize, fontKey: 'fnbody',
+        color: colorOfSetting(settings['f-note-body-color']), measure
+      });
+      if (!rec) {
+        // **§9.8:** חותמה חסרה/פגומה — diagnostic מפורש; הטקסט נשמר ברשומת
+        // ההערה (מלאי/חשבונאות) אך אין מדידה חלופית שקטה של מילים.
+        pushStampDiagnostic(out, 'footnote-gutter', page, n);
+        out.footnotes.push({
+          y, x: laneX[li], w: laneW,
+          marker: scrubPUAText(String(n.marker || '')),
+          text: scrubPUAText(String(n.text || '').replace(/\uE000/g, ' ')),
+          words: [], baselineY: y, h: n.heightPx || 0, stampMissing: true
+        });
+      } else {
+        out.footnotes.push({
+          y: rec.firstTop, x: laneX[li], w: laneW,
+          marker: scrubPUAText(String(n.marker || '')),
+          text: scrubPUAText(String(n.text || '').replace(/\uE000/g, ' ')),
+          words: rec.words, baselineY: rec.firstBaseline, h: Math.max(n.heightPx || 0, rec.h)
+        });
+        inkTop = Math.min(inkTop, rec.firstTop);
+      }
+      y += (n.heightPx != null ? n.heightPx : pitch); // התקדמות לפי התקציב — פריסת העמוד לעולם אינה נפרצת
+    }
+  });
+  // חוט המפריד מעל המרזב — כמו .fn-rule ב-renderFootnoteArea (לא במצב 'none')
+  const ruleStyle = settings['footnote-separator-rule'];
+  if (ruleStyle && ruleStyle !== 'none' && Number.isFinite(inkTop)) {
+    pushRuleDecoration(out, tpl, { kind: 'fn-rule', style: String(ruleStyle), x: fullX, w: fullW, y: inkTop });
+  }
+}
+
+/**
+ * **S5.4 (P-5 — עמודי endnotes ריקים) + שלב 6 פרוסה 2 (§9):** הקרנת עמוד
+ * הערות-הסיום — כותרת (h2, 1.2× הגוף) ואז ההערות בטורי המודל (colIdx/heightPx
+ * מ-buildEndnotePages). השורות, רוחבי המילים, הסמן והפיץ' **מהחותמת** שנקבעה
+ * בבונה עצמו (המדידה היחידה של ההערה בהקשר עמודי-ההערות) — המקרין אינו
+ * מודד ואינו שובר שוב. חותמה חסרה ⇒ diagnostic מפורש (§9.8).
+ * השורות נכנסות ל-out.lines ⇒ מצוירות ב-PDF, נכנסות למלאי הגליפים ולתיבת הדיו.
+ */
+function projectEndnotePage(page, settings, measure, out, production) {
+  const tpl = page.template;
+  const bodyPt = settings['body-font-size-pt'];
+  const notePt = bodyPt * 0.8;
+  if (page.heading) {
+    // **שלב 8 ביקורת §3.2:** כותרת עמוד ההערות — מהחותמת שהוטבעה בתכנון
+    // (stampEndnoteHeading: מדידה אחת). חותמה חסרה ⇒ diagnostic (בייצור) או
+    // fakeLine (compat בלבד) — לא מדידה שקטה במסלול הייצור.
+    if (page.endnoteTitleGeo && page.endnoteTitleGeo.words) {
+      const g = page.endnoteTitleGeo;
+      out.lines.push(stampedRowLine({ x: g.x, y: g.y, w: g.w, h: g.h, words: g.words, spaceW: g.spaceW }, g.sizePt, 'endnote-title', g.fontKey || 'heading'));
+    } else {
+      materializeFallbacks.push({ kind: 'materialize-fallback-endnote-title', page: page.index });
+      if (!production) {
+        const sizePt = bodyPt * 1.2;
+        const bandH = (page.titleBandPx && page.titleBandPx > 16) ? page.titleBandPx - 16 : (measure.lineHeightPx ? measure.lineHeightPx(sizePt) : Math.round(sizePt * (96 / 72) * 1.34));
+        out.lines.push(fakeLine(scrubPUAText(String(page.heading)), colLeftOf(tpl), tpl.contentBox.top + 8, colWidthOf(tpl), bandH, settings, measure, sizePt, 'heading', 'endnote-title'));
+      }
+    }
+  }
+  const top = tpl.contentBox.top + (page.titleBandPx || 0);
+  const cols = Math.max(1, (page.columns || []).length);
+  // טור-אחד (endnote-columns=1): רשימה ברוחב תיבת התוכן המלא (כמו המנוע
+  // שמדד את ההערה ברוחב המלא) — התבנית עצמה דו-טורית תמיד.
+  const singleColMode = (page.columns || []).length === 1;
+  for (let ci = 0; ci < cols; ci++) {
+    const colNotes = page.columns[ci] || [];
+    if (!colNotes.length) continue;
+    const col = singleColMode
+      ? { x: colLeftOf(tpl), w: colWidthOf(tpl) }
+      : (tpl.columns[ci] || { x: colLeftOf(tpl), w: colWidthOf(tpl) / cols });
+    let y = top;
+    for (const n of colNotes) {
+      const pitch = n.lineH || (measure.lineHeightPx ? measure.lineHeightPx(notePt) : Math.round(notePt * (96 / 72) * 1.34));
+      const rec = projectStampedRows(n, col.x, col.w, y, {
+        sizePt: notePt, fontKey: 'fnbody',
+        color: colorOfSetting(settings['f-note-body-color']), measure
+      });
+      if (!rec) {
+        pushStampDiagnostic(out, 'endnote-page', page, n); // §9.8 — לא מדידה חלופית שקטה
+      } else {
+        rec.lines.forEach((line) => {
+          out.lines.push({
+            x: col.x, y: line.y, w: col.w, h: pitch,
+            words: line.words.map(wd => ({ text: wd.text, x: wd.x, w: wd.w, sizePt: wd.sizePt, fontKey: wd.fontKey })),
+            align: 'right', kind: 'endnote-note', level: null, isLast: true, sizePt: notePt,
+            baselineY: null, tokenId: n.tokenId != null ? n.tokenId : null
+          });
+        });
+      }

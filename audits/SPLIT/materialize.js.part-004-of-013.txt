@@ -1,0 +1,107 @@
+          lnProj.windowW = ln.windowW;
+          if (ln.windowWords && ln.windowWords.length) lnProj.windowWords = ln.windowWords.slice();
+        }
+        if (ln.windowWords && ln.windowWords.length) {
+          const winText = ln.windowWords.join(' ');
+          const winSizePt = (ln.sizePt || settings['body-font-size-pt']) * (Number(settings['first-word-size-em']) || 1.5);
+          // **Iteration-006 (RC-W2 — מילת-חלון צמודה לשפה):** המילה נמדדת
+          // במטריקות גופן החלון (FrankReal — כמו המקרין המורשת: winMeasure
+          // + tracking 0 לדיו) ומוצבת מהשפה הימנית של הטור שמאלה — כמו
+          // הייחוס ('השבת' x1=513.3 = קצה הטור במדויק, p44) וכמו המורשת
+          // (legacy-projector: cx=col.x+col.w; cx-=w). בעבר התיבה הייתה
+          // ההשקעה כולה (windowW−2) — הטיה של ~3px מהקצה (ההשקעה כוללת
+          // רווח+0.5 שאינם דיו של המילה) ⇒ WINDOW_WRONG_SIDE באודיט החי.
+          // הצרינת השורות נשארת לפי ההשקעה המלאה (winShift לעיל) — מקור אחד.
+          const winFam = settings['first-word-font'] || null;
+          const MeasureAPICls = require('../typography/measure-api').MeasureAPI;
+          const wApi = (winFam && MeasureAPICls.forFamily(winFam, settings)) || measure;
+          const winInkW = Math.max(4, wApi.measureTextWidth(winText, winSizePt, 0));
+          lnProj.words = lnProj.words || [];
+          lnProj.words.push({
+            text: winText, x: col.x + col.w - winInkW, w: winInkW,
+            baselineY: null, __window: true, // נקבע במעבר התיקון אחרי attachBaselines
+            sizePt: winSizePt, fontKey: 'window',
+            ...(settings['first-word-color'] && settings['first-word-color'] !== '#000000'
+              ? { color: hexColorToRgb(settings['first-word-color']) } : {})
+          });
+        }
+        out.lines.push(lnProj);
+        // **EXT-20:** מקדם ה-AQ מיושם על גובה השורה (אנכי) — השורות שאחריה
+        // זזות בהתאם; התיבה והבסיס מחושבים מהגובה הנמתח (מודל תיבת שורה).
+        // **FX-6:** הפער קבוע — אינו מתמתח עם השורות.
+        y += (ln.heightPx || 0) * (ln.aqStretch || 1);
+      }
+    });
+    // **S5.4 (P-5 — הערות-צד חסרות):** הקרנה לפי ה-placement (x/yTop/colWidth)
+    // — כמו ה-aside המוחלט ב-DOM. fontKey 'margin' ⇒ ‏/F6 (Hadassah) ב-PDF.
+    if (page.sideNotes && page.sideNotes.length) projectSideNotes(page, settings, measure, out);
+    // **S5.4 (P-5 — מפריד טורים חסר):** אותה גיאומטריה כמו renderColumnDivider
+    // ב-DOM (מינימום הטורים −8px; x במרכז המרזב).
+    projectColumnDivider(page, settings, out);
+  }
+
+  // **S5.4 (P-5 — הערות מרוסקות):** מרזב הערות — מילים במדידה אמיתית, שבירה
+  // לשורות ברוחב הנתיב, סמן/(המשך), יישור לשני הצדדים, בסיסים פר-שורה ושני
+  // נתיבים לפי footnote-columns. בעבר: רשומת טקסט אחת לכל הערה, וה-pdf-writer
+  // "פיזר" את מילותיה בקידום קבוע 8.2px ⇒ הערות מרוסקות זו על זו.
+  if (page.footnotes && page.footnotes.length) projectFootnoteGutter(page, settings, measure, out, production);
+
+  // גיליון — **שלב 8 (§4.1):** מהחותמת שהוטבעה בזמן התכנון (folioGeo מ-
+  // furniture-geometry, המקור היחיד, בגופן הגיליון מההגדרות). בלי חותמה —
+  // נפילה מדווחת ואז אותו חישוב חד-פעמי.
+  if (page.folioDisplay) {
+    if (page.folioGeo) {
+      out.folio = { ...page.folioGeo };
+    } else {
+      materializeFallbacks.push({ kind: 'materialize-fallback-folio-stamp', page: page.index });
+      if (!production) { // **§3.1:** compat בלבד; בייצור הגיליון נשאר ריק + diagnostic
+      const folioFam = settings['page-num-font'] || '';
+      const folioMeasure = (folioFam && familyFontKeyOf(folioFam))
+        ? new MeasureAPI({ ...settings, 'body-font': folioFam }, 'font-metrics') : measure;
+      out.folio = folioGeoOf(page, settings, folioMeasure);
+      if (out.folio) {
+        const folioKey = (folioFam && familyFontKeyOf(folioFam)) || null;
+        const folioColor = colorOfSetting(settings['page-num-color']);
+        if (folioKey) out.folio.fontKey = folioKey;
+        if (folioColor) out.folio.color = folioColor;
+      }
+      } // סוף שמירת compat
+    }
+  }
+
+  // כותרת עליונה — **שלב 8 (§4.1):** מהחותמת שהוטבעה בזמן התכנון
+  // (headerSlotGeo: רוחבי סלוטים נמדדו פעם אחת בגודל הסלוט בגופן הסלוט; ה-x
+  // נגזר מה-pos — טהור). בלי חותמה — נפילה מדווחת ואותה מדידה חד-פעמית.
+  // **Iteration-006 (G6/RC-F1):** בפרופיל IMUD סלוטי-הצד ממורכזים על עוגני
+  // הייחוס — מרכז העמוד ±HDR_SIDE_SLOT_CENTER_OFFSET_PX (170.2px, מכויל
+  // מ-old-engine.pdf: «מקום»/«בינה» ב-566.8/226.35px) — ולא בקצוות העמוד
+  // (tpl.width−60−w / 60; פער 116..153px). סלוט המרכז נשאר ממורכז-עמוד —
+  // תואם את הייחוס גם כך. ה-x הוא שפת המילה (שמאל) — הסלוט נצייר כמילה
+  // אחת ב-PDF וה-DOM ממורכז בתיבת רוחב-הטקסט.
+  const imudHdr = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  if (page.header && page.header.slots) {
+    if (page.headerSlotGeo && page.headerSlotGeo.slots) {
+      out.header = {
+        y: page.headerSlotGeo.y,
+        ...(page.headerSlotGeo.baselineY != null ? { baselineY: page.headerSlotGeo.baselineY } : {}),
+        slots: page.headerSlotGeo.slots.map(s => {
+          let x;
+          if (imudHdr && s.pos !== 'center') {
+            const { HDR_SIDE_SLOT_CENTER_OFFSET_PX } = require('../core/imud-geometry');
+            const c = tpl.width / 2 + (s.pos === 'right' ? HDR_SIDE_SLOT_CENTER_OFFSET_PX : -HDR_SIDE_SLOT_CENTER_OFFSET_PX);
+            x = Math.round(c - s.w / 2);
+          } else {
+            x = s.pos === 'right' ? tpl.width - 60 - s.w : s.pos === 'center' ? Math.round((tpl.width - s.w) / 2) : 60;
+          }
+          return { ...s, x };
+        })
+      };
+    } else {
+      const slots = ['right', 'center', 'left']
+        .map(pos => ({ pos, ...page.header.slots[pos] }))
+        .filter(s => s && s.text);
+      if (slots.length) {
+        materializeFallbacks.push({ kind: 'materialize-fallback-header-stamp', page: page.index });
+        if (!production) { // **§3.1:** compat בלבד; בייצור הכותרת נשארת ריקה + diagnostic
+        out.header = {
+          y: headerGeoOf(page).y,

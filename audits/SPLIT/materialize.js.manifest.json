@@ -1,0 +1,60 @@
+{
+  "source": "red-build/src/engine/core/materialize.js",
+  "branch": "engine/legacy-parity-preview-20261119",
+  "totalChars": 74557,
+  "sha256": "01ad5d4d5722dd404eddf1549ab855202368b536b70d0378c364801394ffd078",
+  "parts": [
+    {
+      "file": "materialize.js.part-001-of-013.txt",
+      "chars": 5943
+    },
+    {
+      "file": "materialize.js.part-002-of-013.txt",
+      "chars": 5853
+    },
+    {
+      "file": "materialize.js.part-003-of-013.txt",
+      "chars": 5987
+    },
+    {
+      "file": "materialize.js.part-004-of-013.txt",
+      "chars": 5980
+    },
+    {
+      "file": "materialize.js.part-005-of-013.txt",
+      "chars": 5958
+    },
+    {
+      "file": "materialize.js.part-006-of-013.txt",
+      "chars": 5936
+    },
+    {
+      "file": "materialize.js.part-007-of-013.txt",
+      "chars": 5962
+    },
+    {
+      "file": "materialize.js.part-008-of-013.txt",
+      "chars": 5933
+    },
+    {
+      "file": "materialize.js.part-009-of-013.txt",
+      "chars": 5904
+    },
+    {
+      "file": "materialize.js.part-010-of-013.txt",
+      "chars": 5996
+    },
+    {
+      "file": "materialize.js.part-011-of-013.txt",
+      "chars": 5992
+    },
+    {
+      "file": "materialize.js.part-012-of-013.txt",
+      "chars": 5989
+    },
+    {
+      "file": "materialize.js.part-013-of-013.txt",
+      "chars": 3124
+    }
+  ]
+}

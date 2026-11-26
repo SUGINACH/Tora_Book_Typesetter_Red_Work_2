@@ -1,0 +1,104 @@
+    // "התמרכזה" על תיבה ברוחב שלילי ונחתה בקצה השמאלי (נמדד ב-PDF: x=67–121
+    // מול 279–333 בייחוס). האיחוד = תיבת הפס החוצה-טורים שכותרת ה-H2 כבר משתמשת
+    // בה (x=120.7 w=552.3 — מרכז 396.85px=306.15pt=מרכז העמוד; בייחוס: כל
+    // 88 היחידות ב-306.2pt בדיוק).
+    const tplW2 = Math.max(...tpl.columns.map(c => c.x + c.w)) - Math.min(...tpl.columns.map(c => c.x));
+    out.lines.push(stampedRowLine({
+      x: Math.min(...tpl.columns.map(c => c.x)), y: sb.y, w: tplW2, h: sb.h || 36,
+      words: sb.words, spaceW: sb.spaceW, align: 'center'
+    }, sb.sizePt || 20, 'h2-siman', sb.fontKey || null));
+  }
+
+  // **פרוסה 3 (§2.4 — כיסוי מלא):** עמודים מותאמים — התיבות והתמונות בגיאומטריה
+  // סופית מהתוכנית (page.custom; הוחלטו בתכנון העמוד) עוברות כמו שהן להקרנה.
+  // מעבר נתונים טהור — אין כאן מדידה ואין החלטה; המקרין של ה-PageModel מצייר
+  // והמקרין הישן ממשיך בנתיב שלו (עד שלב 9).
+  if (page.type === 'custom' && page.custom) {
+    out.custom = {
+      boxes: (page.custom.boxes || []).map(b => ({ x: b.x, y: b.y, w: b.w, h: b.h, text: b.text || '' })),
+      images: (page.custom.images || []).map(im => ({ x: im.x, y: im.y, w: im.w, h: im.h, src: im.src || null }))
+    };
+  }
+
+  // **S12 (REQ-EXP-03) + שלב 8 (§4.1):** עמודי תוכן־העניינים — השורות מהחותמת
+  // שהוטבעה בזמן התכנון (structural-stamps: מילים נמדדות פעם אחת); ההקרנה
+  // ממקמת את המילים החותמות ואינה מודדת. חותמה חסרה — נפילה מדווחת.
+  if (page.type === 'toc-general' || page.type === 'toc-detail') {
+    if (page.tocLayout && page.tocLayout.rows) {
+      if (page.tocLayout.title) {
+        const t = page.tocLayout.title;
+        out.lines.push(stampedRowLine(t, t.sizePt || page.tocLayout.sizePt || 12, 'toc-title', t.fontKey));
+      }
+      for (const row of page.tocLayout.rows) {
+        out.lines.push(stampedRowLine(row, row.sizePt || page.tocLayout.sizePt || 12, row.kind || 'toc-row', row.fontKey));
+      }
+    } else {
+      materializeFallbacks.push({ kind: 'materialize-fallback-toc-stamp', page: page.index });
+      if (!production) { // **§3.1:** compat בלבד; בייצור — diagnostic מזוהה, אין השחזור/מדידה
+      const rows = (page.toc && page.toc.rows) || [];
+      let yi = 0;
+      for (const row of rows) {
+        const y = 70 + yi * 24;
+        if (row.kind === 'group') {
+          let xi = 0;
+          for (const it of row.items || []) {
+            const text = [it.text, it.label || ''].filter(Boolean).join(' ');
+            out.lines.push(fakeLine(text, 18 + xi, y, 60, 24, settings, measure));
+            xi += 80;
+          }
+        } else {
+          const text = [row.text, row.label || ''].filter(Boolean).join(' ');
+          out.lines.push(fakeLine(text, 18, y, tpl.width - 36, 24, settings, measure));
+        }
+        yi++;
+      }
+      } // סוף שמירת compat
+    }
+  }
+
+  // **03.11(ד) + שלב 8 (§4.1):** תוכן מובנה של עמודי השער — מהחותמת שהוטבעה
+  // בזמן התכנון (structural-stamps: בלוקים+שורות+רוחבי מילים+גופן+צבע+מיקום
+  // אנכי). ההקרנה ממקמת מילים חותמות — אין שבירה ואין מדידה כאן.
+  if (/^shaar-/.test(page.type) && page.shaarLayout && page.shaarLayout.blocks) {
+    for (const bl of page.shaarLayout.blocks) {
+      // **פרוסה 3 (§2.2/§2.4):** כתרי השער — דיו SVG ממקור יחיד (shaar-content),
+      // מוקרן כעיטור בגיאומטריה הסופית מהחותמת; המקרינים קוראים ואינם
+      // מטמיעים את הנתיבים בעצמם (אין עותק שני של הדיו).
+      if (bl.graphic) {
+        const { crownSvgOf } = require('../output/shaar-content');
+        const { svgDataUri } = require('../decoration/asset-registry');
+        if (!out.decorations) out.decorations = [];
+        out.decorations.push({
+          x: page.shaarLayout.box.x, y: bl.yTop != null ? bl.yTop : 0,
+          w: page.shaarLayout.box.w, h: bl.h || 24,
+          kind: 'shaar-crown', slot: 'shaar', kindStyle: String(bl.graphic),
+          inkType: 'svg', inkUri: null, ink: { type: 'svg', uri: svgDataUri(crownSvgOf(bl.graphic)) },
+          paint: null, pdfOps: null, ornId: null, source: 'shaar'
+        });
+        continue;
+      }
+      if (!bl.lines || !bl.lines.length) continue;
+      const lh = bl.h / bl.lines.length;
+      bl.lines.forEach((words, li) => {
+        const lineH = Math.max(12, Math.round((bl.sizePt * (96 / 72)) * 1.25));
+        void lh;
+        // **פרוסה 3 (§2.2):** מאפייני העיצוב של הבלוק (מחלקה/משקל/ריווח-אותיות)
+        // עוברים בשלמותם להקרנה — המקרין של ה-PageModel קורא ואינו גוזר מההגדרות.
+        out.lines.push(centeredStampedLine(words, bl.spaceW, page.shaarLayout.box.x, bl.yTop + li * lineH, page.shaarLayout.box.w, lineH, bl.sizePt, bl.cls, bl.fontKey, bl.color, { bold: bl.bold === true, letterSpacingPx: bl.letterSpacingPx || null }));
+      });
+    }
+  } else if (/^shaar-/.test(page.type)) {
+    materializeFallbacks.push({ kind: 'materialize-fallback-shaar-stamp', page: page.index });
+    if (!production) { // **§3.1:** compat בלבד; בייצור — diagnostic מזוהה בלבד
+    const model = buildShaarBlocks(page, settings, page._metadata);
+    if (model && model.blocks.length) {
+      const b = model.box;
+      const boxX = b.left, boxW = Math.max(40, tpl.width - b.left - b.right);
+      const boxY = b.top, boxH = Math.max(60, tpl.height - b.top - b.bottom);
+      const shaarColorOf = (cls) => {
+        if (cls.includes('bsd-header') || cls.includes('publication-footer')) return colorOfSetting(settings['shaar-year-color']);
+        if (cls.includes('book-title-main')) return colorOfSetting(settings['shaar-title-color']);
+        if (cls.includes('book-subtitle')) return colorOfSetting(settings['shaar-subtitle-color']);
+        if (cls.includes('book-description')) return colorOfSetting(settings['shaar-desc-color']);
+        if (cls.includes('book-sections-summary')) return colorOfSetting(settings['shaar-sections-color']);
+        if (cls.includes('author-block')) return colorOfSetting(settings['shaar-author-color']);

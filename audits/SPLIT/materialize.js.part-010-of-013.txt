@@ -1,0 +1,101 @@
+    && (ln.lineModel.constraints.placement === 'block' || ln.lineModel.breakReason === 'image-block')
+    && ln.lineModel.constraints.align) {
+    align = String(ln.lineModel.constraints.align);
+  }
+  // **S73 (תצוגה=ייצוא בגופני כותרות — נתיב DP):** ה-DOM מציג כותרות inline
+  // בגופן הרמה מההגדרות (heading-N-font) ובצבען (heading-N-color); עד כאן
+  // ההקרנה ציירה הכול בגוף הטקסט (/F1). כעת: fontKey משפחה + צבע — כמו ה-DOM.
+  // וכן צבע גוף (body-color; שחור ⇒ אפס אופרטורי rg).
+  const isHeadingLine = ln.kind === 'heading' && ln.level != null;
+  const hFontKey = isHeadingLine ? familyFontKeyOf(settings[`heading-${ln.level}-font`]) : null;
+  const hColor = isHeadingLine ? colorOfSetting(settings[`heading-${ln.level}-color`]) : null;
+  const bodyColor = colorOfSetting(settings['body-color']);
+  // **S68 (R2-M6 — סגירת פער PDF↔DOM):** גודל אפקטיבי פר-מילה. המודל נמדד
+  // בסקאלות אלה בזמן הפענוח (measureWithParen: paren×scale, custom×factor)
+  // וה-DOM מציג אותן כך (span.w--paren / span.w--custom); ההקרנה ל-PDF חייבת
+  // למדוד ולהציג באותם גדלים — אחרת מילות הסוגריים/הסגנון חורגות מה-DOM
+  // ומהמודל שנמדד. ה-pdf-writer מכבד w.sizePt פר-מילה ממילא.
+  const parenScale = Number(settings['paren-style-scale']) || 1;
+  // **RC-2c (i004): גודל הסוגריים אבסולוטי** — כמו ה-DOM (parenPx =
+  // SZ.body+parenDelta) וכמו המורשת (10pt קבוע גם בהקדמה שגופה 11.5pt;
+  // הוכח מה-PDF הישן: p43 ספאני סוגריים 10.0pt). ה-scale המיובא יחסי לגוף
+  // (10/12) — כאן נגזר הגודל האבסולוטי ומוצב ישירות, כך ששורת הקדמה
+  // (11.5pt) מקבלת 10pt ולא 9.58pt — תצוגה = ייצוא = מדידה.
+  const parenAbsPt = parenScale !== 1
+    ? (Number(settings['body-font-size-pt']) || 12) * parenScale
+    : null;
+  const csFactors = (ln.customSpans && ln.customSpans.length) ? customFactorMapOf(settings) : null;
+  const parenSet = (ln.parenSpans && ln.parenSpans.length && parenScale !== 1) ? new Set(ln.parenSpans) : null;
+  const effSizeOf = (i) => {
+    let s = sizePt;
+    if (csFactors) {
+      const cs = ln.customSpans.find((c) => c.wi === i);
+      if (cs) { const f = csFactors.get(cs.styleId); if (f != null) s *= f; }
+    }
+    if (parenSet && parenSet.has(i)) s = parenAbsPt != null ? parenAbsPt : s * parenScale;
+    return s;
+  };
+  const words = (ln.words || []).map(w => scrubPUAText(String(w).replace(/\u00A0/g, ' '))).filter(Boolean);
+  // **שלב 8 (§4.6 — הסרת חישוב כפול):** רוחבי המילים נצרכים מה-LineModel
+  // (measuredAdvance של הפרגמנטים — מדידת השבירה היחידה, בגופן האמיתי של
+  // השורה). בעבר נמדדו כאן שוב בגוף הטקסט — כולל כותרות שנמדדו בגוף הגוף
+  // בזמן שהמודל נשבר בגופן הכותרת (תצוגה≠ייצוא ברמת המילה). שורה בלי
+  // LineModel (סינתטית בבדיקות) — מדידת נפילה מסומנת, לא שקטה.
+  const lm = lineWidthsFromModel(ln);
+  let spaceW = lm ? lm.spaceW : null;
+  // **פרוסה 2 (§4.2):** טקסט-המקור של תמונה צפה — מחוץ לזרימה אך נספר ב-words;
+  // רוחבו הוטבע בזמן התכנון (sourceTextWidthPx) ונצרך כאן — בלי מדידה.
+  const floatTextW = new Map();
+  if (lm === null || lm === undefined) { /* no model */ }
+  if (ln.lineModel && Array.isArray(ln.lineModel.floatAreas)) {
+    for (const fa of ln.lineModel.floatAreas) {
+      if (fa.sourceText != null && fa.sourceTextWidthPx != null) floatTextW.set(fa.sourceText, fa.sourceTextWidthPx);
+    }
+  }
+  const nFloatWords = floatTextW.size ? words.reduce((a, w) => a + (floatTextW.has(w) ? 1 : 0), 0) : 0;
+  let widths;
+  if (lm && lm.widths.length + nFloatWords === words.length) {
+    let k = 0;
+    widths = words.map(w => (floatTextW.has(w) ? floatTextW.get(w) : lm.widths[k++]));
+  } else if (production) {
+    // **§3.1 (מסלול הייצור):** אין מדידה חלופית — הטקסט נשמר (חשבונאות מלאה)
+    // ברוחב אפס מסומן, והנפילה מדווחת; תוקן במקור יצירת הנתון, לא כאן.
+    widths = words.map(() => 0);
+    spaceW = 0;
+    materializeFallbacks.push({ kind: 'materialize-fallback-line-widths', line: ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId) || null });
+  } else {
+    widths = words.map((w, i) => measure.measureTextWidth(w, effSizeOf(i)));
+    if (lm) { /* מיפוי חלקי — נפילה מתועדת להלן */ }
+    spaceW = null;
+  }
+  // **שלב 8 ביקורת §3.2 (שורש נפילת-שווא):** שורה חד-מילית אין לה דבק במודל —
+  // ואין לה צורך ברוחב רווח (אין רווחים למלא). דרישת רווח בלתי-מותנית הפכה
+  // 852 שורות כאלה ב-very_long ל"נפילת מדידה" כזובה. רק שורה רב-מילית בלי
+  // רוחב רווח קנוני היא נתון חסר אמיתי: בייצור — diagnostic + אפס; ב-compat —
+  // מדידת נפילה מתועדת.
+  if (spaceW == null && (words.length - nFloatWords) > 1) { // רווח נדרש רק בין מילות זרימה — טקסט-צף אינו מילת זרימה
+    if (production) {
+      spaceW = 0;
+    } else {
+      spaceW = measure.measureTextWidth(' ', sizePt, 0);
+    }
+    if (!materializeFallbacks) materializeFallbacks = [];
+    materializeFallbacks.push({ kind: 'materialize-fallback-line-widths', line: ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId) || null });
+  }
+  if (spaceW == null) spaceW = 0; // חד-מילית: אין רווחים — אפס ללא נפילה
+  // **U-16 (ביקורת שלמות 20.11 — מילים של תווי-כיוון בלבד, בלי רווח פנטום):**
+  // מילה המורכבת מתווי כיוון בלבד (RLM/LRM וכו') היא ברוחב אפס, אבל הרווח
+  // שמפריד אותה משכנתה נכלל בתיבת השורה ומזיז את המרכוז (נמדד באודיט החי:
+  // אסימטריה 4–4.2px בשורות אחרונות ממורכזות, עמ' 723/724 — המקור מסתיים
+  // ב-RLM מילולי לפני שורת הכותרת). חוזה S4.24 של המקרן הישן: הדבקה לשכן —
+  // הרווח הפנטום נעלם, הכיווניות נשמרת (התו חסר-רוחב; אין חשש לגלישה).
+  // כלל ההדבקה: מילת-כיוון נדבקת לשכנתה משמאל אם קיימת מילה גלויה לפניה
+  // (הרווח שלפניה מת); אחרת (מובילה) — לשכנתה מימין (הרווח שאחריה מת).
+  const FORMAT_WORD_RE = /^[\u200e\u200f\u2066-\u2069\u202a-\u202e\u00ad]+$/;
+  const isFmtWord = words.map(w => FORMAT_WORD_RE.test(String(w)));
+  const gapDead = new Array(Math.max(0, words.length - 1)).fill(false);
+  for (let j = 0; j < words.length; j++) {
+    if (!isFmtWord[j]) continue;
+    let hasVisibleBefore = false;
+    for (let k = 0; k < j; k++) if (!isFmtWord[k]) { hasVisibleBefore = true; break; }
+    if (hasVisibleBefore) gapDead[j - 1] = true;
