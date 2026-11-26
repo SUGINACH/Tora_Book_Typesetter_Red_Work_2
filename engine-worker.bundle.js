@@ -1191,22 +1191,21 @@ function typeset(rawText, settingsIn, env = {}) {
     measureWithImpl.paragraphShaper = paragraphShaper;
     measureWithImpl.paragraphDirection = paragraphDirection || 'rtl';
   }
-  // Side-note words have their own registered font role. Measuring them with
-  // the body-font API and only applying a generic width factor made the stamp
-  // disagree with the font selected for the note itself. Use one family-bound
-  // MeasureAPI for both the note-word advances and the note's HarfBuzz request.
-  const sideNoteFont = String(settings['s-note-body-font'] || settings['body-font'] || '').trim();
-  const sideNoteSettings = sideNoteFont && sideNoteFont !== settings['body-font']
-    ? { ...settings, 'body-font': sideNoteFont }
+  // H7 margin headings are measured with the same font that the legacy DOM
+  // has always rendered (heading-7-font). Info boxes retain their independent
+  // s-note-body-font path through measureWithImpl.
+  const h7NoteFont = String(settings['heading-7-font'] || settings['body-font'] || '').trim();
+  const h7NoteSettings = h7NoteFont && h7NoteFont !== settings['body-font']
+    ? { ...settings, 'body-font': h7NoteFont }
     : settings;
-  const sideNoteApi = sideNoteSettings === settings
+  const h7NoteApi = h7NoteSettings === settings
     ? api
-    : new MeasureAPI(sideNoteSettings, resolveMeasureImpl(sideNoteSettings));
-  const measureSideNotes = (text, sizePt) => sideNoteApi.measureTextWidth(text, sizePt);
-  measureSideNotes.impl = sideNoteApi.impl;
+    : new MeasureAPI(h7NoteSettings, resolveMeasureImpl(h7NoteSettings));
+  const measureH7Notes = (text, sizePt) => h7NoteApi.measureTextWidth(text, sizePt);
+  measureH7Notes.impl = h7NoteApi.impl;
   if (paragraphShaper) {
-    measureSideNotes.paragraphShaper = paragraphShaper;
-    measureSideNotes.paragraphDirection = paragraphDirection || 'rtl';
+    measureH7Notes.paragraphShaper = paragraphShaper;
+    measureH7Notes.paragraphDirection = paragraphDirection || 'rtl';
   }
   // **שלב 3 (§3.1-2) → מקטע ב׳ (הוראה §6):** נכסי המסמך שהגיעו מה-Worker
   // כבר חוברו לבניית המודל וזורמים למדידה דרך ctx.assetResolver של הגשר
@@ -1874,7 +1873,9 @@ function typeset(rawText, settingsIn, env = {}) {
   // (רשם שלב 5 — אותו רשם של ה-Planner; ספירות תמיד זמינות).
   const { placeSideNotes, verifyH7Conversion } = require('../layout/side-notes');
   for (const pg of pages) pg.isRecto = pg.index % 2 === 0;
-  const sideNotePlacement = placeSideNotes(pages, settings, measureSideNotes, { ledger, eventLog, trace: plannerTrace });
+  const sideNotePlacement = placeSideNotes(pages, settings, measureWithImpl, {
+    ledger, eventLog, trace: plannerTrace, heading7Measure: measureH7Notes
+  });
 
   // **S8 — פאס העיטורים (L5):** כל העיטורים overlay-rects על העמודים;
   // אסור לגעת בשורות (invariant T1 — מוכח מיד לאחר מכן ב‑bodyGeometryHash).
@@ -22954,9 +22955,16 @@ function placeSideNotes(pages, settings, measureFn, hooks = {}) {
       const sn = queue[i];
       // **מדידה אחת (§10):** הגובה מהחותמת. פריט לא-חתום (מסלול חריג) מוטבע
       // כאן פעם אחת — ומרגע זה ההקצאה, ה-DOM וה-PDF קוראים את אותה חותמת.
-      if (!stampIsValid(sn)) {
-        stampNote(sn, settings, measureFn, NOTE_KINDS.SIDE_NOTE, {
-          widthPx: sn.boxSpec && sn.boxSpec.widthPx ? sn.boxSpec.widthPx : undefined
+      const isInfoBox = sn.itemKind === 'info-box';
+      const noteFontName = isInfoBox
+        ? (settings['s-note-body-font'] || settings['body-font'] || null)
+        : (settings['heading-7-font'] || settings['s-note-body-font'] || settings['body-font'] || null);
+      const noteMeasure = !isInfoBox && typeof hooks.heading7Measure === 'function'
+        ? hooks.heading7Measure : measureFn;
+      if (!stampIsValid(sn) || !sn.stampCtx || sn.stampCtx.fontName !== noteFontName) {
+        stampNote(sn, settings, noteMeasure, NOTE_KINDS.SIDE_NOTE, {
+          widthPx: sn.boxSpec && sn.boxSpec.widthPx ? sn.boxSpec.widthPx : undefined,
+          fontName: noteFontName || undefined
         });
       }
       const h = sn.heightPx;
@@ -27974,10 +27982,11 @@ function projectSideNotes(page, settings, measure, out) {
         });
       }
     }
+    const noteColor = colorOfSetting(isBox ? settings['s-note-body-color'] : settings['heading-7-color']);
     const rec = projectStampedRows(sn, sn.x, boxW, sn.yTop, {
       sizePt,
       fontKey: familyFontKeyOf(sn.stampCtx && sn.stampCtx.fontName || settings['s-note-body-font']) || null,
-      color: colorOfSetting(settings['s-note-body-color']), measure,
+      color: noteColor, measure,
       padPx: isBox ? chrome.pad + chrome.border : 0,
       align: 'center' // **G4/RC-4d:** הערות-צד ממורכזות כמו המקור (מרזב: יישור מלא)
     });
