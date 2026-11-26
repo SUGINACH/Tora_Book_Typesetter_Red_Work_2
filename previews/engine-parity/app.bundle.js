@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 78 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 81 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -416,6 +416,9 @@ var __paths = {
   "src/engine/layout/footnote-budget.js|./footnote-lanes": "src/engine/layout/footnote-lanes.js",
   "src/engine/layout/footnote-budget.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/layout/notes-model.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
+  "src/engine/layout/notes-model.js|../typography/paragraph-shaping": "src/engine/typography/paragraph-shaping.js",
+  "src/engine/typography/paragraph-shaping.js|./text-item-shaping-plan": "src/engine/typography/text-item-shaping-plan.js",
+  "src/engine/typography/paragraph-shaping.js|./shaped-run": "src/engine/typography/shaped-run.js",
   "src/ui/page-model-transport.js|../engine/core/page-model-hashes": "src/engine/core/page-model-hashes.js",
   "src/engine/core/page-model-hashes.js|../assets/hash256": "src/engine/assets/hash256.js",
   "src/ui/caret-map.js|../engine/parser/dfa-lexer": "src/engine/parser/dfa-lexer.js",
@@ -21294,6 +21297,25 @@ function renderModelPage(mp, settings, doc, opts = {}) {
           if (wd.sizePt != null) span.style.fontSize = `${px2(wd.sizePt * PT_TO_PX)}px`;
           const fam = familyOf(wd.fontKey);
           if (fam) span.style.fontFamily = fam;
+          const outlineLine = {
+            y: Number.isFinite(wd.lineY) ? wd.lineY : (wd.baselineY || 0) - lineH * 0.8,
+            h: lineH,
+            sizePt: wd.sizePt,
+            baselineY: wd.baselineY
+          };
+          if (wd.typography && appendGlyphOutlineWord(outlineLine, wd, span, doc)) {
+            row.appendChild(span);
+            continue;
+          }
+          if (wd.typography) {
+            diags.push({
+              kind: 'footnote-glyph-outline-fallback',
+              page: mp.index,
+              noteId: n.noteId || null,
+              word: wd.text,
+              reason: span.dataset.glyphOutlineFallback || 'outline-render-failed'
+            });
+          }
           span.textContent = scrubPUAText(wd.text);
           row.appendChild(span);
         }
@@ -22493,6 +22515,9 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
           cur.footnotes.push({
             ...n, text: firstText, heightPx: cutRow * fnLH, lineH: fnLH, linesCount: cutRow,
             noteRows: rows.slice(0, cutRow), noteWords: wordsArr.slice(0, cutIdx),
+            ...(Array.isArray(n.noteWordTypography)
+              ? { noteWordTypography: n.noteWordTypography.slice(0, cutIdx) }
+              : {}),
             mode: 'split-first', linesShown: cutRow,
             wordRange: { from: n.wordRange ? n.wordRange.from : 0, to: (n.wordRange ? n.wordRange.from : 0) + cutIdx }
           });
@@ -25228,6 +25253,7 @@ __modules["src/engine/layout/notes-model.js"] = function (require, module, expor
  * המטריקות מדויקות והכפלה מנפחת (S70/R7-M4) — measureContextFor מכבה אותו שם.
  */
 const { SZ_CORE } = require('../core/imud-geometry');
+const { projectShapedTextItemRanges } = require('../typography/paragraph-shaping');
 const NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
 const SIDE_NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
 
@@ -25324,14 +25350,18 @@ function measureContextFor(kind, settings, opts = {}, measure = null) {
  * @param {number} spaceW — רוחב הרווח בהקשר (כבר מחושב — מודדים פעם אחת)
  * @returns {{rows:Array}} שורות {wFrom,wTo,widthPx,wordW[]}
  */
-function wrapNoteWords(words, ctx, measure, prefixW, spaceW) {
+function wrapNoteWords(words, ctx, measure, prefixW, spaceW, wordWidths = null) {
   const r3 = (v) => Math.round(v * 1000) / 1000;
+  if (wordWidths != null && (!Array.isArray(wordWidths) || wordWidths.length !== words.length ||
+      wordWidths.some(width => !Number.isFinite(width) || width < 0))) {
+    throw new TypeError('notes-model: wordWidths must contain one finite non-negative advance per note word');
+  }
   const rows = [];
   let rowW = Math.min(prefixW, ctx.widthPx); // קידומת בפינת השורה הראשונה
   let wFrom = 0;
   let rowWordW = [];
   for (let i = 0; i < words.length; i++) {
-    const ww = measure(words[i], ctx.sizePt) * ctx.factor;
+    const ww = wordWidths ? wordWidths[i] : measure(words[i], ctx.sizePt) * ctx.factor;
     const addW = (rowW > 0 ? spaceW : 0) + ww;
     if (rowW + addW > ctx.widthPx && rowW > 0) {
       rows.push({ wFrom, wTo: i, widthPx: r3(rowW), wordW: rowWordW });
@@ -25343,6 +25373,111 @@ function wrapNoteWords(words, ctx, measure, prefixW, spaceW) {
   }
   rows.push({ wFrom, wTo: words.length, widthPx: r3(rowW), wordW: rowWordW });
   return { rows };
+}
+
+// ─── Glyph shaping להערות: אותה חותמת ושבירת שורות, ללא מקרין/מודד שני ───
+function shapeNoteText(text, note, ctx, measure, role) {
+  const service = measure && measure.paragraphShaper;
+  if (!service || typeof service.shapeTextItem !== 'function' || !text) return null;
+  const value = String(text);
+  const itemId = 'note-' + String(note.noteId || note.tokenId || 'anonymous')
+    .replace(/[^A-Za-z0-9._:-]/g, '_') + '-' + role;
+  const item = {
+    id: itemId,
+    kind: 'text',
+    sourceRange: { start: 0, end: value.length },
+    payload: {
+      runs: [{
+        text: value,
+        sourceStart: 0,
+        sourceEnd: value.length,
+        ...(service.useItemFontRole === true && ctx.fontName ? { fontFamily: ctx.fontName } : {})
+      }]
+    }
+  };
+  const request = { direction: measure.paragraphDirection || 'rtl', language: 'he' };
+  if (service.useItemFontRole === true && ctx.fontName) request.defaultFamily = ctx.fontName;
+  return service.shapeTextItem(item, request);
+}
+
+function typographyForShapedRuns(runs, sizePt) {
+  if (!Array.isArray(runs) || !runs.length) return { advancePx: 0, typography: null, glyphCount: 0 };
+  const sizePx = Number(sizePt) * (96 / 72);
+  let advancePx = 0;
+  let glyphCount = 0;
+  const segments = [];
+  for (const run of runs) {
+    if (!run || !run.font || !Number.isSafeInteger(run.font.unitsPerEm) ||
+        run.font.unitsPerEm <= 0 || !Array.isArray(run.glyphs) || !run.glyphs.length) {
+      throw new TypeError('notes-model: a shaped note run is missing valid font units or glyphs');
+    }
+    let runAdvance = 0;
+    for (const glyph of run.glyphs) {
+      if (!glyph || !Number.isFinite(glyph.xAdvance)) {
+        throw new TypeError('notes-model: a shaped note glyph has no finite xAdvance');
+      }
+      runAdvance += glyph.xAdvance;
+    }
+    if (!Number.isFinite(runAdvance) || runAdvance < 0) {
+      throw new TypeError('notes-model: a shaped note run has an invalid advance');
+    }
+    const runAdvancePx = runAdvance / run.font.unitsPerEm * sizePx;
+    advancePx += runAdvancePx;
+    glyphCount += run.glyphs.length;
+    segments.push({
+      itemId: run.itemId || null,
+      sourceRange: run.sourceRange ? { ...run.sourceRange } : null,
+      advancePx: runAdvancePx,
+      shapedRuns: [run],
+      glyphCount: run.glyphs.length
+    });
+  }
+  if (!glyphCount) return { advancePx, typography: null, glyphCount: 0 };
+  return {
+    advancePx,
+    glyphCount,
+    typography: { contractVersion: 'page-word-typography-v1', glyphCount, segments }
+  };
+}
+
+function shapedNoteWords(text, note, ctx, measure) {
+  const shaped = shapeNoteText(text, note, ctx, measure, 'body');
+  if (!shaped) return null;
+  const matches = Array.from(text.matchAll(/\S+/gu), match => ({
+    text: match[0], start: match.index, end: match.index + match[0].length
+  }));
+  const ranges = matches.map(match => ({ start: match.start, end: match.end }));
+  const projected = ranges.length
+    ? projectShapedTextItemRanges(shaped, ranges).slices
+    : [];
+  const widths = [];
+  const typographies = [];
+  for (const slice of projected) {
+    const measured = typographyForShapedRuns(slice.shapedRuns, ctx.sizePt);
+    if (!measured.glyphCount && slice.nonShapingRuns.some(run =>
+      String(run.text || '').replace(/[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '').trim())) {
+      throw new Error('notes-model: visible note word has no HarfBuzz glyph coverage');
+    }
+    widths.push(measured.advancePx);
+    typographies.push(measured.typography);
+  }
+  const spaceRun = shapeNoteText(' ', note, ctx, measure, 'space');
+  const spaceMeasured = spaceRun ? typographyForShapedRuns(spaceRun.shapedRuns, ctx.sizePt) : null;
+  if (spaceRun && !spaceMeasured.glyphCount) {
+    throw new Error('notes-model: note-space did not receive a HarfBuzz glyph');
+  }
+  return { matches, widths, typographies, spaceW: spaceMeasured ? spaceMeasured.advancePx : 0 };
+}
+
+function shapedPrefix(note, value, ctx, measure, role) {
+  if (!value) return { advancePx: 0, typography: null };
+  const shaped = shapeNoteText(value, note, ctx, measure, role);
+  if (!shaped) return null;
+  const result = typographyForShapedRuns(shaped.shapedRuns, ctx.sizePt);
+  if (!result.glyphCount && String(value).trim()) {
+    throw new Error('notes-model: visible note prefix has no HarfBuzz glyph coverage (' + role + ')');
+  }
+  return { advancePx: result.advancePx, typography: result.typography };
 }
 
 // ─── חשבונאות מדידה (דפוס api.cacheStats / _rowsStats): הוכחת "פעם אחת" ───
@@ -25367,28 +25502,48 @@ function __stampStats() {
  */
 function stampNote(note, settings, measure, kind, opts = {}) {
   const ctx = measureContextFor(kind, settings, opts, measure);
+  const paragraphShaper = measure && measure.paragraphShaper;
+  const shapingActive = !!(paragraphShaper && typeof paragraphShaper.shapeTextItem === 'function');
   if (note.stampCtx && note.stampCtx.kind === ctx.kind
-    && note.stampCtx.widthPx === ctx.widthPx && note.stampCtx.sizePt === ctx.sizePt) {
+    && note.stampCtx.widthPx === ctx.widthPx && note.stampCtx.sizePt === ctx.sizePt
+    && note.stampCtx.fontName === (ctx.fontName || null)
+    && note.stampCtx.shaping === shapingActive) {
     return note; // כבר נמדדה בדיוק בהקשר הזה — לא מודדים שוב
   }
   _stampStats.calls.push(`${ctx.kind}:${note.noteId || note.tokenId || ''}#${note.noteIndex != null ? note.noteIndex : ''}`);
   const text = scrubNoteText(note.text);
   const words = text.split(/\s+/).filter(Boolean);
-  const spaceW = measure(' ', ctx.sizePt) * ctx.factor;
+  delete note.noteWordTypography;
+  delete note.markerTypography;
+  delete note.contMarkTypography;
+  delete note.counterMarkTypography;
+  const shapedBody = shapingActive ? shapedNoteWords(text, note, ctx, measure) : null;
+  const wordWidths = shapedBody ? shapedBody.widths : null;
+  if (shapedBody && shapedBody.matches.length !== words.length) {
+    throw new Error('notes-model: shaped note word ranges differ from the canonical note word list');
+  }
+  if (shapedBody) note.noteWordTypography = shapedBody.typographies;
+  const spaceW = shapedBody ? shapedBody.spaceW : measure(' ', ctx.sizePt) * ctx.factor;
   const mkTxt = note.marker != null && String(note.marker) !== '' ? String(note.marker) : '';
-  const mkGlyphW = mkTxt ? measure(mkTxt, ctx.sizePt) * ctx.factor : 0;
+  const shapedMarker = shapingActive && mkTxt ? shapedPrefix(note, mkTxt, ctx, measure, 'marker') : null;
+  const mkGlyphW = shapedMarker ? shapedMarker.advancePx : (mkTxt ? measure(mkTxt, ctx.sizePt) * ctx.factor : 0);
+  if (shapedMarker && shapedMarker.typography) note.markerTypography = shapedMarker.typography;
   const markerW = mkTxt ? mkGlyphW + spaceW : 0;
   const isCont = note.isContinuation === true || note.mode === 'split-rest';
-  const contMarkW = isCont ? measure(CONTINUATION_MARK, ctx.sizePt) * ctx.factor + spaceW : 0;
+  const shapedContMark = shapingActive && isCont ? shapedPrefix(note, CONTINUATION_MARK, ctx, measure, 'continuation') : null;
+  const contMarkW = isCont ? (shapedContMark ? shapedContMark.advancePx : measure(CONTINUATION_MARK, ctx.sizePt) * ctx.factor) + spaceW : 0;
+  if (shapedContMark && shapedContMark.typography) note.contMarkTypography = shapedContMark.typography;
   // **תיקון פרוסה 2 (§9):** הקידומות של שורה 0 — הסמן **וגם סימון ההמשך** —
   // נכנסות לתקציב השורה. בעבר ההמשכים נמדדו בלי '(המשך)' בזמן ששני הרנדרים
   // ציירו אותו ⇒ השורה הראשונה של כל המשך הייתה צרה בכ~30px מהמצויר.
   // הערות-צד עם counterMark — אותו תיקון (הסמן מוצג ולא תוקצב).
   const cmTxt = (!isCont && note.counterMark != null && String(note.counterMark) !== '') ? String(note.counterMark) : '';
-  const cmGlyphW = cmTxt ? measure(cmTxt, ctx.sizePt) * ctx.factor : 0;
+  const shapedCounterMark = shapingActive && cmTxt ? shapedPrefix(note, cmTxt, ctx, measure, 'counter') : null;
+  const cmGlyphW = shapedCounterMark ? shapedCounterMark.advancePx : (cmTxt ? measure(cmTxt, ctx.sizePt) * ctx.factor : 0);
+  if (shapedCounterMark && shapedCounterMark.typography) note.counterMarkTypography = shapedCounterMark.typography;
   const counterMarkW = cmTxt ? cmGlyphW + spaceW : 0;
   const prefixW = contMarkW + markerW + counterMarkW;
-  const { rows } = wrapNoteWords(words, ctx, measure, prefixW, spaceW);
+  const { rows } = wrapNoteWords(words, ctx, measure, prefixW, spaceW, wordWidths);
   note.noteRows = rows;
   note.noteWords = words;
   note.heightPx = Math.round(rows.length * ctx.lineH * 1000) / 1000;
@@ -25399,7 +25554,12 @@ function stampNote(note, settings, measure, kind, opts = {}) {
   note.contMarkW = contMarkW ? Math.round(contMarkW * 1000) / 1000 : 0;
   note.counterMarkW = counterMarkW ? Math.round(counterMarkW * 1000) / 1000 : 0;
   note.spaceW = Math.round(spaceW * 1000) / 1000;
-  note.stampCtx = { kind: ctx.kind, sizePt: ctx.sizePt, widthPx: ctx.widthPx, lineH: ctx.lineH, factor: ctx.factor };
+  note.stampCtx = {
+    kind: ctx.kind, sizePt: ctx.sizePt, widthPx: ctx.widthPx, lineH: ctx.lineH,
+    factor: shapingActive ? 1 : ctx.factor,
+    fontName: ctx.fontName || null,
+    shaping: shapingActive
+  };
   return note;
 }
 
@@ -25412,6 +25572,11 @@ function stampIsValid(note) {
   for (const row of note.noteRows) {
     if (!(row.wTo >= row.wFrom) || !Array.isArray(row.wordW)) return false;
     if (row.wordW.length !== row.wTo - row.wFrom) return false;
+  }
+  if (note.stampCtx && note.stampCtx.shaping === true) {
+    if (!Array.isArray(note.noteWordTypography) ||
+        note.noteWordTypography.length !== note.noteWords.length ||
+        note.noteWordTypography.some((item, index) => String(note.noteWords[index] || '').trim() && !item)) return false;
   }
   return true;
 }
@@ -25496,6 +25661,1294 @@ module.exports = {
   anchorLinksOf,
   __resetStampStats,
   __stampStats
+};
+
+};
+__modules["src/engine/typography/paragraph-shaping.js"] = function (require, module, exports) {
+'use strict';
+
+const { createTextItemShapingPlan } = require('./text-item-shaping-plan');
+const { sliceShapedRun, isShapedRun } = require('./shaped-run');
+
+function fail(code, message) {
+  const error = new TypeError(message);
+  error.code = code;
+  throw error;
+}
+
+function isRecord(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function requireRecord(value, label) {
+  if (!isRecord(value)) fail('invalid-paragraph-shaping-config', label + ' must be a plain object');
+  return value;
+}
+
+/**
+ * Create the canonical paragraph shaping service.
+ * Runtime and script policy are fixed at construction; the product's block font
+ * is supplied per TextItem so headings and body retain their own font roles.
+ */
+function createParagraphShaper(options = {}) {
+  requireRecord(options, 'options');
+  const runtime = options.runtime;
+  const fontResolver = options.fontResolver;
+  if (!runtime || !runtime.unicode ||
+      typeof runtime.unicode.resolve !== 'function' ||
+      typeof runtime.unicode.itemizeScripts !== 'function' ||
+      typeof runtime.createShaper !== 'function') {
+    fail('paragraph-shaping-runtime-unavailable', 'A verified Unicode/HarfBuzz runtime is required');
+  }
+  if (!fontResolver || typeof fontResolver.resolveFontForGrapheme !== 'function' ||
+      typeof fontResolver.resolveFontById !== 'function') {
+    fail('paragraph-shaping-font-resolver-unavailable', 'The canonical FontResolver is required');
+  }
+
+  const languageByScript = requireRecord(options.languageByScript, 'languageByScript');
+  const featuresByScript = requireRecord(options.featuresByScript, 'featuresByScript');
+  const variationAxesByFontId = requireRecord(options.variationAxesByFontId, 'variationAxesByFontId');
+  const faceIndexByFontId = options.faceIndexByFontId == null
+    ? Object.create(null)
+    : requireRecord(options.faceIndexByFontId, 'faceIndexByFontId');
+  const fallbacksByFamily = options.fallbacksByFamily == null
+    ? Object.create(null)
+    : requireRecord(options.fallbacksByFamily, 'fallbacksByFamily');
+  const useNativeDefaults = options.useNativeDefaults === true;
+  const defaultFamily = options.defaultFamily == null ? null : String(options.defaultFamily);
+  if (defaultFamily != null && !defaultFamily.trim()) {
+    fail('invalid-paragraph-shaping-config', 'defaultFamily must be non-empty when supplied');
+  }
+
+  const shaper = runtime.createShaper(fontResolver, options.shaperOptions || {});
+  if (!shaper || typeof shaper.shapeTextItemPlan !== 'function') {
+    fail('paragraph-shaping-adapter-unavailable', 'Runtime did not create a valid HarfBuzz shaper');
+  }
+
+  return Object.freeze({
+    // Only product-derived policies opt into per-block font-role selection.
+    // Explicit diagnostic policies retain their own global defaultFamily.
+    useItemFontRole: options.useItemFontRole === true,
+    shapeTextItem(item, request = {}) {
+      if (!isRecord(request) || (request.direction !== 'ltr' && request.direction !== 'rtl')) {
+        fail('paragraph-shaping-direction-required', 'Each TextItem requires an explicit paragraph direction');
+      }
+      const plan = createTextItemShapingPlan(item, {
+        bidiRuntime: runtime.unicode,
+        fontResolver,
+        direction: request.direction,
+        defaultFamily: request.defaultFamily == null ? defaultFamily : String(request.defaultFamily),
+        languageByScript,
+        featuresByScript,
+        variationAxesByFontId,
+        useNativeDefaults,
+        faceIndexByFontId,
+        fallbacksByFamily
+      });
+      const shaped = shaper.shapeTextItemPlan(plan);
+      if (!shaped || shaped.kind !== 'ShapedTextItem' ||
+          shaped.itemId !== item.id || shaped.text !== plan.text ||
+          !Array.isArray(shaped.shapedRuns) || !Array.isArray(shaped.nonShapingRuns)) {
+        fail('invalid-shaped-text-item', 'HarfBuzz adapter returned an incomplete ShapedTextItem');
+      }
+      return shaped;
+    }
+  });
+}
+
+function projectShapedTextItemRange(shapedTextItem, range) {
+  if (!isRecord(shapedTextItem) || shapedTextItem.kind !== 'ShapedTextItem' ||
+      typeof shapedTextItem.text !== 'string' || !isRecord(shapedTextItem.sourceRange) ||
+      !Array.isArray(shapedTextItem.shapedRuns) || !Array.isArray(shapedTextItem.nonShapingRuns)) {
+    fail('invalid-shaped-text-item', 'Range projection requires a canonical ShapedTextItem');
+  }
+  if (!isRecord(range) || !Number.isSafeInteger(range.start) ||
+      !Number.isSafeInteger(range.end) || range.end <= range.start) {
+    fail('invalid-shaped-source-range', 'Requested source range must be a non-empty UTF-16 interval');
+  }
+  const itemStart = shapedTextItem.sourceRange.start;
+  const itemEnd = shapedTextItem.sourceRange.end;
+  if (!Number.isSafeInteger(itemStart) || !Number.isSafeInteger(itemEnd) ||
+      itemEnd <= itemStart || range.start < itemStart || range.end > itemEnd) {
+    fail('shaped-source-range-outside-item', 'Requested source range falls outside the ShapedTextItem envelope');
+  }
+
+  const pieces = [];
+  for (const run of shapedTextItem.shapedRuns) {
+    if (!isShapedRun(run)) fail('invalid-shaped-run', 'ShapedTextItem contains a non-canonical ShapedRun');
+    const start = Math.max(range.start, run.sourceRange.start);
+    const end = Math.min(range.end, run.sourceRange.end);
+    if (end <= start) continue;
+    const slice = start === run.sourceRange.start && end === run.sourceRange.end
+      ? run
+      : sliceShapedRun(run, start, end);
+    pieces.push({
+      kind: 'shape',
+      sourceRange: { start, end },
+      shapedRun: slice
+    });
+  }
+
+  for (const run of shapedTextItem.nonShapingRuns) {
+    if (!isRecord(run) || !Array.isArray(run.sourceRanges) || typeof run.text !== 'string' ||
+        !Number.isSafeInteger(run.start) || !Number.isSafeInteger(run.end) ||
+        run.end <= run.start || run.end - run.start !== run.text.length) {
+      fail('invalid-non-shaping-run', 'Non-shaping source runs must retain exact UTF-16 coordinates and text');
+    }
+    for (const segment of run.sourceRanges) {
+      if (!isRecord(segment) || !isRecord(segment.localRange) || !isRecord(segment.sourceRange)) {
+        fail('invalid-non-shaping-source-map', 'Non-shaping source segment has an invalid range map');
+      }
+      const localStart = segment.localRange.start;
+      const localEnd = segment.localRange.end;
+      const sourceStart = segment.sourceRange.start;
+      const sourceEnd = segment.sourceRange.end;
+      if (![localStart, localEnd, sourceStart, sourceEnd].every(Number.isSafeInteger) ||
+          localStart < run.start || localEnd > run.end || localEnd <= localStart ||
+          sourceEnd <= sourceStart || localEnd - localStart !== sourceEnd - sourceStart) {
+        fail('invalid-non-shaping-source-map', 'Non-shaping source segment is not a length-preserving UTF-16 map');
+      }
+      const start = Math.max(range.start, sourceStart);
+      const end = Math.min(range.end, sourceEnd);
+      if (end <= start) continue;
+      const localSliceStart = localStart + (start - sourceStart);
+      const localSliceEnd = localSliceStart + (end - start);
+      pieces.push({
+        kind: run.kind,
+        text: run.text.slice(localSliceStart - run.start, localSliceEnd - run.start),
+        sourceRange: { start, end },
+        localRange: { start: localSliceStart, end: localSliceEnd }
+      });
+    }
+  }
+
+  pieces.sort((a, b) => a.sourceRange.start - b.sourceRange.start || a.sourceRange.end - b.sourceRange.end);
+  let cursor = range.start;
+  for (const piece of pieces) {
+    if (piece.sourceRange.start !== cursor || piece.sourceRange.end <= cursor) {
+      fail('shaped-slice-source-coverage', 'Shaped slices contain a source gap or overlap at UTF-16 offset ' + cursor);
+    }
+    cursor = piece.sourceRange.end;
+  }
+  if (cursor !== range.end) {
+    fail('shaped-slice-source-coverage', 'Shaped slices do not cover requested source end ' + range.end);
+  }
+
+  const shapedRuns = pieces.filter(piece => piece.kind === 'shape').map(piece => piece.shapedRun);
+  const nonShapingRuns = pieces.filter(piece => piece.kind !== 'shape');
+  const glyphCount = shapedRuns.reduce((sum, run) => sum + run.glyphs.length, 0);
+  return Object.freeze({
+    contractVersion: 'paragraph-shaped-slices-v1',
+    sourceRange: Object.freeze({ start: range.start, end: range.end }),
+    pieces: Object.freeze(pieces.map(piece => Object.freeze(piece))),
+    shapedRuns: Object.freeze(shapedRuns),
+    nonShapingRuns: Object.freeze(nonShapingRuns),
+    glyphCount
+  });
+}
+
+function projectShapedTextItemRanges(shapedTextItem, ranges) {
+  if (!Array.isArray(ranges) || ranges.length === 0) {
+    fail('invalid-shaped-range-list', 'At least one source range must be supplied');
+  }
+  const normalized = [];
+  for (const range of ranges) {
+    if (!isRecord(range) || !Number.isSafeInteger(range.start) ||
+        !Number.isSafeInteger(range.end) || range.end <= range.start) {
+      fail('invalid-shaped-source-range', 'Every projected source segment must be a non-empty UTF-16 interval');
+    }
+    const previous = normalized[normalized.length - 1];
+    if (previous && range.start < previous.end) {
+      fail('overlapping-shaped-source-ranges', 'Projected source segments must be ordered and non-overlapping');
+    }
+    if (previous && range.start === previous.end) {
+      previous.end = range.end;
+    } else {
+      normalized.push({ start: range.start, end: range.end });
+    }
+  }
+  const slices = normalized.map(range => projectShapedTextItemRange(shapedTextItem, range));
+  const shapedRuns = slices.flatMap(slice => slice.shapedRuns);
+  const nonShapingRuns = slices.flatMap(slice => slice.nonShapingRuns);
+  return Object.freeze({
+    contractVersion: 'paragraph-shaped-slices-set-v1',
+    sourceRanges: Object.freeze(normalized.map(range => Object.freeze({ ...range }))),
+    slices: Object.freeze(slices),
+    shapedRuns: Object.freeze(shapedRuns),
+    nonShapingRuns: Object.freeze(nonShapingRuns),
+    glyphCount: shapedRuns.reduce((sum, run) => sum + run.glyphs.length, 0)
+  });
+}
+
+module.exports = {
+  createParagraphShaper,
+  projectShapedTextItemRange,
+  projectShapedTextItemRanges
+};
+
+};
+__modules["src/engine/typography/text-item-shaping-plan.js"] = function (require, module, exports) {
+// red-build/src/engine/typography/text-item-shaping-plan.js
+// Paragraph-level itemization + font/style run projection, before word splitting.
+'use strict';
+
+const PLAN_VERSION = 'text-item-shaping-plan-v3-source-map';
+
+function fail(code, message) {
+  const error = new TypeError(message);
+  error.code = code;
+  throw error;
+}
+
+function isRecord(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+function requireRecord(value, code, label) {
+  if (!isRecord(value)) fail(code, label + ' must be a plain object');
+  return value;
+}
+
+function requireString(value, code, label) {
+  if (typeof value !== 'string' || !value.length) fail(code, label + ' must be a non-empty string');
+  return value;
+}
+
+function requireRange(value, label, minimum = 0) {
+  if (!Number.isSafeInteger(value) || value < minimum) fail('invalid-source-range', label + ' is invalid');
+  return value;
+}
+
+function normalizeFeatures(value, script) {
+  if (!Array.isArray(value)) {
+    fail('missing-script-features', 'An explicit feature array (possibly []) is required for Script ' + script);
+  }
+  const seen = new Set();
+  return value.map((feature, index) => {
+    requireRecord(feature, 'invalid-open-type-feature', 'featuresByScript.' + script + '[' + index + ']');
+    const tag = requireString(feature.tag, 'invalid-open-type-feature', 'feature.tag');
+    if (!/^[A-Za-z0-9]{4}$/.test(tag) || seen.has(tag)) {
+      fail('invalid-open-type-feature', 'OpenType feature tag must be unique and exactly four ASCII characters');
+    }
+    seen.add(tag);
+    if (!Number.isFinite(feature.value)) {
+      fail('invalid-open-type-feature', 'OpenType feature value must be finite');
+    }
+    return { tag, value: feature.value };
+  });
+}
+
+function normalizeAxes(value, fontId) {
+  if (!Array.isArray(value)) {
+    fail('missing-variation-axes', 'An explicit variation-axis array (possibly []) is required for font ' + fontId);
+  }
+  const seen = new Set();
+  return value.map((axis, index) => {
+    requireRecord(axis, 'invalid-variation-axis', 'variationAxesByFontId.' + fontId + '[' + index + ']');
+    const tag = requireString(axis.tag, 'invalid-variation-axis', 'variation axis tag');
+    if (!/^[A-Za-z0-9]{4}$/.test(tag) || seen.has(tag) || !Number.isFinite(axis.value)) {
+      fail('invalid-variation-axis', 'Variation axes require unique four-character tags and finite values');
+    }
+    seen.add(tag);
+    return { tag, value: axis.value };
+  });
+}
+
+function normalizeStyleRuns(item, text, sourceRange) {
+  const input = item.payload && item.payload.runs;
+  if (!Array.isArray(input) || !input.length) {
+    fail('text-item-no-style-runs', 'TextItem must contain one or more inline style/font runs');
+  }
+  if (!isRecord(input[0])) fail('invalid-inline-style-run', 'payload.runs[0] must be a plain object');
+  const firstSourceStart = input[0].sourceStart == null
+    ? 0 : requireRange(input[0].sourceStart, 'run.sourceStart');
+  const documentBase = sourceRange.start - firstSourceStart;
+  let localCursor = 0;
+  let previousSourceEnd = firstSourceStart;
+  const normalized = input.map((entry, index) => {
+    const run = requireRecord(entry, 'invalid-inline-style-run', 'payload.runs[' + index + ']');
+    if (typeof run.text !== 'string') fail('invalid-inline-style-run-text', 'Inline style run text must be a string');
+    const runText = run.text;
+    if (!runText.length) fail('empty-inline-style-run', 'Empty inline style runs are not valid in a TextItem');
+    const sourceStart = run.sourceStart == null
+      ? previousSourceEnd : requireRange(run.sourceStart, 'run.sourceStart');
+    const sourceEnd = run.sourceEnd == null
+      ? sourceStart + runText.length : requireRange(run.sourceEnd, 'run.sourceEnd', 1);
+    if (sourceStart < previousSourceEnd || sourceEnd - sourceStart !== runText.length ||
+        text.slice(localCursor, localCursor + runText.length) !== runText) {
+      fail('inline-style-source-partition',
+        'Inline style runs must form an ordered local-text partition with monotone, length-preserving source ranges');
+    }
+    const localStart = localCursor;
+    const localEnd = localStart + runText.length;
+    const absoluteStart = documentBase + sourceStart;
+    const absoluteEnd = documentBase + sourceEnd;
+    if (absoluteStart < sourceRange.start || absoluteEnd > sourceRange.end) {
+      fail('inline-style-source-outside-item',
+        'Inline style source range falls outside the TextItem source envelope at run ' + index);
+    }
+    localCursor = localEnd;
+    previousSourceEnd = sourceEnd;
+    return {
+      index, localStart, localEnd,
+      sourceRange: { start: absoluteStart, end: absoluteEnd },
+      text: runText,
+      fontFamily: run.fontFamily == null ? null : requireString(run.fontFamily, 'invalid-font-family', 'fontFamily')
+    };
+  });
+  if (localCursor !== text.length) {
+    fail('inline-style-incomplete-coverage', 'Inline style runs do not cover TextItem.text');
+  }
+  return normalized;
+}
+
+function mapLocalRangeToSourceSegments(styleRuns, localStart, localEnd) {
+  if (!Number.isSafeInteger(localStart) || !Number.isSafeInteger(localEnd) ||
+      localStart < 0 || localEnd <= localStart) {
+    fail('invalid-local-source-map-range', 'Local source-map range must be a non-empty UTF-16 range');
+  }
+  const mapped = [];
+  let expectedLocal = localStart;
+  for (const run of styleRuns) {
+    const start = Math.max(localStart, run.localStart);
+    const end = Math.min(localEnd, run.localEnd);
+    if (end <= start) continue;
+    if (start !== expectedLocal) {
+      fail('incomplete-local-source-map', 'Inline style runs leave a local source-map gap at ' + expectedLocal);
+    }
+    const sourceStart = run.sourceRange.start + (start - run.localStart);
+    const sourceEnd = run.sourceRange.start + (end - run.localStart);
+    const previous = mapped[mapped.length - 1];
+    if (previous && previous.localRange.end === start && previous.sourceRange.end === sourceStart) {
+      previous.localRange.end = end;
+      previous.sourceRange.end = sourceEnd;
+      previous.styleRunIndexes.push(run.index);
+    } else {
+      mapped.push({
+        localRange: { start, end },
+        sourceRange: { start: sourceStart, end: sourceEnd },
+        styleRunIndexes: [run.index]
+      });
+    }
+    expectedLocal = end;
+  }
+  if (expectedLocal !== localEnd) {
+    fail('incomplete-local-source-map', 'Inline style runs do not map the complete local range');
+  }
+  return mapped;
+}
+
+function codePointForScalarRange(text, start, end, label) {
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) ||
+      start < 0 || end <= start || end > text.length) {
+    fail('invalid-grapheme-scalar-partition', label + ' has an invalid UTF-16 scalar range');
+  }
+  const codePoint = text.codePointAt(start);
+  const expectedWidth = codePoint > 0xFFFF ? 2 : 1;
+  if (end - start !== expectedWidth) {
+    fail('invalid-grapheme-scalar-partition', label + ' does not describe exactly one Unicode scalar');
+  }
+  const scalarText = text.slice(start, end);
+  if (scalarText.length !== expectedWidth ||
+      (expectedWidth === 2 && !(scalarText.charCodeAt(0) >= 0xD800 && scalarText.charCodeAt(0) <= 0xDBFF &&
+        scalarText.charCodeAt(1) >= 0xDC00 && scalarText.charCodeAt(1) <= 0xDFFF)) ||
+      (expectedWidth === 1 && scalarText.charCodeAt(0) >= 0xD800 && scalarText.charCodeAt(0) <= 0xDFFF)) {
+    fail('invalid-grapheme-scalar-partition', label + ' contains an invalid or split UTF-16 scalar');
+  }
+  return codePoint;
+}
+
+function requiredCodePointsForGrapheme(text, grapheme, graphemeIndex) {
+  if (!Array.isArray(grapheme.scalars) || !grapheme.scalars.length) {
+    fail('missing-grapheme-scalars',
+      'Unicode itemizer must provide scalar-level Default_Ignorable_Code_Point data for EGC ' + graphemeIndex);
+  }
+  const required = [];
+  let expected = grapheme.start;
+  for (let scalarIndex = 0; scalarIndex < grapheme.scalars.length; scalarIndex++) {
+    const scalar = grapheme.scalars[scalarIndex];
+    if (!scalar || scalar.start !== expected || !Number.isSafeInteger(scalar.end) ||
+        scalar.end <= scalar.start || scalar.end > grapheme.end ||
+        typeof scalar.isDefaultIgnorable !== 'boolean') {
+      fail('invalid-grapheme-scalar-partition',
+        'Unicode scalar records are not an exact contiguous partition of EGC ' + graphemeIndex +
+        ' at scalar ' + scalarIndex);
+    }
+    const codePoint = codePointForScalarRange(
+      text, scalar.start, scalar.end, 'EGC ' + graphemeIndex + ' scalar ' + scalarIndex
+    );
+    if (scalar.isDefaultIgnorable !== true) required.push(codePoint);
+    expected = scalar.end;
+  }
+  if (expected !== grapheme.end) {
+    fail('invalid-grapheme-scalar-partition',
+      'Unicode scalar records do not cover the complete EGC ' + graphemeIndex);
+  }
+  return required;
+}
+
+function validateItemization(text, result) {
+  if (!result || result.text !== text || result.utf16Length !== text.length ||
+      !Array.isArray(result.graphemes) || !Array.isArray(result.scriptRuns) ||
+      !Array.isArray(result.sourceRuns) || !Array.isArray(result.nonShapingRuns)) {
+    fail('invalid-itemizer-result', 'Canonical Unicode itemizer returned an incomplete or mismatched result');
+  }
+  let expected = 0;
+  for (let index = 0; index < result.graphemes.length; index++) {
+    const g = result.graphemes[index];
+    if (!g || g.start !== expected || !Number.isSafeInteger(g.end) || g.end <= g.start ||
+        g.end > text.length || g.text !== text.slice(g.start,g.end) || typeof g.shapeable !== 'boolean') {
+      fail('invalid-grapheme-partition', 'Itemizer graphemes are not an exact contiguous UTF-16 partition at index ' + index);
+    }
+    requiredCodePointsForGrapheme(text, g, index);
+    if (g.shapeable && (g.containsBidiControl || g.isBidiControl)) {
+      fail('invalid-shapeable-bidi-control', 'Bidi_Control grapheme cannot be shapeable');
+    }
+    expected = g.end;
+  }
+  if (!result.graphemes.length || expected !== text.length) {
+    fail('incomplete-grapheme-coverage', 'Itemizer graphemes do not cover the complete TextItem');
+  }
+  expected = 0;
+  const projectedShape = [], projectedNonShaping = [];
+  for (let index=0; index<result.sourceRuns.length; index++) {
+    const run=result.sourceRuns[index];
+    if (!run || run.start!==expected || !Number.isSafeInteger(run.end) ||
+        run.end<=run.start || run.end>text.length || run.text!==text.slice(run.start,run.end)) {
+      fail('invalid-source-partition', 'Itemizer sourceRuns are not a lossless contiguous partition at index '+index);
+    }
+    if (run.kind==='shape') projectedShape.push(run);
+    else if (['bidi-control','non-shaping-bidi-mixed','unresolved'].includes(run.kind)) projectedNonShaping.push(run);
+    else fail('invalid-source-run-kind','Itemizer returned an unknown source run kind: '+run.kind);
+    expected=run.end;
+  }
+  if (expected!==text.length) fail('incomplete-source-coverage','Itemizer sourceRuns do not cover the complete TextItem');
+  if (projectedNonShaping.length!==result.nonShapingRuns.length) {
+    fail('non-shaping-run-projection-mismatch','nonShapingRuns must be the non-shape projection of sourceRuns');
+  }
+  for(let i=0;i<projectedNonShaping.length;i++){
+    const a=projectedNonShaping[i],b=result.nonShapingRuns[i];
+    if(!b||a.start!==b.start||a.end!==b.end||a.kind!==b.kind||a.text!==b.text)
+      fail('non-shaping-run-projection-mismatch','nonShapingRuns differ from sourceRuns at index '+i);
+  }
+  const covered=new Set();
+  let previousEnd=0;
+  for(let index=0;index<result.scriptRuns.length;index++){
+    const r=result.scriptRuns[index];
+    if(!r||!Number.isSafeInteger(r.start)||!Number.isSafeInteger(r.end)||
+       r.start<previousEnd||r.end<=r.start||r.end>text.length||
+       !/^[A-Za-z]{4}$/.test(r.script||'')||
+       !['ltr','rtl'].includes(r.direction)||
+       !Number.isSafeInteger(r.bidiLevel)||r.bidiLevel<0||
+       ((r.bidiLevel%2===1)!==(r.direction==='rtl'))||
+       !Number.isSafeInteger(r.graphemeStart)||!Number.isSafeInteger(r.graphemeEnd)||
+       r.graphemeStart<0||r.graphemeEnd<=r.graphemeStart||r.graphemeEnd>result.graphemes.length||
+       r.text!==text.slice(r.start,r.end)||
+       result.graphemes[r.graphemeStart].start!==r.start||
+       result.graphemes[r.graphemeEnd-1].end!==r.end){
+      fail('invalid-script-run','Itemizer ScriptRun has an invalid source, Script, direction or Bidi range at index '+index);
+    }
+    for(let gi=r.graphemeStart;gi<r.graphemeEnd;gi++){
+      const g=result.graphemes[gi];
+      if(!g.shapeable||g.containsBidiControl||g.isBidiControl||covered.has(gi))
+        fail('non-shapeable-in-script-run','Non-shapeable or duplicate grapheme entered ScriptRun '+index);
+      covered.add(gi);
+    }
+    previousEnd=r.end;
+  }
+  for(let i=0;i<result.graphemes.length;i++){
+    if(result.graphemes[i].shapeable!==covered.has(i))
+      fail('script-run-coverage-mismatch','ScriptRuns do not cover exactly the shapeable EGCs; grapheme '+i);
+  }
+  if(projectedShape.length!==result.scriptRuns.length)
+    fail('script-run-projection-mismatch','scriptRuns must be the shape projection of sourceRuns');
+  for(let i=0;i<projectedShape.length;i++){
+    const a=projectedShape[i],b=result.scriptRuns[i];
+    if(a.start!==b.start||a.end!==b.end||a.text!==b.text||
+       a.script!==b.script||a.direction!==b.direction||a.bidiLevel!==b.bidiLevel||
+       a.graphemeStart!==b.graphemeStart||a.graphemeEnd!==b.graphemeEnd)
+      fail('script-run-projection-mismatch','scriptRuns differ from sourceRuns at index '+i);
+  }
+}
+
+function deepFreeze(value, seen = new Set()) {
+  if (!value || typeof value !== 'object' || seen.has(value)) return value;
+  seen.add(value);
+  for (const key of Object.keys(value)) deepFreeze(value[key], seen);
+  return Object.freeze(value);
+}
+
+/**
+ * Build the paragraph-level shaping plan before splitTextItem.
+ * No glyph metrics are generated here. The output is the deterministic,
+ * source-mapped plan consumed by the initialized HarfBuzz runtime.
+ */
+function createTextItemShapingPlan(item, options = {}) {
+  requireRecord(item, 'invalid-text-item', 'TextItem');
+  if (item.kind !== 'text') fail('invalid-text-item-kind', 'Shaping plan accepts only TextItem');
+  const bidiRuntime = options.bidiRuntime;
+  if (!bidiRuntime || typeof bidiRuntime.resolve !== 'function' ||
+      typeof bidiRuntime.itemizeScripts !== 'function') {
+    fail('missing-unicode-runtime', 'Pinned Bidi/Grapheme runtime is required');
+  }
+  const fontResolver = options.fontResolver;
+  if (!fontResolver || typeof fontResolver.resolveFontForGrapheme !== 'function') {
+    fail('missing-font-resolver', 'Canonical fontResolver with whole-grapheme coverage resolution is required');
+  }
+
+  const runs = item.payload && item.payload.runs;
+  const text = Array.isArray(runs) ? runs.map((run) => String(run.text == null ? '' : run.text)).join('') : '';
+  if (!text.length) fail('empty-text-item', 'TextItem has no shaping text');
+  const source = requireRecord(item.sourceRange, 'invalid-text-item-source-range', 'TextItem.sourceRange');
+  const sourceStart = requireRange(source.start, 'TextItem.sourceRange.start');
+  const sourceEnd = requireRange(source.end, 'TextItem.sourceRange.end', 1);
+  if (sourceEnd <= sourceStart) {
+    fail('text-item-source-length-mismatch', 'TextItem sourceRange must be a non-empty document UTF-16 envelope');
+  }
+
+  const styleRuns = normalizeStyleRuns(item, text, source);
+  const sourceSegments = styleRuns.map((run) => ({
+    localRange: { start: run.localStart, end: run.localEnd },
+    sourceRange: { ...run.sourceRange },
+    styleRunIndexes: [run.index]
+  }));
+  const mapLocalRange = (start, end) => mapLocalRangeToSourceSegments(styleRuns, start, end);
+  const direction = options.direction;
+  if (direction !== 'ltr' && direction !== 'rtl') {
+    fail('missing-base-direction', 'Base paragraph direction must be explicit (ltr or rtl)');
+  }
+  const languageByScript = requireRecord(options.languageByScript, 'missing-script-languages', 'languageByScript');
+  const featuresByScript = requireRecord(options.featuresByScript, 'missing-script-features', 'featuresByScript');
+  const variationAxesByFontId = requireRecord(options.variationAxesByFontId, 'missing-variation-axes', 'variationAxesByFontId');
+  const faceIndexByFontId = options.faceIndexByFontId == null
+    ? Object.create(null)
+    : requireRecord(options.faceIndexByFontId, 'invalid-face-index-map', 'faceIndexByFontId');
+  const fallbacksByFamily = options.fallbacksByFamily == null
+    ? Object.create(null)
+    : requireRecord(options.fallbacksByFamily, 'invalid-font-fallback-map', 'fallbacksByFamily');
+  const resolved = bidiRuntime.resolve(text, direction);
+  const itemization = bidiRuntime.itemizeScripts(text, resolved);
+  validateItemization(text, itemization);
+
+  // Validate all shaping policies before resolving or opening font faces.
+  // A malformed/missing language/feature policy must fail independently of
+  // whether the requested font is installed in this runtime.
+  const useNativeDefaults = options.useNativeDefaults === true;
+  const shapingConfigByScript = new Map();
+  for (const scriptRun of itemization.scriptRuns) {
+    if (!shapingConfigByScript.has(scriptRun.script)) {
+      const configuredLanguage = languageByScript[scriptRun.script];
+      const language = (typeof configuredLanguage === 'string' && configuredLanguage.trim())
+        ? configuredLanguage
+        : (useNativeDefaults
+          ? (scriptRun.script === 'Hebr' ? 'he' : scriptRun.script === 'Latn' ? 'en' : 'und')
+          : null);
+      if (!language) {
+        fail('missing-script-language', 'No explicit language provided for Script ' + scriptRun.script);
+      }
+      const configuredFeatures = featuresByScript[scriptRun.script];
+      const features = configuredFeatures == null && useNativeDefaults
+        ? []
+        : normalizeFeatures(configuredFeatures, scriptRun.script);
+      shapingConfigByScript.set(scriptRun.script, { language, features });
+    }
+  }
+
+  const graphemeStyleIndexes = itemization.graphemes.map((grapheme, graphemeIndex) => {
+    const matches = styleRuns.filter((run) => run.localStart <= grapheme.start && grapheme.end <= run.localEnd);
+    if (matches.length !== 1) {
+      const overlaps = styleRuns.filter((run) => run.localStart < grapheme.end && grapheme.start < run.localEnd);
+      if (overlaps.length > 1) {
+        fail('style-boundary-splits-grapheme',
+          'Inline font/style boundary falls inside extended grapheme ' + graphemeIndex +
+          ' [' + grapheme.start + ',' + grapheme.end + ')');
+      }
+      fail('grapheme-without-font-run','Extended grapheme ' + graphemeIndex + ' is not covered by exactly one inline style run');
+    }
+    return matches[0].index;
+  });
+  const graphemeSourceRanges = itemization.graphemes.map((grapheme, graphemeIndex) => {
+    const mapped = mapLocalRange(grapheme.start, grapheme.end);
+    if (mapped.length !== 1) {
+      fail('grapheme-source-range-discontiguous',
+        'A single EGC must map to one contiguous document source range; grapheme ' + graphemeIndex);
+    }
+    return {
+      localRange: { start: grapheme.start, end: grapheme.end },
+      sourceRange: { ...mapped[0].sourceRange },
+      styleRunIndexes: mapped[0].styleRunIndexes.slice()
+    };
+  });
+
+  // Resolve each shapeable EGC independently. A font transition may occur only
+  // between EGCs; no base/mark/ZWJ sequence is ever split to satisfy cmap.
+  const resolvedGraphemeFonts = new Array(itemization.graphemes.length).fill(null);
+  for (let graphemeIndex = 0; graphemeIndex < itemization.graphemes.length; graphemeIndex++) {
+    const grapheme = itemization.graphemes[graphemeIndex];
+    if (!grapheme.shapeable) continue;
+    const styleRunIndex = graphemeStyleIndexes[graphemeIndex];
+    const styleRun = styleRuns[styleRunIndex];
+    const requestedFamily = styleRun.fontFamily || options.defaultFamily || null;
+    const configuredFallbacks = requestedFamily == null ? null : fallbacksByFamily[requestedFamily];
+    if (configuredFallbacks != null && !Array.isArray(configuredFallbacks)) {
+      fail('invalid-font-fallback-map', 'Fallbacks for family ' + requestedFamily + ' must be an ordered array');
+    }
+    const fallbacks = configuredFallbacks || [];
+    const coverageCodePoints = requiredCodePointsForGrapheme(text, grapheme, graphemeIndex);
+    const resolution = fontResolver.resolveFontForGrapheme(requestedFamily, coverageCodePoints, {
+      defaultFamily: options.defaultFamily || null,
+      fallbacks
+    });
+    if (!resolution.ok || !resolution.record || !resolution.record.font ||
+        !resolution.record.font.bytes || !resolution.record.font.bytes.length) {
+      fail('font-unavailable-for-grapheme',
+        'No registered font covers every required scalar in EGC ' + graphemeIndex +
+        ' [' + graphemeSourceRanges[graphemeIndex].sourceRange.start + ',' + graphemeSourceRanges[graphemeIndex].sourceRange.end + '): ' +
+        (resolution.message || 'font bytes are unavailable'));
+    }
+    const fontId = requireString(resolution.fontId, 'invalid-resolved-font', 'resolved fontId');
+    const sourceHash = requireString(resolution.record.sourceHash, 'missing-font-source-hash', 'resolved font SHA-256');
+    if (!/^[0-9a-f]{64}$/i.test(sourceHash)) {
+      fail('invalid-font-source-hash', 'Resolved font sourceHash must be a 64-character SHA-256');
+    }
+    const unitsPerEm = requireRange(resolution.record.unitsPerEm, 'resolved font unitsPerEm', 1);
+    if (resolution.record.font.unitsPerEm !== unitsPerEm) {
+      fail('font-units-per-em-mismatch', 'FontResolver record and parsed font UPEM disagree for ' + fontId);
+    }
+    const configuredAxes = variationAxesByFontId[fontId];
+    const axisPolicy = configuredAxes == null && useNativeDefaults &&
+      typeof fontResolver.defaultVariationAxesOf === 'function'
+      ? fontResolver.defaultVariationAxesOf(fontId)
+      : configuredAxes;
+    const variationAxes = normalizeAxes(axisPolicy, fontId);
+    const faceIndex = faceIndexByFontId[fontId] == null
+      ? 0 : requireRange(faceIndexByFontId[fontId], 'faceIndexByFontId.' + fontId);
+    resolvedGraphemeFonts[graphemeIndex] = {
+      localRange: graphemeSourceRanges[graphemeIndex].localRange,
+      sourceRange: graphemeSourceRanges[graphemeIndex].sourceRange,
+      styleRunIndex,
+      requestedFamily,
+      fontId,
+      sourceHash: sourceHash.toLowerCase(),
+      faceIndex,
+      unitsPerEm,
+      variationAxes,
+      coverageCodePoints,
+      fallbackUsed: resolution.fallbackUsed === true,
+      fallbackChain: resolution.fallbackChain || [],
+      diagnostics: resolution.diagnostics || []
+    };
+  }
+
+  const plannedRuns = [];
+  for (let scriptRunIndex = 0; scriptRunIndex < itemization.scriptRuns.length; scriptRunIndex++) {
+    const scriptRun = itemization.scriptRuns[scriptRunIndex];
+    const shapingConfig = shapingConfigByScript.get(scriptRun.script);
+    const language = shapingConfig.language;
+    const features = shapingConfig.features;
+    let group = null;
+    const flush = () => {
+      if (!group) return;
+      const first = resolvedGraphemeFonts[group.graphemeStart];
+      const last = resolvedGraphemeFonts[group.graphemeEnd - 1];
+      const localStart = first.localRange.start;
+      const localEnd = last.localRange.end;
+      const absoluteStart = first.sourceRange.start;
+      const absoluteEnd = last.sourceRange.end;
+      plannedRuns.push({
+        id: item.id + '#shape:' + absoluteStart + '-' + absoluteEnd + ':' + group.fontId,
+        sourceRange: {
+          coordinateSpace: 'document-utf16',
+          start: absoluteStart,
+          end: absoluteEnd,
+          ...(source.docId != null ? { docId: source.docId } : {}),
+          ...(source.blockId != null ? { blockId: source.blockId } : {}),
+          itemId: item.id
+        },
+        styleRunIndexes: group.styleRunIndexes.slice(),
+        localRange: { start: localStart, end: localEnd },
+        text: text.slice(localStart, localEnd),
+        script: scriptRun.script,
+        language,
+        direction: scriptRun.direction,
+        bidiLevel: scriptRun.bidiLevel,
+        bot: localStart === 0,
+        eot: localEnd === text.length,
+        graphemeStart: group.graphemeStart,
+        graphemeEnd: group.graphemeEnd,
+        graphemes: Array.from({ length: group.graphemeEnd - group.graphemeStart }, (_, index) => {
+          const graphemeIndex = group.graphemeStart + index;
+          const grapheme = itemization.graphemes[graphemeIndex];
+          const resolved = resolvedGraphemeFonts[graphemeIndex];
+          return {
+            start: resolved.sourceRange.start,
+            end: resolved.sourceRange.end,
+            localRange: { ...resolved.localRange },
+            text: grapheme.text,
+            coverageCodePoints: resolved.coverageCodePoints.slice()
+          };
+        }),
+        font: {
+          fontId: group.fontId,
+          sourceHash: group.sourceHash,
+          faceIndex: group.faceIndex,
+          unitsPerEm: group.unitsPerEm,
+          variationAxes: group.variationAxes
+        },
+        features,
+        fallbackUsed: group.fallbackUsed,
+        fallbackChains: group.fallbackChains
+      });
+      group = null;
+    };
+    for (let graphemeIndex = scriptRun.graphemeStart; graphemeIndex < scriptRun.graphemeEnd; graphemeIndex++) {
+      const resolvedFont = resolvedGraphemeFonts[graphemeIndex];
+      if (!resolvedFont) fail('missing-font-for-shapeable-grapheme',
+        'A shapeable grapheme has no resolved font identity at index ' + graphemeIndex);
+      const canMerge = group &&
+        group.graphemeEnd === graphemeIndex &&
+        group.lastSourceEnd === resolvedFont.sourceRange.start &&
+        group.fontId === resolvedFont.fontId &&
+        group.sourceHash === resolvedFont.sourceHash &&
+        group.faceIndex === resolvedFont.faceIndex &&
+        JSON.stringify(group.variationAxes) === JSON.stringify(resolvedFont.variationAxes);
+      if (!canMerge) {
+        flush();
+        group = {
+          styleRunIndexes: [resolvedFont.styleRunIndex],
+          fontId: resolvedFont.fontId,
+          sourceHash: resolvedFont.sourceHash,
+          faceIndex: resolvedFont.faceIndex,
+          unitsPerEm: resolvedFont.unitsPerEm,
+          variationAxes: resolvedFont.variationAxes,
+          fallbackUsed: resolvedFont.fallbackUsed,
+          fallbackChains: resolvedFont.fallbackUsed ? [resolvedFont.fallbackChain] : [],
+          graphemeStart: graphemeIndex,
+          graphemeEnd: graphemeIndex + 1,
+          lastSourceEnd: resolvedFont.sourceRange.end
+        };
+      } else {
+        group.graphemeEnd = graphemeIndex + 1;
+        group.lastSourceEnd = resolvedFont.sourceRange.end;
+        if (!group.styleRunIndexes.includes(resolvedFont.styleRunIndex)) {
+          group.styleRunIndexes.push(resolvedFont.styleRunIndex);
+        }
+        if (resolvedFont.fallbackUsed) group.fallbackUsed = true;
+        if (resolvedFont.fallbackUsed &&
+            !group.fallbackChains.some((chain) => JSON.stringify(chain) === JSON.stringify(resolvedFont.fallbackChain))) {
+          group.fallbackChains.push(resolvedFont.fallbackChain);
+        }
+      }
+    }
+    flush();
+  }
+
+  const diagnostics = [];
+  for (let graphemeIndex = 0; graphemeIndex < resolvedGraphemeFonts.length; graphemeIndex++) {
+    const resolvedFont = resolvedGraphemeFonts[graphemeIndex];
+    if (resolvedFont && resolvedFont.fallbackUsed) {
+      const grapheme = itemization.graphemes[graphemeIndex];
+      diagnostics.push({
+        code: 'font-fallback',
+        itemId: item.id,
+        styleRunIndex: resolvedFont.styleRunIndex,
+        graphemeRange: { ...resolvedFont.sourceRange },
+        graphemeText: grapheme.text,
+        requiredCodePoints: resolvedFont.coverageCodePoints,
+        requestedFamily: resolvedFont.requestedFamily,
+        fontId: resolvedFont.fontId,
+        fallbackChain: resolvedFont.fallbackChain
+      });
+    }
+  }
+  const projectSourceRun = (run) => ({
+    ...run,
+    sourceRanges: mapLocalRange(run.start, run.end).map((segment) => ({
+      localRange: { ...segment.localRange },
+      sourceRange: { ...segment.sourceRange }
+    }))
+  });
+  const nonShapingRuns = itemization.nonShapingRuns.map(projectSourceRun);
+  const sourceRuns = itemization.sourceRuns.map(projectSourceRun);
+
+  return deepFreeze({
+    kind: 'TextItemShapingPlan',
+    version: PLAN_VERSION,
+    itemId: item.id,
+    text,
+    sourceRange: { ...source, coordinateSpace: 'document-utf16' },
+    sourceSegments,
+    unicodeVersion: itemization.unicodeVersion,
+    direction,
+    graphemes: itemization.graphemes.map((grapheme, index) => ({
+      start: graphemeSourceRanges[index].sourceRange.start,
+      end: graphemeSourceRanges[index].sourceRange.end,
+      localRange: { ...graphemeSourceRanges[index].localRange },
+      text: grapheme.text,
+      script: grapheme.script || null,
+      status: grapheme.status,
+      direction: grapheme.direction || null,
+      bidiLevel: grapheme.bidiLevel,
+      shapeable: grapheme.shapeable === true,
+      containsBidiControl: !!grapheme.containsBidiControl,
+      isBidiControl: !!grapheme.isBidiControl,
+      coverageCodePoints: requiredCodePointsForGrapheme(text, grapheme, index),
+      font: resolvedGraphemeFonts[index]
+        ? {
+            fontId: resolvedGraphemeFonts[index].fontId,
+            sourceHash: resolvedGraphemeFonts[index].sourceHash,
+            faceIndex: resolvedGraphemeFonts[index].faceIndex,
+            variationAxes: resolvedGraphemeFonts[index].variationAxes
+          }
+        : null
+    })),
+    scriptRuns: plannedRuns,
+    nonShapingRuns,
+    sourceRuns,
+    diagnostics
+  });
+}
+
+module.exports = { PLAN_VERSION, createTextItemShapingPlan };
+
+};
+__modules["src/engine/typography/shaped-run.js"] = function (require, module, exports) {
+// red-build/src/engine/typography/shaped-run.js
+// Canonical immutable ShapedRun/ShapedGlyph contract — production model layer.
+'use strict';
+
+const SHAPED_RUN_CONTRACT_VERSION = 'shaped-run-v1';
+const CLUSTER_LEVEL = 'monotone-characters';
+
+function fail(code, message) {
+  const error = new TypeError(message);
+  error.code = code;
+  throw error;
+}
+
+function isRecord(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+function requireRecord(value, code, label) {
+  if (!isRecord(value)) fail(code, label + ' must be a plain object');
+  return value;
+}
+
+function requireString(value, code, label) {
+  if (typeof value !== 'string' || value.length === 0) {
+    fail(code, label + ' must be a non-empty string');
+  }
+  return value;
+}
+
+function requireInteger(value, min, code, label) {
+  if (!Number.isSafeInteger(value) || value < min) {
+    fail(code, label + ' must be an integer >= ' + min);
+  }
+  return value;
+}
+
+function requireFinite(value, code, label) {
+  if (!Number.isFinite(value)) fail(code, label + ' must be finite');
+  return value;
+}
+
+function assertWellFormedUtf16(text, label) {
+  for (let i = 0; i < text.length; i++) {
+    const unit = text.charCodeAt(i);
+    if (unit >= 0xD800 && unit <= 0xDBFF) {
+      if (i + 1 >= text.length) fail('invalid-utf16', label + ' ends with an unpaired high surrogate');
+      const next = text.charCodeAt(i + 1);
+      if (next < 0xDC00 || next > 0xDFFF) {
+        fail('invalid-utf16', label + ' contains an unpaired high surrogate at UTF-16 offset ' + i);
+      }
+      i++;
+    } else if (unit >= 0xDC00 && unit <= 0xDFFF) {
+      fail('invalid-utf16', label + ' contains an unpaired low surrogate at UTF-16 offset ' + i);
+    }
+  }
+}
+
+function normalizeSourceRange(input, text) {
+  const range = requireRecord(input, 'invalid-source-range', 'sourceRange');
+  const start = requireInteger(range.start, 0, 'invalid-source-range', 'sourceRange.start');
+  const end = requireInteger(range.end, 1, 'invalid-source-range', 'sourceRange.end');
+  if (end <= start || end - start !== text.length) {
+    fail('source-range-length-mismatch', 'sourceRange must cover the text exactly in UTF-16 code units');
+  }
+  const out = { coordinateSpace: 'document-utf16', start, end };
+  for (const key of ['docId', 'blockId', 'itemId']) {
+    if (range[key] != null) out[key] = requireString(range[key], 'invalid-source-range', 'sourceRange.' + key);
+  }
+  if (range.runIndex != null) {
+    out.runIndex = requireInteger(range.runIndex, 0, 'invalid-source-range', 'sourceRange.runIndex');
+  }
+  return out;
+}
+
+function normalizeFont(input) {
+  const font = requireRecord(input, 'invalid-font-identity', 'font');
+  const fontId = requireString(font.fontId, 'invalid-font-identity', 'font.fontId');
+  const faceIndex = font.faceIndex == null
+    ? 0
+    : requireInteger(font.faceIndex, 0, 'invalid-font-identity', 'font.faceIndex');
+  const unitsPerEm = requireInteger(font.unitsPerEm, 1, 'invalid-font-identity', 'font.unitsPerEm');
+
+  if (typeof font.sourceHash !== 'string' || !/^[0-9a-f]{64}$/i.test(font.sourceHash)) {
+    fail('invalid-font-hash', 'font.sourceHash must be a 64-character hexadecimal SHA-256');
+  }
+  const out = { fontId, faceIndex, unitsPerEm, sourceHash: font.sourceHash.toLowerCase() };
+  if (font.normalizedHash != null) {
+    if (typeof font.normalizedHash !== 'string' || !/^[0-9a-f]{64}$/i.test(font.normalizedHash)) {
+      fail('invalid-font-hash', 'font.normalizedHash must be a 64-character hexadecimal SHA-256');
+    }
+    out.normalizedHash = font.normalizedHash.toLowerCase();
+  }
+  return out;
+}
+
+function normalizeTagValueList(input, code, label) {
+  if (!Array.isArray(input)) fail(code, label + ' must be an array (use [] when empty)');
+  const seen = new Set();
+  return input.map((item, index) => {
+    const rec = requireRecord(item, code, label + '[' + index + ']');
+    const tag = requireString(rec.tag, code, label + '[' + index + '].tag');
+    if (!/^[A-Za-z0-9]{4}$/.test(tag)) {
+      fail(code, label + '[' + index + '].tag must be a four-character OpenType tag');
+    }
+    if (seen.has(tag)) fail(code, label + ' contains duplicate tag ' + tag);
+    seen.add(tag);
+    return { tag, value: requireFinite(rec.value, code, label + '[' + index + '].value') };
+  });
+}
+
+function normalizeShaping(input) {
+  const shaping = requireRecord(input, 'invalid-shaping-context', 'shaping');
+  const script = requireString(shaping.script, 'invalid-shaping-context', 'shaping.script');
+  if (!/^[A-Za-z]{4}$/.test(script)) {
+    fail('invalid-shaping-context', 'shaping.script must be a four-letter ISO 15924 tag');
+  }
+  const language = requireString(shaping.language, 'invalid-shaping-context', 'shaping.language');
+  const direction = shaping.direction;
+  if (direction !== 'ltr' && direction !== 'rtl') {
+    fail('invalid-shaping-context', 'shaping.direction must be ltr or rtl');
+  }
+  const bidiLevel = requireInteger(shaping.bidiLevel, 0, 'invalid-shaping-context', 'shaping.bidiLevel');
+  if ((bidiLevel % 2 === 1) !== (direction === 'rtl')) {
+    fail('bidi-level-direction-mismatch', 'Bidi level parity does not match shaping direction');
+  }
+  const engine = requireString(shaping.engine, 'invalid-shaping-context', 'shaping.engine');
+  const engineVersion = requireString(shaping.engineVersion, 'invalid-shaping-context', 'shaping.engineVersion');
+  const unicodeVersion = requireString(shaping.unicodeVersion, 'invalid-shaping-context', 'shaping.unicodeVersion');
+  if (shaping.bot !== true && shaping.bot !== false) {
+    fail('invalid-shaping-context', 'shaping.bot must be explicit boolean');
+  }
+  if (shaping.eot !== true && shaping.eot !== false) {
+    fail('invalid-shaping-context', 'shaping.eot must be explicit boolean');
+  }
+  if (shaping.clusterLevel !== CLUSTER_LEVEL) {
+    fail('invalid-cluster-level', 'ShapedRun requires MONOTONE_CHARACTERS cluster semantics');
+  }
+
+  const variationAxes = normalizeTagValueList(
+    shaping.variationAxes,
+    'invalid-variation-axes',
+    'shaping.variationAxes'
+  );
+  const features = normalizeTagValueList(
+    shaping.features,
+    'invalid-open-type-features',
+    'shaping.features'
+  );
+
+  return {
+    engine,
+    engineVersion,
+    unicodeVersion,
+    script,
+    language,
+    direction,
+    bidiLevel,
+    bot: shaping.bot,
+    eot: shaping.eot,
+    clusterLevel: CLUSTER_LEVEL,
+    variationAxes,
+    features
+  };
+}
+
+function normalizeGraphemes(input, sourceRange, text) {
+  if (!Array.isArray(input) || input.length === 0) {
+    fail('invalid-graphemes', 'graphemes must be a non-empty array from the canonical itemizer');
+  }
+  let expectedStart = sourceRange.start;
+  return input.map((item, index) => {
+    const grapheme = requireRecord(item, 'invalid-graphemes', 'graphemes[' + index + ']');
+    const start = requireInteger(grapheme.start, sourceRange.start, 'invalid-graphemes', 'graphemes[' + index + '].start');
+    const end = requireInteger(grapheme.end, sourceRange.start + 1, 'invalid-graphemes', 'graphemes[' + index + '].end');
+    const value = requireString(grapheme.text, 'invalid-graphemes', 'graphemes[' + index + '].text');
+    if (start !== expectedStart || end <= start || end > sourceRange.end ||
+        end - start !== value.length ||
+        value !== text.slice(start - sourceRange.start, end - sourceRange.start)) {
+      fail('invalid-grapheme-partition', 'graphemes must be an exact contiguous UTF-16 partition of the ShapedRun source');
+    }
+    assertWellFormedUtf16(value, 'graphemes[' + index + '].text');
+    expectedStart = end;
+    return { start, end, text: value };
+  }).map((grapheme, index, all) => {
+    if (index === all.length - 1 && grapheme.end !== sourceRange.end) {
+      fail('incomplete-grapheme-coverage', 'graphemes do not cover the complete ShapedRun source range');
+    }
+    return grapheme;
+  });
+}
+
+function normalizeBounds(input, code, label) {
+  if (input == null) return null;
+  const bounds = requireRecord(input, code, label);
+  const out = {
+    xMin: requireFinite(bounds.xMin, code, label + '.xMin'),
+    yMin: requireFinite(bounds.yMin, code, label + '.yMin'),
+    xMax: requireFinite(bounds.xMax, code, label + '.xMax'),
+    yMax: requireFinite(bounds.yMax, code, label + '.yMax')
+  };
+  if (out.xMax < out.xMin || out.yMax < out.yMin) {
+    fail(code, label + ' has inverted bounds');
+  }
+  return out;
+}
+
+function normalizeGlyphs(input, sourceRange, graphemes, direction) {
+  if (!Array.isArray(input) || input.length === 0) {
+    fail('empty-glyph-output', 'A non-shaping or empty run cannot be represented as ShapedRun');
+  }
+  const graphemeStarts = new Set(graphemes.map((item) => item.start));
+  const glyphs = input.map((item, index) => {
+    const glyph = requireRecord(item, 'invalid-glyph', 'glyphs[' + index + ']');
+    const gid = requireInteger(glyph.gid, 1, 'missing-glyph-coverage', 'glyphs[' + index + '].gid');
+    const cluster = requireInteger(glyph.cluster, sourceRange.start, 'invalid-glyph-cluster', 'glyphs[' + index + '].cluster');
+    if (cluster >= sourceRange.end || !graphemeStarts.has(cluster)) {
+      fail('invalid-glyph-cluster', 'glyph cluster must be an absolute UTF-16 start of an input grapheme');
+    }
+    const xAdvance = requireFinite(glyph.xAdvance, 'invalid-glyph-position', 'glyphs[' + index + '].xAdvance');
+    const yAdvance = requireFinite(glyph.yAdvance, 'invalid-glyph-position', 'glyphs[' + index + '].yAdvance');
+    const xOffset = requireFinite(glyph.xOffset, 'invalid-glyph-position', 'glyphs[' + index + '].xOffset');
+    const yOffset = requireFinite(glyph.yOffset, 'invalid-glyph-position', 'glyphs[' + index + '].yOffset');
+    const flags = glyph.flags == null ? 0 : requireInteger(glyph.flags, 0, 'invalid-glyph', 'glyphs[' + index + '].flags');
+    let outlinePath;
+    if (glyph.outlinePath != null) {
+      if (typeof glyph.outlinePath !== 'string' || glyph.outlinePath.length > 2 * 1024 * 1024 ||
+          /[^MLCQZ0-9eE+.,\-\s]/.test(glyph.outlinePath)) {
+        fail('invalid-glyph-outline', 'glyphs[' + index + '].outlinePath must be a bounded SVG path with deterministic commands');
+      }
+      outlinePath = glyph.outlinePath;
+    }
+    return {
+      gid, cluster, xAdvance, yAdvance, xOffset, yOffset, flags,
+      controlBounds: normalizeBounds(glyph.controlBounds, 'invalid-glyph-bounds', 'glyphs[' + index + '].controlBounds'),
+      inkBounds: normalizeBounds(glyph.inkBounds, 'invalid-glyph-bounds', 'glyphs[' + index + '].inkBounds'),
+      ...(outlinePath !== undefined ? { outlinePath } : {})
+    };
+  });
+
+  for (let index = 1; index < glyphs.length; index++) {
+    const previous = glyphs[index - 1].cluster;
+    const current = glyphs[index].cluster;
+    const monotone = direction === 'rtl' ? current <= previous : current >= previous;
+    if (!monotone) {
+      fail('non-monotone-glyph-clusters',
+        'HarfBuzz MONOTONE_CHARACTERS output clusters must follow the visual run direction');
+    }
+  }
+
+  const starts = Array.from(new Set(glyphs.map((glyph) => glyph.cluster))).sort((a, b) => a - b);
+  if (starts[0] !== sourceRange.start) {
+    fail('incomplete-shaped-source-prefix', 'first shaped cluster must begin at the ShapedRun source start');
+  }
+  const graphemeIndexByStart = new Map(graphemes.map((item, index) => [item.start, index]));
+  const clusters = starts.map((start, index) => {
+    const end = index + 1 < starts.length ? starts[index + 1] : sourceRange.end;
+    const graphemeStart = graphemeIndexByStart.get(start);
+    const graphemeEnd = end === sourceRange.end
+      ? graphemes.length
+      : graphemeIndexByStart.get(end);
+    if (graphemeStart == null || graphemeEnd == null || graphemeEnd <= graphemeStart) {
+      fail('invalid-shaped-cluster-range', 'shaped cluster boundaries must align to canonical grapheme boundaries');
+    }
+    const glyphIndices = [];
+    for (let glyphIndex = 0; glyphIndex < glyphs.length; glyphIndex++) {
+      if (glyphs[glyphIndex].cluster === start) glyphIndices.push(glyphIndex);
+    }
+    if (!glyphIndices.length) fail('empty-shaped-cluster', 'every shaped cluster must reference at least one glyph');
+    return {
+      start, end,
+      text: graphemes.slice(graphemeStart, graphemeEnd).map((item) => item.text).join(''),
+      graphemeStart, graphemeEnd,
+      glyphIndices
+    };
+  });
+
+  const clusterByStart = new Map(clusters.map((cluster, index) => [cluster.start, { cluster, index }]));
+  const shapedGlyphs = glyphs.map((glyph) => {
+    const entry = clusterByStart.get(glyph.cluster);
+    if (!entry) fail('orphan-shaped-glyph', 'glyph references a missing shaped cluster');
+    return {
+      ...glyph,
+      sourceRange: { start: entry.cluster.start, end: entry.cluster.end },
+      clusterIndex: entry.index
+    };
+  });
+
+  return { clusters, glyphs: shapedGlyphs };
+}
+
+function deepFreeze(value, seen) {
+  if (!value || typeof value !== 'object') return value;
+  const visited = seen || new Set();
+  if (visited.has(value)) return value;
+  visited.add(value);
+  for (const key of Object.keys(value)) deepFreeze(value[key], visited);
+  return Object.freeze(value);
+}
+
+/**
+ * Create an immutable ShapedRun from actual HarfBuzz output plus canonical
+ * itemizer graphemes. Offsets and clusters use absolute document UTF-16 units;
+ * advances and bounds remain in font units.
+ */
+function createShapedRun(input) {
+  const data = requireRecord(input, 'invalid-shaped-run', 'ShapedRun input');
+  const id = requireString(data.id, 'invalid-shaped-run', 'ShapedRun.id');
+  const text = requireString(data.text, 'invalid-shaped-run', 'ShapedRun.text');
+  assertWellFormedUtf16(text, 'ShapedRun.text');
+  const sourceRange = normalizeSourceRange(data.sourceRange, text);
+  const font = normalizeFont(data.font);
+  const shaping = normalizeShaping(data.shaping);
+  const graphemes = normalizeGraphemes(data.graphemes, sourceRange, text);
+  const normalizedGlyphs = normalizeGlyphs(data.glyphs, sourceRange, graphemes, shaping.direction);
+  const advance = normalizedGlyphs.glyphs.reduce((sum, glyph) => ({
+    x: sum.x + glyph.xAdvance,
+    y: sum.y + glyph.yAdvance
+  }), { x: 0, y: 0 });
+  if (!Number.isFinite(advance.x) || !Number.isFinite(advance.y)) {
+    fail('invalid-run-advance', 'sum of shaped glyph advances must remain finite');
+  }
+
+  if (data.diagnostics != null && !Array.isArray(data.diagnostics)) {
+    fail('invalid-shaped-run-diagnostic', 'diagnostics must be an array when supplied');
+  }
+  const diagnostics = (data.diagnostics || []).map((item, index) => {
+    const diagnostic = requireRecord(item, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + ']');
+    return {
+      code: requireString(diagnostic.code, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + '].code'),
+      message: requireString(diagnostic.message, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + '].message'),
+      ...(diagnostic.severity != null ? { severity: requireString(diagnostic.severity, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + '].severity') } : {})
+    };
+  });
+
+  return deepFreeze({
+    kind: 'ShapedRun',
+    contractVersion: SHAPED_RUN_CONTRACT_VERSION,
+    id,
+    sourceRange,
+    text,
+    font,
+    shaping,
+    graphemes,
+    clusters: normalizedGlyphs.clusters,
+    glyphs: normalizedGlyphs.glyphs,
+    advance,
+    diagnostics
+  });
+}
+
+/**
+ * Slice an already-shaped run without reshaping. Both edges must be output
+ * cluster boundaries, not merely EGC boundaries: a ligature may own several
+ * adjacent EGCs and may not be divided between line/word items.
+ *
+ * BOT/EOT remain those of the original shaping context. A later line-break
+ * decision must call the shaper again with line-specific BOT/EOT.
+ */
+function sliceShapedRun(shapedRun, start, end, sliceId) {
+  if (!isShapedRun(shapedRun)) {
+    fail('not-shaped-run', 'sliceShapedRun requires an immutable ShapedRun');
+  }
+  requireInteger(start, shapedRun.sourceRange.start, 'invalid-shaped-slice', 'slice.start');
+  requireInteger(end, shapedRun.sourceRange.start + 1, 'invalid-shaped-slice', 'slice.end');
+  if (end <= start || start < shapedRun.sourceRange.start || end > shapedRun.sourceRange.end) {
+    fail('invalid-shaped-slice', 'slice range must be a non-empty subrange of the source ShapedRun');
+  }
+  if (!isShapedClusterBoundary(shapedRun, start) || !isShapedClusterBoundary(shapedRun, end)) {
+    fail('slice-splits-shaped-cluster',
+      'ShapedRun slices are legal only at output cluster boundaries; an EGC boundary inside a ligature is insufficient');
+  }
+
+  const clusters = shapedRun.clusters.filter((cluster) =>
+    cluster.start >= start && cluster.end <= end);
+  if (!clusters.length || clusters[0].start !== start || clusters[clusters.length - 1].end !== end) {
+    fail('incomplete-shaped-slice', 'selected clusters do not cover the complete requested slice');
+  }
+  const graphemeStart = clusters[0].graphemeStart;
+  const graphemeEnd = clusters[clusters.length - 1].graphemeEnd;
+  const graphemes = shapedRun.graphemes.slice(graphemeStart, graphemeEnd);
+  const glyphs = shapedRun.glyphs.filter((glyph) => glyph.cluster >= start && glyph.cluster < end);
+  if (!glyphs.length) fail('empty-shaped-slice', 'selected shaped clusters contain no glyphs');
+
+  const sourceOffset = start - shapedRun.sourceRange.start;
+  const text = shapedRun.text.slice(sourceOffset, end - shapedRun.sourceRange.start);
+  return createShapedRun({
+    id: sliceId == null
+      ? shapedRun.id + '#slice:' + start + '-' + end
+      : requireString(sliceId, 'invalid-shaped-slice', 'sliceId'),
+    text,
+    sourceRange: { ...shapedRun.sourceRange, start, end },
+    font: shapedRun.font,
+    shaping: shapedRun.shaping,
+    graphemes,
+    glyphs,
+    diagnostics: shapedRun.diagnostics
+  });
+}
+
+function isDeepFrozen(value, seen = new Set()) {
+  if (!value || typeof value !== 'object') return true;
+  if (seen.has(value)) return true;
+  seen.add(value);
+  if (!Object.isFrozen(value)) return false;
+  return Object.keys(value).every((key) => isDeepFrozen(value[key], seen));
+}
+
+function isShapedRun(value) {
+  return !!(value && value.kind === 'ShapedRun' &&
+    value.contractVersion === SHAPED_RUN_CONTRACT_VERSION &&
+    isDeepFrozen(value) &&
+    Array.isArray(value.glyphs) &&
+    Array.isArray(value.clusters));
+}
+
+/** Only output-cluster boundaries are legal shaping/line-break slice points. */
+function isShapedClusterBoundary(shapedRun, absoluteOffset) {
+  if (!isShapedRun(shapedRun) || !Number.isSafeInteger(absoluteOffset)) return false;
+  if (absoluteOffset === shapedRun.sourceRange.start || absoluteOffset === shapedRun.sourceRange.end) return true;
+  return shapedRun.clusters.some((cluster) =>
+    cluster.start === absoluteOffset || cluster.end === absoluteOffset);
+}
+
+module.exports = {
+  SHAPED_RUN_CONTRACT_VERSION,
+  CLUSTER_LEVEL,
+  createShapedRun,
+  sliceShapedRun,
+  isShapedRun,
+  isShapedClusterBoundary
 };
 
 };

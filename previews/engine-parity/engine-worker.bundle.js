@@ -422,6 +422,7 @@ var __paths = {
   "src/engine/layout/footnote-budget.js|./footnote-lanes": "src/engine/layout/footnote-lanes.js",
   "src/engine/layout/footnote-budget.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/layout/notes-model.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
+  "src/engine/layout/notes-model.js|../typography/paragraph-shaping": "src/engine/typography/paragraph-shaping.js",
   "src/engine/layout/plan-model.js|./column-flow": "src/engine/layout/column-flow.js",
   "src/engine/layout/plan-model.js|./constraint-matrix": "src/engine/layout/constraint-matrix.js",
   "src/engine/audit/editing-recommendations.js|../core/pipeline": "src/engine/core/pipeline.js",
@@ -1184,6 +1185,12 @@ function typeset(rawText, settingsIn, env = {}) {
   // בודקים את measure.impl ומדלגים על הפקטור ב-impl B.
   const measureWithImpl = (t, s) => api.measureTextWidth(t, s);
   measureWithImpl.impl = api.impl;
+  // Notes share this exact measurement boundary and shaping service; no alternate
+  // note-specific layout engine or browser/PDF shaping pass is introduced.
+  if (paragraphShaper) {
+    measureWithImpl.paragraphShaper = paragraphShaper;
+    measureWithImpl.paragraphDirection = paragraphDirection || 'rtl';
+  }
   // **שלב 3 (§3.1-2) → מקטע ב׳ (הוראה §6):** נכסי המסמך שהגיעו מה-Worker
   // כבר חוברו לבניית המודל וזורמים למדידה דרך ctx.assetResolver של הגשר
   // (אותן זהויות בדיוק). האירוע מתעד את הקליטה; אין עוד צריכה תלוית-סביבה.
@@ -12297,6 +12304,9 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
           cur.footnotes.push({
             ...n, text: firstText, heightPx: cutRow * fnLH, lineH: fnLH, linesCount: cutRow,
             noteRows: rows.slice(0, cutRow), noteWords: wordsArr.slice(0, cutIdx),
+            ...(Array.isArray(n.noteWordTypography)
+              ? { noteWordTypography: n.noteWordTypography.slice(0, cutIdx) }
+              : {}),
             mode: 'split-first', linesShown: cutRow,
             wordRange: { from: n.wordRange ? n.wordRange.from : 0, to: (n.wordRange ? n.wordRange.from : 0) + cutIdx }
           });
@@ -15541,6 +15551,7 @@ __modules["src/engine/layout/notes-model.js"] = function (require, module, expor
  * המטריקות מדויקות והכפלה מנפחת (S70/R7-M4) — measureContextFor מכבה אותו שם.
  */
 const { SZ_CORE } = require('../core/imud-geometry');
+const { projectShapedTextItemRanges } = require('../typography/paragraph-shaping');
 const NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
 const SIDE_NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
 
@@ -15637,14 +15648,18 @@ function measureContextFor(kind, settings, opts = {}, measure = null) {
  * @param {number} spaceW — רוחב הרווח בהקשר (כבר מחושב — מודדים פעם אחת)
  * @returns {{rows:Array}} שורות {wFrom,wTo,widthPx,wordW[]}
  */
-function wrapNoteWords(words, ctx, measure, prefixW, spaceW) {
+function wrapNoteWords(words, ctx, measure, prefixW, spaceW, wordWidths = null) {
   const r3 = (v) => Math.round(v * 1000) / 1000;
+  if (wordWidths != null && (!Array.isArray(wordWidths) || wordWidths.length !== words.length ||
+      wordWidths.some(width => !Number.isFinite(width) || width < 0))) {
+    throw new TypeError('notes-model: wordWidths must contain one finite non-negative advance per note word');
+  }
   const rows = [];
   let rowW = Math.min(prefixW, ctx.widthPx); // קידומת בפינת השורה הראשונה
   let wFrom = 0;
   let rowWordW = [];
   for (let i = 0; i < words.length; i++) {
-    const ww = measure(words[i], ctx.sizePt) * ctx.factor;
+    const ww = wordWidths ? wordWidths[i] : measure(words[i], ctx.sizePt) * ctx.factor;
     const addW = (rowW > 0 ? spaceW : 0) + ww;
     if (rowW + addW > ctx.widthPx && rowW > 0) {
       rows.push({ wFrom, wTo: i, widthPx: r3(rowW), wordW: rowWordW });
@@ -15656,6 +15671,111 @@ function wrapNoteWords(words, ctx, measure, prefixW, spaceW) {
   }
   rows.push({ wFrom, wTo: words.length, widthPx: r3(rowW), wordW: rowWordW });
   return { rows };
+}
+
+// ─── Glyph shaping להערות: אותה חותמת ושבירת שורות, ללא מקרין/מודד שני ───
+function shapeNoteText(text, note, ctx, measure, role) {
+  const service = measure && measure.paragraphShaper;
+  if (!service || typeof service.shapeTextItem !== 'function' || !text) return null;
+  const value = String(text);
+  const itemId = 'note-' + String(note.noteId || note.tokenId || 'anonymous')
+    .replace(/[^A-Za-z0-9._:-]/g, '_') + '-' + role;
+  const item = {
+    id: itemId,
+    kind: 'text',
+    sourceRange: { start: 0, end: value.length },
+    payload: {
+      runs: [{
+        text: value,
+        sourceStart: 0,
+        sourceEnd: value.length,
+        ...(service.useItemFontRole === true && ctx.fontName ? { fontFamily: ctx.fontName } : {})
+      }]
+    }
+  };
+  const request = { direction: measure.paragraphDirection || 'rtl', language: 'he' };
+  if (service.useItemFontRole === true && ctx.fontName) request.defaultFamily = ctx.fontName;
+  return service.shapeTextItem(item, request);
+}
+
+function typographyForShapedRuns(runs, sizePt) {
+  if (!Array.isArray(runs) || !runs.length) return { advancePx: 0, typography: null, glyphCount: 0 };
+  const sizePx = Number(sizePt) * (96 / 72);
+  let advancePx = 0;
+  let glyphCount = 0;
+  const segments = [];
+  for (const run of runs) {
+    if (!run || !run.font || !Number.isSafeInteger(run.font.unitsPerEm) ||
+        run.font.unitsPerEm <= 0 || !Array.isArray(run.glyphs) || !run.glyphs.length) {
+      throw new TypeError('notes-model: a shaped note run is missing valid font units or glyphs');
+    }
+    let runAdvance = 0;
+    for (const glyph of run.glyphs) {
+      if (!glyph || !Number.isFinite(glyph.xAdvance)) {
+        throw new TypeError('notes-model: a shaped note glyph has no finite xAdvance');
+      }
+      runAdvance += glyph.xAdvance;
+    }
+    if (!Number.isFinite(runAdvance) || runAdvance < 0) {
+      throw new TypeError('notes-model: a shaped note run has an invalid advance');
+    }
+    const runAdvancePx = runAdvance / run.font.unitsPerEm * sizePx;
+    advancePx += runAdvancePx;
+    glyphCount += run.glyphs.length;
+    segments.push({
+      itemId: run.itemId || null,
+      sourceRange: run.sourceRange ? { ...run.sourceRange } : null,
+      advancePx: runAdvancePx,
+      shapedRuns: [run],
+      glyphCount: run.glyphs.length
+    });
+  }
+  if (!glyphCount) return { advancePx, typography: null, glyphCount: 0 };
+  return {
+    advancePx,
+    glyphCount,
+    typography: { contractVersion: 'page-word-typography-v1', glyphCount, segments }
+  };
+}
+
+function shapedNoteWords(text, note, ctx, measure) {
+  const shaped = shapeNoteText(text, note, ctx, measure, 'body');
+  if (!shaped) return null;
+  const matches = Array.from(text.matchAll(/\S+/gu), match => ({
+    text: match[0], start: match.index, end: match.index + match[0].length
+  }));
+  const ranges = matches.map(match => ({ start: match.start, end: match.end }));
+  const projected = ranges.length
+    ? projectShapedTextItemRanges(shaped, ranges).slices
+    : [];
+  const widths = [];
+  const typographies = [];
+  for (const slice of projected) {
+    const measured = typographyForShapedRuns(slice.shapedRuns, ctx.sizePt);
+    if (!measured.glyphCount && slice.nonShapingRuns.some(run =>
+      String(run.text || '').replace(/[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '').trim())) {
+      throw new Error('notes-model: visible note word has no HarfBuzz glyph coverage');
+    }
+    widths.push(measured.advancePx);
+    typographies.push(measured.typography);
+  }
+  const spaceRun = shapeNoteText(' ', note, ctx, measure, 'space');
+  const spaceMeasured = spaceRun ? typographyForShapedRuns(spaceRun.shapedRuns, ctx.sizePt) : null;
+  if (spaceRun && !spaceMeasured.glyphCount) {
+    throw new Error('notes-model: note-space did not receive a HarfBuzz glyph');
+  }
+  return { matches, widths, typographies, spaceW: spaceMeasured ? spaceMeasured.advancePx : 0 };
+}
+
+function shapedPrefix(note, value, ctx, measure, role) {
+  if (!value) return { advancePx: 0, typography: null };
+  const shaped = shapeNoteText(value, note, ctx, measure, role);
+  if (!shaped) return null;
+  const result = typographyForShapedRuns(shaped.shapedRuns, ctx.sizePt);
+  if (!result.glyphCount && String(value).trim()) {
+    throw new Error('notes-model: visible note prefix has no HarfBuzz glyph coverage (' + role + ')');
+  }
+  return { advancePx: result.advancePx, typography: result.typography };
 }
 
 // ─── חשבונאות מדידה (דפוס api.cacheStats / _rowsStats): הוכחת "פעם אחת" ───
@@ -15680,28 +15800,48 @@ function __stampStats() {
  */
 function stampNote(note, settings, measure, kind, opts = {}) {
   const ctx = measureContextFor(kind, settings, opts, measure);
+  const paragraphShaper = measure && measure.paragraphShaper;
+  const shapingActive = !!(paragraphShaper && typeof paragraphShaper.shapeTextItem === 'function');
   if (note.stampCtx && note.stampCtx.kind === ctx.kind
-    && note.stampCtx.widthPx === ctx.widthPx && note.stampCtx.sizePt === ctx.sizePt) {
+    && note.stampCtx.widthPx === ctx.widthPx && note.stampCtx.sizePt === ctx.sizePt
+    && note.stampCtx.fontName === (ctx.fontName || null)
+    && note.stampCtx.shaping === shapingActive) {
     return note; // כבר נמדדה בדיוק בהקשר הזה — לא מודדים שוב
   }
   _stampStats.calls.push(`${ctx.kind}:${note.noteId || note.tokenId || ''}#${note.noteIndex != null ? note.noteIndex : ''}`);
   const text = scrubNoteText(note.text);
   const words = text.split(/\s+/).filter(Boolean);
-  const spaceW = measure(' ', ctx.sizePt) * ctx.factor;
+  delete note.noteWordTypography;
+  delete note.markerTypography;
+  delete note.contMarkTypography;
+  delete note.counterMarkTypography;
+  const shapedBody = shapingActive ? shapedNoteWords(text, note, ctx, measure) : null;
+  const wordWidths = shapedBody ? shapedBody.widths : null;
+  if (shapedBody && shapedBody.matches.length !== words.length) {
+    throw new Error('notes-model: shaped note word ranges differ from the canonical note word list');
+  }
+  if (shapedBody) note.noteWordTypography = shapedBody.typographies;
+  const spaceW = shapedBody ? shapedBody.spaceW : measure(' ', ctx.sizePt) * ctx.factor;
   const mkTxt = note.marker != null && String(note.marker) !== '' ? String(note.marker) : '';
-  const mkGlyphW = mkTxt ? measure(mkTxt, ctx.sizePt) * ctx.factor : 0;
+  const shapedMarker = shapingActive && mkTxt ? shapedPrefix(note, mkTxt, ctx, measure, 'marker') : null;
+  const mkGlyphW = shapedMarker ? shapedMarker.advancePx : (mkTxt ? measure(mkTxt, ctx.sizePt) * ctx.factor : 0);
+  if (shapedMarker && shapedMarker.typography) note.markerTypography = shapedMarker.typography;
   const markerW = mkTxt ? mkGlyphW + spaceW : 0;
   const isCont = note.isContinuation === true || note.mode === 'split-rest';
-  const contMarkW = isCont ? measure(CONTINUATION_MARK, ctx.sizePt) * ctx.factor + spaceW : 0;
+  const shapedContMark = shapingActive && isCont ? shapedPrefix(note, CONTINUATION_MARK, ctx, measure, 'continuation') : null;
+  const contMarkW = isCont ? (shapedContMark ? shapedContMark.advancePx : measure(CONTINUATION_MARK, ctx.sizePt) * ctx.factor) + spaceW : 0;
+  if (shapedContMark && shapedContMark.typography) note.contMarkTypography = shapedContMark.typography;
   // **תיקון פרוסה 2 (§9):** הקידומות של שורה 0 — הסמן **וגם סימון ההמשך** —
   // נכנסות לתקציב השורה. בעבר ההמשכים נמדדו בלי '(המשך)' בזמן ששני הרנדרים
   // ציירו אותו ⇒ השורה הראשונה של כל המשך הייתה צרה בכ~30px מהמצויר.
   // הערות-צד עם counterMark — אותו תיקון (הסמן מוצג ולא תוקצב).
   const cmTxt = (!isCont && note.counterMark != null && String(note.counterMark) !== '') ? String(note.counterMark) : '';
-  const cmGlyphW = cmTxt ? measure(cmTxt, ctx.sizePt) * ctx.factor : 0;
+  const shapedCounterMark = shapingActive && cmTxt ? shapedPrefix(note, cmTxt, ctx, measure, 'counter') : null;
+  const cmGlyphW = shapedCounterMark ? shapedCounterMark.advancePx : (cmTxt ? measure(cmTxt, ctx.sizePt) * ctx.factor : 0);
+  if (shapedCounterMark && shapedCounterMark.typography) note.counterMarkTypography = shapedCounterMark.typography;
   const counterMarkW = cmTxt ? cmGlyphW + spaceW : 0;
   const prefixW = contMarkW + markerW + counterMarkW;
-  const { rows } = wrapNoteWords(words, ctx, measure, prefixW, spaceW);
+  const { rows } = wrapNoteWords(words, ctx, measure, prefixW, spaceW, wordWidths);
   note.noteRows = rows;
   note.noteWords = words;
   note.heightPx = Math.round(rows.length * ctx.lineH * 1000) / 1000;
@@ -15712,7 +15852,12 @@ function stampNote(note, settings, measure, kind, opts = {}) {
   note.contMarkW = contMarkW ? Math.round(contMarkW * 1000) / 1000 : 0;
   note.counterMarkW = counterMarkW ? Math.round(counterMarkW * 1000) / 1000 : 0;
   note.spaceW = Math.round(spaceW * 1000) / 1000;
-  note.stampCtx = { kind: ctx.kind, sizePt: ctx.sizePt, widthPx: ctx.widthPx, lineH: ctx.lineH, factor: ctx.factor };
+  note.stampCtx = {
+    kind: ctx.kind, sizePt: ctx.sizePt, widthPx: ctx.widthPx, lineH: ctx.lineH,
+    factor: shapingActive ? 1 : ctx.factor,
+    fontName: ctx.fontName || null,
+    shaping: shapingActive
+  };
   return note;
 }
 
@@ -15725,6 +15870,11 @@ function stampIsValid(note) {
   for (const row of note.noteRows) {
     if (!(row.wTo >= row.wFrom) || !Array.isArray(row.wordW)) return false;
     if (row.wordW.length !== row.wTo - row.wFrom) return false;
+  }
+  if (note.stampCtx && note.stampCtx.shaping === true) {
+    if (!Array.isArray(note.noteWordTypography) ||
+        note.noteWordTypography.length !== note.noteWords.length ||
+        note.noteWordTypography.some((item, index) => String(note.noteWords[index] || '').trim() && !item)) return false;
   }
   return true;
 }
@@ -26579,6 +26729,8 @@ function notePlacement(n, proj, where) {
       ...(wd.sizePt != null ? { sizePt: wd.sizePt } : {}),
       ...(wd.fontKey != null ? { fontKey: wd.fontKey } : {}),
       ...(wd.color != null ? { color: wd.color } : {}),
+      ...(wd.typography ? { typography: wd.typography } : {}),
+      ...(wd.lineY != null ? { lineY: r2(wd.lineY) } : {}),
       ...(wd.mk ? { mk: true } : {})
     })) : [],
     ...where
@@ -27440,11 +27592,20 @@ function projectStampedRows(n, x, w, yTop, opts) {
   const glyph = (v) => Math.max(0, (Number(v) || 0) - spaceW); // חותמת נושאת גליף+רווח
   const isCont = n.isContinuation === true || n.mode === 'split-rest';
   const prefix = [];
-  if (isCont && Number(n.contMarkW) > 0) prefix.push({ text: NM.CONTINUATION_MARK, w: glyph(n.contMarkW) });
+  if (isCont && Number(n.contMarkW) > 0) prefix.push({
+    text: NM.CONTINUATION_MARK, w: glyph(n.contMarkW),
+    ...(n.contMarkTypography ? { typography: n.contMarkTypography } : {})
+  });
   const mkTxt = noteMarkerOf(n, { 'footnote-marker-style': null });
-  if (mkTxt && Number(n.markerW) > 0) prefix.push({ text: scrubPUAText(mkTxt), w: glyph(n.markerW), mk: true });
+  if (mkTxt && Number(n.markerW) > 0) prefix.push({
+    text: scrubPUAText(mkTxt), w: glyph(n.markerW), mk: true,
+    ...(n.markerTypography ? { typography: n.markerTypography } : {})
+  });
   if (!isCont && n.counterMark != null && String(n.counterMark) !== '' && Number(n.counterMarkW) > 0) {
-    prefix.push({ text: scrubPUAText(String(n.counterMark)), w: glyph(n.counterMarkW) });
+    prefix.push({
+      text: scrubPUAText(String(n.counterMark)), w: glyph(n.counterMarkW),
+      ...(n.counterMarkTypography ? { typography: n.counterMarkTypography } : {})
+    });
   }
   const ascent = opts.measure.ascentEm(), descent = opts.measure.descentEm();
   const sizePx = sizePt * (96 / 72);
@@ -27455,7 +27616,10 @@ function projectStampedRows(n, x, w, yTop, opts) {
     const toks = [];
     if (li === 0) for (const p of prefix) toks.push(p);
     for (let i = row.wFrom; i < row.wTo; i++) {
-      toks.push({ text: scrubPUAText(String(words[i])), w: row.wordW[i - row.wFrom] });
+      toks.push({
+        text: scrubPUAText(String(words[i])), w: row.wordW[i - row.wFrom],
+        ...(n.noteWordTypography && n.noteWordTypography[i] ? { typography: n.noteWordTypography[i] } : {})
+      });
     }
     const live = toks.filter(t => t.text && String(t.text).trim());
     const sumW = live.reduce((s, t) => s + t.w, 0);
@@ -27477,8 +27641,11 @@ function projectStampedRows(n, x, w, yTop, opts) {
     let cursor = centerAlign ? gx + (gw + sumW + gaps * gapW) / 2 - gapW / 2 : gx + gw;
     for (const t of live) {
       cursor -= t.w;
-      const wd = { text: t.text, x: cursor, w: t.w, sizePt, baselineY, fontKey: opts.fontKey,
-        ...(t.mk ? { mk: true } : {}), ...(opts.color ? { color: opts.color } : {}) };
+      const wd = {
+        text: t.text, x: cursor, w: t.w, sizePt, baselineY, lineY: y, fontKey: opts.fontKey,
+        ...(t.typography ? { typography: t.typography } : {}),
+        ...(t.mk ? { mk: true } : {}), ...(opts.color ? { color: opts.color } : {})
+      };
       wds.push(wd);
       flat.push(wd);
       cursor -= gapW;
@@ -27635,9 +27802,12 @@ function projectEndnotePage(page, settings, measure, out, production) {
         rec.lines.forEach((line) => {
           out.lines.push({
             x: col.x, y: line.y, w: col.w, h: pitch,
-            words: line.words.map(wd => ({ text: wd.text, x: wd.x, w: wd.w, sizePt: wd.sizePt, fontKey: wd.fontKey })),
+            words: line.words.map(wd => ({
+              text: wd.text, x: wd.x, w: wd.w, sizePt: wd.sizePt, fontKey: wd.fontKey,
+              ...(wd.typography ? { typography: wd.typography } : {})
+            })),
             align: 'right', kind: 'endnote-note', level: null, isLast: true, sizePt: notePt,
-            baselineY: null, tokenId: n.tokenId != null ? n.tokenId : null
+            baselineY: line.baselineY, tokenId: n.tokenId != null ? n.tokenId : null
           });
         });
       }
@@ -27694,9 +27864,12 @@ function projectSideNotes(page, settings, measure, out) {
     rec.lines.forEach((line) => {
       out.lines.push({
         x: sn.x, y: line.y, w: boxW, h: sn.lineH,
-        words: line.words.map(wd => ({ text: wd.text, x: wd.x, w: wd.w, sizePt: wd.sizePt, fontKey: wd.fontKey })),
+        words: line.words.map(wd => ({
+          text: wd.text, x: wd.x, w: wd.w, sizePt: wd.sizePt, fontKey: wd.fontKey,
+          ...(wd.typography ? { typography: wd.typography } : {})
+        })),
         align: 'right', kind: isBox ? 'info-box' : 'side-note', level: sn.level != null ? sn.level : null,
-        isLast: true, sizePt, baselineY: null,
+        isLast: true, sizePt, baselineY: line.baselineY,
         tokenId: sn.anchorToken != null ? sn.anchorToken : (sn.ownToken != null ? sn.ownToken : null)
       });
     });
@@ -28685,8 +28858,8 @@ const EXPECTED_FILES = Object.freeze({
     sha256: '92200c5035787f530332dcf547b22fceace4d18ee9253995f213d49c09143cb4'
   }),
   'unicode18-bidi-runtime.js': Object.freeze({
-    bytes: 37186,
-    sha256: '580685c67ffbadf68900ae152253ca9a9e1616a32d8a1864b306967d928009dc'
+    bytes: 37811,
+    sha256: 'f8561105050e81113492a10cd30c77ed210b37f8a4ca42fb72fad82f648a81ff'
   }),
   'unicode18-bidi-runtime.wasm': Object.freeze({
     bytes: 151361,
@@ -34993,6 +35166,25 @@ function renderModelPage(mp, settings, doc, opts = {}) {
           if (wd.sizePt != null) span.style.fontSize = `${px2(wd.sizePt * PT_TO_PX)}px`;
           const fam = familyOf(wd.fontKey);
           if (fam) span.style.fontFamily = fam;
+          const outlineLine = {
+            y: Number.isFinite(wd.lineY) ? wd.lineY : (wd.baselineY || 0) - lineH * 0.8,
+            h: lineH,
+            sizePt: wd.sizePt,
+            baselineY: wd.baselineY
+          };
+          if (wd.typography && appendGlyphOutlineWord(outlineLine, wd, span, doc)) {
+            row.appendChild(span);
+            continue;
+          }
+          if (wd.typography) {
+            diags.push({
+              kind: 'footnote-glyph-outline-fallback',
+              page: mp.index,
+              noteId: n.noteId || null,
+              word: wd.text,
+              reason: span.dataset.glyphOutlineFallback || 'outline-render-failed'
+            });
+          }
           span.textContent = scrubPUAText(wd.text);
           row.appendChild(span);
         }
