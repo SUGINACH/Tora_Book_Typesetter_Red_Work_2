@@ -37529,7 +37529,10 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
       // The live TOC draws a dotted flex leader between the measured title
       // edge and the page label. Emit the same measured segment into the PDF.
       if (hasPageLabel) {
-        const leaderX = GEO.TOC_NUM_X + numW + 12;
+        // The DOM .toc-num has min-width:20px; reserve the same label box
+        // even when a short gematria glyph is narrower than that minimum.
+        const labelBoxW = Math.max(20, numW);
+        const leaderX = GEO.TOC_NUM_X + labelBoxW + 12;
         const leaderRight = r.x1 - tW - 12;
         const leaderW = leaderRight - leaderX;
         if (leaderW >= 24) {
