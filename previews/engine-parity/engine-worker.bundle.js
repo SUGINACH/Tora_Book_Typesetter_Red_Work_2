@@ -556,6 +556,7 @@ var __paths = {
   "src/engine/output/geometry-projector.js|../core/materialize": "src/engine/core/materialize.js",
   "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/output/pdf-writer.js|../import/zip-reader": "src/engine/import/zip-reader.js",
   "src/engine/output/legacy-projector.js|../layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
   "src/engine/output/legacy-projector.js|./line-font": "src/engine/output/line-font.js",
   "src/engine/output/legacy-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
@@ -35923,6 +35924,8 @@ __modules["src/engine/output/pdf-writer.js"] = function (require, module, export
 // src/engine/output/pdf-writer.js — Pure-JS PDF 1.4 writer (S12.1-3, REQ-EXP-03)
 'use strict';
 
+const { inflateRawPure } = require('../import/zip-reader');
+
 /**
  * כותב PDF מהקרנת הגיאומטריה (geometry-projector — מקור יחיד) + תת־גופן
  * TrueType מוטמע (CIDFontType2 + ToUnicode — טקסט אמיתי נבחר/מופק).
@@ -35987,11 +35990,129 @@ function escapePdfText(s) {
 function round2(v) { return Math.round(v * 100) / 100; }
 function pdfPrecise(v) { const n = Math.round(Number(v) * 1e6) / 1e6; return Object.is(n, -0) ? '0' : String(n); }
 
+/** Adler-32 for producing a minimal valid zlib stream without Node zlib. */
+function adler32(bytes) {
+  let a = 1, b = 0;
+  for (let i = 0; i < bytes.length; i++) {
+    a = (a + bytes[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+  return (((b << 16) | a) >>> 0);
+}
+
+/** A deterministic zlib wrapper using uncompressed DEFLATE blocks. */
+function zlibStored(bytes) {
+  const source = Buffer.from(bytes);
+  const parts = [Buffer.from([0x78, 0x01])];
+  let offset = 0;
+  if (!source.length) {
+    parts.push(Buffer.from([0x01, 0x00, 0x00, 0xff, 0xff]));
+  }
+  while (offset < source.length) {
+    const length = Math.min(65535, source.length - offset);
+    const final = offset + length >= source.length;
+    const nlen = (~length) & 0xffff;
+    const header = Buffer.from([
+      final ? 0x01 : 0x00,
+      length & 0xff, (length >>> 8) & 0xff,
+      nlen & 0xff, (nlen >>> 8) & 0xff
+    ]);
+    parts.push(header, source.subarray(offset, offset + length));
+    offset += length;
+  }
+  const checksum = Buffer.alloc(4);
+  checksum.writeUInt32BE(adler32(source), 0);
+  parts.push(checksum);
+  return Buffer.concat(parts);
+}
+
+/** Validate and inflate a PNG zlib payload with the engine's pure DEFLATE reader. */
+function inflatePngIdat(bytes, expectedSize) {
+  if (!Number.isSafeInteger(expectedSize) || expectedSize < 0 || expectedSize > 64 * 1024 * 1024) {
+    throw new Error('png-pixel-data-size-limit');
+  }
+  if (!bytes || bytes.length < 6 || (bytes[0] & 0x0f) !== 8 ||
+      (((bytes[0] << 8) | bytes[1]) % 31) !== 0 || (bytes[1] & 0x20) !== 0) {
+    throw new Error('png-zlib-header-invalid');
+  }
+  const rawDeflate = bytes.subarray(2, bytes.length - 4);
+  const inflated = inflateRawPure(rawDeflate, 0, expectedSize);
+  if (inflated.length !== expectedSize) throw new Error('png-scanline-size-mismatch');
+  const checksum = bytes.readUInt32BE(bytes.length - 4);
+  if (adler32(inflated) !== checksum) throw new Error('png-adler32-mismatch');
+  return inflated;
+}
+
+/** Undo PNG row filters (0..4) into packed, unfiltered pixel rows. */
+function unfilterPngRows(filtered, width, height, channels) {
+  const rowBytes = width * channels;
+  const pixels = new Uint8Array(rowBytes * height);
+  let source = 0;
+  for (let y = 0; y < height; y++) {
+    const filter = filtered[source++];
+    const rowStart = y * rowBytes;
+    const previousStart = rowStart - rowBytes;
+    for (let x = 0; x < rowBytes; x++) {
+      const value = filtered[source++];
+      const left = x >= channels ? pixels[rowStart + x - channels] : 0;
+      const up = y > 0 ? pixels[previousStart + x] : 0;
+      const upperLeft = y > 0 && x >= channels ? pixels[previousStart + x - channels] : 0;
+      let predictor = 0;
+      if (filter === 1) predictor = left;
+      else if (filter === 2) predictor = up;
+      else if (filter === 3) predictor = Math.floor((left + up) / 2);
+      else if (filter === 4) {
+        const p = left + up - upperLeft;
+        const pa = Math.abs(p - left), pb = Math.abs(p - up), pc = Math.abs(p - upperLeft);
+        predictor = pa <= pb && pa <= pc ? left : (pb <= pc ? up : upperLeft);
+      } else if (filter !== 0) {
+        throw new Error('png-filter-unsupported:' + filter);
+      }
+      pixels[rowStart + x] = (value + predictor) & 0xff;
+    }
+  }
+  return pixels;
+}
+
+/**
+ * Split 8-bit PNG grayscale-alpha/RGBA pixels into opaque color samples and an
+ * alpha plane. The resulting zlib streams use PNG filter 0 and a PDF soft mask.
+ */
+function splitPngAlpha(filtered, width, height, colorType) {
+  const channels = colorType === 6 ? 4 : 2;
+  const colorChannels = colorType === 6 ? 3 : 1;
+  const pixels = unfilterPngRows(filtered, width, height, channels);
+  const colorRows = new Uint8Array(height * (1 + width * colorChannels));
+  const alphaRows = new Uint8Array(height * (1 + width));
+  for (let y = 0; y < height; y++) {
+    const srcRow = y * width * channels;
+    const colorRow = y * (1 + width * colorChannels);
+    const alphaRow = y * (1 + width);
+    colorRows[colorRow] = 0; // PNG filter None
+    alphaRows[alphaRow] = 0;
+    for (let x = 0; x < width; x++) {
+      const src = srcRow + x * channels;
+      const color = colorRow + 1 + x * colorChannels;
+      for (let c = 0; c < colorChannels; c++) colorRows[color + c] = pixels[src + c];
+      alphaRows[alphaRow + 1 + x] = pixels[src + colorChannels];
+    }
+  }
+  return {
+    colorBytes: zlibStored(colorRows),
+    alphaBytes: zlibStored(alphaRows),
+    smask: {
+      width, height, colorSpace: '/DeviceGray', bitsPerComponent: 8,
+      filter: '/FlateDecode',
+      decodeParms: `/DecodeParms << /Predictor 15 /Colors 1 /BitsPerComponent 8 /Columns ${width} >>`,
+      bytes: zlibStored(alphaRows)
+    }
+  };
+}
+
 /**
  * Parse image bytes for direct PDF XObject embedding. JPEG is copied unchanged
- * under DCTDecode. Opaque, non-interlaced 8-bit grayscale/RGB PNG preserves
- * its zlib-compressed IDAT bytes and uses the PDF PNG predictor 15 decoder.
- * Unsupported/transparent formats fail explicitly rather than disappearing.
+ * under DCTDecode. PNG supports opaque grayscale/RGB directly and 8-bit
+ * grayscale-alpha/RGBA through a PDF soft mask; unsupported formats fail loudly.
  */
 function parsePdfImageAsset(asset) {
   const source = asset && asset.bytes;
@@ -36075,15 +36196,34 @@ function parsePdfImageAsset(asset) {
       offset = dataEnd + 4; // skip CRC
     }
     if (!sawHeader || !sawEnd || !idat.length) return { ok: false, code: 'png-incomplete-stream' };
-    if (interlace !== 0 || bitDepth !== 8 || (colorType !== 0 && colorType !== 2)) {
-      return { ok: false, code: 'png-color-model-unsupported', message: 'PDF תומך כאן ב-PNG אטום, לא משולב, grayscale או RGB, בעומק 8-bit בלבד' };
+    if (interlace !== 0 || bitDepth !== 8 || ![0, 2, 4, 6].includes(colorType)) {
+      return { ok: false, code: 'png-color-model-unsupported', message: 'PDF תומך ב-PNG לא משולב בעומק 8-bit: grayscale/RGB עם או בלי alpha' };
+    }
+    const idatBytes = Buffer.concat(idat);
+    if (colorType === 4 || colorType === 6) {
+      try {
+        const channels = colorType === 6 ? 4 : 2;
+        const expectedSize = height * (1 + width * channels);
+        const filtered = inflatePngIdat(idatBytes, expectedSize);
+        const split = splitPngAlpha(filtered, width, height, colorType);
+        return {
+          ok: true, format: 'png', width, height,
+          colorSpace: colorType === 6 ? '/DeviceRGB' : '/DeviceGray',
+          bitsPerComponent: 8, filter: '/FlateDecode',
+          decodeParms: `/DecodeParms << /Predictor 15 /Colors ${colorType === 6 ? 3 : 1} /BitsPerComponent 8 /Columns ${width} >>`,
+          bytes: split.colorBytes,
+          smask: split.smask
+        };
+      } catch (error) {
+        return { ok: false, code: 'png-alpha-decode-failed', message: error && error.message ? error.message : String(error) };
+      }
     }
     return {
       ok: true, format: 'png', width, height,
       colorSpace: colorType === 0 ? '/DeviceGray' : '/DeviceRGB',
       bitsPerComponent: bitDepth, filter: '/FlateDecode',
       decodeParms: `/DecodeParms << /Predictor 15 /Colors ${colorType === 0 ? 1 : 3} /BitsPerComponent 8 /Columns ${width} >>`,
-      bytes: Buffer.concat(idat)
+      bytes: idatBytes
     };
   }
   return { ok: false, code: 'image-format-unsupported', message: 'הטמעת PDF תומכת כרגע ב-JPEG וב-PNG אטום grayscale/RGB בלבד' };
@@ -36558,6 +36698,7 @@ function writePdf(opts) {
       assetId: key,
       name: `Im${imageObjects.length + 1}`,
       objectId: pdf.reserve(),
+      ...(parsed.smask ? { smaskObjectId: pdf.reserve() } : {}),
       ...parsed
     };
     imageByAssetId.set(key, record);
@@ -36989,12 +37130,23 @@ function writePdf(opts) {
   // ---- תמונות: Image XObjects + stream bytes ----
   for (const image of imageObjects) {
     const decodeParms = image.decodeParms ? ' ' + image.decodeParms : '';
-    const dictionary = `<< /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace ${image.colorSpace} /BitsPerComponent ${image.bitsPerComponent} /Filter ${image.filter}${decodeParms} /Length ${image.bytes.length} >>`;
+    const smaskRef = image.smask ? ` /SMask ${image.smaskObjectId} 0 R` : '';
+    const dictionary = `<< /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace ${image.colorSpace} /BitsPerComponent ${image.bitsPerComponent} /Filter ${image.filter}${decodeParms}${smaskRef} /Length ${image.bytes.length} >>`;
     pdf.put(image.objectId, Buffer.concat([
       Buffer.from(dictionary + '\nstream\n', 'latin1'),
       image.bytes,
       Buffer.from('\nendstream', 'latin1')
     ]));
+    if (image.smask) {
+      const mask = image.smask;
+      const maskParams = mask.decodeParms ? ' ' + mask.decodeParms : '';
+      const maskDictionary = `<< /Type /XObject /Subtype /Image /Width ${mask.width} /Height ${mask.height} /ColorSpace ${mask.colorSpace} /BitsPerComponent ${mask.bitsPerComponent} /Filter ${mask.filter}${maskParams} /Length ${mask.bytes.length} >>`;
+      pdf.put(image.smaskObjectId, Buffer.concat([
+        Buffer.from(maskDictionary + '\nstream\n', 'latin1'),
+        mask.bytes,
+        Buffer.from('\nendstream', 'latin1')
+      ]));
+    }
   }
 
   // ---- עמודים ----
