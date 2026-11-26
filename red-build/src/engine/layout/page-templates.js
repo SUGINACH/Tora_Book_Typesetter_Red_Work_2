@@ -23,7 +23,7 @@ const MM_TO_PX = 96 / 25.4;
 const PAGE_SIZES = {
   // **S5.2 (O14 — A4 מדויק):** 210×297מ״מ @96dpi = 793.70×1122.52px — הערכים
   // המעוגלים (794×1123) הזיזו את גוף ה-DP ב-0.3px ויצרו MediaBox שאינו זהה
-  // לגיאומטריית המורשת (793.7×1122.5). כעת זהה ל-GEO של legacy-imud-flow.
+  // לגיאומטריית החוזה המכויל (793.7×1122.5). כעת זהה ל-GEO של החוזה המשותף.
   // **S6.0:** הערכים בפועל ללא עיגול — 793.70×1122.52 (הערת O14 טענה
   // זהות ל-GEO אך הקוד עיגל ל-794×1123 — ההערה לא יושמה מעולם).
   A4: { w: 210 * MM_TO_PX, h: 297 * MM_TO_PX },
@@ -38,23 +38,17 @@ const PAGE_SIZES = {
  * @param {boolean} isRecto
  */
 // **שלב ההעברה למנוע המאוחד — מקטע 1 (גאומטריית עמוד וטורים):**
-// כשפרופיל IMUD פעיל (הגדרות שמקורן ב-default_settings.json של התוכנה
-// המקורית — importImudSettings מסמן _layout-profile='imud' ומצרף _imudRaw),
 // הגריד נבנה **מהחוזה המכויל מהייחוס** (core/imud-geometry.js) ולא מהאחוזים
 // הגנריים. הפער שתוקן (דוח חקירת האתר החי 19.11, ג.10): האחוזים הגנריים
 // (grid-col-width-pct=40% מהתוכן) ייצרו חור מרכזי של 134.9px בין הטורים,
 // מול מרזב 13.48px במקור; שוליים של 7.5% מול 120.72px (15.2%) במקור.
-// לא ערכי קסם: המקור הוא החוזה המשותף ששני המנועים צורכים.
+// לא ערכי קסם: המקור הוא החוזה המשותף.
 const {
   GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, H2_AREA_H, H2_SPAN_AREA_H, H2_TITLE_LINE_PITCH_PX, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
 } = require('../core/imud-geometry');
 const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
 
-function isImudProfile(settings) {
-  return !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
-}
-
-/** תבנית עמוד מהחוזה המכויל של IMUD — אותה גאומטריה שהמורשת מייצרת. */
+/** תבנית עמוד מהחוזה המכויל — אותה גאומטריה שהמנוע המאוחד מייצר. */
 function buildImudPageTemplate(type, settings, isRecto, opts = {}) {
   const twoCol = !( [PAGE_TYPES.PREFACE, PAGE_TYPES.SHAAR_MAIN, PAGE_TYPES.SHAAR_SUB,
     PAGE_TYPES.SHAAR_BACK, PAGE_TYPES.TOC_GENERAL, PAGE_TYPES.TOC_DETAIL,
@@ -106,11 +100,9 @@ function buildImudPageTemplate(type, settings, isRecto, opts = {}) {
 }
 
 function buildPageTemplate(type, settings, isRecto = true, opts = {}) {
-  // **מקטע 1:** פרופיל IMUD ⇒ החוזה המכויל (לא הגריד הגנרי). הנתיב הלא-IMUD
-  // (קורפוס ה-DP הכללי) אינו משתנה כלל — אותן נוסחאות אחוזים כמו קודם.
-  // **G3/RC-3 (i004):** opts מועבר הלאה — h2SpanExempt של פתיחות-סימן (עד כאן
-  // המעטפת בלעה אותו והתבנית חזרה תמיד לאזור הרגיל).
-  if (isImudProfile(settings)) return buildImudPageTemplate(type, settings, isRecto, opts);
+  // **מקטע 1:** החוזה המכויל (לא הגריד הגנרי).
+  // **G3/RC-3 (i004):** opts מועבר הלאה — h2SpanExempt של פתיחות-סימן.
+  return buildImudPageTemplate(type, settings, isRecto, opts);
   const size = PAGE_SIZES[settings['page-size']] || PAGE_SIZES.A4;
   const marginSide = size.w * settings['grid-margin-side-pct'] / 100;
   const binding = settings['binding-offset-px'] || 0;
@@ -160,6 +152,14 @@ function buildPageTemplate(type, settings, isRecto = true, opts = {}) {
     // (renderPaginatedTOC של המקור מרנדר top-header-grid בכל עמודי התוכן).
     hasRunningHead: [PAGE_TYPES.REGULAR, PAGE_TYPES.SIGN_OPEN, PAGE_TYPES.H3_SPREAD, PAGE_TYPES.PREFACE, PAGE_TYPES.TOC_GENERAL, PAGE_TYPES.TOC_DETAIL].includes(type),
   };
+}
+
+/**
+ * Since the legacy engine is removed, we always use IMUD geometry.
+ * This function is kept for backward compatibility with code that checks it.
+ */
+function isImudProfile(settings) {
+  return true;
 }
 
 module.exports = { PAGE_TYPES, PAGE_SIZES, buildPageTemplate, buildImudPageTemplate, isImudProfile, MM_TO_PX };

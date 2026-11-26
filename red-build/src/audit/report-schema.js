@@ -71,12 +71,9 @@ function buildReport(result, opts = {}) {
   // **S4.10:** תוצאת מנוע-מורשת מקבלת hash מחדש בשיטת המורשת עצמה — hash של DP
   // על עמודי מורשת אינו מוגדר (שדות שונים) והיה מסמן אקראיות שקרית.
   const { layoutHash } = require('../engine/layout/dp-planner');
-  const { legacyLayoutHashDigest } = require('../engine/layout/legacy-imud-flow');
   let recomputed = null;
   if (result.pages) {
-    recomputed = result.legacyProfile
-      ? 'legacy-' + legacyLayoutHashDigest(result.pages)
-      : layoutHash(result.pages);
+    recomputed = layoutHash(result.pages);
   }
   const deterministic = recomputed === result.layoutHash;
   const findings = [];

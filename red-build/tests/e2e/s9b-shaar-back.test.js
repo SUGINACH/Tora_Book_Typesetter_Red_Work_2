@@ -12,7 +12,6 @@ const ROOT = path.join(RB, '..');
 
 const { typeset } = require('../../src/engine/core/pipeline');
 const { getDefaultSettings } = require('../../src/engine/core/settings-registry');
-const { importImudSettings } = require('../../src/engine/core/legacy-settings-map');
 const { registerFont } = require('../../src/engine/typography/measure-api');
 const { buildShaarBlocks } = require('../../src/engine/output/shaar-content');
 
@@ -103,27 +102,19 @@ describe('s9b-shaar-back — ארבעת מקטעי השער האחורי (D-107)
     assert(!text.includes('כל הזכויות שמורות'), 'הכותרת אינה מופיעה בלי זכויות יוצרים (כמקור)');
   });
 
-  it('ייבוא IMUD: inp-book-back-* ממופים ל-imud-book-back-* ומגיעים לפלט', () => {
+  it('הגדרות שער אחורי: imud-book-back-* מגיעות לפלט ישירות', () => {
     const raw = JSON.parse(fs.readFileSync(path.join(RB, 'ui/assets/imud/default_settings.json'), 'utf8'));
-    const { getSettingDefs } = require('../../src/engine/core/settings-registry');
-    const families = new Set();
-    for (const cat of ['imud-fonts.json', 'fonts-extended.json']) {
-      const p = path.join(RB, 'ui/assets/imud', cat);
-      if (fs.existsSync(p)) for (const f of JSON.parse(fs.readFileSync(p, 'utf8'))) families.add(f.family);
-    }
-    const imp = importImudSettings(raw, new Set(getSettingDefs().map(r2 => r2.id)), { availableFonts: families });
-    assertEq(imp.settings['imud-book-back-copyright'], raw['inp-book-back-copyright'], 'מיפוי זכויות');
-    assertEq(imp.settings['imud-book-back-publishing'], raw['inp-book-back-publishing'], 'מיפוי הוצאה');
-    assertEq(imp.settings['imud-book-back-contact'], raw['inp-book-back-contact'], 'מיפוי קשר');
-    assertEq(imp.settings['imud-book-back-extra'], raw['inp-book-back-extra'], 'מיפוי נוספים');
-    // הערכים המיובאים מגיעים לפלט גם בלי מטא במסמך (בלי פרופיל המורשת — כמו הכלי)
-    const s = { ...getDefaultSettings(), ...imp.settings };
-    delete s['_layout-profile']; delete s['_imudRaw'];
+    const s = { ...getDefaultSettings(),
+      'imud-book-back-copyright': raw['inp-book-back-copyright'],
+      'imud-book-back-publishing': raw['inp-book-back-publishing'],
+      'imud-book-back-contact': raw['inp-book-back-contact'],
+      'imud-book-back-extra': raw['inp-book-back-extra']
+    };
     const r = typeset(DOC_WITHOUT_BACK_META, s, {});
     const text = backText(r);
-    assert(text.includes(String(raw['inp-book-back-publishing'])), 'הוצאה מיובאת מגיעה לשער האחורי');
-    assert(text.includes(String(raw['inp-book-back-contact'])), 'קשר מיובא מגיע');
-    assert(text.includes(String(raw['inp-book-back-extra'])), 'נוספים מיובאים מגיעים');
+    assert(text.includes(String(raw['inp-book-back-publishing'])), 'הוצאה מגיעה לשער האחורי');
+    assert(text.includes(String(raw['inp-book-back-contact'])), 'קשר מגיע');
+    assert(text.includes(String(raw['inp-book-back-extra'])), 'נוספים מגיעים');
   });
 
   it('ערכים רב-שורתיים — שורה לכל שורת מקור; גדלים לפי המקור (13.5/10/11/10/9.5)', () => {

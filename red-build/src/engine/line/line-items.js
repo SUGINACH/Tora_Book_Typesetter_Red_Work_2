@@ -74,13 +74,17 @@ function baseStyleOf(settings, kind, level) {
     family = s[`heading-${level}-font`] || family;
   }
   const prof = familyWidthProfileOf(family, s);
+  // For h4, h5, h6 use 1.45 pitch (headingItemH) instead of body line-height (1.34)
+  // This matches the legacy engine and the mathematical audit expectations (S4.24).
+  const headingPitch = (kind === 'heading' && level >= 4) ? 1.45
+    : (Number.isFinite(s['body-line-height']) ? s['body-line-height'] : 1.34);
   return {
     sizePt,
     // **חוזה H3 (D-S2H3/CSS parity):** שורות כותרת 3 ב-line-height 1.22 של
     // ה-CSS המקורי — לא body-line-height הכללי. מקור יחיד: core/h3-contract.
     lineHeight: (kind === 'heading' && level === 3)
       ? H3_CONTRACT_LINE_HEIGHT
-      : (Number.isFinite(s['body-line-height']) ? s['body-line-height'] : 1.34),
+      : headingPitch,
     fnSize: Number.isFinite(s['f-note-body-size-pt']) ? s['f-note-body-size-pt'] : 8,
     family,
     defaultFamily: s['body-font'] || null,

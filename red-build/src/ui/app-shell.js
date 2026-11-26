@@ -484,7 +484,7 @@ function createApp(doc, opts = {}) {
       // **פרוסה 3 (§2.3):** פרופיל המנוע שרץ (מה-Worker דרך ui-result-v1) —
       // נשמר לכל רינדור חוזר (גם keepView) כדי שהתצוגה לא תחליף רנדרר
       // באמצע סשן.
-      engineProfile = (res && res.legacyProfile) ? 'legacy' : 'unified';
+      engineProfile = 'unified';
       // **ענף preview (§ג.4 בהוראה):** כשל מפורש כשחסר PageModel או כשהמנוע
       // נפל בשקט ל־legacy למרות פרופיל הענף — אין fallback שקט ואין המשך תצוגה
       // כאילו הכול תקין. התצוגה הקיימת נשמרת כמו שהיא, אך מצב המנוע הופך לשגיאה.
@@ -717,31 +717,20 @@ function createApp(doc, opts = {}) {
       status.setNotice('קיימים שינויים שלא הוחלו — הפעילו עימוד (⚡) לפני ייצוא');
       return { ok: false, kind, reason: 'dirty' };
     }
-    const { exportHtml, exportPdf, exportProjectZip } = require('../engine/output/export-api');
+    const { exportHtml, exportHtmlFromModel, exportProjectZip } = require('../engine/output/export-api');
     try {
       if (kind === 'html') {
         const fontCss = (typeof opts.getExportFontCss === 'function' && opts.getExportFontCss()) || '';
-        // **פרוסה 4 (§3 — HTML מה-PageModel):** בפרופיל המאוחד הייצוא מהמודל
-        // שכבר חושב — אותו מקרין כמו התצוגה החיה; אין typeset נוסף. חסר-מודל
-        // = כשל מפורש (אין נפילה לייצוא מהתוצאה הגולמית — §3). legacy ממשיך
-        // בנתיב הקיים עד שלב 9 (תקופת המעבר, כמו בתצוגה).
-        if (engineProfile === 'unified') {
-          if (!pageModelObj) {
-            status.setNotice('ייצוא HTML בפרופיל המאוחד דורש PageModel — אין נתיב חלופי (הפעילו עימוד מחדש).');
-            return { ok: false, kind, reason: 'no-page-model' };
-          }
-          const { exportHtmlFromModel } = require('../engine/output/export-api');
-          const html = exportHtmlFromModel(pageModelObj, settings, doc, { title: (result.metadata && result.metadata['ספר']) || 'ספר', fontCss });
-          if (opts.onExportFile) opts.onExportFile('html', html, 'book.html');
-          status.setNotice('יוצא HTML עצמאי מה-PageModel (חד־קובץ, offline, אין עימוד שני).');
-          return { ok: true, kind, data: html };
+        // **פרוסה 4 (§3 — HTML מה-PageModel):** המנוע המאוחד מייצא מהמודל
+        // שכבר חושב — אותו מקרין כמו התצוגה החיה; אין typeset נוסף.
+        // חסר-מודל = כשל מפורש (אין נפילה לייצוא מהתוצאה הגולמית).
+        if (!pageModelObj) {
+          status.setNotice('ייצוא HTML דורש PageModel — אין נתיב חלופי (הפעילו עימוד מחדש).');
+          return { ok: false, kind, reason: 'no-page-model' };
         }
-        // **9c.2/9c.4-marker:** נתיב מורשת — צריכת result.pages הגולמיים.
-        // יוסר עם הסרת המנוע ב-9c.4; עד אז האתחול בפרופיל המורשת זקוק לו.
-        // אין fallback בנתיב המאוחד — PageModel חסר = שגיאה מפורשת (לעיל).
-        const html = exportHtml(result, settings, doc, { title: (result.metadata && result.metadata['ספר']) || 'ספר', fontCss });
+        const html = exportHtmlFromModel(pageModelObj, settings, doc, { title: (result.metadata && result.metadata['ספר']) || 'ספר', fontCss });
         if (opts.onExportFile) opts.onExportFile('html', html, 'book.html');
-        status.setNotice('יוצא HTML עצמאי (חד־קובץ, offline).');
+        status.setNotice('יוצא HTML עצמאי מה-PageModel (חד־קובץ, offline, אין עימוד שני).');
         return { ok: true, kind, data: html };
       }
       if (kind === 'pdf') {
@@ -762,28 +751,17 @@ function createApp(doc, opts = {}) {
           status.setNotice('ייצוא PDF דורש גופן מוטמע — נא לטעון גופן (TTF) בהגדרות המסמך.');
           return { ok: false, reason: 'no-embedded-font' };
         }
-        // **9c.1 (אין עימוד שני):** הנתיב המקומי (Node/בדיקות) מייצא בפרופיל
-        // המאוחד מה-PageModel שכבר חושב — כמו הנתיב החי ב-Worker. חסר-מודל
-        // (או שאין תוצאת עימוד כלל — הפרופיל עודנו ברירת המחדל) = כשל מפורש;
-        // אין נפילה שקטה ל-exportPdf שמעמד מחדש. פרופיל המורשת ממשיך בנתיב
-        // הקיים עד 9c.4 (הסרת המנוע).
-        if (engineProfile === 'unified' || !result) {
-          if (!pageModelObj) {
-            status.setNotice('ייצוא PDF דורש PageModel — אין נתיב חלופי (הפעילו עימוד קודם).');
-            return { ok: false, kind, reason: 'no-page-model' };
-          }
-          const { exportPdfFromModel } = require('../engine/output/export-api');
-          const res = exportPdfFromModel(pageModelObj, settings, opts.embeddedFont);
-          if (!res.ok) { status.setNotice('ייצוא PDF נכשל: ' + res.error); return res; }
-          if (opts.onExportFile) opts.onExportFile('pdf', res.bytes, 'book.pdf');
-          status.setNotice(`יוצא PDF מה-PageModel — ${res.info.pages} עמודים, ${res.info.outline} סימניות, טקסט נבחר.`);
-          return { ok: true, kind, data: res.bytes, info: res.info };
+        // **המנוע המאוחד בלבד:** ייצוא מה-PageModel שכבר חושב — כמו הנתיב החי ב-Worker.
+        // חסר-מודל (או שאין תוצאת עימוד כלל) = כשל מפורש; אין נפילה שקטה לעימוד מחדש.
+        if (!pageModelObj) {
+          status.setNotice('ייצוא PDF דורש PageModel — אין נתיב חלופי (הפעילו עימוד קודם).');
+          return { ok: false, kind, reason: 'no-page-model' };
         }
-        // **9c.4-marker:** נתיב מורשת — יוסר עם הסרת המנוע ב-9c.4.
-        const res = exportPdf(text, settings, opts.embeddedFont);
+        const { exportPdfFromModel } = require('../engine/output/export-api');
+        const res = exportPdfFromModel(pageModelObj, settings, opts.embeddedFont);
         if (!res.ok) { status.setNotice('ייצוא PDF נכשל: ' + res.error); return res; }
         if (opts.onExportFile) opts.onExportFile('pdf', res.bytes, 'book.pdf');
-        status.setNotice(`יוצא PDF — ${res.info.pages} עמודים, ${res.info.outline} סימניות, טקסט נבחר.`);
+        status.setNotice(`יוצא PDF מה-PageModel — ${res.info.pages} עמודים, ${res.info.outline} סימניות, טקסט נבחר.`);
         return { ok: true, kind, data: res.bytes, info: res.info };
       }
       if (kind === 'zip') {
@@ -887,29 +865,14 @@ function createApp(doc, opts = {}) {
     // מפתחות שאינם ברישום RED עוברים דרך importImudSettings (טבלת ה-disposition)
     // במקום להישאר "לא מוכרים". ערכי ui-state נשמרים ב-_legacy-ui-state (לא אובדם).
     const { getSettingDefs } = require('../engine/core/settings-registry');
-    const { importImudSettings } = require('../engine/core/legacy-settings-map');
     const migrated = migrate(raw.settings || {});
     const regKeys = new Set(getSettingDefs().map(r => r.id));
     const known = {};
-    const legacyKeys = {};
     for (const [k, v] of Object.entries(migrated)) {
       if (k === 'settings_version' || k.startsWith('_')) { known[k] = v; continue; }
-      (regKeys.has(k) ? known : legacyKeys)[k] = v;
+      if (regKeys.has(k)) known[k] = v;
     }
-    let legacySettings = {};
-    if (Object.keys(legacyKeys).length) {
-      // **EXT-9:** הקטלוג המוטמע (אם נטען) מועבר לפתרון מחסניות הגופן —
-      // "Guttman Rashi, Frank Ruhl Libre" ⇒ המשפחה המוטמעת בפועל, כך שהמדידה
-      // (font-metrics) והתצוגה משתמשות באותו גופן (מונע סחף live↔ייצוא EXT-13).
-      const availableFonts = (opts.imudLibrary && typeof opts.imudLibrary.catalogFamilies === 'function')
-        ? opts.imudLibrary.catalogFamilies() : undefined;
-      const imp = importImudSettings(legacyKeys, regKeys, {
-        contentHeightPx: currentContentHeightPx(),
-        ...(availableFonts ? { availableFonts } : {})
-      });
-      legacySettings = imp.settings; // כולל _legacy-ui-state (ערכי UI נשמרים)
-    }
-    const { merged, unknownKeys, issues } = mergeWithDefaults({ ...legacySettings, ...known });
+    const { merged, unknownKeys, issues } = mergeWithDefaults(known);
     const unsupportedUnifiedKeys = [];
     if (branchProfile === 'unified') {
       for (const definition of getSettingDefs()) {

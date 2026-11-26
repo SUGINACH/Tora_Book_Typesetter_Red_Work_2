@@ -111,31 +111,19 @@ function handleRegisterAssets(msg, post) {
  * הפלט מועתק ל-Uint8Array טהור (בלי byteOffset) — structured-clone/transfer בטוחים. */
 function handleExportRequest(msg, post) {
   try {
-    const { exportPdf, exportPdfFromModel, exportProjectZip } = require('../engine/output/export-api');
+    const { exportPdfFromModel, exportProjectZip } = require('../engine/output/export-api');
     if (msg.kind === 'pdf') {
       if (msg.fontBytes == null) {
         post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: false, error: 'no-embedded-font' });
         return;
       }
       const u8 = msg.fontBytes instanceof ArrayBuffer ? new Uint8Array(msg.fontBytes) : new Uint8Array(msg.fontBytes.buffer, msg.fontBytes.byteOffset, msg.fontBytes.length);
-      // **9c.1 (§12 בהוראת 9b — אין עימוד שני; אין נפילה שקטה):** הנתיב
-      // המאוחד מייצא מה-PageModel שכבר חושב — בלבד. תוצאה מאוחדת בלי מודל
-      // (למשל כשל העברה) אינה נופלת עוד בשקט לעימוד מחדש דרך exportPdf —
-      // כשל מפורש. פרופיל המורשת ממשיך בנתיב הייצוא הישן עד 9c.4 (החלפת
-      // ברירת המחדל והסרת המנוע — שם ה-dispatch הזה נמחק עמו).
-      const isLegacyProfile = !!(_lastTypesetResult && _lastTypesetResult.legacyProfile === true);
-      if (!isLegacyProfile) {
-        if (!_lastTypesetResult || !_lastTypesetResult.pageModel) {
-          post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: false, error: 'model-required: אין PageModel בזיכרון — הפעילו עימוד לפני ייצוא (אין עימוד שני ואין נתיב חלופי)' });
-          return;
-        }
-        const res = exportPdfFromModel(_lastTypesetResult.pageModel, msg.settings, u8, msg.fontName);
-        if (!res.ok) { post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: false, error: res.error }); return; }
-        post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: true, bytes: new Uint8Array(res.bytes), info: res.info || null });
+      // המנוע המאוחד הוא היחיד — ייצוא מה-PageModel בלבד, אין נתיב מורשת.
+      if (!_lastTypesetResult || !_lastTypesetResult.pageModel) {
+        post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: false, error: 'model-required: אין PageModel בזיכרון — הפעילו עימוד לפני ייצוא (אין עימוד שני ואין נתיב חלופי)' });
         return;
       }
-      // **9c.4-marker:** נתיב מורשת — יוסר עם הסרת המנוע ב-9c.4.
-      const res = exportPdf(msg.text, msg.settings, u8, msg.fontName);
+      const res = exportPdfFromModel(_lastTypesetResult.pageModel, msg.settings, u8, msg.fontName);
       if (!res.ok) { post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: false, error: res.error }); return; }
       post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: true, bytes: new Uint8Array(res.bytes), info: res.info || null });
       return;

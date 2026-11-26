@@ -165,21 +165,8 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
       'measure-impl': 'font-metrics'
     };
     const result = typeset(text, settings, { noRecommendations: true, ...(env || {}) });
-    // **S4.9:** פרופיל IMUD — הקרנה ממקרן ה-legacy (גיאומטריה מפורשת מהייחוס)
-    // **S71.1 (double-check — projection measurement consistency):** the
-    // projection must measure with the SAME impl that built the model
-    // (impl B — registered-font metrics). Until now projectDocument built
-    // itself a MeasureAPI(settings,'table') when no api was passed, so word
-    // x-positions followed the table while line breaks followed real font
-    // metrics: with Frank Ruhl Libre (the default font) 168 lines overflowed
-    // the column box in the exported PDF (up to 32.5px into the neighbouring
-    // column) and 97.8% of words diverged from the display (avg 111.8px) —
-    // display≠export, exactly the class EXT-13 closed for live↔export on the
-    // typeset side. resolveMeasureImpl = the same single source as pipeline;
-    // with no registered font it falls back to 'table' (previous behaviour).
-    const projected = result.legacyProfile
-      ? require('./legacy-projector').projectLegacyDocument(result, settings)
-      : projectDocument(result, settings, new MeasureAPI(settings, resolveMeasureImpl(settings)));
+    // המנוע המאוחד הוא היחיד — הקרנה דרך projectDocument (אין נתיב legacy-projector).
+    const projected = projectDocument(result, settings, new MeasureAPI(settings, resolveMeasureImpl(settings)));
     const drawnParts = [];
     for (const pg of projected.pages) {
       for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) for (const w of ln.words) drawnParts.push(w.text);
@@ -477,18 +464,15 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
     // סימנים משולבים ב-advance 0 ('_marks-advance=combined' — נקבע בתוך typeset
     // על ההגדרות הפנימיות; RC-M4 ב-measure-api). ה-PDF מקרין את אותה החלטה:
     // גליפי ניקוד ברוחב 0 במערך /W של כל גופן-כותב ⇒ רוחב המילה ב-PDF =
-    // רוחב המילה שהמודל תכנן. נתיב המורשת (legacyProfile) מודד hmtx בהפרדה
-    // כמו מנוע המקור שייצר את הייחוס — ואינו מושפע (בתים זהים; שער s73 נשאר).
-    if (!result.legacyProfile) {
-      fontForWriter = applyCombinedMarkPolicy(fontForWriter);
-      fontForWriter2 = applyCombinedMarkPolicy(fontForWriter2);
-      fontForWriter3 = applyCombinedMarkPolicy(fontForWriter3);
-      fontForWriter4 = applyCombinedMarkPolicy(fontForWriter4);
-      fontForWriter5 = applyCombinedMarkPolicy(fontForWriter5);
-      fontForWriter6 = applyCombinedMarkPolicy(fontForWriter6);
-      for (let i = 0; i < extraFonts.length; i++) {
-        extraFonts[i] = { ...extraFonts[i], font: applyCombinedMarkPolicy(extraFonts[i].font) };
-      }
+    // רוחב המילה שהמודל תכנן.
+    fontForWriter = applyCombinedMarkPolicy(fontForWriter);
+    fontForWriter2 = applyCombinedMarkPolicy(fontForWriter2);
+    fontForWriter3 = applyCombinedMarkPolicy(fontForWriter3);
+    fontForWriter4 = applyCombinedMarkPolicy(fontForWriter4);
+    fontForWriter5 = applyCombinedMarkPolicy(fontForWriter5);
+    fontForWriter6 = applyCombinedMarkPolicy(fontForWriter6);
+    for (let i = 0; i < extraFonts.length; i++) {
+      extraFonts[i] = { ...extraFonts[i], font: applyCombinedMarkPolicy(extraFonts[i].font) };
     }
     const bytes = writePdf({
       pages: projected.pages,

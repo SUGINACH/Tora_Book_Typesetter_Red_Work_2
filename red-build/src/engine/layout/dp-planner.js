@@ -3,11 +3,10 @@
 
 const crypto = require('crypto');
 // **חוזה H3 (D-S2H3/CSS parity):** ריפודי פס כותרת 3 ממקור יחיד —
-// אותו חוזה כמו המנוע המורשת (legacy-imud-flow) ומדידת ה-pipeline.
+// אותו חוזה כמו מדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, H3_FOLLOW_MIN_PX, h3BandHeightPx, h3BandRoomThresholdPx } = require('../core/h3-contract');
-const { PAGE_TYPES, buildPageTemplate } = require('./page-templates');
-const { H0_TITLE_Y, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN, H2_TITLE_LINE_PITCH_PX } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** עוגני פתיחת-הסימן — מקור יחיד (S4.19)
-const { isImudProfile: isImud } = require('./page-templates');
+const { PAGE_TYPES, buildPageTemplate, isImudProfile } = require('./page-templates');
+const { H0_TITLE_Y, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN, H2_TITLE_LINE_PITCH_PX, GEO, FLOW_BOTTOM, SINGLE_W, SZ_CORE } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** עוגני פתיחת-הסימן — מקור יחיד (S4.19)
 const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
 const { runRetreatLoop } = require('./retreat-loop');
@@ -21,6 +20,504 @@ const { getFootnotesReservedHeight, noteHeight, noteMetrics, stampNoteMetrics } 
 const { stampNote, makeNoteRecord, NOTE_KINDS } = require('./notes-model'); // **שלב 6 פרוסה 2:** מודל ההערות המאוחד — זהות/עוגן + חותמת הערות-צד ביצירה
 const CM = require('./constraint-matrix'); // **שלב 5:** מטריצת האילוצים המאוחדת (חילוץ שורש מ-#16/#17)
 const { createTraceRecorder } = require('./decision-trace'); // **פרוסה 2 (§2.7):** תיעוד החלטות דטרמיניסטי קומפקטי
+const { getDefaultSettings, findKey } = require('../core/settings-registry');
+const { breakLines, FIT_EPS, STRETCH_RATIO, SHRINK_RATIO } = require('../typography/kp-linebreak');
+
+/**
+ * LineBreaker class — wraps breakLines for backward compatibility with tests.
+ * Tests expect: new LineBreaker(api, cfg, windowApi, headingApi)
+ */
+class LineBreaker {
+  constructor(api, cfg, windowApi, headingApi) {
+    this.api = api;
+    this.cfg = cfg;
+    this.win = windowApi;
+    this.winCache = new Map();
+    this.hApi = headingApi;
+    this.hCache = new Map();
+    this.cache = new Map();
+  }
+
+  w(text, sizePt) {
+    const key = sizePt + '|' + text;
+    let v = this.cache.get(key);
+    if (v === undefined) { v = this.api.measureTextWidth(text, sizePt, 0); this.cache.set(key, v); }
+    return v;
+  }
+  hw(text, sizePt, apiOverride) {
+    const useApi = apiOverride || this.hApi;
+    if (!useApi) return this.w(text, sizePt);
+    if (!useApi._hwCache) useApi._hwCache = new Map();
+    const key = sizePt + '|' + text;
+    let v = useApi._hwCache.get(key);
+    if (v === undefined) { v = useApi.measureTextWidth(text, sizePt, 0); useApi._hwCache.set(key, v); }
+    return v;
+  }
+  wWin(text, sizePt) {
+    if (!this.win) return this.w(text, sizePt);
+    const key = sizePt + '|' + text;
+    let v = this.winCache.get(key);
+    if (v === undefined) { v = this.win.measureTextWidth(text, sizePt, 0); this.winCache.set(key, v); }
+    return v;
+  }
+
+  splitWords(text, opts) {
+    const { fnOpen, fnClose } = this.cfg;
+    const safe = String(text).trim();
+    // Simple findNotes implementation
+    const notes = [];
+    let idx = 0;
+    while (true) {
+      const openIdx = safe.indexOf(fnOpen, idx);
+      if (openIdx === -1) break;
+      const closeIdx = safe.indexOf(fnClose, openIdx + fnOpen.length);
+      if (closeIdx === -1) break;
+      notes.push({ start: openIdx, end: closeIdx + fnClose.length });
+      idx = closeIdx + fnClose.length;
+    }
+    let atomic = safe;
+    for (const n of notes) {
+      const inner = safe.slice(n.start + fnOpen.length, n.end - fnClose.length).replace(/\s+/g, '');
+      atomic = atomic.slice(0, n.start + fnOpen.length) + inner + atomic.slice(n.end - fnClose.length);
+    }
+    const words = atomic.split(/\s+/).filter(Boolean);
+    const escO = fnOpen.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const escC = fnClose.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const inWord = new RegExp(escO + '[\\s\\S]*?' + escC, 'g');
+    const markerOf = (opts && typeof opts.markerOf === 'function') ? opts.markerOf : null;
+    const markerSzPt = (opts && Number.isFinite(opts.markerSizePt)) ? opts.markerSizePt : null;
+    const markerMw = (opts && typeof opts.markerMeasure === 'function') ? opts.markerMeasure : null;
+    const bodySzPt = (opts && Number.isFinite(opts.bodySizePt)) ? opts.bodySizePt : null;
+    const bodyMw = (opts && typeof opts.bodyMeasure === 'function') ? opts.bodyMeasure : markerMw;
+    const canMeasureMarker = !!(markerOf && markerMw && markerSzPt != null && bodySzPt != null);
+    const dispW = new Array(words.length).fill(null);
+    let noteOrdinal = 0;
+    const markerTextOf = () => {
+      if (!markerOf) return 'א';
+      return LineBreaker.markerWord(markerOf(noteOrdinal), this.cfg.fnNumSeparator);
+    };
+    const disp = words.map((word, wi) => {
+      if (word.startsWith(fnOpen) && word.endsWith(fnClose)) {
+        const mText = markerOf ? markerTextOf() : 'א';
+        noteOrdinal++;
+        if (markerOf && markerMw && markerSzPt != null) dispW[wi] = markerMw(mText, markerSzPt);
+        return markerOf ? mText : 'א';
+      }
+      if (canMeasureMarker) {
+        const m = word.match(inWord);
+        if (m) {
+          const full = word.replace(inWord, '\u0001');
+          const parts = full.split('\u0001');
+          if (parts.length === 2) {
+            const mText = markerTextOf();
+            noteOrdinal++;
+            dispW[wi] = (parts[0] ? bodyMw(parts[0], bodySzPt) + bodyMw(' ', bodySzPt) : 0)
+              + markerMw(mText, markerSzPt)
+              + (parts[1] ? bodyMw(' ', bodySzPt) + bodyMw(parts[1], bodySzPt) : 0);
+            return parts[0] + ' ' + mText + ' ' + parts[1];
+          }
+        }
+      }
+      return word.replace(inWord, ' א ');
+    });
+    const out = words.map(word => word.replace(//g, ' '));
+    return { words, disp, out, notes, dispW };
+  }
+
+  static markerWord(n, sep) { return toGematria(n) + (sep != null ? sep : '.'); }
+
+  breakPara(text, colWidthPx, sizePt, allowWindow, measureApi = null, opts = null) {
+    const cfg = this.cfg;
+    const mw = measureApi
+      ? (t, sz) => measureApi.measureTextWidth(t, sz, 0)
+      : (t, sz) => this.w(t, sz);
+    const { disp, out, notes, dispW } = this.splitWords(text, opts);
+    const spaceW = mw(' ', sizePt);
+    const parenSize = sizePt - 2; // 12-2 = 10pt
+    const wordWs = new Array(out.length);
+    const wordParen = new Array(out.length);
+    const endsInParen = new Array(out.length);
+    const startsInParen = new Array(out.length);
+    {
+      let depth = 0;
+      for (let i = 0; i < out.length; i++) {
+        const wd = disp[i];
+        if (dispW && dispW[i] != null) {
+          wordWs[i] = dispW[i];
+          if (out[i].startsWith(cfg.fnOpen) && out[i].endsWith(cfg.fnClose)) {
+            wordParen[i] = false;
+            startsInParen[i] = false;
+            endsInParen[i] = false;
+            continue;
+          }
+          let anyParen = false;
+          for (let c = 0; c < wd.length; c++) {
+            const ch = wd[c];
+            if (ch === '(') depth++;
+            const inParen = depth > 0;
+            if (inParen) anyParen = true;
+            if (c === 0) startsInParen[i] = inParen;
+            endsInParen[i] = inParen;
+            if (ch === ')' && depth > 0) depth--;
+          }
+          wordParen[i] = anyParen;
+          continue;
+        }
+        let w = 0, seg = '', segParen = false;
+        let anyParen = false;
+        for (let c = 0; c < wd.length; c++) {
+          const ch = wd[c];
+          if (ch === '(') { depth++; segParen = true; }
+          const inParen = depth > 0;
+          if (inParen) anyParen = true;
+          if (c === 0) startsInParen[i] = inParen;
+          endsInParen[i] = inParen;
+          if (ch === ')' && depth > 0) { depth--; if (depth === 0) segParen = false; }
+        }
+        wordParen[i] = anyParen;
+        const sz = wordParen[i] ? parenSize : sizePt;
+        wordWs[i] = mw(wd, sz);
+      }
+    }
+    const lines = [];
+    let i = 0;
+    let hasWindow = false;
+    let windowWords = null;
+    const dropWordMode = cfg.dropWordMode || 'window';
+    const dropWordCount = cfg.dropWordCount || 1;
+    const dropWordMinLines = cfg.dropWordMinLines || 2;
+    while (i < out.length) {
+      let w = 0;
+      let lineWords = [];
+      let lineDisp = [];
+      let lineDispW = [];
+      let j = i;
+      // Check for window word
+      if (allowWindow && dropWordMode === 'window' && j < out.length && lines.length < dropWordMinLines) {
+        const winW = this.wWin(out[j], sizePt * 1.5);
+        if (winW > colWidthPx - FIT_EPS) {
+          // Single word wider than column -> window mode
+          hasWindow = true;
+          windowWords = [out[j]];
+          const line = { words: [disp[j]], heightPx: sizePt * 96 / 72 * 1.5, window: true, windowW: winW };
+          lines.push(line);
+          i = j + 1;
+          continue;
+        }
+      }
+      // Regular greedy fill
+      while (j < out.length) {
+        const addW = (lineWords.length ? spaceW : 0) + wordWs[j];
+        if (w + addW > colWidthPx - FIT_EPS) break;
+        w += addW;
+        lineWords.push(out[j]);
+        lineDisp.push(disp[j]);
+        lineDispW.push(dispW[j] != null ? dispW[j] : wordWs[j]);
+        j++;
+      }
+      if (!lineWords.length) {
+        // Force at least one word
+        lineWords.push(out[i]);
+        lineDisp.push(disp[i]);
+        lineDispW.push(dispW[i] != null ? dispW[i] : wordWs[i]);
+        i++;
+      } else {
+        i = j;
+      }
+      lines.push({ words: lineDisp, widthPx: w, heightPx: sizePt * 96 / 72, isLast: i >= out.length, window: false });
+    }
+    return { lines, hasWindow, windowW: hasWindow ? this.wWin(windowWords[0], sizePt * 1.5) : 0 };
+  }
+}
+
+// Hebrew gematria helper
+function toGematria(n) {
+  const letters = [
+    '', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י',
+    'יא', 'יב', 'יג', 'יד', 'טו', 'טז', 'יז', 'יח', 'יט', 'כ',
+    'כא', 'כב', 'כג', 'כד', 'כה', 'כו', 'כז', 'כח', 'כט', 'ל',
+    'לא', 'לב', 'לג', 'לד', 'לה', 'לו', 'לז', 'לח', 'לט', 'מ',
+    'מא', 'מב', 'מג', 'מד', 'מה', 'מו', 'מז', 'מח', 'מט', 'נ',
+    'נא', 'נב', 'נג', 'נד', 'נה', 'נו', 'נז', 'נח', 'נט', 'ס',
+    'סא', 'סב', 'סג', 'סד', 'סה', 'סו', 'סז', 'סח', 'סט', 'ע',
+    'עא', 'עב', 'עג', 'עד', 'עה', 'עו', 'עז', 'עח', 'עט', 'פ',
+    'פא', 'פב', 'פג', 'פד', 'פה', 'פו', 'פז', 'פח', 'פט', 'צ',
+    'צא', 'צב', 'צג', 'צד', 'צה', 'צו', 'צז', 'צח', 'צט', 'ק',
+    'קא', 'קב', 'קג', 'קד', 'קה', 'קו', 'קז', 'קח', 'קט', 'קי',
+    'קיא', 'קיב', 'קיג', 'קיד', 'קטו', 'קטז', 'קיז', 'קיח', 'קיט', 'ככ',
+    'ככא', 'ככב', 'ככג', 'ככד', 'ככה', 'ככו', 'ככז', 'ככח', 'ככט', 'ככל',
+    'ככלא', 'ככלב', 'ככלג', 'ככלד', 'ככלה', 'ככלו', 'ככלז', 'ככלח', 'ככלט', 'ככלמ',
+    'ככלמא', 'ככלמב', 'ככלמג', 'ככלמד', 'ככלמה', 'ככלמו', 'ככלמז', 'ככלמח', 'ככלמט', 'כככנ',
+    'כככנא', 'כככנב', 'כככנג', 'כככנד', 'כככנה', 'כככנו', 'כככנז', 'כככנח', 'כככנט', 'כככס',
+    'כככסא', 'כככסב', 'כככסג', 'כככסד', 'כככסה', 'כככסו', 'כככסז', 'כככסח', 'כככסט', 'כככע',
+    'כככעא', 'כככעב', 'כככעג', 'כככעד', 'כככעה', 'כככעו', 'כככעז', 'כככעח', 'כככעט', 'כככפ'
+  ];
+  let result = '';
+  if (n >= 1000) {
+    const thousands = Math.floor(n / 1000);
+    const remainder = n % 1000;
+    result = (letters[thousands] || 'א') + '׳';
+    if (remainder > 0) {
+      result += letters[remainder] || '';
+    }
+  } else {
+    result = letters[n] || 'א';
+  }
+  return result;
+}
+
+/** גובה פריט כותרת inline (h4/h5/h6) בטור — גודל×1.45.
+ * **S4.14 (מדידה שיטתית מעוגני הייחוס):** מרחק תווית-hN → עוגן הפסקה הבא
+ * באותו טור, על פני כל המסמך: h4=24-25px (32 מדידות; 12.5pt), h5=22px
+ * (7 מדידות; 11.5pt), h6=20px (5 מדידות; 10.5pt) — כלומר גודל×1.45 בדיוק
+ * (24.2/22.2/20.3). הנוסחה הקודמת ×1.22+6 נתנה 26.3/24.7 — גבוהה ב-2 עד 2.5px
+ * לכל כותרת, והפער הצטבר לשורה שלמה בעמודים עם כותרות מרובות. */
+function headingItemH(level) {
+  const sz = ({ 4: SZ_CORE.h4, 5: SZ_CORE.h5, 6: SZ_CORE.h6 })[level] || SZ_CORE.body;
+  return sz * (96 / 72) * 1.45;
+}
+
+/** גלישת שורות גרידה גנרית (להערות). */
+function wrapText(text, api, widthPx, sizePt) {
+  const words = String(text).split(/\s+/).filter(Boolean);
+  const lines = [];
+  let cur = [], curW = 0;
+  const spaceW = api.measureTextWidth(' ', sizePt, 0);
+  for (const w of words) {
+    const ww = api.measureTextWidth(w, sizePt, 0);
+    const add = ww + (cur.length ? spaceW : 0);
+    // **D-92:** רווח-ביטחון התאמת-דפדפן (הערות השוליים מרונדרות מחדש ב-DOM).
+    if (cur.length && curW + add > widthPx - FIT_EPS) { lines.push(cur.join(' ')); cur = [w]; curW = ww; }
+    else { cur.push(w); curW += add; }
+  }
+  if (cur.length) lines.push(cur.join(' '));
+  return lines;
+}
+
+/**
+ * **גשר הגדרות (S77):** ממיר את ה-raw של IMUD (default_settings.json) + הרשמה
+ * לאובייקט הגדרות שהמנוע המאוחד משתמש בו — יחידת כניסה יחידה למודול ה-DP.
+ * ערכי ההגדרה החיים (settings registry) גוברים על ה-raw; ברירות המחדל של המקור
+ * נשמרות כ-fallback מדויק (אותן הערכים המכוילים).
+ */
+function readConfig(imudRaw, settings) {
+  // IMUD raw key -> RED registry ID key mapping (from legacy-settings-map.js DISPOSITIONS)
+  // The settings object uses the registry ID (e.g., 'heading-4-size-pt') not the control name (e.g., 'rng-h4-size')
+  const IMUD_TO_REGISTRY = {
+    // Typography
+    'font-body': 'body-font',
+    'size-body': 'body-font-size-pt',
+    'line-height-body': 'body-line-height',
+    's-paren': 'paren-style-scale', // handled specially with transform
+    's-paren-mode': null, // ui-state
+    'body-last-line-align': 'body-last-line-align',
+    // Drop word
+    'drop-word-mode': 'first-word-mode',
+    'drop-word-count': 'first-word-length',
+    'drop-word-min-lines': 'first-word-threshold-lines',
+    'font-first-word': 'first-word-font',
+    'size-first-word': 'first-word-size-em',
+    // DH
+    'auto-dh': 'dh-auto-detect',
+    'font-dh': 'dh-font',
+    // Heading modes
+    'mode-h0': 'heading-0-mode',
+    'mode-h1': 'heading-1-mode',
+    'mode-h2': 'heading-2-mode',
+    'mode-h3': 'heading-3-mode',
+    'mode-h4': 'heading-4-mode',
+    'mode-h5': 'heading-5-mode',
+    'mode-h6': 'heading-6-mode',
+    'mode-h7': 'heading-7-mode',
+    // Odd page starts (ui-state)
+    'odd-h0': null, 'odd-h1': null, 'odd-h2': null,
+    'h2-auto-siman': null, 'h2-reset-siman': null,
+    'h2-top-distance': 'h2-top-offset',
+    // Notes
+    'en-line-prefix': 'en-line-prefix',
+    'fn-delim-open': 'fn-delim-open',
+    'fn-delim-close': 'fn-delim-close',
+    // Font families (heading fonts)
+    'f-h0': 'heading-0-font', 'f-h1': 'heading-1-font', 'f-h2': 'heading-2-font',
+    'f-h3': 'heading-3-font', 'f-h4': 'heading-4-font', 'f-h5': 'heading-5-font',
+    'f-h6': 'heading-6-font', 'f-h7': 'heading-7-font',
+    // Heading sizes - use registry ID (e.g., heading-4-size-pt), not control name (rng-h4-size)
+    's-h0': 'heading-0-size-pt', 's-h1': 'heading-1-size-pt', 's-h2': 'heading-2-size-pt',
+    's-h3': 'heading-3-size-pt', 's-h4': 'heading-4-size-pt', 's-h5': 'heading-5-size-pt',
+    's-h6': 'heading-6-size-pt', 's-h7': 'heading-7-size-pt',
+    // Note body font
+    'f-note-body': 'f-note-body-font',
+    // Header fonts and sizes
+    'f-hdr-r': 'header-recto-right-font', 'f-hdr-c': 'header-recto-center-font', 'f-hdr-l': 'header-recto-left-font',
+    's-hdr-r': 'header-recto-right-size-pt', 's-hdr-c': 'header-recto-center-size-pt', 's-hdr-l': 'header-recto-left-size-pt',
+    'f-hdr-verso-r': 'header-verso-right-font', 'f-hdr-verso-c': 'header-verso-center-font', 'f-hdr-verso-l': 'header-verso-left-font',
+    // Header slot types
+    'hdr-r-type': 'header-recto-right-source', 'hdr-c-type': 'header-recto-center-source', 'hdr-l-type': 'header-recto-left-source',
+    'hdr-verso-r-type': 'header-verso-right-source', 'hdr-verso-c-type': 'header-verso-center-source', 'hdr-verso-l-type': 'header-verso-left-source',
+    'hdr-verso-same-as-recto': 'header-verso-same-as-recto',
+    'hdr-divider-style': 'header-separator-line',
+    // Page numbering
+    'page-num-position': 'page-num-position',
+    'page-num-format': 'page-num-format',
+    'page-num-frame': 'page-num-frame',
+    'page-num-start-idx': 'page-num-start-idx',
+    'page-num-initial-value': 'page-num-initial-value',
+    // Column/proportion settings
+    'prop-col': 'grid-col-width-pct', 'prop-margin': 'grid-margin-side-pct', 'prop-gutter': 'grid-gutter-pct', 'prop-gap': 'grid-gap-pct',
+    'prop-mt': 'margin-top-px', 'prop-mb': 'margin-bottom-px', 'prop-mt-h2': 'h2-top-offset',
+    // Other
+    'fn-columns': 'footnote-columns',
+    'fn-layout-mode': 'fn-layout-mode',
+    'fn-reset-mode': 'footnote-reset-policy',
+    'fn-title-text': 'fn-title-text',
+    'f-note-title': 'f-note-title',
+    's-note-title': 's-note-title',
+    'f-note-body': 'f-note-body-font',
+    's-note-body': 'f-note-body-size-pt',
+    'note-numbering-style': 'footnote-marker-style',
+    'note-marker-type': null, // ui-state
+    'note-marker-size': 'note-marker-size',
+    'note-listing-num-size': 'note-listing-num-size',
+    'note-num-separator': 'note-num-separator',
+    'note-rule-style': 'footnote-separator-rule',
+    'avoid-orphans': 'avoid-orphans', 'avoid-widows': 'avoid-widows', 'avoid-runt-word': 'avoid-runt-word',
+    'hdr-distinct-even-odd': 'hdr-distinct-even-odd',
+    'hdr-alternating': 'hdr-alternating',
+    'hdr-title-split': 'split-book-title',
+    // TOC
+    'enable-general-toc': 'enable-general-toc', 'enable-detailed-toc': 'enable-detailed-toc',
+    'f-gtoc-1': 'f-gtoc-1', 's-gtoc-1': 's-gtoc-1', 'f-gtoc-2': 'f-gtoc-2', 's-gtoc-2': 's-gtoc-2',
+    'f-gtoc-3': 'f-gtoc-3', 's-gtoc-3': 's-gtoc-3', 'f-gtoc-4': 'f-gtoc-4', 's-gtoc-4': 's-gtoc-4',
+    'f-gtoc-5': 'f-gtoc-5', 's-gtoc-5': 's-gtoc-5', 'f-gtoc-6': 'f-gtoc-6', 's-gtoc-6': 's-gtoc-6',
+    'f-gtoc-7': 'f-gtoc-7', 's-gtoc-7': 's-gtoc-7',
+    'f-dtoc-1': 'f-dtoc-1', 's-dtoc-1': 's-dtoc-1', 'f-dtoc-2': 'f-dtoc-2', 's-dtoc-2': 's-dtoc-2',
+    'f-dtoc-3': 'f-dtoc-3', 's-dtoc-3': 's-dtoc-3', 'f-dtoc-4': 'f-dtoc-4', 's-dtoc-4': 's-dtoc-4',
+    'f-dtoc-5': 'f-dtoc-5', 's-dtoc-5': 's-dtoc-5', 'f-dtoc-6': 'f-dtoc-6', 's-dtoc-6': 's-dtoc-6',
+    'f-dtoc-7': 'f-dtoc-7', 's-dtoc-7': 's-dtoc-7',
+    // Shaar
+    'show-main-shaar': 'show-main-shaar', 'show-back-shaar': 'show-back-shaar', 'show-sub-shaar': 'show-sub-shaar',
+    'count-shaar-pages': 'count-shaar-pages', 'count-toc-pages': 'count-toc-pages',
+    'main-shaar-count-numbering': 'main-shaar-count-numbering', 'main-shaar-show-number': 'main-shaar-show-number',
+    'back-shaar-count-numbering': 'back-shaar-count-numbering', 'back-shaar-show-number': 'back-shaar-show-number',
+    'sub-shaar-count-numbering': 'sub-shaar-count-numbering', 'sub-shaar-show-number': 'sub-shaar-show-number',
+    'general-toc-count-numbering': 'general-toc-count-numbering', 'general-toc-show-numbering': 'general-toc-show-numbering',
+    'detailed-toc-count-numbering': 'detailed-toc-count-numbering', 'detailed-toc-show-numbering': 'detailed-toc-show-numbering',
+    // Footer
+    'page-num-format': 'page-num-format',
+    // fn-bar-max-height-px (legacy)
+    'fn-bar-max-height-px': null, // removed
+    // Background
+    'cbg-regular-mode': 'cbg-regular-mode', 'cbg-regular-color': 'cbg-regular-color',
+    'cbg-regular-opacity': 'cbg-regular-opacity', 'data-cbg-regular-img': 'data-cbg-regular-img',
+    'cbg-h0Open-mode': 'cbg-h0Open-mode', 'cbg-h0Open-color': 'cbg-h0Open-color',
+    'cbg-h0Open-opacity': 'cbg-h0Open-opacity', 'data-cbg-h0Open-img': 'data-cbg-h0Open-img',
+    'cbg-h2Open-mode': 'cbg-h2Open-mode', 'cbg-h2Open-color': 'cbg-h2Open-color',
+    'cbg-h2Open-opacity': 'cbg-h2Open-opacity', 'data-cbg-h2Open-img': 'data-cbg-h2Open-img',
+  };
+
+  const g = (k, d) => {
+    // S77: הגדרה חיה של הרישום גוברת על ה-raw (הייבוא מסנכרן את ברירות
+    // המחדל — התנהגות ברירת המחדל נשמרת במדויק)
+    // תרגום אוצר-מילים: 'drop' של הרישום = 'window' של המקור (אותו
+    // מנגנון מילת-חלון — כך מיפוי הייבוא); המנוע המורשת בודק 'window'.
+    if (k === 'drop-word-mode' && settings) {
+      const fm = settings['first-word-mode'];
+      if (fm != null && fm !== '') return fm === 'drop' ? 'window' : String(fm);
+    }
+    // Map IMUD key to registry ID (not control name)
+    const registryKey = IMUD_TO_REGISTRY[k];
+    if (registryKey) {
+      if (settings && settings[registryKey] !== undefined && settings[registryKey] !== null && settings[registryKey] !== '') {
+        return settings[registryKey];
+      }
+    }
+    const def = findKey(k);
+    const rk = def ? def.id : null;  // Use registry ID, not control name
+    if (rk && settings && settings[rk] !== undefined && settings[rk] !== null && settings[rk] !== '') return settings[rk];
+    return (imudRaw && imudRaw[k] !== undefined && imudRaw[k] !== '' ? imudRaw[k] : d);
+  };
+  const b = (k, d) => {
+    const v = g(k, d);
+    return v === true || v === 'true' || v === '1' || v === 1;
+  };
+  const n = (k, d) => {
+    const v = parseFloat(g(k, d));
+    return isNaN(v) ? d : v;
+  };
+  return {
+    fnOpen: String(g('fn-delim-open', '[')),
+    fnClose: String(g('fn-delim-close', ']')),
+    endPrefix: String(g('en-line-prefix', 'הערת סיום -')),
+    dropWordMode: String(g('drop-word-mode', 'window')),
+    dropWordCount: n('drop-word-count', 1),
+    dropWordMinLines: n('drop-word-min-lines', 2),
+    avoidRunt: b('avoid-runt-word', true),
+    autoSimanH2: b('h2-auto-siman', true),
+    resetSimanOnH1: b('h2-reset-siman', true),
+    showMainShaar: b('show-main-shaar', true),
+    showBackShaar: b('show-back-shaar', false),
+    showSubShaar: b('show-sub-shaar', true),
+    countSubShaar: b('sub-shaar-count-numbering', true),
+    countGeneralToc: b('general-toc-count-numbering', true),
+    countDetailedToc: b('detailed-toc-count-numbering', true),
+    enableGeneralToc: b('enable-general-toc', true),
+    enableDetailedToc: b('enable-detailed-toc', true),
+    oddH0: b('odd-h0', true),
+    oddH1: b('odd-h1', true),
+    oddH2: b('odd-h2', false),
+    // EXT-17 (גדלים נפרדים לסמן הערה/מספור ברשימה/מפריד): במקור שלוש
+    // הגדרות עצמאיות — אצלנו היו נגזרות מגודל הגוף. ברירות המחדל של המקור:
+    // ‏8/‏8/'.' (מילה-סמן בגוף, סמן ברשימת ההערות, המפריד אחרי המספר).
+    fnMarkerSize: n('note-marker-size', 8),
+    fnListingNumSize: n('note-listing-num-size', 8),
+    fnNumSeparator: String(g('note-num-separator', '.')),
+    // D-89 (כלל הכותרת התחתון): hdr-divider-style של המקור (black/gray/none).
+    // פרופיל המורשת מכויל לייחוס — שם הכלל נמדד שחור מלא (43,62)-(553,63)pt
+    // בכל עמודי הגוף/התוכן; 'none' מבטל.
+    hdrDivider: String(g('hdr-divider-style', 'black')),
+    // D-89 (עיצוב שערים): עיטור שער-המשנה מ-section_dividers.json
+    // (shaar-sub-divider; 'none' = גל המובנה של המקור — כמו renderSubShaar).
+    shaarSubDivider: String(g('shaar-sub-divider', 'none')),
+    // EXT-19 (כותרות מתחלפות): החלפת החצאים בעמודים זוגיים (ברירת
+    // המחדל במקור: כבוי — שני החצאים קבועים; hdr-title-split כבר ממומש
+    // בפיצול שם הספר לחצאים ב-setHeader).
+    hdrAlternating: b('hdr-alternating', false),
+    hdrRType: String(g('hdr-r-type', 'book_title_split_r')),
+    hdrCType: String(g('hdr-c-type', 'h2_without_siman')),
+    hdrLType: String(g('hdr-l-type', 'book_title_split_l')),
+    gtocShow: imudRaw && 'gtoc-show' in imudRaw ? imudRaw['gtoc-show'] : [1, 2, 3, 4, 5, 6],
+    dtocShow: imudRaw && 'dtoc-show' in imudRaw ? imudRaw['dtoc-show'] : [2, 3, 4, 5, 6],
+    // S5.2 (F2 — הערות סיום): כותרת עמודי הערות-הסיום מהמקור
+    // (fn-title-text; ממופה ב-legacy-settings-map ל-endnote-title-text).
+    fnTitleText: String(g('fn-title-text', 'הערות')),
+    // S6.3 (חיבור הגדרות — "וכמויות של הגדרות שלא מחוברות"): טקסטי
+    // השער האחורי משדות הפאנל של המקור (inp-book-back-*) — במקור הם
+    // מקור התוכן של renderBackShaar; המטא-דאטה של המסמך רק מילאה את
+    // השדות. ערך ריק בהגדרה ⇒ נפילה למטא (התנהגות קודמת).
+    backCopyright: String(g('inp-book-back-copyright', '')),
+    backPublishing: String(g('inp-book-back-publishing', '')),
+    backContact: String(g('inp-book-back-contact', '')),
+    backExtra: String(g('inp-book-back-extra', '')),
+    // S6.3: גדלים מההגדרות — עד כאן היו קשיחים ב-SZ/בקוד (מכוילי
+    // ייחוס); ערכי המקור גוברים (ברירות המחדל של default_settings.json).
+    h0Size: n('s-h0', 17),
+    h1Size: n('s-h1', 50),
+    h1SubSize: n('s-sh-sub', 21),
+    shTitle: n('s-sh-title', 46),
+    shSub: n('s-sh-sub', 21),
+    shDesc: n('s-sh-desc', 12),
+    shSec: n('s-sh-sec', 11.5),
+    shAuthor: n('s-sh-author', 15),
+    shYear: n('s-sh-year', 12),
+    fnBodySize: n('s-note-body', 8.5),
+    gtocSizes: { 1: n('s-gtoc-1', 12), 2: n('s-gtoc-2', 11), 3: n('s-gtoc-3', 10.5), 4: n('s-gtoc-4', 10), 5: n('s-gtoc-5', 9.5), 6: n('s-gtoc-6', 9), 7: n('s-gtoc-7', 8.8) },
+    dtocSizes: { 1: n('s-dtoc-1', 12), 2: n('s-dtoc-2', 11), 3: n('s-dtoc-3', 10.5), 4: n('s-dtoc-4', 10), 5: n('s-dtoc-5', 9.5), 6: n('s-dtoc-6', 9), 7: n('s-dtoc-7', 8.8) },
+    // S6.3 (בקשת משתמש — "אי איזון = שני טורים מאותו בלוק שאינם
+    // מסתיימים בגובה זהה סימטרי"): סף אי-האיזון מההגדרות (במקום
+    // 60px קשיח) — imbalance-max-delta-px של המרשם (ברירת מחדל 5).
+    imbalanceMaxDeltaPx: n('imbalance-max-delta-px', 5)
+  };
+}
 
 /** חתימת פריסה דטרמיניסטית — ללא Date/random (REQ-GOV determinism).
  * תיקון S7-E2E: tokenId נמצא ב‑meta של pushLines (לא על השורה עצמה) — יש לחלץ משם,
@@ -384,7 +881,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       cur.balanceInfo = { before: [a0, b0], after: [a, b] };
       eventLog.emit('balance', 'column-balance', { page: cur.index, delta: Math.abs(a - b) }, cur.index);
     }
-    // Invariant BRZ-14: scrollHeight ≤ clientHeight (בכפוף לפס החוצה־טורים — FWD-1)
+    // Invariant BRZ-14: element height ≤ container height (בכפוף לפס החוצה־טורים — FWD-1)
     for (const col of cur.columns) {
       if (usedHeight(col, cur) > colCapacity(cur.template, cur) + 0.5) {
         const rec = ledger.create('containment', `page#${cur.index}`, cur.index, { used: usedHeight(col, cur), cap: colCapacity(cur.template, cur) }, 'page-plan');
@@ -729,7 +1226,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       // ממורכז בעוגן המכויל (H0_TITLE_Y=309) בתוך השטח השמור של התבנית
       // (H0_AREA_H) — כמו bands.push(kind:'h0-title') במורשת §1326. הזרימה
       // מתחילה מתחת לאזור; עד כאן הכותרת זרמה כשורה ראשונה בראש העמוד.
-      if (blk.level === 0 && isImud(settings) && cur.template.columns.length >= 1) {
+      if (blk.level === 0 && isImudProfile(settings) && cur.template.columns.length >= 1) {
         const startY = H0_TITLE_Y;
         let yy = startY;
         cur.spanning = {
@@ -913,7 +1410,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       // §1351) בתוך אזור ה-h2 השמור של התבנית — לא שורה בטור. הפס חופשי
       // (freeBand): הוא חי בשטח השמור ואינו מקצץ קיבולת. הסימן נחתם
       // בהטבעה (structural-stamps — h2-siman).
-      if (isImud(settings) && cur.template.columns.length >= 2) {
+      if (isImudProfile(settings) && cur.template.columns.length >= 2) {
         // **G3/RC-3 (i004) — הכיל הכפול של המורשת (S4.19, flowSection §1335):**
         // פתיחת-סימן שהמקטע שלה נפתח בכותרת רוחבית (h3-span —
         // HEADING_MODES[3]=span_1col היחידי) משתמשת באזור ובעוגנים מורמים: נמדד מהיחוס
@@ -1490,4 +1987,4 @@ function findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, s
   return maxFit;
 }
 
-module.exports = { planPages, layoutHash, bodyGeometryHash, lineTokenId, moveLineForward, balancePageSafe };
+module.exports = { planPages, layoutHash, bodyGeometryHash, lineTokenId, moveLineForward, balancePageSafe, readConfig, LineBreaker, GEO, FLOW_BOTTOM, SINGLE_W, SZ: SZ_CORE, headingItemH, wrapText };

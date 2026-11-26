@@ -50,8 +50,8 @@ const NON_BODY_LINE_KINDS = new Set(['side-note', 'info-box']);
  * (y=307.88 מול contentBox.top=391.45) — ובטור השני שורת-גוף עם גיאומטריית
  * טור-0 מקבלת col=1 (נמדד: «את דברי הראשונים» right=−253px; LINE_OVERLAP
  * 557px ב-DOM; ושורת הגוף האחרונה נפלטת ל-structural). הוכחה נוספת:
- * המורשת מטפלת בפס הסימן כ-pg.bands ברמת העמוד (legacy-imud-flow §1341:
- * y=307.88, tokenId:null) — לא כשורת טור. הן מסווגות כאן structural —
+ * מנוע המורשת טיפל בפס הסימן כ-pg.bands ברמת העמוד (y=307.88, tokenId:null)
+ * — לא כשורת טור. הן מסווגות כאן structural —
  * מיקום מוחלט בקואורדינטות העמוד, כמו תוכן השער ושורות ה-TOC.
  */
 const STAMPED_BAND_KINDS = new Set(['h2-siman']);

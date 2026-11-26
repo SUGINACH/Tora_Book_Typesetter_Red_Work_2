@@ -468,7 +468,7 @@ function buildPreviewTab(doc, opts) {
     // **פרוסה 3 (§2.3):** קביעת הפרופיל — מפורשת מהקריאה; ברירת המחדל
     // לתוצאות ללא סימון היא legacy (מצב המעבר). בפרופיל unified חסר-מודל
     // = שגיאה מפורשת וגלויה — שום נפילה שקטה לרנדרר הישן (§2.3).
-    profile = (options && options.profile) || (serializedResult.legacyProfile ? 'legacy' : (options && options.pageModel ? 'unified' : 'legacy'));
+    profile = (options && options.profile) || (options && options.pageModel ? 'unified' : 'unified');
     const modelPages = (options && options.pageModel && Array.isArray(options.pageModel.pages)) ? options.pageModel.pages : null;
     profileError = null;
     if (profile === 'unified' && !modelPages) {

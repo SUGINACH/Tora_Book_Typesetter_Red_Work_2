@@ -30,8 +30,7 @@ const fm = require('../../src/engine/typography/font-metrics');
 const { MeasureAPI, registerFont, unregisterFont, clearRegisteredFonts, resolveMeasureImpl } = require('../../src/engine/typography/measure-api');
 const { typeset } = require('../../src/engine/core/pipeline');
 const { getDefaultSettings, getSettingDefs } = require('../../src/engine/core/settings-registry');
-const { importImudSettings } = require('../../src/engine/core/legacy-settings-map');
-const { exportPdf } = require('../../src/engine/output/export-api');
+const { exportPdf, exportPdfFromModel } = require('../../src/engine/output/export-api');
 
 const ART = path.join(__dirname, '..', 'artifacts');
 if (!fs.existsSync(ART)) fs.mkdirSync(ART, { recursive: true });
@@ -174,10 +173,11 @@ describe('EXT-9 א — שלמות ספריית הגופנים התורניים �
 });
 
 // =====================================================================
-describe('EXT-9 ב — פתרון מחסניות המקור מול הקטלוג (נתיב חי, כמו imud-library)', () => {
-  it('ברירות המקור נפתרות למשפחות מוטמעות בפועל', () => {
+describe('EXT-9 ב — פתרון מחסניות המקור מול הקטלוג (נתיב חי, מנוע מאוחד)', () => {
+  it('ברירות המאוחדות נפתרות למשפחות מוטמעות בפועל', () => {
     const available = new Set(CATALOG.map(e => e.family));
-    const { settings } = importImudSettings(LEGACY_DEFAULTS, new Set(getSettingDefs().map(r => r.id)), { availableFonts: available });
+    // מנוע מאוחד משתמש בהגדרות ישירות - אין importImudSettings
+    const settings = { ...getDefaultSettings(), 'body-font': 'Guttman Rashi', 'measure-impl': 'font-metrics' };
     // **S4.26:** גוף המקור "'Guttman Rashi', 'Frank Ruhl Libre', serif" — הכינוי
     // האנגלי 'Guttman Rashi' נוסף לקטלוג (מצביע על Guttman-Rashi-Normal.ttf
     // המוטמע — הגופן שמחסנית המקור נפלה אליו במכונת המשתמש, מוכח מהייחוס:
@@ -249,19 +249,18 @@ describe('EXT-9 ג — מדידת אמת בגופנים תורניים (hmtx/cma
 });
 
 // =====================================================================
-describe('EXT-9 ד — עימוד ספר-אמת שלם במדידת גופן תורני אמיתי', () => {
+describe('EXT-9 ד — עימוד ספר-אמת שלם במדידת גופן תורני אמיתי (מנוע מאוחד)', () => {
   const REAL_BOOK = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'real', 'no_long_test_text.txt'), 'utf8');
 
-  it('פרופיל המורשת + גופן רשום ⇒ עימוד מלא, שימור, דטרמיניזם', () => {
+  it('מנוע מאוחד + גופן רשום ⇒ עימוד מלא, שימור, דטרמיניזם', () => {
     clearRegisteredFonts();
-    // בדיוק כמו הנתיב החי: ברירות המקור מיובאות עם הקטלוג, הגופן המוטמע
-    // נרשם (imud-library registerFont), ואז העימוד מודד ב-hmtx אמיתי.
+    // מנוע מאוחד: ברירות ישירות, הגופן נרשם, העימוד מודד ב-hmtx אמיתי.
     const available = new Set(CATALOG.map(e => e.family));
-    const { settings } = importImudSettings(LEGACY_DEFAULTS, new Set(getSettingDefs().map(r => r.id)), { availableFonts: available });
+    const settings = { ...getDefaultSettings(), 'body-font': 'Frank Ruhl Libre', 'measure-impl': 'font-metrics' };
     const reg = registerFont(settings['body-font'], bytesOf(fileOf(settings['body-font'])));
     assert(reg.ok, 'גופן הגוף נרשם: ' + reg.error);
     const r1 = typeset(REAL_BOOK, settings, { noRecommendations: true });
-    assert(r1.legacyProfile === true, 'פרופיל המורשת של המקור הופעל');
+    assert(!!r1.pageModel, 'מנוע מאוחד פעיל');
     assert(r1.contentPreserved === true, 'שימור תוכן במדידת גופן אמיתי');
     assert(r1.pages.length > 50, `ספר אמת שלם (קיבלנו ${r1.pages.length} עמודים)`);
     const r2 = typeset(REAL_BOOK, settings, { noRecommendations: true });
@@ -272,7 +271,7 @@ describe('EXT-9 ד — עימוד ספר-אמת שלם במדידת גופן ת�
   it('השוואת צמצום: מדידת האמת משנה את העימוד בפועל (לא זהה לטבלה)', () => {
     clearRegisteredFonts();
     const available = new Set(CATALOG.map(e => e.family));
-    const { settings } = importImudSettings(LEGACY_DEFAULTS, new Set(getSettingDefs().map(r => r.id)), { availableFonts: available });
+    const settings = { ...getDefaultSettings(), 'body-font': 'Frank Ruhl Libre', 'measure-impl': 'font-metrics' };
     registerFont(settings['body-font'], bytesOf(fileOf(settings['body-font'])));
     const withReal = typeset(REAL_BOOK, settings, { noRecommendations: true });
     // אותן הגדרות בלי גופן רשום ⇒ נפילה שקופה לטבלה — עימוד שונה בהכרח

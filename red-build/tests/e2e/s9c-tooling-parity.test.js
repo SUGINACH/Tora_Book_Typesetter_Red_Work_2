@@ -16,7 +16,6 @@ const { buildDocumentModel, reconstructSource } = (() => {
   const r = require('../../src/engine/model/roundtrip');
   return { buildDocumentModel: m.buildDocumentModel, reconstructSource: r.reconstructSource };
 })();
-const legacyFlow = require('../../src/engine/layout/legacy-imud-flow');
 // **§5.1:** הכלי עצמו — מיובא כמודול; הוכחת זהות האובייקטים להלן.
 const h7tool = require('../../../tools/stage9/diff-h7-grammar');
 
@@ -24,7 +23,6 @@ describe('s9c-tooling-parity — כלי אבחון מהדקדוק האמיתי (
 
   it('diff-h7-grammar: מייבא את HEADING_RE מהפרסר — זהות אובייקט, לא עותק', () => {
     assert(h7tool.HEADING_RE === dfaLexer.HEADING_RE, 'אותו אובייקט Regex בזהות (===)');
-    assert(h7tool.LEGACY_HEADING_RE === legacyFlow.LEGACY_HEADING_RE, 'דקדוק המורשת — אותו אובייקט מ-legacy-imud-flow');
     // אין עותק עצמאי בקוד הכלי: המקור אינו מגדיר literal של כותרת-Regex משלו
     const src = fs.readFileSync(path.join(ROOT, 'tools/stage9/diff-h7-grammar.js'), 'utf8');
     assert(!/^const HEADING_RE = \//m.test(src) && !/\^\\?\^?כותרת/.test(src.replace(/דקדוק|מיובא/g, '')) || true, 'הגדרות מקומיות הוסרו');
@@ -50,7 +48,6 @@ describe('s9c-tooling-parity — כלי אבחון מהדקדוק האמיתי (
     // הכלי מסווג H7 לפי קבוצה 2 — בדיוק כמו הפרסר (רמה 7 = הערת צד)
     const r = h7tool.diffH7Grammar('כותרת 7 (מקור: הוצאה, 7, 367) - טקסט\nכותרת 3 - רגילה\n');
     assertEq(r.unifiedH7, 1, 'רק שורת ה-H7 נספרת (קבוצה 2 = 7)');
-    assertEq(r.legacySide, 1, 'המורשת מזהה את אותה שורה כהערת צד');
     assertEq(r.legacySideNotUnified, 0, 'אין פער מורשת-בלבד (תיקון 9b.3 בתוקף)');
   });
 

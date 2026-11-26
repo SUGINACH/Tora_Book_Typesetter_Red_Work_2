@@ -103,49 +103,16 @@ function offsetInSpans(at, spans) {
  *   אסור לו לגעת בפריסה — no-op proof נאכף בבדיקה (hash זהה עם ובלי המזליף).
  */
 function typeset(rawText, settingsIn, env = {}) {
-  // **S4.9 (פרופיל העימוד המקורי):** הגדרות שמקורן ב-default_settings.json של
-  // התוכנה המקורית (importImudSettings מסמן layout-profile='imud' ומצרף
-  // את ה-JSON הגולמי) ⇒ הפעלת הפורט הנאמן של מנוע המקור. התנהגות המקור
-  // היא המפרט — כולל הגיאומטריה המדויקת שנמדדה מקובצי הייחוס שהעלה המשתמש
-  // (בקשת 03.11: "בדיקת עימוד מתמטית ומוחלטת דרך וורקפלו").
-  // **שלב ההעברה למנוע המאוחד — דגל בדיקה דו-מנועי:** ‏RED_UNIFIED_IMUD=1
-  // משאיר את אותן ההגדרות בדיוק (כולל _imudRaw והמפתחות המיובאים) אך מריץ
-  // את המנוע המאוחד. זהו **מנגנון הוכחת שקילות בלבד** (tools/layout-parity/run-ours.js --unified):
-  // אסור שיהיה דרך להפעלה בנתיב החי. הלקח מהחיתוך הכושל של 9c.4 (דוח חקירת
-  // האתר החי, סעיף ד): ה-CI בדק את המנוע שהמשתמשים *לא* קיבלו — הדגל הזה
-  // מאפשר לבדוק את שניהם על אותם קלטים ולהשוות מול בסיס 9C.3.
-  // **ענף preview לצורך parity (engine/legacy-parity-preview-20261119):** אותה
-  // הפעלה מדויקת זמינה גם ב־settings עצמם (`_engine-force-unified === true`) —
-  // דגל in-band שזורם באותו ערוץ הגדרות דרך ה־Worker לנתיב ה־UI החי של ענף
-  // ה־preview בלבד. זו לא מנגנון dispatch מקבילי: אותה נקודת הכרעה אחת
-  // בדיוק, וב־main הדגל לא נקבע לעולם (browser-entry של main אינו מזריק אותו).
-  const forceUnifiedImud = (!!(typeof process !== 'undefined' && process.env
-    && String(process.env.RED_UNIFIED_IMUD) === '1'))
-    || !!(settingsIn && settingsIn['_engine-force-unified'] === true);
-  if (forceUnifiedImud && settingsIn) {
-    const unsupported = getSettingDefs()
-      .filter((definition) => definition.unifiedSupport === false
-        && Object.prototype.hasOwnProperty.call(settingsIn, definition.id)
-        && JSON.stringify(settingsIn[definition.id]) !== JSON.stringify(definition.default))
-      .map((definition) => definition.id);
-    if (unsupported.length) {
-      const error = new Error('unified-unsupported-settings: הגדרות אלו עדיין אינן מחוברות ל-PageModel המאוחד: ' + unsupported.join(', '));
-      error.code = 'unified-unsupported-settings';
-      error.settingKeys = unsupported;
-      throw error;
-    }
-  }
-  if (!forceUnifiedImud && settingsIn && settingsIn['_layout-profile'] === 'imud' && settingsIn._imudRaw) {
-    const { legacyTypeset } = require('../layout/legacy-imud-flow');
-    return legacyTypeset(rawText, settingsIn, env);
-  }
+  // **S4.9 (פרופיל העימוד המקורי — הוסר):** המנוע היחיד כעת הוא המנוע המאוחד.
+  // נתיב המורשת (legacy-imud-flow) וכל דגלי הכניסה הכפולה (RED_UNIFIED_IMUD,
+  // _engine-force-unified, _layout-profile='imud' + _imudRaw) הוסרו.
+  // ה-unified engine הוא מקור האמת הבלעדי לגיאומטריה, טיפוגרפיה ופגינציה.
+  const settings = derivePlacementFlags({ ...getDefaultSettings(), ...(settingsIn || {}) });
   // **S10 (REQ-UI-03):** מזליף התקדמות — null כשלא סופק (אפס תקורה במסלול הרגיל).
   const onProgress = typeof env.onProgress === 'function' ? env.onProgress : null;
   const prog = (stage, pct, label, extra) => {
     if (onProgress) onProgress(Object.assign({ stage, pct, label }, extra || {}));
   };
-  // **D-39 (P0-4):** מקור־האמת note-placement-mode; קלט משתמש מפורש גובר על נגזרות.
-  const settings = derivePlacementFlags({ ...getDefaultSettings(), ...(settingsIn || {}) });
   // **Iteration-006 (RC-M4 — חוזה הצבת סימנים משולבים במנוע המאוחד):** המאוחד
   // מקרין מילים ממוקמות-מוחלט (PageModel) והדפדפן מציב ניקוד ב-GPOS
   // mark-to-base (advance 0 בפועל) — המדידה חייבת להאמין לרינדרר הזה.
@@ -355,9 +322,13 @@ function typeset(rawText, settingsIn, env = {}) {
       // ב-line-height 1.22 של ה-CSS המקורי — לא body-line-height הכללי.
       // אותו חוזה כמו המנוע המורשת (legacy-imud-flow) — מקור יחיד.
       const isH3 = t.level === 3;
+      // For h4, h5, h6 use 1.45 pitch (headingItemH) instead of body line-height (1.34)
+      // This matches the legacy engine and the mathematical audit expectations.
+      const headingLineHeightPx = (t.level >= 4) ? hSize * (96 / 72) * 1.45
+        : (isH3 ? h3LineHeightPx(hSize) : api.lineHeightPx(hSize));
       const hBuilt = layoutModelBlock(blockById.get(t.blockId), {
         settings, kind: 'heading', level: t.level, widthPx: wLimit,
-        lineHeightPx: isH3 ? h3LineHeightPx(hSize) : api.lineHeightPx(hSize),
+        lineHeightPx: headingLineHeightPx,
         measureCtx: { assetResolver: docAssets, measure: api }
       });
       const lines = hBuilt.view;
@@ -1107,11 +1078,35 @@ function typeset(rawText, settingsIn, env = {}) {
   /** פיצול placeholder: `${marker}\uE000${text}` → מרקר + מילות הטקסט (D-30). */
   function explodePlaceholderWord(w) {
     const s = String(w);
-    const at = s.indexOf(ATOMIC);
-    if (at > 0) {
-      const marker = s.slice(0, at);
-      const rest = s.slice(at + 1);
+    // Handle ATOMIC (U+E000) placeholders
+    const atAtomic = s.indexOf(ATOMIC);
+    if (atAtomic > 0) {
+      const marker = s.slice(0, atAtomic);
+      const rest = s.slice(atAtomic + 1);
       return [...wordSeq(marker), ...wordSeq(rest)];
+    }
+    // Handle MARK_TAG (U+E102) tagged words — extract all markers in the word
+    const atMark = s.indexOf(MARK_TAG);
+    if (atMark >= 0) {
+      const result = [];
+      let from = 0;
+      while (true) {
+        const at = s.indexOf(MARK_TAG, from);
+        if (at < 0) break;
+        // Text before the MARK_TAG (if first segment)
+        if (at > from) {
+          result.push(...wordSeq(s.slice(from, at)));
+        }
+        // Extract marker after MARK_TAG (until NBSP or space)
+        const frag = s.slice(at + 1).split(/[  ]/)[0];
+        if (frag) result.push(...wordSeq(frag));
+        from = at + 1 + (frag ? frag.length : 1);
+      }
+      // Any remaining text after last MARK_TAG
+      if (from < s.length) {
+        result.push(...wordSeq(s.slice(from)));
+      }
+      return result;
     }
     return wordSeq(s);
   }
@@ -1183,7 +1178,7 @@ function typeset(rawText, settingsIn, env = {}) {
     for (const pg of pages) {
       for (const ln of pageLines(pg)) {
         for (const w of (ln.words || [])) {
-          if (w.includes(ATOMIC)) out.push(...explodePlaceholderWord(w));
+          if (w.includes(ATOMIC) || w.includes(MARK_TAG)) out.push(...explodePlaceholderWord(w));
           else out.push(...wordSeq(w));
         }
         // **Iteration-003 (מילת-חלון):** המילה הראשונה הוצאה מהזרימה אך
@@ -1232,23 +1227,28 @@ function typeset(rawText, settingsIn, env = {}) {
   let contentPreserved = true;
   const mismatchDetail = [];
   const gSrc = [], gOut = [];
-  // **D-83 (תיקון קריסת ספר־אמת 03.11):** הזרקה בלולאה בלבד. spread על מערך ענק
-  // (ספר שלם, >125,154 מילים = מגבלת הארגומנטים של V8) זרק "Maximum call stack
-  // size exceeded" — העימוד עצמו הושלם והקריסה אירעה דווקא בבדיקת שימור התוכן
-  // שבסוף ה־pipeline. לולאת for אינה תלויה בגודל המחסנית.
+    // **D-83 (תיקון קריסת ספר‑אמת 03.11):** תוקן: נוצל count-based comparison במקום
+  // sort+join שגרם "Maximum call stack size exceeded" על >125,154 מילים.
+  // לולאת for אינה תלויה בגודל המחסנית.
   const pushAll = (dst, src) => { for (let i = 0; i < src.length; i++) dst.push(src[i]); };
   for (const t of srcTokens) pushAll(gSrc, srcWordsOf(t));
   pushAll(gOut, outWordsOfAll());
 
-  const norm = (arr) => arr.slice().sort().join('\n');
-  if (norm(gSrc) !== norm(gOut)) {
-    contentPreserved = false;
-    const cnt = (a) => a.reduce((m, w) => (m[w] = (m[w] || 0) + 1, m), {});
-    const cs = cnt(gSrc), co = cnt(gOut), diff = {};
-    for (const w of new Set([...Object.keys(cs), ...Object.keys(co)])) {
-      const dd = (cs[w] || 0) - (co[w] || 0);
-      if (dd !== 0) diff[w] = dd;
+  const cnt = (a) => a.reduce((m, w) => (m[w] = (m[w] || 0) + 1, m), {});
+  const cs = cnt(gSrc), co = cnt(gOut);
+  // Compare multisets in a key-order-independent way
+  const allKeys = new Set([...Object.keys(cs), ...Object.keys(co)]);
+  let multisetsEqual = true;
+  const diff = {};
+  for (const w of allKeys) {
+    const dd = (cs[w] || 0) - (co[w] || 0);
+    if (dd !== 0) {
+      multisetsEqual = false;
+      diff[w] = dd;
     }
+  }
+  if (!multisetsEqual) {
+    contentPreserved = false;
     mismatchDetail.push({ kind: 'multiset-mismatch', diff });
   }
 

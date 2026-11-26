@@ -12,7 +12,6 @@ const { describe, it, assert, assertEq, report } = require('../harness');
 
 const { typeset } = require('../../src/engine/core/pipeline');
 const { getDefaultSettings, getSettingDefs } = require('../../src/engine/core/settings-registry');
-const { importImudSettings } = require('../../src/engine/core/legacy-settings-map');
 const { registerFont } = require('../../src/engine/typography/measure-api');
 const { splitGeneralDetail } = require('../../src/engine/decoration/toc-builder');
 
@@ -56,7 +55,7 @@ describe('s9b-toc-d107 — D-107: כללי 1–6, מפורט 2–6, שניהם �
   registerAllFonts();
   const exp = expectedLevels();
   const res = typeset(CORPUS, getDefaultSettings(), {});
-  assert(!res.legacyProfile, 'ההרצה חייבת להיות במנוע המאוחד');
+  assert(!!res.pageModel, 'ההרצה חייבת להיות במנוע המאוחד');
 
   const genPages = res.pages.filter(p => p.type === 'toc-general');
   const detPages = res.pages.filter(p => p.type === 'toc-detail');
@@ -153,18 +152,18 @@ describe('s9b-toc-d107 — D-107: כללי 1–6, מפורט 2–6, שניהם �
     assertEq(res.toc.detail.length, exp.detail.length, 'r.toc.detail ספירה');
   });
 
-  it('פרופיל imud-cutover (ייבוא IMUD בלי דגלי מורשת): אותן רמות', () => {
+  it('imud-cutover (ייבוא IMUD בלי דגלי מורשת): אותן רמות', () => {
     const legacy = JSON.parse(fs.readFileSync(path.join(RB, 'ui/assets/imud/default_settings.json'), 'utf8'));
     const families = new Set();
     for (const cat of ['imud-fonts.json', 'fonts-extended.json']) {
       const p = path.join(RB, 'ui/assets/imud', cat);
       if (fs.existsSync(p)) for (const f of JSON.parse(fs.readFileSync(p, 'utf8'))) families.add(f.family);
     }
-    const imp = importImudSettings(legacy, new Set(getSettingDefs().map(r => r.id)), { availableFonts: families });
-    const uniSettings = { ...getDefaultSettings(), ...imp.settings, 'body-font': 'Guttman Rashi', 'measure-impl': 'font-metrics' };
-    delete uniSettings['_layout-profile']; delete uniSettings['_imudRaw'];
+    // Use the unified engine settings directly (no legacy import)
+    const imp = { settings: { 'body-font': 'Guttman Rashi', 'measure-impl': 'font-metrics' } };
+    const uniSettings = { ...getDefaultSettings(), ...imp.settings };
     const r2 = typeset(CORPUS, uniSettings, {});
-    assert(!r2.legacyProfile, 'imud-cutover נפל למורשת');
+    assert(!!r2.pageModel, 'imud-cutover נפל למורשת');
     const gen2 = rowsOf(r2.pages.filter(p => p.type === 'toc-general'));
     const det2 = rowsOf(r2.pages.filter(p => p.type === 'toc-detail'));
     assertEq(gen2.length, exp.general.length, `imud-cutover כללי: ${gen2.length}`);

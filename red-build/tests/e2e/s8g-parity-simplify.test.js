@@ -112,16 +112,14 @@ describe('S8G-1 מלאי קוד — סיווג פונקציות המודולים
     }
   });
 
-  it('geometry-projector הוא facade מתועד ל-materialize (אין מנוע שני); legacy-projector — מורשת מפורשת עד שלב 9', () => {
+  it('geometry-projector הוא facade מתועד ל-materialize (אין מנוע שני); legacy-projector נמחק', () => {
     const gp = fs.readFileSync(path.join(REPO, 'src/engine/output/geometry-projector.js'), 'utf8');
     assert(gp.includes('facade'), 'geometry-projector מוגדר כ-facade');
     assert(gp.includes('materialize'), 'מעביר ל-materialize היחיד');
-    const lp = fs.readFileSync(path.join(REPO, 'src/engine/output/legacy-projector.js'), 'utf8');
-    assert(/legacy|מורשת/.test(lp), 'legacy-projector מסומן מורשת');
-    // צרכניות: מי משתמש בכל אחד
+    // legacy-projector נמחק — אין נתיב מורשת
     const exportApi = fs.readFileSync(path.join(REPO, 'src/engine/output/export-api.js'), 'utf8');
     assert(exportApi.includes('exportPdfFromModel'), 'נתיב PDF מהמודל קיים');
-    assert(!exportApi.includes("require('./legacy-projector')") || /legacyProfile/.test(exportApi), 'legacy-projector רק בנתיב המורשת המפורש');
+    assert(!exportApi.includes("require('./legacy-projector')"), 'legacy-projector נמחק — אין require');
   });
 
   it('export-api: שני נתיבי ייצוא מתועדים — מהמודל (unified) ומהתוצאה (legacy עד שלב 9); אין נתיב שלישי', () => {

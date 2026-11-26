@@ -15,16 +15,12 @@ const { describe, it, assert, assertEq, report } = require('../harness');
 
 const { typeset } = require('../../src/engine/core/pipeline');
 const { getDefaultSettings } = require('../../src/engine/core/settings-registry');
-const { importImudSettings } = require('../../src/engine/core/legacy-settings-map');
 const { registerFont } = require('../../src/engine/typography/measure-api');
 const {
   toBareGematria, toHebrewNumber, formatPageNumber, tocPageLabel, assignNumbers,
 } = require('../../src/engine/decoration/folio');
 const { exportHtmlFromModel, exportPdfFromModel } = require('../../src/engine/output/export-api');
 const { markerFor } = require('../../src/engine/notes/markers');
-const {
-  toGematria, LineBreaker,
-} = require('../../src/engine/layout/legacy-imud-flow');
 
 // ---------- מטריצת D-108 (הוראת §ו.8) ----------
 const MATRIX = [1, 2, 15, 16, 21, 22, 99, 100, 101, 999, 1000, 1001, 5702];
@@ -36,18 +32,10 @@ const EXPECTED = {
 const FORBIDDEN = /[\u05F3\u05F4'"]/;
 const isBareFolio = (s) => !FORBIDDEN.test(String(s == null ? '' : s));
 
-// ---------- הגדרות הנתיב החי (כמו parity-signature: אותן הגדרות לשני המנועים) ----------
+// ---------- הגדרות הנתיב החי (מנוע מאוחד בלבד) ----------
 const RB = path.join(__dirname, '..', '..');
-function liveSettings() {
-  const legacy = JSON.parse(fs.readFileSync(path.join(RB, 'ui/assets/imud/default_settings.json'), 'utf8'));
-  const families = new Set();
-  for (const cat of ['imud-fonts.json', 'fonts-extended.json']) {
-    const p = path.join(RB, 'ui/assets/imud', cat);
-    if (fs.existsSync(p)) for (const f of JSON.parse(fs.readFileSync(p, 'utf8'))) families.add(f.family);
-  }
-  const { getSettingDefs } = require('../../src/engine/core/settings-registry');
-  const regKeys = new Set(getSettingDefs().map(r => r.id));
-  return importImudSettings(legacy, regKeys, { availableFonts: families }).settings;
+function unifiedSettings() {
+  return { ...getDefaultSettings(), 'measure-impl': 'font-metrics' };
 }
 function registerLiveFonts() {
   const FONTS = [
@@ -171,29 +159,32 @@ describe('D-108 typeset מלא — כל פוליו וכל תווית TOC חשו�
     assert(r.layoutHash.startsWith('89a0eb42'), `layoutHash קנוני נשמר (התקבל ${r.layoutHash.slice(0, 16)})`);
   });
 
-  it('legacy (פרופיל IMUD, הגדרות חיות): כל folioDisplay חשוף', () => {
+  it('unified (מנוע מאוחד, הגדרות חיות): כל folioDisplay חשוף', () => {
     registerLiveFonts();
-    const settings = { ...getDefaultSettings(), ...liveSettings(), 'measure-impl': 'font-metrics' };
+    const settings = { ...getDefaultSettings(), ...unifiedSettings(), 'measure-impl': 'font-metrics' };
     const r = typeset(CORPUS, settings, { noRecommendations: true, ...typesetEnvExtras() });
-    assert(r.legacyProfile === true, 'המנוע רץ כמורשת (בלי דגל unified)');
+    assert(!!r.pageModel, 'המנוע המאוחד פעיל');
     let folios = 0;
     for (const p of r.pages) {
       if (!p.folioDisplay) continue;
       folios++;
-      assert(isBareFolio(p.folioDisplay), `מורשת, עמוד ${p.index + 1}: פוליו "${p.folioDisplay}" חשוף (D-108)`);
+      assert(isBareFolio(p.folioDisplay), `מאוחד, עמוד ${p.index + 1}: פוליו "${p.folioDisplay}" חשוף (D-108)`);
     }
-    assert(folios >= 5, `יש פוליות לבדיקה במורשת (התקבלו ${folios})`);
-    // תוויות TOC של המורשת — r.folio מ-folioByToken (= folioDisplay/fallback):
+    assert(folios >= 5, `יש פוליות לבדיקה במאוחד (התקבלו ${folios})`);
+    // תוויות TOC — e.label מ-resolveTocTargets (tocPageLabel ⇒ formatPageNumber):
     let labels = 0;
     for (const p of r.pages) {
       if (!p.toc || !Array.isArray(p.toc.rows)) continue;
       for (const row of p.toc.rows) {
-        if (!row.folio) continue;
-        labels++;
-        assert(isBareFolio(row.folio), `מורשת, עמוד ${p.index + 1}: תווית TOC "${row.folio}" חשופה (D-108)`);
+        const entries = row.kind === 'group' ? row.items : [row];
+        for (const e of entries) {
+          if (!e.label) continue;
+          labels++;
+          assert(isBareFolio(e.label), `מאוחד, עמוד ${p.index + 1}: תווית TOC "${e.label}" חשופה (D-108)`);
+        }
       }
     }
-    assert(labels >= 3, `יש תוויות TOC לבדיקה במורשת (התקבלו ${labels})`);
+    assert(labels >= 3, `יש תוויות TOC לבדיקה במאוחד (התקבלו ${labels})`);
   });
 });
 

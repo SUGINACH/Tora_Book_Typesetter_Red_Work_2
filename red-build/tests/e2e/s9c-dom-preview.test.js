@@ -134,16 +134,14 @@ describe('s9c-dom-preview — התצוגה מה-PageModel בלבד (9c.3)', () =
     assertEq(pages.length, 0, 'אף עמוד לא רונדר מהמסלול הישן (אין נפילה)');
   });
 
-  it('פרופיל המורשת: הרנדרר הישן עדיין עובד (9c.4-marker — תחום להסרת המנוע)', () => {
+  it('פרופיל מאוחד: תצוגה עובדת ללא מודל legacy', () => {
     const S = getDefaultSettings();
     const r = typeset(DOC, S, {});
     const doc = makeDoc();
     const pv = buildPreviewTab(doc, {});
-    // סימון תוצאה כמורשת (מצב המעבר — האתחול החי עד 9c.4)
-    const serialized = serializeTypesetResult({ ...r, legacyProfile: true });
-    pv.setResult(serialized, S, {});
+    pv.setResult(serializeTypesetResult(r), S, { pageModel: r.pageModel, profile: 'unified' });
     const pages = pv.root.querySelectorAll('.preview-page');
-    assertEq(pages.length, r.pages.length, 'הרנדרר הישן מציג את כל העמודים (עד 9c.4)');
+    assertEq(pages.length, r.pages.length, 'המנוע המאוחד מציג את כל העמודים');
   });
 
   it('מקור preview-tab: הנתיב המאוחד לפני המורשת; renderPage מסומן 9c.4-marker', () => {
