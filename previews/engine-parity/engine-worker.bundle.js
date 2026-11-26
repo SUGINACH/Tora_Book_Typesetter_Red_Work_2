@@ -35987,6 +35987,106 @@ function escapePdfText(s) {
 function round2(v) { return Math.round(v * 100) / 100; }
 function pdfPrecise(v) { const n = Math.round(Number(v) * 1e6) / 1e6; return Object.is(n, -0) ? '0' : String(n); }
 
+/**
+ * Parse image bytes for direct PDF XObject embedding. JPEG is copied unchanged
+ * under DCTDecode. Opaque, non-interlaced 8-bit grayscale/RGB PNG preserves
+ * its zlib-compressed IDAT bytes and uses the PDF PNG predictor 15 decoder.
+ * Unsupported/transparent formats fail explicitly rather than disappearing.
+ */
+function parsePdfImageAsset(asset) {
+  const source = asset && asset.bytes;
+  if (!source || typeof source.length !== 'number' || source.length === 0) {
+    return { ok: false, code: 'empty-image-bytes' };
+  }
+  const bytes = Buffer.from(source.buffer || source, source.byteOffset || 0, source.byteLength || source.length);
+  const measured = asset.measured || {};
+  if (Number(measured.orientation || 1) !== 1) {
+    return { ok: false, code: 'jpeg-exif-orientation-unsupported', message: 'תמונות עם EXIF orientation שאינו 1 דורשות נרמול כיוון לפני הטמעה' };
+  }
+
+  // JPEG: locate a valid SOF frame header and retain the original DCT stream.
+  if (bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8) {
+    const sofMarkers = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
+    let offset = 2;
+    while (offset + 4 <= bytes.length) {
+      if (bytes[offset] !== 0xff) { offset++; continue; }
+      while (offset < bytes.length && bytes[offset] === 0xff) offset++;
+      if (offset >= bytes.length) break;
+      const marker = bytes[offset++];
+      if (marker === 0xd9 || marker === 0xda) break;
+      if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+      if (offset + 2 > bytes.length) break;
+      const segmentLength = bytes.readUInt16BE(offset);
+      if (segmentLength < 2 || offset + segmentLength > bytes.length) {
+        return { ok: false, code: 'jpeg-invalid-segment' };
+      }
+      if (sofMarkers.has(marker)) {
+        if (segmentLength < 8) return { ok: false, code: 'jpeg-invalid-frame' };
+        const bits = bytes[offset + 2];
+        const height = bytes.readUInt16BE(offset + 3);
+        const width = bytes.readUInt16BE(offset + 5);
+        const components = bytes[offset + 7];
+        if (bits !== 8 || !width || !height || (components !== 1 && components !== 3)) {
+          return { ok: false, code: 'jpeg-color-model-unsupported', message: 'PDF תומך כאן ב-JPEG של 8-bit grayscale או RGB בלבד' };
+        }
+        return {
+          ok: true, format: 'jpeg', width, height,
+          colorSpace: components === 1 ? '/DeviceGray' : '/DeviceRGB',
+          bitsPerComponent: 8, filter: '/DCTDecode', bytes
+        };
+      }
+      offset += segmentLength;
+    }
+    return { ok: false, code: 'jpeg-frame-not-found' };
+  }
+
+  // PNG: accept grayscale or RGB without alpha/interlacing. The IDAT zlib
+  // stream already contains PNG row-filter bytes, consumed by Predictor 15.
+  const pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  if (bytes.length >= 33 && pngSignature.every((value, index) => bytes[index] === value)) {
+    let offset = 8, width = 0, height = 0, bitDepth = 0, colorType = -1, interlace = -1;
+    const idat = [];
+    let sawHeader = false, sawEnd = false;
+    while (offset + 12 <= bytes.length) {
+      const length = bytes.readUInt32BE(offset);
+      if (length > bytes.length - offset - 12) return { ok: false, code: 'png-invalid-chunk-length' };
+      const type = bytes.toString('ascii', offset + 4, offset + 8);
+      const dataStart = offset + 8, dataEnd = dataStart + length;
+      if (type === 'IHDR') {
+        if (sawHeader || length !== 13) return { ok: false, code: 'png-invalid-ihdr' };
+        width = bytes.readUInt32BE(dataStart);
+        height = bytes.readUInt32BE(dataStart + 4);
+        bitDepth = bytes[dataStart + 8];
+        colorType = bytes[dataStart + 9];
+        const compression = bytes[dataStart + 10];
+        const filter = bytes[dataStart + 11];
+        interlace = bytes[dataStart + 12];
+        if (!width || !height || compression !== 0 || filter !== 0) return { ok: false, code: 'png-invalid-header' };
+        sawHeader = true;
+      } else if (type === 'IDAT') {
+        if (!sawHeader || sawEnd) return { ok: false, code: 'png-invalid-idat-order' };
+        idat.push(bytes.subarray(dataStart, dataEnd));
+      } else if (type === 'IEND') {
+        sawEnd = true;
+        break;
+      }
+      offset = dataEnd + 4; // skip CRC
+    }
+    if (!sawHeader || !sawEnd || !idat.length) return { ok: false, code: 'png-incomplete-stream' };
+    if (interlace !== 0 || bitDepth !== 8 || (colorType !== 0 && colorType !== 2)) {
+      return { ok: false, code: 'png-color-model-unsupported', message: 'PDF תומך כאן ב-PNG אטום, לא משולב, grayscale או RGB, בעומק 8-bit בלבד' };
+    }
+    return {
+      ok: true, format: 'png', width, height,
+      colorSpace: colorType === 0 ? '/DeviceGray' : '/DeviceRGB',
+      bitsPerComponent: bitDepth, filter: '/FlateDecode',
+      decodeParms: `/DecodeParms << /Predictor 15 /Colors ${colorType === 0 ? 1 : 3} /BitsPerComponent 8 /Columns ${width} >>`,
+      bytes: Buffer.concat(idat)
+    };
+  }
+  return { ok: false, code: 'image-format-unsupported', message: 'הטמעת PDF תומכת כרגע ב-JPEG וב-PNG אטום grayscale/RGB בלבד' };
+}
+
 /** **כותרת סימנייה עברית:** מחרוזת טקסט PDF לא־לטינית ⇒ UTF-16BE עם BOM
  * כמחרוזת הקסדצימלית (חוזה PDF 1.4 §3.8.4) — קוראים מציגים עברית תקינה. */
 function pdfTitleHex(s) {
@@ -36435,6 +36535,33 @@ function writePdf(opts) {
   }
   /** מפת key → {font, name} לציור מיידי ב-emitWord (נתיב יחיד). */
   const extraByKeys = new Map(extraFonts.map((ef, i) => [ef.key, { font: ef.font, name: `F${7 + i}` }]));
+
+  // תמונות הן משאבי PDF נפרדים עם זהות תוכן יציבה. סדר המזהים נקבע לפי
+  // assetId, ולא לפי סדר הגעת הבתים, לשמירת דטרמיניזם בייצוא כפול.
+  const imageByAssetId = new Map();
+  const imageObjects = [];
+  const imageAssets = [...(opts.imageAssets || [])]
+    .filter(item => item && item.assetId != null)
+    .slice()
+    .sort((a, b) => String(a.assetId).localeCompare(String(b.assetId)));
+  for (const item of imageAssets) {
+    const key = String(item.assetId);
+    if (imageByAssetId.has(key)) continue;
+    const parsed = parsePdfImageAsset(item);
+    if (!parsed.ok) {
+      throw new Error('pdf-image-unsupported:' + key + ':' + parsed.code +
+        (parsed.message ? ':' + parsed.message : ''));
+    }
+    const record = {
+      assetId: key,
+      name: `Im${imageObjects.length + 1}`,
+      objectId: pdf.reserve(),
+      ...parsed
+    };
+    imageByAssetId.set(key, record);
+    imageObjects.push(record);
+  }
+
   const pageIds = pages.map(() => pdf.reserve());
   const contentIds = pages.map(() => pdf.reserve());
   const linkIds = new Map(); // pageIndex → [ids]
@@ -36570,6 +36697,21 @@ function writePdf(opts) {
     };
     if (pg.spanning) emitLines(pg.spanning.lines);
     emitLines(pg.lines);
+    // תמונות מוצבות רק לפי x/y/w/h הסופיים מה-PageModel. אין מדידה,
+    // fit או חישוב מיקום חדש בכותב; אותו XObject יכול לשרת כמה עמודים.
+    for (const image of (pg.images || [])) {
+      const record = image && imageByAssetId.get(String(image.assetId));
+      if (!record) throw new Error('pdf-image-resource-missing:' + (image && image.assetId));
+      const values = [image.x, image.y, image.w, image.h].map(Number);
+      if (!values.every(Number.isFinite) || values[2] <= 0 || values[3] <= 0) {
+        throw new Error('pdf-image-geometry-invalid:' + record.assetId);
+      }
+      const x = values[0] * PX_TO_PT;
+      const y = hPt - (values[1] + values[3]) * PX_TO_PT;
+      const width = values[2] * PX_TO_PT;
+      const height = values[3] * PX_TO_PT;
+      ops.push(`q ${pdfPrecise(width)} 0 0 ${pdfPrecise(height)} ${pdfPrecise(x)} ${pdfPrecise(y)} cm /${record.name} Do Q`);
+    }
     // מרזב הערות — סמן + מילות ההערה (מימין לשמאל); בסיס מהמקרן
     for (const fn of pg.footnotes) {
       if (fn.words && fn.words.length) {
@@ -36842,6 +36984,17 @@ function writePdf(opts) {
     pdf.put(ef.ids.toUnicode, `<< /Length ${toUniE.length} >>\nstream\n${toUniE}\nendstream`);
   });
 
+  // ---- תמונות: Image XObjects + stream bytes ----
+  for (const image of imageObjects) {
+    const decodeParms = image.decodeParms ? ' ' + image.decodeParms : '';
+    const dictionary = `<< /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace ${image.colorSpace} /BitsPerComponent ${image.bitsPerComponent} /Filter ${image.filter}${decodeParms} /Length ${image.bytes.length} >>`;
+    pdf.put(image.objectId, Buffer.concat([
+      Buffer.from(dictionary + '\\nstream\\n', 'latin1'),
+      image.bytes,
+      Buffer.from('\\nendstream', 'latin1')
+    ]));
+  }
+
   // ---- עמודים ----
   // **S6.0 (R5-M6 — תיבות עמוד חוקיות):** TrimBox = גודל העמוד; BleedBox
   // בתוך ה-MediaBox (בעבר ה-BleedBox חרג **מחוץ** ל-MediaBox — הפרה של
@@ -36871,7 +37024,17 @@ function writePdf(opts) {
     // **S73:** הגופנים הדינמיים באותם משאבים לכל עמוד — סדר קבוע (דטרמיניזם)
     extraFonts.forEach((ef, i) => fontPairs.push([`/F${7 + i}`, ef.ids.type0]));
     const fontRes = `/Font << ${fontPairs.map(([n, id]) => `${n} ${id} 0 R`).join(' ')} >>`;
-    pdf.put(pageIds[i], `<< /Type /Page /Parent ${ID.pages} 0 R /MediaBox ${mediabox} /TrimBox ${trimbox} /BleedBox ${bleedbox} /Resources << ${fontRes} >> /Contents ${contentIds[i]} 0 R${annotsStr} >>`);
+    const pageImageRefs = [];
+    const seenPageImages = new Set();
+    for (const image of (pg.images || [])) {
+      const record = image && imageByAssetId.get(String(image.assetId));
+      if (!record) throw new Error('pdf-image-resource-missing:' + (image && image.assetId));
+      if (seenPageImages.has(record.assetId)) continue;
+      seenPageImages.add(record.assetId);
+      pageImageRefs.push(`/${record.name} ${record.objectId} 0 R`);
+    }
+    const xObjectRes = pageImageRefs.length ? ` /XObject << ${pageImageRefs.join(' ')} >>` : '';
+    pdf.put(pageIds[i], `<< /Type /Page /Parent ${ID.pages} 0 R /MediaBox ${mediabox} /TrimBox ${trimbox} /BleedBox ${bleedbox} /Resources << ${fontRes}${xObjectRes} >> /Contents ${contentIds[i]} 0 R${annotsStr} >>`);
     pdf.put(contentIds[i], Buffer.concat([
       Buffer.from(`<< /Length ${contents[i].length} >>\nstream\n`, 'latin1'),
       contents[i],
