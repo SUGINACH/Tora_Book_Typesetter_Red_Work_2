@@ -5797,7 +5797,7 @@ function _itemCacheKey(item, style, ctx) {
   const raw = (v) => JSON.stringify(v == null ? '' : String(v));
   const env = environmentFingerprint();
   const sItem = [
-    'item-key-v3',
+    'item-key-v4',
     MEASURE_ENGINE_VERSION,
     (ctx && ctx.environmentFingerprint) || '',
     raw(it.kind),
@@ -5807,6 +5807,7 @@ function _itemCacheKey(item, style, ctx) {
     _canonicalStringify(style || null),
     raw(ctx && ctx.direction),
     raw(ctx && ctx.language),
+    raw(ctx && ctx.settings && ctx.settings['_marks-advance']),
     _canonicalStringifyStable((ctx && ctx.constraints) || null),
     raw(ctx && ctx.constraintsKey),
     raw(ctx && ctx.assetId),
@@ -5897,10 +5898,15 @@ function measureItem(item, style, ctx) {
       let advance = 0;
       let ascentEmMax = 0, descentEmMax = 0;
       const diagnostics = [];
+      // Preserve the line-layout combining-mark policy in canonical font metrics.
+      const measureSettings = { 'body-font-size-pt': sizePt };
+      if (ctx && ctx.settings && ctx.settings['_marks-advance'] === 'combined') {
+        measureSettings['_marks-advance'] = 'combined';
+      }
       for (let ri = 0; ri < runs.length; ri++) {
         const run = runs[ri];
         const fontId = (style && style.fontIds && style.fontIds[ri]) || (style && style.fontIds && style.fontIds[0]) || null;
-        const api = fontId ? MeasureAPI.forFontId(fontId, { 'body-font-size-pt': sizePt }) : null;
+        const api = fontId ? MeasureAPI.forFontId(fontId, measureSettings) : null;
         if (api) {
           const w = api.measureTextWidth(run.text, sizePt, 0);
           segments.push({ fontId, text: run.text, advancePx: w, family: api.fontProfileName });
@@ -5913,7 +5919,7 @@ function measureItem(item, style, ctx) {
             defaultFamily: style && style.defaultFamily
           });
           if (res.ok) {
-            const api2 = MeasureAPI.forFontId(res.fontId, { 'body-font-size-pt': sizePt });
+            const api2 = MeasureAPI.forFontId(res.fontId, measureSettings);
             const w = api2.measureTextWidth(run.text, sizePt, 0);
             segments.push({ fontId: res.fontId, text: run.text, advancePx: w, family: res.record.face, fallbackUsed: res.fallbackUsed });
             ascentEmMax = Math.max(ascentEmMax, api2.ascentEm());
@@ -6151,7 +6157,9 @@ function clearItemMeasureCache() { _itemMeasureCache.clear(); }
 MeasureAPI.forFontId = function forFontId(fontId, settings) {
   const font = fontResolver.fontOf(fontId);
   if (!font) return null;
-  const key = String(fontId);
+  const sizeKey = settings && settings['body-font-size-pt'] != null ? String(settings['body-font-size-pt']) : '';
+  const marksKey = settings && settings['_marks-advance'] === 'combined' ? 'mkC' : 'mkH';
+  const key = `id:${String(fontId)}|${sizeKey}|${marksKey}`;
   if (!_familyApiCache.has(key)) {
     const api = new MeasureAPI({ ...(settings || {}), 'body-font': fontResolverAliasOf(fontId) || key }, 'font-metrics');
     // קשירה ישירה לפרנסר של הזהות — לא דרך רישום שם (הזהות היא המקור)
