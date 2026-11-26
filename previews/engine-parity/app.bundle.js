@@ -20603,7 +20603,167 @@ function appendLineSep(container, doc, isFirstLogicalLine) {
   }
 }
 
-function renderModelLine(ml, doc, relX, relY) {
+function visualRunOrder(entries) {
+  const out = entries.slice();
+  const levels = out.map(entry => entry.run && entry.run.shaping
+    ? entry.run.shaping.bidiLevel : 0);
+  const odd = levels.filter(level => level % 2 === 1);
+  if (!odd.length) return out;
+  const maxLevel = Math.max(...levels);
+  const minOdd = Math.min(...odd);
+  for (let level = maxLevel; level >= minOdd; level--) {
+    let start = 0;
+    while (start < out.length) {
+      while (start < out.length && levels[start] < level) start++;
+      if (start >= out.length) break;
+      let end = start + 1;
+      while (end < out.length && levels[end] >= level) end++;
+      for (let left = start, right = end - 1; left < right; left++, right--) {
+        [out[left], out[right]] = [out[right], out[left]];
+        [levels[left], levels[right]] = [levels[right], levels[left]];
+      }
+      start = end;
+    }
+  }
+  return out;
+}
+
+function glyphOutlineSvgOf(wd, ml, doc) {
+  const typography = wd && wd.typography;
+  if (!typography || typography.contractVersion !== 'page-word-typography-v1' ||
+      !Array.isArray(typography.segments) || !typography.segments.length) {
+    return { svg: null, reason: 'word-typography-missing' };
+  }
+  if (typeof doc.createElementNS !== 'function') {
+    return { svg: null, reason: 'svg-namespace-api-unavailable' };
+  }
+  const sizePt = Number(wd.sizePt != null ? wd.sizePt : ml.sizePt);
+  if (!Number.isFinite(sizePt) || sizePt <= 0 || !Number.isFinite(wd.w) || wd.w < 0) {
+    return { svg: null, reason: 'word-font-size-or-width-invalid' };
+  }
+  const sizePx = sizePt * PT_TO_PX;
+  const entries = [];
+  const naturalAdvanceBySegment = new Map();
+  let totalGlyphs = 0;
+  for (const segment of typography.segments) {
+    if (!segment || !Array.isArray(segment.shapedRuns) || !segment.shapedRuns.length ||
+        !Number.isFinite(segment.advancePx) || segment.advancePx < 0) {
+      return { svg: null, reason: 'word-shaping-segment-invalid' };
+    }
+    let naturalAdvancePx = 0;
+    for (const run of segment.shapedRuns) {
+      if (!run || run.kind !== 'ShapedRun' || run.contractVersion !== 'shaped-run-v1' ||
+          !run.font || !Number.isSafeInteger(run.font.unitsPerEm) || run.font.unitsPerEm <= 0 ||
+          !Array.isArray(run.glyphs) || !run.glyphs.length) {
+        return { svg: null, reason: 'shaped-run-invalid' };
+      }
+      let glyphAdvance = 0;
+      for (const glyph of run.glyphs) {
+        if (!glyph || typeof glyph.outlinePath !== 'string' ||
+            !Number.isFinite(glyph.xAdvance) || !Number.isFinite(glyph.xOffset) ||
+            !Number.isFinite(glyph.yOffset)) {
+          return { svg: null, reason: 'native-glyph-outline-or-position-missing' };
+        }
+        glyphAdvance += glyph.xAdvance;
+      }
+      if (!Number.isFinite(glyphAdvance) || glyphAdvance < 0 ||
+          !run.advance || !Number.isFinite(run.advance.x) ||
+          Math.abs(glyphAdvance - run.advance.x) > 1e-7) {
+        return { svg: null, reason: 'shaped-glyph-advance-invalid' };
+      }
+      naturalAdvancePx += glyphAdvance / run.font.unitsPerEm * sizePx;
+      entries.push({ run, segment });
+      totalGlyphs += run.glyphs.length;
+    }
+    naturalAdvanceBySegment.set(segment, naturalAdvancePx);
+  }
+  if (!totalGlyphs || totalGlyphs !== typography.glyphCount) {
+    return { svg: null, reason: 'word-glyph-count-mismatch' };
+  }
+
+  const segmentScale = new Map();
+  for (const segment of typography.segments) {
+    const natural = naturalAdvanceBySegment.get(segment);
+    if (natural <= 0) {
+      if (segment.advancePx > 0) return { svg: null, reason: 'zero-natural-advance' };
+      segmentScale.set(segment, 1);
+    } else {
+      segmentScale.set(segment, segment.advancePx / natural);
+    }
+  }
+  const visual = visualRunOrder(entries);
+  const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  const width = Math.max(0.01, Number(wd.w) || 0.01);
+  const height = Math.max(0.01, Number(ml.h) || 0.01);
+  const baselineAbs = Number.isFinite(ml.baselineY)
+    ? ml.baselineY
+    : ml.y + (Number.isFinite(ml.ascentPx) ? ml.ascentPx : height * 0.8);
+  const baseline = baselineAbs - ml.y;
+  svg.setAttribute('viewBox', `0 0 ${px2(width)} ${px2(height)}`);
+  svg.setAttribute('width', String(px2(width)));
+  svg.setAttribute('height', String(px2(height)));
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  svg.style.position = 'absolute';
+  svg.style.left = '0';
+  svg.style.top = '0';
+  svg.style.width = `${px2(width)}px`;
+  svg.style.height = `${px2(height)}px`;
+  svg.style.overflow = 'visible';
+
+  let penX = 0;
+  for (const entry of visual) {
+    const run = entry.run;
+    const scaleY = sizePx / run.font.unitsPerEm;
+    const scaleX = scaleY * segmentScale.get(entry.segment);
+    for (const glyph of run.glyphs) {
+      if (glyph.outlinePath.length) {
+        const path = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', glyph.outlinePath);
+        path.setAttribute('transform',
+          `translate(${px2(penX + glyph.xOffset * scaleX)} ${px2(baseline - glyph.yOffset * scaleY)}) scale(${scaleX} ${-scaleY})`);
+        path.setAttribute('fill', 'currentColor');
+        svg.appendChild(path);
+      }
+      penX += glyph.xAdvance * scaleX;
+    }
+  }
+  if (Math.abs(penX - width) > Math.max(1.25, width * 0.015)) {
+    return { svg: null, reason: 'positioned-glyph-advance-does-not-match-word-width' };
+  }
+  return { svg, glyphCount: totalGlyphs };
+}
+
+function appendGlyphOutlineWord(ml, wd, span, doc) {
+  const rendered = glyphOutlineSvgOf(wd, ml, doc);
+  if (!rendered.svg) {
+    span.dataset.glyphOutlineFallback = rendered.reason || 'native-outline-unavailable';
+    return false;
+  }
+  span.className += ' w--glyph-outline';
+  span.style.width = `${px2(wd.w)}px`;
+  span.style.height = `${px2(ml.h)}px`;
+  span.style.display = 'block';
+  span.setAttribute('role', 'text');
+  span.setAttribute('aria-label', scrubPUAText(wd.text));
+  span.dataset.glyphOutline = 'harfbuzz';
+  span.dataset.glyphCount = String(rendered.glyphCount);
+  span.appendChild(rendered.svg);
+  // Preserve searchable/copyable Unicode text without letting the browser shape it visibly.
+  const accessibleText = doc.createElement('span');
+  accessibleText.style.position = 'absolute';
+  accessibleText.style.width = '1px';
+  accessibleText.style.height = '1px';
+  accessibleText.style.overflow = 'hidden';
+  accessibleText.style.clipPath = 'inset(50%)';
+  accessibleText.style.whiteSpace = 'nowrap';
+  accessibleText.setAttribute('aria-hidden', 'true');
+  accessibleText.textContent = scrubPUAText(wd.text);
+  span.appendChild(accessibleText);
+  return true;
+}
+
+function renderModelLine(ml, doc, relX, relY, diagnostics) {
   const el = doc.createElement('div');
   el.className = 'line'
     + (ml.isLast ? ' line--last' : '')
@@ -20659,6 +20819,18 @@ function renderModelLine(ml, doc, relX, relY) {
     if (fam) span.style.fontFamily = fam;
     const col = nonBlack(wd.color);
     if (col) span.style.color = col;
+    if (wd.typography) {
+      if (appendGlyphOutlineWord(ml, wd, span, doc)) {
+        el.appendChild(span);
+        continue;
+      }
+      if (Array.isArray(diagnostics)) diagnostics.push({
+        kind: 'pmr-glyph-outline-fallback',
+        lineId: ml.id || null,
+        text: wd.text,
+        reason: span.dataset.glyphOutlineFallback || 'native-outline-unavailable'
+      });
+    }
     span.textContent = scrubPUAText(wd.text);
     el.appendChild(span);
   }
@@ -20756,13 +20928,13 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     wrap.style.width = `${px2(mp.shaar.box.w)}px`;
     wrap.style.height = `${px2(mp.shaar.box.h)}px`;
     for (const ln of mp.lines.filter(l => l.area === 'structural')) {
-      wrap.appendChild(renderModelLine(ln, doc, mp.shaar.box.x, mp.shaar.box.y));
+      wrap.appendChild(renderModelLine(ln, doc, mp.shaar.box.x, mp.shaar.box.y, diags));
     }
     root.appendChild(wrap);
   } else if ((mp.lines || []).some(l => l.area === 'structural')) {
     // שורות מובנות בלי תיבה (TOC/כותרת הערות) — מוקרנות ישירות בקואורדינטות העמוד
     for (const ln of mp.lines.filter(l => l.area === 'structural')) {
-      root.appendChild(renderModelLine(ln, doc, 0, 0));
+      root.appendChild(renderModelLine(ln, doc, 0, 0, diags));
     }
   }
 
@@ -20804,7 +20976,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     for (const ln of mp.lines.filter(l => l.area === 'spanning')) {
       appendLineSep(band, doc, firstSpanningLine); // **RC-A1:** רווח בין שורות הפס
       firstSpanningLine = false;
-      band.appendChild(renderModelLine(ln, doc, mp.spanning.x, mp.spanning.y));
+      band.appendChild(renderModelLine(ln, doc, mp.spanning.x, mp.spanning.y, diags));
     }
     root.appendChild(band);
   }
@@ -20828,7 +21000,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
       // **RC-A1:** רווח בין שורות של אותו פס (אותו token) — לא בין פסים שונים
       appendLineSep(mbWrap, doc, prevMidBandToken == null || ln.sourceTokenId !== prevMidBandToken);
       prevMidBandToken = ln.sourceTokenId != null ? ln.sourceTokenId : null;
-      mbWrap.appendChild(renderModelLine(ln, doc, 0, 0));
+      mbWrap.appendChild(renderModelLine(ln, doc, 0, 0, diags));
     }
     root.appendChild(mbWrap);
   }
@@ -20872,7 +21044,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
       note.style.left = `${px2(ln.x)}px`;
       note.style.top = `${px2(ln.y)}px`;
       note.style.width = `${px2(ln.w)}px`;
-      note.appendChild(renderModelLine(ln, doc, ln.x, ln.y));
+      note.appendChild(renderModelLine(ln, doc, ln.x, ln.y, diags));
       enWrap.appendChild(note);
     }
     root.appendChild(enWrap);
@@ -20897,7 +21069,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     colEl.dataset.modelHeight = String(colHeight);
     colEl.dataset.modelBottom = String(colTops[ci] + colHeight);
     for (const ln of mp.lines.filter(l => l.area === 'column' && l.col === ci && l.projected !== false && l.midBand !== true)) {
-      colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci]));
+      colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci], diags));
     }
     colsWrap.appendChild(colEl);
   });
@@ -20960,7 +21132,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     for (const ln of own) {
       appendLineSep(el, doc, firstOwnLine);
       firstOwnLine = false;
-      el.appendChild(renderModelLine(ln, doc, sn.x, sn.yTop));
+      el.appendChild(renderModelLine(ln, doc, sn.x, sn.yTop, diags));
     }
     if (!own.length && sn.text) {
       // רשומה בלי שורות מוקרנות — דיאגנוסטיק גלוי; הטקסט אינו נעלם (§2.4)
@@ -20984,7 +21156,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
   for (const ln of marginLines) {
     if (claimed.has(ln.id)) continue;
     diags.push({ kind: 'pmr-margin-line-orphan', lineId: ln.id || null });
-    const el = renderModelLine(ln, doc, 0, 0);
+    const el = renderModelLine(ln, doc, 0, 0, diags);
     el.classList.add('pmr-orphan-margin');
     root.appendChild(el);
   }
@@ -25796,8 +25968,17 @@ function contentHashOf(model) {
     i: p.index,
     l: p.lines.map(l => {
       const text = (l.words || []).map(w => w.text).join('\u00A7');
-      // Keep the legacy canonical value exactly when no glyph sidecar is present.
-      return l.typography ? { text, typography: l.typography } : text;
+      // Keep the legacy canonical value exactly when neither line nor word
+      // glyph sidecars are present; shaped word placement is integrity-protected.
+      const wordTypography = (l.words || [])
+        .filter(word => word && word.typography)
+        .map(word => ({ text: word.text, typography: word.typography }));
+      if (!l.typography && !wordTypography.length) return text;
+      return {
+        text,
+        ...(l.typography ? { typography: l.typography } : {}),
+        ...(wordTypography.length ? { wordTypography } : {})
+      };
     }),
     fn: p.footnotes.map(n => `${n.marker || ''}§${n.text}`),
     sn: p.sideNotes.map(s => s.text)
