@@ -27848,11 +27848,12 @@ function projectStampedRows(n, x, w, yTop, opts) {
     const y = yTop + pad + li * lineH;
     const baselineY = y + half + ascent * sizePx;
     const wds = [];
-    // RTL — מימין לשמאל; מרוכז: רוחבי החותמת כוללים רווח עוקב לכל מילה — הרווח
-    // שאחרי המילה השמאלית ביותר מנפח את התיבה משמאל; האמת ממורכזת על הדיו:
-    // עוגן ההתחלה מוסט שמאלה בחצי אותו רווח (נמדד: מרכז הדיו יורד מ-712.9 ל-711.6px
-    // — מרכז עמודת-השוליים בייחוס, סטייה 0.00).
-    let cursor = centerAlign ? gx + (gw + sumW + gaps * gapW) / 2 - gapW / 2 : gx + gw;
+    // RTL — מימין לשמאל. wordW מכיל גליפים בלבד ו-spaceW מתווסף כאן
+    // בדיוק בין זוגות מילים (n−1 רווחים); לכן מרכז התיבה הוא מרכז סכום
+    // הגליפים והרווחים בפועל. אין להזיז בחצי רווח — ההסטה הישנה נשענה על
+    // חוזה קודם שבו כל wordW כלל רווח עוקב, שכבר אינו נכון מאז תיקון רוחבי
+    // המילים ב-materialize.
+    let cursor = centerAlign ? gx + (gw + sumW + gaps * gapW) / 2 : gx + gw;
     for (const t of live) {
       cursor -= t.w;
       const wd = {
