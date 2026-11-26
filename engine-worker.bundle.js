@@ -5802,12 +5802,13 @@ function _itemCacheKey(item, style, ctx) {
   const raw = (v) => JSON.stringify(v == null ? '' : String(v));
   const env = environmentFingerprint();
   const sItem = [
-    'item-key-v4',
+    'item-key-v5',
     MEASURE_ENGINE_VERSION,
     (ctx && ctx.environmentFingerprint) || '',
     raw(it.kind),
     raw(it.id),
     _canonicalStringify(it.payload !== undefined ? it.payload : it),
+    _canonicalStringify(it.shapingSlices || null),
     _canonicalStringify(it.constraints || null),
     _canonicalStringify(style || null),
     raw(ctx && ctx.direction),
@@ -5874,6 +5875,108 @@ function _sharedMeasureApi(impl, family, settingsSizePt) {
   return api;
 }
 
+/**
+ * Measure a pre-shaped TextItem from canonical HarfBuzz advances. This remains
+ * the single MeasureAPI boundary; there is no second line-width service.
+ * Unresolved visible text is rejected; only bidi controls may have zero advance.
+ */
+function measureShapedTextItem(item, style, ctx, sizePt, lineHeight, dir, lang) {
+  const slices = item.shapingSlices;
+  if (!slices || slices.contractVersion !== 'paragraph-shaped-slices-set-v1' ||
+      !Array.isArray(slices.slices) || !Array.isArray(slices.shapedRuns) ||
+      !Array.isArray(slices.nonShapingRuns) || !Number.isSafeInteger(slices.glyphCount) ||
+      slices.glyphCount < 0) {
+    return { ok: false, code: 'invalid-shaping-slices', message: 'Canonical ShapedTextItem slices are missing or malformed' };
+  }
+  const actualGlyphCount = slices.shapedRuns.reduce((sum, run) =>
+    sum + (run && Array.isArray(run.glyphs) ? run.glyphs.length : -1000000), 0);
+  if (actualGlyphCount !== slices.glyphCount) {
+    return { ok: false, code: 'shaping-glyph-count-mismatch', message: 'Shaping slice glyphCount does not match its ShapedRun records' };
+  }
+  for (const slice of slices.slices) {
+    if (!slice || slice.contractVersion !== 'paragraph-shaped-slices-v1' ||
+        !slice.sourceRange || !Array.isArray(slice.pieces)) {
+      return { ok: false, code: 'invalid-shaping-slice', message: 'A paragraph shaping slice is malformed' };
+    }
+    let cursor = slice.sourceRange.start;
+    for (const piece of slice.pieces) {
+      if (!piece || !piece.sourceRange || piece.sourceRange.start !== cursor ||
+          !Number.isSafeInteger(piece.sourceRange.end) || piece.sourceRange.end <= cursor) {
+        return { ok: false, code: 'shaping-source-coverage-gap', message: 'Shaping pieces do not form a contiguous source partition' };
+      }
+      cursor = piece.sourceRange.end;
+    }
+    if (cursor !== slice.sourceRange.end) {
+      return { ok: false, code: 'shaping-source-coverage-gap', message: 'Shaping pieces do not cover the complete source slice' };
+    }
+  }
+  const sizePx = ptToPx(sizePt);
+  const segments = [];
+  const diagnostics = [];
+  let advance = 0;
+  let ascentEmMax = 0;
+  let descentEmMax = 0;
+  for (const run of slices.shapedRuns) {
+    if (!run || run.kind !== 'ShapedRun' || run.contractVersion !== 'shaped-run-v1' ||
+        !Array.isArray(run.glyphs) || !run.font || !run.font.fontId ||
+        !Number.isSafeInteger(run.font.unitsPerEm) || run.font.unitsPerEm <= 0 ||
+        !run.font.sourceHash) {
+      return { ok: false, code: 'invalid-shaped-run', message: 'A canonical ShapedRun has invalid font or glyph data' };
+    }
+    const resolved = fontResolver.resolveFontById(run.font.fontId);
+    if (!resolved.ok || !resolved.record || resolved.record.sourceHash !== run.font.sourceHash ||
+        resolved.record.unitsPerEm !== run.font.unitsPerEm) {
+      return { ok: false, code: 'shaped-font-identity-mismatch', message: 'ShapedRun font identity no longer matches the canonical FontResolver' };
+    }
+    const api = MeasureAPI.forFontId(run.font.fontId, {
+      'body-font-size-pt': sizePt,
+      ...(ctx && ctx.settings && ctx.settings['_marks-advance'] === 'combined' ? { '_marks-advance': 'combined' } : {})
+    });
+    if (!api) {
+      return { ok: false, code: 'shaped-font-measurement-unavailable', message: 'No canonical metric profile exists for ShapedRun font ' + run.font.fontId };
+    }
+    const glyphAdvance = run.glyphs.reduce((sum, glyph) => {
+      if (!glyph || !Number.isFinite(glyph.xAdvance)) return NaN;
+      return sum + glyph.xAdvance;
+    }, 0);
+    if (!Number.isFinite(glyphAdvance) || glyphAdvance < 0 ||
+        !run.advance || !Number.isFinite(run.advance.x) || Math.abs(glyphAdvance - run.advance.x) > 1e-7) {
+      return { ok: false, code: 'invalid-shaped-advance', message: 'ShapedRun glyph advances are invalid or inconsistent with the run advance' };
+    }
+    const advancePx = glyphAdvance / run.font.unitsPerEm * sizePx;
+    advance += advancePx;
+    ascentEmMax = Math.max(ascentEmMax, api.ascentEm());
+    descentEmMax = Math.max(descentEmMax, api.descentEm());
+    segments.push({
+      fontId: run.font.fontId, text: run.text, advancePx,
+      family: resolved.record.face, shaped: true, glyphCount: run.glyphs.length
+    });
+  }
+  for (const run of slices.nonShapingRuns) {
+    if (!run || run.kind !== 'bidi-control' || typeof run.text !== 'string') {
+      return { ok: false, code: 'unshaped-visible-text', message: 'Visible or unresolved text cannot bypass HarfBuzz measurement' };
+    }
+    segments.push({ fontId: null, text: run.text, advancePx: 0, bidiControl: true });
+  }
+  const advanceFactor = style && Number.isFinite(style.advanceFactor) && style.advanceFactor > 0
+    ? style.advanceFactor : 1;
+  if (advanceFactor !== 1) {
+    advance *= advanceFactor;
+    for (const segment of segments) segment.advancePx *= advanceFactor;
+  }
+  for (const run of slices.shapedRuns) {
+    for (const diagnostic of (run.diagnostics || [])) diagnostics.push(diagnostic);
+  }
+  return {
+    ok: true, kind: 'text', itemId: item.id, unit: 'px', direction: dir, language: lang,
+    advance, width: advance,
+    inkBounds: { left: 0, right: advance, top: -ascentEmMax * sizePx, bottom: descentEmMax * sizePx, source: 'advance-approximation' },
+    ascent: ascentEmMax * sizePx, descent: descentEmMax * sizePx, baseline: ascentEmMax * sizePx,
+    height: sizePx * lineHeight, segments,
+    breakOpportunities: _textBreaks((item.payload && item.payload.runs) || []),
+    shaping: { engine: 'harfbuzz', glyphCount: slices.glyphCount }, diagnostics
+  };
+}
 function measureItem(item, style, ctx) {
   if (!item || typeof item !== 'object') return { ok: false, code: 'no-item', message: 'measureItem: פריט חסר' };
   const sizePt = (style && Number.isFinite(style.sizePt)) ? style.sizePt : 12;
@@ -5887,7 +5990,9 @@ function measureItem(item, style, ctx) {
   let out;
   const kind = item.kind;
 
-  if (kind === 'text') {
+  if (kind === 'text' && item.shapingSlices) {
+    out = measureShapedTextItem(item, style, ctx, sizePt, lineHeight, dir, lang);
+  } else if (kind === 'text') {
     const runs = (item.payload && item.payload.runs) || [];
     if (!runs.length) {
       out = { ok: false, code: 'text-no-runs', message: `פריט טקסט ללא ריצות: ${item.id}` };
@@ -8736,7 +8841,10 @@ function boxItemFor(b, env) {
     const wordItemId = `${src.id}#w@${docStart}-${docEnd}`;
     const runsPayload = b.word.fragments.map((f) => ({ text: f.text, fontFamily: f.fontFamily || (style && style.family) || undefined }));
     const measureStyle = wordStyleFor(style, b.word.fragments);
-    const m = measuredVia({ id: wordItemId, kind: 'text', payload: { runs: runsPayload } }, measureStyle, env);
+    const m = measuredVia({
+      id: wordItemId, kind: 'text', payload: { runs: runsPayload },
+      ...(b.word.shapingSlices ? { shapingSlices: b.word.shapingSlices } : {})
+    }, measureStyle, env);
     const fragments = b.word.fragments.map((f, k) => ({
       itemId: wordItemId,
       runIndex: f.runIndex,
