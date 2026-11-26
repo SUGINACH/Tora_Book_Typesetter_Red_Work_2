@@ -752,8 +752,10 @@ function createEngineWorkerMain(post, options = {}) {
       // תיקון ביקורת PR #22: ההודעה מגיעה מהלקוח החי (requestTypeset.assets) ולא
       // רק תיאורטית; ה-resolver משוחזר במטמון לפי זהות ה-transport (בלי פענוח חוזר).
       const docAssets = _resolverForAssets(msg.assets);
+      const shapingEnabled = !!(msg.settings && msg.settings._typographyShaping
+        && msg.settings._typographyShaping.enabled === true);
       const typographyRuntime = getTypographyRuntime();
-      if (requireTypographyRuntime && (!typographyRuntime ||
+      if (shapingEnabled && requireTypographyRuntime && (!typographyRuntime ||
           !typographyRuntime.unicode || typographyRuntime.unicode.unicodeVersion !== '18.0.0' ||
           !typographyRuntime.harfbuzz || typeof typographyRuntime.harfbuzz.shape !== 'function' ||
           typeof typographyRuntime.createShaper !== 'function')) {
@@ -881,10 +883,12 @@ function bootWorkerContext(ctx, options = {}) {
       handler(message);
       return;
     }
-    // The actual browser Worker has location.href and must load the verified runtime.
-    // Minimal fakeSelf contexts used by the bundle's synchronous harness have no
-    // Worker location and exercise only the protocol/bootstrap behavior.
-    if (!isRealWorkerContext) {
+    // The pinned runtime is required only for an explicit, complete shaping
+    // policy. Ordinary legacy/unified requests keep their current shaping path
+    // and do not download or initialize a staged HarfBuzz runtime.
+    const shapingEnabled = !!(message.settings && message.settings._typographyShaping
+      && message.settings._typographyShaping.enabled === true);
+    if (!isRealWorkerContext || !shapingEnabled) {
       handler(message);
       return;
     }
@@ -8043,11 +8047,9 @@ function copyConfigValue(value, path) {
 }
 
 /**
- * Resolve the explicit document-level opt-in into the one canonical paragraph
- * shaper used by line-items. No default is inferred: language/features,
- * variation axes, fallback order, base direction and default font must all be
- * present in the supplied config. This prevents an apparently enabled engine
- * from quietly inventing typography policy.
+ * Resolve only an explicit document-level opt-in into the canonical shaper.
+ * No product defaults or fallback chains are inferred: all font, script,
+ * direction, variation and fallback policy must be supplied by the document.
  *
  * settings._typographyShaping:
  * {
@@ -8058,46 +8060,19 @@ function copyConfigValue(value, path) {
  *   featuresByScript: { Hebr: [{tag:"kern",value:1}, ...], ... },
  *   variationAxesByFontId: { "fnt-...": [] | [{tag:"wght",value:...}], ... },
  *   faceIndexByFontId?: { "fnt-...": 0, ... },
- *   fallbacksByFamily?: { "Family": ["Fallback A", ...], ... }
+ *   fallbacksByFamily?: { "Family": ["Fallback A", ...] }
  * }
  */
-function buildProductShapingPolicy(settings, env) {
-  const bodyFamily = settings && typeof settings['body-font'] === 'string'
-    ? settings['body-font'].trim() : '';
-  if (!bodyFamily) {
-    fail('production-shaping-default-font-unavailable',
-      'Automatic production shaping requires the product body-font setting');
-  }
-  const fallbacksByFamily = Object.create(null);
-  for (const [key, value] of Object.entries(settings || {})) {
-    if (!key.endsWith('-font') || typeof value !== 'string') continue;
-    const family = value.trim();
-    if (family && family !== bodyFamily) fallbacksByFamily[family] = [bodyFamily];
-  }
-  return {
-    enabled: true,
-    baseDirection: env && (env.direction === 'ltr' || env.direction === 'rtl')
-      ? env.direction : 'rtl',
-    defaultFamily: bodyFamily,
-    languageByScript: { Hebr: 'he', Latn: 'en' },
-    // Empty arrays preserve HarfBuzz's standard OpenType default feature set.
-    featuresByScript: { Hebr: [], Latn: [] },
-    // Static fonts use []; variable fonts use their actual fvar defaults.
-    variationAxesByFontId: Object.create(null),
-    fallbacksByFamily,
-    useNativeDefaults: true
-  };
-}
-
 function createProductionParagraphShaper(settings, env = {}) {
   const explicitConfig = settings && settings._typographyShaping;
   if (explicitConfig != null && !isRecord(explicitConfig)) {
     fail('invalid-typography-shaping-config', 'settings._typographyShaping must be a plain object');
   }
+  // Runtime availability alone never enables shaping. It is staged separately
+  // from production font normalization and line-edge BOT/EOT integration.
+  if (explicitConfig == null || explicitConfig.enabled !== true) return null;
+  const config = explicitConfig;
   const runtime = env.typographyRuntime;
-  if (explicitConfig == null && !runtime) return null;
-  if (explicitConfig && explicitConfig.enabled !== true) return null;
-  const config = explicitConfig || buildProductShapingPolicy(settings || {}, env);
 
   if (!runtime || !runtime.unicode || !runtime.harfbuzz ||
       typeof runtime.createShaper !== 'function') {
@@ -8145,7 +8120,7 @@ function createProductionParagraphShaper(settings, env = {}) {
       ? { fallbacksByFamily: copyConfigValue(config.fallbacksByFamily, 'fallbacksByFamily') }
       : {}),
     useNativeDefaults: config.useNativeDefaults === true,
-    useItemFontRole: !explicitConfig || config.useItemFontRole === true,
+    useItemFontRole: config.useItemFontRole === true,
     shaperOptions
   });
 
@@ -8156,7 +8131,7 @@ function createProductionParagraphShaper(settings, env = {}) {
     unicodeVersion: runtime.unicode.unicodeVersion,
     harfbuzzVersion: typeof runtime.harfbuzz.versionString === 'function'
       ? runtime.harfbuzz.versionString() : null,
-    policySource: explicitConfig ? 'explicit-settings' : 'product-defaults'
+    policySource: 'explicit-settings'
   });
 }
 module.exports = { createProductionParagraphShaper };
@@ -10237,9 +10212,10 @@ function buildContainerSequence(cont, ctx = {}, opts = {}) {
   const items = (cont.items || []).length ? cont.items : [];
   if (!items.length) return null;
 
-  // Experimental, opt-in paragraph shaping: shape every complete TextItem
-  // before splitTextItem creates word boxes. This sidecar never feeds
-  // MeasureAPI or changes a line-break width.
+  // Explicit paragraph shaping: shape every complete TextItem before
+  // splitTextItem creates word boxes. The resulting cluster slices are passed
+  // into measureItem; HarfBuzz xAdvance values determine measuredAdvance
+  // and therefore the actual line-break widths.
   const shapingPreview = [];
   if (ctx.paragraphShaper != null) {
     if (typeof ctx.paragraphShaper.shapeTextItem !== 'function') {
