@@ -18189,19 +18189,10 @@ function legacyTypeset(rawText, settings, env) {
   const h6Font = fontApiFor(settings['heading-6-font']) || null;
   const h7Font = fontApiFor(settings['heading-7-font']) || null;
   const headingApiFor = (lv) => (({ 0: h0Font, 1: h1Font, 2: h2Font, 3: h3Font, 4: h4Font, 5: h5Font, 6: h6Font, 7: h7Font })[lv]) || null;
-  // **S4.13 (גופן הערות-צד — כמו המקור):** הערות הצד מודפסות בגופן
-  // HadassahFriedlaender (מוכח מהייחוס: שורות השוליים sz=6 בפונט
-  // 'HadassahFriedlaender', לא GuttmanRashi). הגלישה שלהן חייבת למדוד
-  // במטריקות שלו — בגופן הגוף הרוחבים שונים והשבירה מתפצלת אחרת
-  // (נצפה: 'מכלל ימי השבת,' 47.2px בגוף מול 52.5px ב-Hadassah — הייחוס
-  // שובר אחרי 'מכלל ימי'). אם הגופן לא נרשם — נפילה שקופה לגופן הגוף.
-  let marginApi = api;
-  if (impl === 'font-metrics' && registeredMeasureFonts.has('Hadassah Friedlaender')) {
-    marginApi = new MeasureAPI(
-      { 'body-font': 'Hadassah Friedlaender', 'body-font-size-pt': SZ.marginNote, 'body-line-height': 1.2 },
-      'font-metrics'
-    );
-  }
+  // הערות-צד הן H7: אותו heading-7-font שמקרין ה-DOM. בעבר העימוד
+  // קיבע את מדידתן ל-Hadassah גם כאשר המשתמש שינה את גופן H7, ולכן
+  // שבירת השורות לא תאמה לרוחב הגופן שהוצג בפועל.
+  const marginApi = h7Font || api;
   const brk = new LineBreaker(api, cfg, windowApi, headingApi);
   const { meta, tokens } = tokenizeDoc(rawText, cfg);
 
@@ -37321,14 +37312,15 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
   // הוחלף בהגדרה עם ברירת מחדל שחורה — בקשת משתמש מפורשת). בלי ערך —
   // שחור (אפס אופרטורי rg).
   const mnColor = headingColorOf(7);
+  const mnFamily = settings['heading-7-font'] || 'Hadassah Friedlaender';
+  const mnFontKey = fontKeyOf(mnFamily);
   for (const mn of (pg.marginNotes || [])) {
     const x = mn.side === 'right' ? GEO.MARGIN_R_X : GEO.MARGIN_L_X;
     for (const l of mn.lines) {
       const baseY = baselineOf(l.y, GEO.MN_PITCH, SZ.marginNote, ascent, descent);
-      // **S5.1:** הערות-צד בגופן המקור (Hadassah Friedlaender — כמו המדידה
-      // במנוע וכמו ה-DOM); עד כאן צוירו בגוף הטקסט — התצוגה ≠ הייצוא בגופנים.
+      // PDF measurement and font identity follow the same H7 family as DOM.
       const words = placeWords(l.text.split(' '), mnApi, x, GEO.MARGIN_W, SZ.marginNote, 'center', baseY);
-      for (const w of words) { w.fontKey = 'margin'; if (mnColor) w.color = mnColor; }
+      for (const w of words) { if (mnFontKey) w.fontKey = mnFontKey; if (mnColor) w.color = mnColor; }
       out.lines.push({
         x, y: l.y, w: GEO.MARGIN_W, h: GEO.MN_PITCH, words, align: 'center',
         kind: 'margin-note', level: null, isLast: false, sizePt: SZ.marginNote,
@@ -37676,9 +37668,10 @@ function projectLegacyDocument(result, settings) {
   if (impl === 'font-metrics' && registeredFonts.has('Frank Ruhl Libre')) {
     fnMarkApi = new MeasureAPI({ 'body-font': 'Frank Ruhl Libre', 'body-font-size-pt': SZ.fnBody, 'body-line-height': 1.5 }, 'font-metrics');
   }
+  const mnFamily = settings['heading-7-font'] || 'Hadassah Friedlaender';
   let mnApi = null;
-  if (impl === 'font-metrics' && registeredFonts.has('Hadassah Friedlaender')) {
-    mnApi = new MeasureAPI({ 'body-font': 'Hadassah Friedlaender', 'body-font-size-pt': SZ.marginNote, 'body-line-height': 1.2 }, 'font-metrics');
+  if (impl === 'font-metrics' && registeredFonts.has(mnFamily)) {
+    mnApi = new MeasureAPI({ 'body-font': mnFamily, 'body-font-size-pt': SZ.marginNote, 'body-line-height': 1.2 }, 'font-metrics');
   }
   const fnOpts = { bodyKey: fnBodyKey, markApi: fnMarkApi };
   const pages = result.pages.map(p => projectLegacyPage(p, settings, api, winApi, headingApi, fnApi, mnApi, fnOpts));
