@@ -22789,6 +22789,12 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   function pushAnchoredMarginItem(rec) {
     const isBox = rec.itemKind === 'info-box';
     const kind = isBox ? NOTE_KINDS.INFO_BOX : NOTE_KINDS.SIDE_NOTE;
+    const noteFontName = isBox
+      ? (settings['s-note-body-font'] || settings['body-font'] || null)
+      : (settings['heading-7-font'] || settings['s-note-body-font'] || settings['body-font'] || null);
+    const noteMeasure = isBox
+      ? (typeof env.infoBoxMeasure === 'function' ? env.infoBoxMeasure : measureFn)
+      : (typeof env.heading7Measure === 'function' ? env.heading7Measure : measureFn);
     const chrome = isBox && rec.boxSpec
       ? { pad: rec.boxSpec.padPx || 0, border: rec.boxSpec.borderPx || 0 }
       : { pad: 0, border: 0 };
@@ -22800,9 +22806,12 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       continuationPolicy: 'anchor-cascade',
       ...(isBox ? { splitPolicy: 'atomic' } : {})
     });
-    stampNote(record, settings, measureFn, kind, {
+    // The one and only stamp is created here with the same role-specific font
+    // and measurement service later consumed by placeSideNotes and both renderers.
+    stampNote(record, settings, noteMeasure, kind, {
       ...(outerW != null ? { widthPx: Math.max(12, outerW - 2 * (chrome.pad + chrome.border)) } : {}),
-      ...(isBox && rec.boxSpec && Number(rec.boxSpec.sizePt) > 0 ? { sizePt: Number(rec.boxSpec.sizePt) } : {})
+      ...(isBox && rec.boxSpec && Number(rec.boxSpec.sizePt) > 0 ? { sizePt: Number(rec.boxSpec.sizePt) } : {}),
+      fontName: noteFontName || undefined
     });
     if (isBox) {
       record.boxChrome = chrome;
