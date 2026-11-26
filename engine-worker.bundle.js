@@ -8993,6 +8993,9 @@ __modules["src/engine/typography/shaped-run.js"] = function (require, module, ex
 
 const SHAPED_RUN_CONTRACT_VERSION = 'shaped-run-v1';
 const CLUSTER_LEVEL = 'monotone-characters';
+// Canonical runs are deeply frozen once at construction. Internal projection paths
+// can validate them in O(1) instead of recursively re-walking every glyph per word.
+const canonicalShapedRuns = new WeakSet();
 
 function fail(code, message) {
   const error = new TypeError(message);
@@ -9238,7 +9241,23 @@ function normalizeGlyphs(input, sourceRange, graphemes, direction) {
     }
   }
 
-  const starts = Array.from(new Set(glyphs.map((glyph) => glyph.cluster))).sort((a, b) => a - b);
+  // HarfBuzz MONOTONE_CHARACTERS guarantees cluster order follows the selected
+  // visual direction. Collect glyph indexes once, then reverse only the RTL
+  // cluster-key list to recover logical source order. The old implementation
+  // rescanned every glyph for every cluster (O(clusterCount × glyphCount)),
+  // which made long paragraphs effectively unusable.
+  const glyphIndicesByCluster = new Map();
+  for (let glyphIndex = 0; glyphIndex < glyphs.length; glyphIndex++) {
+    const cluster = glyphs[glyphIndex].cluster;
+    let indexes = glyphIndicesByCluster.get(cluster);
+    if (!indexes) {
+      indexes = [];
+      glyphIndicesByCluster.set(cluster, indexes);
+    }
+    indexes.push(glyphIndex);
+  }
+  const starts = Array.from(glyphIndicesByCluster.keys());
+  if (direction === 'rtl') starts.reverse();
   if (starts[0] !== sourceRange.start) {
     fail('incomplete-shaped-source-prefix', 'first shaped cluster must begin at the ShapedRun source start');
   }
@@ -9252,11 +9271,10 @@ function normalizeGlyphs(input, sourceRange, graphemes, direction) {
     if (graphemeStart == null || graphemeEnd == null || graphemeEnd <= graphemeStart) {
       fail('invalid-shaped-cluster-range', 'shaped cluster boundaries must align to canonical grapheme boundaries');
     }
-    const glyphIndices = [];
-    for (let glyphIndex = 0; glyphIndex < glyphs.length; glyphIndex++) {
-      if (glyphs[glyphIndex].cluster === start) glyphIndices.push(glyphIndex);
+    const glyphIndices = glyphIndicesByCluster.get(start);
+    if (!glyphIndices || !glyphIndices.length) {
+      fail('empty-shaped-cluster', 'every shaped cluster must reference at least one glyph');
     }
-    if (!glyphIndices.length) fail('empty-shaped-cluster', 'every shaped cluster must reference at least one glyph');
     return {
       start, end,
       text: graphemes.slice(graphemeStart, graphemeEnd).map((item) => item.text).join(''),
@@ -9323,7 +9341,7 @@ function createShapedRun(input) {
     };
   });
 
-  return deepFreeze({
+  const shapedRun = deepFreeze({
     kind: 'ShapedRun',
     contractVersion: SHAPED_RUN_CONTRACT_VERSION,
     id,
@@ -9337,6 +9355,40 @@ function createShapedRun(input) {
     advance,
     diagnostics
   });
+  canonicalShapedRuns.add(shapedRun);
+  return shapedRun;
+}
+
+/**
+ * First cluster whose logical source start is >= offset.
+ * ShapedRun.clusters is always stored in ascending source order.
+ */
+function lowerBoundClusterStart(clusters, offset) {
+  let low = 0;
+  let high = clusters.length;
+  while (low < high) {
+    const middle = low + ((high - low) >> 1);
+    if (clusters[middle].start < offset) low = middle + 1;
+    else high = middle;
+  }
+  return low;
+}
+
+/**
+ * First visual glyph index outside the logical interval boundary.
+ * HarfBuzz glyph clusters are monotone: ascending for LTR, descending for RTL.
+ */
+function lowerBoundGlyphCluster(glyphs, offset, direction) {
+  let low = 0;
+  let high = glyphs.length;
+  while (low < high) {
+    const middle = low + ((high - low) >> 1);
+    const cluster = glyphs[middle].cluster;
+    const beforeBoundary = direction === 'rtl' ? cluster >= offset : cluster < offset;
+    if (beforeBoundary) low = middle + 1;
+    else high = middle;
+  }
+  return low;
 }
 
 /**
@@ -9361,15 +9413,23 @@ function sliceShapedRun(shapedRun, start, end, sliceId) {
       'ShapedRun slices are legal only at output cluster boundaries; an EGC boundary inside a ligature is insufficient');
   }
 
-  const clusters = shapedRun.clusters.filter((cluster) =>
-    cluster.start >= start && cluster.end <= end);
+  const firstCluster = lowerBoundClusterStart(shapedRun.clusters, start);
+  const afterCluster = lowerBoundClusterStart(shapedRun.clusters, end);
+  const clusters = shapedRun.clusters.slice(firstCluster, afterCluster);
   if (!clusters.length || clusters[0].start !== start || clusters[clusters.length - 1].end !== end) {
     fail('incomplete-shaped-slice', 'selected clusters do not cover the complete requested slice');
   }
   const graphemeStart = clusters[0].graphemeStart;
   const graphemeEnd = clusters[clusters.length - 1].graphemeEnd;
   const graphemes = shapedRun.graphemes.slice(graphemeStart, graphemeEnd);
-  const glyphs = shapedRun.glyphs.filter((glyph) => glyph.cluster >= start && glyph.cluster < end);
+  const direction = shapedRun.shaping.direction;
+  const glyphStart = direction === 'rtl'
+    ? lowerBoundGlyphCluster(shapedRun.glyphs, end, direction)
+    : lowerBoundGlyphCluster(shapedRun.glyphs, start, direction);
+  const glyphEnd = direction === 'rtl'
+    ? lowerBoundGlyphCluster(shapedRun.glyphs, start, direction)
+    : lowerBoundGlyphCluster(shapedRun.glyphs, end, direction);
+  const glyphs = shapedRun.glyphs.slice(glyphStart, glyphEnd);
   if (!glyphs.length) fail('empty-shaped-slice', 'selected shaped clusters contain no glyphs');
 
   const sourceOffset = start - shapedRun.sourceRange.start;
@@ -9397,19 +9457,23 @@ function isDeepFrozen(value, seen = new Set()) {
 }
 
 function isShapedRun(value) {
-  return !!(value && value.kind === 'ShapedRun' &&
-    value.contractVersion === SHAPED_RUN_CONTRACT_VERSION &&
-    isDeepFrozen(value) &&
-    Array.isArray(value.glyphs) &&
-    Array.isArray(value.clusters));
+  if (!(value && value.kind === 'ShapedRun' &&
+      value.contractVersion === SHAPED_RUN_CONTRACT_VERSION &&
+      Array.isArray(value.glyphs) &&
+      Array.isArray(value.clusters))) return false;
+  // Runs created here were fully frozen and verified at construction. External
+  // objects retain the original recursive immutability validation on first use.
+  return canonicalShapedRuns.has(value) || isDeepFrozen(value);
 }
 
 /** Only output-cluster boundaries are legal shaping/line-break slice points. */
 function isShapedClusterBoundary(shapedRun, absoluteOffset) {
   if (!isShapedRun(shapedRun) || !Number.isSafeInteger(absoluteOffset)) return false;
   if (absoluteOffset === shapedRun.sourceRange.start || absoluteOffset === shapedRun.sourceRange.end) return true;
-  return shapedRun.clusters.some((cluster) =>
-    cluster.start === absoluteOffset || cluster.end === absoluteOffset);
+  const index = lowerBoundClusterStart(shapedRun.clusters, absoluteOffset);
+  return (index < shapedRun.clusters.length &&
+      shapedRun.clusters[index].start === absoluteOffset) ||
+    (index > 0 && shapedRun.clusters[index - 1].end === absoluteOffset);
 }
 
 module.exports = {
