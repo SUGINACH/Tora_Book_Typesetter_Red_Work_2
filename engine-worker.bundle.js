@@ -24485,6 +24485,50 @@ const { sanitizeSvg } = require('./svg-sanitize');
 
 /** הרישום עצמו: collection → Map(id → item). */
 const collections = new Map();
+/** קבצי תמונה שהמשתמש ייבא למסמך בדפדפן — הפניה יחסית → data URI בטוח. */
+const documentImages = new Map();
+
+function base64OfBytes(value) {
+  const bytes = value instanceof Uint8Array
+    ? value
+    : (value instanceof ArrayBuffer ? new Uint8Array(value) : new Uint8Array(value || []));
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i], hasB = i + 1 < bytes.length, hasC = i + 2 < bytes.length;
+    const b = hasB ? bytes[i + 1] : 0;
+    const c = hasC ? bytes[i + 2] : 0;
+    out += alphabet[a >> 2];
+    out += alphabet[((a & 3) << 4) | (b >> 4)];
+    out += hasB ? alphabet[((b & 15) << 2) | (c >> 6)] : '=';
+    out += hasC ? alphabet[c & 63] : '=';
+  }
+  return out;
+}
+
+/** רישום תמונת מסמך מקומית לתצוגת DOM/HTML; המודל עצמו שומר רק ref ו-assetId. */
+function registerDocumentImage(ref, bytes) {
+  if (typeof ref !== 'string' || !ref || ref.startsWith('/') ||
+      ref.includes('\\') || ref.split('/').some(part => !part || part === '.' || part === '..') ||
+      /^[a-z][a-z0-9+.-]*:/i.test(ref)) {
+    return { ok: false, code: 'invalid-document-image-ref' };
+  }
+  const match = ref.match(/\.(png|jpe?g)$/i);
+  if (!match) return { ok: false, code: 'unsupported-document-image-type' };
+  const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
+  if (!data.length) return { ok: false, code: 'empty-document-image' };
+  const mime = match[1].toLowerCase() === 'png' ? 'image/png' : 'image/jpeg';
+  documentImages.set(ref, {
+    uri: `data:${mime};base64,${base64OfBytes(data)}`,
+    mime,
+    byteLength: data.length
+  });
+  return { ok: true, ref, byteLength: data.length };
+}
+
+function clearDocumentImages() {
+  documentImages.clear();
+}
 
 /** קידוד SVG כ-data-URI (UTF-8 percent-encoding — תואם url("...") ב-CSS). */
 function svgDataUri(svg) {
@@ -24546,7 +24590,12 @@ function listCollection(collection) {
  * @returns {{resolved:boolean, uri:string|null, item:object|null}}
  */
 function resolveAssetRef(ref) {
-  if (typeof ref !== 'string' || !ref.startsWith('imud:')) return { resolved: false, uri: ref || null, item: null };
+  if (typeof ref !== 'string' || !ref.startsWith('imud:')) {
+    const documentImage = typeof ref === 'string' ? documentImages.get(ref) : null;
+    return documentImage
+      ? { resolved: true, uri: documentImage.uri, item: documentImage, source: 'document-image' }
+      : { resolved: false, uri: ref || null, item: null };
+  }
   const parts = ref.split(':');
   if (parts.length !== 3) return { resolved: false, uri: null, item: null };
   const [, col, id] = parts;
@@ -24564,9 +24613,13 @@ function isImudRef(ref) {
 /** ניקוי מלא (בדיקות/isolation). */
 function resetAssets() {
   collections.clear();
+  documentImages.clear();
 }
 
-module.exports = { registerAssets, resolveAssetRef, isImudRef, listCollection, assetCount, resetAssets, svgDataUri };
+module.exports = {
+  registerAssets, registerDocumentImage, clearDocumentImages,
+  resolveAssetRef, isImudRef, listCollection, assetCount, resetAssets, svgDataUri
+};
 
 };
 __modules["src/engine/decoration/svg-sanitize.js"] = function (require, module, exports) {
