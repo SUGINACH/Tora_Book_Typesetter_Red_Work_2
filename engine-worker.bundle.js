@@ -31089,6 +31089,16 @@ class AssetResolver {
     return r;
   }
 
+  /** איפוס אוסף נכסי המסמך כאשר פותחים/מנקים מסמך חדש. */
+  clear() {
+    this._byId.clear();
+    this._byRef.clear();
+    this._providers.length = 0;
+    this.diagnostics.length = 0;
+    this.transportReport = null;
+    return this;
+  }
+
   /** סטטיסטיקה + אבחונים (לדוחות). */
   stats() {
     return { assets: this._byId.size, refs: this._byRef.size, providers: this._providers.length, diagnostics: this.diagnostics.length };
