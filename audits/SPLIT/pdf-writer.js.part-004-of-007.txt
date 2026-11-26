@@ -1,0 +1,114 @@
+      ops.push(`BT ${round2(xPx * PX_TO_PT)} ${round2(hPt - yPx * PX_TO_PT)} Td`);
+      for (const run of runs) {
+        let hex = '';
+        for (const ch of run.chars) {
+          const g = run.font.cidOf(ch);
+          if (g) hex += g.toString(16).padStart(4, '0');
+        }
+        if (hex) ops.push(`/${run.name} ${round2(sizePt)} Tf <${hex}> Tj`);
+      }
+      ops.push('ET');
+    };
+    const emitLines = (lines) => {
+      for (const ln of lines) {
+        // **S12 (parity):** בסיס השורה מהמקרן (מודל תיבת שורה CSS — half-leading+ascent)
+        const baselineY = ln.baselineY != null ? ln.baselineY : ln.y + ln.h - ln.sizePt * (96 / 72) * 0.78;
+        // **S4.9 (legacy IMUD):** מילים עם גודל/בסיס משלהן (מילת-חלון 1.5×, סמני הערות)
+        for (const w of ln.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : baselineY, w.sizePt || ln.sizePt, w.fontKey, w.color);
+      }
+    };
+    if (pg.spanning) emitLines(pg.spanning.lines);
+    emitLines(pg.lines);
+    // מרזב הערות — סמן + מילות ההערה (מימין לשמאל); בסיס מהמקרן
+    for (const fn of pg.footnotes) {
+      if (fn.words && fn.words.length) {
+        // **D-89 (דיווח משתמש: "בהערות השוליים יש מילים אחת על השניה"):**
+        // בסיס פר-מילה מהמקרן (פר-שורה) — בעבר baselineY אחד לכל ההערה
+        // וכל שורות הערה רבת-שורות נערמו זו על זו.
+        for (const w of fn.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : fn.baselineY, w.sizePt || 8.5, w.fontKey, w.color);
+        continue;
+      }
+      const fs = 11;
+      const baseY = fn.baselineY != null ? fn.baselineY : fn.y + 9;
+      let x = fn.x + fn.w - 4;
+      // **S73:** צבע סמן ההערה — כצבע גוף ההערה מההגדרות (ברירת מחדל שחור)
+      if (fn.marker) { emitWord(fn.marker, x - 14, baseY, fs, null, fn.color); x -= 18; }
+      let cx = x;
+      for (const w of fn.text.split(/\s+/).filter(Boolean)) {
+        cx -= 8.2;
+        emitWord(w, cx, baseY, fs);
+      }
+    }
+    // גיליון — מקור יחיד (D-81): מיקום/רוחב מהקרן; נפילה לנוסחה הישנה רק אם חסר
+    // **S73:** גופן/צבע הגיליון מההגדרות (page-num-font/page-num-color) —
+    // כמו ה-DOM; fontKey של משפחה רשומה מצויר בגופן שלה, אחרת גוף הטקסט.
+    if (pg.folio && pg.folio.text) {
+      const fw = pg.folio.w != null ? pg.folio.w : pg.folio.text.length * 6;
+      const fx = pg.folio.x != null ? pg.folio.x : pg.width / 2 - fw / 2;
+      const fy = pg.folio.baselineY != null ? pg.folio.baselineY : pg.folio.y + 10;
+      emitWord(pg.folio.text, fx, fy, pg.folio.sizePt || 10, pg.folio.fontKey || null, pg.folio.color);
+    }
+    // כותרת עליונה — סלוטים לפי מיקום פיזי מהקרן (D-81); נפילה מתועדת לנוסחה הישנה
+    if (pg.header) {
+      for (const s of pg.header.slots) {
+        const sw = s.w != null ? s.w : s.text.length * 5.5;
+        const x = s.x != null ? s.x : (s.pos === 'right' ? pg.width - 60 - sw : s.pos === 'center' ? (pg.width - sw) / 2 : 60);
+        const y = pg.header.baselineY != null ? pg.header.baselineY : pg.header.y + 10;
+        // **D-89:** סלוט legacy עם מילים ממוקמות מהמקרן — בסיס/צבע פר-מילה;
+        // נפילה לנוסחה הישנה רק כשאין מילים (נתיב DP).
+        if (s.words && s.words.length) {
+          for (const w of s.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : y, w.sizePt || s.sizePt || 9, w.fontKey, w.color);
+          continue;
+        }
+        // **Iteration-003 (תצוגה=ייצוא):** הסלוט המוטבע נושא fontKey (גופן
+        // הסלוט מההגדרות — Livorna בייחוס) — עד כאן null קבוע ⇒ /F1 (גוף).
+        emitWord(s.text, x, y, s.sizePt || 9, s.fontKey || null, s.color);
+      }
+    }
+    // **EXT-4 (ציור עיטורים):** פעולות הציור מגיעות מוכנות מהפרויקטור
+    // (d.pdfOps — פוענחו שם מה-SVG במקור היחיד ornament-ink; הכותב עצמו
+    // חף-תלויות ואוסף אובייקטים בלבד). תמונות רסטר אינן מצוירות כאן (מתועד).
+    if (pg.decorations && pg.decorations.length) {
+      for (const d of pg.decorations) {
+        if (Array.isArray(d.pdfOps)) ops.push(...d.pdfOps);
+      }
+    }
+    // סימני חיתוך (**S6.0 R5-M6** — בחוץ ל-TrimBox, כמו המסמך; בעבר צוירו
+    // בפנים על העמוד החתוך עצמו): זוג קווים בכל פינה, מוסטים 0.5מ״מ משפת
+    // החיתוך, באורך 5מ״מ — בתוך טבעת הבליד/ההרחבה של ה-MediaBox.
+    if (cropMarks) {
+      const g = 0.5 * MM_TO_PT, L = 5 * MM_TO_PT;
+      const xl0 = -(g + L), xl1 = -g, xr0 = wPt + g, xr1 = wPt + g + L;
+      const yb0 = -(g + L), yb1 = -g, yt0 = hPt + g, yt1 = hPt + g + L;
+      ops.push('0.6 w 0 G');
+      ops.push(`${round2(xl0)} 0 m ${round2(xl1)} 0 l S`);
+      ops.push(`0 ${round2(yb0)} m 0 ${round2(yb1)} l S`);
+      ops.push(`${round2(xr0)} 0 m ${round2(xr1)} 0 l S`);
+      ops.push(`${round2(wPt)} ${round2(yb0)} m ${round2(wPt)} ${round2(yb1)} l S`);
+      ops.push(`${round2(xl0)} ${round2(hPt)} m ${round2(xl1)} ${round2(hPt)} l S`);
+      ops.push(`0 ${round2(yt0)} m 0 ${round2(yt1)} l S`);
+      ops.push(`${round2(xr0)} ${round2(hPt)} m ${round2(xr1)} ${round2(hPt)} l S`);
+      ops.push(`${round2(wPt)} ${round2(yt0)} m ${round2(wPt)} ${round2(yt1)} l S`);
+    }
+    return Buffer.from(ops.join('\n'), 'latin1');
+  });
+
+  // ---- הרכבה: קטלוג, דפים, גופן ----
+  const catalogKids = pageIds.map(id => `${id} 0 R`).join(' ');
+  const outlinesRef = (outlineItems.length) ? ` /Outlines ${ID.outlines} 0 R /PageMode /UseOutlines` : '';
+  pdf.put(ID.catalog, `<< /Type /Catalog /Pages ${ID.pages} 0 R${outlinesRef} >>`);
+  pdf.put(ID.pages, `<< /Type /Pages /Count ${pageCount} /Kids [${catalogKids}] >>`);
+
+  // W: לפי חוזה PDF — צורה 1: `c [w1 w2 … wn]` (רצף רוחבים בסוגריים); יחידות פר 1000
+  const wArray = [];
+  let run = null;
+  let prevGid = -10;
+  for (const g of [...font.widthsUnits.keys()].sort((a, b) => a - b)) {
+    const wv = Math.round((font.widthsUnits.get(g) / font.unitsPerEm) * 1000);
+    if (g === prevGid + 1 && run) run.push(wv);
+    else { if (run) wArray.push(run); run = [g, wv]; }
+    prevGid = g;
+  }
+  if (run) wArray.push(run);
+  const wStr = wArray.map(r => `${r[0]} [${r.slice(1).join(' ')}]`).join(' ');
+

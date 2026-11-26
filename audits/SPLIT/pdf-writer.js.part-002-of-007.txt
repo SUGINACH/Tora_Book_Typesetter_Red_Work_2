@@ -1,0 +1,145 @@
+  // סדר ויזואלי: היפוך סדר הריצות; RTL — היפוך פנימי + שיקוף סוגריים; LTR — כמו שהוא
+  const out = [];
+  for (let i = merged.length - 1; i >= 0; i--) {
+    const r = merged[i];
+    if (r.ltr) { out.push(...r.chars); continue; }
+    for (let j = r.chars.length - 1; j >= 0; j--) out.push(BRACKET_MIRROR[r.chars[j]] || r.chars[j]);
+  }
+  return out;
+}
+
+/** מחרוזת CID הקסדצימלית לטקסט (Identity-H: 2 בתים לגליף).
+ * **RTL:** PDF מתקדם ימינה מ־Td ברוחבים חיוביים; לכן התווים נפלטים בסדר
+ * **ויזואלי** (חילוץ לוגי אחרון ראשון = השמאלי ביותר) — דרך visualOrderRtl
+ * (D-89: ריצות LTR שלמות + שיקוף סוגריים) — המילה מרונדרת נכון לקורא עברי. */
+function cidHex(text, font) {
+  const chars = [...String(text)].filter(ch => {
+    const cp = ch.codePointAt(0);
+    return cp >= 0x20 && cp !== 0x7F;
+  });
+  let out = '';
+  for (const ch of visualOrderRtl(chars)) {
+    const g = font.cidOf(ch);
+    if (g === 0) continue;
+    out += g.toString(16).padStart(4, '0');
+  }
+  return out;
+}
+
+/** ToUnicode CMap — מיפוי gid → Unicode (חילוץ טקסט אמיתי ב־pdftotext). */
+function buildToUnicode(font) {
+  const lines = [
+    '/CIDInit /ProcSet findresource begin',
+    '12 dict begin',
+    'begincmap',
+    '/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def',
+    '/CMapName /Adobe-Identity-UCS def',
+    '/CMapType 2 def',
+    '1 begincodespacerange',
+    '<0000> <FFFF>',
+    'endcodespacerange'
+  ];
+  const entries = [];
+  for (const [ch, gid] of font.charToGidEntries()) {
+    if (gid === 0) continue;
+    entries.push(`<${gid.toString(16).padStart(4, '0')}> <${ch.codePointAt(0).toString(16).padStart(4, '0')}>`);
+  }
+  for (let i = 0; i < entries.length; i += 100) {
+    const chunk = entries.slice(i, i + 100);
+    lines.push(`${chunk.length} beginbfchar`, ...chunk, 'endbfchar');
+  }
+  lines.push('endcmap', 'CMapName currentdict /CMap defineresource pop', 'end', 'end');
+  return lines.join('\n');
+}
+
+/**
+ * כתיבת מסמך PDF שלם.
+ * @param {object} opts
+ * @param {Array} opts.pages — תוצר projectPage() לכל עמוד
+ * @param {{w:number,h:number}} opts.pageSizeMm — גודל עמוד במ״מ (מרישום גדלי העמוד)
+ * @param {object} opts.font — {subsetBytes, widthsUnits:Map(gid→units), unitsPerEm, cidOf:(ch)=>gid, charToGidEntries:()=>[ch,gid][]}
+ * @param {object} [opts.font2] — **S4.15:** גופן משני (FrankReal-Bold — מילות-חלון):
+ *   אותה צורה; מילים עם fontKey==='window' נציירות בו (/F2). בלעדיו — הכל ב-/F1.
+ * @param {object} [opts.font5] — **S5.1:** גוף ההערה (Frank Ruhl Libre — fontKey
+ *   'fnbody'): אותה צורה; /F5. בלעדיו — הערות ב-/F1 (התנהגות קודמת).
+ * @param {object} [opts.font6] — **S5.1:** הערות-צד (Hadassah Friedlaender —
+ *   fontKey 'margin'): אותה צורה; /F6. בלעדיו — הערות-צד ב-/F1.
+ * @param {Array} [opts.extraFonts] — **S73 (תצוגה=ייצוא בגופנים):** גופנים
+ *   דינמיים לפי משפחה — [{key, font, ascentEm?, descentEm?}]. מילה שה-fontKey
+ *   שלה שווה ל-key מצוירת בגופן זה (/F7, /F8, … לפי הסדר). מיועד למשפחות
+ *   הכותרות/השער/הכותרות-העליונות מההגדרות — כמו שה-DOM מציג. משפחה
+ *   שלא סופקה כאן נופלת ל-/F1 (גוף הטקסט) — התנהגות קודמת.
+ * @param {object} opts.settings — pdf-crop-marks, export-bleed-mm
+ * @param {Array} [opts.outline] — [{title, page, level}] — סימניות מכותרות
+ * @param {Array} [opts.tocLinks] — [{page, x, y, w, h, targetPage}] — קישורי TOC (px מהמקרן)
+ * @returns {Buffer}
+ */
+function writePdf(opts) {
+  const { pages, pageSizeMm, font, font2, font3, font4, font5, font6, settings, outline, tocLinks } = opts;
+  const pdf = new PdfBuilder();
+
+  const wPt = pageSizeMm.w * MM_TO_PT;
+  const hPt = pageSizeMm.h * MM_TO_PT;
+  const bleedPt = (Number(settings['export-bleed-mm']) || 0) * MM_TO_PT;
+  const cropMarks = settings['pdf-crop-marks'] === true;
+  const pageCount = pages.length;
+
+  // ---- הקצאת מזהים דטרמיניסטית מראש ----
+  // מפת מזהים קבוע: 1 קטלוג, 2 דפים, 3 Type0, 4 CIDFont, 5 FontDescriptor,
+  // 6 FontFile2 (stream), 7 ToUnicode (stream), 8 Outlines; 9 שמור; 10+ דינמי.
+  const ID = {
+    catalog: 1, pages: 2, type0: 3, cidFont: 4, fontDescriptor: 5, fontFile: 6, toUnicode: 7, outlines: 8
+  };
+  pdf.nextId = 10;
+  // **S4.15:** מזהי הגופן המשני (קבועים — דטרמיניזם): 9 היה שמור; 4 נוספים דינמיים
+  // מיד אחריו, לפני הדפים — סדר קבוע לכל הרצות.
+  if (font2) {
+    ID.type0b = 9;
+    ID.cidFontb = pdf.reserve();
+    ID.fontDescriptorb = pdf.reserve();
+    ID.fontFileb = pdf.reserve();
+    ID.toUnicodeb = pdf.reserve();
+  }
+  // **S4.26:** מזהי הגופן השלישי (DavidLibre-Bold — כותרות) — אחרי אלו של
+  // font2, סדר קבוע לפני הדפים (דטרמיניזם).
+  if (font3) {
+    ID.type0c = pdf.reserve();
+    ID.cidFontc = pdf.reserve();
+    ID.fontDescriptorc = pdf.reserve();
+    ID.fontFilec = pdf.reserve();
+    ID.toUnicodec = pdf.reserve();
+  }
+  // **S4.26:** מזהי הגופן הרביעי (Frank Ruhl Libre — fallback לפיסוק שחסר
+  // בגוף הראשי, כמו מחסנית ה-CSS בדפדפן).
+  if (font4) {
+    ID.type0d = pdf.reserve();
+    ID.cidFontd = pdf.reserve();
+    ID.fontDescriptord = pdf.reserve();
+    ID.fontFiled = pdf.reserve();
+    ID.toUnicoded = pdf.reserve();
+  }
+  // **S5.1:** מזהי הגופן החמישי (Frank Ruhl Libre — גוף ההערה, /F5) והשישי
+  // (Hadassah Friedlaender — הערות-צד, /F6) — אותו סדר קבוע (דטרמיניזם).
+  if (font5) {
+    ID.type0e = pdf.reserve();
+    ID.cidFonte = pdf.reserve();
+    ID.fontDescriptore = pdf.reserve();
+    ID.fontFilee = pdf.reserve();
+    ID.toUnicodee = pdf.reserve();
+  }
+  if (font6) {
+    ID.type0f = pdf.reserve();
+    ID.cidFontf = pdf.reserve();
+    ID.fontDescriptorf = pdf.reserve();
+    ID.fontFilef = pdf.reserve();
+    ID.toUnicodef = pdf.reserve();
+  }
+  // **S73 (גופנים דינמיים — תצוגה=ייצוא):** משפחות נוספות (כותרות/שער/כותרות
+  // עליונות מההגדרות). מזהים דטרמיניסטיים — 5 ברצף לכל גופן, בסדר המערך
+  // שנקבע מראש ב-export-api (מיון לפי key) — ייצוא כפול ⇒ בתים זהים.
+  const extraFonts = [];
+  for (const ef of (opts.extraFonts || [])) {
+    if (!ef || !ef.font) continue;
+    extraFonts.push({
+      key: String(ef.key),
+      font: ef.font,

@@ -1,0 +1,115 @@
+    } else {
+      // **Iteration-003 (תיקון המשך — כותרת רבת-שורות):** ההקשר הרץ נקבע מהכותרת
+      // השלמה, לא משורתה האחרונה. עד כאן כל שורת heading דרסה את ההקשר —
+      // כותרת H2 שנעטפה לשתי שורות השאירה במרכז את ההמשך בלבד (נמדד:
+      // 'בעניין מי ששכח...' איבד את 'בעניין'). כאן: קיבוץ שורות הכותרת לפי
+      // tokenId ואיחוי הטקסט המלא של הכותרת האחרונה בעמוד — כמו setHeader
+      // של המורשת שקורא את כותרת הבלוק ולא שורה בודדת.
+      const byTok = new Map();
+      for (const ln of pageLines(pg)) {
+        if (ln.kind !== 'heading') continue;
+        const key = ln.tokenId != null ? ln.tokenId : `anon-${ln.level}`;
+        if (!byTok.has(key)) byTok.set(key, []);
+        byTok.get(key).push(ln);
+      }
+      for (const [, lns] of byTok) {
+        const lvl = lns[0].level;
+        const full = lns.map(ln => ln.words.join(' ')).join(' ').replace(/\s+/g, ' ').trim();
+        if (lvl <= 1) { runningH1 = full; }
+        else if (lvl === 0 || lvl === 2) { runningH2 = stripSimanPrefix(full); }
+      }
+      h1 = runningH1; h2 = runningH2;
+      pg.headerCtx = { bookName, h1, h2 };
+    }
+    const firstCol = pg.columns[0] && pg.columns[0][0];
+    const lastCol = pg.columns[pg.columns.length - 1];
+    const lastLine = lastCol && lastCol[lastCol.length - 1];
+    // **S9 (פורט IMUD fillHeaderFirstLastWords):** מילה ראשונה/אחרונה — בלי פיסוק קצה
+    // (הכותרת עצמה לא נחשבת כתוכן העמוד לעניין זה; מילים מנוקות מסימני פיסוק בקצוות).
+    const bodyLines = pageLines(pg).filter(ln => ln.kind !== 'heading');
+    const firstBody = bodyLines[0];
+    const lastBody = bodyLines[bodyLines.length - 1];
+    pg.firstWord = firstBody && firstBody.words ? trimEdgePunctuation(firstBody.words[0]) : '';
+    pg.lastWord = lastBody && lastBody.words ? trimEdgePunctuation(lastBody.words[lastBody.words.length - 1]) : '';
+    pg.isRecto = pg.index % 2 === 0;
+    // **S9 (REQ-HDR-02):** האם העמוד נפתח בכותרת H2/H3 (שורת התוכן הראשונה בסדר קריאה)
+    const firstLine = pageLines(pg)[0];
+    pg.opensWithHeadingLevel = firstLine && firstLine.kind === 'heading' ? firstLine.level : null;
+    // D-36 + REQ-HDR-02: עמודי פתיחה ללא כותרת עליונה — אלא אם הופעלה הכותרת הייעודית
+    // לפותחות H2/H3 (הבדיקה בתוך buildHeader — מקור יחיד)
+    pg.header = buildHeader(pg, settings, pg.headerCtx);
+    // **S10 (REQ-UI-03):** התקדמות מדויקת לפי עמוד — "עמוד X מתוך Y" כאן Y סופי.
+    prog('headers', 82 + Math.round(10 * ((i + 1) / pages.length)),
+      `כותרות עליונות — עמוד ${i + 1} מתוך ${pages.length}`,
+      { pageIndex: i + 1, totalPages: pages.length });
+  });
+
+  // ---- TOC (מודל לגרסאות ≤S8 — תאימות לאחור; עמודי ה‑TOC האמיתיים נבנו לעיל) ----
+  const { buildTocEntries, splitGeneralDetail } = require('../decoration/toc-builder');
+  const firstPageByToken = new Map();
+  for (const pg of pages) {
+    for (const ln of pageLines(pg)) { // **FWD-1:** כולל שורות הפס החוצה־טורים
+      const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
+      if (tok != null && !firstPageByToken.has(tok)) firstPageByToken.set(tok, pg.index);
+    }
+  }
+  const headingsForToc = [];
+  for (const b of blocks) {
+    if (b.kind !== 'heading') continue;
+    const page = firstPageByToken.has(b.tokenId) ? firstPageByToken.get(b.tokenId) : -1;
+    if (page < 0) continue;
+    headingsForToc.push({ level: b.level, text: b.lines.map(l => l.words.join(' ')).join(' ').trim(), page, tokenId: b.tokenId });
+  }
+  headingsForToc.sort((a, b) => a.page - b.page);
+  const tocEntries = buildTocEntries(headingsForToc, settings, numbers);
+  const toc = splitGeneralDetail(tocEntries, settings);
+
+  // ---- אינטגריטיית שימור תוכן (BRZ-15) — identity-by-construction (D-30) ----
+  // צד src: גוף + סמן + טקסט־הערה (לכל note-ref); הערות־סיום גלויות:
+  //   endnotes-mode ⇒ סמן (מה שהודפס בעמודי ההערות) + טקסט; אחרת ⇒ הטקסט בגוף.
+  // צד out: נספר ממקום ההצגה בפועל — שורות הגוף (כולל סמנים/placeholder),
+  // מרזב (טקסט בלבד — הסמן נספר בגוף), עמודי הערות (טקסט ל-inline-refs;
+  // סמן+טקסט לטוקנים גלויים), הערות צד.
+  const scrubForCompare = (s0) => String(s0)
+    .replace(/[\u00A0\uE000\uE101\uE102]/g, ' ')
+    .replace(/\uFF9F/g, '\u05F3')
+    .replace(/\uFF93/g, '\u05F4')
+    .replace(/[\u27E6\u27E7]/g, '')
+    .replace(/\s+/g, ' ').trim();
+
+  /** פיצול placeholder: `${marker}\uE000${text}` → מרקר + מילות הטקסט (D-30). */
+  function explodePlaceholderWord(w) {
+    const s = String(w);
+    const at = s.indexOf(ATOMIC);
+    if (at > 0) {
+      const marker = s.slice(0, at);
+      const rest = s.slice(at + 1);
+      return [...wordSeq(marker), ...wordSeq(rest)];
+    }
+    return wordSeq(s);
+  }
+  const wordSeq = (s0) => scrubForCompare(s0).split(' ').filter(Boolean);
+
+  /** מפת סמנים מודפסים של טוקני הערות־סיום גלויים (מה שהודפס בפועל). */
+  const printedEndnoteMarker = new Map(); // tokenId -> marker
+  for (const ep of (endnotePagesInfo.pages || [])) {
+    for (const n of ep.notes) {
+      if (n.tokenId != null && !n.fromInline) printedEndnoteMarker.set(n.tokenId, n.marker);
+    }
+  }
+
+  function srcWordsOf(t) {
+    if (t.type === 'heading' || t.type === 'side-note') {
+      // **Iteration-003 (legacy parity — סימטריית ההשוואה):** ה-h1 נצרך לשער-המשנה
+      // ומפוצל במקף (splitPartTitle: main + ' - ' + rest) — אותה טרנספורמציה
+      // בצד המקור (כמו F11 במורשת §3561) כדי שהשוואת הרב-קבוצה תהיה הוגנת.
+      // **היקף (Iteration-003):** טרנספורמציית הפיצול רלוונטית רק כשה-h1 נצרך
+      // לשער (פרופיל IMUD); ב-DP הכותרת זורמת כמות שהיא ושני הצדדים זהים.
+      const imudSrc = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+      if (imudSrc && t.type === 'heading' && Number(t.level) === 1) {
+        const parts = String(t.text || '').split(/[-–—]/).map(x => x.trim()).filter(Boolean);
+        if (parts.length >= 2) return wordSeq(parts[0] + ' ' + parts.slice(1).join(' - '));
+      }
+      return wordSeq(t.text);
+    }
+    if (t.type === 'endnote-class') return []; // directive (D-40) — לא תוכן

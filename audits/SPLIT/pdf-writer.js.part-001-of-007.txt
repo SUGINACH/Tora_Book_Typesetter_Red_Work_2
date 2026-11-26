@@ -1,0 +1,135 @@
+// src/engine/output/pdf-writer.js — Pure-JS PDF 1.4 writer (S12.1-3, REQ-EXP-03)
+'use strict';
+
+/**
+ * כותב PDF מהקרנת הגיאומטריה (geometry-projector — מקור יחיד) + תת־גופן
+ * TrueType מוטמע (CIDFontType2 + ToUnicode — טקסט אמיתי נבחר/מופק).
+ *
+ * יכולות (חוזה S12.1-3):
+ *  - MediaBox/TrimBox/BleedBox מרישום גדלי העמוד (מ״מ→pt) + export-bleed-mm;
+ *  - סימני חיתוך (pdf-crop-marks) — קווים מחוץ לתבנית החיתוך ב־4 פינות;
+ *  - עץ סימניות (Outlines) ממודל הכותרות — H1 רמה 1, H2 רמה 2 תחתיו;
+ *  - יעדי קישור לחיצים משורות ה־TOC (Link/GoTo → עמוד הכותרת);
+ *  - טקסט אמיתי לכל מילה (BT/Tf/Td/Tj) — RTL מוצב מפורש;
+ *  - דטרמיניזם: אין תאריך/מזהים אקראיים; סדר אובייקטים קבוע; ייצוא כפול ⇒ בתים זהים.
+ *
+ * עצמאי לחלוטין — אפס תלות חיצונית (אותה דוקטרינה כמו zip-writer/xml-lite).
+ * מוכן גם לצינור הדפסת Chromium: ה־HTML העצמאי (html-export) כולל את אותם
+ * כללי @page; ה־PDF הכתוב כאן הוא המסלול המנועי המלא (סימניות+קישורים).
+ */
+
+const PX_TO_PT = 72 / 96;
+const MM_TO_PT = 72 / 25.4;
+
+/** כתיבת מסמך PDF — אוסף אובייקטים ומרכיב xref מדויק. */
+class PdfBuilder {
+  constructor() {
+    this.objects = new Map(); // id → Buffer (האובייקט בלבד, בלי "N 0 obj")
+    this.nextId = 1;
+  }
+  reserve() { return this.nextId++; }
+  put(id, content) {
+    this.objects.set(id, Buffer.isBuffer(content) ? content : Buffer.from(content, 'latin1'));
+    return id;
+  }
+  add(content) { return this.put(this.reserve(), content); }
+  build() {
+    const parts = [Buffer.from('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n', 'latin1')];
+    let pos = parts[0].length;
+    const offsets = new Map();
+    const maxId = Math.max(0, ...this.objects.keys());
+    for (let id = 1; id <= maxId; id++) {
+      if (!this.objects.has(id)) continue;
+      const head = Buffer.from(`${id} 0 obj\n`, 'latin1');
+      const body = this.objects.get(id);
+      const tail = Buffer.from('\nendobj\n', 'latin1');
+      offsets.set(id, pos);
+      pos += head.length + body.length + tail.length;
+      parts.push(head, body, tail);
+    }
+    const xrefPos = pos;
+    let xref = `xref\n0 ${maxId + 1}\n0000000000 65535 f \n`;
+    for (let id = 1; id <= maxId; id++) {
+      if (offsets.has(id)) xref += `${String(offsets.get(id)).padStart(10, '0')} 00000 n \n`;
+      else xref += `0000000000 65535 f \n`;
+    }
+    parts.push(Buffer.from(xref, 'latin1'));
+    parts.push(Buffer.from(`trailer\n<< /Size ${maxId + 1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF\n`, 'latin1'));
+    return Buffer.concat(parts);
+  }
+}
+
+function escapePdfText(s) {
+  return String(s).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+}
+function round2(v) { return Math.round(v * 100) / 100; }
+
+/** **כותרת סימנייה עברית:** מחרוזת טקסט PDF לא־לטינית ⇒ UTF-16BE עם BOM
+ * כמחרוזת הקסדצימלית (חוזה PDF 1.4 §3.8.4) — קוראים מציגים עברית תקינה. */
+function pdfTitleHex(s) {
+  let out = 'FEFF';
+  for (const ch of String(s)) {
+    const cp = ch.codePointAt(0);
+    if (cp > 0xFFFF) {
+      const v = cp - 0x10000;
+      const hi = 0xD800 + (v >> 10), lo = 0xDC00 + (v & 0x3FF);
+      out += hi.toString(16).padStart(4, '0') + lo.toString(16).padStart(4, '0');
+    } else {
+      out += cp.toString(16).padStart(4, '0');
+    }
+  }
+  return `<${out.toUpperCase()}>`;
+}
+
+/** **D-89 (דיווח משתמש: "כיוון הסוגריים בכל המופעים הפוך"):** חיקוי ה-bidi
+ * של הדפדפן למילה עברית שמצוירת בסדר ויזואלי:
+ *  - אותיות עברית/ניטרליים מהופכים (התו הלוגי הראשון בצד ימין) — כמו קודם;
+ *  - ריצות ספרות/לטינית נשארות בסדר לוגי (קריאות שמאל→ימין). בלי זה מספר
+ *    הטלפון 052-7666666 הוצג הפוך (6666667-250) — מדגם ה-CUTOVER, עמ' 2.
+ *    פיסוק מספרי קצר (.,-+/:;%) בין שתי ריצות LTR נבלע לתוכן (1.5, 052-7666666);
+ *    פיסוק עוקב/קודם (סוף משפט) נשאר בהקשר RTL — כמו UAX#9 בדפדפן.
+ *  - סוגריים מכוונים בהקשר RTL משוקפים (Bidi Mirrored, UAX#9 §3.1.4):
+ *    '(' לוגי מצויר כגליף ')' בקצה ימין של הרץ — "נפתח" כלפי כיוון הקריאה.
+ *    סוגריים בתוך ריצת LTR (ספרות) אינם משוקפים.
+ * המודול מיוצא לבדיקות (visualOrderRtl) — מקור יחיד לשני הצרכנים העתידיים. */
+const LTR_RE = /[0-9A-Za-z]/;
+const BRACKET_MIRROR = { '(': ')', ')': '(', '[': ']', ']': '[', '{': '}', '}': '{', '<': '>', '>': '<' };
+// פיסוק ביניים (CS/ES — נבלע במספר רק **בין** שתי ריצות LTR: 052-7666666, 1.5)
+const NUM_MID_GLUE = '.,-+/:;';
+// פיסוק עוקב/קודם מסוג ET (W5 — נדבק למספר גם בקצה: 1.5%, $20)
+const NUM_ET_GLUE = '%$#°₪';
+
+function visualOrderRtl(chars) {
+  // חלוקה לריצות LTR/שאר
+  const runs = [];
+  for (const ch of chars) {
+    const l = LTR_RE.test(ch);
+    if (runs.length && runs[runs.length - 1].ltr === l) runs[runs.length - 1].chars.push(ch);
+    else runs.push({ ltr: l, chars: [ch] });
+  }
+  // בליעת פיסוק בין/בקצה ריצות LTR — חלק מהמספר (052-7666666, 1.5, 1.5%).
+  // פיסוק ביניים נבלע רק כשריצת LTR באה אחריו; פיסוק ET נבלע גם בקצה (W5).
+  const merged = [];
+  for (const r of runs) {
+    const prev = merged[merged.length - 1];
+    const isMid = r.chars.length <= 3 && r.chars.every(c => NUM_MID_GLUE.includes(c));
+    const isEt = r.chars.length <= 3 && r.chars.every(c => NUM_ET_GLUE.includes(c));
+    if (!r.ltr && prev && prev.ltr && (isMid || isEt)) {
+      prev._glue = (prev._glue || []).concat(r.chars); // עדיין לא ידוע אם תבוא LTR אחרי
+      continue;
+    }
+    if (r.ltr && prev && prev._glue) { prev.chars.push(...prev._glue, ...r.chars); prev._glue = null; continue; }
+    if (prev && prev._glue) {
+      // לא באה LTR אחרי הפיסוק: ET נדבק למספר שלפניו (1.5%); ביניים — הקשר RTL (סוף משפט)
+      if (prev._glue.every(c => NUM_ET_GLUE.includes(c))) { prev.chars.push(...prev._glue); }
+      else merged.push({ ltr: false, chars: prev._glue });
+      prev._glue = null;
+    }
+    merged.push({ ltr: r.ltr, chars: r.chars.slice() });
+  }
+  const tail = merged[merged.length - 1];
+  if (tail && tail._glue) {
+    if (tail._glue.every(c => NUM_ET_GLUE.includes(c))) { tail.chars.push(...tail._glue); }
+    else merged.push({ ltr: false, chars: tail._glue }); // פיסוק עוקב בלי LTR אחריו — הקשר RTL
+    tail._glue = null;
+  }

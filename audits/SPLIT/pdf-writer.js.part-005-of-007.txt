@@ -1,0 +1,92 @@
+  pdf.put(ID.type0, `<< /Type /Font /Subtype /Type0 /BaseFont /ToraBook /Encoding /Identity-H /DescendantFonts [${ID.cidFont} 0 R] /ToUnicode ${ID.toUnicode} 0 R >>`);
+  pdf.put(ID.cidFont, `<< /Type /Font /Subtype /CIDFontType2 /BaseFont /ToraBook /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor ${ID.fontDescriptor} 0 R /DW 1000 /W [${wStr}] >>`);
+  pdf.put(ID.fontDescriptor, `<< /Type /FontDescriptor /FontName /ToraBook /Flags 4 /FontBBox [-200 -300 1200 1000] /ItalicAngle 0 /Ascent 800 /Descent -200 /CapHeight 700 /StemV 80 /FontFile2 ${ID.fontFile} 0 R >>`);
+  const ffStream = Buffer.concat([
+    Buffer.from(`<< /Length ${font.subsetBytes.length} /Length1 ${font.subsetBytes.length} >>\nstream\n`, 'latin1'),
+    font.subsetBytes,
+    Buffer.from('\nendstream', 'latin1')
+  ]);
+  pdf.put(ID.fontFile, ffStream); // 5
+  const toUni = buildToUnicode(font);
+  pdf.put(ID.toUnicode, `<< /Length ${toUni.length} >>\nstream\n${toUni}\nendstream`); // 6
+
+  // **S4.15:** הגופן המשני (FrankReal-Bold — מילות-חלון) — אותם אובייקטים בשמות שונים
+  if (font2) {
+    const wArray2 = [];
+    let run2 = null;
+    let prevGid2 = -10;
+    for (const g of [...font2.widthsUnits.keys()].sort((a, b) => a - b)) {
+      const wv = Math.round((font2.widthsUnits.get(g) / font2.unitsPerEm) * 1000);
+      if (g === prevGid2 + 1 && run2) run2.push(wv);
+      else { if (run2) wArray2.push(run2); run2 = [g, wv]; }
+      prevGid2 = g;
+    }
+    if (run2) wArray2.push(run2);
+    const wStr2 = wArray2.map(r => `${r[0]} [${r.slice(1).join(' ')}]`).join(' ');
+    pdf.put(ID.type0b, `<< /Type /Font /Subtype /Type0 /BaseFont /ToraWin /Encoding /Identity-H /DescendantFonts [${ID.cidFontb} 0 R] /ToUnicode ${ID.toUnicodeb} 0 R >>`);
+    pdf.put(ID.cidFontb, `<< /Type /Font /Subtype /CIDFontType2 /BaseFont /ToraWin /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor ${ID.fontDescriptorb} 0 R /DW 1000 /W [${wStr2}] >>`);
+    pdf.put(ID.fontDescriptorb, `<< /Type /FontDescriptor /FontName /ToraWin /Flags 4 /FontBBox [-200 -300 1200 1000] /ItalicAngle 0 /Ascent 751 /Descent -135 /CapHeight 700 /StemV 120 /FontFile2 ${ID.fontFileb} 0 R >>`);
+    const ff2 = Buffer.concat([
+      Buffer.from(`<< /Length ${font2.subsetBytes.length} /Length1 ${font2.subsetBytes.length} >>\nstream\n`, 'latin1'),
+      font2.subsetBytes,
+      Buffer.from('\nendstream', 'latin1')
+    ]);
+    pdf.put(ID.fontFileb, ff2);
+    const toUni2 = buildToUnicode(font2);
+    pdf.put(ID.toUnicodeb, `<< /Length ${toUni2.length} >>\nstream\n${toUni2}\nendstream`);
+  }
+
+  // **S4.26:** הגופן הרביעי (Frank Ruhl Libre — fallback לפיסוק) — אותם
+  // אובייקטים בשמות שונים (מטריקות: asc 1000/1000, desc −200/1000).
+  if (font4) {
+    const wArray4 = [];
+    let run4 = null;
+    let prevGid4 = -10;
+    for (const g of [...font4.widthsUnits.keys()].sort((a, b) => a - b)) {
+      const wv = Math.round((font4.widthsUnits.get(g) / font4.unitsPerEm) * 1000);
+      if (g === prevGid4 + 1 && run4) run4.push(wv);
+      else { if (run4) wArray4.push(run4); run4 = [g, wv]; }
+      prevGid4 = g;
+    }
+    if (run4) wArray4.push(run4);
+    const wStr4 = wArray4.map(r => `${r[0]} [${r.slice(1).join(' ')}]`).join(' ');
+    pdf.put(ID.type0d, `<< /Type /Font /Subtype /Type0 /BaseFont /ToraPunct /Encoding /Identity-H /DescendantFonts [${ID.cidFontd} 0 R] /ToUnicode ${ID.toUnicoded} 0 R >>`);
+    pdf.put(ID.cidFontd, `<< /Type /Font /Subtype /CIDFontType2 /BaseFont /ToraPunct /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor ${ID.fontDescriptord} 0 R /DW 1000 /W [${wStr4}] >>`);
+    pdf.put(ID.fontDescriptord, `<< /Type /FontDescriptor /FontName /ToraPunct /Flags 4 /FontBBox [-200 -300 1200 1000] /ItalicAngle 0 /Ascent 1000 /Descent -200 /CapHeight 700 /StemV 80 /FontFile2 ${ID.fontFiled} 0 R >>`);
+    const ff4 = Buffer.concat([
+      Buffer.from(`<< /Length ${font4.subsetBytes.length} /Length1 ${font4.subsetBytes.length} >>\nstream\n`, 'latin1'),
+      font4.subsetBytes,
+      Buffer.from('\nendstream', 'latin1')
+    ]);
+    pdf.put(ID.fontFiled, ff4);
+    const toUni4 = buildToUnicode(font4);
+    pdf.put(ID.toUnicoded, `<< /Length ${toUni4.length} >>\nstream\n${toUni4}\nendstream`);
+  }
+
+  // **S4.26:** הגופן השלישי (DavidLibre-Bold — כותרות/TOC) — אותם אובייקטים
+  // בשמות שונים (מטריקות אמת: ascender 1599/2048=781, descender −449/2048=−219).
+  if (font3) {
+    const wArray3 = [];
+    let run3 = null;
+    let prevGid3 = -10;
+    for (const g of [...font3.widthsUnits.keys()].sort((a, b) => a - b)) {
+      const wv = Math.round((font3.widthsUnits.get(g) / font3.unitsPerEm) * 1000);
+      if (g === prevGid3 + 1 && run3) run3.push(wv);
+      else { if (run3) wArray3.push(run3); run3 = [g, wv]; }
+      prevGid3 = g;
+    }
+    if (run3) wArray3.push(run3);
+    const wStr3 = wArray3.map(r => `${r[0]} [${r.slice(1).join(' ')}]`).join(' ');
+    pdf.put(ID.type0c, `<< /Type /Font /Subtype /Type0 /BaseFont /ToraHead /Encoding /Identity-H /DescendantFonts [${ID.cidFontc} 0 R] /ToUnicode ${ID.toUnicodec} 0 R >>`);
+    pdf.put(ID.cidFontc, `<< /Type /Font /Subtype /CIDFontType2 /BaseFont /ToraHead /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor ${ID.fontDescriptorc} 0 R /DW 1000 /W [${wStr3}] >>`);
+    pdf.put(ID.fontDescriptorc, `<< /Type /FontDescriptor /FontName /ToraHead /Flags 4 /FontBBox [-200 -300 1200 1000] /ItalicAngle 0 /Ascent 781 /Descent -219 /CapHeight 700 /StemV 120 /FontFile2 ${ID.fontFilec} 0 R >>`);
+    const ff3 = Buffer.concat([
+      Buffer.from(`<< /Length ${font3.subsetBytes.length} /Length1 ${font3.subsetBytes.length} >>\nstream\n`, 'latin1'),
+      font3.subsetBytes,
+      Buffer.from('\nendstream', 'latin1')
+    ]);
+    pdf.put(ID.fontFilec, ff3);
+    const toUni3 = buildToUnicode(font3);
+    pdf.put(ID.toUnicodec, `<< /Length ${toUni3.length} >>\nstream\n${toUni3}\nendstream`);
+  }
+

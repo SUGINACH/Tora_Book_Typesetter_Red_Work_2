@@ -1,0 +1,36 @@
+{
+  "source": "red-build/src/engine/output/export-api.js",
+  "branch": "engine/legacy-parity-preview-20261119",
+  "totalChars": 39756,
+  "sha256": "b7072b5326bdd04005403638a55454ce83244651aa1983fbf27ce31e7b674edb",
+  "parts": [
+    {
+      "file": "export-api.js.part-001-of-007.txt",
+      "chars": 5997
+    },
+    {
+      "file": "export-api.js.part-002-of-007.txt",
+      "chars": 5967
+    },
+    {
+      "file": "export-api.js.part-003-of-007.txt",
+      "chars": 5963
+    },
+    {
+      "file": "export-api.js.part-004-of-007.txt",
+      "chars": 6000
+    },
+    {
+      "file": "export-api.js.part-005-of-007.txt",
+      "chars": 5983
+    },
+    {
+      "file": "export-api.js.part-006-of-007.txt",
+      "chars": 5993
+    },
+    {
+      "file": "export-api.js.part-007-of-007.txt",
+      "chars": 3853
+    }
+  ]
+}

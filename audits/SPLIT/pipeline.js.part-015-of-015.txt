@@ -1,0 +1,80 @@
+  for (const v of pageItemValidation.violations) {
+    const rec = ledger.create('page-item-contract', `${v.kind}:${v.code}:${v.page != null ? 'p' + v.page : 'x'}`, v.page, v, 'page-plan');
+    ledger.transition(rec.issue_id, 'persists', 'page-plan', `placed item violates its registry contract: ${v.kind}/${v.code}`);
+  }
+  eventLog.emit('page-plan', 'page-items-validated', {
+    checked: pageItemValidation.checked,
+    violations: pageItemValidation.violations.length
+  });
+
+  // ---- **שלב 8 (§4.1): הטבעת גיאומטריית התוכן המבני — לפני המודל** ----
+  // מדידה אחת לשורות TOC/שערים/סלוטי כותרת/גיליון/נתיבי מרזב, אחרי כל
+  // ההחלטות (הצבות, איזונים, פיוס הערות, עיטורים ומספור) ולפני בניית
+  // ה-PageModel: ה-materialization צורך חותמות ואינו מודד (מונה הנפילות 0).
+  const { stampStructuralGeometry } = require('../layout/structural-stamps');
+  const structuralStamps = stampStructuralGeometry(pages, settings, api);
+  eventLog.emit('page-model', 'structural-stamps', { ...structuralStamps.stamped, pages: structuralStamps.pagesStamped });
+
+  // ---- **שלב 7 (§§18–22): PageModel יחיד, סופי ו-immutable** ----
+  // הבונה היחיד: מאמת את התוכנית, מוכיח כיסוי מלא (אין יתומים/כפילויות),
+  // משמר עוגנים, מקרין fragments פעם אחת, מאמת גיאומטריה/הזמנות/נכסים,
+  // מפיק אבחונים ומקפיא עמוק. מכאן ואילך אין החלטות עימוד חדשות — המקרינים
+  // (שלב 8) יקראו בלבד. נבנה בסוף הזרימה, אחרי כל ההחלטות (DP, נסיגות,
+  // שערים/TOC, איזון, AQ, הערות, עיטורים, ריהוט ומספור).
+  const { buildPageModel } = require('./page-model');
+  // אינטגריטי נכסים (§21-10): מזהי הנכסים שנפתרו בפועל — לאימות שכל הפניה
+  // ב-LineModel נפתרה (resolvedAssetIds — API קריאה של ה-resolver).
+  const resolvedAssetIds = (docAssets && typeof docAssets.resolvedAssetIds === 'function')
+    ? new Set(docAssets.resolvedAssetIds()) : null;
+  const pageModelResult = buildPageModel({
+    pages, tokens, settings, contentHashIn: hashIn
+  }, {
+    measure: api,
+    ...(resolvedAssetIds && resolvedAssetIds.size ? { assets: { ids: resolvedAssetIds } } : {})
+  });
+  for (const v of pageModelResult.validation.violations) {
+    const rec = ledger.create('page-model-invalid', `${v.code}:${(v.detail || '').slice(0, 40)}`, null, v, 'page-model');
+    ledger.transition(rec.issue_id, 'persists', 'page-model', `PageModel invariant violated: ${v.code}`);
+  }
+  eventLog.emit('page-model', 'page-model-built', {
+    schema: pageModelResult.model.schema,
+    pages: pageModelResult.model.pages.length,
+    geometryHash: pageModelResult.model.geometryHash.slice(0, 16),
+    contentHash: pageModelResult.model.contentHash.slice(0, 16),
+    validation: pageModelResult.validation.summary
+  });
+
+  return {
+    metadata, tokens, pages, ledger, events: eventLog,
+    toc, numbers,
+    tocPages: tocPagesAll,          // **S9:** עמודי תוכן־העניינים האמיתיים (אובייקטים בתוך pages)
+    tocInsert: tocInsertInfo,       // **S9:** היכן הוכנסו וכמה
+    numberingAudit,                 // **S9:** ממצאי pn-sequence/pn-overflow
+    settings,
+    contentHashIn: hashIn,
+    contentPreserved,
+    layoutHash: finalHash,
+    plannedLayoutHash: planned.hash,
+    geometryNeutralVerified,
+    ornaments: ornamentPass,
+    retreat: planned.retreat,
+    sideNotes: sideNotePlacement,
+    endnotePages: endnotePagesInfo,
+    endnotePagesInfo,
+    scope,
+    customStyles: customStylesRes,  // **S11:** הסגנונות שהופעלו בפועל (כולל שגיאות אימות)
+    stageSnapshots,                 // **S1-ח:** צילומי-מצב/deltas/הקשר-עמוד (או null)
+    recommendations,                // **S11:** המלצות עריכה עם הוכחות (או null אם כובו)
+    // **פרוסה 2:** חוזי התכנון + ה-trace
+    planContracts,
+    pageItemValidation,               // **שלב 6 פרוסה 2:** אימות החוזים מול ה-registry
+    // **שלב 7:** מודל העמוד הסופי — immutable; המקרינים (שלב 8) יקראו בלבד.
+    // לא עובר בסריאליזציה של ה-Worker (ui-result-v1) — ה-UI אינו צריך עדין
+    // את המודל המלא; הייצוא והבדיקות צורכים אותו ישירות מהתוצאה.
+    pageModel: pageModelResult.model,
+    pageModelValidation: pageModelResult.validation,
+    plannerTrace: plannerTrace.enabled ? plannerTrace.toJSON() : plannerTrace.stats()
+  };
+}
+
+module.exports = { typeset };

@@ -1,0 +1,94 @@
+  // **S4.9 (פרופיל העימוד המקורי):** הגדרות שמקורן ב-default_settings.json של
+  // התוכנה המקורית (importImudSettings מסמן layout-profile='imud' ומצרף
+  // את ה-JSON הגולמי) ⇒ הפעלת הפורט הנאמן של מנוע המקור. התנהגות המקור
+  // היא המפרט — כולל הגיאומטריה המדויקת שנמדדה מקובצי הייחוס שהעלה המשתמש
+  // (בקשת 03.11: "בדיקת עימוד מתמטית ומוחלטת דרך וורקפלו").
+  // **שלב ההעברה למנוע המאוחד — דגל בדיקה דו-מנועי:** ‏RED_UNIFIED_IMUD=1
+  // משאיר את אותן ההגדרות בדיוק (כולל _imudRaw והמפתחות המיובאים) אך מריץ
+  // את המנוע המאוחד. זהו **מנגנון הוכחת שקילות בלבד** (tools/layout-parity/run-ours.js --unified):
+  // אסור שיהיה דרך להפעלה בנתיב החי. הלקח מהחיתוך הכושל של 9c.4 (דוח חקירת
+  // האתר החי, סעיף ד): ה-CI בדק את המנוע שהמשתמשים *לא* קיבלו — הדגל הזה
+  // מאפשר לבדוק את שניהם על אותם קלטים ולהשוות מול בסיס 9C.3.
+  // **ענף preview לצורך parity (engine/legacy-parity-preview-20261119):** אותה
+  // הפעלה מדויקת זמינה גם ב־settings עצמם (`_engine-force-unified === true`) —
+  // דגל in-band שזורם באותו ערוץ הגדרות דרך ה־Worker לנתיב ה־UI החי של ענף
+  // ה־preview בלבד. זו לא מנגנון dispatch מקבילי: אותה נקודת הכרעה אחת
+  // בדיוק, וב־main הדגל לא נקבע לעולם (browser-entry של main אינו מזריק אותו).
+  const forceUnifiedImud = (!!(typeof process !== 'undefined' && process.env
+    && String(process.env.RED_UNIFIED_IMUD) === '1'))
+    || !!(settingsIn && settingsIn['_engine-force-unified'] === true);
+  if (forceUnifiedImud && settingsIn) {
+    const unsupported = getSettingDefs()
+      .filter((definition) => definition.unifiedSupport === false
+        && Object.prototype.hasOwnProperty.call(settingsIn, definition.id)
+        && JSON.stringify(settingsIn[definition.id]) !== JSON.stringify(definition.default))
+      .map((definition) => definition.id);
+    if (unsupported.length) {
+      const error = new Error('unified-unsupported-settings: הגדרות אלו עדיין אינן מחוברות ל-PageModel המאוחד: ' + unsupported.join(', '));
+      error.code = 'unified-unsupported-settings';
+      error.settingKeys = unsupported;
+      throw error;
+    }
+  }
+  if (!forceUnifiedImud && settingsIn && settingsIn['_layout-profile'] === 'imud' && settingsIn._imudRaw) {
+    const { legacyTypeset } = require('../layout/legacy-imud-flow');
+    return legacyTypeset(rawText, settingsIn, env);
+  }
+  // **S10 (REQ-UI-03):** מזליף התקדמות — null כשלא סופק (אפס תקורה במסלול הרגיל).
+  const onProgress = typeof env.onProgress === 'function' ? env.onProgress : null;
+  const prog = (stage, pct, label, extra) => {
+    if (onProgress) onProgress(Object.assign({ stage, pct, label }, extra || {}));
+  };
+  // **D-39 (P0-4):** מקור־האמת note-placement-mode; קלט משתמש מפורש גובר על נגזרות.
+  const settings = derivePlacementFlags({ ...getDefaultSettings(), ...(settingsIn || {}) });
+  // **Iteration-006 (RC-M4 — חוזה הצבת סימנים משולבים במנוע המאוחד):** המאוחד
+  // מקרין מילים ממוקמות-מוחלט (PageModel) והדפדפן מציב ניקוד ב-GPOS
+  // mark-to-base (advance 0 בפועל) — המדידה חייבת להאמין לרינדרר הזה.
+  // הפורט (legacy-imud-flow) מודד hmtx בהפרדה — כמו מנוע המקור שייצר את
+  // הייחוס (הוכחה: הצרינת חלון «וְהָיָה» בייחוס 52.4px = hmtx 47.06+רווח;
+  // תיבת הדיו ב-PDF 47.09px = סימנים מופרדים). ראו measure-api::_isMappedMark.
+  settings['_marks-advance'] = 'combined';
+  const eventLog = new EventLog(settings['trace-verbosity'] || 'standard'); // נצרך בפועל (P0-5)
+  const ledger = new Ledger();
+  const notesMode = settings['note-placement-mode'];
+  const parenScale = Number(settings['paren-style-scale']) || 1;
+
+  // **S11 (REQ-PAR-06):** סגנונות מותאמים — פענוח + רישום שגיאות אימות (כמו _customPages).
+  // הפקד הזה אינו ברישום ההגדרות (נכס מסמך, לא הגדרת מנוע) — דפוס _customPages של S8.
+  const customStylesRes = settings._customStyles
+    ? require('../extensions/style-schema').parseCustomStyles(settings._customStyles)
+    : { ok: true, styles: [], errors: [] };
+  const customStyles = customStylesRes.styles;
+  const { CustomStyleCounters, matchBlockStyle, matchInlineStyles, inlineSizeFactor } = require('../extensions/apply-styles');
+  const counters = new CustomStyleCounters();
+  for (const err of customStylesRes.errors) {
+    const rec = ledger.create('settings-verification', `custom-styles:${err.code}`, null, { path: err.path, message: err.message }, 'parse');
+    ledger.transition(rec.issue_id, 'persists', 'parse', `custom style rejected: ${err.code}`);
+  }
+  // **S11:** עוגני תוכן לפסקאות — לזיהוי ממצאים בין הרצות (בפרט הוכחות המלצות־עריכה):
+  // tail = 40 התווים האחרונים של שורת המקור; head = 40 הראשונים. העברת מילה בין
+  // פסקאות משנה את הזנב של הנותן/המקבל בלבד — ולכן זהות שאר הפסקאות נשמרת.
+  settings._tokenTexts = new Map();
+
+  // ---- CP1: parse ----
+  // **S4.5 (03.11):** מזהי הטקסט מוגדרים — קידומת הערת סיום ותוחמי הערות מגיעים
+  // מההגדרות (ברירת מחדל = המקור: 'הערת סיום -', '[', ']'). ערך ריק מבטל זיהוי.
+  const parseOpts = {
+    endnotePrefix: settings['en-line-prefix'],
+    fnOpen: settings['fn-delim-open'],
+    fnClose: settings['fn-delim-close']
+  };
+  // **שלב 2 — פענוח דרך המודל הקנוני:** lexer+tokenizer (הפרסר הקיים, לא חדש)
+  // → buildDocumentModel (מבנה + זהות + מקור) → modelToTokens (תחזית נגזרת).
+  // הטוקנים זהים במלואם לישירים (בדיקות adapter-equality על הקורפוסים);
+  // המודל נבנה טרום-מדידה ואינו מכיל שום החלטה גאומטרית.
+  const lexResult = lexDocument(rawText, parseOpts);
+  const detail = tokenizeDetailed(lexResult.bodyLines, parseOpts);
+  const inlineOptions = {
+    fontMarkers: settings['_inline-font-markers'] || settings._inlineFontStyles || settings._inlineFontMarkers || [],
+    knownFamilies: settings['_inline-font-families'] || settings._inlineFontFamilies || []
+  };
+  // **שלב 4 מקטע ב׳ (הוראה §6 — חיבור נכסים):** ה-AssetResolver המאומת שהגיע מה-Worker
+  // מוזרם לבניית המודל (תמונות מזוהות כפריטי תוכן עם assetId + מידות
+  // מהבתים), ובהמשך למנגנון המדידה דרך ctx.assetResolver של הגשר —
+  // אותו resolver, אותן זהויות, בלי נתיבי קבצים מקומיים. נכס שלא נפתר — אבחון

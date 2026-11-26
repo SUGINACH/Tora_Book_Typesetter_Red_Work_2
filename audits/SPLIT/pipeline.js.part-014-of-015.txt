@@ -1,0 +1,109 @@
+    eventLog.emit('render', 'content-preservation-failed', {
+      mismatches: mismatchDetail.slice(0, 6),
+      total: mismatchDetail.length
+    });
+  }
+
+  // **P1-2: \u05d0\u05db\u05dc\u05d5\u05e1 parenRanges \u05de\u05de\u05e4\u05ea \u05d4\u05d4\u05d9\u05e7\u05e3** \u2014 \u05d4\u05d2\u05e0\u05ea paren-cross-boundary \u05d7\u05d9\u05d4
+  {
+    let spanId = 0;
+    for (const b of blocks) {
+      if (b.kind !== 'paragraph' || !b.parenCharSpans || !b.parenCharSpans.length) continue;
+      if (!b.flatWordOffsets || !b.flatWordOffsets.length) continue;
+      // \u05de\u05d9\u05e4\u05d5\u05d9 \u05d8\u05d5\u05d5\u05d7\u05d9 (...) \u05dc\u05de\u05d3\u05d3\u05d9 \u05de\u05d9\u05dc\u05d9\u05dd \u05d1\u05e8\u05e6\u05e3 \u05d4\u05d1\u05dc\u05d5\u05e7 (\u05e1\u05d3\u05e8 \u05de\u05e1\u05de\u05da, \u05dc\u05d0 \u05d7\u05d9\u05e4\u05d5\u05e9\u05d9\u05dd)
+      const ranges = [];
+      for (const sp of b.parenCharSpans) {
+        const startW = b.flatWordOffsets.find(x => x.at > sp.from && x.at < sp.to);
+        // **S6.0 (R2-M5):** find החזיר את המילה הראשונה בטווח (שהיא startW
+        // עצמו) ⇒ כל טווח סוגריים רב-מילים קרס למילה אחת והגנת
+        // paren-cross-boundary הייתה מתה. כעת נלקחת המילה ה**אחרונה** בטווח.
+        let endW = null;
+        for (const off of b.flatWordOffsets) {
+          if (off.at > sp.from && off.at < sp.to && off.at >= (startW ? startW.at : 0)) endW = off;
+        }
+        if (startW && endW) ranges.push({ startWi: b.flatWordOffsets.indexOf(startW), endWi: b.flatWordOffsets.indexOf(endW) });
+      }
+      for (const r of ranges) {
+        // \u05de\u05d9\u05e4\u05d5\u05d9 \u05de\u05d3\u05d3\u05d9 \u05de\u05d9\u05dc\u05d4 \u05dc\u05e9\u05d5\u05e8\u05d5\u05ea \u05d4\u05d1\u05dc\u05d5\u05e7 \u2014 \u05d5\u05de\u05e9\u05dd \u05dc\u05de\u05e7\u05d5\u05dd \u05d1\u05e4\u05e8\u05d9\u05e1\u05d4
+        let acc = 0, startLine = -1, endLine = -1;
+        for (let li = 0; li < b.lines.length; li++) {
+          const len = (b.lines[li].words || []).length;
+          if (startLine < 0 && acc + len > r.startWi) startLine = li;
+          if (endLine < 0 && acc + len > r.endWi) endLine = li;
+          acc += len;
+        }
+        if (startLine < 0 || endLine < 0) continue;
+        const found = { start: null, end: null };
+        for (const pg of pages) {
+          for (let c = 0; c < pg.columns.length; c++) {
+            for (const ln of pg.columns[c]) {
+              const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
+              if (tok !== b.tokenId) continue;
+              const lIdx = ln.meta && ln.meta.lineIdx != null ? ln.meta.lineIdx : null;
+              if (lIdx === null) continue;
+              if (lIdx === startLine) found.start = { page: pg.index, col: c };
+              if (lIdx === endLine) found.end = { page: pg.index, col: c };
+            }
+          }
+        }
+        if (found.start && found.end) {
+          spanId++;
+          const host = pages.find(pg => pg.index === found.start.page);
+          if (host) {
+            host.parenRanges = host.parenRanges || [];
+            host.parenRanges.push({
+              id: `p${spanId}@${b.tokenId}`,
+              startPage: found.start.page, startCol: found.start.col,
+              endPage: found.end.page, endCol: found.end.col
+            });
+          }
+        }
+      }
+    }
+    if (spanId) eventLog.emit('scope-map', 'paren-ranges-populated', { count: spanId });
+  }
+
+  // ---- ledger finalize + CP5 ----
+  // **S1-ח:** צילום cp5-final — המצב שממנו נגזר layoutHash; delta ריק מול
+  // cp4-decorations הוא הוכחה פר-שורה שאף שלב מאוחר לא הזיז שורות.
+  if (snapTracker) {
+    snapTracker.capture(pages, 'cp5-final', 'render');
+    eventLog.emit('render', 'stage-snapshot-captured', { checkpoint: 'cp5-final', pageCount: pages.length });
+  }
+  eventLog.emit('ledger-finalize', 'summary', ledger.summary());
+  const finalHash = layoutHash(pages); // hash \u05e9\u05dc \u05d4\u05de\u05e6\u05d1 \u05d4\u05e1\u05d5\u05e4\u05d9 (\u05d3\u05d8\u05e8\u05de\u05d9\u05e0\u05d9\u05d6\u05dd \u05d1\u05d9\u05df\u05be\u05e8\u05d9\u05e6\u05d5\u05ea)
+  eventLog.emit('render', 'cp5-render-ready', { layoutHash: finalHash });
+  prog('render', 100, 'מוכן לתצוגה', { totalPages: pages.length, layoutHash: finalHash });
+
+  // **S11 (REQ-GOV-11):** המלצות עריכה — רק עם הוכחת dry-run חיה (D-16).
+  // דוק >200 עמודים ⇒ לא אוטומטי (שומר ביצועים); env.wantRecommendations=true ⇒ כן.
+  let recommendations = null;
+  if (!env || env.noRecommendations !== true) {
+    recommendations = computeEditingRecommendations(
+      rawText, settingsIn || {},
+      { pages, ledger, layoutHash: finalHash },
+      { force: !!(env && env.wantRecommendations === true) }
+    );
+  }
+
+  // **S1-ח:** אסוף צילומי-המצב לאובייקט אבחוני קומפקטי (deltas + הקשר-עמוד
+  // + סיכום סיבתי Gold) — או null כשהמנגנון כבוי (ברירת מחדל).
+  const stageSnapshots = snapTracker ? snapTracker.finalize(ledger) : null;
+
+  // **שלב 5 פרוסה 2 (§2.5 — חוזי ColumnModel/PagePlan):** השלמת התכנון —
+  // כאן, בסוף הזרימה (אחרי ה-DP, הנסיגות, שערים/TOC שמאנדקסים עמודים,
+  // איזון-סוף-פרק, AQ, הערות-צד ועיטורים), נבנים חוזי העמודים, מאומתים
+  // וקופאים: אין לזיזת שורה/הערה אחרי נקודה זו — תצוגה וייצוא קוראים בלבד.
+  // דיאגנוסטיקות חוזה נרשמות ל-ledger (page-plan-invalid) — לא מוסתרות.
+  const planContracts = finalizePagePlans(pages, {
+    settings, lineH: Math.round(settings['body-font-size-pt'] * (96 / 72) * settings['body-line-height']),
+    ledger, eventLog, trace: plannerTrace
+  });
+  eventLog.emit('page-plan', 'contracts-finalized', { ...planContracts, trace: plannerTrace.stats() });
+
+  // **שלב 6 פרוסה 2 (§5 — הרישום כסמכות תפעולית):** מעבר אימות החוזים —
+  // כל פריט שהוצב בפועל נבדק מול ה-descriptor של סוגו ב-registry, והערות
+  // גם מול תקינות החותמת. הפרות נרשמות ל-ledger (page-item-contract) —
+  // הרישום מאמת את מה שהבונים מייצרים; הוא אינו מקבילי להם.
+  const { validatePageItems } = require('../layout/page-items');
+  const pageItemValidation = validatePageItems(pages);

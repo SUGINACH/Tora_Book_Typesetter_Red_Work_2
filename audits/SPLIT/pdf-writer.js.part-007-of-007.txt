@@ -1,0 +1,74 @@
+    ? `[${round2(-extPt)} ${round2(-extPt)} ${round2(wPt + extPt)} ${round2(hPt + extPt)}]`
+    : trimbox;
+  const bleedbox = bleedPt > 0.01
+    ? `[${round2(-bleedPt)} ${round2(-bleedPt)} ${round2(wPt + bleedPt)} ${round2(hPt + bleedPt)}]`
+    : trimbox;
+  pages.forEach((pg, i) => {
+    const annots = linkIds.get(i) || [];
+    const annotsStr = annots.length ? ` /Annots [${annots.map(id => `${id} 0 R`).join(' ')}]` : '';
+    // **S5.1:** רשימת גופנים דינמית — מחרוזת זהה בדיוק לצירופים הקיימים
+    // (סדר F1,F2,F3,F4), ותוספת טבעית ל-/F5 (גוף הערה) ו-/F6 (הערות-צד).
+    const fontPairs = [['/F1', ID.type0]];
+    if (font2) fontPairs.push(['/F2', ID.type0b]);
+    if (font3) fontPairs.push(['/F3', ID.type0c]);
+    if (font4) fontPairs.push(['/F4', ID.type0d]);
+    if (font5) fontPairs.push(['/F5', ID.type0e]);
+    if (font6) fontPairs.push(['/F6', ID.type0f]);
+    // **S73:** הגופנים הדינמיים באותם משאבים לכל עמוד — סדר קבוע (דטרמיניזם)
+    extraFonts.forEach((ef, i) => fontPairs.push([`/F${7 + i}`, ef.ids.type0]));
+    const fontRes = `/Font << ${fontPairs.map(([n, id]) => `${n} ${id} 0 R`).join(' ')} >>`;
+    pdf.put(pageIds[i], `<< /Type /Page /Parent ${ID.pages} 0 R /MediaBox ${mediabox} /TrimBox ${trimbox} /BleedBox ${bleedbox} /Resources << ${fontRes} >> /Contents ${contentIds[i]} 0 R${annotsStr} >>`);
+    pdf.put(contentIds[i], Buffer.concat([
+      Buffer.from(`<< /Length ${contents[i].length} >>\nstream\n`, 'latin1'),
+      contents[i],
+      Buffer.from('\nendstream', 'latin1')
+    ]));
+  });
+
+  // ---- קישורי TOC ----
+  let linkCursor = 0;
+  for (const link of tocLinks || []) {
+    const id = linkIds.get(link.page)[0] ? null : null;
+    void id;
+  }
+  // סדר הקצאת הקישורים: לפי סדר tocLinks (אותו סדר בשמור המזהים)
+  {
+    const perPage = new Map();
+    for (const link of tocLinks || []) {
+      if (!perPage.has(link.page)) perPage.set(link.page, []);
+      perPage.get(link.page).push(link);
+    }
+    for (const [pgIdx, links] of perPage) {
+      const ids = linkIds.get(pgIdx);
+      links.forEach((link, j) => {
+        const x1 = link.x * PX_TO_PT, y1 = hPt - (link.y + link.h) * PX_TO_PT;
+        const x2 = (link.x + link.w) * PX_TO_PT, y2 = hPt - link.y * PX_TO_PT;
+        pdf.put(ids[j], `<< /Type /Annot /Subtype /Link /Rect [${round2(x1)} ${round2(y1)} ${round2(x2)} ${round2(y2)}] /Border [0 0 0] /Dest [${pageIds[link.targetPage]} 0 R /XYZ null null null] >>`);
+      });
+    }
+    void linkCursor;
+  }
+
+  // ---- סימניות ----
+  if (outlineItems.length) {
+    pdf.put(ID.outlines, `<< /Type /Outlines /First ${roots[0].id} 0 R /Last ${roots[roots.length - 1].id} 0 R /Count ${flatOrder.length} >>`);
+    for (const it of flatOrder) {
+      const parts = [
+        '<< /Title ' + pdfTitleHex(it.title),
+        `/Parent ${it.parent ? it.parent.id : ID.outlines} 0 R`,
+        `/Dest [${pageIds[it.page]} 0 R /XYZ null null null]`,
+        `/Count ${it.children.length}`
+      ];
+      if (it.prev) parts.push(`/Prev ${it.prev.id} 0 R`);
+      if (it.next) parts.push(`/Next ${it.next.id} 0 R`);
+      if (it.children.length) parts.push(`/First ${it.children[0].id} 0 R /Last ${it.children[it.children.length - 1].id} 0 R`);
+      pdf.put(it.id, parts.join(' ') + ' >>');
+    }
+  } else {
+    pdf.put(ID.outlines, `<< /Type /Outlines /Count 0 >>`);
+  }
+
+  return pdf.build();
+}
+
+module.exports = { writePdf, PdfBuilder, PX_TO_PT, MM_TO_PT, visualOrderRtl, BRACKET_MIRROR };

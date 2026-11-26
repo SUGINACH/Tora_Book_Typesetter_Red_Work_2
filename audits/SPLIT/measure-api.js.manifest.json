@@ -1,0 +1,44 @@
+{
+  "source": "red-build/src/engine/typography/measure-api.js",
+  "branch": "engine/legacy-parity-preview-20261119",
+  "totalChars": 47999,
+  "sha256": "d7b9c3c87879d442002f9ecf4078be70a430c1dd4b17a24a363f2145c12d5ed0",
+  "parts": [
+    {
+      "file": "measure-api.js.part-001-of-009.txt",
+      "chars": 5977
+    },
+    {
+      "file": "measure-api.js.part-002-of-009.txt",
+      "chars": 5987
+    },
+    {
+      "file": "measure-api.js.part-003-of-009.txt",
+      "chars": 5976
+    },
+    {
+      "file": "measure-api.js.part-004-of-009.txt",
+      "chars": 5938
+    },
+    {
+      "file": "measure-api.js.part-005-of-009.txt",
+      "chars": 5987
+    },
+    {
+      "file": "measure-api.js.part-006-of-009.txt",
+      "chars": 5999
+    },
+    {
+      "file": "measure-api.js.part-007-of-009.txt",
+      "chars": 5995
+    },
+    {
+      "file": "measure-api.js.part-008-of-009.txt",
+      "chars": 5905
+    },
+    {
+      "file": "measure-api.js.part-009-of-009.txt",
+      "chars": 235
+    }
+  ]
+}

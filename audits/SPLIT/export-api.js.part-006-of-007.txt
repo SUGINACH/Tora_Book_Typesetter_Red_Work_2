@@ -1,0 +1,130 @@
+    // (legacy) וגם סלוט טקסטואלי מוטבע.
+    for (const pg of pages) {
+      if (pg.header) for (const s of (pg.header.slots || [])) {
+        if (!s) continue;
+        for (const w of (s.words || [])) {
+          const k = w.fontKey != null ? w.fontKey : s.fontKey;
+          if (k == null) continue;
+          if (!wordsByRole.has(k)) wordsByRole.set(k, []);
+          wordsByRole.get(k).push(w.text);
+        }
+        if ((!s.words || !s.words.length) && s.text && s.fontKey != null) {
+          if (!wordsByRole.has(s.fontKey)) wordsByRole.set(s.fontKey, []);
+          wordsByRole.get(s.fontKey).push(s.text);
+        }
+      }
+      if (pg.folio && pg.folio.text && pg.folio.fontKey != null) {
+        if (!wordsByRole.has(pg.folio.fontKey)) wordsByRole.set(pg.folio.fontKey, []);
+        wordsByRole.get(pg.folio.fontKey).push(pg.folio.text);
+      }
+    }
+    const mkRoleFont = (roleKey, family) => {
+      const prof = registeredFontsRef.get(family);
+      if (!prof) return null;
+      const parts = wordsByRole.get(roleKey) || [];
+      if (!parts.length) return null;
+      const sub = buildSubset(prof, charInventory(parts.join(' ')));
+      return sub.ok ? mkFont(sub) : null;
+    };
+    // **Iteration-003 (מילת-חלון):** משפחת החלון — FrankReal-Bold כשרשומה
+    // תחת שמה, ואם לא — המשפחה 'FrankReal' (הקטלוג רושם את FrankReal-Bold.ttf
+    // תחת 'FrankReal'; בלי הנפילה מילות החלון נפלו ל-/F1 גוף).
+    const fontForWriter2 = mkRoleFont('window', 'FrankReal-Bold') || mkRoleFont('window', 'FrankReal');
+    const fontForWriter3 = mkRoleFont('heading', 'DavidLibre-Bold');
+    // **Iteration-003:** משפחת גוף ההערה מההגדרות (f-note-body-font — אסיסטנט
+    // קל מאוד בפרוביל IMUD, כמו fnApi של המורשת); נפילה היסטורית ל-FRL.
+    const fnBodyFamilyForRole = (settings && settings['f-note-body-font']) || 'Frank Ruhl Libre';
+    const fontForWriter5 = mkRoleFont('fnbody', fnBodyFamilyForRole) || mkRoleFont('fnbody', 'Frank Ruhl Libre');
+    const fontForWriter6 = mkRoleFont('margin', 'Hadassah Friedlaender');
+    // **S4.26 (כמו נתיב הטקסט):** הגופן הרביעי — Frank Ruhl Libre כ-fallback
+    // לפיסוק שחסר בגוף הראשי (בנתיב המודל היה מת תמיד — חיפוש מילים במפתח
+    // 'David Libre' שאינו קיים אף פעם). תווים חסרים ב-/F1 שקיימים ב-FRL.
+    let fontForWriter4 = null;
+    {
+      const frlProfile = registeredFontsRef.get('Frank Ruhl Libre');
+      if (frlProfile && fontForWriter) {
+        const missingChars = new Set();
+        const scan = (lines) => {
+          for (const ln of lines) {
+            for (const w of (ln.words || [])) {
+              for (const ch of String(w.text || '')) {
+                if (fontForWriter.cidOf(ch) === 0 && glyphIdOf(frlProfile, ch) !== 0) missingChars.add(ch);
+              }
+            }
+          }
+        };
+        for (const pg of pages) {
+          scan(pg.spanning ? pg.spanning.lines : []);
+          scan(pg.lines || []);
+          for (const fn of (pg.footnotes || [])) scan([{ words: fn.words || [] }]);
+          if (pg.folio && pg.folio.text) scan([{ words: [{ text: pg.folio.text }] }]);
+          if (pg.header) for (const s of (pg.header.slots || [])) if (s && s.text) scan([{ words: [{ text: s.text }] }]);
+        }
+        if (missingChars.size) {
+          const punctSubset = buildSubset(frlProfile, charInventory([...missingChars].join('')));
+          if (punctSubset.ok) fontForWriter4 = mkFont(punctSubset);
+        }
+      }
+    }
+    // משפחות רשודות נוספות (מפתחות שאינם תפקידים) — כמו הנתיב הקיים
+    const ROLE_KEYS = new Set(['window', 'heading', 'fnbody', 'margin']);
+    const extraFonts = [];
+    for (const key of wordsByRole.keys()) {
+      if (ROLE_KEYS.has(key) || !registeredFontsRef.has(key)) continue;
+      const sub = buildSubset(registeredFontsRef.get(key), charInventory(wordsByRole.get(key).join(' ')));
+      if (sub.ok) extraFonts.push({ key, font: mkFont(sub) });
+    }
+    // ---- סימניות וקישורים: מהמודל (נבנו בבונה מהטוקנים/החותמות) ----
+    const outline = (model.document && model.document.outline) || [];
+    const tocLinks = (model.document && model.document.tocLinks) || [];
+    const pageSizeMm = pageMmOf(settings);
+    const bytes = writePdf({
+      pages, pageSizeMm,
+      font: fontForWriter, font2: fontForWriter2, font3: fontForWriter3,
+      font4: fontForWriter4, font5: fontForWriter5, font6: fontForWriter6,
+      extraFonts, settings, outline, tocLinks
+    });
+    return {
+      ok: true, bytes,
+      info: {
+        pages: pages.length, glyphs: subset.kept, fontBytes: subset.bytes.length,
+        outline: outline.length, tocLinks: tocLinks.length,
+        geometryHash: model.geometryHash || null,
+        outlineItems: outline,
+        tocLinkTargets: tocLinks.map(l => l.targetPage),
+        tocLinkPages: tocLinks.map(l => l.page),
+        fromPageModel: true
+      }
+    };
+  } finally {
+    restoreFontRegistration(profileName, prevFont);
+  }
+}
+
+/** קריאת תת־הגופן (פעם אחת) למיפוי תו→gid חדש — ה־cidOf/charToGidEntries של הכותב. */
+const _subsetCache = new WeakMap();
+function parseSubsetCache(subset) {
+  if (!_subsetCache.has(subset)) {
+    /* node-only */ const { parseFont } = require('../typography/font-metrics');
+    _subsetCache.set(subset, parseFont(subset.bytes).font);
+  }
+  return _subsetCache.get(subset);
+}
+function subsetNewCmap(subset) {
+  const f = parseSubsetCache(subset);
+  const out = new Map();
+  for (const [cp, g] of f.charToGlyph) out.set(String.fromCodePoint(cp), g);
+  return out;
+}
+
+// ============ חבילת פרויקט ZIP (REQ-EXP-04) ============
+
+/**
+ * ייצוא חבילת פרויקט: מסמך + הגדרות (עם settings_version) + הרחבות + תבנית ערכה.
+ * כל החלקים JSON מובנה — אפס תבניות מחרוזות (שיעור regex-replacement).
+ * @returns {Buffer} — ZIP
+ */
+function exportProjectZip(text, settings, extras = {}) {
+  if (typeof Buffer === 'undefined') return Buffer.alloc(0); // דפדפן — נתיב Node בלבד (מתועד)
+  /* node-only */ const { buildZip } = require('./zip-writer');
+  /* node-only */ const { exportProject } = require('./project-io');

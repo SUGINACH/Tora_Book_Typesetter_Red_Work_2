@@ -1,0 +1,36 @@
+{
+  "source": "red-build/src/engine/output/pdf-writer.js",
+  "branch": "engine/legacy-parity-preview-20261119",
+  "totalChars": 39133,
+  "sha256": "f95aed604fcae9272ecda4bc1ea6eec46e43d9182a3f525350db37ccfc099a39",
+  "parts": [
+    {
+      "file": "pdf-writer.js.part-001-of-007.txt",
+      "chars": 5953
+    },
+    {
+      "file": "pdf-writer.js.part-002-of-007.txt",
+      "chars": 5952
+    },
+    {
+      "file": "pdf-writer.js.part-003-of-007.txt",
+      "chars": 5923
+    },
+    {
+      "file": "pdf-writer.js.part-004-of-007.txt",
+      "chars": 5954
+    },
+    {
+      "file": "pdf-writer.js.part-005-of-007.txt",
+      "chars": 5961
+    },
+    {
+      "file": "pdf-writer.js.part-006-of-007.txt",
+      "chars": 5964
+    },
+    {
+      "file": "pdf-writer.js.part-007-of-007.txt",
+      "chars": 3426
+    }
+  ]
+}

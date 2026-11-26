@@ -1,0 +1,98 @@
+        const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
+        if (tok != null && !firstPageByToken.has(tok)) firstPageByToken.set(tok, pg);
+      }
+      // **Iteration-003:** h1 שנצרך לשער-משנה — עמוד השער הוא מקום הופעתו
+      // (בלי זה שורות ה-TOC של החלקים נעלמו אחרי צריכת הכותרת).
+      for (const tok of (pg._consumedH1Tokens || [])) {
+        if (!firstPageByToken.has(tok)) firstPageByToken.set(tok, pg);
+      }
+    }
+    const headingsAll = [];
+    for (const b of blocks) {
+      if (b.kind !== 'heading') continue;
+      const pageRef = firstPageByToken.has(b.tokenId) ? firstPageByToken.get(b.tokenId) : null;
+      if (!pageRef) continue;
+      headingsAll.push({
+        level: b.level,
+        text: b.lines.map(l => l.words.join(' ')).join(' ').trim(),
+        tokenId: b.tokenId, pageRef,
+      });
+    }
+    headingsAll.sort((a, b) => (a.pageRef.index - b.pageRef.index) || String(a.tokenId).localeCompare(String(b.tokenId)));
+
+    const measureToc = (t, sz) => api.measureTextWidth(t, sz);
+    const lineHToc = (sz) => api.lineHeightPx(sz);
+    // **Iteration-003 (מדידה=רינדור):** מודד לפי משפחה רשומה — שורות ה-TOC
+    // נמדדות בגופן הרמה (כמו rApi במורשת); נפילה שקופה למדידת הגוף.
+    const { MeasureAPI: MeasureAPIToc } = require('../typography/measure-api');
+    const { registeredFonts: registeredFontsToc } = require('../typography/measure-api');
+    const famMeasureCache = new Map();
+    const measureOfFamilyToc = (fam) => {
+      if (!fam || !registeredFontsToc.has(fam)) return null;
+      if (!famMeasureCache.has(fam)) {
+        famMeasureCache.set(fam, (t, sz) => new MeasureAPIToc({ ...settings, 'body-font': fam }, 'font-metrics').measureTextWidth(t, sz));
+      }
+      return famMeasureCache.get(fam);
+    };
+    // **D-107 (9b.2):** תוכן כללי — רמות 1–6; תוכן מפורט — רמות 2–6; רמה 7 מוסתרת
+    // בשניהם; שניהם פעילים בברירת המחדל. הסינון הקודם (כללי ≤2, מפורט = הכול)
+    // סתר את החלטת המשתמש — במקומו טווח מפורש לכל תוכן; דגלי toc-level-N-show
+    // נותרים הסינון העדין מעל הטווח (ברירת המחדל הנגזרת מהייבוא: [1..6]/[2..6]).
+    // **Iteration-003 (legacy parity):** כותרות התוכן כמו במקור; מספור סידורי
+    // לשורות — כבוי (המקור מציג תווית גימטריה בלבד; המפתחות הכלליים
+    // general/detailed-toc-count-numbering פירושם מניית עמודי התוכן בפוליו —
+    // לא מספרי שורות. נצרך ב-legacy-settings-map ל-count-toc-pages).
+    if (settings['toc-general-enabled'] !== false) {
+      const model = buildTocModel(headingsAll.filter(h => h.level >= 1 && h.level <= 6), settings);
+      const imudTocProf = !!(settings['_layout-profile'] === 'imud' || settings._imudRaw);
+      numberRows(model.rows, imudTocProf ? (settings['toc-count-row-numbers'] === true) : (settings['general-toc-count-numbering'] !== false));
+      const built = buildTocPages(model, 'toc-general', imudTocProf ? 'תוכן עניינים כללי' : 'תוכן העניינים', settings, measureToc, lineHToc, { ledger, eventLog, measureOfFamily: measureOfFamilyToc });
+      tocPagesAll = tocPagesAll.concat(built.pages);
+    }
+    if (settings['toc-detail-enabled'] !== false) {
+      const model = buildTocModel(headingsAll.filter(h => h.level >= 2 && h.level <= 6), settings);
+      const imudTocProf2 = !!(settings['_layout-profile'] === 'imud' || settings._imudRaw);
+      numberRows(model.rows, imudTocProf2 ? (settings['toc-count-row-numbers'] === true) : (settings['detailed-toc-count-numbering'] !== false));
+      const built = buildTocPages(model, 'toc-detail', imudTocProf2 ? 'תוכן עניינים מפורט' : 'תוכן העניינים המפורט', settings, measureToc, lineHToc, { ledger, eventLog, measureOfFamily: measureOfFamilyToc });
+      tocPagesAll = tocPagesAll.concat(built.pages);
+    }
+    if (tocPagesAll.length) {
+      const res = insertTocPages(pages, tocPagesAll, settings, { ledger, eventLog });
+      pages = res.pages;
+      tocInsertInfo = { inserted: res.inserted, at: res.at };
+      eventLog.emit('toc', 'toc-pages-inserted', { ...tocInsertInfo, total: tocPagesAll.length });
+    }
+    prog('toc', 78, 'תוכן העניינים', { totalPages: pages.length, tocPages: tocPagesAll.length });
+  }
+
+  // **S1-ח:** צילום cp3-structural — בסיס הוכחת הניטרליות של CP4 (cp4BodyBefore נלקח מיד).
+  if (snapTracker) {
+    snapTracker.capture(pages, 'cp3-structural', 'toc');
+    eventLog.emit('toc', 'stage-snapshot-captured', { checkpoint: 'cp3-structural', pageCount: pages.length });
+  }
+
+  // ---- CP4: decorations pass — geometry-neutral (invariant T1; D-47) ----
+  const cp4PageCount = pages.length;
+  const cp4BodyBefore = bodyGeometryHash(pages);
+
+  // S7.1.2: הערות צד — עיגון לפסקה, cascade, מיכל 20px, מעבר לעמוד הבא
+  // **שלב 6 פרוסה 2 (§8):** המקצה האנכי המשותף מהחותמות + trace של החלטות
+  // (רשם שלב 5 — אותו רשם של ה-Planner; ספירות תמיד זמינות).
+  const { placeSideNotes, verifyH7Conversion } = require('../layout/side-notes');
+  for (const pg of pages) pg.isRecto = pg.index % 2 === 0;
+  const sideNotePlacement = placeSideNotes(pages, settings, measureWithImpl, { ledger, eventLog, trace: plannerTrace });
+
+  // **S8 — פאס העיטורים (L5):** כל העיטורים overlay-rects על העמודים;
+  // אסור לגעת בשורות (invariant T1 — מוכח מיד לאחר מכן ב‑bodyGeometryHash).
+  // סוגר: REQ-ORN-01..04 + אודיט ornament-* במייצרים אמיתיים.
+  const { planPageOrnaments } = require('../decoration/ornament-plan');
+  const ornamentPass = planPageOrnaments(pages, settings, measureWithImpl, { ledger, eventLog });
+
+  // S7.1.1: עמודי הערות per-part — טוקנים גלויים + inline-refs (endnotes mode)
+  settings._endnoteTitleByPart = endnoteTitleByPart;
+  settings._endnoteColCapPx = regTpl.contentBox.height;
+  const endnoteBlocks = [...endnoteTokens];
+  if (notesMode === 'endnotes') {
+    for (const b of blocks) {
+      if (b.kind !== 'paragraph' || !b.notes || !b.notes.length) continue;
+      for (const n of b.notes) {

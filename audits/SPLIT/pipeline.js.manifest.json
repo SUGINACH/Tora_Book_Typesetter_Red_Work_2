@@ -1,0 +1,68 @@
+{
+  "source": "red-build/src/engine/core/pipeline.js",
+  "branch": "engine/legacy-parity-preview-20261119",
+  "totalChars": 87647,
+  "sha256": "7561f3b11a2180ac42061da535912f7332cfe1e1dded52fee548bf9ec5ec6741",
+  "parts": [
+    {
+      "file": "pipeline.js.part-001-of-015.txt",
+      "chars": 5935
+    },
+    {
+      "file": "pipeline.js.part-002-of-015.txt",
+      "chars": 5950
+    },
+    {
+      "file": "pipeline.js.part-003-of-015.txt",
+      "chars": 5990
+    },
+    {
+      "file": "pipeline.js.part-004-of-015.txt",
+      "chars": 5998
+    },
+    {
+      "file": "pipeline.js.part-005-of-015.txt",
+      "chars": 6000
+    },
+    {
+      "file": "pipeline.js.part-006-of-015.txt",
+      "chars": 5938
+    },
+    {
+      "file": "pipeline.js.part-007-of-015.txt",
+      "chars": 5933
+    },
+    {
+      "file": "pipeline.js.part-008-of-015.txt",
+      "chars": 5998
+    },
+    {
+      "file": "pipeline.js.part-009-of-015.txt",
+      "chars": 5828
+    },
+    {
+      "file": "pipeline.js.part-010-of-015.txt",
+      "chars": 5997
+    },
+    {
+      "file": "pipeline.js.part-011-of-015.txt",
+      "chars": 5966
+    },
+    {
+      "file": "pipeline.js.part-012-of-015.txt",
+      "chars": 5992
+    },
+    {
+      "file": "pipeline.js.part-013-of-015.txt",
+      "chars": 5982
+    },
+    {
+      "file": "pipeline.js.part-014-of-015.txt",
+      "chars": 5995
+    },
+    {
+      "file": "pipeline.js.part-015-of-015.txt",
+      "chars": 4145
+    }
+  ]
+}

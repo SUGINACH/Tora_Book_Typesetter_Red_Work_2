@@ -1,0 +1,131 @@
+    const c = ch.codePointAt(0);
+    return (c >= 0x200B && c <= 0x200F) || (c >= 0x202A && c <= 0x202E) || c === 0xFEFF;
+  }
+
+  /** קרנינג בין תווים סמוכים ב־em (מימוש A: 0 תמיד — כמו S1–S11). */
+  _kernEm(a, b) {
+    if (this.impl === 'font-metrics' && this.fontProfile) {
+      const k = fm.kernUnitsOf(this.fontProfile, a, b);
+      if (k !== 0) return (k / this.fontProfile.unitsPerEm) * this.fontFactor;
+    }
+    return 0;
+  }
+
+  /**
+   * רוחב טקסט ב‑px. מימוש B כולל קרנינג בר־מילה (hmtx + kern/GPOS) —
+   * ההבדל היחיד מ־A בנוסף לרוחבי הגליפים עצמם.
+   */
+  measureTextWidth(text, sizePt = null, trackingEm = DEFAULT_TRACKING) {
+    const size = this._fontSpec(sizePt);
+    const key = `${this.impl}|${this.fontProfileName || ''}|${size}|${trackingEm}|${text}`;
+    this.stats.calls++;
+    if (this.cache.has(key)) { this.stats.hits++; return this.cache.get(key); }
+    const str = String(text);
+    let w = 0;
+    let prev = null;
+    for (const ch of str) {
+      // **S4.16:** ניקוד ממופה (advance=0) — אין רוחב, אין tracking ואין קרנינג
+      // (הסימן נצמד לבסיס שלו; letter-spacing אינו חל על סימנים משולבים במדידת
+      // הדפדפן). prev נשאר הבסיס האחרון — קרנינג בין בסיסים דרך הניקוד נשמר.
+      if (this._isMappedMark(ch)) continue;
+      if (this._isZeroWidthControl(ch)) continue; // RLM/bidi — אפס-רוחב בכל מנוע תצוגה
+      if (prev !== null) w += this._kernEm(prev, ch);
+      w += this._charEm(ch) + trackingEm;
+      prev = ch;
+    }
+    const px = Math.max(0, w * size * (96 / 72)); // pt→px
+    this._cacheSet(key, px);
+    return px;
+  }
+
+  /**
+   * **S12.1-6 — cap-height מטבלאות אמת** (OS/2 sCapHeight; נפילה: ascender×0.7).
+   * משמש את יישור המילה הראשונה (dropword) במקום הקירוב הקבוע.
+   */
+  capHeightEm() {
+    if (this.impl === 'font-metrics' && this.fontProfile) {
+      return fm.capHeightEmOf(this.fontProfile) * this.fontFactor;
+    }
+    return 0.7; // הקירוב ההיסטורי (תיעוד dropword CSS)
+  }
+
+  /** **S12 (parity גיאומטרי):** ascent/descent ב־em — מפרופיל הגופן (hhea)
+   * כשנטען, אחרת הפרופיל המכויל (0.80/0.20 — תואם קו הבסיס ההיסטורי). */
+  ascentEm() {
+    if (this.impl === 'font-metrics' && this.fontProfile) {
+      return (this.fontProfile.ascender / this.fontProfile.unitsPerEm) * this.fontFactor;
+    }
+    return 0.80;
+  }
+  descentEm() {
+    if (this.impl === 'font-metrics' && this.fontProfile) {
+      return Math.abs(this.fontProfile.descender / this.fontProfile.unitsPerEm) * this.fontFactor;
+    }
+    return 0.20;
+  }
+
+  /** שורת "גובה" אחידה (baseline grid): fontSize × lineHeight (BRZ-2). */
+  lineHeightPx(sizePt = null) {
+    const size = this._fontSpec(sizePt);
+    // **S5.1:** בלי Math.round — 12pt×1.34=21.44px אורגל ל-21 ⇒ +2 שורות לעמוד
+    // (סוג המוקש שתוקן במנוע המורשת ב-S4.13, לא הופץ לנתיב ה-DP).
+    // **S5.1:** בלי Math.round — 12pt×1.34=21.44px אורגל ל-21 ⇒ +2 שורות לעמוד
+    // (סוג המוקש שתוקן במנוע המורשת ב-S4.13, לא הופץ לנתיב ה-DP).
+    return size * (96 / 72) * this.settings['body-line-height'];
+  }
+
+  /**
+   * מיקום שורות אופטימלי (KP) → מערך שורות עם רוחבים.
+   * @param {Function} [measureOverride] - הזרקת פונקציית מדידה (למשל פרופיל רוחב־גופן מהpipeline) — L1: entry יחיד דרך ההזרקה.
+   * @returns {Array<{words:string[], widthPx:number, badness:number}>}
+   */
+  layoutLines(words, maxWidthPx, sizePt = null, opts = {}, measureOverride = null) {
+    const knuth = require('./kp-linebreak');
+    const measure = measureOverride || ((t) => this.measureTextWidth(t, sizePt));
+    return knuth.breakLines(words, maxWidthPx, measure, this.lineHeightPx(sizePt), opts);
+  }
+
+  cacheStats() { return { ...this.stats, hitRate: this.stats.calls ? this.stats.hits / this.stats.calls : 0 }; }
+}
+
+/** **S5.2 (תיקון 6 — מדידת כותרות בגופן רשום):** API כבול למשפחה שנרשמה ב‑registerFont
+ * (מטריקות אמת hmtx/kern בגודל הכותרת), או null כשהמשפחה אינה רשומה —
+ * דפוס apiFor(family) של legacy-projector, מיוצא כאן כסטטי על המחלקה כדי
+ * שה-pipeline (widthFor) ישתמש בו בלי לרדוף אחרי מפת הגופנים בעצמו.
+ * מטומן לפי משפחה; המטמון מתרוקן בהסרת/איפוס גופנים (unregister/clear). */
+const _familyApiCache = new Map();
+MeasureAPI.forFamily = function forFamily(family, settings) {
+  if (!family || !registeredFonts.has(String(family))) return null;
+  const fam = String(family);
+  const sizeKey = settings && settings['body-font-size-pt'] != null ? String(settings['body-font-size-pt']) : '';
+  // **Iteration-006 (RC-M4):** חוזה הסימנים במפתח — מופע combined ומופע hmtx
+  // של אותה משפחה הם שתי מדידות שונות; בלי זה המופע הראשון שנוצר היה
+  // מוגש לשני המנועים.
+  const marksKey = settings && settings['_marks-advance'] === 'combined' ? '|mkC' : '';
+  const key = `${fam}|${sizeKey}${marksKey}`;
+  if (!_familyApiCache.has(key)) {
+    _familyApiCache.set(key, new MeasureAPI({ ...(settings || {}), 'body-font': fam }, 'font-metrics'));
+  }
+  return _familyApiCache.get(key);
+};
+
+/** **EXT-13 (איחוד מקור המדידה live↔ייצוא):** כשגוף הגוף רשום בפועל
+ * (registerFont) — מדידת האמת (font-metrics) מועדפת גם כשההגדרה היא
+ * 'table' (ברירת המחדל). בלי זה ה-live מדד בטבלאות המקורבות בזמן שהייצוא
+ * מדד במטריקות האמיתיות — סחף עמודים של 2% בספר אמת (1,021 מול 1,000;
+ * real-book-matrix.json) ועד 17% בקורפוס הגדול (794 מול 678). ההעדפה
+ * בטוחה: MeasureAPI נופל בשקיפות לטבלה כשאין גופן (_bindProfile). */
+function resolveMeasureImpl(settings) {
+  if (settings && settings['measure-impl'] === 'font-metrics') return 'font-metrics';
+  const name = settings && settings['body-font'];
+  if (name && registeredFonts.has(name)) return 'font-metrics';
+  return 'table';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// שלב 3 (§3.1-7/8/10/11) — מדידה קנונית של פריטי המודל: MeasuredItem.
+// **הרחבה בלבד** — המדידות הקיימות (measureTextWidth וכו') לא נגעו; לא נוצר
+// API שני: measureItem הוא שכבת הפריט-והסגנון מעל אותן פונקציות בסיס.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const { ptToPx, UNITS_VERSION } = require('./units');

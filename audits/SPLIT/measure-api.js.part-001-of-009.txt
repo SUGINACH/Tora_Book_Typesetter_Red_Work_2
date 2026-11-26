@@ -1,0 +1,118 @@
+// src/engine/typography/measure-api.js — Measurement single entry (REQ-LB-01) + Hebrew glyph-width metrics
+'use strict';
+
+/**
+ * MeasureAPI — הכניסה היחידה למדידת רוחב/גובה. אסור לקרוא offsetHeight מפוזר (lint ב‑CI).
+ * מימוש A = 'table' (טבלאות מכוילות — ברירת המחדל, המשך רציפות S1–S11);
+ * מימוש B = 'font-metrics' (S12: טבלאות אמת מקובץ גופן שנטען — hmtx/cmap/kern/GPOS)
+ * חתימה זהה; הפרופיל נרשם דרך registerFont ומופעל דרך ההגדרה measure-impl.
+ */
+
+const { charWidthEm, FONT_PROFILES } = require('./measure-table');
+const fm = require('./font-metrics');
+const { sha256Hex } = require('../assets/hash256');
+
+// **S5.2 (תיקון 5 — tracking שאין לאף מרנדר):** ברירת המחדל הייתה 0.02em —
+// המדידה "הרחיבה" כל שורה ב~2% יחסית לדיו: אף מרנדר (DOM/PDF) אינו מצייר
+// letter-spacing, והפרויקטור הגיאומטרי ערבב באותה שורה מדידות עם tracking=0
+// (מפורש) וברירת המחדל. כעת 0 — המודל = הדיו. נתיב המורשת אינו מושפע:
+// כל קריאותיו מעבירות tracking=0 במפורש (אומת בסקירה).
+const DEFAULT_TRACKING = 0; // em
+
+/** **ביקורת בטיחות 20.11 (U-14):** תקרת מטמון המחרורות לכל מופע MeasureAPI —
+ * אותם קבועים כמו מטמון הפריטים (מדיניות חסימה אחת לכל מטמוני המדידה).
+ * נמדד לפני החסימה (בקרה שלילית): ‏70,000 מחרורות שונות ⇒ ‏70,000 רשומות
+ * במופע — צמיחה בלתי-חסומה ב-Worker ארוך-חיים. */
+const STRING_CACHE_MAX_ENTRIES = 65536;
+const STRING_CACHE_EVICT_BATCH = 8192;
+
+/** גופנים רשומים (פרופיל → פרנסר). ההרשמה מפורשת — אין טעינת רשת (offline). */
+const registeredFonts = new Map();
+/** **תיקון ביקורת PR #22 (מפתח מטמון):** זהות תוכן לכל רישום — `fnt-<sha256[:14]>`
+ * (אותה נוסחה כמו font-resolver). השם הוא כינוי בלבד; החית של הסביבה ומפתח
+ * המטמון נגזרים מהזהות, לא מהשם — שני קבצים שונים תחת אותו שם לא יחלקו מדידות. */
+const _fontContentIds = new Map();
+/** מנעול סנכרון ניקוי דו-כיווני measure-api ↔ font-resolver (מונע נצנוץ). */
+let _fontClearSync = false;
+/** מזכר חית סביבה (מבוטל בכל שינוי רישום) — מדידות רבות לא ימיינו שמות שוב ושוב. */
+let _envFpMemo = null;
+
+/**
+ * **Iteration-006 (RC-M4):** סימנים משולבים (Mn) — ניקוד עברי, משולבים כלליים
+ * וסימני ערבית. הדפדפן מציב אותם ב-GPOS mark-to-base ב-advance 0 גם כשה-hmtx
+ * שלהם אינו אפסי (נמדד ב-FrankReal: 1.72–4.68px לסימן) — המדידה חייבת להאמין
+ * להצבה, לא ל-hmtx (ראו _isMappedMark).
+ */
+const COMBINING_MARK_RE = /[\u0300-\u036F\u0483-\u0489\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u0711\u0730-\u074A\u07A6-\u07B0\u0816-\u082D\u0859-\u085B\u08E3-\u0903]/;
+
+/** טביעת מבנה לגופן שנרשם ללא בתים (שחזור) — חלשה מזהות-תוכן אך דטרמיניסטית. */
+function _structuralFontFp(font) {
+  if (!font) return 'none';
+  return `u${font.unitsPerEm || 0}g${font.numGlyphs || 0}a${font.ascender || 0}d${font.descender || 0}`;
+}
+
+function _invalidateEnvFp() { _envFpMemo = null; }
+
+/**
+ * רישום גופן למדידת אמת (S12.1-5). קלט: בתים בלבד (Uint8Array/Buffer).
+ * @returns {{ok:boolean, error?:string, profile?:object, glyphCount?:number, mappedChars?:number}}
+ */
+function registerFont(profileName, bytes) {
+  const res = fm.parseFont(bytes);
+  if (!res.ok) return { ok: false, error: res.error };
+  registeredFonts.set(String(profileName), res.font);
+  _fontContentIds.set(String(profileName), `fnt-${sha256Hex(bytes).slice(0, 14)}`);
+  _invalidateEnvFp();
+  // **S6.0 (R7-L2):** גם רישום מנקה את מטמון ה-API-פר-משפחה — בעבר רק
+  // ההסרה ניקתה ⇒ רישום מחדש של אותה משפחה החזיר מופע ישן מהמטמון
+  // (קשור לגופן הקודם) והמדידה המשיכה במטריקות הישנות.
+  _familyApiCache.clear();
+  // **אופטימיזציה (19.11):** ניקוי מופעי ה-fallback המשותפים — אותה סיבה
+  // בדיוק (מופע font-metrics קשור-שם שלא יחזיק פרופיל גופן מת אחרי מחזור רישום).
+  _sharedFallbackApis.clear();
+  // **S4.26 (גליפים חסרים):** 'Frank Ruhl Libre' הוא fallback הפיסוק
+  // של מחסנית הרינדור (fontStack מוסיף אותו שני) — גם המדידה תשתמש
+  // בו לתווים שחסרים בגופן הראשי (בדיוק כמו הדפדפן).
+  if (String(profileName) === 'Frank Ruhl Libre') {
+    fm.setMissingGlyphFallbackFont(res.font);
+  }
+  return { ok: true, profile: res.font, glyphCount: res.font.numGlyphs, mappedChars: res.font.charToGlyph.size };
+}
+
+/** **S6.0 (R2-C1):** שחזור רישום קודם אחרי שימוש זמני (exportPdf) —
+ * font=null ⇒ הסרה רגילה. מונע מצב שבו ייצוא מוחק ל-worker את רישום
+ * הגופן של התצוגה החיה (המדידה היתה נופלת בשקט ל'table'). */
+function restoreFontRegistration(profileName, font, bytes) {
+  if (!font) { unregisterFont(profileName); return; }
+  const name = String(profileName);
+  registeredFonts.set(name, font);
+  if (bytes && bytes.length) {
+    _fontContentIds.set(name, `fnt-${sha256Hex(bytes).slice(0, 14)}`);
+  } else {
+    // בלי בתים: זהות מדויקת אם ה-resolver מחזיק את אותו פרנסר תחת הכינוי; אחרת — מבנית
+    let cid = null;
+    const fid = fontResolver.fontIdOfAlias(name);
+    if (fid && fontResolver.fontOf(fid) === font) cid = fid;
+    _fontContentIds.set(name, cid || `struct-${_structuralFontFp(font)}`);
+  }
+  if (String(profileName) === 'Frank Ruhl Libre') fm.setMissingGlyphFallbackFont(font);
+  _familyApiCache.clear();
+  // **ביקורת בטיחות 20.11 (U-13):** גם מופעי ה-fallback המשותפים חייבים להימחק —
+  // מופע font-metrics נקשר לפרופיל הגופן בבנאי; מופע שנוצר בזמן הרישום הזמני
+  // (מסלול exportPdf) המשיך למדוד בגופן הזמני גם אחרי השחזור (נמדד:
+  // ‏76.86 במקום 67.81 אחרי מחזור רישום-החלפה-שחזור + פינוי מטמון פריטים).
+  _sharedFallbackApis.clear();
+  _invalidateEnvFp();
+}
+
+/** הסרת גופן רשום. **תיקון ביקורת PR #22 (סנכרון ניקוי):** מסונכרן גם ל-font-resolver
+ * (הסרת הכינוי) — אין מצב שבו ה-resolver אומר "לא רשום" אך המדידה עדיין מודדת
+ * דרך רישום ישן, ולהפך. */
+function unregisterFont(profileName) {
+  const name = String(profileName);
+  registeredFonts.delete(name);
+  _fontContentIds.delete(name);
+  if (name === 'Frank Ruhl Libre') fm.setMissingGlyphFallbackFont(null);
+  _familyApiCache.clear(); // **S5.2:** מטמון ה-API-פר-משפחה נגרר אחרי ההרשמה
+  _sharedFallbackApis.clear(); // **U-13 (20.11):** אין מופע-fallback הקשור לגופן שהוסר
+  _invalidateEnvFp();

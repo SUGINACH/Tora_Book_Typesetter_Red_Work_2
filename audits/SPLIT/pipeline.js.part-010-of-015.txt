@@ -1,0 +1,106 @@
+        endnoteBlocks.push({ tokenId: b.tokenId, noteIndex: n.noteIndex, text: n.text, part: b.part || 1, marker: n.marker, fromInline: true, noteId: n.noteId || null, lines: [] });
+      }
+    }
+  }
+  let endnotePagesInfo = { count: 0, pages: [] };
+  if (notesMode === 'endnotes' && endnoteBlocks.length) {
+    const { buildEndnotePages } = require('../layout/endnote-pages');
+    endnotePagesInfo = { count: 0, pages: buildEndnotePages(endnoteBlocks, settings, measureWithImpl, (s2) => api.lineHeightPx(s2), { ledger, eventLog }) };
+    endnotePagesInfo.count = endnotePagesInfo.pages.length;
+  }
+
+  // **S5.4 (P-5 — עמודי endnotes ריקים/חסרים):** עמודי הערות-הסיום מצטרפים
+  // לרצף העמודים תמיד — בעבר הצטרפו רק כש-count-endnote-pages=true, ואז
+  // בברירת המחדל הם לא הופיעו כלל לא בתצוגה ולא בייצוא (אובדן תוכן בפרופיל
+  // DP). המספור/הגיליון נותר מותנה ב-count-endnote-pages — assignNumbers כבר
+  // מטפל בזה ממילא (endnotes לא נספרים כשהדגל כבוי).
+  if (endnotePagesInfo.pages.length) {
+    let idx = pages.length ? pages[pages.length - 1].index + 1 : 0;
+    for (const ep of endnotePagesInfo.pages) {
+      ep.index = idx++;
+      ep.template = buildPageTemplate(PAGE_TYPES.ENDNOTES, settings, ep.index % 2 === 0);
+      pages.push(ep);
+    }
+    eventLog.emit('folio', 'endnote-pages-appended', {
+      count: endnotePagesInfo.pages.length,
+      numbered: settings['count-endnote-pages'] === true
+    });
+  }
+
+  // **P0-6 (D-47): הוכחת ניטרליות אמיתית** — hash גיאומטריה מחושב מחדש אחרי
+  // פאס העיטורים ומושווה. הוספת עמודים מותרת (מסמן תוספת, לא מוטציה);
+  // כל שינוי בשורות קיימות או הסרת עמוד ⇒ הבדיקה נכשלת.
+  const cp5BodyAfter = pages.length >= cp4PageCount ? bodyGeometryHash(pages.slice(0, cp4PageCount)) : '<shrunk>';
+  const geometryNeutralVerified = cp5BodyAfter === cp4BodyBefore;
+  eventLog.emit('decorations', 'cp4-decoration-pass', {
+    geometryNeutral: geometryNeutralVerified,
+    sideNotesPlaced: sideNotePlacement.placed.length,
+    sideNotesDeferred: sideNotePlacement.deferred.length,
+    endnotePages: endnotePagesInfo.count
+  });
+
+  // **S1-ח:** צילום cp4-decorations — אחרי פאס העיטורים ועמודי ההערות (הפעם עם כל
+  // התוספות המבניות שהוכחו ניטרליות לשורות הקיימות).
+  if (snapTracker) {
+    snapTracker.capture(pages, 'cp4-decorations', 'decorations');
+    eventLog.emit('decorations', 'stage-snapshot-captured', { checkpoint: 'cp4-decorations', pageCount: pages.length });
+  }
+
+  // S7.1.3 + **9b.3 §3.3:** אימות H7 מורחב — זהות ownToken, יחידות פריט,
+  // שימור טקסט, עוגן מארחת צפוי (hostByH7 מהמתכנן), אין הצבה לפני עוגן,
+  // אין פריט חסר-מקור, דחויים נסגרו. מחובר לצינור (בעבר פונקציה יתומה).
+  const h7Mismatches = verifyH7Conversion(tokens, pages, sideNotePlacement, { hostByH7: planned.hostByH7 });
+  for (const m of h7Mismatches) {
+    const rec = ledger.create(m.kind || 'h7-conversion-missing', m.token, null, m, 'decorations');
+    ledger.transition(rec.issue_id, 'persists', 'decorations',
+      `H7 conversion verification: ${m.kind || 'h7-conversion-missing'}${m.expectedHost ? ` (expected host ${m.expectedHost}, anchor ${m.actualAnchor})` : ''}`);
+  }
+
+  // ---- folio numbering (D-36: פתיחות אינן מציגות גיליון; S9: נוסחת V1 start-idx+initial) ----
+  const numbers = assignNumbers(pages, settings);
+  prog('folio', 82, 'מספור עמודים', { totalPages: pages.length });
+  pages.forEach((pg, i) => {
+    pg.pageNumber = numbers[i].page;
+    pg.folioDisplay = numbers[i].shown ? numbers[i].display : '';
+    pg.pageNumberDisplay = numbers[i].display; // מקור page-num לכותרות עליונות (P1-1)
+  });
+
+  // **S9.1.6 — בודק אינווריאנטים מספור (pn-sequence / pn-overflow → ledger):**
+  // סדרה מונוטונית, בלי כפילות/דילוגים פרט ל"חסרים מוצהרים"; גיליון בתקציב רוחב.
+  const { auditNumbering } = require('../decoration/numbering-audit');
+  const numberingAudit = auditNumbering(pages, numbers, settings, (t) => api.measureTextWidth(t), { ledger, eventLog });
+
+  // **S9 (D-62): פענוח עוגנים + תוויות גיליון בשורות ה‑TOC — לפי המספור הסופי.**
+  if (tocPagesAll.length) {
+    const { resolveTocTargets } = require('../decoration/toc-builder');
+    const { tocPageLabel } = require('../decoration/folio');
+    resolveTocTargets(pages, tocPagesAll, numbers, settings, { formatLabel: (v) => tocPageLabel(v, settings) });
+  }
+
+  // ---- headers ----
+  // **S4.5 / Iteration-003 (legacy parity — מקור השם):** המורשת (legacy-imud-flow
+  // §1042) גוזרת את שם הספר לכותרת מ**המטא-דאטה של המסמך** (meta.bookTitle) —
+  // לא מהגדרת השער. הגדרת imud-book-title היא שדה טופס בתוכנה המקורית שברירת
+  // המחדל שלו (default_settings.json) היא שם מקום ("ספר מלכי המלוכה"); כשלמסמך
+  // יש מטא-דאטה אמיתי — המקור מציג אותו. עדכני כאן: מטא קודם, הגדרה כגיבוי.
+  const bookName = metadata['שם הספר'] || metadata['ספר'] || metadata['title'] || settings['imud-book-title'] || '';
+  const { trimEdgePunctuation } = require('../decoration/headers-builder');
+  // **FWD-1:** הפס חוצה־טורים נסרק גם הוא — כותרת H2 חיה שם עכשיו (S8)
+  const pageLines = (pg) => [
+    ...(pg.spanning ? pg.spanning.lines : []),
+    ...pg.columns.flatMap(c => c)
+  ];
+  // **Iteration-003 (legacy parity — הקשר רץ):** המורשת מנהלת currentH1/currentH2
+  // לאורך הספר (setHeader בזמן יצירת העמוד) — המרכז מציג את הפרק/ההקדמה
+  // הנוכחיים גם בעמודים בלי כותרת על העמוד עצמו. כאן: סריקה אחת בסדר העמודים;
+  // h0/h2 מעדכנים את currentH2 (כמו המורשת — h3 אינו משנה את המרכז), h1 מעדכן
+  // את currentH1 בלבד. עמודי TOC — מרכזם כותרת התוכן (S77 במורשת).
+  const stripSimanPrefix = (t) => String(t || '').replace(/^סימן\s+[א-ת]+[:\-–—\s]*/i, '').trim();
+  let runningH1 = '', runningH2 = '';
+  pages.forEach((pg, i) => {
+    let h1 = '', h2 = '';
+    pg._metadata = metadata; // S8: תיבות שער ראשי קוראות שם ספר/נושא (REQ-ORN-05)
+    if (pg.type === 'toc-general' || pg.type === 'toc-detail') {
+      // **S77 (כמו המורשת):** עמוד תוכן-עניינים — מרכזו הענייני = כותרת התוכן
+      h2 = (pg.toc && (pg.toc.headerTitle || pg.toc.title)) || 'תוכן העניינים';
+      pg.headerCtx = { bookName, h1: '', h2 };

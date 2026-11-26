@@ -1,0 +1,119 @@
+ *  הייתה שגויה מספרית) — נמוך, אך הסתברות אינה הוכחת נכונות: התנגשות אמיתית הייתה
+ *  מחזירה MeasuredItem של פריט אחר (נמדד בהזרקה מלאה). כעת המטמון מאמת
+ *  **מקור מדויק** בכל קריאה — התנגשות פוגעת בביצועים בלבד, לעולם לא בנכונות.
+ *  sha256Hex נשאר לזהויות
+ *  content-addressed (גופנים/נכסים) — שם הוא חלק מהחוזה. המפתח אינו נשמר
+ *  בין תהליכים ואינו חוצה את גבול ה-Worker — אין השלכות שחזור. */
+function _fmix32(h) {
+  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
+  return h | 0;
+}
+function _fastKeyHash(s) {
+  let h1 = 0x811c9dc5, h2 = 0x9e3779b9, h3 = 5381;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193);
+    h2 = Math.imul(h2 ^ Math.imul(i + 1, c), 0x85ebca6b);
+    h3 = (Math.imul(h3, 0x21) ^ c) | 0;
+  }
+  const len = s.length;
+  h1 = _fmix32(h1 ^ len); h2 = _fmix32(h2 ^ Math.imul(len, 0x9e3779b9)); h3 = _fmix32(h3 ^ h1);
+  return (h1 >>> 0).toString(16).padStart(8, '0')
+    + (h2 >>> 0).toString(16).padStart(8, '0')
+    + (h3 >>> 0).toString(16).padStart(8, '0')
+    + len.toString(16).padStart(8, '0');
+}
+
+/** זהות נכס content-addressed לפי שרשרת המועמדים של הפריט — מה-resolver בלבד
+ * (הזהות מחושבת מהבתים, לא מההצהרה). אותה הפניה (resourcePath) עם תוכן נכס
+ * אחר ⇒ מזהה אחר ⇒ מפתח מטמון אחר. פותר את הפגם שבו item.id לבדו קבע את המפתח. */
+function _assetIdentityFp(item, ctx) {
+  const ar = ctx && ctx.assetResolver;
+  if (!ar || !item || item.kind !== 'image') return '';
+  const p = item.payload || {};
+  const cands = [];
+  if (p.contentAssetId != null) cands.push(String(p.contentAssetId));
+  if (p.assetId != null) cands.push(String(p.assetId));
+  if (p.resourcePath != null) cands.push(String(p.resourcePath));
+  if (!cands.length) return 'no-candidates';
+  for (const c of cands) {
+    let r = null;
+    try { r = c.startsWith('ast-') ? ar.resolveById(c) : ar.resolve(c); } catch (_) { r = null; }
+    if (r && r.ok) return `id:${r.assetId}`;
+  }
+  return 'unresolved(' + cands.join('|') + ')';
+}
+
+/** **U-11 (20.11):** חשיש-ניתוב מֵימוֹז לטביעת הסביבה — מחושב פעם אחת לכל
+ * מחרוזת סביבה (ההפניה יציבה דרך המֵימוֹ של environmentFingerprint). משמש את
+ * קלט החשיש של המפתח בלבד; אימות הקריאה משווה את המחרוזת המלאה עצמה. */
+let _envRouteHashMemo = null;
+function _envRouteHash(env) {
+  if (!_envRouteHashMemo || _envRouteHashMemo.env !== env) {
+    _envRouteHashMemo = { env, h: _fastKeyHash(env) };
+  }
+  return _envRouteHashMemo.h;
+}
+
+/** מפתח מטמון מדידת פריט (§3.1-10) — **קנוני ודטרמיניסטי**.
+ * **תיקון שורש (ביקורת PR #22):** הקוד הקודם השתמש ב-item.id לבדו כשקיים מזהה —
+ * שני פריטים בעלי אותו מזהה ו-payload שונה (טקסט/תמונה/widthPct/ריצות גופן/
+ * אילוצי רוחב) קיבלו את אותה מדידה. כעת המזהה הוא רכיב אחד מיני רבים:
+ * (1) item.id אם קיים; (2) טביעת payload מלאה (טקסט, ריצות, widthPct, מזהי נכסים);
+ * (3) סוג הפריט; (4) טביעת סגנון מלאה (גודל, גובה-שורה, משקל, family);
+ * (5) זהויות גופן קנוניות — fontIds כתובות-תוכן + חית סביבה מזהויות-תוכן;
+ * (6) זהות נכס content-addressed מה-resolver (שרשרת המועמדים);
+ * (7) שפה וכיוון; (8) אילוצי מדידה מלאים (availableWidth/fit/align/widthPct)
+ * + מפתח הקשר; (9) גרסת מנוע המדידה; (10) חית סביבה **חיה** (מחושבת כעת
+ * מהרישומים בפועל — לא הצהרת caller) + חית ההקשר שהועברה. */
+function _itemCacheKey(item, style, ctx) {
+  // **מקטע ב׳ (זיכרון):** המפתח קומפקטי — חשיש יחיד על שריות הקנוניות המלאות
+  // (אותה חד-משמעיות, כולל זהות-תוכן של החלקים) — בספרים גדולים
+  // מיליוני מחרוזות-מפתח משורבות זיכרון משמעותי.
+  // **אופטימיזציה (19.11, הוראת ביצועים §5):** (א) _fastKeyHash במקום sha256Hex —
+  // המפתח משרת מטמון בתהליך בלבד (לא זהות content-addressed); (ב) ctx.constraints
+  // דרך מֵימוֹ קנוני לפי זהות — אותה הפניה לכל אורך ה-typeset.
+  // **ביקורת בטיחות 20.11 (U-11):** מוחזרים מקור-הפריט הקנוני המלא (sItem),
+  // טביעת הסביבה (env — הפניה משותפת למחרוזת המֵימוֹ של environmentFingerprint)
+  // והחשיש (k) יחד — המטמון מאמת מקור מדויק בכל קריאה; התנגשות hash אמיתית
+  // היא miss (חישוב מחדש), לא החזרת מדידה זרה — הגנת PR #22 מובטחת
+  // דטרמיניסטית, לא הסתברותית.
+  // פרדת רכיבים ב-NUL (\u0000): רכיבי המקור הגולמיים עטופים ב-JSON.stringify
+  // (מבריח תווי בקרה, כולל NUL עצמו) — המפריד חד-משמעי גם לרכיבים חיצוניים
+  // (item.id/resourcePath); אין היווצרות מקור זהה מרכיבים שונים.
+  // **זיכרון (הפרדת ה-env):** טביעת הסביבה (~16KB בקטלוג IMUD המלא) אינה
+  // מוטמעת עוד בכל רשומה — הרשומה מחזיקה הפניה למחרוזת המשותפת; נמדד
+  // לפני ההפרדה: ‏65,536 רשומות × ‏16KB ≈ ‏1.0GB שמור (OOM ב-very_long).
+  const it = item || {};
+  const raw = (v) => JSON.stringify(v == null ? '' : String(v));
+  const env = environmentFingerprint();
+  const sItem = [
+    'item-key-v3',
+    MEASURE_ENGINE_VERSION,
+    (ctx && ctx.environmentFingerprint) || '',
+    raw(it.kind),
+    raw(it.id),
+    _canonicalStringify(it.payload !== undefined ? it.payload : it),
+    _canonicalStringify(it.constraints || null),
+    _canonicalStringify(style || null),
+    raw(ctx && ctx.direction),
+    raw(ctx && ctx.language),
+    _canonicalStringifyStable((ctx && ctx.constraints) || null),
+    raw(ctx && ctx.constraintsKey),
+    raw(ctx && ctx.assetId),
+    raw(_assetIdentityFp(item, ctx))
+  ].join('\u0000');
+  // **זיכרון/מהירות:** ה-env נכנס לחשיש הניתוב דרך חשיש-עזר מֵימוֹז (96 ביט לכל
+  // שינוי סביבה) במקום העתקת ‏16KB לכל קריאה — הניתוב בלבד; האימות ב-get נשאר
+  // השוואת מחרוזות מדויקת של ה-env המלא (דטרמיניסטי).
+  return { k: 'ik3:' + _fastKeyHash(sItem + '\u0000' + _envRouteHash(env)), sItem, env };
+}
+
+/** **תיקון ביקורת PR #22 (immutability אמיתי):** הקפאה עמוקה — כל המבנים
+ * הפנימיים: inkBounds, segments וכל אובייקט segment, breakOpportunities וכל
+ * הזדמנות, diagnostics, natural, fit, placement. ידידותי למחזורים (seen)
+ * ודלג מוקדם על אובייקטים שכבר הוקפאו. */
+function _deepFreeze(value, seen) {
+  if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  if (seen === undefined) seen = new Set();
+  else if (seen.has(value)) return value;

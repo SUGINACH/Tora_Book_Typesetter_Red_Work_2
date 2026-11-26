@@ -1,0 +1,98 @@
+  // מפורש (image-unresolved-text-fallback), לא פלובק שקט.
+  const docAssets = (env && env.assets) || null;
+  const documentModel = buildDocumentModel(rawText, { lexResult, detail, parseOpts, inlineOptions, assets: docAssets });
+  const tokens = modelToTokens(documentModel);
+  // מיפוי טוקן ← בלוק מודל (blockId נגזר ב-adapter) — פריטי המודל הם הקלט
+  // למנוע השורות הקנוני (הוראה §10: DocumentModel → LineItems ישירות).
+  const blockById = new Map(documentModel.blocks.map(b => [b.id, b]));
+  // טקסט שטוח של בלוקי המודל — לחשבונאות שימור התוכן (מקטע ב׳):
+  // אותו מקור של הגוף ושל הפלט — טקסט קנוני בלי תחביר.
+  const modelFlatByToken = new Map();
+  for (const b of documentModel.blocks) modelFlatByToken.set(b.id, flatTextOf(b).flat);
+  const metadata = lexResult.metadata;
+  for (const t of tokens) {
+    const rawLine = String(t.raw != null ? t.raw : (t.text != null ? t.text : ''));
+    settings._tokenTexts.set(t.id, {
+      head: rawLine.slice(0, 40),
+      tail: rawLine.slice(-40)
+    });
+  }
+  const hashIn = contentHash(tokens);
+  eventLog.emit('parse', 'cp1-parsed', { tokens: tokens.length, contentHash: hashIn });
+  prog('parse', 5, 'פענוח המסמך', { tokens: tokens.length });
+
+  // ---- scope-map (S2.1.3: BEFORE measuring) ----
+  const segments = tokens.filter(t => t.type === 'paragraph').map((t, i) => ({ text: t.raw, paraIndex: i }));
+  const scope = scanBrackets(segments, { open: parseOpts.fnOpen, close: parseOpts.fnClose });
+  eventLog.emit('scope-map', 'cp2-scope', { pairs: scope.pairs.length, crossParagraph: scope.scopeMap.crossParagraphCount, unmatchedClosers: scope.unmatchedClosers.length });
+  prog('scope-map', 10, 'מיפוי סוגריים והערות', { pairs: scope.pairs.length });
+
+  // ---- measure + line-plan (L2) ----
+  // **S12 (REQ-LB-01 impl B):** measure-impl = table (ברירת מחדל — רציפות S1–S11) | font-metrics
+  // (טבלאות אמת מגופן רשום — hmtx/cmap/kern/GPOS; registerFont מפורש, אין רשת).
+  const api = new MeasureAPI(settings, resolveMeasureImpl(settings));
+  // **S70 (R7-M4):** עטיפת מדידה משותפת עם סימון המימוש. פקטורי הגופן
+  // (NOTE_FONT_FACTORS וכו') הם תיקון לטבלה של impl A ('table'); ב-impl B
+  // ('font-metrics') המטריקות מדויקות והכפלה הייתה מנפחת רוחבים ומסיטה
+  // תקציבי הערות. הצרכנים (footnote-budget/endnote-pages/projector)
+  // בודקים את measure.impl ומדלגים על הפקטור ב-impl B.
+  const measureWithImpl = (t, s) => api.measureTextWidth(t, s);
+  measureWithImpl.impl = api.impl;
+  // **שלב 3 (§3.1-2) → מקטע ב׳ (הוראה §6):** נכסי המסמך שהגיעו מה-Worker
+  // כבר חוברו לבניית המודל וזורמים למדידה דרך ctx.assetResolver של הגשר
+  // (אותן זהויות בדיוק). האירוע מתעד את הקליטה; אין עוד צריכה תלוית-סביבה.
+  if (docAssets) {
+    const st = typeof docAssets.stats === 'function' ? docAssets.stats() : null;
+    eventLog.emit('measure', 'doc-assets-received', { assets: st ? st.assets : null, consumption: 'model+measure (stage4b)' });
+  }
+
+  // ---- תקציבי גיאומטריה נגזרים לפני ה‑DP (מקור יחיד; ה‑DP והצינור קוראים אותם) ----
+  const regTpl = buildPageTemplate(PAGE_TYPES.REGULAR, settings, true);
+  // **S5.2 (P-4 — גזירה אחידה של רוחב התוכן):** רוחב תיבת התוכן המלא =
+  // max(col.x+col.w) − min(col.x) — זהה לנוסחה שב-page-templates.js:43
+  // (size.w − 2·marginSide − binding; 674.90px בברירת המחדל) ולרוחב שבו
+  // מוקרן מרזב ההערות (geometry-projector: x=colLeftOf, w=colWidthOf).
+  // הערך הישן — "סכום הטורים + המרזב" (2·40%+2% = 555.80px) — לא תאם אף
+  // גיאומטריה מרונדרת: הטורים נצמדים לשולי תיבת התוכן והמרווח ביניהם הוא
+  // contentW−2·cw (134.98px), לא ה-gutter (15.88px).
+  const contentW = regTpl.columns.length
+    ? Math.max(...regTpl.columns.map(c => c.x + c.w)) - Math.min(...regTpl.columns.map(c => c.x))
+    : regTpl.width - 2 * (regTpl.margins.side || 0);
+  // נתיב הערות במרזב התחתון: 1 ⇒ רוחב תיבת התוכן המלא (כמו שמוקרן/מרונדר);
+  // 2 ⇒ שני נתיבים בפריסת תיבת התוכן עם המרזב של התבנית ביניהם.
+  settings._fnColWidthPx = settings['footnote-columns'] === 2
+    ? Math.round((contentW - regTpl.gutter) / 2)
+    : Math.round(contentW);
+  settings._outerMarginPx = Math.max(regTpl.margins.outer != null ? regTpl.margins.outer : 0, regTpl.margins.side * 0.8);
+  // **S6.0 (R3-M5):** רצפת 60px חרגה מרוחב השוליים החיצוניים בברירת המחדל
+  // (A4: תיבת ההערה [8.93,68.93] חפפה את טור הגוף ב-9.4px). כעת הרוחב
+  // נתפס לשטח הפנוי בפועל בשוליים (side − 15% עוגן − 2px ביטחון).
+  const snSideM = regTpl.margins && regTpl.margins.side != null ? regTpl.margins.side : (settings._outerMarginPx || 120);
+  // **Iteration-003 (legacy parity):** בפרופיל IMUD טור השוליים המכויל —
+  // GEO.MARGIN_W (50.5px, margin-col של המקור). עד כאן ~101px — חרג מהשטח
+  // הזמין ודרס את שולי העמוד (נמדד: אזור 76pt מול 37pt בייחוס).
+  if (settings['_layout-profile'] === 'imud' || settings._imudRaw) {
+    settings._sideNoteColWidthPx = GEO.MARGIN_W; // **G4/RC-4c:** מדויק (50.5) — כמו wrapText של המקור; עיגול ל-51 שינה נקודות שבירה
+  } else {
+    settings._sideNoteColWidthPx = Math.max(24, Math.min(
+      Math.round(settings._outerMarginPx) - 12,
+      Math.round(snSideM * 0.85) - 2
+    ));
+  }
+  // **S5.2 (P-3/P-4):** רוחב **טור בודד** בעמודי ההערות — מתבנית PT-07 עצמה
+  // (עמוד דו-טורי; 269.96px בברירת המחדל). הצרכן (endnote-pages) קורא אותו
+  // ישירות כרוחב טור כשendnote-columns=2; במצב טור-אחד הוא משתמש ברוחב
+  // המלא מהתבנית שלו (רשימה חד-טורית כמו ברינדור). בעבר הוזרם כאן 556px
+  // ("סכום טורים+מרזב") וחולק ב-2 ⇒ 278px — ניחוש שאינו הגיאומטריה.
+  {
+    const enTpl = buildPageTemplate(PAGE_TYPES.ENDNOTES, settings, true);
+    settings._endnoteColWidthPx = Math.round(enTpl.columns[0].w);
+    // **פרוסה 2 (§9 — הקשר מדידה אחיד לעמודי ההערות):** רוחב הרשימה במצב
+    // טור-אחד (רוחב תיבת התוכן המלא של PT-07) — אותה נוסחה כמו בבונה
+    // עמודי-ההערות; מקור אחד, שני צרכנים.
+    settings._endnoteFullWidthPx = Math.round(enTpl.columns.length
+      ? Math.max(...enTpl.columns.map(c => c.x + c.w)) - Math.min(...enTpl.columns.map(c => c.x))
+      : (settings._endnoteColWidthPx || 300));
+  }
+
+  const blocks = [];

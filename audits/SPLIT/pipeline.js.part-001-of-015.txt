@@ -1,0 +1,105 @@
+// src/engine/core/pipeline.js — Canonical engine order + checkpoints CP1..CP5 (T1, נספח ג)
+'use strict';
+
+/**
+ * סדר הפעולות המחויב (enforced here, mirrored in module headers):
+ * CP1 parse → scope-map → style-prepass (parens BEFORE measure — שורש הסיבתיות) →
+ * CP2 fonts-ready → measure/line-plan (KP) → CP3 page-plan (DP) + protections + retreat →
+ * balance/AQ → notes-budget → re-fit pass → CP4 decorations (geometry-neutral!) →
+ * headers/folio/toc → ledger-finalize → CP5 render.
+ *
+ * **S1-ח (gap-Gold-V21):** צילומי-מצב אופציונליים ב-4 נקודות הביקורת
+ * (‏audit/stage-snapshots — opt-in בלבד, טהור ודטרמיניסטי): cp3-dp ← אחרי
+ * ה-DP; cp3-structural ← בסיס CP4; cp4-decorations ← אחרי העיטורים;
+ * cp5-final ← המצב שממנו נגזר layoutHash. ה-deltas והקשר-העמוד לממצאים
+ * מוחזרים ב-result.stageSnapshots (ראה שם).
+ *
+ * **תיקוני סגירת S7 (ראו audits/02_S7_CLOSURE_REPORT.md):**
+ *  - P0-1/P0-2: חשבונאות שימור תוכן identity-by-construction (D-30) — צד src וצד out
+ *    נספרים מאותו ייצוג מחושב; ההערות נספרות ממקום הצגתן בפועל.
+ *  - P0-6: CP4==CP5 הוכחה אמיתית (bodyGeometryHash — D-47), לא משתנה לעצמו.
+ *  - P1-2: קדם־פאס סוגריים לפני מדידה + אכלוס parenRanges (משפחת V23).
+ *  - P1-3: סמני הערות מאוחדים (notes/markers) + הדבקה למילה הקודמת (BRZ-11).
+ *  - P1-1: AQ/מצבי סוף־פרק/מילה־נופלת מחוברים לצינור בפועל.
+ */
+
+const { getDefaultSettings, getSettingDefs, derivePlacementFlags } = require('./settings-registry');
+// **חוזה H3 (D-S2H3/CSS parity):** line-height 1.22 של ה-CSS המקורי — מקור
+// יחיד המשותף למדידת הכותרות כאן, לפס ה-H3 ב-planner ולמנוע המורשת.
+const { h3LineHeightPx } = require('./h3-contract');
+const { lexDocument } = require('../parser/dfa-lexer');
+const { tokenizeDetailed, contentHash } = require('../parser/block-tokenizer');
+// **שלב 2 (מודל תוכן אחיד):** המודל הקנוני הוא מקור הסמכות של שלב הפענוח;
+// זרם הטוקנים נגזר ממנו דרך adapter יציאה זמני (תנאי הסרה ב-model/adapter.js).
+// הוכחת שקילות מלאה לעומת הטוקניזר הישיר: בדיקות round-trip ב-suite של שלב 2.
+const { buildDocumentModel } = require('../model/document-model');
+const { modelToTokens } = require('../model/adapter');
+const { scanBrackets } = require('../parser/bracket-scanner');
+const { MeasureAPI, resolveMeasureImpl } = require('../typography/measure-api');
+const { applyDropWord } = require('../typography/dropword');
+// **שלב 4 מקטע ב׳ (הוראה §§9-10):** מסלול השורות הקנוני — הגשר המרכזי היחיד
+// (DocumentModel → LineItems → מדידה יחידה → LineModel → תצוגה נגזרת). ארבע
+// נקודות השבירה של ה-pipeline (כותרות/הערות-סיום בגוף/פסקאות-הערה מוסגנות/
+// פסקאות) עוברות כולן דרכו; אין עוד words[] שמחליט שבירה במסלול ה-DP.
+const { layoutModelBlock, flatTextOf } = require('../line/pipeline-bridge');
+const { baseStyleOf } = require('../line/line-items');
+const { planPages, layoutHash, bodyGeometryHash } = require('../layout/dp-planner');
+const { buildPageTemplate, PAGE_TYPES, isImudProfile } = require('../layout/page-templates');
+const { GEO, H23_TITLE_W, H2_AREA_H, H0_AREA_H, H0_TITLE_Y, SZ_CORE } = require('../core/imud-geometry');
+// **שלב 5 פרוסה 2 (§§2.3/2.5/2.7 בביקורת):** מדדי הערה חד-פעמיים (חותמת CP2),
+// חוזי ColumnModel/PagePlan + validation + immutability, ורשם ה-trace.
+const { stampNoteMetrics } = require('../layout/footnote-budget');
+const { makeNoteRecord, NOTE_KINDS, stampIsValid } = require('../layout/notes-model'); // **שלב 6 פרוסה 2:** מודל ההערות המאוחד — זהות/עוגן + תקינות חותמות
+const { finalizePagePlans } = require('../layout/plan-model');
+const { createTraceRecorder } = require('../layout/decision-trace');
+const { assignNumbers } = require('../decoration/folio');
+const { buildHeader } = require('../decoration/headers-builder');
+const { autoQualityPass, applyChapterEndMode, alignColumnBottoms } = require('../layout/balancing');
+const { applyHeadingModes } = require('../layout/headings-escort');
+// **S5.2 (תיקון 11):** splitPlaceholder הוסר מ-markers — קוד מת מלכודתי
+// (פיצול על ':' היה מבתק שעות כמו 12:30; ה-placeholder האמיתי משתמש ב-U+E000).
+const { markerFor, markerForSettings, makeCounter, MARK_TAG } = require('../notes/markers');
+// **מקטע ב׳:** רווח אטומי (E000) — מפריד placeholder סמן טקסט בחשבונאות שימור התוכן (D-30). במנוע השורות הקינוני ה-placeholder
+// סונזז בגשר עם אותו מפריד — התוכן זהה לביט.
+const ATOMIC = '\uE000';
+const Ledger = require('./ledger').Ledger;
+const EventLog = require('./events').EventLog;
+const { computeEditingRecommendations } = require('../audit/editing-recommendations');
+
+
+/** זיהוי דיבור המתחיל: עד נקודה/מקף (REQ-PAR-ST-03; dh-auto-detect). */
+function detectDh(text, enabled) {
+  if (!enabled) return null;
+  const m = String(text).match(/^(.+?[.׃])\s+(.*)$/) || String(text).match(/^(.+?\s*[-–—])\s+(.*)$/);
+  return m ? { dh: m[1].trim(), rest: m[2] } : null;
+}
+
+/** רוחב טור ייעודי לסוג בלוק (מקור: page-templates; column-flow מספק את ההפשטה). */
+function columnWidthFor(block, settings) {
+  if (block.kind === 'heading' && block.level <= 1) {
+    const tpl0 = buildPageTemplate(PAGE_TYPES.PREFACE, settings, true);
+    return tpl0.columns[0].w;
+  }
+  const tpl = buildPageTemplate(PAGE_TYPES.REGULAR, settings, true);
+  return Math.max(...tpl.columns.map(c => c.w));
+}
+
+function fullWidthWidth(settings) {
+  const tpl = buildPageTemplate(PAGE_TYPES.PREFACE, settings, true);
+  return tpl.columns[0].w;
+}
+
+/** האם מיקום מילה בתוך טווח סוגריים (פתיחה אחרי ה'(' ולפני ה')'). */
+function offsetInSpans(at, spans) {
+  for (const s of spans) if (at > s.from && at < s.to) return true;
+  return false;
+}
+
+/**
+ * @param {string} rawText - מקור הטקסט
+ * @param {object} settings - merged settings (registry defaults + user)
+ * @param {{doc?:object, onProgress?:(info:object)=>void}} env - optional DOM for oracle rendering;
+ *   onProgress — **S10:** מזליף התקדמות שלבית ל‑Worker ("עמוד X מתוך Y"). מכשור בלבד:
+ *   אסור לו לגעת בפריסה — no-op proof נאכף בבדיקה (hash זהה עם ובלי המזליף).
+ */
+function typeset(rawText, settingsIn, env = {}) {

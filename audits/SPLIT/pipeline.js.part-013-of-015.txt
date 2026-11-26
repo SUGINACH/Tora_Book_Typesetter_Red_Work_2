@@ -1,0 +1,100 @@
+  for (const t of srcTokens) {
+    const placedAsSide = placedSideAnchors.has(t.id);
+    const representedElsewhere = endnoteRepresented.has(t.id);
+    if (!blocksByToken.has(t.id) && !placedAsSide && !representedElsewhere) {
+      contentPreserved = false; mismatchDetail.push({ token: t.id, kind: 'token-not-placed' });
+    }
+  }
+
+  // **עקביות סמנים (P1-3):** סמן הגוף == סמן מקום ההצגה, לכל הערה — בדיקת אמת.
+  {
+    // סמנים ידועים של המסמך (מדוקים בלבד — ללד חיווים) + סמני הערות סיום גלויות
+    const knownMarkers = new Set();
+    for (const b of blocks) for (const a of (b.noteAssignments || [])) knownMarkers.add(a.marker);
+    for (const ep of (endnotePagesInfo.pages || [])) for (const n of ep.notes) if (!n.fromInline) knownMarkers.add(n.marker);
+    const countKnown = (w) => {
+      // מדויק (D-53): סמן מזוהה רק לפי תג (E102) או placeholder (E000).
+      // מילה רגילה (ספרה 1 בטקסט, סגנון decimal) אינה סמן (NC-10).
+      // **מקטע ב׳ (תיקון נלווה ל-P-1):** הצמדה מבנית של המנוע המאוחד יוצרת
+      // יחידות מרובות-סמנים (שני סמנים עוקבים בפתיחת פסקה: סמן₁‏NBSP‏סמן₂) —
+      // החשבונאות מונה את כל הסמנים המתויגים במילה, לא רק את הראשון. בנתיב
+      // הישן זה עבד רק מפני ש-protectWords פירק את ההצמדות (הבאג P-1).
+      const sw = String(w);
+      if (sw.includes(ATOMIC)) {
+        // placeholder עם E000 (reject-to-body; נוצר אחרי תכנון השורות):
+        // הסמן הוא הפרגמנט המוכר שלפני ה‑E000 (עשוי להיות ממוזג לעוגן ב‑NBSP).
+        // **S5.1:** ה-NBSP מנורמל לרווח לפני הפיצול — בעבר protectWords פירק
+        // את ההדבקה בטעות (\s תופס NBSP) והסתיר את העיוורון הזה; כעת
+        // ההדבקה נשמרת (BRZ-11) והחשבונאות חייבת לפצל אותה בעצמה.
+        const at = sw.indexOf(ATOMIC);
+        const frags = wordSeq(sw.slice(0, at).replace(/\u00A0/g, ' '));
+        const last = frags.slice().reverse().find(f => knownMarkers.has(f)) || null;
+        return last ? [last] : [];
+      }
+      if (!sw.includes(MARK_TAG)) return [];
+      const found = [];
+      let from = 0;
+      while (true) {
+        const at = sw.indexOf(MARK_TAG, from);
+        if (at < 0) break;
+        const frag = sw.slice(at + 1).split(/[\u00A0 ]/)[0];
+        if (frag && knownMarkers.has(frag)) found.push(frag);
+        from = at + 1 + (frag ? frag.length : 1);
+      }
+      return found;
+    };
+
+
+    const bodyMarkers = [];
+    for (const pg of pages) for (const ln of pageLines(pg)) { // FWD-1: כולל פס חוצה־טורים
+      for (const w of (ln.words || [])) {
+        for (const km of countKnown(w)) bodyMarkers.push(km); // תג/E000 בלבד — D-53; יחידה מרובת-סמנים מפורקת לכל סמניה
+      }
+    }
+    // \u05d4\u05d0\u05de\u05ea: \u05d4\u05e1\u05de\u05e0\u05d9\u05dd \u05e9\u05d4\u05d5\u05e7\u05e6\u05d5 \u05dc\u05de\u05e1\u05de\u05da (\u05de\u05d5\u05e0\u05d9\u05dd \u05de\u05d5\u05d1\u05df \u05d0\u05d7\u05d3) \u2014 \u05de\u05d5\u05db\u05d7\u05d9\u05dd \u05de\u05d5\u05dc \u05d4\u05e1\u05de\u05da
+    const assignedAll = [];
+    for (const b of blocks) for (const a of (b.noteAssignments || [])) assignedAll.push(a.marker);
+    // \u05de\u05e7\u05d5\u05dd \u05d4\u05e6\u05d2\u05d4 \u05e0\u05e4\u05e8\u05d3 (\u05de\u05e8\u05d6\u05d1 / \u05e2\u05de\u05d5\u05d3\u05d9 \u05d4\u05e2\u05e8\u05d5\u05ea) — \u05d1\u05de\u05e6\u05d1\u05d9\u05dd \u05d0\u05dc\u05d5 \u05d1\u05dc\u05d1\u05d3
+    // rejected-to-body: displayed in the body (body count covers it) - excluded from separate-display compare
+    const rejectedMarkers = new Set();
+    for (const b of blocks) for (const rn of (b.rejectedNotes || [])) rejectedMarkers.add(rn.marker);
+    const displayMarkers = [];
+    if (settings['footnotes-enabled'] && notesMode !== 'endnotes') {
+      for (const pg of pages) for (const n of pg.footnotes) if (n.marker && !n.isContinuation && n.mode !== 'split-rest') displayMarkers.push(n.marker); // continuation = repeat, not a separate anchor
+    }
+    if (notesMode === 'endnotes') {
+      for (const ep of (endnotePagesInfo.pages || [])) for (const n of ep.notes) {
+        if (n.fromInline && n.marker) displayMarkers.push(n.marker);
+      }
+    }
+    const cnt = (a) => a.reduce((m, w) => (m[w] = (m[w] || 0) + 1, m), {});
+    const cb = cnt(bodyMarkers.filter(Boolean));
+    const ca = cnt(assignedAll);
+    const cd = cnt(displayMarkers.filter(Boolean));
+    // \u05d2\u05d5\u05e3: \u05db\u05dc \u05e1\u05de\u05df \u05de\u05d5\u05e7\u05e6\u05d4 \u05de\u05d5\u05e4\u05d9\u05e2 \u05d1\u05d3\u05d5\u05e7 \u05e4\u05e2\u05dd \u05d0\u05d7\u05ea
+    for (const k of new Set([...Object.keys(cb), ...Object.keys(ca)])) {
+      if ((cb[k] || 0) !== (ca[k] || 0)) {
+        contentPreserved = false;
+        mismatchDetail.push({ kind: 'marker-mismatch', where: 'body', marker: k, body: cb[k] || 0, assigned: ca[k] || 0 });
+      }
+    }
+    // \u05de\u05e7\u05d5\u05dd \u05d4\u05e6\u05d2\u05d4 \u05e0\u05e4\u05e8\u05d3: \u05d0\u05d5\u05ea\u05d5 \u05e1\u05de\u05df \u05d1\u05d3\u05d5\u05e7 (\u05e8\u05e7 \uu05d1\u05de\u05e6\u05d1\u05d9\u05dd \u05e2\u05dd \u05d4\u05e6\u05d2\u05d4 \u05e0\u05e4\u05e8\u05d3\u05ea — \u05dc\u05d0 placeholder)
+    if (displayMarkers.length || (notesMode !== 'inline' && settings['footnotes-enabled'])) {
+      const cdd = cnt(displayMarkers);
+      const cad = cnt(assignedAll.filter(m => !rejectedMarkers.has(m)));
+      for (const k of new Set([...Object.keys(cdd), ...Object.keys(cad)])) {
+        if ((cdd[k] || 0) !== (cad[k] || 0)) {
+          contentPreserved = false;
+          mismatchDetail.push({ kind: 'marker-mismatch', where: 'display', marker: k, display: cdd[k] || 0, assigned: cad[k] || 0 });
+        }
+      }
+    }
+  }
+
+
+
+  if (!contentPreserved) {
+    const rec = ledger.create('text-completeness', 'document', null, { hashIn, mismatches: mismatchDetail }, 'render');
+    ledger.transition(rec.issue_id, 'persists', 'render', 'word-multiset mismatch \u2014 token loss/duplication detected');
+    // **Iteration-003 (אבחון):** פירוט הפער גם ביומן האירועים — ה-ledger מציג
+    // את הרשומה אך לא את ה-diff; בלי זה אין דרך לראות מה חסר/עודף בלי דיבאגר.

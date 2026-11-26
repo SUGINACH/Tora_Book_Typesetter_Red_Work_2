@@ -1,0 +1,135 @@
+  if (!_fontClearSync) {
+    _fontClearSync = true;
+    try { fontResolver.unregisterAlias(name); } catch (_) { /* מחזור טעינה — יסונכרן בטעינתו */ }
+    finally { _fontClearSync = false; }
+  }
+}
+function clearRegisteredFonts() {
+  registeredFonts.clear();
+  _fontContentIds.clear();
+  fm.setMissingGlyphFallbackFont(null);
+  _familyApiCache.clear();
+  _sharedFallbackApis.clear();
+  _invalidateEnvFp();
+  if (!_fontClearSync) {
+    _fontClearSync = true;
+    try { fontResolver.clearFontResolver(); } catch (_) { /* מחזור טעינה */ }
+    finally { _fontClearSync = false; }
+  }
+}
+
+class MeasureAPI {
+  constructor(settings, impl = 'table') {
+    this.settings = settings;
+    this.impl = impl === 'font-metrics' ? 'font-metrics' : 'table'; // 'table' | 'font-metrics'
+    this.fontProfileName = null;
+    this.fontProfile = null;
+    this.fontFactor = 1;
+    this.cache = new Map();
+    this.stats = { calls: 0, hits: 0, fontFallbacks: 0, evictions: 0 };
+    // **Iteration-006 (RC-M4):** חוזה הצבת הסימנים המשולבים של הרינדור שהכין
+    // הקורא הזה — 'combined' (הדפדפן/GPOS) או ברירת המחדל hmtx (המורשת).
+    this._marksCombined = !!(settings && settings['_marks-advance'] === 'combined');
+    if (this.impl === 'font-metrics') this._bindProfile();
+  }
+
+  /** **ביקורת בטיחות 20.11 (U-14) — חסימת מטמון המחרורות:** מופעי ה-family/fallback
+   * חיים לכל אורך חיי ה-Worker, ומטמון המחרורות היה בלתי-חסום (נמדד: כל מסמך
+   * חדש מוסיף את שלו לנצח). אותה מדיניות החסימה של מטמון הפריטים — תקרה
+   * ‏65,536 + ניפוי-באצווה ‏8,192 (FIFO לפי סדר הכנסה; המדידה היא מֵימוֹ של פונקציה
+   * טהורה — חסימה אטומה לפלט, מוכח בדטרמיניזם ובנעילות ה-cross-check). */
+  _cacheSet(key, px) {
+    if (this.cache.size >= STRING_CACHE_MAX_ENTRIES) {
+      const it = this.cache.keys();
+      for (let i = 0; i < STRING_CACHE_EVICT_BATCH; i++) {
+        const k = it.next().value;
+        if (k === undefined) break;
+        this.cache.delete(k);
+        this.stats.evictions++;
+      }
+    }
+    this.cache.set(key, px);
+  }
+
+  /** קשירת פרופיל הגופן לפי שם הגופן בהגדרות; fallback שקוף לטבלה אם לא נרשם. */
+  _bindProfile() {
+    const name = this.settings['body-font'];
+    if (name && registeredFonts.has(name)) {
+      this.fontProfileName = name;
+      this.fontProfile = registeredFonts.get(name);
+      this.fontFactor = FONT_PROFILES[name] || 1;
+    } else {
+      // לא נרשם גופן — מימוש B נופל בשקיפות לטבלה (מדידה עקבית, לא כשל שקט)
+      this.impl = 'table';
+      this.stats.fontFallbacks++;
+    }
+  }
+
+  _fontSpec(sizePt) {
+    return sizePt || this.settings['body-font-size-pt'];
+  }
+
+  /**
+   * **S4.16 (תיקון שורש — מדידת ניקוד):** סימן משולב הממופה בגופן עם advance=0
+   * (ניקוד עברי: דגש/תנועות/טעמים) הוא **שכבת-אפס אמיתית** — כך מודד אותו
+   * הדפדפן (hmtx=0, שכבת-גליף על הבסיס). בעבר נפל לסל העברי של הטבלה (0.5em
+   * = 6pt בגוף 12) ⇒ מילה מנוקדת כמו המצוּוֶה נמדדה רחבה ב~12pt, שבירת השורות
+   * נגררה מילה-מילה והדריפט הצטבר לכל העימוד (P7 0.919). מבחינים עתה בין
+   * "לא ממופה כלל" (fallback מכויל — מונה fontFallbacks) לבין "ממופה
+   * עם advance=0" (אפס אמיתי).
+   */
+  _charEm(ch) {
+    if (this.impl === 'font-metrics' && this.fontProfile) {
+      const gid = fm.glyphIdOf(this.fontProfile, ch);
+      if (gid !== 0 && gid < this.fontProfile.numGlyphs) {
+        // ממופה בגופן — רוחב hmtx אמיתי (כולל 0 לניקוד)
+        return (fm.advanceUnitsOf(this.fontProfile, ch) / this.fontProfile.unitsPerEm) * this.fontFactor;
+      }
+      // **S4.26 (גליף חסר — fallback כמו הדפדפן):** פיסוק שחסר בגופנים
+      // תורניים מצויר בדפדפן במשפחת ה-fallback שבמחסנית ('Frank Ruhl
+      // Libre') — המדידה באותם מטריקות בדיוק. בלי גופן כזה רשום — הקירוב
+      // המכויל (התנהגות קודמת).
+      this.stats.fontFallbacks++;
+      const fbEm = fm.missingGlyphFallbackEm(ch);
+      if (fbEm > 0) return fbEm;
+      return charWidthEm(ch);
+    }
+    return charWidthEm(ch);
+  }
+
+  /** סימן משולב ממופה (ניקוד): שכבת-אפס — לא חלק מאשכול מדידה.
+   * **Iteration-006 (RC-M4 — סימנים משולבים עם hmtx לא-אפסי):** חוזה S4.16
+   * הניח שסימן ניקוד ממופה מקבל advance=0 ב-hmtx (נכון ל-Guttman Rashi).
+   * FrankReal מקורקע אחרת: לסימני הניקוד שלו advance לא-אפסי ב-hmtx
+   * (1.72–4.68px @18pt — נמדד: ְ=1.72, ַ=4.68, ֵ=4.68, ּ=1.72). כאן שני
+   * חוזי רינדור, והמדידה חייבת להאמין לרינדרר שלה:
+   *  - **hmtx (ברירת המחדל — המורשת):** המנוע המקורי הציב את הסימנים
+   *    בהפרדה לפי ה-hmtx (הוכח מהייחוס: חלון «וְהָיָה» — הצרינת השורה
+   *    52.4px = מדידת hmtx 47.06+רווח; תיבת הדיו ב-PDF 47.09px = הפרדה).
+   *    הפורט חייב מדידה זו — הנעילות (legacy-*) והשוואת השורות מול הייחוס
+   *    בנויות עליה.
+   *  - **combined ('_marks-advance':'combined' — המנוע המאוחד):** ה-PageModel
+   *    ממקם מילים מוחלט והדפדפן מציב סימנים משולבים ב-GPOS mark-to-base
+   *    (advance 0 בפועל). מדידת hmtx הנפוחה הותירה את מילת-החלון «וַיְדַבֵּר»
+   *    17px משפת הטור (נמדד: fm=61.21 מול דפדפן=43.73 — הפרש 17.5px = בדיוק
+   *    חמשת הסימנים; WINDOW_WRONG_SIDE p613-614 באודיט החי). בפרופיל זה
+   *    תו ממופה שהוא סימן משולב (Mn) נמדד תמיד ב-0. */
+  _isMappedMark(ch) {
+    if (this.impl !== 'font-metrics' || !this.fontProfile) return false;
+    const gid = fm.glyphIdOf(this.fontProfile, ch);
+    if (!(gid !== 0 && gid < this.fontProfile.numGlyphs)) return false;
+    if (fm.advanceUnitsOf(this.fontProfile, ch) === 0) return true;
+    return this._marksCombined === true && COMBINING_MARK_RE.test(ch);
+  }
+
+  /**
+   * **פרוסה 3 (RLM — שורש פער דיו במקרין ה-PageModel, 17.11):** תווי בקרת
+   * bidi/פורמט (U+200B..200F, U+202A..202E, U+FEFF) הם **אפס-רוחב לפי
+   * הגדרת יוניקוד** וכך מציגים אותם כל מנועי התצוגה (דפדפנים, מציגי PDF).
+   * חלק מהגופנים נותנים להם advance ב-hmtx (נמדד: 6.4px ל-RLM ב-12pt) —
+   * המדידה ספרה אותם והתצוגה לא ⇒ פער דיו של ~7px בכל מילה מסומנת-RLM
+   * (INK_NOT_JUSTIFIED באודיט החי; 230 מופעי RLM ב-very_long — תוכן המקור).
+   * תיקון השורש בסמכות המדידה: אפס advance גם כשהגופן טוען אחרת —
+   * מילה, מודל, PDF ו-DOM מסכימים ביט-לביט.
+   */
+  _isZeroWidthControl(ch) {

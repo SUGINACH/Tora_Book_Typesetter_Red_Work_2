@@ -1,0 +1,103 @@
+        // סימנייה/קישור מצביע לעמוד הנכון (לא רק מספרם).
+        outlineItems: outline,
+        tocLinkTargets: tocLinks.map(l => l.targetPage),
+        tocLinkPages: tocLinks.map(l => l.page)
+      }
+    };
+  } finally {
+    // **S6.0 (R2-C1):** שחזור הרישום שהיה קיים לפני הייצוא (או הסרה אם לא היה)
+    restoreFontRegistration(profileName, prevFont);
+  }
+}
+
+/**
+ * **פרוסה 5 (§4 — PDF מה-PageModel בלבד):** הסרת העימוד השני מנתיב ה-PDF.
+ * הכותב צורך את **אותו PageModel** שה-DOM וה-HTML צורכים — אין typeset,
+ * אין Parser/Planner, אין מדידה, אין חלוקת הערות, אין החלטות מיקום: כל
+ * x/y/baseline/גודל/מפתח-גופן/צבע/פעולות-דיו מגיעים מהמודל. הפונקציה עוסקת
+ * באריזה בלבד (רישום גופן הייצוא, מלאי תווים מהטקסט המצויר בפועל, מצווץ,
+ * כתיבה) — כמו exportPdf, בלי שלב העימוד-ההקרנה.
+ * @param {object} model — PageModel (pagemodel-v1) — אותו מודל שהגיע ל-UI
+ * @param {object} settingsIn — הגדרות (עמוד/הגדרות כותב בלבד)
+ * @param {Uint8Array} fontBytes — גופן הייצוא (TTF) ל-/F1
+ * @param {string} [fontName] — שם פרופיל הרישום
+ */
+function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
+  if (typeof Buffer === 'undefined') return { ok: false, error: 'no-buffer' }; // דפדפן — נתיב Node בלבד (מתועד)
+  if (!model || model.schema !== 'pagemodel-v1' || !Array.isArray(model.pages) || !model.pages.length) {
+    return { ok: false, error: 'model-required: נדרש PageModel תקין — אין נתיב עימוד חלופי בייצוא מהמודל' };
+  }
+  /* node-only */ const { registerFont, unregisterFont, restoreFontRegistration, registeredFonts: registeredFontsRef } = require('../typography/measure-api');
+  /* node-only */ const { glyphIdOf } = require('../typography/font-metrics');
+  /* node-only */ const { buildSubset, charInventory } = require('../typography/font-subset');
+  /* node-only */ const { writePdf } = require('./pdf-writer');
+  /* node-only */ const { getDefaultSettings } = require('../core/settings-registry');
+  const profileName = fontName || settingsIn['body-font'] || 'ToraExport';
+  const hadPrevFont = registeredFontsRef.has(profileName);
+  const prevFont = hadPrevFont ? registeredFontsRef.get(profileName) : null;
+  const reg = registerFont(profileName, fontBytes);
+  if (!reg.ok) { if (!hadPrevFont) unregisterFont(profileName); return { ok: false, error: `font:${reg.error}` }; }
+  try {
+    const settings = { ...getDefaultSettings(), ...settingsIn, 'body-font': profileName };
+    // ---- עמודי הכותב: התאמה טהורה של עמודי המודל לצורת הכותב (אפס החלטות) ----
+    const pages = model.pages.map(mp => ({
+      width: mp.geometry.width, height: mp.geometry.height,
+      type: mp.type,
+      spanning: mp.spanning ? { lines: mp.lines.filter(l => l.area === 'spanning') } : null,
+      // **Iteration-001 (legacy parity):** רשומות-צל (h3band-shadow) הן רזרבציות
+      // מתוכננות בלי הקרנה — אין להן דיו והן אינן מגיעות לכותב ה-PDF.
+      lines: mp.lines.filter(l => l.area !== 'spanning' && l.projected !== false),
+      footnotes: mp.footnotes || [],
+      folio: mp.folio || null,
+      header: mp.header || null,
+      decorations: (mp.decorations || []).filter(d => Array.isArray(d.pdfOps) && d.pdfOps.length)
+    }));
+    // ---- מלאי תווים מהטקסט שמצויר בפועל (מהמודל) ----
+    const drawnParts = [];
+    for (const pg of pages) {
+      for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) for (const w of ln.words) drawnParts.push(w.text);
+      for (const fn of pg.footnotes) for (const w of (fn.words || [])) drawnParts.push(w.text);
+      if (pg.folio && pg.folio.text) drawnParts.push(pg.folio.text);
+      if (pg.header) for (const s of pg.header.slots) drawnParts.push(s.text);
+    }
+    const font = reg.profile;
+    const inventory = charInventory(drawnParts.join(' '));
+    const f1Inventory = inventory.filter(ch => glyphIdOf(font, ch) !== 0);
+    const subset = buildSubset(font, f1Inventory);
+    if (!subset.ok) return { ok: false, error: `subset:${subset.error}` };
+    const mkFont = (sub) => {
+      const c2g = subsetNewCmap(sub);
+      return {
+        subsetBytes: sub.bytes, widthsUnits: sub.widthsUnits, unitsPerEm: sub.unitsPerEm,
+        cidOf: (ch) => { const g = c2g.get(ch); return g != null ? g : glyphIdOf(parseSubsetCache(sub), ch); },
+        charToGidEntries: () => [...c2g.entries()]
+      };
+    };
+    const fontForWriter = mkFont(subset);
+    // ---- גופני-תפקידים מהמודל (window/heading/fnbody/margin) + משפחות רשודות ----
+    // **Iteration-003 (תיקון שורש — תצוגה=ייצוא):** מילות המודל נושאות את
+    // **מפתח התפקיד** ('heading'/'window'/'fnbody'/'margin' — כך מטביעים
+    // structural-stamps/projectLine), לא את שם המשפחה. עד כאן החיפוש נעשה
+    // לפי שם המשפחה בלבד ('DavidLibre-Bold' וכו') ⇒ אפס מילים נמצאו ⇒ כל
+    // גופני התפקידים היו null וכל הטקסט נפל ל-/F1 (גוף הטקסט) — ההערות,
+    // הערות-הצד, מילות-החלון ושורות ה-TOC נצבעו בגופן הגוף במקום בגופניהן.
+    // כעת: איסוף לפי מפתח-התפקיד ומיפוי מפתח→משפחה (אותה טבלה הפוכה של
+    // familyFontKeyOf — מקור יחיד ב-font-keys).
+    const wordsByRole = new Map();
+    const allLines = [];
+    for (const pg of pages) { allLines.push(...(pg.spanning ? pg.spanning.lines : []), ...pg.lines); }
+    for (const ln of allLines) for (const w of ln.words) {
+      if (w.fontKey == null) continue;
+      if (!wordsByRole.has(w.fontKey)) wordsByRole.set(w.fontKey, []);
+      wordsByRole.get(w.fontKey).push(w.text);
+    }
+    for (const fn of pages.flatMap(p => p.footnotes)) for (const w of (fn.words || [])) {
+      if (w.fontKey == null) continue;
+      if (!wordsByRole.has(w.fontKey)) wordsByRole.set(w.fontKey, []);
+      wordsByRole.get(w.fontKey).push(w.text);
+    }
+    // **Iteration-003 (תצוגה=ייצוא — סלוטי כותרת וגיליון):** טקסטים שאינם
+    // בשורות/הערות — סלוטי הכותרת העליונה (fontKey = המשפחה מההגדרות,
+    // למשל Livorna) והגיליון. בלי האיסוף הזה תת-הגופן של המשפחה נבנה ממלאי
+    // חלקי (מקורות אחרים) ואותיות בודדות נפלו ל-/F1 — גופן מעורב בכותרת
+    // (נמדע: 'בעניין' הוצג 'בע'+F1+'נ'+F2+'יין'). אוספים גם מילים ממוקמות

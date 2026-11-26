@@ -1,0 +1,107 @@
+    const imudWin = !!(settings['_layout-profile'] === 'imud' || settings._imudRaw)
+      && String(settings['first-word-mode'] || '') === 'drop';
+    let winSpec = null;
+    if (imudWin) {
+      // flatTextOf מחזיר { flat, segs } — הטקסט השטוח בשדה flat
+      const flatPara = flatTextOf(mBlk);
+      const txt = String((flatPara && flatPara.flat) || '').trim();
+      const minLines = Math.max(1, Number(settings['first-word-threshold-lines']) || 2);
+      const firstWord = txt.split(/\s+/)[0] || '';
+      const startsWithParen = txt.startsWith('(');
+      const firstHasNote = !!(mBlk.items && mBlk.items[0] && mBlk.items[0].kind === 'noteMarker')
+        || firstWord.includes(String(settings['fn-delim-open'] || '['));
+      // RC-2a (i004): בסעיף h0 האמדן ומילת-החלון לפי גודל גוף ההקדמה (11.5) —
+      // הייחוס: 'כהקדמה'/'והנה'/'וכן' נמדדו 17.2pt = 11.5×1.5 (לא 18=12×1.5)
+      const bodySzForWin = inH0Section ? h0BodySizePt : settings['body-font-size-pt'];
+      const estW = txt ? api.measureTextWidth(txt, bodySzForWin) : 0;
+      // כמו המקור: עיגול כלפי מעלה (נמדע: הפסקה הראשונה 1.96→2 — בלי ceil
+      // נפסלה בניגוד לייחוס שמציג לה חלון)
+      const estLines = colW > 0 ? Math.max(1, Math.ceil(estW / colW)) : 0;
+      if (txt && firstWord && !startsWithParen && !firstHasNote && estLines >= minLines && firstWord.length <= 24) {
+        const winFam = settings['first-word-font'] || null;
+        const MeasureAPICls = require('../typography/measure-api').MeasureAPI;
+        const wApi = (winFam && MeasureAPICls.forFamily(winFam, settings)) || api;
+        const winSizePt = bodySzForWin * (Number(settings['first-word-size-em']) || 1.5);
+        const wW = wApi.measureTextWidth(firstWord, winSizePt)
+          + wApi.measureTextWidth(' ', winSizePt) + 0.5; // D-92: רווח החלון + ביטחון
+        if (wW < colW * 0.5) winSpec = { widthPx: wW };
+      }
+    }
+    const built = layoutModelBlock(mBlk, {
+      settings, kind: 'paragraph', widthPx: colW,
+      lineHeightPx: paraLineHeightPx,
+      ...(h0BaseStyle ? { baseStyle: h0BaseStyle, parenContextSizePt: h0BodySizePt } : {}),
+      runts: settings['runt-min-width-pct'],
+      notesByRef, customStyles,
+      measureCtx: { assetResolver: docAssets, measure: api },
+      ...(winSpec ? { window: winSpec } : {})
+    });
+    const lines = built.view;
+    // **RC-2a (i004):** התצוגה נושאת את גודל/גופן גוף ההקדמה — line-font.js
+    // (S6.3) קורא ln.sizePt/ln.font בהקרנת PDF וב-DOM כאחד; בלי זה נפלו
+    // ל-body-font-size-pt/body-font (12pt גוף הספר) בניגוד למדידה.
+    if (inH0Section) {
+      for (const ln of lines) {
+        ln.sizePt = h0BodySizePt;
+        if (h0BodyFamily) ln.font = h0BodyFamily;
+      }
+    }
+    for (const d of (built.diagnostics || [])) {
+      ledger.create('line-engine', `para:${t.id}`, null, d, 'measure');
+    }
+    // **S11:** הסגנון ברמת הבלוק על הפסקה (לא-footnote): דגלי פריסה + מונה + עיטורים מקושרים
+    if (csBlock && csBlock.style.layoutMode !== 'footnote' && csBlock.style.layoutMode !== 'endnote') {
+      const counterMark = counters.nextMark(csBlock.style, { part: currentPart || 1, page: null });
+      csInfo = {
+        id: csBlock.style.id, name: csBlock.style.name, layoutMode: csBlock.style.layoutMode,
+        styleSpec: csBlock.style.style, counterMark, linkedOrnaments: csBlock.style.linkedOrnaments
+      };
+      const ORN_PAD_PX = 18; // הזמנת גובה לעיטור מקושר — דפוס h2Orn (F-08): גיאומטריה מוזמנת בזמן אמת
+      if (csInfo.linkedOrnaments && csInfo.linkedOrnaments.top && lines.length) {
+        lines[0].heightPx = (lines[0].heightPx || 0) + ORN_PAD_PX;
+        lines[0].csOrnPadTop = ORN_PAD_PX;
+      }
+      if (csInfo.linkedOrnaments && csInfo.linkedOrnaments.bottom && lines.length) {
+        const lastLn = lines[lines.length - 1];
+        lastLn.heightPx = (lastLn.heightPx || 0) + ORN_PAD_PX;
+        lastLn.csOrnPadBottom = ORN_PAD_PX;
+      }
+      for (const ln of lines) ln.customStyle = csInfo;
+      // המונה מוצג בשורה הראשונה של הבלוק (הפס של full-width מטופל ברנדרר מהמידע על הפס)
+      if (csInfo.counterMark && lines.length) lines[0].csCounterMark = csInfo.counterMark;
+    }
+    const blk = {
+      kind: 'paragraph', tokenId: t.id, parts: t.parts, notes, bodyMarkers, lines,
+      unmatchedClosers: t.unmatchedClosers || [], part: currentPart, dh,
+      noteAssignments,
+      customStyle: csInfo
+    };
+    if (blk.customStyle) {
+      blk.fullWidth = blk.customStyle.layoutMode === 'full-width';
+      blk.forcePageBreakBefore = blk.customStyle.layoutMode === 'new-location';
+      blk.asSideNote = blk.customStyle.layoutMode === 'side-note';
+      // **שלב 6 פרוסה 2 (§11 — פריט הרחבה):** תיבת מידע בשוליים — אותו דפוס
+      // דגלים (D-09) כמו side-note; הגאומטריה המוגדרת של התיבה (רוחב/ריפוד/
+      // מסגרת) נגזרת כאן פעם אחת וזורמת לחוזה (registry) ולמקצה העוגן.
+      blk.asInfoBox = blk.customStyle.layoutMode === 'info-box';
+      if (blk.asInfoBox) {
+        const ib = blk.customStyle.infoBox || {};
+        const bodyPx = (Number(settings['body-font-size-pt']) || 14) * (96 / 72);
+        const maxW = settings._sideNoteColWidthPx || 84;
+        const stylePt = blk.customStyle.styleSpec && Number(blk.customStyle.styleSpec.fontSizePt) > 0
+          ? Number(blk.customStyle.styleSpec.fontSizePt) : null;
+        blk.infoBoxSpec = {
+          widthPx: Math.max(24, Math.min(Math.round((Number(ib.widthEm) || 4.5) * bodyPx), maxW)),
+          padPx: Math.max(0, Math.round((Number(ib.padEm) || 0.3) * bodyPx)),
+          borderPx: (blk.customStyle.styleSpec && blk.customStyle.styleSpec.border) ? 1 : 0,
+          ...(stylePt ? { sizePt: stylePt } : {}) // גודל הגוף של התיבה מהסגנון — אותו מדד החותמת
+        };
+      }
+    }
+    const fwRes = applyDropWord(blk, settings, api);
+    if (fwRes.applied) fwCount++;
+    blocks.push(blk);
+  }
+
+  // תבנית ההחלטה המאוחדת של כותרות (D-09) — לפני ה‑DP; ה‑DP קורא דגלים בלבד
+  applyHeadingModes(blocks, settings);

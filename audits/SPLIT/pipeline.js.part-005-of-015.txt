@@ -1,0 +1,111 @@
+      continue;
+    }
+
+    if (t.type === 'endnote') {
+      // **D-40:** הערת־סיום גלויה. endnotes-mode ⇒ עמודי ההערות (עם סמן
+      // markerFor(num, style)); מצבים אחרים ⇒ בלוק פסקה בגוף (הטקסט בלבד;
+      // המספר במקור הוא עוגן סמן — פריט קישור, לא תוכן — D-30).
+      if (notesMode === 'endnotes') {
+        endnoteTokens.push({ tokenId: t.id, text: t.text, part: currentPart || 1, num: t.num != null ? t.num : null, lines: [] });
+        continue;
+      }
+      const w = columnWidthFor({ kind: 'paragraph' }, settings);
+      // **שלב 4 מקטע ב׳:** הערת-סיום גלויה בגוף — שבירה קנונית מפריטי המודל
+      // (המספרון של המקור אינו תוכן — עוגן סמן, D-30) בסגנון הגוף.
+      const enBuilt = layoutModelBlock(blockById.get(t.blockId), {
+        settings, kind: 'paragraph', widthPx: w,
+        lineHeightPx: api.lineHeightPx(null),
+        runts: settings['runt-min-width-pct'],
+        measureCtx: { assetResolver: docAssets, measure: api }
+      });
+      const lines = enBuilt.view;
+      for (const d of (enBuilt.diagnostics || [])) {
+        ledger.create('line-engine', `endnote-body:${t.id}`, null, d, 'measure');
+      }
+ // **S4.21:** המידה שבה השורה נשברה בפועל (runt-check אמת)
+      blocks.push({
+        kind: 'paragraph', tokenId: t.id, parts: [{ kind: 'text', value: t.text }],
+        notes: [], bodyMarkers: [], lines, part: currentPart, dh: null, isEndnoteSource: true
+      });
+      continue;
+    }
+
+    // ---- paragraph ----
+    // (colW נקבע לאחר התאמת הסגנון המותאם — full-width נמדד ברוחב מלא; S11)
+    const mBlk = blockById.get(t.blockId);
+    let dh = null;
+    // **מקטע ב׳:** הטקסט השטוח להחלטות ברמת הבלוק (dh, סגנונות מותאמים) — מהמודל
+    // הקנוני: פריטי הטקסט שלו (תחביר סמנים/תמונות אינו תוכן — המודל כבר הסיר אותו).
+    // המפרידים והטווחים של סוגריים/סגנון inline מחושבים בגשר
+    // (pipeline-bridge.wordOverlayFactory) על אותו טקסט — מקור אחד, אותן כללי החברות.
+    const flatBody = mBlk
+      ? flatTextOf(mBlk).flat
+      : t.parts.filter(p => p.kind === 'text').map(p => p.value).join(' ');
+    if (settings['dh-auto-detect']) {
+      dh = detectDh(flatBody, true);
+    }
+    // **S73 (צבע פר-גופן):** צבע דיבור-המתחיל מההגדרות — מוצמד למודל
+    // (כמו dh.font; שחור ברירת מחדל — null ⇒ ירושת ברירת מחדל ברינדר).
+    if (dh) { dh.font = settings['dh-font']; dh.color = settings['dh-color'] || null; }
+
+    const allWords = [];
+    const notes = [];
+    const bodyMarkers = [];
+    const assignedMarkers = new Set();
+    const noteAssignments = [];
+
+    // **S11 (REQ-PAR-06): התאמת סגנונות מותאמים — לפני המדידה** (שורש הסיבתיות:
+    // הסגנון נקבע לפני שבירת השורות, לא אחרי — דפוס D-42).
+    const csBlock = customStyles.length ? matchBlockStyle(flatBody, customStyles) : null;
+    const csInlineSpans = [];
+    if (customStyles.length) {
+      for (const im of matchInlineStyles(flatBody, customStyles)) {
+        for (const r of im.ranges) {
+          csInlineSpans.push({ from: r.from, to: r.to, styleId: im.styleId, factor: inlineSizeFactor(im.style.style, settings['body-font-size-pt']) });
+        }
+      }
+    }
+    // endnote-mode: הפסקה כולה זורמת לעמודי ההערות של החלק (סמן הסגנון אם הוגדר מונה)
+    if (csBlock && csBlock.style.layoutMode === 'endnote') {
+      const mark = counters.nextMark(csBlock.style, { part: currentPart || 1, page: null });
+      endnoteTokens.push({ tokenId: t.id, text: flatBody, part: currentPart || 1, customStyle: csBlock.style.id, ...(mark ? { marker: mark } : {}), lines: [] });
+      customEndnoteTokens.add(t.id); // הסמן (מוקצה בבניית עמודי ההערות) נספר במקור
+      continue;
+    }
+    // footnote-mode: הפסקה כולה הופכת הערת שוליים — בגוף נשאר הסמן בלבד (מקום הפסקה = מקום העיגון).
+    // נתיב זה דורש מרזב פעיל; בלי מרזב — הסגנון חוזר להיות חזותי בלבד (BRZ-15: לא מאבדים תוכן).
+    if (csBlock && csBlock.style.layoutMode === 'footnote' && notesMode === 'footnotes' && settings['footnotes-enabled']) {
+      const mark = counters.nextMark(csBlock.style, { part: currentPart || 1, page: null });
+      const fnMark = mark || markerForSettings(nextMarkerNum({ page: null, part: currentPart || 1 }), settings);
+      const fnNotes = [{ text: flatBody, marker: fnMark, tokenId: t.id, part: currentPart || 1, customStyle: csBlock.style.id }];
+      const fnBodyMarkers = [fnMark];
+      // הסמן בגוף מתויג (D-53) — תיבת סמן של מנוע השורות הקנוני (מקטע ב׳)
+      // **מקטע ב׳:** הסמן בגוף — תיבת סמן יחידה במנוע השורות הקנוני:
+      // מודד בגודל הרישום (חוזה שלב 3) — הרחבה מתועדפת בדוח ההשוואה.
+      const fnWLimit = columnWidthFor({ kind: 'paragraph' }, settings);
+      const fnBuilt = layoutModelBlock(blockById.get(t.blockId), {
+        settings, kind: 'paragraph', widthPx: fnWLimit,
+        lineHeightPx: api.lineHeightPx(null),
+        runts: settings['runt-min-width-pct'],
+        items: [{
+          id: `t-${t.id}#fnmark`, kind: 'noteMarker',
+          payload: { markerText: fnMark, noteRef: `fnstyle:${t.id}` },
+          constraints: { atomic: true, participates: 'inline', splittable: 'never', bindToNeighbor: true }
+        }],
+        measureCtx: { assetResolver: docAssets, measure: api }
+      });
+      const fnLines = fnBuilt.view;
+      const fnBlk = {
+        kind: 'paragraph', tokenId: t.id, parts: t.parts, notes: fnNotes, bodyMarkers: fnBodyMarkers,
+        lines: fnLines, unmatchedClosers: t.unmatchedClosers || [], part: currentPart, dh: null,
+        // **S11:** הקצאת הסמן נרשמת כמו note-ref — עקביות סמנים גוף/מרזב (P1-3, D-30)
+        noteAssignments: [{ noteIndex: 0, marker: fnMark }],
+        customStyle: { id: csBlock.style.id, name: csBlock.style.name, layoutMode: 'footnote', styleSpec: csBlock.style.style, counterMark: fnMark, linkedOrnaments: csBlock.style.linkedOrnaments }
+      };
+      for (const ln of fnBlk.lines) ln.customStyle = fnBlk.customStyle;
+      customFootnoteMarkers.set(t.id, fnMark); // חשבונאות שימור תוכן: הסמן במקור
+      blocks.push(fnBlk);
+      continue;
+    }
+
+    // full-width-mode: המדידה ברוחב מלא (כמו H1) — לפני הפריסה, לא אחריה

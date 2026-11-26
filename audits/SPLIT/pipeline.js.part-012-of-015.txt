@@ -1,0 +1,117 @@
+    if (t.type === 'editorial') return [];
+    if (t.type === 'endnote') {
+      if (notesMode === 'endnotes') {
+        const marker = printedEndnoteMarker.get(t.id) || '';
+        return [...wordSeq(marker), ...wordSeq(t.text)];
+      }
+      return wordSeq(t.text); // גוף: הטקסט בלבד (המספר במקור = עוגן סמן, לא תוכן — D-30)
+    }
+    // paragraph: גוף + לכל note-ref: סמן (בעוגן שבגוף) + טקסט ההערה
+    // (ממקום הצגתו). הסמן אחד לכל המצטרים — הוקצה אחדת
+    // בשלב הבלוק (מדיניות + סגנון) — identity-by-construction (D-30).
+    // **מקטע ב׳:** הגוף מסידת המקור של הפסקה — טקסט המודל הקנוני
+    // (ריצות טקסט + טקסט-מקור של תמונות; תחביר סמני-גופן/תמונה אינו תוכן
+    // אלא תחביר — המודל כבר פרק אותו לריצות/פריטים). הצד הפלט
+    // מציג את אותו טקסט מהפרגמנטים — ההשוואה חד-משמעית.
+    const body = (t.blockId && modelFlatByToken.has(t.blockId))
+      ? modelFlatByToken.get(t.blockId)
+      : t.parts.filter(p => p.kind === 'text').map(p => p.value).join(' ');
+    const refs = t.parts.filter(p => p.kind === 'note-ref');
+    const assigns = markersByToken.get(t.id) || [];
+    const out = [...wordSeq(body)];
+    // **S11:** פסקה שהוסבה כולה להערה בסגנון מותאם — הסמן נספר במקור פעם אחת:
+    // footnote ⇒ הוקצה בבלוק; endnote ⇒ מה שהודפס בעמודי ההערות (printedEndnoteMarker)
+    if (customFootnoteMarkers.has(t.id)) out.push(...wordSeq(customFootnoteMarkers.get(t.id)));
+    if (customEndnoteTokens.has(t.id)) out.push(...wordSeq(printedEndnoteMarker.get(t.id) || ''));
+    for (let i = 0; i < refs.length; i++) {
+      const p = refs[i];
+      const marker = assigns[i] ? assigns[i].marker : '';
+      const noteText = String(t.notes[p.noteIndex]).replace(/\uE000/g, ' ');
+      // סמן אחד (בגוף, בעוגן) + טקסט אחד (ממקום ההצגה) — בכל מצב
+      out.push(...wordSeq(marker), ...wordSeq(noteText));
+    }
+    return out;
+  }
+
+  /** חילוץ מילים מהפלט המרונדר בפועל (בדיקת אמת של המבקר — לא הסכמה פנימית). */
+  function outWordsOfAll() {
+    const out = [];
+    // 1) שורות הגוף של כל העמודים — כפי שמרונדרות (placeholder מפוצל).
+    //    **FWD-1 (S8):** כולל שורות הפס החוצה־טורים — כותרות H2 חיות שם.
+    for (const pg of pages) {
+      for (const ln of pageLines(pg)) {
+        for (const w of (ln.words || [])) {
+          if (w.includes(ATOMIC)) out.push(...explodePlaceholderWord(w));
+          else out.push(...wordSeq(w));
+        }
+        // **Iteration-003 (מילת-חלון):** המילה הראשונה הוצאה מהזרימה אך
+        // היא תוכן מרונדר (בשפה הימנית) — נספרת כאן כדי שחשבונאות השימור
+        // תישאר מדויקת (בלי זה: כל פסקת-חלון הייתה נחשבת כחסרת מילה).
+        if (ln.windowWords && ln.windowWords.length) {
+          for (const w of ln.windowWords) out.push(...wordSeq(w));
+        }
+      }
+      // **Iteration-003 (legacy parity):** תוכן שער-המשנה — ה-h1 נצרך לשער
+      // (חוזה sub_shaar) ונרנדר מהחותמת (shaarLayout; בשלב הבדיקה היא עוד
+      // לא הוטבעה — המקור הוא shaarInfo.title, אותה טרנספורמציית פיצול
+      // כמו בצד המקור). שער ראשי/אחורי — תוכן מטא (לא טוקני מקור) ואינו
+      // נספר, כמו תוכן-העניינים והגיליון (העתקות/מספור של המנוע).
+      if (pg.type === 'shaar-sub' && Array.isArray(pg._consumedH1Tokens) && pg._consumedH1Tokens.length && pg.shaarInfo && pg.shaarInfo.title) {
+        const parts = String(pg.shaarInfo.title).split(/[-–—]/).map(x => x.trim()).filter(Boolean);
+        out.push(...wordSeq(parts.length >= 2 ? parts[0] + ' ' + parts.slice(1).join(' - ') : String(pg.shaarInfo.title)));
+      }
+    }
+    // 2) מרזב footnotes — טקסט בלבד (הסמן נספר פעם אחת בגוף — D-30)
+    if (settings['footnotes-enabled'] && notesMode !== 'endnotes') {
+      for (const pg of pages) {
+        for (const n of pg.footnotes) {
+          if (n.isContinuation || n.mode === 'split-rest') out.push(...wordSeq(n.text));
+          else if (n.mode === 'split-first') out.push(...wordSeq(n.text));
+          else if (n.rejected) { /* הוחזר לגוף — נספר שם */ }
+          else out.push(...wordSeq(n.text));
+        }
+      }
+    }
+    // 3) עמודי הערות — inline-refs: טקסט בלבד; טוקנים גלויים: סמן + טקסט
+    if (notesMode === 'endnotes') {
+      for (const ep of (endnotePagesInfo.pages || [])) {
+        for (const n of ep.notes) {
+          if (n.fromInline) out.push(...wordSeq(n.text));            // הסמן נספר בגוף
+          else out.push(...wordSeq(n.marker), ...wordSeq(n.text));   // אין עוגן בגוף
+        }
+      }
+    }
+    // 4) הערות צד — טקסט מהמיקום שהוצג
+    for (const p of sideNotePlacement.placed) out.push(...wordSeq(p.text));
+    return out;
+  }
+
+  const srcTokens = tokens.filter(t => t.type !== 'editorial' && t.type !== 'endnote-class');
+  let contentPreserved = true;
+  const mismatchDetail = [];
+  const gSrc = [], gOut = [];
+  // **D-83 (תיקון קריסת ספר־אמת 03.11):** הזרקה בלולאה בלבד. spread על מערך ענק
+  // (ספר שלם, >125,154 מילים = מגבלת הארגומנטים של V8) זרק "Maximum call stack
+  // size exceeded" — העימוד עצמו הושלם והקריסה אירעה דווקא בבדיקת שימור התוכן
+  // שבסוף ה־pipeline. לולאת for אינה תלויה בגודל המחסנית.
+  const pushAll = (dst, src) => { for (let i = 0; i < src.length; i++) dst.push(src[i]); };
+  for (const t of srcTokens) pushAll(gSrc, srcWordsOf(t));
+  pushAll(gOut, outWordsOfAll());
+
+  const norm = (arr) => arr.slice().sort().join('\n');
+  if (norm(gSrc) !== norm(gOut)) {
+    contentPreserved = false;
+    const cnt = (a) => a.reduce((m, w) => (m[w] = (m[w] || 0) + 1, m), {});
+    const cs = cnt(gSrc), co = cnt(gOut), diff = {};
+    for (const w of new Set([...Object.keys(cs), ...Object.keys(co)])) {
+      const dd = (cs[w] || 0) - (co[w] || 0);
+      if (dd !== 0) diff[w] = dd;
+    }
+    mismatchDetail.push({ kind: 'multiset-mismatch', diff });
+  }
+
+  // כל טוקן מיוצג (נמצא בפלט או הומר להערת צד / עמודי הערות)
+  const blocksByToken = new Map();
+  for (const b of blocks) if (!blocksByToken.has(b.tokenId)) blocksByToken.set(b.tokenId, b);
+  const placedSideAnchors = new Set(sideNotePlacement.placed.map(p => p.anchorToken));
+  const endnoteRepresented = new Set(endnoteBlocks.map(e => e.tokenId));

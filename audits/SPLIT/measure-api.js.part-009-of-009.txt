@@ -1,0 +1,4 @@
+  measureItem, environmentFingerprint, MEASURE_ENGINE_VERSION, itemCacheStats, clearItemMeasureCache, stringCacheStats,
+  FONT_WIDTH_PROFILES, familyWidthProfileOf,
+  deepFreeze: _deepFreeze, canonicalStringify: _canonicalStringify
+};

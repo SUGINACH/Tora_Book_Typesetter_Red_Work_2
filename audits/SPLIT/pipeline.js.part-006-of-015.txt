@@ -1,0 +1,93 @@
+    // **מקטע 1 (העברה):** פסקה בסעיף H0 (הקדמה) בפרופיל IMUD — נמדדת ברוחב
+    // הטור הרחב של תבנית ההקדמה (SINGLE_W=552.3), כמו flowSection של המורשת
+    // (isH0Body ⇒ SINGLE_W). עד כאן נמדדה ברוחב טור רגיל (269px) ⇒ שורות
+    // הקדמה קצרות וגלישת עמודים. **היקף מוגבל לפרופיל IMUD בלבד** — קורפוס
+    // ה-DP הקנוני (הנתיב הלא-IMUD) שמור על נעילת D-107 שלו ללא שינוי;
+    // עקביות הרוחב שם היא הכרעה מוצרית נפרדת. הגופן של גוף ההקדמה — מקטע 2.
+    const inH0Section = lastHeadingLevel === 0 && isImudProfile(settings);
+    const colW = (csBlock && csBlock.style.layoutMode === 'full-width')
+      ? fullWidthWidth(settings)
+      : (inH0Section ? fullWidthWidth(settings) : columnWidthFor({ kind: 'paragraph' }, settings));
+    // **RC-2a (i004) — מקטע 2, סגנון גוף ההקדמה:** גוף ה-h0 בגוף הספר ב-11.5pt
+    // בפיץ' H0_LINE_H (SZ.h0Body — הוכח מה-PDF הישן: p43-45 גוף 11.5pt, פיץ'
+    // ~15.5pt, ומילות-החלון 17.25=11.5×1.5). עד כאן זרם ההקדמה כגוף 12pt —
+    // שורות ארוכות מהייחוס, פיץ' 16.1 במקום 15.5, ומילות-חלון 18pt. הסגנון
+    // נבנה כאן פעם אחת (מקור יחיד) וזורם: מדידה (baseStyle), פיץ' (lineHeightPx),
+    // מילת-חלון (winSizePt), ורינדור (ln.sizePt — נקרא ב-line-font.js S6.3).
+    // **Iteration-006 (RC-M2 — גופן גוף ההקדמה = גופן הגוף, כמו הייחוס):**
+    // עד כאן הוזרם גם הגופן מ-heading-0-body-font (ברירת המחדל מהמקור:
+    // f-h0-body='Frank Ruhl Libre') — הן למדידת הרצות והן ל-ln.font. הייחוס
+    // מכריע שהמקור לא מימש הגדרה זו בפלט: 9 מילים מגוף ההקדמה ב-PDF הישן
+    // (p43, ToraBook@11.5 — אותו גופן מוטמע כמו גוף הספר) נמדדו מול שני
+    // המועמדים: Guttman Rashi סטייה כוללת 0.03pt (התאמה מדויקת פר-מילה —
+    // 'לדיני' 19.83=19.83, 'הוצאה' 25.27=25.27, 'רשויות' 26.56=26.56),
+    // Frank Ruhl Libre סטייה 8.58pt. בנתיב המאוחד הפער יצר מדידה≠רינדור:
+    // הרצות נמדדו ב-FRL (בלי גופן רשום באפליקציה החיה ⇒ קירוב טבלה, רחב
+    // ב-18–42%) בעוד המילים רונדרו במחסנית הגוף (Guttman) — רווחי דיו
+    // 4–15px בשפה הימנית של 19 שורות הקדמה (אודיט חי p42/p411). הקביעה
+    // כאן: גוף ההקדמה בגופן הגוף — ההיבט היחיד שהמקור מימש מ-f-h0-body
+    // הוא הגודל (11.5pt).
+    const h0BodySizePt = Number(settings['heading-0-body-size-pt']) || 11.5;
+    const h0BodyFamily = null; // גוף הגוף — כמו הייחוס (ההוכחה לעיל)
+    const h0BaseStyle = inH0Section
+      ? baseStyleOf({ ...settings, 'body-font-size-pt': h0BodySizePt }, 'paragraph')
+      : null;
+    const paraLineHeightPx = inH0Section ? api.lineHeightPx(h0BodySizePt) : api.lineHeightPx(null);
+    const customFactorById = new Map(csInlineSpans.map(s => [s.styleId, s.factor]));
+    let csInfo = null; // **S11:** סגנון הבלוק שיוצמד לשורות ולבלוק (מדלג על ערכי איטרציות קודמות)
+
+    // **שלב 4 מקטע ב׳:** הקצאת סמנים לפי זהות העוגן (noteRef) — סדר
+    // החלקים = סדר פריטי הסמן של המודל; הסמן זורם למנוע כ-markerText
+    // על פריט הסמן של המודל — הזהות והעוגן מן המקור (D-30/D-41).
+    const notesByRef = new Map();
+    const markerItems = mBlk ? (mBlk.items || []).filter(i => i.kind === 'noteMarker') : [];
+    let markerItemIdx = 0;
+    const inlineNoteMode = notesMode === 'inline' || (!settings['footnotes-enabled'] && notesMode !== 'endnotes');
+    for (const p of t.parts) {
+      if (p.kind !== 'note-ref') continue;
+      const noteRaw = t.notes[p.noteIndex];
+      const marker = markerForSettings(nextMarkerNum({ page: null, part: currentPart || 1 }), settings);
+      noteAssignments.push({ noteIndex: p.noteIndex, marker });
+      const mItem = markerItems[markerItemIdx++];
+      if (mItem && mItem.payload && mItem.payload.noteRef) {
+        notesByRef.set(mItem.payload.noteRef, inlineNoteMode
+          ? { marker, inlineText: noteRaw } // placeholder אטומי בגוף (D-30) — סונזז בגשר
+          : { marker }); // רק הסמן בגוף; הטקסט זורם למקום ההצגה
+      }
+      if (!inlineNoteMode) {
+        // **פרוסה 2 (§2.3 — מדידה אחת לכל פריט):** הערה נולדת עם חותמת מדדים
+        // מלאה (גובה/פיץ'/שורות מעוטפות) — מדידתה הראשונה והאחרונה; מכאן
+        // התקציב, ההצבה, הפיצול וההקרנה קוראים את החותמת ואינם מודדים שוב.
+        // **שלב 6 פרוסה 2 (§7):** הרשומה נולדת בזהות מודל-ההערות המאוחד
+        // (noteId/sourceId/anchorId + מדיניות מספור/פיצול). במצב endnotes אין
+        // מרזב — החותמה נדחית לבונה עמודי ההערות (הקשר היעד האמיתי); שם
+        // היא מדידתה היחידה (בעבר נמדדה פעמיים: פעם ברוחב המרזב שאינו קיים
+        // במצב זה, ופעם באומדן עמודי-ההערות).
+        const noteRec = makeNoteRecord(
+          { text: String(noteRaw).replace(/\uE000/g, ' '), marker, tokenId: t.id, noteIndex: p.noteIndex, part: currentPart || 1 },
+          {
+            kind: notesMode === 'endnotes' ? NOTE_KINDS.ENDNOTE : NOTE_KINDS.FOOTNOTE,
+            numberingScope: resetPolicy,
+            splitPolicy: settings['long-footnote-policy'] || null,
+            continuationPolicy: settings['long-footnote-policy'] || null
+          }
+        );
+        if (notesMode !== 'endnotes') stampNoteMetrics(noteRec, settings, measureWithImpl);
+        notes.push(noteRec);
+        bodyMarkers.push(marker);
+      }
+    }
+    markersByToken.set(t.id, noteAssignments);
+
+    // **שלב 4 מקטע ב׳ (הוראה §10):** השבירה הקנונית של הפסקה — פריטי המודל
+    // (כולל תיבות סמן מסונזזות עם ההקצאות, תמונות אטומיות) → מדידה יחידה →
+    // LineModel → תצוגה נגזרת. שכבות-על של סוגריים/סגנון inline מוחלות בתוך הגשר בקואורדינטות
+    // מקור; אין סנטינלים ואין ניקוי סנטינלים — המידע נוסע על הפרגמנטים
+    // (לינאריות הרוחב בלבד — הגובה/הבסיס נשארים של השורה, כמו הנתיב החי).
+    // **Iteration-003 (legacy parity — מילת-חלון):** בפרופיל IMUD, מילת-החלון
+    // של המקור (createDropWord: המילה הראשונה של פסקה רבת-שורות מוצאת
+    // מהזרימה ומוצגת בשפה הימנית ב-1.5× בגופן FrankReal; שתי השורות
+    // הראשונות ברוחב מוקטן). תנאי המקור: estLines ≥ drop-word-min-lines,
+    // לא מתחילה בסוגריים, המילה הראשונה בלי סמן הערה (S4.13/S6.0/F1).
+    // **היקף:** IMUD בלבד — ב-DP מנגנון ה-drop הגיאומטרי-ניטרלי של RED
+    // (applyDropWord) נשאר כפי שננעל.

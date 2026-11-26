@@ -1,0 +1,133 @@
+    out = { ok: false, code: 'unsupported-item-kind', message: `measureItem: סוג פריט לא נתמך: ${kind} (${item.id})` };
+  }
+
+  if (out && out.ok) {
+    // החית המתועדת בתוצאה = הסביבה החיה שבה נמדד בפועל (לא הצהרת ה-caller)
+    out.environmentFingerprint = environmentFingerprint();
+    out.measureEngineVersion = MEASURE_ENGINE_VERSION;
+    _deepFreeze(out);
+    _itemCacheSet(ck, out);
+  } else if (out) {
+    _deepFreeze(out); // דחייה — גם היא בלתי-ניתנת לשינוי (אותו חוזה)
+  }
+  return out;
+}
+
+/** הזדמנויות שבירה של רצף ריצות טקסט — מיקומי רווחים (מפתחות לשלב 4). */
+const EMPTY_ARR = Object.freeze([]);
+function _textBreaks(runs) {
+  // מקטע ב׳: מילה בדרך כלל איננה מכילה רווחים — מערך ריק משותף
+  // (חיסכון מיליוני הקצאות בספרים גדולים).
+  let any = false;
+  for (const run of runs) { if (String(run.text).includes(' ')) { any = true; break; } }
+  if (!any) return EMPTY_ARR;
+  const breaks = [];
+  let pos = 0;
+  for (const run of runs) {
+    const text = String(run.text);
+    for (let i = 0; i < text.length; i++) {
+      if (text[i] === ' ') breaks.push({ offset: pos + i, after: true });
+    }
+    pos += text.length;
+  }
+  return breaks;
+}
+
+/** מטמון מדידות פריט — מפתח מלא בלבד (§3.1-10).
+ *
+ * **חסימת זיכרון (שלב 4 מקטע ב׳, תיקון שורש שנמצא באימות ה-PR):** מדידת
+ * פריט היא מֵימוּז של פונקציה דטרמיניסטית טהורה — חסימת המטמון אינה יכולה
+ * לשנות פלט, אלא זמן CPU בלבד (ולכן גם ה-hash אטום לה). בלי חסימה,
+ * המטמון שומר לנצח MeasuredItem לכל פריט-שורה שנמדד אי-פעם בתהליך:
+ * ספר של 3.4MB השאיר ~682 אלף ערכים ≈ 766MB (נמדד) — דליפה גם ב-Worker
+ * של המוצר וגם קריסת OOM בבדיקות הספרים הארוכים (4 ספרים בתהליך אחד
+ * הצטברו ל-1.9GB+). התועלת שנמדדה בריצה-חוזרת זהה (טקסט+סגנון ללא
+ * שינוי): האצה של ×1.35 בלבד — שולית מול העלות. התקרה נגזרת מתקציב
+ * הזיכרון הקיים של s13 (memoryMaxMB=1500 לספר גדול): 65,536 ערכים
+ * ≈ 75MB (~1.16KB לפריט, נמדד) ≈ 5% מהתקציב — המטמון לעולם אינו דומיננטי.
+ * מסמכים עד ~130 עמ' נשמרים במלואם; ספרים גדולים יותר שומרים את הערכים
+ * האחרונים בלבד. גם בתוך typeset בודד אין לחסימה השפעה: חוזה גבול המדידה
+ * היחיד מבטיח שכל פריט נמדד בדיוק פעם אחת (מוכח ב-s4b-production-path)
+ * — המטמון משרת רק בניות-חוזרות של אותו מסמך ללא שינוי.
+ *
+ * **ניפוי באצוות (נמדד):** ניפוי של ערך-בודד בכל הכנסה מעל התקרה האט את
+ * ההכנסות פי ~2 (יצירת איטרטור + מחיקה לכל אחת מ-617 אלף ההכנסות של
+ * ספר גדול). ניפוי באצוות של 8,192 מחזיר את המהירות לקו הבסיס (13.0s
+ * מול 27.4s — נמדד על very_long) בלי לפגוע בחסימה. */
+const ITEM_MEASURE_CACHE_MAX_ENTRIES = 65536;
+const ITEM_CACHE_EVICT_BATCH = 8192;
+const _itemMeasureCache = new Map();
+function _itemCacheGet(ck) {
+  const e = _itemMeasureCache.get(ck.k);
+  if (e === undefined) return undefined;
+  // **ביקורת בטיחות 20.11 (U-11) — אימות מקור מדויק:** החשיש המהיר אינו הוכחת
+  // זהות. הרשומה שומרת את מקור-הפריט הקנוני המלא **ואת טביעת הסביבה** (הפניה
+  // משותפת למחרוזת המֵימוֹ של environmentFingerprint — בלי העתקה לכל רשומה);
+  // מקור שונה תחת אותו חשיש (התנגשות אמיתית — כולל כזו שהוזרקה בבדיקה) היא
+  // **miss**, לא החזרת מדידה זרה. ההשוואה מדויקת (אין חשיש בשרשרת האימות).
+  if (e.sItem !== ck.sItem || e.env !== ck.env) return undefined;
+  // LRU: חידוש עדכניות — מחיקה והחזרה לסוף (סדר ה-Map = סדר הכנסה)
+  _itemMeasureCache.delete(ck.k);
+  _itemMeasureCache.set(ck.k, e);
+  return e.val;
+}
+function _itemCacheSet(ck, value) {
+  if (_itemMeasureCache.size >= ITEM_MEASURE_CACHE_MAX_ENTRIES) {
+    // ניפוי הערכים העתיקים ביותר באצווה אחת (הראשונים שהוכנסו ולא נגעו בהם מאז)
+    const it = _itemMeasureCache.keys();
+    for (let i = 0; i < ITEM_CACHE_EVICT_BATCH; i++) {
+      const k = it.next().value;
+      _itemMeasureCache.delete(k);
+    }
+  }
+  // התנגשות hash (מקור אחר תחת אותו חשיש): הרשומה האחרונה גוברת — ההגנה
+  // היא ב-get (אימות מקור); שני המקורות פשוט יחושבו מחדש לסירוגין.
+  // ה-env הוא הפניה למחרוזת המֵימוֹ המשותפת — אין העתקה לכל רשומה.
+  _itemMeasureCache.set(ck.k, { sItem: ck.sItem, env: ck.env, val: value });
+}
+function itemCacheStats() {
+  return { entries: _itemMeasureCache.size, capacity: ITEM_MEASURE_CACHE_MAX_ENTRIES };
+}
+
+/** **ביקורת בטיחות 20.11 (U-14) — אבחון מדידה, לא מנגנון שני:** סקירת מטמוני
+ *  המחרורות של המופעים ארוכי-החיים (family/shared) — למדידת זיכרון בפועל
+ *  ב-Worker חי; ההחזר כולל רשומות, ניפויים ותפוסה לכל מופע. */
+function stringCacheStats() {
+  const perInstance = [];
+  let entries = 0, evictions = 0;
+  const scan = (label, map) => {
+    for (const [k, api] of map) {
+      if (!api || !api.cache) continue;
+      perInstance.push({ label: label + ':' + k, entries: api.cache.size, capacity: STRING_CACHE_MAX_ENTRIES, evictions: api.stats.evictions || 0 });
+      entries += api.cache.size;
+      evictions += api.stats.evictions || 0;
+    }
+  };
+  scan('family', _familyApiCache);
+  scan('shared', _sharedFallbackApis);
+  return { entries, evictions, instances: perInstance.length, perInstance, capacityPerInstance: STRING_CACHE_MAX_ENTRIES };
+}
+function clearItemMeasureCache() { _itemMeasureCache.clear(); }
+
+/** API כבול לזהות גופן קנונית (fontId מה-resolver) — לא לשם בלבד. */
+MeasureAPI.forFontId = function forFontId(fontId, settings) {
+  const font = fontResolver.fontOf(fontId);
+  if (!font) return null;
+  const key = String(fontId);
+  if (!_familyApiCache.has(key)) {
+    const api = new MeasureAPI({ ...(settings || {}), 'body-font': fontResolverAliasOf(fontId) || key }, 'font-metrics');
+    // קשירה ישירה לפרנסר של הזהות — לא דרך רישום שם (הזהות היא המקור)
+    api.fontProfileName = fontResolverAliasOf(fontId) || key;
+    api.fontProfile = font;
+    _familyApiCache.set(key, api);
+  }
+  return _familyApiCache.get(key);
+};
+function fontResolverAliasOf(fontId) {
+  const rec = fontResolver.resolveFontById(fontId);
+  return rec.ok ? rec.record.aliases[0] : null;
+}
+
+module.exports = {
+  MeasureAPI, registerFont, unregisterFont, clearRegisteredFonts, restoreFontRegistration,
+  charWidthEm, registeredFonts, resolveMeasureImpl,

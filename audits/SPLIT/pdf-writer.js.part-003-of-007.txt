@@ -1,0 +1,112 @@
+      ascentEm: Number.isFinite(ef.ascentEm) ? ef.ascentEm : 0.8,
+      descentEm: Number.isFinite(ef.descentEm) ? ef.descentEm : 0.2,
+      ids: { type0: pdf.reserve(), cidFont: pdf.reserve(), fontDescriptor: pdf.reserve(), fontFile: pdf.reserve(), toUnicode: pdf.reserve() }
+    });
+  }
+  /** מפת key → {font, name} לציור מיידי ב-emitWord (נתיב יחיד). */
+  const extraByKeys = new Map(extraFonts.map((ef, i) => [ef.key, { font: ef.font, name: `F${7 + i}` }]));
+  const pageIds = pages.map(() => pdf.reserve());
+  const contentIds = pages.map(() => pdf.reserve());
+  const linkIds = new Map(); // pageIndex → [ids]
+  for (const link of tocLinks || []) {
+    if (!linkIds.has(link.page)) linkIds.set(link.page, []);
+    linkIds.get(link.page).push(pdf.reserve());
+  }
+  const outlineItems = (outline || []).map(o => ({ ...o, id: pdf.reserve() }));
+
+  // ---- עץ הסימניות: היררכיה לפי level ----
+  const stack = [];
+  const roots = [];
+  for (const it of outlineItems) {
+    while (stack.length && stack[stack.length - 1].level >= it.level) stack.pop();
+    it.parent = stack.length ? stack[stack.length - 1] : null;
+    it.children = [];
+    if (!it.parent) roots.push(it); else it.parent.children.push(it);
+    stack.push(it);
+  }
+  const flatOrder = [];
+  const walk = (list) => { for (const x of list) { flatOrder.push(x); walk(x.children); } };
+  walk(roots);
+  for (const list of [roots, ...flatOrder.filter(f => f.children.length).map(f => f.children)]) {
+    for (let i = 0; i < list.length; i++) { list[i].prev = list[i - 1] || null; list[i].next = list[i + 1] || null; }
+  }
+
+  // ---- תוכן לכל עמוד (content streams) ----
+  const contents = pages.map((pg) => {
+    const ops = [];
+    // **S6.0 (R5-M2 — צבע דביק):** מצב מילוי נוכחי לכל אורך מסלול התוכן
+    // של העמוד. בעבר 'rg' נפלט רק למילים צבועות ולא אופס לעולם ⇒ מילה
+    // צבועה (הערת-שוליים אפורה) צבעה את כל הטקסט שאחריה בעמוד — הערות
+    // שוליים, גיליון וכותרות (נמדד: #404040 מדביק עד סוף העמוד).
+    let fillState = '0 0 0';
+    const emitFill = (color) => {
+      if (Array.isArray(color) && color.length === 3) {
+        const cs = `${round2(color[0])} ${round2(color[1])} ${round2(color[2])} rg`;
+        if (cs !== fillState) { ops.push(cs); fillState = cs; }
+      } else if (fillState !== '0 0 0') {
+        ops.push('0 0 0 rg'); fillState = '0 0 0';
+      }
+    };
+    // **D-89 (צבע פר-מילה):** rgb 0..1 על המילה (כותרת עליונה בכחול-הייחוס
+    // #0F1749, בלוקי השער האחורי) — ברירת מחדל שחור (0 0 0 rg מרומז ב-PDF).
+    const emitWord = (text, xPx, yPx, sizePt, fontKey, color) => {
+      // **S4.15:** מילת-חלון בגופן המשני (FrankReal-Bold) — כמו המקור;
+      // **S4.26:** כותרות בגופן השלישי (DavidLibre-Bold — כמו הייחוס);
+      // **S4.26 (פיצול גליפים):** תווים שחסרים בגוף הראשי (פיסוק בסיסי
+      // בגוטמן רש"י: ' . ׳) מצוירים בגופן ה-fallback (/F4) — המשך אותה
+      // פעולת טקסט, העט ממשיך מאליו אחרי כל Tj.
+      // **S5.1 (תיקון C4 + הרחבת ה-fallback לכל הגופנים):** הרשת כעת
+      // פר-תו לכל גופן (F1..F6): תו שחסר בגופן המילה נופל לגוף הטקסט (/F1)
+      // ורק אז ל-/F4. בעבר תו חסר ב-/F2 או //F3 הושמט בשקט מה-PDF
+      // (הדפדפן הציג אותו — תצוגה ≠ ייצוא). פורמט ה-bytes של המקרים
+      // הקיימים נשמר בדיוק (מסלול יחיד = המסלול הפשוט הקודם;
+      // מסלול מרובה = פורמט ה-F4 הקודם).
+      // **S73 (תצוגה=ייצוא בגופנים):** משפחה דינמית — ה-fontKey של המילה הוא
+      // שם המשפחה מההגדרות (למשל 'Lia Sgula' בכותרת השער); היא נמדדת
+      // באותו גופן במקרן ומצוירת כאן בתת-הגופן הייעודי (/F7…) — כמו ה-DOM.
+      // משפחה שלא סופקה ⇒ המשך לשרשרת הקיימת (window/heading/fnbody/margin/F1).
+      const ex = fontKey != null ? extraByKeys.get(fontKey) : null;
+      const useF2 = !ex && font2 && fontKey === 'window';
+      const useF3 = !ex && font3 && fontKey === 'heading';
+      const useF5 = !ex && font5 && fontKey === 'fnbody';
+      const useF6 = !ex && font6 && fontKey === 'margin';
+      const f = ex ? ex.font : (useF2 ? font2 : (useF3 ? font3 : (useF5 ? font5 : (useF6 ? font6 : font))));
+      const fName = ex ? ex.name : (useF2 ? 'F2' : (useF3 ? 'F3' : (useF5 ? 'F5' : (useF6 ? 'F6' : 'F1'))));
+      const chars = [...String(text)].filter(ch => {
+        const cp = ch.codePointAt(0);
+        return cp >= 0x20 && cp !== 0x7F;
+      // **S6.0 (R7-M3 — NBSP נעלם ב-PDF):** גופני Frank אינם ממפים U+00A0
+      // ⇒ התו הושמט בשקט מהייצוא והמילים הודבקו. כעת NBSP ממופה לרווח
+      // רגיל (הדפדפן מציג רווח — עתה גם ה-PDF).
+      }).map(ch => (ch === '\u00A0' ? ' ' : ch));
+      const visual = visualOrderRtl(chars);
+      if (!visual.length) return;
+      // ריצות פר-תו: הגופן הראשי של המילה; חסר ⇒ /F1 (גוף); חסר גם שם
+      // וקיים ב-/F4 ⇒ /F4. תו שאינו בשום גופן מושמט (כמו קודם — tofu).
+      const runs = [];
+      for (const ch of visual) {
+        let rn = fName, rf = f;
+        if (f.cidOf(ch) === 0) {
+          if (font.cidOf(ch) !== 0) { rn = 'F1'; rf = font; }
+          else if (font4 && font4.cidOf(ch) !== 0) { rn = 'F4'; rf = font4; }
+          else continue;
+        }
+        if (runs.length && runs[runs.length - 1].name === rn) runs[runs.length - 1].chars.push(ch);
+        else runs.push({ name: rn, font: rf, chars: [ch] });
+      }
+      if (!runs.length) return;
+      // **S6.0 (R5-M2):** הצבע נפלט פעם אחת לפני המסלולים — עם איפוס
+      // מפורש כשהמילה אינה צבועה והקודם היה צבוע (בעבר: הצבע נדבק).
+      emitFill(color);
+      if (runs.length === 1) {
+        // מסלוק יחיד — פורמט ה-bytes של המסלול הפשוט הקודם (ללא שינוי)
+        let out = '';
+        for (const ch of runs[0].chars) {
+          const g = runs[0].font.cidOf(ch);
+          if (g) out += g.toString(16).padStart(4, '0');
+        }
+        if (!out) return;
+        ops.push(`BT /${runs[0].name} ${round2(sizePt)} Tf ${round2(xPx * PX_TO_PT)} ${round2(hPt - yPx * PX_TO_PT)} Td <${out}> Tj ET`);
+        return;
+      }
+      // מסלוק מרובה — פורמט ה-F4 הקודם (BT x y Td; פר-ריצה /Fn sz Tf <hex> Tj; ET)
