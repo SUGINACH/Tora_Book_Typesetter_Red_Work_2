@@ -10229,6 +10229,70 @@ function measuredVia(item, style, env) {
   return measureItem(item, style, env.ctx);
 }
 
+/**
+ * Derive each source fragment's metrics from the HarfBuzz clusters it owns.
+ * Source fragments and HarfBuzz ScriptRuns are different partitions: one
+ * fragment may contain several ScriptRuns, and one ScriptRun may cover
+ * adjacent same-font style runs. Never pair them by array index.
+ */
+function shapedFragmentMetricsOf(fragment, shapingSlices, style) {
+  if (!shapingSlices || !Array.isArray(shapingSlices.shapedRuns)) return null;
+  const start = fragment && fragment.docStart;
+  const end = fragment && fragment.docEnd;
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || end <= start) {
+    const error = new Error('A shaped source fragment requires a valid absolute UTF-16 range');
+    error.code = 'invalid-shaped-fragment-source-range';
+    throw error;
+  }
+  const sizePt = style && Number.isFinite(style.sizePt) ? style.sizePt : 12;
+  const sizePx = sizePt * (96 / 72);
+  const advanceFactor = style && Number.isFinite(style.advanceFactor) && style.advanceFactor > 0
+    ? style.advanceFactor : 1;
+  const fontIds = new Set();
+  let advancePx = 0;
+  let glyphCount = 0;
+  for (const run of shapingSlices.shapedRuns) {
+    if (!run || !run.font || !Number.isSafeInteger(run.font.unitsPerEm) || run.font.unitsPerEm <= 0 ||
+        !Array.isArray(run.glyphs)) {
+      const error = new Error('A shaped source fragment references an invalid ShapedRun');
+      error.code = 'invalid-shaped-fragment-run';
+      throw error;
+    }
+    for (const glyph of run.glyphs) {
+      if (!glyph || !Number.isSafeInteger(glyph.cluster)) {
+        const error = new Error('A ShapedGlyph requires an absolute UTF-16 cluster');
+        error.code = 'invalid-shaped-fragment-cluster';
+        throw error;
+      }
+      if (glyph.cluster < start || glyph.cluster >= end) continue;
+      if (!Number.isFinite(glyph.xAdvance)) {
+        const error = new Error('A ShapedGlyph cluster has no finite xAdvance');
+        error.code = 'invalid-shaped-fragment-advance';
+        throw error;
+      }
+      advancePx += (glyph.xAdvance / run.font.unitsPerEm) * sizePx;
+      glyphCount++;
+      fontIds.add(String(run.font.fontId));
+    }
+  }
+  if (!glyphCount) {
+    // Bidi controls are intentionally non-shaping and have zero advance.
+    const visible = String(fragment.text || '').replace(/[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '');
+    if (visible.length) {
+      const error = new Error('Visible source-fragment text has no HarfBuzz output cluster');
+      error.code = 'shaped-fragment-glyph-coverage-gap';
+      throw error;
+    }
+  }
+  const orderedFontIds = [...fontIds];
+  return {
+    fontId: orderedFontIds.length === 1 ? orderedFontIds[0] : null,
+    fontIds: orderedFontIds,
+    advancePx: advancePx * advanceFactor,
+    glyphCount
+  };
+}
+
 /** הזרמת תיבה אחת לרצף: בניית פריט-מילה קנוני + מדידה דרך measureItem היחיד.
  * הסגנון נפתר מהמיכל (baseStyle או resolveStyleFor המשותף) + שכבת-על פר-מילה. */
 function boxItemFor(b, env) {
@@ -10258,16 +10322,22 @@ function boxItemFor(b, env) {
       id: wordItemId, kind: 'text', payload: { runs: runsPayload },
       ...(b.word.shapingSlices ? { shapingSlices: b.word.shapingSlices } : {})
     }, measureStyle, env);
-    const fragments = b.word.fragments.map((f, k) => ({
-      itemId: wordItemId,
-      runIndex: f.runIndex,
-      text: f.text,
-      start: f.start, end: f.end,
-      docStart: f.docStart, docEnd: f.docEnd,
-      fontId: (m.ok && m.segments && m.segments[k] && m.segments[k].fontId) || null,
-      fontFamily: f.fontFamily || null,
-      advancePx: (m.ok && m.segments && m.segments[k] && m.segments[k].advancePx) || 0
-    }));
+    const fragments = b.word.fragments.map((f, k) => {
+      const shaped = b.word.shapingSlices
+        ? shapedFragmentMetricsOf(f, b.word.shapingSlices, measureStyle)
+        : null;
+      return {
+        itemId: wordItemId,
+        runIndex: f.runIndex,
+        text: f.text,
+        start: f.start, end: f.end,
+        docStart: f.docStart, docEnd: f.docEnd,
+        fontId: shaped ? shaped.fontId : ((m.ok && m.segments && m.segments[k] && m.segments[k].fontId) || null),
+        fontFamily: f.fontFamily || null,
+        advancePx: shaped ? shaped.advancePx : ((m.ok && m.segments && m.segments[k] && m.segments[k].advancePx) || 0),
+        ...(shaped && shaped.fontIds.length > 1 ? { shapedFontIds: shaped.fontIds } : {})
+      };
+    });
     return lineItemOf({
       role: 'box', kind: 'text', itemId: wordItemId, sourceItemId: src.id,
       fragments,
@@ -34275,17 +34345,31 @@ function glyphOutlineSvgOf(wd, ml, doc) {
     const run = entry.run;
     const scaleY = sizePx / run.font.unitsPerEm;
     const scaleX = scaleY * segmentScale.get(entry.segment);
+    const direction = run.shaping && run.shaping.direction;
+    if (direction !== 'rtl' && direction !== 'ltr') {
+      return { svg: null, reason: 'shaped-run-direction-invalid' };
+    }
+    const runAdvancePx = run.glyphs.reduce((sum, glyph) => sum + glyph.xAdvance * scaleX, 0);
+    if (!Number.isFinite(runAdvancePx) || runAdvancePx < 0) {
+      return { svg: null, reason: 'shaped-run-advance-invalid' };
+    }
+    // HarfBuzz returns glyphs in visual order within a run. RTL output starts
+    // at the right edge and advances left; LTR output starts at the left edge.
+    let glyphPenX = direction === 'rtl' ? penX + runAdvancePx : penX;
     for (const glyph of run.glyphs) {
+      const glyphAdvancePx = glyph.xAdvance * scaleX;
+      if (direction === 'rtl') glyphPenX -= glyphAdvancePx;
       if (glyph.outlinePath.length) {
         const path = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', glyph.outlinePath);
         path.setAttribute('transform',
-          `translate(${px2(penX + glyph.xOffset * scaleX)} ${px2(baseline - glyph.yOffset * scaleY)}) scale(${scaleX} ${-scaleY})`);
+          `translate(${px2(glyphPenX + glyph.xOffset * scaleX)} ${px2(baseline - glyph.yOffset * scaleY)}) scale(${scaleX} ${-scaleY})`);
         path.setAttribute('fill', 'currentColor');
         svg.appendChild(path);
       }
-      penX += glyph.xAdvance * scaleX;
+      if (direction === 'ltr') glyphPenX += glyphAdvancePx;
     }
+    penX += runAdvancePx;
   }
   if (Math.abs(penX - width) > Math.max(1.25, width * 0.015)) {
     return { svg: null, reason: 'positioned-glyph-advance-does-not-match-word-width' };
@@ -35537,50 +35621,86 @@ function buildToUnicode(font) {
  * glyph lookup happens here: these are the exact GID outlines in font units.
  */
 function svgOutlineToPdfOps(pathData) {
-  if (typeof pathData !== 'string') return null;
+  if (typeof pathData !== 'string' || pathData.length > 2 * 1024 * 1024) return null;
   if (!pathData.length) return [];
-  const numberPattern = /[-+]?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][-+]?\\d+)?/;
-  const tokenPattern = /[MLCQZ]|[-+]?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][-+]?\\d+)?/g;
-  const residue = pathData.replace(/[MLCQZ]/g, '').replace(new RegExp(numberPattern.source, 'g'), '').replace(/[\\s,]/g, '');
-  if (residue.length) return null;
-  const tokens = pathData.match(tokenPattern) || [];
-  if (!tokens.length) return null;
   const ops = [];
   let i = 0;
   let command = null;
   let x = 0, y = 0, sx = 0, sy = 0;
-  const take = () => {
-    const token = tokens[i++];
-    if (token == null || /^[MLCQZ]$/.test(token)) throw new Error('outline-path-arity');
-    const value = Number(token);
-    if (!Number.isFinite(value)) throw new Error('outline-path-number');
+  const isDigit = (ch) => ch >= '0' && ch <= '9';
+  const isSpace = (ch) => ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r' || ch === '\f';
+  const skipSeparators = () => {
+    while (i < pathData.length && (isSpace(pathData[i]) || pathData[i] === ',')) i++;
+  };
+  const readNumber = () => {
+    skipSeparators();
+    const start = i;
+    if (pathData[i] === '+' || pathData[i] === '-') i++;
+    let integerDigits = 0;
+    while (i < pathData.length && isDigit(pathData[i])) { integerDigits++; i++; }
+    let fractionDigits = 0;
+    if (pathData[i] === '.') {
+      i++;
+      while (i < pathData.length && isDigit(pathData[i])) { fractionDigits++; i++; }
+    }
+    if (integerDigits + fractionDigits === 0) throw new Error('outline-path-number-expected');
+    if (pathData[i] === 'e' || pathData[i] === 'E') {
+      i++;
+      if (pathData[i] === '+' || pathData[i] === '-') i++;
+      let exponentDigits = 0;
+      while (i < pathData.length && isDigit(pathData[i])) { exponentDigits++; i++; }
+      if (!exponentDigits) throw new Error('outline-path-invalid-exponent');
+    }
+    const value = Number(pathData.slice(start, i));
+    if (!Number.isFinite(value)) throw new Error('outline-path-non-finite-number');
     return value;
   };
   try {
-    while (i < tokens.length) {
-      if (/^[MLCQZ]$/.test(tokens[i])) command = tokens[i++];
-      else if (command == null) return null;
+    while (i < pathData.length) {
+      skipSeparators();
+      if (i >= pathData.length) break;
+      const ch = pathData[i];
+      if (ch === 'M' || ch === 'L' || ch === 'Q' || ch === 'C' || ch === 'Z') {
+        command = ch;
+        i++;
+      } else if (command == null) {
+        return null;
+      }
+      if (command === 'Z') {
+        ops.push('h');
+        x = sx;
+        y = sy;
+        command = null;
+        continue;
+      }
       if (command === 'M') {
-        x = take(); y = take(); sx = x; sy = y;
+        x = readNumber();
+        y = readNumber();
+        sx = x;
+        sy = y;
         ops.push(`${round2(x)} ${round2(y)} m`);
-        command = 'L'; // SVG implicit coordinate pairs after moveto are lineto.
+        command = 'L'; // further coordinate pairs after moveto are lineto
       } else if (command === 'L') {
-        x = take(); y = take();
+        x = readNumber();
+        y = readNumber();
         ops.push(`${round2(x)} ${round2(y)} l`);
       } else if (command === 'Q') {
-        const cx = take(), cy = take(), ex = take(), ey = take();
+        const cx = readNumber(), cy = readNumber();
+        const ex = readNumber(), ey = readNumber();
         const c1x = x + (2 / 3) * (cx - x);
         const c1y = y + (2 / 3) * (cy - y);
         const c2x = ex + (2 / 3) * (cx - ex);
         const c2y = ey + (2 / 3) * (cy - ey);
         ops.push(`${round2(c1x)} ${round2(c1y)} ${round2(c2x)} ${round2(c2y)} ${round2(ex)} ${round2(ey)} c`);
-        x = ex; y = ey;
+        x = ex;
+        y = ey;
       } else if (command === 'C') {
-        const c1x = take(), c1y = take(), c2x = take(), c2y = take(), ex = take(), ey = take();
+        const c1x = readNumber(), c1y = readNumber();
+        const c2x = readNumber(), c2y = readNumber();
+        const ex = readNumber(), ey = readNumber();
         ops.push(`${round2(c1x)} ${round2(c1y)} ${round2(c2x)} ${round2(c2y)} ${round2(ex)} ${round2(ey)} c`);
-        x = ex; y = ey;
-      } else if (command === 'Z') {
-        ops.push('h'); x = sx; y = sy; command = null;
+        x = ex;
+        y = ey;
       } else {
         return null;
       }
@@ -35588,7 +35708,7 @@ function svgOutlineToPdfOps(pathData) {
   } catch (_) {
     return null;
   }
-  return ops;
+  return ops.length ? ops : null;
 }
 
 function visualShapedRunOrder(entries) {
@@ -35685,19 +35805,34 @@ function shapedWordPdfOps(word, xPx, baselinePx, sizePt, pageHeightPt) {
   let drawnGlyphs = 0;
   for (const entry of visual) {
     const run = entry.run;
+    const direction = run.shaping && run.shaping.direction;
+    if (direction !== 'rtl' && direction !== 'ltr') {
+      return { ok: false, error: 'shaped-run-direction-invalid' };
+    }
     const xScalePt = (sizePt / run.font.unitsPerEm) * segmentScale.get(entry.segment);
     const yScalePt = sizePt / run.font.unitsPerEm;
+    const runAdvancePx = run.glyphs.reduce((sum, glyph) =>
+      sum + glyph.xAdvance * sizePx / run.font.unitsPerEm * segmentScale.get(entry.segment), 0);
+    if (!Number.isFinite(runAdvancePx) || runAdvancePx < 0) {
+      return { ok: false, error: 'shaped-run-advance-invalid' };
+    }
+    // HarfBuzz returns visual glyph order within each ScriptRun. LTR runs
+    // advance from their left edge; RTL runs begin at their right edge.
+    let glyphPenPx = direction === 'rtl' ? penPx + runAdvancePx : penPx;
     for (const glyph of run.glyphs) {
+      const glyphAdvancePx = glyph.xAdvance * sizePx / run.font.unitsPerEm * segmentScale.get(entry.segment);
+      if (direction === 'rtl') glyphPenPx -= glyphAdvancePx;
       if (glyph.outlinePath.length) {
         const pathOps = svgOutlineToPdfOps(glyph.outlinePath);
         if (!pathOps || !pathOps.length) return { ok: false, error: 'invalid-native-glyph-outline-path' };
-        const gxPt = xPx * PX_TO_PT + penPx * PX_TO_PT + glyph.xOffset * xScalePt;
+        const gxPt = xPx * PX_TO_PT + glyphPenPx * PX_TO_PT + glyph.xOffset * xScalePt;
         const gyPt = pageHeightPt - baselinePx * PX_TO_PT + glyph.yOffset * yScalePt;
         ops.push(`q ${pdfPrecise(xScalePt)} 0 0 ${pdfPrecise(yScalePt)} ${round2(gxPt)} ${round2(gyPt)} cm ${pathOps.join(' ')} f Q`);
         drawnGlyphs++;
       }
-      penPx += glyph.xAdvance * sizePx / run.font.unitsPerEm * segmentScale.get(entry.segment);
+      if (direction === 'ltr') glyphPenPx += glyphAdvancePx;
     }
+    penPx += runAdvancePx;
   }
   if (!drawnGlyphs) return { ok: false, error: 'page-word-has-no-visible-glyph-outline' };
   if (Math.abs(penPx - word.w) > Math.max(1.25, word.w * 0.015)) {
