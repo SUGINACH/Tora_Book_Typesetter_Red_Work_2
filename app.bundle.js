@@ -28450,7 +28450,7 @@ function firstShapedPdfWordIssue(pages) {
  * @param {Uint8Array} fontBytes — גופן הייצוא (TTF) ל-/F1
  * @param {string} [fontName] — שם פרופיל הרישום
  */
-function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
+function exportPdfFromModel(model, settingsIn, fontBytes, fontName, assetResolver = null) {
   if (typeof Buffer === 'undefined') return { ok: false, error: 'no-buffer' }; // דפדפן — נתיב Node בלבד (מתועד)
   if (!model || model.schema !== 'pagemodel-v1' || !Array.isArray(model.pages) || !model.pages.length) {
     return { ok: false, error: 'model-required: נדרש PageModel תקין — אין נתיב עימוד חלופי בייצוא מהמודל' };
@@ -28478,8 +28478,34 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       footnotes: mp.footnotes || [],
       folio: mp.folio || null,
       header: mp.header || null,
-      decorations: (mp.decorations || []).filter(d => Array.isArray(d.pdfOps) && d.pdfOps.length)
+      decorations: (mp.decorations || []).filter(d => Array.isArray(d.pdfOps) && d.pdfOps.length),
+      images: mp.images || []
     }));
+    // PageModel images refer only to content-addressed assets. Resolve their
+    // original verified bytes from the same Worker AssetResolver used at layout;
+    // do not fetch paths or reconstruct image geometry during export.
+    const imageAssetsById = new Map();
+    for (const pg of pages) {
+      for (const image of (pg.images || [])) {
+        if (!image || image.assetId == null) {
+          return { ok: false, error: 'pdf-image-identity-required: תמונה ללא assetId במודל' };
+        }
+        const key = String(image.assetId);
+        if (imageAssetsById.has(key)) continue;
+        if (!assetResolver || typeof assetResolver.resolveById !== 'function') {
+          return { ok: false, error: 'pdf-image-assets-required: חסר AssetResolver לייצוא תמונות מהמודל' };
+        }
+        const resolved = assetResolver.resolveById(key);
+        if (!resolved || !resolved.ok || !resolved.asset || !resolved.asset.bytes) {
+          return { ok: false, error: 'pdf-image-asset-unresolved:' + key };
+        }
+        imageAssetsById.set(key, {
+          assetId: key,
+          bytes: resolved.asset.bytes,
+          measured: resolved.asset.measured || null
+        });
+      }
+    }
     // A shaped PageModel must carry a native outline for every positioned glyph.
     // The PDF writer must not silently switch back to Unicode re-shaping.
     const shapedIntegrity = firstShapedPdfWordIssue(pages);
@@ -28626,7 +28652,8 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
         pages, pageSizeMm,
         font: fontForWriter, font2: fontForWriter2, font3: fontForWriter3,
         font4: fontForWriter4, font5: fontForWriter5, font6: fontForWriter6,
-        extraFonts, settings, outline, tocLinks
+        extraFonts, imageAssets: [...imageAssetsById.values()],
+        settings, outline, tocLinks
       });
     } catch (error) {
       return { ok: false, error: 'pdf:' + (error && error.message ? error.message : String(error)) };
