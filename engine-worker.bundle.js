@@ -29876,8 +29876,12 @@ function createHarfBuzzShaper(options = {}) {
   const engineVersion = options.engineVersion;
   const inkBoundsProvider = options.inkBoundsProvider || null;
   const requireInkBounds = options.requireInkBounds === true;
+  const includeGlyphOutlines = options.includeGlyphOutlines === true;
+  const maxOutlineCacheEntries = Number.isSafeInteger(options.maxOutlineCacheEntries)
+    ? Math.max(1, options.maxOutlineCacheEntries) : 65536;
   if (!hb || typeof hb.shape !== 'function' || !hb.Blob || !hb.Face || !hb.Font ||
-      !hb.Buffer || !hb.Feature || !hb.Variation || !hb.ClusterLevel || !hb.BufferFlag || !hb.Direction) {
+      !hb.Buffer || !hb.Feature || !hb.Variation || !hb.ClusterLevel || !hb.BufferFlag || !hb.Direction ||
+      (includeGlyphOutlines && (!hb.DrawFuncs || typeof hb.DrawFuncs !== 'function'))) {
     fail('harfbuzz-runtime-not-ready', 'A fully initialized HarfBuzzJS runtime is required');
   }
   if (!fontResolver || typeof fontResolver.resolveFontById !== 'function') {
@@ -29889,6 +29893,35 @@ function createHarfBuzzShaper(options = {}) {
   }
 
   const fontCache = new Map();
+  const glyphOutlineCache = new Map();
+  const outlineDrawFuncs = includeGlyphOutlines ? new hb.DrawFuncs() : null;
+  if (outlineDrawFuncs) {
+    outlineDrawFuncs.setMoveToFunc((x, y, commands) => commands.push(`M${x},${y}`));
+    outlineDrawFuncs.setLineToFunc((x, y, commands) => commands.push(`L${x},${y}`));
+    outlineDrawFuncs.setQuadraticToFunc((cx, cy, x, y, commands) => commands.push(`Q${cx},${cy} ${x},${y}`));
+    outlineDrawFuncs.setCubicToFunc((c1x, c1y, c2x, c2y, x, y, commands) =>
+      commands.push(`C${c1x},${c1y} ${c2x},${c2y} ${x},${y}`));
+    outlineDrawFuncs.setClosePathFunc((commands) => commands.push('Z'));
+  }
+
+  function glyphOutlineOf(instance, fontSpec, gid) {
+    const fontKey = JSON.stringify([
+      fontSpec.fontId, fontSpec.sourceHash, fontSpec.faceIndex, fontSpec.variationAxes, gid
+    ]);
+    if (glyphOutlineCache.has(fontKey)) return glyphOutlineCache.get(fontKey);
+    const commands = [];
+    const drawn = instance.font.drawGlyphOrFail(gid, outlineDrawFuncs, commands);
+    const path = drawn ? commands.join('') : '';
+    if (path.length > 2 * 1024 * 1024) {
+      fail('glyph-outline-size-limit', 'A single glyph outline exceeded the 2 MiB safety limit');
+    }
+    if (glyphOutlineCache.size >= maxOutlineCacheEntries) {
+      const oldest = glyphOutlineCache.keys().next().value;
+      if (oldest !== undefined) glyphOutlineCache.delete(oldest);
+    }
+    glyphOutlineCache.set(fontKey, path);
+    return path;
+  }
 
   function resolveFontInstance(fontSpec) {
     const resolution = fontResolver.resolveFontById(fontSpec.fontId);
@@ -30038,7 +30071,8 @@ function createHarfBuzzShaper(options = {}) {
         yOffset: requireFinite(Number(position.yOffset), 'invalid-harfbuzz-position', 'yOffset'),
         flags: requireInteger(Number(info.flags || 0), 0, 'invalid-harfbuzz-glyph-flags', 'glyph flags'),
         controlBounds,
-        inkBounds
+        inkBounds,
+        ...(includeGlyphOutlines ? { outlinePath: glyphOutlineOf(instance, planRun.font, gid) } : {})
       };
     });
     if (!inkBoundsProvider) {
@@ -30096,12 +30130,14 @@ function createHarfBuzzShaper(options = {}) {
 
   function clearFontCache() {
     fontCache.clear();
+    glyphOutlineCache.clear();
   }
 
   return Object.freeze({
     shapeTextItemPlan,
     clearFontCache,
-    getFontCacheSize: () => fontCache.size
+    getFontCacheSize: () => fontCache.size,
+    getGlyphOutlineCacheSize: () => glyphOutlineCache.size
   });
 }
 
