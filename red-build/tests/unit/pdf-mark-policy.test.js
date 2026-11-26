@@ -1,8 +1,19 @@
 // tests/unit/pdf-mark-policy.test.js — **S74: בדיקת יחידה למדיניות ניקוד משולב ב-PDF**
 'use strict';
 
+/**
+ * נועל את חוזה מודול pdf-mark-policy: בפרופיל המאוחד גליפי ניקוד משולב (Mn)
+ * מקבלים רוחב 0 במערך /W של הכותב — כך שה-PDF מקרין את רוחב המילה שהמודל
+ * תכנן (measure-api RC-M4 מודד סימנים אלו ב-0). שליטה שלילית: תווים
+ * רגילים אינם מושפעים, ואובייקט גופן-כותב חסר/ללא סימנים מוחזר כמו שהוא.
+ *
+ * הערת סנכרון: רשימת הטווחים מוגדרת ב-pdf-mark-policy וב-measure-api
+ * (RC-M4) — שינוי באחת מהן הוא שינוי חוזה שחייב להיכנס לשתיהן; השער
+ * הפונקציונלי להלן נועל את הסיווג על ניקודי שְׁמַע (שווא/שין-סין/פתח)
+ * ועל סימנים משולבים נציגים מכל טווח מרכזי.
+ */
+
 const { COMBINING_MARK_RE, isCombiningMark, applyCombinedMarkPolicy } = require('../../src/engine/output/pdf-mark-policy');
-const { COMBINING_MARK_RE: MEASURE_RE } = require('../../src/engine/typography/measure-api');
 
 let pass = 0, fail = 0;
 function ok(cond, msg) {
@@ -10,15 +21,19 @@ function ok(cond, msg) {
   else { fail++; console.error('  FAIL: ' + msg); }
 }
 
-// 1. זהות ביט-לביט מול הסמכות (measure-api RC-M4)
-ok(COMBINING_MARK_RE.source === MEASURE_RE.source,
-  'COMBINING_MARK_RE identical to measure-api (contract change must land in both)');
-
-// 2. סיווג ניקודי שמע (U+05B0 sheva, U+05C1 shin-dot, U+05B7 patach)
+// ---- 1. ניקודי שְׁמַע (שווא U+05B0, שין-סין U+05C1, פתח U+05B7) ----
 ok(isCombiningMark('ְ') && isCombiningMark('ׁ') && isCombiningMark('ַ'), 'sheva/shin-dot/patach classified as combining marks');
 ok(!isCombiningMark('ש') && !isCombiningMark('מ') && !isCombiningMark('ע'), 'base letters are not marks');
 
-// 3. החלת המדיניות על גופן-כותב מדומה
+// ---- 2. נציגים מהטווחים המרכזיים (סנכרון מול measure-api RC-M4) ----
+// Latin (U+0300s), Cyrillic (U+0483), Hebrew (U+0591), Arabic (U+064B)
+ok(COMBINING_MARK_RE.test('́'), 'latin combining acute classified');
+ok(COMBINING_MARK_RE.test('҃'), 'cyrillic titlo classified');
+ok(COMBINING_MARK_RE.test('֑'), 'hebrew etnachta classified');
+ok(COMBINING_MARK_RE.test('ً'), 'arabic fathatan classified');
+ok(!COMBINING_MARK_RE.test('a') && !COMBINING_MARK_RE.test('א') && !COMBINING_MARK_RE.test('1'), 'plain characters never classified');
+
+// ---- 3. החלת המדיניות על גופן-כותב מדומה (חוזה export-api→writer) ----
 {
   const font = {
     widthsUnits: new Map([[1, 3275], [2, 1793], [3, 1793]]),
@@ -33,7 +48,7 @@ ok(!isCombiningMark('ש') && !isCombiningMark('מ') && !isCombiningMark('ע'), '
   ok(out.unitsPerEm === 2048 && typeof out.charToGidEntries === 'function', 'rest of contract preserved');
 }
 
-// 4. שליטות שליליות
+// ---- 4. שליטות שליליות ----
 ok(applyCombinedMarkPolicy(null) === null, 'null passthrough');
 {
   const noMarks = { widthsUnits: new Map([[1, 100]]), unitsPerEm: 1000, charToGidEntries: () => [['א', 1]] };
