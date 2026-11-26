@@ -16020,6 +16020,48 @@ const _aliases = new Map();
 let _clearSync = false;
 
 /**
+ * fvar defaults come from the actual font bytes. No generic axis coordinates
+ * are invented for variable fonts; static fonts correctly return an empty list.
+ */
+function parseDefaultVariationAxes(font) {
+  const table = font && font.tables && font.tables.fvar;
+  if (!table) return Object.freeze([]);
+  const bytes = font.bytes;
+  const start = table.offset;
+  const length = table.length;
+  const readU16 = (at) => (bytes[at] << 8) | bytes[at + 1];
+  const readTag = (at) => String.fromCharCode(bytes[at], bytes[at + 1], bytes[at + 2], bytes[at + 3]);
+  if (!bytes || !Number.isSafeInteger(start) || !Number.isSafeInteger(length) ||
+      start < 0 || length < 16 || start + length > bytes.length) {
+    throw new Error('The fvar table range is invalid');
+  }
+  const major = readU16(start);
+  const minor = readU16(start + 2);
+  const axesOffset = readU16(start + 4);
+  const axisCount = readU16(start + 8);
+  const axisSize = readU16(start + 10);
+  if (major !== 1 || minor > 0 || axisCount > 64 || axisSize < 20 ||
+      axesOffset < 16 || axesOffset > length || axisCount * axisSize > length - axesOffset) {
+    throw new Error('The fvar header or axis records are unsupported or out of bounds');
+  }
+  const seen = new Set();
+  const axes = [];
+  for (let index = 0; index < axisCount; index++) {
+    const at = start + axesOffset + index * axisSize;
+    const tag = readTag(at);
+    const raw = ((bytes[at + 8] << 24) | (bytes[at + 9] << 16) |
+      (bytes[at + 10] << 8) | bytes[at + 11]) | 0;
+    const value = raw / 65536;
+    if (!/^[A-Za-z0-9]{4}$/.test(tag) || seen.has(tag) || !Number.isFinite(value)) {
+      throw new Error('The fvar axis records contain an invalid tag or default value');
+    }
+    seen.add(tag);
+    axes.push(Object.freeze({ tag, value }));
+  }
+  return Object.freeze(axes);
+}
+
+/**
  * רישום גופן קנוני — בתים אמיתיים + כינוי.
  * @param {string} alias — כינוי המשפחה מההגדרות (למשל 'Frank Ruhl Libre')
  * @param {Uint8Array|Buffer} bytes
@@ -16031,6 +16073,12 @@ function registerFont(alias, bytes, meta = {}) {
   if (!bytes || !bytes.length) return { ok: false, code: 'empty-bytes', message: `גופן ללא בתים: ${alias}` };
   const parsed = fm.parseFont(bytes);
   if (!parsed.ok) return { ok: false, code: 'unparseable-font', message: `פענוח הגופן נכשל (${alias}): ${parsed.error}` };
+  let defaultVariationAxes;
+  try {
+    defaultVariationAxes = parseDefaultVariationAxes(parsed.font);
+  } catch (error) {
+    return { ok: false, code: 'invalid-font-variation-table', message: `טבלת הצירים של הגופן פגומה (${alias}): ${error.message}` };
+  }
   const sourceHash = sha256Hex(bytes);
   const fontId = `fnt-${sourceHash.slice(0, 14)}`;
   let record = _fonts.get(fontId);
@@ -16049,6 +16097,7 @@ function registerFont(alias, bytes, meta = {}) {
       fingerprint: sourceHash.slice(14, 28), // טביעת אצבע משלימה (מעבר המזהה)
       unitsPerEm: parsed.font.unitsPerEm,
       numGlyphs: parsed.font.numGlyphs,
+      defaultVariationAxes,
       metrics: {
         unitsPerEm: parsed.font.unitsPerEm,
         ascenderEm: parsed.font.ascender / parsed.font.unitsPerEm,
@@ -16224,6 +16273,12 @@ function resolveFontById(fontId) {
   return { ok: true, fontId: String(fontId), record: rec, fallbackUsed: false, fallbackChain: [{ alias: rec.face, fontId: String(fontId), chosen: true, reason: 'by-id' }], diagnostics: [] };
 }
 
+/** צירי ברירת־המחדל האמיתיים מטבלת fvar; גופן סטטי מחזיר []. */
+function defaultVariationAxesOf(fontId) {
+  const rec = _fonts.get(String(fontId));
+  return rec ? rec.defaultVariationAxes : null;
+}
+
 /** הפרנסר החי לפי מזהה — הגישה הקנונית של MeasureAPI למטריקות אמת. */
 function fontOf(fontId) {
   const rec = _fonts.get(String(fontId));
@@ -16276,7 +16331,8 @@ function fontCount() { return _fonts.size; }
 function aliasCount() { return _aliases.size; }
 
 module.exports = {
-  registerFont, resolveFont, resolveFontForGrapheme, resolveFontById, fontOf, fontIdOfAlias,
+  registerFont, resolveFont, resolveFontForGrapheme, resolveFontById,
+  defaultVariationAxesOf, fontOf, fontIdOfAlias,
   clearFontResolver, unregisterAlias, fontCount, aliasCount
 };
 

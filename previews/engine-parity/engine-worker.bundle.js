@@ -1174,7 +1174,7 @@ function typeset(rawText, settingsIn, env = {}) {
       engine: 'harfbuzz',
       unicodeVersion: productionShaping ? productionShaping.unicodeVersion : null,
       harfbuzzVersion: productionShaping ? productionShaping.harfbuzzVersion : null,
-      mode: productionShaping ? 'settings-opt-in' : 'injected-service'
+      mode: productionShaping ? productionShaping.policySource : 'injected-service'
     });
   }
   // **S70 (R7-M4):** עטיפת מדידה משותפת עם סימון המימוש. פקטורי הגופן
@@ -7656,6 +7656,48 @@ const _aliases = new Map();
 let _clearSync = false;
 
 /**
+ * fvar defaults come from the actual font bytes. No generic axis coordinates
+ * are invented for variable fonts; static fonts correctly return an empty list.
+ */
+function parseDefaultVariationAxes(font) {
+  const table = font && font.tables && font.tables.fvar;
+  if (!table) return Object.freeze([]);
+  const bytes = font.bytes;
+  const start = table.offset;
+  const length = table.length;
+  const readU16 = (at) => (bytes[at] << 8) | bytes[at + 1];
+  const readTag = (at) => String.fromCharCode(bytes[at], bytes[at + 1], bytes[at + 2], bytes[at + 3]);
+  if (!bytes || !Number.isSafeInteger(start) || !Number.isSafeInteger(length) ||
+      start < 0 || length < 16 || start + length > bytes.length) {
+    throw new Error('The fvar table range is invalid');
+  }
+  const major = readU16(start);
+  const minor = readU16(start + 2);
+  const axesOffset = readU16(start + 4);
+  const axisCount = readU16(start + 8);
+  const axisSize = readU16(start + 10);
+  if (major !== 1 || minor > 0 || axisCount > 64 || axisSize < 20 ||
+      axesOffset < 16 || axesOffset > length || axisCount * axisSize > length - axesOffset) {
+    throw new Error('The fvar header or axis records are unsupported or out of bounds');
+  }
+  const seen = new Set();
+  const axes = [];
+  for (let index = 0; index < axisCount; index++) {
+    const at = start + axesOffset + index * axisSize;
+    const tag = readTag(at);
+    const raw = ((bytes[at + 8] << 24) | (bytes[at + 9] << 16) |
+      (bytes[at + 10] << 8) | bytes[at + 11]) | 0;
+    const value = raw / 65536;
+    if (!/^[A-Za-z0-9]{4}$/.test(tag) || seen.has(tag) || !Number.isFinite(value)) {
+      throw new Error('The fvar axis records contain an invalid tag or default value');
+    }
+    seen.add(tag);
+    axes.push(Object.freeze({ tag, value }));
+  }
+  return Object.freeze(axes);
+}
+
+/**
  * רישום גופן קנוני — בתים אמיתיים + כינוי.
  * @param {string} alias — כינוי המשפחה מההגדרות (למשל 'Frank Ruhl Libre')
  * @param {Uint8Array|Buffer} bytes
@@ -7667,6 +7709,12 @@ function registerFont(alias, bytes, meta = {}) {
   if (!bytes || !bytes.length) return { ok: false, code: 'empty-bytes', message: `גופן ללא בתים: ${alias}` };
   const parsed = fm.parseFont(bytes);
   if (!parsed.ok) return { ok: false, code: 'unparseable-font', message: `פענוח הגופן נכשל (${alias}): ${parsed.error}` };
+  let defaultVariationAxes;
+  try {
+    defaultVariationAxes = parseDefaultVariationAxes(parsed.font);
+  } catch (error) {
+    return { ok: false, code: 'invalid-font-variation-table', message: `טבלת הצירים של הגופן פגומה (${alias}): ${error.message}` };
+  }
   const sourceHash = sha256Hex(bytes);
   const fontId = `fnt-${sourceHash.slice(0, 14)}`;
   let record = _fonts.get(fontId);
@@ -7685,6 +7733,7 @@ function registerFont(alias, bytes, meta = {}) {
       fingerprint: sourceHash.slice(14, 28), // טביעת אצבע משלימה (מעבר המזהה)
       unitsPerEm: parsed.font.unitsPerEm,
       numGlyphs: parsed.font.numGlyphs,
+      defaultVariationAxes,
       metrics: {
         unitsPerEm: parsed.font.unitsPerEm,
         ascenderEm: parsed.font.ascender / parsed.font.unitsPerEm,
@@ -7860,6 +7909,12 @@ function resolveFontById(fontId) {
   return { ok: true, fontId: String(fontId), record: rec, fallbackUsed: false, fallbackChain: [{ alias: rec.face, fontId: String(fontId), chosen: true, reason: 'by-id' }], diagnostics: [] };
 }
 
+/** צירי ברירת־המחדל האמיתיים מטבלת fvar; גופן סטטי מחזיר []. */
+function defaultVariationAxesOf(fontId) {
+  const rec = _fonts.get(String(fontId));
+  return rec ? rec.defaultVariationAxes : null;
+}
+
 /** הפרנסר החי לפי מזהה — הגישה הקנונית של MeasureAPI למטריקות אמת. */
 function fontOf(fontId) {
   const rec = _fonts.get(String(fontId));
@@ -7912,7 +7967,8 @@ function fontCount() { return _fonts.size; }
 function aliasCount() { return _aliases.size; }
 
 module.exports = {
-  registerFont, resolveFont, resolveFontForGrapheme, resolveFontById, fontOf, fontIdOfAlias,
+  registerFont, resolveFont, resolveFontForGrapheme, resolveFontById,
+  defaultVariationAxesOf, fontOf, fontIdOfAlias,
   clearFontResolver, unregisterAlias, fontCount, aliasCount
 };
 
@@ -7970,16 +8026,47 @@ function copyConfigValue(value, path) {
  *   fallbacksByFamily?: { "Family": ["Fallback A", ...], ... }
  * }
  */
+function buildProductShapingPolicy(settings, env) {
+  const bodyFamily = settings && typeof settings['body-font'] === 'string'
+    ? settings['body-font'].trim() : '';
+  if (!bodyFamily) {
+    fail('production-shaping-default-font-unavailable',
+      'Automatic production shaping requires the product body-font setting');
+  }
+  const fallbacksByFamily = Object.create(null);
+  for (const [key, value] of Object.entries(settings || {})) {
+    if (!key.endsWith('-font') || typeof value !== 'string') continue;
+    const family = value.trim();
+    if (family && family !== bodyFamily) fallbacksByFamily[family] = [bodyFamily];
+  }
+  return {
+    enabled: true,
+    baseDirection: env && (env.direction === 'ltr' || env.direction === 'rtl')
+      ? env.direction : 'rtl',
+    defaultFamily: bodyFamily,
+    languageByScript: { Hebr: 'he', Latn: 'en' },
+    // Empty arrays preserve HarfBuzz's standard OpenType default feature set.
+    featuresByScript: { Hebr: [], Latn: [] },
+    // Static fonts use []; variable fonts use their actual fvar defaults.
+    variationAxesByFontId: Object.create(null),
+    fallbacksByFamily,
+    useNativeDefaults: true
+  };
+}
+
 function createProductionParagraphShaper(settings, env = {}) {
-  const config = settings && settings._typographyShaping;
-  if (config == null || config.enabled !== true) return null;
-  if (!isRecord(config)) {
+  const explicitConfig = settings && settings._typographyShaping;
+  if (explicitConfig != null && !isRecord(explicitConfig)) {
     fail('invalid-typography-shaping-config', 'settings._typographyShaping must be a plain object');
   }
   const runtime = env.typographyRuntime;
+  if (explicitConfig == null && !runtime) return null;
+  if (explicitConfig && explicitConfig.enabled !== true) return null;
+  const config = explicitConfig || buildProductShapingPolicy(settings || {}, env);
+
   if (!runtime || !runtime.unicode || !runtime.harfbuzz ||
       typeof runtime.createShaper !== 'function') {
-    fail('typography-runtime-required', 'Explicit paragraph shaping requires the verified Worker Unicode/HarfBuzz runtime');
+    fail('typography-runtime-required', 'Production paragraph shaping requires the verified Worker Unicode/HarfBuzz runtime');
   }
   if (runtime.unicode.unicodeVersion !== '18.0.0' ||
       typeof runtime.harfbuzz.shape !== 'function') {
@@ -7993,7 +8080,7 @@ function createProductionParagraphShaper(settings, env = {}) {
   }
   for (const key of ['languageByScript', 'featuresByScript', 'variationAxesByFontId']) {
     if (!isRecord(config[key])) {
-      fail('invalid-typography-shaping-config', key + ' must be an explicit object (empty only when no shaping run uses that map)');
+      fail('invalid-typography-shaping-config', key + ' must be an explicit object');
     }
   }
 
@@ -8001,7 +8088,6 @@ function createProductionParagraphShaper(settings, env = {}) {
     ? Object.create(null)
     : copyConfigValue(config.shaperOptions, 'shaperOptions');
   // A production-shaped word must never be rendered by a second browser/PDF shaper.
-  // Capture exact GID outlines by default for every explicitly enabled production job.
   shaperOptions.includeGlyphOutlines = true;
   if (config.maxOutlineCacheEntries != null) {
     if (!Number.isSafeInteger(config.maxOutlineCacheEntries) || config.maxOutlineCacheEntries < 1) {
@@ -8023,6 +8109,7 @@ function createProductionParagraphShaper(settings, env = {}) {
     ...(config.fallbacksByFamily != null
       ? { fallbacksByFamily: copyConfigValue(config.fallbacksByFamily, 'fallbacksByFamily') }
       : {}),
+    useNativeDefaults: config.useNativeDefaults === true,
     shaperOptions
   });
 
@@ -8032,10 +8119,10 @@ function createProductionParagraphShaper(settings, env = {}) {
     defaultFamily: config.defaultFamily,
     unicodeVersion: runtime.unicode.unicodeVersion,
     harfbuzzVersion: typeof runtime.harfbuzz.versionString === 'function'
-      ? runtime.harfbuzz.versionString() : null
+      ? runtime.harfbuzz.versionString() : null,
+    policySource: explicitConfig ? 'explicit-settings' : 'product-defaults'
   });
 }
-
 module.exports = { createProductionParagraphShaper };
 
 };
@@ -8063,9 +8150,9 @@ function requireRecord(value, label) {
 }
 
 /**
- * Create an explicit, opt-in paragraph shaping service.
- * Runtime and font policy are fixed at construction; direction is supplied per item.
- * This service does not activate itself and never changes measurement.
+ * Create the canonical paragraph shaping service.
+ * Runtime and script policy are fixed at construction; the product's block font
+ * is supplied per TextItem so headings and body retain their own font roles.
  */
 function createParagraphShaper(options = {}) {
   requireRecord(options, 'options');
@@ -8091,6 +8178,7 @@ function createParagraphShaper(options = {}) {
   const fallbacksByFamily = options.fallbacksByFamily == null
     ? Object.create(null)
     : requireRecord(options.fallbacksByFamily, 'fallbacksByFamily');
+  const useNativeDefaults = options.useNativeDefaults === true;
   const defaultFamily = options.defaultFamily == null ? null : String(options.defaultFamily);
   if (defaultFamily != null && !defaultFamily.trim()) {
     fail('invalid-paragraph-shaping-config', 'defaultFamily must be non-empty when supplied');
@@ -8110,10 +8198,11 @@ function createParagraphShaper(options = {}) {
         bidiRuntime: runtime.unicode,
         fontResolver,
         direction: request.direction,
-        defaultFamily,
+        defaultFamily: request.defaultFamily == null ? defaultFamily : String(request.defaultFamily),
         languageByScript,
         featuresByScript,
         variationAxesByFontId,
+        useNativeDefaults,
         faceIndexByFontId,
         fallbacksByFamily
       });
@@ -8607,17 +8696,24 @@ function createTextItemShapingPlan(item, options = {}) {
   // Validate all shaping policies before resolving or opening font faces.
   // A malformed/missing language/feature policy must fail independently of
   // whether the requested font is installed in this runtime.
+  const useNativeDefaults = options.useNativeDefaults === true;
   const shapingConfigByScript = new Map();
   for (const scriptRun of itemization.scriptRuns) {
     if (!shapingConfigByScript.has(scriptRun.script)) {
-      const language = languageByScript[scriptRun.script];
-      if (typeof language !== 'string' || !language.trim()) {
+      const configuredLanguage = languageByScript[scriptRun.script];
+      const language = (typeof configuredLanguage === 'string' && configuredLanguage.trim())
+        ? configuredLanguage
+        : (useNativeDefaults
+          ? (scriptRun.script === 'Hebr' ? 'he' : scriptRun.script === 'Latn' ? 'en' : 'und')
+          : null);
+      if (!language) {
         fail('missing-script-language', 'No explicit language provided for Script ' + scriptRun.script);
       }
-      shapingConfigByScript.set(scriptRun.script, {
-        language,
-        features: normalizeFeatures(featuresByScript[scriptRun.script], scriptRun.script)
-      });
+      const configuredFeatures = featuresByScript[scriptRun.script];
+      const features = configuredFeatures == null && useNativeDefaults
+        ? []
+        : normalizeFeatures(configuredFeatures, scriptRun.script);
+      shapingConfigByScript.set(scriptRun.script, { language, features });
     }
   }
 
@@ -8682,7 +8778,12 @@ function createTextItemShapingPlan(item, options = {}) {
     if (resolution.record.font.unitsPerEm !== unitsPerEm) {
       fail('font-units-per-em-mismatch', 'FontResolver record and parsed font UPEM disagree for ' + fontId);
     }
-    const variationAxes = normalizeAxes(variationAxesByFontId[fontId], fontId);
+    const configuredAxes = variationAxesByFontId[fontId];
+    const axisPolicy = configuredAxes == null && useNativeDefaults &&
+      typeof fontResolver.defaultVariationAxesOf === 'function'
+      ? fontResolver.defaultVariationAxesOf(fontId)
+      : configuredAxes;
+    const variationAxes = normalizeAxes(axisPolicy, fontId);
     const faceIndex = faceIndexByFontId[fontId] == null
       ? 0 : requireRange(faceIndexByFontId[fontId], 'faceIndexByFontId.' + fontId);
     resolvedGraphemeFonts[graphemeIndex] = {
@@ -10044,7 +10145,12 @@ function buildContainerSequence(cont, ctx = {}, opts = {}) {
     env.shapedTextItems = new Map();
     for (const item of items) {
       if (item.kind !== 'text') continue;
-      const shaped = ctx.paragraphShaper.shapeTextItem(item, { direction: dir, language: lang });
+      const itemDefaultFamily = (env.baseStyle && env.baseStyle.family) || base.defaultFamily;
+      const shaped = ctx.paragraphShaper.shapeTextItem(item, {
+        direction: dir,
+        language: lang,
+        ...(itemDefaultFamily ? { defaultFamily: itemDefaultFamily } : {})
+      });
       if (!shaped || shaped.kind !== 'ShapedTextItem' || shaped.itemId !== item.id) {
         throw new TypeError('buildContainerSequence: paragraphShaper returned an invalid ShapedTextItem for ' + item.id);
       }
