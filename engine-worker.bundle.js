@@ -1191,6 +1191,23 @@ function typeset(rawText, settingsIn, env = {}) {
     measureWithImpl.paragraphShaper = paragraphShaper;
     measureWithImpl.paragraphDirection = paragraphDirection || 'rtl';
   }
+  // Side-note words have their own registered font role. Measuring them with
+  // the body-font API and only applying a generic width factor made the stamp
+  // disagree with the font selected for the note itself. Use one family-bound
+  // MeasureAPI for both the note-word advances and the note's HarfBuzz request.
+  const sideNoteFont = String(settings['s-note-body-font'] || settings['body-font'] || '').trim();
+  const sideNoteSettings = sideNoteFont && sideNoteFont !== settings['body-font']
+    ? { ...settings, 'body-font': sideNoteFont }
+    : settings;
+  const sideNoteApi = sideNoteSettings === settings
+    ? api
+    : new MeasureAPI(sideNoteSettings, resolveMeasureImpl(sideNoteSettings));
+  const measureSideNotes = (text, sizePt) => sideNoteApi.measureTextWidth(text, sizePt);
+  measureSideNotes.impl = sideNoteApi.impl;
+  if (paragraphShaper) {
+    measureSideNotes.paragraphShaper = paragraphShaper;
+    measureSideNotes.paragraphDirection = paragraphDirection || 'rtl';
+  }
   // **שלב 3 (§3.1-2) → מקטע ב׳ (הוראה §6):** נכסי המסמך שהגיעו מה-Worker
   // כבר חוברו לבניית המודל וזורמים למדידה דרך ctx.assetResolver של הגשר
   // (אותן זהויות בדיוק). האירוע מתעד את הקליטה; אין עוד צריכה תלוית-סביבה.
@@ -1857,7 +1874,7 @@ function typeset(rawText, settingsIn, env = {}) {
   // (רשם שלב 5 — אותו רשם של ה-Planner; ספירות תמיד זמינות).
   const { placeSideNotes, verifyH7Conversion } = require('../layout/side-notes');
   for (const pg of pages) pg.isRecto = pg.index % 2 === 0;
-  const sideNotePlacement = placeSideNotes(pages, settings, measureWithImpl, { ledger, eventLog, trace: plannerTrace });
+  const sideNotePlacement = placeSideNotes(pages, settings, measureSideNotes, { ledger, eventLog, trace: plannerTrace });
 
   // **S8 — פאס העיטורים (L5):** כל העיטורים overlay-rects על העמודים;
   // אסור לגעת בשורות (invariant T1 — מוכח מיד לאחר מכן ב‑bodyGeometryHash).
@@ -27967,7 +27984,8 @@ function projectSideNotes(page, settings, measure, out) {
       }
     }
     const rec = projectStampedRows(sn, sn.x, boxW, sn.yTop, {
-      sizePt, fontKey: 'margin',
+      sizePt,
+      fontKey: familyFontKeyOf(sn.stampCtx && sn.stampCtx.fontName || settings['s-note-body-font']) || null,
       color: colorOfSetting(settings['s-note-body-color']), measure,
       padPx: isBox ? chrome.pad + chrome.border : 0,
       align: 'center' // **G4/RC-4d:** הערות-צד ממורכזות כמו המקור (מרזב: יישור מלא)
