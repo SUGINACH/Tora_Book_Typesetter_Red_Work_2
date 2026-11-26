@@ -8000,7 +8000,9 @@ function createProductionParagraphShaper(settings, env = {}) {
   const shaperOptions = config.shaperOptions == null
     ? Object.create(null)
     : copyConfigValue(config.shaperOptions, 'shaperOptions');
-  if (config.includeGlyphOutlines === true) shaperOptions.includeGlyphOutlines = true;
+  // A production-shaped word must never be rendered by a second browser/PDF shaper.
+  // Capture exact GID outlines by default for every explicitly enabled production job.
+  shaperOptions.includeGlyphOutlines = true;
   if (config.maxOutlineCacheEntries != null) {
     if (!Number.isSafeInteger(config.maxOutlineCacheEntries) || config.maxOutlineCacheEntries < 1) {
       fail('invalid-typography-shaping-config', 'maxOutlineCacheEntries must be a positive safe integer');
