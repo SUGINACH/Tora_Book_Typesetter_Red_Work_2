@@ -8674,20 +8674,20 @@ function splitTextItem(item, env, boxes, rejected) {
     for (const word of words) {
       const first = word.fragments[0];
       const last = word.fragments[word.fragments.length - 1];
-      word.shapingSlices = projectShapedTextItemRanges(shapedTextItem, [{
-        start: first.docStart,
-        end: last.docEnd
-      }])[0];
+      word.shapingSlices = projectShapedTextItemRanges(
+        shapedTextItem,
+        word.fragments.map(fragment => ({ start: fragment.docStart, end: fragment.docEnd }))
+      );
       if (word.sep != null && word.sepRange) {
-        const absoluteSeparator = sepRangeAbs(word.sepRange, item);
-        word.separatorShapingSlices =
-          projectShapedTextItemRanges(shapedTextItem, [absoluteSeparator])[0];
+        word.separatorShapingSlices = projectShapedTextItemRanges(
+          shapedTextItem,
+          sourceSegmentsAbsOfRange(word.sepRange, item)
+        );
       }
     }
     if (words.length && pendingSep) {
-      const absoluteTrailingSeparator = sepRangeAbs(pendingSep, item);
       words[words.length - 1].trailingSepShapingSlices =
-        projectShapedTextItemRanges(shapedTextItem, [absoluteTrailingSeparator])[0];
+        projectShapedTextItemRanges(shapedTextItem, sourceSegmentsAbsOfRange(pendingSep, item));
     }
   }
 
@@ -8864,6 +8864,40 @@ function boxDocEnd(b) {
   }
   const sr = b.source && b.source.sourceRange;
   return sr && Number.isFinite(sr.end) ? sr.end : 0;
+}
+
+/** Exact source intervals for a separator spanning one or more inline runs. */
+function sourceSegmentsAbsOfRange(range, owner) {
+  const runs = (owner.payload && owner.payload.runs) || [];
+  if (!runs.length || !runs[range.fromRun] || !runs[range.toRun]) {
+    failShapingRange('invalid-separator-source-range', 'Separator range references a missing source run');
+  }
+  const run0 = runs[0];
+  const itemAbsStart = owner.sourceRange && Number.isFinite(owner.sourceRange.start) ? owner.sourceRange.start : 0;
+  const base = itemAbsStart - (Number.isFinite(run0.sourceStart) ? run0.sourceStart : 0);
+  const ranges = [];
+  for (let ri = range.fromRun; ri <= range.toRun; ri++) {
+    const run = runs[ri];
+    const runLength = String(run.text == null ? '' : run.text).length;
+    const localStart = ri === range.fromRun ? range.fromStart : 0;
+    const localEnd = ri === range.toRun ? range.toEnd : runLength;
+    if (localEnd <= localStart) continue;
+    const runSourceStart = Number.isFinite(run.sourceStart) ? run.sourceStart : 0;
+    ranges.push({
+      start: base + runSourceStart + localStart,
+      end: base + runSourceStart + localEnd
+    });
+  }
+  if (!ranges.length) {
+    failShapingRange('empty-separator-source-range', 'Separator contains no source text segments');
+  }
+  return ranges;
+}
+
+function failShapingRange(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  throw error;
 }
 
 /** היסט מוחלט של טווח מפריד (מריצות הפריט שבבעלותו). */
@@ -9161,8 +9195,7 @@ function projectShapedTextItemRange(shapedTextItem, range) {
   const itemStart = shapedTextItem.sourceRange.start;
   const itemEnd = shapedTextItem.sourceRange.end;
   if (!Number.isSafeInteger(itemStart) || !Number.isSafeInteger(itemEnd) ||
-      itemEnd - itemStart !== shapedTextItem.text.length ||
-      range.start < itemStart || range.end > itemEnd) {
+      itemEnd <= itemStart || range.start < itemStart || range.end > itemEnd) {
     fail('shaped-source-range-outside-item', 'Requested source range falls outside the ShapedTextItem envelope');
   }
 
@@ -9244,7 +9277,33 @@ function projectShapedTextItemRanges(shapedTextItem, ranges) {
   if (!Array.isArray(ranges) || ranges.length === 0) {
     fail('invalid-shaped-range-list', 'At least one source range must be supplied');
   }
-  return Object.freeze(ranges.map(range => projectShapedTextItemRange(shapedTextItem, range)));
+  const normalized = [];
+  for (const range of ranges) {
+    if (!isRecord(range) || !Number.isSafeInteger(range.start) ||
+        !Number.isSafeInteger(range.end) || range.end <= range.start) {
+      fail('invalid-shaped-source-range', 'Every projected source segment must be a non-empty UTF-16 interval');
+    }
+    const previous = normalized[normalized.length - 1];
+    if (previous && range.start < previous.end) {
+      fail('overlapping-shaped-source-ranges', 'Projected source segments must be ordered and non-overlapping');
+    }
+    if (previous && range.start === previous.end) {
+      previous.end = range.end;
+    } else {
+      normalized.push({ start: range.start, end: range.end });
+    }
+  }
+  const slices = normalized.map(range => projectShapedTextItemRange(shapedTextItem, range));
+  const shapedRuns = slices.flatMap(slice => slice.shapedRuns);
+  const nonShapingRuns = slices.flatMap(slice => slice.nonShapingRuns);
+  return Object.freeze({
+    contractVersion: 'paragraph-shaped-slices-set-v1',
+    sourceRanges: Object.freeze(normalized.map(range => Object.freeze({ ...range }))),
+    slices: Object.freeze(slices),
+    shapedRuns: Object.freeze(shapedRuns),
+    nonShapingRuns: Object.freeze(nonShapingRuns),
+    glyphCount: shapedRuns.reduce((sum, run) => sum + run.glyphs.length, 0)
+  });
 }
 
 module.exports = {
