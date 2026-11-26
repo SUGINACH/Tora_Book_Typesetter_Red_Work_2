@@ -27915,6 +27915,7 @@ function projectEndnotePage(page, settings, measure, out, production) {
             x: col.x, y: line.y, w: col.w, h: pitch,
             words: line.words.map(wd => ({
               text: wd.text, x: wd.x, w: wd.w, sizePt: wd.sizePt, fontKey: wd.fontKey,
+              ...(wd.color != null ? { color: wd.color } : {}),
               ...(wd.typography ? { typography: wd.typography } : {})
             })),
             align: 'right', kind: 'endnote-note', level: null, isLast: true, sizePt: notePt,
@@ -27977,6 +27978,7 @@ function projectSideNotes(page, settings, measure, out) {
         x: sn.x, y: line.y, w: boxW, h: sn.lineH,
         words: line.words.map(wd => ({
           text: wd.text, x: wd.x, w: wd.w, sizePt: wd.sizePt, fontKey: wd.fontKey,
+          ...(wd.color != null ? { color: wd.color } : {}),
           ...(wd.typography ? { typography: wd.typography } : {})
         })),
         align: 'right', kind: isBox ? 'info-box' : 'side-note', level: sn.level != null ? sn.level : null,
