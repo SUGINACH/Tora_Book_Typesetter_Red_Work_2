@@ -26008,6 +26008,40 @@ function matchEndnoteLine(pl, page) {
   return { tokenId: null, part: null, seq: null };
 }
 
+/** Project immutable glyph-level line data without changing positioned word geometry. */
+function pageLineTypographyOf(srcLine) {
+  const lineModel = srcLine && srcLine.lineModel;
+  if (!lineModel) return null;
+  const fragments = (lineModel.fragments || [])
+    .filter(fragment => fragment && fragment.shapingSlices)
+    .map(fragment => ({
+      itemId: fragment.itemId,
+      sourceItemId: fragment.sourceItemId || null,
+      sourceRange: fragment.sourceRange ? { ...fragment.sourceRange } : null,
+      ...(fragment.fontId != null ? { fontId: fragment.fontId } : {}),
+      shapingSlices: fragment.shapingSlices
+    }));
+  const flow = (lineModel.flow || [])
+    .filter(step => step && step.shapingSlices)
+    .map(step => ({
+      type: step.type,
+      itemId: step.itemId,
+      ...(step.sep != null ? { sep: step.sep } : {}),
+      ...(step.gapChars != null ? { gapChars: step.gapChars } : {}),
+      ...(step.internal ? { internal: true } : {}),
+      ...(step.breakGlue ? { breakGlue: true } : {}),
+      ...(step.noteRef != null ? { noteRef: step.noteRef } : {}),
+      shapingSlices: step.shapingSlices
+    }));
+  if (!fragments.length && !flow.length) return null;
+  return {
+    contractVersion: 'page-line-typography-v1',
+    lineModelVersion: lineModel.modelVersion || null,
+    fragments,
+    flow
+  };
+}
+
 /** מיקום שורה: גיאומטריה סופית + זהות מקור + fragments ממוקמים. */
 function placeLine(pl, srcLine, where) {
   // **פרוסה 3 (§2.2 — זהות מקור):** ההקרנה עצמה נושאת tokenId (שורות margin
@@ -26053,6 +26087,8 @@ function placeLine(pl, srcLine, where) {
       ...(wd.color != null ? { color: wd.color } : {}),
       ...(wd.mk ? { mk: true } : {})
     })),
+    // Optional glyph-level sidecar; current positioned words and renderers are unchanged.
+    ...(pageLineTypographyOf(srcLine) ? { typography: pageLineTypographyOf(srcLine) } : {}),
     projected: true,
     ...where,
     // **פרוסה 3 (§2.2 — מאפייני עיצוב מהסמכות):** מחלקת הסגנון/משקל/ריווח-
@@ -26185,6 +26221,21 @@ function validatePageModel(model, ctx = {}) {
       } else if (ln.sourceTokenId != null && !tokenIds.has(ln.sourceTokenId)) {
         violations.push({ code: 'line-unknown-token', detail: `${ln.id}→${ln.sourceTokenId}` });
       }
+      if (ln.typography != null) {
+        const t = ln.typography;
+        const sliceSetValid = (set) => !!set &&
+          set.contractVersion === 'paragraph-shaped-slices-set-v1' &&
+          Array.isArray(set.sourceRanges) && Array.isArray(set.shapedRuns) &&
+          Number.isSafeInteger(set.glyphCount) && set.glyphCount >= 0 &&
+          set.glyphCount === set.shapedRuns.reduce((sum, run) =>
+            sum + (run && Array.isArray(run.glyphs) ? run.glyphs.length : -1000000), 0);
+        const valid = t.contractVersion === 'page-line-typography-v1' &&
+          Array.isArray(t.fragments) && Array.isArray(t.flow) &&
+          t.fragments.every(fragment => fragment && fragment.itemId != null && sliceSetValid(fragment.shapingSlices)) &&
+          t.flow.every(step => step && step.itemId != null && sliceSetValid(step.shapingSlices));
+        if (!valid) violations.push({ code: 'line-typography-contract-invalid', detail: String(page.index) + ':' + String(ln.id) });
+        check('typography-projection');
+      }
       check('source-identity');
     }
   }
@@ -26285,7 +26336,11 @@ function geometryHashOf(model) {
 function contentHashOf(model) {
   const canon = model.pages.map(p => ({
     i: p.index,
-    l: p.lines.map(l => (l.words || []).map(w => w.text).join('\u00A7')),
+    l: p.lines.map(l => {
+      const text = (l.words || []).map(w => w.text).join('\u00A7');
+      // Keep the legacy canonical value exactly when no glyph sidecar is present.
+      return l.typography ? { text, typography: l.typography } : text;
+    }),
     fn: p.footnotes.map(n => `${n.marker || ''}§${n.text}`),
     sn: p.sideNotes.map(s => s.text)
   }));
