@@ -14352,12 +14352,12 @@ function measureShapedTextItem(item, style, ctx, sizePt, lineHeight, dir, lang) 
     for (const diagnostic of (run.diagnostics || [])) diagnostics.push(diagnostic);
   }
   return {
-    ok: true, kind: 'text', itemId: item.id, unit: 'px', direction: dir, language: lang,
+    ok: true, kind: item.kind, itemId: item.id, unit: 'px', direction: dir, language: lang,
     advance, width: advance,
     inkBounds: { left: 0, right: advance, top: -ascentEmMax * sizePx, bottom: descentEmMax * sizePx, source: 'advance-approximation' },
     ascent: ascentEmMax * sizePx, descent: descentEmMax * sizePx, baseline: ascentEmMax * sizePx,
     height: sizePx * lineHeight, segments,
-    breakOpportunities: _textBreaks((item.payload && item.payload.runs) || []),
+    breakOpportunities: item.kind === 'text' ? _textBreaks((item.payload && item.payload.runs) || []) : [],
     shaping: { engine: 'harfbuzz', glyphCount: slices.glyphCount }, diagnostics
   };
 }
@@ -14374,7 +14374,7 @@ function measureItem(item, style, ctx) {
   let out;
   const kind = item.kind;
 
-  if (kind === 'text' && item.shapingSlices) {
+  if ((kind === 'text' || kind === 'glue') && item.shapingSlices) {
     out = measureShapedTextItem(item, style, ctx, sizePt, lineHeight, dir, lang);
   } else if (kind === 'text') {
     const runs = (item.payload && item.payload.runs) || [];

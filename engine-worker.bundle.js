@@ -5968,12 +5968,12 @@ function measureShapedTextItem(item, style, ctx, sizePt, lineHeight, dir, lang) 
     for (const diagnostic of (run.diagnostics || [])) diagnostics.push(diagnostic);
   }
   return {
-    ok: true, kind: 'text', itemId: item.id, unit: 'px', direction: dir, language: lang,
+    ok: true, kind: item.kind, itemId: item.id, unit: 'px', direction: dir, language: lang,
     advance, width: advance,
     inkBounds: { left: 0, right: advance, top: -ascentEmMax * sizePx, bottom: descentEmMax * sizePx, source: 'advance-approximation' },
     ascent: ascentEmMax * sizePx, descent: descentEmMax * sizePx, baseline: ascentEmMax * sizePx,
     height: sizePx * lineHeight, segments,
-    breakOpportunities: _textBreaks((item.payload && item.payload.runs) || []),
+    breakOpportunities: item.kind === 'text' ? _textBreaks((item.payload && item.payload.runs) || []) : [],
     shaping: { engine: 'harfbuzz', glyphCount: slices.glyphCount }, diagnostics
   };
 }
@@ -5990,7 +5990,7 @@ function measureItem(item, style, ctx) {
   let out;
   const kind = item.kind;
 
-  if (kind === 'text' && item.shapingSlices) {
+  if ((kind === 'text' || kind === 'glue') && item.shapingSlices) {
     out = measureShapedTextItem(item, style, ctx, sizePt, lineHeight, dir, lang);
   } else if (kind === 'text') {
     const runs = (item.payload && item.payload.runs) || [];
@@ -9040,12 +9040,16 @@ function glueItemFor(prevBox, nextBox, env) {
   const { sep, range, owner } = separatorOf(prevBox, nextBox);
   const abs = sepRangeAbs(range, owner);
   const glueItemId = `${owner.id}#g@${abs.start}-${abs.end}`;
-  const m = measuredVia({ id: glueItemId, kind: 'glue', payload: { text: ' ' } }, style, env);
+  const shapingSlices = separatorShapingSlicesOf(prevBox, nextBox);
+  const m = measuredVia({
+    id: glueItemId, kind: 'glue', payload: { text: ' ' },
+    ...(shapingSlices ? { shapingSlices } : {})
+  }, style, env);
   return lineItemOf({
     role: 'glue', kind: 'glue', itemId: glueItemId, sourceItemId: owner.id,
     sep, gapChars: sep,
     measured: m,
-    ...(separatorShapingSlicesOf(prevBox, nextBox) ? { shapingSlices: separatorShapingSlicesOf(prevBox, nextBox) } : {}),
+    ...(shapingSlices ? { shapingSlices } : {}),
     sourceRange: { blockId: env.blockId, itemId: owner.id, runIndex: range.fromRun, start: abs.start, end: abs.end },
     constraints: null
   });
@@ -9061,14 +9065,18 @@ function internalGlueFor(prevBox, nextBox, env) {
   const abs = sepRangeAbs(range, owner);
   const glueItemId = `${nextBox.source.id}#j@${abs.start}-${abs.end}`;
   // המדידה ברוחב רווח (כמו המנוע הקיים: NBSP מוצג ברוחב רווח)
-  const m = measuredVia({ id: glueItemId, kind: 'glue', payload: { text: ' ' } }, style, env);
+  const shapingSlices = separatorShapingSlicesOf(prevBox, nextBox);
+  const m = measuredVia({
+    id: glueItemId, kind: 'glue', payload: { text: ' ' },
+    ...(shapingSlices ? { shapingSlices } : {})
+  }, style, env);
   const noteRef = (nextBox.source.kind === 'noteMarker' && nextBox.source.payload && nextBox.source.payload.noteRef)
     || (prevBox.source.kind === 'noteMarker' && prevBox.source.payload && prevBox.source.payload.noteRef) || null;
   return lineItemOf({
     role: 'glue', kind: 'glue', itemId: glueItemId, sourceItemId: owner.id,
     sep: '\u00A0', internal: true, gapChars: sep, noteRef,
     measured: m,
-    ...(separatorShapingSlicesOf(prevBox, nextBox) ? { shapingSlices: separatorShapingSlicesOf(prevBox, nextBox) } : {}),
+    ...(shapingSlices ? { shapingSlices } : {}),
     sourceRange: { blockId: env.blockId, itemId: owner.id, runIndex: range.fromRun, start: abs.start, end: abs.end },
     constraints: null
   });
