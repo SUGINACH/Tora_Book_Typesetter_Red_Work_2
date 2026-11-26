@@ -461,6 +461,7 @@ var __paths = {
   "src/engine/layout/endnote-pages.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/layout/page-items.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/layout/structural-stamps.js|../output/shaar-content": "src/engine/output/shaar-content.js",
+  "src/engine/layout/structural-stamps.js|../decoration/toc-builder": "src/engine/decoration/toc-builder.js",
   "src/engine/layout/structural-stamps.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/layout/structural-stamps.js|../layout/furniture-geometry": "src/engine/layout/furniture-geometry.js",
   "src/engine/layout/structural-stamps.js|../layout/footnote-lanes": "src/engine/layout/footnote-lanes.js",
@@ -22860,7 +22861,7 @@ function splitGeneralDetail(entries, settings = {}) {
 module.exports = {
   buildTocModel, numberRows, buildTocPages, insertTocPages, resolveTocTargets,
   buildTocEntries, splitGeneralDetail, wrapTitle, levelSizePt, levelIndentPx,
-  TOC_MAX_ROWS, TOC_MAX_PAGES, TOC_MAX_TITLE_LINES,
+  TOC_MAX_ROWS, TOC_MAX_PAGES, TOC_MAX_TITLE_LINES, DOTS_MIN_PX,
 };
 
 };
@@ -25481,6 +25482,7 @@ __modules["src/engine/layout/structural-stamps.js"] = function (require, module,
  */
 
 const { buildShaarBlocks, shaarFontOf } = require('../output/shaar-content');
+const { DOTS_MIN_PX } = require('../decoration/toc-builder');
 const { GEO, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM, SZ_CORE, H2_SIMAN_Y, H2_SIMAN_Y_SPAN } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** H2_SIMAN_Y* — עוגן דואלי, מקור יחיד
 const { folioGeometry, headerGeometry } = require('../layout/furniture-geometry');
 const { assignFootnoteLanes } = require('../layout/footnote-lanes');
