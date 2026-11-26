@@ -26762,8 +26762,84 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
   }
 }
 
+function firstShapedPdfWordIssue(pages) {
+  let shapedWords = 0;
+  let shapedGlyphs = 0;
+  let outlinedGlyphs = 0;
+  const inspectWord = (word, pageIndex, lineId) => {
+    if (!word || !word.typography) return null;
+    shapedWords++;
+    const typography = word.typography;
+    if (typography.contractVersion !== 'page-word-typography-v1' ||
+        !Array.isArray(typography.segments) || !typography.segments.length ||
+        !Number.isSafeInteger(typography.glyphCount) || typography.glyphCount <= 0) {
+      return `invalid-word-typography:p${pageIndex}:${lineId}:${String(word.text || '')}`;
+    }
+    let count = 0;
+    let hasInk = false;
+    for (const segment of typography.segments) {
+      if (!segment || !Number.isFinite(segment.advancePx) || segment.advancePx < 0 ||
+          !Array.isArray(segment.shapedRuns) || !segment.shapedRuns.length) {
+        return `invalid-word-shaping-segment:p${pageIndex}:${lineId}`;
+      }
+      for (const run of segment.shapedRuns) {
+        if (!run || run.kind !== 'ShapedRun' || run.contractVersion !== 'shaped-run-v1' ||
+            !run.font || !Number.isSafeInteger(run.font.unitsPerEm) || run.font.unitsPerEm <= 0 ||
+            !Array.isArray(run.glyphs) || !run.glyphs.length) {
+          return `invalid-shaped-run:p${pageIndex}:${lineId}`;
+        }
+        for (const glyph of run.glyphs) {
+          if (!glyph || !Number.isSafeInteger(glyph.gid) || glyph.gid <= 0 ||
+              typeof glyph.outlinePath !== 'string' || glyph.outlinePath.length > 2 * 1024 * 1024 ||
+              !Number.isFinite(glyph.xAdvance) || !Number.isFinite(glyph.xOffset) ||
+              !Number.isFinite(glyph.yOffset) || !Number.isFinite(glyph.yAdvance)) {
+            return `shaped-glyph-outline-missing:p${pageIndex}:${lineId}:${String(word.text || '')}`;
+          }
+          count++;
+          shapedGlyphs++;
+          if (glyph.outlinePath.length) { hasInk = true; outlinedGlyphs++; }
+        }
+      }
+    }
+    if (count !== typography.glyphCount) {
+      return `word-glyph-count-mismatch:p${pageIndex}:${lineId}:${String(word.text || '')}`;
+    }
+    if (!hasInk) {
+      return `word-has-no-native-outline:p${pageIndex}:${lineId}:${String(word.text || '')}`;
+    }
+    return null;
+  };
+
+  for (const page of pages) {
+    const lines = [
+      ...(page.spanning ? page.spanning.lines : []),
+      ...(page.lines || [])
+    ];
+    for (const line of lines) {
+      for (const word of (line.words || [])) {
+        const issue = inspectWord(word, page.index, line.id);
+        if (issue) return { issue, shapedWords, shapedGlyphs, outlinedGlyphs };
+      }
+    }
+    for (const note of (page.footnotes || [])) {
+      for (const word of (note.words || [])) {
+        const issue = inspectWord(word, page.index, 'footnote');
+        if (issue) return { issue, shapedWords, shapedGlyphs, outlinedGlyphs };
+      }
+    }
+    for (const slot of (page.header && page.header.slots) || []) {
+      for (const word of (slot.words || [])) {
+        const issue = inspectWord(word, page.index, 'header');
+        if (issue) return { issue, shapedWords, shapedGlyphs, outlinedGlyphs };
+      }
+    }
+  }
+  return { issue: null, shapedWords, shapedGlyphs, outlinedGlyphs };
+}
+
 /**
  * **פרוסה 5 (§4 — PDF מה-PageModel בלבד):** הסרת העימוד השני מנתיב ה-PDF.
+
  * הכותב צורך את **אותו PageModel** שה-DOM וה-HTML צורכים — אין typeset,
  * אין Parser/Planner, אין מדידה, אין חלוקת הערות, אין החלטות מיקום: כל
  * x/y/baseline/גודל/מפתח-גופן/צבע/פעולות-דיו מגיעים מהמודל. הפונקציה עוסקת
@@ -26804,6 +26880,12 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       header: mp.header || null,
       decorations: (mp.decorations || []).filter(d => Array.isArray(d.pdfOps) && d.pdfOps.length)
     }));
+    // A shaped PageModel must carry a native outline for every positioned glyph.
+    // The PDF writer must not silently switch back to Unicode re-shaping.
+    const shapedIntegrity = firstShapedPdfWordIssue(pages);
+    if (shapedIntegrity.issue) {
+      return { ok: false, error: 'glyph-outline-required:' + shapedIntegrity.issue };
+    }
     // ---- מלאי תווים מהטקסט שמצויר בפועל (מהמודל) ----
     const drawnParts = [];
     for (const pg of pages) {
@@ -26938,12 +27020,17 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
     const outline = (model.document && model.document.outline) || [];
     const tocLinks = (model.document && model.document.tocLinks) || [];
     const pageSizeMm = pageMmOf(settings);
-    const bytes = writePdf({
-      pages, pageSizeMm,
-      font: fontForWriter, font2: fontForWriter2, font3: fontForWriter3,
-      font4: fontForWriter4, font5: fontForWriter5, font6: fontForWriter6,
-      extraFonts, settings, outline, tocLinks
-    });
+    let bytes;
+    try {
+      bytes = writePdf({
+        pages, pageSizeMm,
+        font: fontForWriter, font2: fontForWriter2, font3: fontForWriter3,
+        font4: fontForWriter4, font5: fontForWriter5, font6: fontForWriter6,
+        extraFonts, settings, outline, tocLinks
+      });
+    } catch (error) {
+      return { ok: false, error: 'pdf:' + (error && error.message ? error.message : String(error)) };
+    }
     return {
       ok: true, bytes,
       info: {
@@ -26953,6 +27040,9 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
         outlineItems: outline,
         tocLinkTargets: tocLinks.map(l => l.targetPage),
         tocLinkPages: tocLinks.map(l => l.page),
+        shapedWords: shapedIntegrity.shapedWords,
+        shapedGlyphs: shapedIntegrity.shapedGlyphs,
+        outlinedGlyphs: shapedIntegrity.outlinedGlyphs,
         fromPageModel: true
       }
     };

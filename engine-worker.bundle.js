@@ -31570,8 +31570,84 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
   }
 }
 
+function firstShapedPdfWordIssue(pages) {
+  let shapedWords = 0;
+  let shapedGlyphs = 0;
+  let outlinedGlyphs = 0;
+  const inspectWord = (word, pageIndex, lineId) => {
+    if (!word || !word.typography) return null;
+    shapedWords++;
+    const typography = word.typography;
+    if (typography.contractVersion !== 'page-word-typography-v1' ||
+        !Array.isArray(typography.segments) || !typography.segments.length ||
+        !Number.isSafeInteger(typography.glyphCount) || typography.glyphCount <= 0) {
+      return `invalid-word-typography:p${pageIndex}:${lineId}:${String(word.text || '')}`;
+    }
+    let count = 0;
+    let hasInk = false;
+    for (const segment of typography.segments) {
+      if (!segment || !Number.isFinite(segment.advancePx) || segment.advancePx < 0 ||
+          !Array.isArray(segment.shapedRuns) || !segment.shapedRuns.length) {
+        return `invalid-word-shaping-segment:p${pageIndex}:${lineId}`;
+      }
+      for (const run of segment.shapedRuns) {
+        if (!run || run.kind !== 'ShapedRun' || run.contractVersion !== 'shaped-run-v1' ||
+            !run.font || !Number.isSafeInteger(run.font.unitsPerEm) || run.font.unitsPerEm <= 0 ||
+            !Array.isArray(run.glyphs) || !run.glyphs.length) {
+          return `invalid-shaped-run:p${pageIndex}:${lineId}`;
+        }
+        for (const glyph of run.glyphs) {
+          if (!glyph || !Number.isSafeInteger(glyph.gid) || glyph.gid <= 0 ||
+              typeof glyph.outlinePath !== 'string' || glyph.outlinePath.length > 2 * 1024 * 1024 ||
+              !Number.isFinite(glyph.xAdvance) || !Number.isFinite(glyph.xOffset) ||
+              !Number.isFinite(glyph.yOffset) || !Number.isFinite(glyph.yAdvance)) {
+            return `shaped-glyph-outline-missing:p${pageIndex}:${lineId}:${String(word.text || '')}`;
+          }
+          count++;
+          shapedGlyphs++;
+          if (glyph.outlinePath.length) { hasInk = true; outlinedGlyphs++; }
+        }
+      }
+    }
+    if (count !== typography.glyphCount) {
+      return `word-glyph-count-mismatch:p${pageIndex}:${lineId}:${String(word.text || '')}`;
+    }
+    if (!hasInk) {
+      return `word-has-no-native-outline:p${pageIndex}:${lineId}:${String(word.text || '')}`;
+    }
+    return null;
+  };
+
+  for (const page of pages) {
+    const lines = [
+      ...(page.spanning ? page.spanning.lines : []),
+      ...(page.lines || [])
+    ];
+    for (const line of lines) {
+      for (const word of (line.words || [])) {
+        const issue = inspectWord(word, page.index, line.id);
+        if (issue) return { issue, shapedWords, shapedGlyphs, outlinedGlyphs };
+      }
+    }
+    for (const note of (page.footnotes || [])) {
+      for (const word of (note.words || [])) {
+        const issue = inspectWord(word, page.index, 'footnote');
+        if (issue) return { issue, shapedWords, shapedGlyphs, outlinedGlyphs };
+      }
+    }
+    for (const slot of (page.header && page.header.slots) || []) {
+      for (const word of (slot.words || [])) {
+        const issue = inspectWord(word, page.index, 'header');
+        if (issue) return { issue, shapedWords, shapedGlyphs, outlinedGlyphs };
+      }
+    }
+  }
+  return { issue: null, shapedWords, shapedGlyphs, outlinedGlyphs };
+}
+
 /**
  * **פרוסה 5 (§4 — PDF מה-PageModel בלבד):** הסרת העימוד השני מנתיב ה-PDF.
+
  * הכותב צורך את **אותו PageModel** שה-DOM וה-HTML צורכים — אין typeset,
  * אין Parser/Planner, אין מדידה, אין חלוקת הערות, אין החלטות מיקום: כל
  * x/y/baseline/גודל/מפתח-גופן/צבע/פעולות-דיו מגיעים מהמודל. הפונקציה עוסקת
@@ -31612,6 +31688,12 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       header: mp.header || null,
       decorations: (mp.decorations || []).filter(d => Array.isArray(d.pdfOps) && d.pdfOps.length)
     }));
+    // A shaped PageModel must carry a native outline for every positioned glyph.
+    // The PDF writer must not silently switch back to Unicode re-shaping.
+    const shapedIntegrity = firstShapedPdfWordIssue(pages);
+    if (shapedIntegrity.issue) {
+      return { ok: false, error: 'glyph-outline-required:' + shapedIntegrity.issue };
+    }
     // ---- מלאי תווים מהטקסט שמצויר בפועל (מהמודל) ----
     const drawnParts = [];
     for (const pg of pages) {
@@ -31746,12 +31828,17 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
     const outline = (model.document && model.document.outline) || [];
     const tocLinks = (model.document && model.document.tocLinks) || [];
     const pageSizeMm = pageMmOf(settings);
-    const bytes = writePdf({
-      pages, pageSizeMm,
-      font: fontForWriter, font2: fontForWriter2, font3: fontForWriter3,
-      font4: fontForWriter4, font5: fontForWriter5, font6: fontForWriter6,
-      extraFonts, settings, outline, tocLinks
-    });
+    let bytes;
+    try {
+      bytes = writePdf({
+        pages, pageSizeMm,
+        font: fontForWriter, font2: fontForWriter2, font3: fontForWriter3,
+        font4: fontForWriter4, font5: fontForWriter5, font6: fontForWriter6,
+        extraFonts, settings, outline, tocLinks
+      });
+    } catch (error) {
+      return { ok: false, error: 'pdf:' + (error && error.message ? error.message : String(error)) };
+    }
     return {
       ok: true, bytes,
       info: {
@@ -31761,6 +31848,9 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
         outlineItems: outline,
         tocLinkTargets: tocLinks.map(l => l.targetPage),
         tocLinkPages: tocLinks.map(l => l.page),
+        shapedWords: shapedIntegrity.shapedWords,
+        shapedGlyphs: shapedIntegrity.shapedGlyphs,
+        outlinedGlyphs: shapedIntegrity.outlinedGlyphs,
         fromPageModel: true
       }
     };
@@ -35314,6 +35404,7 @@ function escapePdfText(s) {
   return String(s).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
 }
 function round2(v) { return Math.round(v * 100) / 100; }
+function pdfPrecise(v) { const n = Math.round(Number(v) * 1e6) / 1e6; return Object.is(n, -0) ? '0' : String(n); }
 
 /** **כותרת סימנייה עברית:** מחרוזת טקסט PDF לא־לטינית ⇒ UTF-16BE עם BOM
  * כמחרוזת הקסדצימלית (חוזה PDF 1.4 §3.8.4) — קוראים מציגים עברית תקינה. */
@@ -35436,6 +35527,182 @@ function buildToUnicode(font) {
   }
   lines.push('endcmap', 'CMapName currentdict /CMap defineresource pop', 'end', 'end');
   return lines.join('\n');
+}
+
+/**
+ * Convert the restricted absolute SVG outline emitted by the canonical
+ * HarfBuzz DrawFuncs callbacks into PDF path operators. No font shaping or
+ * glyph lookup happens here: these are the exact GID outlines in font units.
+ */
+function svgOutlineToPdfOps(pathData) {
+  if (typeof pathData !== 'string') return null;
+  if (!pathData.length) return [];
+  const numberPattern = /[-+]?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][-+]?\\d+)?/;
+  const tokenPattern = /[MLCQZ]|[-+]?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][-+]?\\d+)?/g;
+  const residue = pathData.replace(/[MLCQZ]/g, '').replace(new RegExp(numberPattern.source, 'g'), '').replace(/[\\s,]/g, '');
+  if (residue.length) return null;
+  const tokens = pathData.match(tokenPattern) || [];
+  if (!tokens.length) return null;
+  const ops = [];
+  let i = 0;
+  let command = null;
+  let x = 0, y = 0, sx = 0, sy = 0;
+  const take = () => {
+    const token = tokens[i++];
+    if (token == null || /^[MLCQZ]$/.test(token)) throw new Error('outline-path-arity');
+    const value = Number(token);
+    if (!Number.isFinite(value)) throw new Error('outline-path-number');
+    return value;
+  };
+  try {
+    while (i < tokens.length) {
+      if (/^[MLCQZ]$/.test(tokens[i])) command = tokens[i++];
+      else if (command == null) return null;
+      if (command === 'M') {
+        x = take(); y = take(); sx = x; sy = y;
+        ops.push(`${round2(x)} ${round2(y)} m`);
+        command = 'L'; // SVG implicit coordinate pairs after moveto are lineto.
+      } else if (command === 'L') {
+        x = take(); y = take();
+        ops.push(`${round2(x)} ${round2(y)} l`);
+      } else if (command === 'Q') {
+        const cx = take(), cy = take(), ex = take(), ey = take();
+        const c1x = x + (2 / 3) * (cx - x);
+        const c1y = y + (2 / 3) * (cy - y);
+        const c2x = ex + (2 / 3) * (cx - ex);
+        const c2y = ey + (2 / 3) * (cy - ey);
+        ops.push(`${round2(c1x)} ${round2(c1y)} ${round2(c2x)} ${round2(c2y)} ${round2(ex)} ${round2(ey)} c`);
+        x = ex; y = ey;
+      } else if (command === 'C') {
+        const c1x = take(), c1y = take(), c2x = take(), c2y = take(), ex = take(), ey = take();
+        ops.push(`${round2(c1x)} ${round2(c1y)} ${round2(c2x)} ${round2(c2y)} ${round2(ex)} ${round2(ey)} c`);
+        x = ex; y = ey;
+      } else if (command === 'Z') {
+        ops.push('h'); x = sx; y = sy; command = null;
+      } else {
+        return null;
+      }
+    }
+  } catch (_) {
+    return null;
+  }
+  return ops;
+}
+
+function visualShapedRunOrder(entries) {
+  const out = entries.slice();
+  const levels = out.map(entry => {
+    const level = entry.run && entry.run.shaping ? entry.run.shaping.bidiLevel : 0;
+    return Number.isSafeInteger(level) ? level : 0;
+  });
+  const odd = levels.filter(level => level % 2 === 1);
+  if (!odd.length) return out;
+  const maxLevel = Math.max(...levels);
+  const minOdd = Math.min(...odd);
+  for (let level = maxLevel; level >= minOdd; level--) {
+    let start = 0;
+    while (start < out.length) {
+      while (start < out.length && levels[start] < level) start++;
+      if (start >= out.length) break;
+      let end = start + 1;
+      while (end < out.length && levels[end] >= level) end++;
+      for (let left = start, right = end - 1; left < right; left++, right--) {
+        [out[left], out[right]] = [out[right], out[left]];
+        [levels[left], levels[right]] = [levels[right], levels[left]];
+      }
+      start = end;
+    }
+  }
+  return out;
+}
+
+/** Vector-only PDF projection for a positioned PageModel word. */
+function shapedWordPdfOps(word, xPx, baselinePx, sizePt, pageHeightPt) {
+  const typography = word && word.typography;
+  if (!typography || typography.contractVersion !== 'page-word-typography-v1' ||
+      !Array.isArray(typography.segments) || !typography.segments.length ||
+      !Number.isSafeInteger(typography.glyphCount) || typography.glyphCount <= 0 ||
+      !Number.isFinite(word.w) || word.w < 0 ||
+      !Number.isFinite(sizePt) || sizePt <= 0) {
+    return { ok: false, error: 'invalid-page-word-typography' };
+  }
+  const sizePx = sizePt * (96 / 72);
+  const entries = [];
+  const naturalBySegment = new Map();
+  let totalGlyphs = 0;
+  for (const segment of typography.segments) {
+    if (!segment || !Number.isFinite(segment.advancePx) || segment.advancePx < 0 ||
+        !Array.isArray(segment.shapedRuns) || !segment.shapedRuns.length) {
+      return { ok: false, error: 'invalid-page-word-shaping-segment' };
+    }
+    let naturalAdvancePx = 0;
+    for (const run of segment.shapedRuns) {
+      if (!run || run.kind !== 'ShapedRun' || run.contractVersion !== 'shaped-run-v1' ||
+          !run.font || !Number.isSafeInteger(run.font.unitsPerEm) || run.font.unitsPerEm <= 0 ||
+          !Array.isArray(run.glyphs) || !run.glyphs.length ||
+          !run.advance || !Number.isFinite(run.advance.x)) {
+        return { ok: false, error: 'invalid-page-word-shaped-run' };
+      }
+      let runAdvance = 0;
+      for (const glyph of run.glyphs) {
+        if (!glyph || !Number.isSafeInteger(glyph.gid) || glyph.gid <= 0 ||
+            typeof glyph.outlinePath !== 'string' || glyph.outlinePath.length > 2 * 1024 * 1024 ||
+            !Number.isFinite(glyph.xAdvance) || !Number.isFinite(glyph.yAdvance) ||
+            !Number.isFinite(glyph.xOffset) || !Number.isFinite(glyph.yOffset)) {
+          return { ok: false, error: 'shaped-glyph-outline-or-position-missing' };
+        }
+        if (Math.abs(glyph.yAdvance) > 1e-7) {
+          return { ok: false, error: 'vertical-glyph-advance-not-supported' };
+        }
+        runAdvance += glyph.xAdvance;
+      }
+      if (!Number.isFinite(runAdvance) || runAdvance < 0 ||
+          Math.abs(runAdvance - run.advance.x) > 1e-7) {
+        return { ok: false, error: 'shaped-glyph-advance-mismatch' };
+      }
+      naturalAdvancePx += (runAdvance / run.font.unitsPerEm) * sizePx;
+      entries.push({ run, segment });
+      totalGlyphs += run.glyphs.length;
+    }
+    naturalBySegment.set(segment, naturalAdvancePx);
+  }
+  if (totalGlyphs !== typography.glyphCount) return { ok: false, error: 'page-word-glyph-count-mismatch' };
+  const segmentScale = new Map();
+  for (const segment of typography.segments) {
+    const natural = naturalBySegment.get(segment);
+    if (natural <= 0) {
+      if (segment.advancePx > 0) return { ok: false, error: 'zero-shaped-segment-advance' };
+      segmentScale.set(segment, 1);
+    } else {
+      segmentScale.set(segment, segment.advancePx / natural);
+    }
+  }
+  const visual = visualShapedRunOrder(entries);
+  const ops = [`/Span << /ActualText ${pdfTitleHex(word.text)} >> BDC`];
+  let penPx = 0;
+  let drawnGlyphs = 0;
+  for (const entry of visual) {
+    const run = entry.run;
+    const xScalePt = (sizePt / run.font.unitsPerEm) * segmentScale.get(entry.segment);
+    const yScalePt = sizePt / run.font.unitsPerEm;
+    for (const glyph of run.glyphs) {
+      if (glyph.outlinePath.length) {
+        const pathOps = svgOutlineToPdfOps(glyph.outlinePath);
+        if (!pathOps || !pathOps.length) return { ok: false, error: 'invalid-native-glyph-outline-path' };
+        const gxPt = xPx * PX_TO_PT + penPx * PX_TO_PT + glyph.xOffset * xScalePt;
+        const gyPt = pageHeightPt - baselinePx * PX_TO_PT + glyph.yOffset * yScalePt;
+        ops.push(`q ${pdfPrecise(xScalePt)} 0 0 ${pdfPrecise(yScalePt)} ${round2(gxPt)} ${round2(gyPt)} cm ${pathOps.join(' ')} f Q`);
+        drawnGlyphs++;
+      }
+      penPx += glyph.xAdvance * sizePx / run.font.unitsPerEm * segmentScale.get(entry.segment);
+    }
+  }
+  if (!drawnGlyphs) return { ok: false, error: 'page-word-has-no-visible-glyph-outline' };
+  if (Math.abs(penPx - word.w) > Math.max(1.25, word.w * 0.015)) {
+    return { ok: false, error: 'page-word-shaped-advance-does-not-match-positioned-width' };
+  }
+  ops.push('EMC');
+  return { ok: true, ops, glyphCount: totalGlyphs, drawnGlyphs };
 }
 
 /**
@@ -35580,7 +35847,16 @@ function writePdf(opts) {
     };
     // **D-89 (צבע פר-מילה):** rgb 0..1 על המילה (כותרת עליונה בכחול-הייחוס
     // #0F1749, בלוקי השער האחורי) — ברירת מחדל שחור (0 0 0 rg מרומז ב-PDF).
-    const emitWord = (text, xPx, yPx, sizePt, fontKey, color) => {
+    const emitWord = (text, xPx, yPx, sizePt, fontKey, color, modelWord = null) => {
+      // Shaped words are emitted from their exact HarfBuzz GID outlines.
+      // ActualText preserves extraction/copy; no second bidi or font shaping.
+      if (modelWord && modelWord.typography) {
+        const shaped = shapedWordPdfOps(modelWord, xPx, yPx, sizePt, hPt);
+        if (!shaped.ok) throw new Error('pdf-glyph-outline:' + shaped.error);
+        emitFill(color);
+        ops.push(...shaped.ops);
+        return;
+      }
       // **S4.15:** מילת-חלון בגופן המשני (FrankReal-Bold) — כמו המקור;
       // **S4.26:** כותרות בגופן השלישי (DavidLibre-Bold — כמו הייחוס);
       // **S4.26 (פיצול גליפים):** תווים שחסרים בגוף הראשי (פיסוק בסיסי
@@ -35657,7 +35933,7 @@ function writePdf(opts) {
         // **S12 (parity):** בסיס השורה מהמקרן (מודל תיבת שורה CSS — half-leading+ascent)
         const baselineY = ln.baselineY != null ? ln.baselineY : ln.y + ln.h - ln.sizePt * (96 / 72) * 0.78;
         // **S4.9 (legacy IMUD):** מילים עם גודל/בסיס משלהן (מילת-חלון 1.5×, סמני הערות)
-        for (const w of ln.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : baselineY, w.sizePt || ln.sizePt, w.fontKey, w.color);
+        for (const w of ln.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : baselineY, w.sizePt || ln.sizePt, w.fontKey, w.color, w);
       }
     };
     if (pg.spanning) emitLines(pg.spanning.lines);
@@ -35668,7 +35944,7 @@ function writePdf(opts) {
         // **D-89 (דיווח משתמש: "בהערות השוליים יש מילים אחת על השניה"):**
         // בסיס פר-מילה מהמקרן (פר-שורה) — בעבר baselineY אחד לכל ההערה
         // וכל שורות הערה רבת-שורות נערמו זו על זו.
-        for (const w of fn.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : fn.baselineY, w.sizePt || 8.5, w.fontKey, w.color);
+        for (const w of fn.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : fn.baselineY, w.sizePt || 8.5, w.fontKey, w.color, w);
         continue;
       }
       const fs = 11;
@@ -35700,7 +35976,7 @@ function writePdf(opts) {
         // **D-89:** סלוט legacy עם מילים ממוקמות מהמקרן — בסיס/צבע פר-מילה;
         // נפילה לנוסחה הישנה רק כשאין מילים (נתיב DP).
         if (s.words && s.words.length) {
-          for (const w of s.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : y, w.sizePt || s.sizePt || 9, w.fontKey, w.color);
+          for (const w of s.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : y, w.sizePt || s.sizePt || 9, w.fontKey, w.color, w);
           continue;
         }
         // **Iteration-003 (תצוגה=ייצוא):** הסלוט המוטבע נושא fontKey (גופן
