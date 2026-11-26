@@ -681,6 +681,17 @@
 
         resolveCommonInherited(graphemes);
         const pairedPunctuationPairCount = resolvePairedPunctuation(graphemes);
+        // Visible Common/Inherited graphemes without a strong-script neighbor
+        // still require glyph shaping. Use Unicode Script=Common (Zyyy), but
+        // never guess for Script_Extensions, mixed-script or Bidi_Control clusters.
+        for (const grapheme of graphemes) {
+          if (!grapheme.script && grapheme.status === 'unresolved-common-inherited' &&
+              grapheme.candidates.length === 0 && grapheme.primaryScripts.length === 0 &&
+              !grapheme.containsBidiControl) {
+            grapheme.script = 'Zyyy';
+            grapheme.status = 'common-script-default';
+          }
+        }
         for (const grapheme of graphemes) {
           grapheme.shapeable = Boolean(grapheme.script) &&
             !grapheme.containsBidiControl &&
