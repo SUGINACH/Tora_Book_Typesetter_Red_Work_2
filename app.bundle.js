@@ -10946,7 +10946,8 @@ function shaarColorOfCls(cls, settings) {
 
 /** **S73:** החזרת צבע שאינו שחור (ערך כהה/חסר ⇒ null — ירושת שחור ב-CSS). */
 function nonBlack(hex) {
-  return (hex && /^#[0-9a-f]{6}$/i.test(hex) && hex.toLowerCase() !== '#000000') ? hex : null;
+  // A configured black color is explicit; only an absent/invalid value inherits.
+  return (hex && /^#[0-9a-f]{6}$/i.test(hex)) ? hex : null;
 }
 
 /**
@@ -11527,6 +11528,12 @@ function renderLegacyPage(pg, settings, doc) {
         t.textContent = scrubPUAText(rowText || '');
         row.appendChild(t);
         if (r.folio && rli === 0) {
+          // Legacy TOC uses a separate flex row rather than the generic
+          // renderTocRows helper; include its leader explicitly so live DOM
+          // and standalone HTML do not silently lose this part of the design.
+          const dots = doc.createElement('span');
+          dots.className = 'toc-dots';
+          row.appendChild(dots);
           const n = doc.createElement('span');
           n.className = 'toc-num';
           n.style.fontSize = `${pt2px(SZ.tocNum)}px`;
@@ -20629,9 +20636,9 @@ function nonBlack(c) {
     // null/undefined (not an array) is the only "inherit" state.
     return `rgb(${channels.join(', ')})`;
   }
-  if (typeof c !== 'string' || !c) return null;
-  const s = c.trim().toLowerCase();
-  if (s === '#000' || s === '#000000' || s === 'black' || s === 'rgb(0, 0, 0)') return null;
+  if (typeof c !== 'string' || !c.trim()) return null;
+  // String colors in PageModel are explicit too, including black. Only null
+  // means inherit from the page root.
   return c;
 }
 
@@ -29629,9 +29636,40 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
       const tW = rApi.measureTextWidth(rowText, r.sizePt, 0);
       const textWords = placeWords([rowText], rApi, r.x1 - tW, tW, r.sizePt, 'right', baseY);
       for (const w of textWords) { w.fontKey = rFamApi ? fontKeyOf(rFam) : 'heading'; if (rColor) w.color = rColor; }
-      const numW = rApi.measureTextWidth(r.folio, SZ.tocNum, 0);
-      const numWords = (r.folio && rli === 0) ? placeWords([r.folio], rApi, GEO.TOC_NUM_X, numW, SZ.tocNum, 'left', baseY) : [];
-      for (const w of numWords) { w.fontKey = rFamApi ? fontKeyOf(rFam) : 'heading'; if (rColor) w.color = rColor; }
+      const hasPageLabel = !!r.folio && rli === 0;
+      const numW = hasPageLabel ? rApi.measureTextWidth(r.folio, SZ.tocNum, 0) : 0;
+      const numWords = hasPageLabel
+        ? placeWords([r.folio], rApi, GEO.TOC_NUM_X, numW, SZ.tocNum, 'left', baseY)
+        : [];
+      const tocLabelColor = hexColorToRgb('#444444');
+      for (const w of numWords) {
+        w.fontKey = rFamApi ? fontKeyOf(rFam) : 'heading';
+        if (tocLabelColor) w.color = tocLabelColor;
+      }
+      // The live TOC draws a dotted flex leader between the measured title
+      // edge and the page label. Emit the same measured segment into the PDF.
+      if (hasPageLabel) {
+        const leaderX = GEO.TOC_NUM_X + numW + 12;
+        const leaderRight = r.x1 - tW - 12;
+        const leaderW = leaderRight - leaderX;
+        if (leaderW >= 24) {
+          const leaderY = baseY - 4;
+          const pxToPt = 72 / 96;
+          const xPt = leaderX * pxToPt;
+          const yPt = out.height * pxToPt - leaderY * pxToPt;
+          const wPt = leaderW * pxToPt;
+          const r2 = value => Math.round(value * 100) / 100;
+          if (!out.decorations) out.decorations = [];
+          out.decorations.push({
+            x: leaderX, y: leaderY, w: leaderW, h: 0,
+            kind: 'toc-leader', slot: 'toc', kindStyle: 'dotted',
+            inkType: 'rule', ink: { type: 'rule', style: 'dotted', color: [0, 0, 0], width: 0.75 },
+            pdfOps: [
+              `0 0 0 RG 0.75 w [1 1.5] 0 d ${r2(xPt)} ${r2(yPt)} m ${r2(xPt + wPt)} ${r2(yPt)} l S [] 0 d`
+            ]
+          });
+        }
+      }
       out.lines.push({
         x: GEO.TOC_NUM_X, y: lineY, w: r.x1 - GEO.TOC_NUM_X, h: 26,
         words: [...textWords, ...numWords], align: 'right', kind: 'toc-row',
@@ -29729,7 +29767,7 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
     const PX_TO_PT = 72 / 96;
     const r2 = (v) => Math.round(v * 100) / 100;
     const cssColor = (c) => `rgb(${Math.round(c[0] * 255)},${Math.round(c[1] * 255)},${Math.round(c[2] * 255)})`;
-    out.decorations = pg.decorations.map((d) => {
+    out.decorations = [...(out.decorations || []), ...pg.decorations.map((d) => {
       const ink = d.image ? { type: 'image', uri: d.image } : ornamentInk(d.kindStyle);
       let paint = null, pdfOps = null;
       if (ink && ink.type === 'svg') {
@@ -29750,7 +29788,7 @@ function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi =
         inkColor: ink && ink.type === 'rect' ? cssColor(ink.color) : null,
         paint, pdfOps
       };
-    });
+    })];
   }
 
   return out;
