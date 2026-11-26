@@ -27680,6 +27680,10 @@ function projectStampedRows(n, x, w, yTop, opts) {
     const toks = [];
     if (li === 0) for (const p of prefix) toks.push(p);
     for (let i = row.wFrom; i < row.wTo; i++) {
+      // noteRows.wordW stores the glyph advance only; spaceW is accounted
+      // separately in row wrapping and positioning. Subtracting a space here
+      // (as we do for prefix widths, which include a trailing space) shrank
+      // every note word and caused its visible glyphs to collide with neighbors.
       toks.push({
         text: scrubPUAText(String(words[i])), w: row.wordW[i - row.wFrom],
         ...(n.noteWordTypography && n.noteWordTypography[i] ? { typography: n.noteWordTypography[i] } : {})
@@ -34560,9 +34564,17 @@ const { PT_CLASS, bgRgba, fontStack } = require('./dom-renderer');
 const PT_TO_PX = 96 / 72;
 const px2 = (v) => Math.round(v * 100) / 100;
 
-/** צבע שאינו שחור — null אחרת (כמו הרנדרר הקיים; שחור ⇒ ירושת ברירת מחדל). */
+/** צבע שאינו שחור — null אחרת. PageModel נושא RGB מנורמל (0..1),
+ * כמו כותב ה-PDF; ה-DOM ממיר את אותו ערך לצבע CSS בלי לדרוס אותו לשחור. */
 function nonBlack(c) {
-  if (!c || typeof c !== 'string') return null;
+  if (Array.isArray(c) && c.length === 3) {
+    const rgb = c.map(value => Number(value));
+    if (!rgb.every(value => Number.isFinite(value) && value >= 0 && value <= 1)) return null;
+    const channels = rgb.map(value => Math.round(value * 255));
+    if (channels.every(value => value === 0)) return null;
+    return `rgb(${channels.join(', ')})`;
+  }
+  if (typeof c !== 'string' || !c) return null;
   const s = c.trim().toLowerCase();
   if (s === '#000' || s === '#000000' || s === 'black' || s === 'rgb(0, 0, 0)') return null;
   return c;
