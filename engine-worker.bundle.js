@@ -1,6 +1,6 @@
 // ui/engine-worker.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת ה־Worker (המנוע המלא — אין לטעון בחוט ה־UI)
-// מודולים: 103 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 104 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -469,8 +469,10 @@ var __paths = {
   "src/engine/layout/structural-stamps.js|../decoration/gate-design": "src/engine/decoration/gate-design.js",
   "src/engine/typography/font-keys.js|./measure-api": "src/engine/typography/measure-api.js",
   "src/engine/decoration/gate-design.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
+  "src/engine/core/page-model.js|./page-model-hashes": "src/engine/core/page-model-hashes.js",
   "src/engine/core/page-model.js|./materialize": "src/engine/core/materialize.js",
   "src/engine/core/page-model.js|../layout/notes-model": "src/engine/layout/notes-model.js",
+  "src/engine/core/page-model-hashes.js|../assets/hash256": "src/engine/assets/hash256.js",
   "src/engine/core/materialize.js|./pua-text": "src/engine/core/pua-text.js",
   "src/engine/core/materialize.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/core/materialize.js|../typography/font-keys": "src/engine/typography/font-keys.js",
@@ -25548,7 +25550,7 @@ __modules["src/engine/core/page-model.js"] = function (require, module, exports)
  * דטרמיניזם: אין תאריך/אקראיות/מזהי ריצה; אותו קלט ⇒ אותו מודל ואותם hashes.
  */
 
-const crypto = require('crypto');
+const { geometryHashOf, contentHashOf } = require('./page-model-hashes');
 // **שלב 8 (§4.1):** materialization חד-פעמי — המנגנון הפנימי הטהור (לא
 // מקרין, לא מודד, לא מחליט; צורך LineModel + חותמות structural-stamps).
 const { materializeDocument } = require('./materialize');
@@ -26320,7 +26322,25 @@ function validatePageModel(model, ctx = {}) {
 
 // ─── hashes דטרמיניסטיים (§7.1-8/9) ───
 
-/** geometryHash — טביעת-אצבע גיאומטרית: מיקומים וגדלים סופיים בלבד (בלי טקסט). */
+// Hash functions live in page-model-hashes.js so the Worker builder and UI receiver share one canonical algorithm.
+
+module.exports = {
+  PAGE_MODEL_SCHEMA,
+  buildPageModel,
+  validatePageModel,
+  deepFreeze,
+  geometryHashOf,
+  contentHashOf
+};
+
+};
+__modules["src/engine/core/page-model-hashes.js"] = function (require, module, exports) {
+// src/engine/core/page-model-hashes.js — canonical PageModel hash contract (engine + UI receiver)
+'use strict';
+
+const { sha256Hex } = require('../assets/hash256');
+
+/** geometryHash — deterministic fingerprint of final geometry only (no text). */
 function geometryHashOf(model) {
   const canon = model.pages.map(p => ({
     i: p.index, t: p.type,
@@ -26329,10 +26349,10 @@ function geometryHashOf(model) {
     sn: p.sideNotes.map(s => `${s.noteId}:${s.x},${s.yTop},${s.heightPx}`),
     d: (p.decorations || []).map(d => `${d.kind}:${d.x},${d.y},${d.w},${d.h}`)
   }));
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  return sha256Hex(JSON.stringify(canon));
 }
 
-/** contentHash — הוכחת שימור מקור ברמת המודל הסופי (טקסט השורות בסדר הקריאה). */
+/** contentHash — final model text in reading order plus glyph-level typography data. */
 function contentHashOf(model) {
   const canon = model.pages.map(p => ({
     i: p.index,
@@ -26344,17 +26364,10 @@ function contentHashOf(model) {
     fn: p.footnotes.map(n => `${n.marker || ''}§${n.text}`),
     sn: p.sideNotes.map(s => s.text)
   }));
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  return sha256Hex(JSON.stringify(canon));
 }
 
-module.exports = {
-  PAGE_MODEL_SCHEMA,
-  buildPageModel,
-  validatePageModel,
-  deepFreeze,
-  geometryHashOf,
-  contentHashOf
-};
+module.exports = { geometryHashOf, contentHashOf };
 
 };
 __modules["src/engine/core/materialize.js"] = function (require, module, exports) {

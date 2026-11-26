@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 77 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 78 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -416,6 +416,8 @@ var __paths = {
   "src/engine/layout/footnote-budget.js|./footnote-lanes": "src/engine/layout/footnote-lanes.js",
   "src/engine/layout/footnote-budget.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/layout/notes-model.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
+  "src/ui/page-model-transport.js|../engine/core/page-model-hashes": "src/engine/core/page-model-hashes.js",
+  "src/engine/core/page-model-hashes.js|../assets/hash256": "src/engine/assets/hash256.js",
   "src/ui/caret-map.js|../engine/parser/dfa-lexer": "src/engine/parser/dfa-lexer.js",
   "src/engine/output/export-api.js|../core/settings-registry": "src/engine/core/settings-registry.js",
   "src/engine/output/export-api.js|./dom-renderer": "src/engine/output/dom-renderer.js",
@@ -25572,24 +25574,26 @@ __modules["src/ui/page-model-transport.js"] = function (require, module, exports
 // src/ui/page-model-transport.js — קבלת PageModel מעבר לגבול ה-Worker (שלב 8 פרוסה 2, §4.3)
 'use strict';
 
+const { geometryHashOf, contentHashOf } = require('../engine/core/page-model-hashes');
+
 /**
  * **חוזה ההעברה (pagemodel-transport-v1):** ה-Worker בונה את המודל וסריאליזציית
  * הפרוטוקול (ui-result-v1) עוטפת אותו עם גרסת transport + ההאשים שחושבו
  * בצד הבונה. structured clone מפשיר הקפאות — לכן הצד המקבל:
- *   1. מאמת סכמה וגרסאות (transport/schema/pages).
- *   2. מאמת שההאשים שבמעטפת תואמים לאלה שעל המודל (שלמות ההעברה).
- *   3. מקפיא מחדש עמוק (אותה סמנטיקה כמו הבונה).
- *   4. מדווח מדדי העברה (גודל מוערך, עמודים, שורות).
+ *   1. מאמת סכמה, גרסאות ומבנה בסיסי.
+ *   2. מאמת שההאשים שבמעטפת תואמים לאלה שעל המודל.
+ *   3. מחשב מחדש geometryHash ו-contentHash מהתוכן שהתקבל, כדי לזהות שינוי
+ *      בשדות הגאומטריים ובתוכן/נתוני הגליפים לאחר יצירת המודל.
+ *   4. מקפיא מחדש עמוק ומדווח מדדי העברה.
  *
- * אין כאן ולידציה גאומטרית מחדש ואין חישוב מחדש — ההאשים הם הוכחת
- * השלמות שחושבה פעם אחת בצד המנוע; ה-UI אינו מפעיל מנוע שני.
+ * האימות מחשב fingerprints בלבד: הוא אינו מפעיל עימוד, מדידה, shaping או
+ * החלטת layout שנייה. שני הצדדים צורכים את אותו חוזה hashes משותף.
  */
 
 const TRANSPORT_VERSION = 'pagemodel-transport-v1';
 const MODEL_SCHEMA = 'pagemodel-v1';
 
-/** הקפאה עמוקה — ראי ההתנהגות של deepFreeze בבונה (core/page-model.js);
- * מוקדת כאן כי חבילת ה-UI אינה כוללת את מנוע הפייפליין. */
+/** הקפאה עמוקה — ראי ההתנהגות של deepFreeze בבונה (core/page-model.js). */
 function deepFreeze(value) {
   if (value === null || typeof value !== 'object') return value;
   if (Object.isFrozen(value)) return value;
@@ -25611,6 +25615,9 @@ function receivePageModel(envelope) {
   if (envelope.transport !== TRANSPORT_VERSION) {
     return { ok: false, error: `transport-version-mismatch:${envelope.transport}` };
   }
+  if (envelope.schema !== MODEL_SCHEMA) {
+    return { ok: false, error: `envelope-schema-mismatch:${envelope.schema}` };
+  }
   const model = envelope.model;
   if (!model || typeof model !== 'object') return { ok: false, error: 'no-model' };
   if (model.schema !== MODEL_SCHEMA) {
@@ -25619,15 +25626,30 @@ function receivePageModel(envelope) {
   if (!Array.isArray(model.pages) || !model.pages.length) {
     return { ok: false, error: 'no-pages' };
   }
-  // שלמות: ההאשים שחושבו בצד הבונה חייבים להתאים לאלה שעל המודל שהגיע
+  if (typeof model.geometryHash !== 'string' || model.geometryHash.length !== 64 ||
+      typeof model.contentHash !== 'string' || model.contentHash.length !== 64) {
+    return { ok: false, error: 'missing-or-invalid-hashes' };
+  }
+  // First compare the envelope claims with the hashes carried by the model.
   if (envelope.geometryHash !== model.geometryHash || envelope.contentHash !== model.contentHash) {
-    return { ok: false, error: 'hash-mismatch' };
+    return { ok: false, error: 'envelope-hash-mismatch' };
   }
-  if (typeof model.geometryHash !== 'string' || model.geometryHash.length < 16 ||
-      typeof model.contentHash !== 'string' || model.contentHash.length < 16) {
-    return { ok: false, error: 'missing-hashes' };
+  // Then recompute both canonical fingerprints over the received payload.
+  let actualGeometryHash;
+  let actualContentHash;
+  try {
+    actualGeometryHash = geometryHashOf(model);
+    actualContentHash = contentHashOf(model);
+  } catch (error) {
+    return {
+      ok: false,
+      error: 'hash-verification-failed:' + (error && error.message ? error.message : String(error))
+    };
   }
-  // הקפאה מחדש — structured clone מפשיר; המודל שוב immutable בצד הצרכן
+  if (actualGeometryHash !== model.geometryHash || actualContentHash !== model.contentHash) {
+    return { ok: false, error: 'model-hash-mismatch' };
+  }
+  // structured clone מפשיר; המודל שוב immutable בצד הצרכן.
   deepFreeze(model);
   const lines = model.pages.reduce((a, p) => a + (p.lines ? p.lines.length : 0), 0);
   return {
@@ -25643,6 +25665,42 @@ function receivePageModel(envelope) {
 }
 
 module.exports = { TRANSPORT_VERSION, receivePageModel, deepFreeze };
+
+};
+__modules["src/engine/core/page-model-hashes.js"] = function (require, module, exports) {
+// src/engine/core/page-model-hashes.js — canonical PageModel hash contract (engine + UI receiver)
+'use strict';
+
+const { sha256Hex } = require('../assets/hash256');
+
+/** geometryHash — deterministic fingerprint of final geometry only (no text). */
+function geometryHashOf(model) {
+  const canon = model.pages.map(p => ({
+    i: p.index, t: p.type,
+    l: p.lines.map(l => l.projected === false ? '∅' : `${l.id}:${l.x},${l.y},${l.w},${l.h},${l.baselineY}:${(l.words || []).map(w => `${Math.round(w.x * 10) / 10}+${Math.round(w.w * 10) / 10}`).join(',')}`),
+    fn: p.footnotes.map(n => `${n.noteId}:${n.x},${n.y},${n.w},${n.h}`),
+    sn: p.sideNotes.map(s => `${s.noteId}:${s.x},${s.yTop},${s.heightPx}`),
+    d: (p.decorations || []).map(d => `${d.kind}:${d.x},${d.y},${d.w},${d.h}`)
+  }));
+  return sha256Hex(JSON.stringify(canon));
+}
+
+/** contentHash — final model text in reading order plus glyph-level typography data. */
+function contentHashOf(model) {
+  const canon = model.pages.map(p => ({
+    i: p.index,
+    l: p.lines.map(l => {
+      const text = (l.words || []).map(w => w.text).join('\u00A7');
+      // Keep the legacy canonical value exactly when no glyph sidecar is present.
+      return l.typography ? { text, typography: l.typography } : text;
+    }),
+    fn: p.footnotes.map(n => `${n.marker || ''}§${n.text}`),
+    sn: p.sideNotes.map(s => s.text)
+  }));
+  return sha256Hex(JSON.stringify(canon));
+}
+
+module.exports = { geometryHashOf, contentHashOf };
 
 };
 __modules["src/ui/caret-map.js"] = function (require, module, exports) {
