@@ -1,10 +1,10 @@
 {
   "STALE": true,
-  "note": "export-api.js was edited on branch engine/legacy-parity-preview-20261119 (S74 combined-marks fix, commit 03f91d68, plus test-registration commit f8ec3f1). The parts below reflect the PRE-FIX version and must not be used as source of truth. Re-run the split script to regenerate, or read the file directly from the preview branch.",
+  "note": "export-api.js was REVERTED on branch engine/legacy-parity-preview-20261119 (withdrawal of the S74 /W zero-advance wiring — commit f85ea9fa, package.json 16a4638). The parts below reflect the version WITH the withdrawn wiring and must not be used as source of truth. Re-run the split script to regenerate, or read the file directly from the preview branch.",
   "source": "red-build/src/engine/output/export-api.js",
   "branch": "engine/legacy-parity-preview-20261119",
-  "supersededByCommit": "03f91d6872115604fba63a458b0dc126ad805bc7",
-  "sha256": "PRE-FIX",
+  "supersededByCommit": "f85ea9fa9166822186b2d0f90ee7c1741f374786",
+  "sha256": "WITHDRAWN-WIRING",
   "totalChars": 45496,
   "parts": [
     { "file": "export-api.js.part-001-of-007.txt", "chars": 4526 },
