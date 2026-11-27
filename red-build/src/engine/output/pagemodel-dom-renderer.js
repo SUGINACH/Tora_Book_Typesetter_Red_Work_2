@@ -156,7 +156,12 @@ function renderModelDecoration(d, doc, diags) {
     el.style.borderTop = '0.75px solid #000';
     el.style.height = '0px';
   } else if (ink && ink.type === 'rect' && ink.color) {
-    el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;
+    // **W-7 (27.11, נמצא באימות החי):** ink.color הוא צף 0..1 (מוסכמת PDF —
+    // materialize כותב אותו כמו שהוא ל-pdfOps). CSS rgb() מפרש מספרים בסקלת
+    // 0..255 ⇒ ‏#F0F0F0 (0.941) עוגל ל-rgb(1,1,1) — כמעט-שחור. המרה לסקלת
+    // ה-CSS מיישרת את ה-DOM ל-PDF (תיקון סטיית צבע דומה לזו שתוקנה בשערים).
+    const c255 = (v) => Math.max(0, Math.min(255, Math.round(Number(v) * 255)));
+    el.style.backgroundColor = `rgb(${c255(ink.color[0])}, ${c255(ink.color[1])}, ${c255(ink.color[2])})`;
   } else if (d.kindStyle && d.kindStyle !== 'none') {
     el.dataset.inkMissing = '1';
     diags.push({ kind: 'pmr-decoration-ink-missing', ornId: d.ornId || null, slot: d.slot || null });

@@ -579,7 +579,9 @@ function renderDecorations(page, doc) {
       el.style.borderTop = '0.75px solid #000';
       el.style.height = '0px';
     } else if (ink && ink.type === 'rect' && ink.color) {
-      el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;
+      // **W-7 (27.11):** אותו תיקון סקלה (0..1 ⇒ 0..255) כמו ב-pagemodel-dom-renderer — האורקל והמוצר זהים.
+      const c255 = (v) => Math.max(0, Math.min(255, Math.round(Number(v) * 255)));
+      el.style.backgroundColor = `rgb(${c255(ink.color[0])}, ${c255(ink.color[1])}, ${c255(ink.color[2])})`;
     } else if (d.kindStyle && d.kindStyle !== 'none') {
       el.dataset.inkMissing = '1'; // הצהרה בלי דיו פתיר — גלוי, לא ריק בשקט
     }
