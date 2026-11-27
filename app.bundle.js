@@ -516,7 +516,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-27-w5-w7'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-27-w5-w7b'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -10865,7 +10865,12 @@ function renderModelDecoration(d, doc, diags) {
     el.style.borderTop = '0.75px solid #000';
     el.style.height = '0px';
   } else if (ink && ink.type === 'rect' && ink.color) {
-    el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;
+    // **W-7 (27.11, נמצא באימות החי):** ink.color הוא צף 0..1 (מוסכמת PDF —
+    // materialize כותב אותו כמו שהוא ל-pdfOps). CSS rgb() מפרש מספרים בסקלת
+    // 0..255 ⇒ ‏#F0F0F0 (0.941) עוגל ל-rgb(1,1,1) — כמעט-שחור. המרה לסקלת
+    // ה-CSS מיישרת את ה-DOM ל-PDF (תיקון סטיית צבע דומה לזו שתוקנה בשערים).
+    const c255 = (v) => Math.max(0, Math.min(255, Math.round(Number(v) * 255)));
+    el.style.backgroundColor = `rgb(${c255(ink.color[0])}, ${c255(ink.color[1])}, ${c255(ink.color[2])})`;
   } else if (d.kindStyle && d.kindStyle !== 'none') {
     el.dataset.inkMissing = '1';
     diags.push({ kind: 'pmr-decoration-ink-missing', ornId: d.ornId || null, slot: d.slot || null });
@@ -14795,7 +14800,9 @@ function renderDecorations(page, doc) {
       el.style.borderTop = '0.75px solid #000';
       el.style.height = '0px';
     } else if (ink && ink.type === 'rect' && ink.color) {
-      el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;
+      // **W-7 (27.11):** אותו תיקון סקלה (0..1 ⇒ 0..255) כמו ב-pagemodel-dom-renderer — האורקל והמוצר זהים.
+      const c255 = (v) => Math.max(0, Math.min(255, Math.round(Number(v) * 255)));
+      el.style.backgroundColor = `rgb(${c255(ink.color[0])}, ${c255(ink.color[1])}, ${c255(ink.color[2])})`;
     } else if (d.kindStyle && d.kindStyle !== 'none') {
       el.dataset.inkMissing = '1'; // הצהרה בלי דיו פתיר — גלוי, לא ריק בשקט
     }

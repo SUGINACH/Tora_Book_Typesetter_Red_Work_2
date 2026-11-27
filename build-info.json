@@ -1,8 +1,8 @@
 {
   "profile": "unified",
   "branch": "fix/pdf-header-baseline-20261127",
-  "commit": "b3d6eae",
-  "builtAt": "2026-11-27T13:10:00Z",
+  "commit": "bd8fa9d",
+  "builtAt": "2026-11-27T13:40:00Z",
   "mode": "manual-gh-pages-deploy-no-workflows",
-  "note": "פריסה ידנית (W-5: נתיב-אחד-לכל-קלט בייבוא — sanitize תרגום/ברירת-מחדל לערכי enum בלתי-חוקיים, F-J1..F-J4; W-7: סורק מפתחות-רפאים שגרתי + תיקון שני רפאים אמיתיים — הקו המפריד האמיתי כעת נשלט מ-header-separator-line הרשום; ASSET_VERSION 2026-11-27-w5-w7)"
+  "note": "פריסה ידנית (W-5+W-7 + תיקון סקאלת צבע עיטורי rect ב-DOM: 0..1⇒0..255 — קו המפריד ומסגרות השערים כעת בהירים בדפדפן כמו ב-PDF; ASSET_VERSION 2026-11-27-w5-w7b)"
 }
