@@ -9,7 +9,8 @@
 //  5. פריט/asset חסר מייצר diagnostic גלוי (dataset + onDiagnostic), לא היעלמות.
 //  6. פרופיל unified ללא מודל = שגיאה מפורשת וגלויה (אין נפילה שקטה לרנדרר הישן).
 //  7. וירטואליזציה תקינה גם במסמך ארוך (placeholders מ-geometry של המודל).
-//  8. פרופיל legacy לא נפגע (הרנדרר הישן ממשיך לעבוד — תקופת המעבר).
+//  8. **W-2 (השלמת כריתת 9c.4, 27.11):** אין עוד פרופיל legacy בתצוגה — בלי מודל
+//     = שגיאה מפורשת גם אם התבקש 'legacy'; renderPage נותר אורקל בדיקות בלבד.
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -411,7 +412,7 @@ describe('S8D-4 פרוסה 3 — דיאגנוסטיקה גלויה לפריט/as
 });
 
 // =====================================================================
-describe('S8D-5 פרוסה 3 — פרופילים בתצוגה: unified מהמודל; legacy לא נפגע; חסר-מודל = שגיאה מפורשת', () => {
+describe('S8D-5 פרוסה 3 — תצוגה מה-PageModel בלבד (W-2: אין עוד פרופילים); חסר-מודל = שגיאה מפורשת', () => {
   const { buildPreviewTab } = require('../../src/ui/preview-tab');
 
   function bootPreview() {
@@ -445,17 +446,18 @@ describe('S8D-5 פרוסה 3 — פרופילים בתצוגה: unified מהמו
     assertEq(errEl.length, 1, 'הודעת השגיאה גלויה בקנבס');
   });
 
-  it('legacy — הרנדרר הישן ממשיך לעבוד (תקופת המעבר; בלי מודל ובלי שינוי)', () => {
+  it('W-2 (השלמת 9c.4): אין פרופיל legacy — בלי מודל = שגיאה מפורשת גם אם התבקש legacy', () => {
     const { r, S } = buildRich();
-    const { tab } = bootPreview();
+    const { tab, errs } = bootPreview();
     tab.setResult(r, S, { pageModel: null, profile: 'legacy' });
-    const pages = collectByClass(tab.root, 'page');
-    assertEq(pages.length, r.pages.length, 'כל עמודי התוצאה ברנדרר הישן');
-    assertEq(collectByClass(tab.root, 'pmr-page').length, 0, 'המקרין החדש אינו מעורב');
-    // renderPage עדיין עובד ישירות על עמודי התוכנית
+    assert(errs.length === 1 && /PageModel/.test(errs[0]), 'הודעת שגיאה מפורשת גם כשהתבקש פרופיל מורשת: ' + errs[0]);
+    assertEq(collectByClass(tab.root, 'page').length, 0, 'אף עמוד לא רונדר — הרנדרר הישן הוסר מהתצוגה');
+    assertEq(collectByClass(tab.root, 'pmr-page').length, 0, 'המקרין החדש אינו מעורב (אין מודל)');
+    // renderPage עדיין עובד ישירות על עמודי התוכנית — אורקל הבדיקות בלבד
+    // (W-2: תפקיד אמת של dom-renderer), לא נתיב מוצר.
     const doc2 = makeDoc();
     const el = renderPage(r.pages[r.pages.length - 1], S, doc2);
-    assert(String(el.className).includes('page'), 'renderPage הישן תקין');
+    assert(String(el.className).includes('page'), 'renderPage (אורקל) תקין');
   });
 
   it('וירטואליזציה במסמך ארוך: placeholders במידות geometry של המודל + חלון חי (§2.6-7)', () => {

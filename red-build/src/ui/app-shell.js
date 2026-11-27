@@ -709,7 +709,9 @@ function createApp(doc, opts = {}) {
       status.setNotice('קיימים שינויים שלא הוחלו — הפעילו עימוד (⚡) לפני ייצוא');
       return { ok: false, kind, reason: 'dirty' };
     }
-    const { exportHtml, exportHtmlFromModel, exportProjectZip } = require('../engine/output/export-api');
+    // **W-2 (השלמת 9c.4):** exportHtml של המורשת הוסר מה-destructure — ה-HTML
+    // נוצר מה-PageModel בלבד (exportHtmlFromModel).
+    const { exportHtmlFromModel, exportProjectZip } = require('../engine/output/export-api');
     try {
       if (kind === 'html') {
         const fontCss = (typeof opts.getExportFontCss === 'function' && opts.getExportFontCss()) || '';
@@ -779,11 +781,10 @@ function createApp(doc, opts = {}) {
   }
 
 
-  /** **9c.3:** מערך העמודים הקנוני של התוצאה הנוכחית — לפי הפרופיל:
-   * unified ⇒ עמודי ה-PageModel בלבד (מקור האמת לגיאומטריה ולתוכן);
-   * legacy ⇒ result.pages (ענף 9c.4-marker — עד הסרת המנוע). כל צרכן
-   * ה-UI (מחוונים, מפת שבירות, סמן↔עמוד) נגזר מכאן — אין תלות סמויה
-   * ב-result.pages כשהפרופיל המאוחד פעיל. */
+  /** **9c.3 + W-2 (השלמת 9c.4):** מערך העמודים הקנוני של התוצאה הנוכחית —
+   * עמודי ה-PageModel בלבד (מקור האמת לגיאומטריה ולתוכן); אין עוד פרופיל
+   * legacy. כל צרכן ה-UI (מחוונים, מפת שבירות, סמן↔עמוד) נגזר מכאן — אין
+   * תלות סמויה ב-result.pages. */
   function canonicalPages() {
     if (engineProfile === 'unified' && pageModelObj && Array.isArray(pageModelObj.pages)) return pageModelObj.pages;
     return result ? result.pages : [];
@@ -904,8 +905,9 @@ function createApp(doc, opts = {}) {
     const ledgerSlice = (result.ledger.issues || []).filter(rec => rec.page === pageIndex || String(rec.target || '').includes(`p${pageIndex}`));
     const traceSlice = (result.trace.events || []).filter(ev => ev.pageIndex === pageIndex);
     const findingsSlice = (result.report.findings || []).filter(f => Number(f.page) === pageIndex);
-    // **9c.3:** בפרופיל המאוחד הגיאומטריה והתוכן של העמוד מה-PageModel — מקור
-    // האמת. עמודי התוצאה הגולמיים אינם נצרכים כאן עוד (המורשת ממשיך כמקודם).
+    // **9c.3 + W-2 (השלמת 9c.4):** בפרופיל המאוחד הגיאומטריה והתוכן של העמוד
+    // מה-PageModel — מקור האמת. ענף התוצאה הגולמית שלהלן הוא אבחון הגנתי
+    // בלבד (תוצאה ללא מודל לא אמורה להיווצר במנוע היחיד) — לא רנדרר.
     if (engineProfile === 'unified' && pageModelObj && Array.isArray(pageModelObj.pages)) {
       const mp = pageModelObj.pages.find(p => p.index === pageIndex);
       if (!mp) return { error: `עמוד ${pageIndex} לא נמצא ב-PageModel` };

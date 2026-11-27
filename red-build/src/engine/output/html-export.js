@@ -61,9 +61,14 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
    "הקדמה" נדבקת לקצה הימני — אסימטריה 494px). :not(.band) מחזיר את
    המרכוז; רינדור ה-DOM גם קובע text-align-last:auto ישירות ב-mkLine. */
 .band{text-align-last:auto}
-.running-head{display:flex;width:100%}
-.head--sep-gray{border-bottom:1px solid #999}
-.head--sep-black{border-bottom:1.5px solid #000}
+/* **W-2 (השלמת כריתת 9c.4, 27.11 — F-3.1/F-3.4):** כללי ההקרנה של ראנדרר
+   המורשת הוסרו מכאן (.running-head{display:flex} + .head--sep-gray/black).
+   מקור הקו המפריד האמיתי בנתיב המאוחד הוא עיטור hdr-rule מ-gate-design
+   (נצבע ב-PageModel — ב-DOM החי וב-PDF כאחד); מיכל הכותרת של המקרין
+   (pagemodel-dom-renderer) נושא position/left/width/height inline וסלוטיו
+   אבסולוטיים — ה-flex לא פעל מעולם בנתיב זה. class ה-head--sep-* נשאר
+   על האלמנט כסמנטיקה חיה בלבד (F-3.2) — בלי כלל CSS, כדי שתיקון שם
+   המפתח לא יצייר קו-שני פנטום בתחתית המיכל. */
 .footnotes{position:absolute;bottom:8px;left:12px;right:12px;border-top:1px solid transparent;font-size:.8em}
 .footnotes--continuous{border-top:none}
 .fn-rule--regular{border-top:1px solid #000;height:0}

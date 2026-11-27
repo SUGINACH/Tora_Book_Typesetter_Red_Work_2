@@ -1,6 +1,7 @@
 // tests/e2e/s9c-dom-preview.test.js — שלב 9c פרוסה 9c.3: התצוגה (DOM) מה-PageModel
-// בלבד בפרופיל המאוחד — אין נפילה לרנדרר הישן, חסר-מודל = שגיאת פרופיל מפורשת,
-// ונתיב המורשת מסומן ותחום ל-9c.4 (§12 בהוראת 9b).
+// בלבד בפרופיל המאוחד — אין נפילה לרנדרר הישן, חסר-מודל = שגיאת פרופיל מפורשת.
+// **W-2 (השלמת כריתת 9c.4, 27.11):** ענף המורשת בתצוגה הוסר כליל — אין עוד
+// פרופילים ואין רנדרר שני; הבדיקות ננעלות על חוזה מנוע-היחיד.
 'use strict';
 
 const path = require('path');
@@ -144,19 +145,49 @@ describe('s9c-dom-preview — התצוגה מה-PageModel בלבד (9c.3)', () =
     assertEq(pages.length, r.pages.length, 'המנוע המאוחד מציג את כל העמודים');
   });
 
-  it('מקור preview-tab: הנתיב המאוחד לפני המורשת; renderPage מסומן 9c.4-marker', () => {
+  it('מקור preview-tab: המקרין מה-PageModel הוא הנתיב היחיד (W-2 — השלמת כריתת 9c.4)', () => {
     const src = fs.readFileSync(path.join(RB, 'src/ui/preview-tab.js'), 'utf8');
-    assert(src.includes('9c.4-marker'), 'סמן נתיב המורשת קיים');
-    assert(src.includes('renderModelPage(page, virtual.settings, doc'), 'הנתיב המאוחד מהמודל');
+    assert(src.includes('renderModelPage(page, virtual.settings, doc'), 'הרינדור מהמודל בלבד');
     assert(src.includes('preview-profile-error'), 'שגיאת פרופיל מפורשת קיימת');
-    const unifiedIdx = src.indexOf('renderModelPage(page');
-    const legacyIdx = src.indexOf(': renderPage(page, virtual.settings, doc)');
-    assert(unifiedIdx >= 0 && legacyIdx > unifiedIdx, 'המורשת אחרי המאוחד (ענף אחר)');
-    // **9c.3:** אין עוד צריכת result.pages מחוץ לענף המורשת — המחוונים,
-    // הגיליונות והניווט נגזרים מ-virtual.pages (המקור הקנוני לפי הפרופיל).
+    // **W-2 (השלמת 9c.4, 27.11):** ענף המורשת הוסר כליל — לא סמן, לא
+    // רנדרר שני, לא צריכת result.pages בשום צורה; המחוונים, הגיליונות
+    // והניווט נגזרים מ-virtual.pages (עמודי המודל) בלבד.
+    assert(!src.includes("require('../engine/output/dom-renderer')"), 'אין יבוא של ראנדרר המורשת');
+    assert(!/[^A-Za-z]renderPage\(/.test(src), 'אין קריאת renderPage — הרנדרר הוסר');
+    assert(!src.includes('9c.4-marker'), 'סמן נתיב המורשת הוסר');
     assert(!/lastResult\s*\.\s*pages/.test(src), 'אין קריאת lastResult.pages בתצוגה');
-    const legacyBranch = src.slice(src.indexOf('const pageSource'));
-    assert(legacyBranch.includes('(serializedResult.pages || [])'), 'עמודי התוצאה בענף המורשת בלבד');
+    assert(!/serializedResult\s*\.\s*pages/.test(src), 'אין קריאת result.pages — המודל הוא המקור היחיד');
+    assert(!/\.template\b/.test(src), 'אין צריכת תבניות מורשת — geometry בלבד');
+  });
+
+  it('W-2 (F-3.2): class מיכל הכותרת משקף את header-separator-line — סמנטיקה חיה, בלי מפתח-רפאים', () => {
+    const S = getDefaultSettings();
+    assertEq(S['header-separator-line'], 'gray', 'ברירת המחדל ברישום: gray');
+    const body = 'פסקה עם מילים רבות למילוי עמודים. ' + 'מילים למילוי הטור ולבדיקה '.repeat(12) + '\n\n';
+    const longDoc = ['שם הספר - ספר בדיקה', '', 'כותרת 2 - פרק ראשון', body.repeat(6), 'כותרת 2 - פרק שני', body.repeat(6)].join('\n');
+    const r = typeset(longDoc, S, {});
+    const withHdr = r.pageModel.pages.filter(p => p.header && (p.header.slots || []).length);
+    assert(withHdr.length > 0, 'יש עמודים עם כותרת עליונה');
+    const firstClass = (pv) => {
+      const els = pv.root.querySelectorAll('.running-head');
+      return els.length ? String(els[0]._class || els[0].className || '') : '';
+    };
+    // ברירת המחדל gray ⇒ head--sep-gray (לפני W-2 היה 'none' ממפתח-הרפאים header-separator-style — F-3.1)
+    const pv1 = buildPreviewTab(makeDoc(), {});
+    pv1.setResult(serializeTypesetResult(r), S, { pageModel: r.pageModel, profile: 'unified' });
+    assert(firstClass(pv1).includes('head--sep-gray'), 'class משקף את ברירת המחדל gray: ' + firstClass(pv1));
+    // שינוי ההגדרה משנה את ה-class — הסמנטיקה חיה (F-3.2)
+    const pv2 = buildPreviewTab(makeDoc(), {});
+    pv2.setResult(serializeTypesetResult(r), { ...S, 'header-separator-line': 'black' }, { pageModel: r.pageModel, profile: 'unified' });
+    assert(firstClass(pv2).includes('head--sep-black'), 'class משקף black: ' + firstClass(pv2));
+    const pv3 = buildPreviewTab(makeDoc(), {});
+    pv3.setResult(serializeTypesetResult(r), { ...S, 'header-separator-line': 'none' }, { pageModel: r.pageModel, profile: 'unified' });
+    assert(firstClass(pv3).includes('head--sep-none'), 'class משקף none: ' + firstClass(pv3));
+    // ואין ל-class הזה כלל CSS משלו — הקו האמיתי מעיטור hdr-rule (F-3.1: מלכודת הקו-השני הוסרה)
+    const { BASE_CSS } = require('../../src/engine/output/html-export');
+    const cssNoComments = String(BASE_CSS).replace(/\/\*[\s\S]*?\*\//g, ''); // ההערות אינן כללים
+    assert(!/\.head--sep-[a-z]+\s*\{/.test(cssNoComments), 'אין כלל CSS ל-head--sep-* — אין קו-שני פנטום');
+    assert(!/\.running-head\s*\{/.test(cssNoComments), 'אין כלל CSS ל-running-head (מיכל המקרין סגור ב-inline styles)');
   });
 
   it('בדיקה שלילית (§4.4): result.pages מוחלף בנתון מכשיל — כל פעולות התצוגה והניווט עובדות מהמודל', () => {

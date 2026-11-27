@@ -138,12 +138,21 @@ describe('e2e-pipeline', () => {
     }
   });
 
-  it('settings changes flow through: column width change alters layout hash', () => {
+  it('settings changes flow through: body size alters layout hash; grid-* is geometry-neutral by contract (W-2)', () => {
     const base = getDefaultSettings();
-    const alt = { ...base, 'grid-col-width-pct': 34 };
+    // **W-2 (27.11) — תיקון בדיקה מיושנת (כשל קיים-מקדים, הוכח על 197225d/d6b8380):**
+    // ההנחה הישנה דרשה ש-grid-col-width-pct ישנה את הפריסה — זהו עולם
+    // הגריד-הגנרי שהוסר: מאז חוזה 9C3 תבנית העמוד נבנית מהחוזה המכויל
+    // core/imud-geometry.js בלבד, והחוזה אוסר מפורשות גריד מאחוזים
+    // (audits/ENGINE_CONTRACT_9C3.md — "חור מרכזי של 134.9px"). לכן:
+    // (א) המנגנון החי מוכח בהגדרה שהמנוע צורך באמת — body-font-size-pt;
+    // (ב) ניטרליות ה-grid מנועלת כאן במפורש כדי שאיש לא יחזיר את הגריד הגנרי
+    //     בשקט (שינוי grid-col-width-pct ⇒ אותה גאומטריה בדיוק).
     const h1 = typeset(FIXTURE, base).layoutHash;
-    const h2 = typeset(FIXTURE, alt).layoutHash;
-    assert(h1 !== h2, 'narrower columns must reflow (registry-driven mechanism live)');
+    const hFont = typeset(FIXTURE, { ...base, 'body-font-size-pt': Number(base['body-font-size-pt']) * 1.3 }).layoutHash;
+    assert(h1 !== hFont, 'body-font-size-pt must reflow (registry-driven mechanism live)');
+    const hGrid = typeset(FIXTURE, { ...base, 'grid-col-width-pct': 34 }).layoutHash;
+    assertEq(hGrid, h1, 'grid-col-width-pct is geometry-neutral — columns come from the 9C3 imud-geometry contract');
   });
 
   it('footnotes enabled/disabled both preserve content', () => {

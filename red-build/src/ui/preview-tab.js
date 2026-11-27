@@ -3,13 +3,13 @@
 
 /**
  * קנבס כהה מאחורי העמודים (S10.1-8 — ריהוט מקצועי). העמודים עצמם נבנים
- * ע"י dom-renderer.renderPage — מקור יחיד; ה־UI רק עוטף (כפתור ⏬ לכל עמוד —
- * בקשת V21; highlightIssue — כלל 2 Working_rules).
+ * ע"י המקרין הטהור מה-PageModel — מקור יחיד; ה־UI רק עוטף (כפתור ⏬ לכל
+ * עמוד — בקשת V21; highlightIssue — כלל 2 Working_rules).
+ * **W-2 (השלמת כריתת 9c.4, 27.11):** ענף renderPage של המורשת הוסר —
+ * המנוע המאוחד הוא היחיד מאז 2ae45b9/6cc5f76; אין פרופיל legacy ואין רנדרר
+ * שני. חסר-מודל = שגיאת פרופיל מפורשת (ב-setResult) — לא נפילה שקטה.
  */
 
-const { renderPage } = require('../engine/output/dom-renderer');
-// **שלב 8 פרוסה 3 (§2):** המקרין הטהור מה-PageModel — פרופיל unified בלבד.
-// פרופיל legacy ממשיך להשתמש ב-renderPage הישן (מצב תאימות מפורש עד שלב 9).
 const { renderModelPage } = require('../engine/output/pagemodel-dom-renderer');
 
 /** פענוח מספר עברי (גימטריה) — עבור "קפיצה לפי מספר עברי". */
@@ -129,9 +129,9 @@ function buildPreviewTab(doc, opts) {
 
   let zoom = 100;
   let pageEls = new Map(); // pageIndex → element (במצב וירטואלי: רק החלון החי)
-  // **9c.3:** אין עוד lastResult — מקור העמודים הקנוני לשני הפרופילים הוא
-  // virtual.pages (unified = עמודי PageModel; legacy = result.pages). כל
-  // הניווט/המחוונים/מפת הגיליונות נגזרים ממנו — אין תלות סמויה ב-result.pages.
+  // **9c.3 + W-2:** אין עוד lastResult — מקור העמודים הקנוני הוא virtual.pages
+  // (עמודי ה-PageModel בלבד — אין עוד פרופילים). כל הניווט/המחוונים/מפת
+  // הגיליונות נגזרים ממנו — אין תלות סמויה ב-result.pages.
   let lastScrollTarget = null;
 
   // ---- D-84: רינדור מחלונות (virtualization) לספרים ארוכים ----
@@ -142,27 +142,21 @@ function buildPreviewTab(doc, opts) {
   const VIRTUAL_THRESHOLD = 60;
   const VIRTUAL_WINDOW = 4; // ריפוד משני צידי הטווח הנראה
   const virtual = { on: false, pages: [], settings: null, rendered: new Set(), phW: 794, phH: 1123, tocLinks: [] };
-  // **פרוסה 3 (§2.3 — הפרדת פרופילים מפורשת):** legacy = הרנדרר הישן (עד
-  // שלב 9); unified = המקרין הטהור מה-PageModel בלבד. בפרופיל unified היעדר
-  // מודל הוא **שגיאה מפורשת** — לא נפילה שקטה לרנדרר הישן (§2.3).
-  let profile = 'legacy';
+  // **פרוסה 3 (§2.3) + W-2 (השלמת 9c.4):** המקרין הטהור מה-PageModel הוא
+  // הנתיב היחיד — היעדר מודל הוא **שגיאה מפורשת** — לא נפילה שקטה (§2.3).
   let profileError = null;
   let scrollRaf = null;
 
   /** בניית אלמנט עמוד אחד (מקור יחיד לרינדור מלא ולווירטואלי) — כולל ⏬ ולחיצה.
-   * פרופיל unified: העמוד הוא עמוד PageModel והרינדור טהור מהמודל (§2.2).
-   * **9c.3:** מלבני קישורי ה-TOC מועברים למקרין (§4.3 — TOC click). */
+   * העמוד הוא עמוד PageModel והרינדור טהור מהמודל (§2.2).
+   * **9c.3:** מלבני קישורי ה-TOC מועברים למקרין (§4.3 — TOC click).
+   * **W-2 (השלמת 9c.4):** ענף ה-renderPage של המורשת הוסר — המקרין מה-
+   * PageModel הוא הנתיב היחיד; result.pages אינו נצרך עוד בתצוגה. */
   function buildPageEl(page) {
-    // **9c.3:** הנתיב המאוחד — המקרין הטהור מה-PageModel בלבד (חסר-מודל =
-    // שגיאת פרופיל מפורשת ב-setResult, לעיל). נתיב ה-renderPage הישן הוא
-    // **9c.4-marker** — צריכת result.pages הגולמיים של פרופיל המורשת בלבד;
-    // יוסר עם הסרת המנוע ב-9c.4 (אחרי הוכחת DOM parity — s8d).
-    const el = profile === 'unified'
-      ? renderModelPage(page, virtual.settings, doc, {
-          tocLinks: virtual.tocLinks,
-          onDiagnostic: (d) => { if (opts.onModelDiagnostic) opts.onModelDiagnostic(page.index, d); }
-        })
-      : renderPage(page, virtual.settings, doc);
+    const el = renderModelPage(page, virtual.settings, doc, {
+      tocLinks: virtual.tocLinks,
+      onDiagnostic: (d) => { if (opts.onModelDiagnostic) opts.onModelDiagnostic(page.index, d); }
+    });
     el.classList.add('preview-page');
     // כפתור דיבאג פר־עמוד (V21): גיאומטריה + פרוסת ledger — בלי לגעת ברינדור
     const dbg = doc.createElement('button');
@@ -190,10 +184,11 @@ function buildPreviewTab(doc, opts) {
     ph.setAttribute('data-page-index', String(i));
     ph.setAttribute('aria-hidden', 'true');
     const page = virtual.pages[i];
-    // **פרוסה 3 (§2.5):** מידות ה-placeholder מה-PageModel בפרופיל המאוחד.
+    // **פרוסה 3 (§2.5) + W-2:** מידות ה-placeholder מה-PageModel — כל עמודי
+    // המודל נושאים geometry; נפילה לגודל ברירת-המחדל רק אם הוא חסר.
     const g = page && page.geometry;
-    const w = (g && g.width) || (page && page.template && page.template.width) || virtual.phW;
-    const h = (g && g.height) || (page && page.template && page.template.height) || virtual.phH;
+    const w = (g && g.width) || virtual.phW;
+    const h = (g && g.height) || virtual.phH;
     if (ph.style) { ph.style.width = `${w}px`; ph.style.height = `${h}px`; }
     return ph;
   }
@@ -291,7 +286,8 @@ function buildPreviewTab(doc, opts) {
     let x = 0;
     for (let i = 0; i < virtual.pages.length; i++) {
       const pg = virtual.pages[i];
-      const w = (pg && pg.template && Number(pg.template.width) > 0) ? Number(pg.template.width) : virtual.phW;
+      // **W-2 (השלמת 9c.4):** עמודי המודל בלבד — geometry (אין עוד template).
+      const w = (pg && pg.geometry && Number(pg.geometry.width) > 0) ? Number(pg.geometry.width) : virtual.phW;
       out.push([x, x + w]);
       x += w + H_GAP;
     }
@@ -465,13 +461,13 @@ function buildPreviewTab(doc, opts) {
     const anchor = keepView ? currentScrollAnchor() : null;
     canvas.textContent = '';
     pageEls = new Map();
-    // **פרוסה 3 (§2.3):** קביעת הפרופיל — מפורשת מהקריאה; ברירת המחדל
-    // לתוצאות ללא סימון היא legacy (מצב המעבר). בפרופיל unified חסר-מודל
-    // = שגיאה מפורשת וגלויה — שום נפילה שקטה לרנדרר הישן (§2.3).
-    profile = (options && options.profile) || (options && options.pageModel ? 'unified' : 'unified');
+    // **פרוסה 3 (§2.3) + W-2 (השלמת 9c.4):** אין עוד פרופילים — המקרין מה-
+    // PageModel הוא הנתיב היחיד. חסר-מודל = שגיאה מפורשת וגלויה — שום
+    // נפילה שקטה לרנדרר הישן (§2.3). options.profile נשמר לתאימות קריאה
+    // בלבד (app-shell מעביר 'unified') ואינו משנה התנהגות.
     const modelPages = (options && options.pageModel && Array.isArray(options.pageModel.pages)) ? options.pageModel.pages : null;
     profileError = null;
-    if (profile === 'unified' && !modelPages) {
+    if (!modelPages) {
       profileError = 'פרופיל מאוחד ללא PageModel — שגיאה מפורשת (אין נפילה שקטה לרנדרר הישן)';
       if (opts.onProfileError) opts.onProfileError(profileError);
       const errEl = doc.createElement('div');
@@ -484,11 +480,12 @@ function buildPreviewTab(doc, opts) {
       pageIndicator.textContent = 'שגיאת פרופיל — אין מודל עמוד';
       return;
     }
-    // **9c.3:** מקור העמודים הקנוני — unified: עמודי ה-PageModel בלבד;
-    // legacy: result.pages (ענף 9c.4-marker). מכאן ואילך הכל נגזר מ-virtual.pages.
-    const pageSource = profile === 'unified' ? modelPages : (serializedResult.pages || []);
+    // **9c.3 + W-2:** מקור העמודים הקנוני — עמודי ה-PageModel בלבד (ענף
+    // result.pages של המורשת הוסר בהשלמת 9c.4 — הפרמטר serializedResult
+    // נשמר לתאימות חתימה ואינו נקרא). מכאן ואילך הכל נגזר מ-virtual.pages.
+    const pageSource = modelPages;
     // **9c.3 (§4.3):** מלבני קישורי ה-TOC מהמודל — מועברים למקרין (קליק מסונכרן).
-    virtual.tocLinks = (profile === 'unified' && options.pageModel && options.pageModel.document && Array.isArray(options.pageModel.document.tocLinks))
+    virtual.tocLinks = (options && options.pageModel && options.pageModel.document && Array.isArray(options.pageModel.document.tocLinks))
       ? options.pageModel.document.tocLinks : [];
     virtual.on = Array.isArray(pageSource) && pageSource.length > VIRTUAL_THRESHOLD;
     virtual.settings = settings;
@@ -504,10 +501,10 @@ function buildPreviewTab(doc, opts) {
       }
     } else {
       // ספר ארוך — placeholders לכולם + חלון חי ראשוני (D-84)
-      // **פרוסה 3 (§2.5):** בפרופיל המאוחד המידות מ-geometry של המודל.
+      // **פרוסה 3 (§2.5) + W-2:** המידות מ-geometry של המודל (אין עוד תבניות מורשת).
       const p0 = virtual.pages[0] || {};
-      virtual.phW = (p0.geometry && p0.geometry.width) || (p0.template && p0.template.width) || 794;
-      virtual.phH = (p0.geometry && p0.geometry.height) || (p0.template && p0.template.height) || 1123;
+      virtual.phW = (p0.geometry && p0.geometry.width) || 794;
+      virtual.phH = (p0.geometry && p0.geometry.height) || 1123;
       for (let i = 0; i < virtual.pages.length; i++) {
         const ph = makePlaceholder(i);
         canvas.appendChild(ph);

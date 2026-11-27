@@ -154,16 +154,14 @@ describe('s9c-html-export — ייצוא HTML מה-PageModel בלבד (9c.2)', (
     }, 400));
   });
 
-  it('מקור app-shell: הנתיב המאוחד לפני נתיב המורשת; exportHtml במורשת בלבד (9c.4-marker)', () => {
+  it('מקור app-shell: מנוע יחיד — exportHtmlFromModel בלבד; אין נתיב מורשת (W-2 — השלמת 9c.4)', () => {
     const src = fs.readFileSync(path.join(RB, 'src/ui/app-shell.js'), 'utf8');
-    const unifiedBranch = src.indexOf('exportHtmlFromModel(pageModelObj');
-    const legacyMarker = src.indexOf('9c.2/9c.4-marker');
-    const legacyCall = src.indexOf('exportHtml(result, settings, doc');
-    assert(unifiedBranch >= 0, 'נתיב המאוחד קיים');
-    assert(legacyMarker >= 0, 'סמן נתיב המורשת קיים');
-    assert(legacyCall > legacyMarker, 'exportHtml הישן בנתיב המורשת בלבד');
-    assert(unifiedBranch < legacyMarker, 'הנתיב המאוחד נבדק ראשון — אין נפילה');
+    assert(src.includes('exportHtmlFromModel(pageModelObj'), 'נתיב המאוחד קיים');
     assert(src.includes("reason: 'no-page-model'"), 'חסר-מודל = סירוב מפורש');
+    // **W-2 (השלמת 9c.4, 27.11):** ענף המורשת הוסר מה-app-shell — אין סמן
+    // ואין קריאת exportHtml(result, …); ה-HTML נוצר מה-PageModel בלבד.
+    assert(!src.includes('exportHtml(result, settings, doc'), 'אין קריאת exportHtml של המורשת');
+    assert(!src.includes('9c.2/9c.4-marker'), 'סמן נתיב המורשת הוסר');
   });
 
   it('הוכחה שלילית נוספת: patch שזורק על projectDocument — HTML המאוחד עדיין נוצר', () => {

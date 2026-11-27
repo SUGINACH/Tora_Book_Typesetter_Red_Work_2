@@ -524,7 +524,12 @@ function renderModelPage(mp, settings, doc, opts = {}) {
   // (9) כותרת עליונה — סלוטים במיקומים סופיים מהמודל
   if (mp.header && (mp.header.slots || []).length) {
     const el = doc.createElement('div');
-    el.className = `running-head head--sep-${settings['header-separator-style'] || 'none'}`;
+    // **W-2 (F-3.1/F-3.2, 27.11):** המפתח האמיתי ברישום הוא header-separator-line
+    // (settings-registry:125; headers-builder:168) — לא header-separator-style
+    // (מפתח-רפאים שהחזיר תמיד 'none'). ה-class הוא סמנטיקה חיה לקוראי DOM בלבד:
+    // אין לו כלל CSS (הוסר מ-BASE_CSS באותו שינוי) — הקו עצמו מצויר מעיטור
+    // hdr-rule של gate-design, בדיוק כמו ב-PDF.
+    el.className = `running-head head--sep-${settings['header-separator-line'] || 'none'}`;
     el.style.position = 'absolute';
     el.style.top = `${px2(mp.header.y)}px`;
     el.style.left = '0';
