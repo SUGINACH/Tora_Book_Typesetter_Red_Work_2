@@ -12,6 +12,11 @@
  * Red_Old.
  */
 
+const HEADING_MODES = {
+  0: 'new_page_1col', 1: 'sub_shaar', 2: 'new_page_1col', 3: 'span_1col',
+  4: 'inline_2col', 5: 'inline_2col', 6: 'inline_2col', 7: 'side_note'
+};
+
 function stripEditorialNotes(text) {
   return String(text || '')
     .replace(/##[\s\S]*?##/g, '')
