@@ -255,6 +255,10 @@ function buildPageModel(result, opts = {}) {
           slots: (pp.header.slots || []).map(s2 => ({
             pos: s2.pos, align: s2.align || null, text: s2.text,
             x: r2(s2.x), w: r2(s2.w), sizePt: s2.sizePt != null ? s2.sizePt : null,
+            // **RC-HDR-20261127:** בסיס פר-סלוט מהחותמת (geo.y+ascent — כמו ה-DOM)
+            // חייב לשרוד את הסריאליזציה; עד כאן נוקה כאן ברשימה הלבנה וה-PDF
+            // נפל לבסיס ה-header הכללי.
+            ...(s2.baselineY != null ? { baselineY: r2(s2.baselineY) } : {}),
             ...(s2.fontKey ? { fontKey: s2.fontKey } : {}),
             ...(s2.color ? { color: s2.color } : {})
           }))

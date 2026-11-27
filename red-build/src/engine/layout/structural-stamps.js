@@ -319,14 +319,26 @@ function stampHeaderSlots(page, settings, measure) {
     // גם לרינדור, והכותרת הודפסה זעירה.
     const slotSize = Number(s.sizePt) > 0 ? Number(s.sizePt) : 9;
     const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, slotSize)));
-    return { pos: s.pos, align: s.align, text: t, w, sizePt: slotSize, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
+    // **RC-HDR-20261127 (פגם כותרת ב-PDF — ״כותרת מעל קו המפריד״):** בסיס
+    // פר-סלוט = geo.y + ascent(גופן הסלוט)×sizePx — בדיוק המיקום שה-DOM מצייר
+    // (span top=geo.y; baseline=top+ascent; נמדד בחי: Livorna 15pt ⇒ 89.2+15=104.2px,
+    // מתחת לקו המפריד ב-82.7px כמו העיצוב המאושר). ascentEm מפרופיל hhea
+    // של גופן הסלוט; נפילה מכוילת 0.75em בלבד כשאין מדידת משפחה.
+    const sizePx = slotSize * (96 / 72);
+    let ascentEm = 0.75;
+    try {
+      if (sMeasure && typeof sMeasure.ascentEm === 'function') {
+        const v = Number(sMeasure.ascentEm());
+        if (Number.isFinite(v) && v > 0) ascentEm = v;
+      }
+    } catch (e) { /* נפילה מכוילת 0.75em */ }
+    return { pos: s.pos, align: s.align, text: t, w, sizePt: slotSize, baselineY: geo.y + ascentEm * sizePx, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
   });
-  // **Iteration-003 (legacy parity):** בסיס הכותרת המכויל (GEO.HEADER_BASELINE
-  // — כמו legacy-projector) בפרופיל IMUD; בלי זה הנוסחה הגנרית הדפיסה
-  // את הכותרת ~20pt נמוך מדי.
-  const imudHdr = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
-  const { GEO } = require('../core/imud-geometry');
-  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y, ...(imudHdr ? { baselineY: GEO.HEADER_BASELINE } : {}), slots: stamped };
+  // **RC-HDR-20261127:** הדריסה הלגסית baselineY=GEO.HEADER_BASELINE (71.9px —
+  // קבוע legacy-projector מעידן ה-parity שבוטל ב-D-100) הציבה את הכותרת
+  // מעל קו המפריד ב-PDF, בסתירה ל-DOM ולעיצוב המאושר (מתחת לקו).
+  // הוסרה — מקור הסמכות היחיד לבסיס הוא baselineY פר-סלוט מחושב לעיל.
+  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y, slots: stamped };
   return true;
 }
 
