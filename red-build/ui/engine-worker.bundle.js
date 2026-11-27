@@ -1020,9 +1020,15 @@ function offsetInSpans(at, spans) {
  */
 function typeset(rawText, settingsIn, env = {}) {
   // **S4.9 (פרופיל העימוד המקורי — הוסר):** המנוע היחיד כעת הוא המנוע המאוחד.
-  // נתיב המורשת (legacy-imud-flow) וכל דגלי הכניסה הכפולה (RED_UNIFIED_IMUD,
-  // _engine-force-unified, _layout-profile='imud' + _imudRaw) הוסרו.
-  // ה-unified engine הוא מקור האמת הבלעדי לגיאומטריה, טיפוגרפיה ופגינציה.
+  // נתיב המורשת (legacy-imud-flow / legacy-projector / legacy-ornaments) ודגלי
+  // הכניסה הכפולה RED_UNIFIED_IMUD ו-_engine-force-unified — הוסרו מהקוד.
+  // **אין למחוק את `_layout-profile='imud'` / `_imudRaw` (F-2.1, audits/SPLIT/2.md):**
+  // אלה אינם דגלי בחירת-מנוע אלא נתוני מקור IMUD גולמיים ש-legacy-settings-map
+  // (::importImudSettings, שורות 496-497) מציב בקצה הקלט; הם נצרכים כתנאי תרגום
+  // בלבד ב-structural-stamps (עוגן RC-HDR2), folio, toc-builder, shaar-content/
+  // shaar-pages, gate-design, balancing, side-notes, notes-model, export-api —
+  // התרגום מסתיים במודל המאוחד. ה-unified engine הוא מקור האמת הבלעדי
+  // לגיאומטריה, טיפוגרפיה ופגינציה.
   const settings = derivePlacementFlags({ ...getDefaultSettings(), ...(settingsIn || {}) });
   // **S10 (REQ-UI-03):** מזליף התקדמות — null כשלא סופק (אפס תקורה במסלול הרגיל).
   const onProgress = typeof env.onProgress === 'function' ? env.onProgress : null;
