@@ -1,7 +1,7 @@
 // src/engine/parser/block-tokenizer.js — H0–H7 / P / endnote / editorial tokens (REQ-PAR-03/04, CP1)
 'use strict';
 
-const crypto = require('crypto');
+const { sha256OfJsonArrayElements } = require('../core/canonical-hash');
 const { HEADING_RE, ENDNOTE_CLASS_RE, DEFAULT_ENDNOTE_PREFIX, compileEndnotePrefix } = require('./dfa-lexer');
 const { scanBrackets } = require('./bracket-scanner');
 
@@ -384,14 +384,19 @@ function tokenizeDetailed(bodyLines, opts = {}) {
  * היא טקסט שמופיע בפלט (כותרת עמודי ההערות); השמטתה אפשרה בעבר לתוכן
  * שסווג בטעות כהוראה להיעלם בלי שה-hash יתריע. */
 function contentHash(tokens) {
-  const stable = JSON.stringify(tokens.flatMap(t => {
-    if (t.type === 'paragraph') return [['P', ...t.parts.map(p => p.kind === 'text' ? p.value : `⟦${t.notes[p.noteIndex]}⟧`), String(t.notes.length)]];
-    if (t.type === 'heading') return [['H', String(t.level), t.text]];
-    if (t.type === 'endnote') return [['EN', String(t.num || ''), t.text]];
-    if (t.type === 'endnote-class') return [['ENH', t.title]]; // directive — כותרתו תוכן מוצג (S4.5)
-    return [];
-  }));
-  return crypto.createHash('sha256').update(stable, 'utf8').digest('hex');
+  // **תיקון "Invalid string length" (מסמכים גדולים):** המימוש הישן מירטיאלז את
+  // כל תוכן המסמך למחרוזת JSON אחת (JSON.stringify(flatMap)) — מעל ~512MB
+  // תווים V8 זורק RangeError והעימוד כולו קורס. עכשיו: האש אינקרמנטלי
+  // איבר-איבר בזהות בתים מלאה (core/canonical-hash) — אותו ערך hash,
+  // זיכרון O(טוקן) במקום O(מסמך).
+  return sha256OfJsonArrayElements((function* canonRows() {
+    for (const t of tokens) {
+      if (t.type === 'paragraph') yield ['P', ...t.parts.map(p => p.kind === 'text' ? p.value : `⟦${t.notes[p.noteIndex]}⟧`), String(t.notes.length)];
+      else if (t.type === 'heading') yield ['H', String(t.level), t.text];
+      else if (t.type === 'endnote') yield ['EN', String(t.num || ''), t.text];
+      else if (t.type === 'endnote-class') yield ['ENH', t.title]; // directive — כותרתו תוכן מוצג (S4.5)
+    }
+  })());
 }
 
 module.exports = { tokenize, tokenizeDetailed, contentHash, normalizeText, normalizeStage, editorialStage, isNormalizedChar, hasUnclosedNote, ATOMIC_SPACE };

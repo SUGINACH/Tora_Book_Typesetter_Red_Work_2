@@ -195,8 +195,19 @@ function createEngineWorkerMain(post, options = {}) {
       // **פרוסה 5 (§4 — המודל נשאר בזיכרון ה-Worker לייצוא):** התוצאה הגולמית
       // (כולל pageModel שלא עובר ב-audit) נשמרת לבקשת ייצוא מהמודל — הייצוא
       // בפרופיל המאוחד צורך את אותו מודל בדיוק שנשלח ל-UI (אין עימוד שני).
+      // **תיקון זיכרון (דיווח "מסמך קטן נכשל אחרי גדול"):** הסריאליזציה רצה
+      // לפני ההשמה — כישלון בהעברת תוצאה ענקית לא משאיר את המודל הענק תקוע
+      // בזיכרון ה-Worker (בכישלון: משוחרר מיד; ה-UI קיבל שגיאה ואין לוייצוא
+      // מה להציע — אותו מצב כמו "אין עימוד בזיכרון").
+      let serializedResult = null;
+      try {
+        serializedResult = serializeResult(result);
+      } catch (e) {
+        _lastTypesetResult = null; // שחרור מיידי — התוצאה לא נשלחה ולא תישלח
+        throw e;
+      }
       _lastTypesetResult = result;
-      post({ type: 'typeset-result', jobId, result: serializeResult(result) });
+      post({ type: 'typeset-result', jobId, result: serializedResult });
     } catch (e) {
       if (cancelledJobs.has(jobId)) { cancelledJobs.delete(jobId); return; }
       post({

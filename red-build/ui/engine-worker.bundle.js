@@ -1,6 +1,6 @@
 // ui/engine-worker.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת ה־Worker (המנוע המלא — אין לטעון בחוט ה־UI)
-// מודולים: 98 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 99 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -347,6 +347,7 @@ var __paths = {
   "src/engine/core/pipeline.js|../layout/page-items": "src/engine/layout/page-items.js",
   "src/engine/core/pipeline.js|../layout/structural-stamps": "src/engine/layout/structural-stamps.js",
   "src/engine/core/pipeline.js|./page-model": "src/engine/core/page-model.js",
+  "src/engine/parser/block-tokenizer.js|../core/canonical-hash": "src/engine/core/canonical-hash.js",
   "src/engine/parser/block-tokenizer.js|./dfa-lexer": "src/engine/parser/dfa-lexer.js",
   "src/engine/parser/block-tokenizer.js|./bracket-scanner": "src/engine/parser/bracket-scanner.js",
   "src/engine/model/document-model.js|../parser/dfa-lexer": "src/engine/parser/dfa-lexer.js",
@@ -382,6 +383,7 @@ var __paths = {
   "src/engine/line/line-items.js|../core/h3-contract": "src/engine/core/h3-contract.js",
   "src/engine/line/line-model.js|../typography/kp-linebreak": "src/engine/typography/kp-linebreak.js",
   "src/engine/extensions/apply-styles.js|../notes/markers": "src/engine/notes/markers.js",
+  "src/engine/layout/dp-planner.js|../core/canonical-hash": "src/engine/core/canonical-hash.js",
   "src/engine/layout/dp-planner.js|../core/h3-contract": "src/engine/core/h3-contract.js",
   "src/engine/layout/dp-planner.js|./page-templates": "src/engine/layout/page-templates.js",
   "src/engine/layout/dp-planner.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
@@ -455,6 +457,7 @@ var __paths = {
   "src/engine/layout/structural-stamps.js|../decoration/gate-design": "src/engine/decoration/gate-design.js",
   "src/engine/typography/font-keys.js|./measure-api": "src/engine/typography/measure-api.js",
   "src/engine/decoration/gate-design.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
+  "src/engine/core/page-model.js|./canonical-hash": "src/engine/core/canonical-hash.js",
   "src/engine/core/page-model.js|./materialize": "src/engine/core/materialize.js",
   "src/engine/core/page-model.js|../layout/notes-model": "src/engine/layout/notes-model.js",
   "src/engine/core/materialize.js|./pua-text": "src/engine/core/pua-text.js",
@@ -736,8 +739,19 @@ function createEngineWorkerMain(post, options = {}) {
       // **פרוסה 5 (§4 — המודל נשאר בזיכרון ה-Worker לייצוא):** התוצאה הגולמית
       // (כולל pageModel שלא עובר ב-audit) נשמרת לבקשת ייצוא מהמודל — הייצוא
       // בפרופיל המאוחד צורך את אותו מודל בדיוק שנשלח ל-UI (אין עימוד שני).
+      // **תיקון זיכרון (דיווח "מסמך קטן נכשל אחרי גדול"):** הסריאליזציה רצה
+      // לפני ההשמה — כישלון בהעברת תוצאה ענקית לא משאיר את המודל הענק תקוע
+      // בזיכרון ה-Worker (בכישלון: משוחרר מיד; ה-UI קיבל שגיאה ואין לוייצוא
+      // מה להציע — אותו מצב כמו "אין עימוד בזיכרון").
+      let serializedResult = null;
+      try {
+        serializedResult = serializeResult(result);
+      } catch (e) {
+        _lastTypesetResult = null; // שחרור מיידי — התוצאה לא נשלחה ולא תישלח
+        throw e;
+      }
       _lastTypesetResult = result;
-      post({ type: 'typeset-result', jobId, result: serializeResult(result) });
+      post({ type: 'typeset-result', jobId, result: serializedResult });
     } catch (e) {
       if (cancelledJobs.has(jobId)) { cancelledJobs.delete(jobId); return; }
       post({
@@ -2986,7 +3000,7 @@ __modules["src/engine/parser/block-tokenizer.js"] = function (require, module, e
 // src/engine/parser/block-tokenizer.js — H0–H7 / P / endnote / editorial tokens (REQ-PAR-03/04, CP1)
 'use strict';
 
-const crypto = require('crypto');
+const { sha256OfJsonArrayElements } = require('../core/canonical-hash');
 const { HEADING_RE, ENDNOTE_CLASS_RE, DEFAULT_ENDNOTE_PREFIX, compileEndnotePrefix } = require('./dfa-lexer');
 const { scanBrackets } = require('./bracket-scanner');
 
@@ -3369,17 +3383,65 @@ function tokenizeDetailed(bodyLines, opts = {}) {
  * היא טקסט שמופיע בפלט (כותרת עמודי ההערות); השמטתה אפשרה בעבר לתוכן
  * שסווג בטעות כהוראה להיעלם בלי שה-hash יתריע. */
 function contentHash(tokens) {
-  const stable = JSON.stringify(tokens.flatMap(t => {
-    if (t.type === 'paragraph') return [['P', ...t.parts.map(p => p.kind === 'text' ? p.value : `⟦${t.notes[p.noteIndex]}⟧`), String(t.notes.length)]];
-    if (t.type === 'heading') return [['H', String(t.level), t.text]];
-    if (t.type === 'endnote') return [['EN', String(t.num || ''), t.text]];
-    if (t.type === 'endnote-class') return [['ENH', t.title]]; // directive — כותרתו תוכן מוצג (S4.5)
-    return [];
-  }));
-  return crypto.createHash('sha256').update(stable, 'utf8').digest('hex');
+  // **תיקון "Invalid string length" (מסמכים גדולים):** המימוש הישן מירטיאלז את
+  // כל תוכן המסמך למחרוזת JSON אחת (JSON.stringify(flatMap)) — מעל ~512MB
+  // תווים V8 זורק RangeError והעימוד כולו קורס. עכשיו: האש אינקרמנטלי
+  // איבר-איבר בזהות בתים מלאה (core/canonical-hash) — אותו ערך hash,
+  // זיכרון O(טוקן) במקום O(מסמך).
+  return sha256OfJsonArrayElements((function* canonRows() {
+    for (const t of tokens) {
+      if (t.type === 'paragraph') yield ['P', ...t.parts.map(p => p.kind === 'text' ? p.value : `⟦${t.notes[p.noteIndex]}⟧`), String(t.notes.length)];
+      else if (t.type === 'heading') yield ['H', String(t.level), t.text];
+      else if (t.type === 'endnote') yield ['EN', String(t.num || ''), t.text];
+      else if (t.type === 'endnote-class') yield ['ENH', t.title]; // directive — כותרתו תוכן מוצג (S4.5)
+    }
+  })());
 }
 
 module.exports = { tokenize, tokenizeDetailed, contentHash, normalizeText, normalizeStage, editorialStage, isNormalizedChar, hasUnclosedNote, ATOMIC_SPACE };
+
+};
+__modules["src/engine/core/canonical-hash.js"] = function (require, module, exports) {
+// src/engine/core/canonical-hash.js — האש קנוני אינקרמנטלי (תיקון "Invalid string length")
+'use strict';
+
+/**
+ * **שורש התקלה "engine: Invalid string length" במסמכים גדולים:**
+ * כל פונקציות ה-hash הקנוניות (contentHash, layoutHash, bodyGeometryHash,
+ * geometryHashOf, contentHashOf) מירטיאלזו את הצורה הקנונית של המסמך כולו
+ * למחרוזת JSON אחת באמצעות JSON.stringify(array) — ואז הזינו אותה ל-sha256.
+ * V8 מגביל אורך מחרוזת ל-2^29-24 תווים (~512MB): מסמך גדול חוצה את הגבול
+ * והעימוד כולו קורס ב-RangeError אחרי דקות של עבודת פריסה.
+ *
+ * הפתרון: אותם בתים בדיוק — בלי מחרוזת ענקית. JSON.stringify של מערך הוא
+ * '[' + JSON.stringify(e1) + ',' + JSON.stringify(e2) + ... + ']' — ולכן הזנה
+ * איבר-איבר ל-createHash מניבה זהות בתים מלאה עם הייצוג הישן, בזיכרון O(איבר)
+ * במקום O(מסמך). כל הנעילות (baseline hashes, locks) נשמרות ללא שינוי ערך.
+ *
+ * @param {Iterable<*>} elems — האיברים הקנוניים (מומלץ generator: בלי לבנות
+ *   מערך ביניים). איבר חייב להיות ניתן ל-JSON (אובייקט/מערך/פרימיטיב).
+ *   undefined → null, בדיוק כמו JSON.stringify בתוך מערך.
+ * @returns {string} hex sha256 — זהה לחלוטין ל-sha256(JSON.stringify([...elems]))
+ */
+const crypto = require('crypto');
+
+function sha256OfJsonArrayElements(elems) {
+  const h = crypto.createHash('sha256');
+  h.update('[', 'utf8');
+  let first = true;
+  for (const elem of elems) {
+    if (!first) h.update(',', 'utf8');
+    // זהות בתים עם JSON.stringify(array): undefined/function בתוך מערך
+    // מוצגים כ-null. בפועל הקנונים כאן איבריהם תמיד אובייקטים/מערכים — אך
+    // השמירה על הכלל הופכת את העזר לנאמנה גם לשימוש עתידי.
+    h.update(elem === undefined || typeof elem === 'function' ? 'null' : JSON.stringify(elem), 'utf8');
+    first = false;
+  }
+  h.update(']', 'utf8');
+  return h.digest('hex');
+}
+
+module.exports = { sha256OfJsonArrayElements };
 
 };
 __modules["src/engine/parser/bracket-scanner.js"] = function (require, module, exports) {
@@ -9893,7 +9955,7 @@ __modules["src/engine/layout/dp-planner.js"] = function (require, module, export
 // src/engine/layout/dp-planner.js — Multi-column/page DP planner (REQ-BAL-01/02/04/08/10)
 'use strict';
 
-const crypto = require('crypto');
+const { sha256OfJsonArrayElements } = require('../core/canonical-hash');
 // **חוזה H3 (D-S2H3/CSS parity):** ריפודי פס כותרת 3 ממקור יחיד —
 // אותו חוזה כמו מדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, H3_FOLLOW_MIN_PX, h3BandHeightPx, h3BandRoomThresholdPx } = require('../core/h3-contract');
@@ -10440,14 +10502,20 @@ function reAlignColumns(page) {
 }
 
 function layoutHash(pages) {
-  const canon = pages.map(p => ({
-    i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}`)),
-    // **S4.10:** דפנסיביות — עמודי מנוע המורשת אינם מחויבים לכל השדות
-    // (לפני כן p.sideNotes.length קרס על undefined). לעמודי DP אין שינוי ערך.
-    fn: (p.footnotes || []).length, sn: (p.sideNotes || []).length
-  }));
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  // **תיקון "Invalid string length" (מסמכים גדולים):** האש אינקרמנטלי עמוד-עמוד
+  // בזהות בתים מלאה עם הייצוג הישן (JSON.stringify של מערך הקנון כולו) —
+  // בלי למרטיאלז מחרוזת בגודל המסמך (V8 מגביל ~512MB תווים למחרוזת).
+  return sha256OfJsonArrayElements((function* canonPages() {
+    for (const p of pages) {
+      yield {
+        i: p.index, t: p.type,
+        c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}`)),
+        // **S4.10:** דפנסיביות — עמודי מנוע המורשת אינם מחויבים לכל השדות
+        // (לפני כן p.sideNotes.length קרס על undefined). לעמודי DP אין שינוי ערך.
+        fn: (p.footnotes || []).length, sn: (p.sideNotes || []).length
+      };
+    }
+  })());
 }
 
 /**
@@ -10458,11 +10526,16 @@ function layoutHash(pages) {
  * — נבדק לפני ואחרי פאס העיטורים בpipeline; שינוי אמיתי בשורות ⇒ הבדיקה נכשלת.
  */
 function bodyGeometryHash(pages) {
-  const canon = pages.map(p => ({
-    i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}:${ln.seq != null ? 's' + ln.seq : ''}`))
-  }));
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  // **תיקון "Invalid string length":** כמו layoutHash — אינקרמנטלי, בלי מחרוזת
+  // קנון אחת ענקית. זהות בתים עם הייצוג הישן נשמרת (נעילות/באזליינים לא משתנים).
+  return sha256OfJsonArrayElements((function* canonPages() {
+    for (const p of pages) {
+      yield {
+        i: p.index, t: p.type,
+        c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}:${ln.seq != null ? 's' + ln.seq : ''}`))
+      };
+    }
+  })());
 }
 
 /**
@@ -20690,7 +20763,7 @@ __modules["src/engine/core/page-model.js"] = function (require, module, exports)
  * דטרמיניזם: אין תאריך/אקראיות/מזהי ריצה; אותו קלט ⇒ אותו מודל ואותם hashes.
  */
 
-const crypto = require('crypto');
+const { sha256OfJsonArrayElements } = require('./canonical-hash');
 // **שלב 8 (§4.1):** materialization חד-פעמי — המנגנון הפנימי הטהור (לא
 // מקרין, לא מודד, לא מחליט; צורך LineModel + חותמות structural-stamps).
 const { materializeDocument } = require('./materialize');
@@ -21413,25 +21486,37 @@ function validatePageModel(model, ctx = {}) {
 
 /** geometryHash — טביעת-אצבע גיאומטרית: מיקומים וגדלים סופיים בלבד (בלי טקסט). */
 function geometryHashOf(model) {
-  const canon = model.pages.map(p => ({
-    i: p.index, t: p.type,
-    l: p.lines.map(l => l.projected === false ? '∅' : `${l.id}:${l.x},${l.y},${l.w},${l.h},${l.baselineY}:${(l.words || []).map(w => `${Math.round(w.x * 10) / 10}+${Math.round(w.w * 10) / 10}`).join(',')}`),
-    fn: p.footnotes.map(n => `${n.noteId}:${n.x},${n.y},${n.w},${n.h}`),
-    sn: p.sideNotes.map(s => `${s.noteId}:${s.x},${s.yTop},${s.heightPx}`),
-    d: (p.decorations || []).map(d => `${d.kind}:${d.x},${d.y},${d.w},${d.h}`)
-  }));
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  // **תיקון "Invalid string length" (מסמכים גדולים):** האש אינקרמנטלי עמוד-עמוד —
+  // זהות בתים מלאה עם JSON.stringify(canon) הישן, בלי למרטיאלז מחרוזת בגודל
+  // המודל כולו (V8: ~512MB תווים הסף — RangeError שהפיל מסמכים גדולים בסוף
+  // העימוד, אחרי דקות של עבודת פריסה).
+  return sha256OfJsonArrayElements((function* canonPages() {
+    for (const p of model.pages) {
+      yield {
+        i: p.index, t: p.type,
+        l: p.lines.map(l => l.projected === false ? '∅' : `${l.id}:${l.x},${l.y},${l.w},${l.h},${l.baselineY}:${(l.words || []).map(w => `${Math.round(w.x * 10) / 10}+${Math.round(w.w * 10) / 10}`).join(',')}`),
+        fn: p.footnotes.map(n => `${n.noteId}:${n.x},${n.y},${n.w},${n.h}`),
+        sn: p.sideNotes.map(s => `${s.noteId}:${s.x},${s.yTop},${s.heightPx}`),
+        d: (p.decorations || []).map(d => `${d.kind}:${d.x},${d.y},${d.w},${d.h}`)
+      };
+    }
+  })());
 }
 
 /** contentHash — הוכחת שימור מקור ברמת המודל הסופי (טקסט השורות בסדר הקריאה). */
 function contentHashOf(model) {
-  const canon = model.pages.map(p => ({
-    i: p.index,
-    l: p.lines.map(l => (l.words || []).map(w => w.text).join('\u00A7')),
-    fn: p.footnotes.map(n => `${n.marker || ''}§${n.text}`),
-    sn: p.sideNotes.map(s => s.text)
-  }));
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  // **תיקון "Invalid string length":** כמו geometryHashOf — אינקרמנטלי, בלי
+  // מחרוזת קנון אחת ענקית; זהות בתים עם הייצוג הישן נשמרת.
+  return sha256OfJsonArrayElements((function* canonPages() {
+    for (const p of model.pages) {
+      yield {
+        i: p.index,
+        l: p.lines.map(l => (l.words || []).map(w => w.text).join('\u00A7')),
+        fn: p.footnotes.map(n => `${n.marker || ''}§${n.text}`),
+        sn: p.sideNotes.map(s => s.text)
+      };
+    }
+  })());
 }
 
 module.exports = {
@@ -22975,8 +23060,46 @@ function serializePageModelTransport(model) {
     model,
     geometryHash: model.geometryHash,
     contentHash: model.contentHash,
-    bytesEstimate: JSON.stringify(model).length
+    // **תיקון "Invalid string length" (מסמכים גדולים):** הערך הישן חושב
+    // JSON.stringify(model).length — מירטיאלז את כל המודל למחרוזת אחת רק
+    // כדי למדוד אותה (מעל ~512MB תווים: RangeError שהפיל את העברת התוצאה
+    // אחרי עימוד מוצלח). אומדן זול ודטרמיניסטי — אותה סדר גודל, אפס מחרוזות
+    // ענקיות. צרכן קיים רק לאבחון (חסם תחתון בבדיקות החוזה) — לא חוזה ערך מדויק.
+    bytesEstimate: estimateJsonBytes(model)
   };
+}
+
+/** אומדן אורך JSON בייטים בלי בניית מחרוזת: סוגריים/פסיקים/נקודותיים,
+ * מפתחות במרכאות, ערכי מחרוזת כולל תוספת נפיחות של תווי בקרה/מרכאות,
+ * מספרים כפי שהם. דטרמיניסטי לחלוטין (אותו מודל ⇒ אותו אומדן). */
+function estimateJsonBytes(value) {
+  let total = 0;
+  const stack = [value];
+  while (stack.length) {
+    const v = stack.pop();
+    if (v === null || v === undefined) { total += 4; continue; }          // null
+    switch (typeof v) {
+      case 'number': total += String(v).length; break;                     // לרבות 1e+21 וכו'
+      case 'boolean': total += (v ? 4 : 5); break;
+      case 'string': total += v.length + 2 + Math.ceil(v.length / 64); break; // תווי בקרה/בריחות — אומדן
+      default: {
+        if (Array.isArray(v)) {
+          total += 2 + Math.max(0, v.length - 1);                          // [ ] ,
+          for (let i = v.length - 1; i >= 0; i--) stack.push(v[i]);
+        } else if (v instanceof Date) {
+          total += 32;
+        } else {
+          const keys = Object.keys(v);
+          total += 2 + Math.max(0, keys.length - 1);                       // { } ,
+          for (let i = keys.length - 1; i >= 0; i--) {
+            total += keys[i].length + 4;                                   // "k":
+            stack.push(v[keys[i]]);
+          }
+        }
+      }
+    }
+  }
+  return total;
 }
 
 /** סריאליזציית תוצאת מנוע → plain JSON עובר structured-clone (D-65). */
@@ -27087,7 +27210,6 @@ const PT_CLASS = {
   // העמוד לא זיהה אף מחלקה). מחלקת CSS ייעודית לכל סוג עמוד.
   'blank': 'page page--blank'
 };
-
 
 // **שלב 8 פרוסה 1-ביקורת (§3.1):** scrubPUAText עבר למודול הניטרלי core/pua-text —
 // הליבה (materialize) כבר אינה מייבאת מהרנדרר. כאן נצרך מהמקור היחיד ומיוצא

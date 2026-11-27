@@ -26,7 +26,7 @@
  * דטרמיניזם: אין תאריך/אקראיות/מזהי ריצה; אותו קלט ⇒ אותו מודל ואותם hashes.
  */
 
-const crypto = require('crypto');
+const { sha256OfJsonArrayElements } = require('./canonical-hash');
 // **שלב 8 (§4.1):** materialization חד-פעמי — המנגנון הפנימי הטהור (לא
 // מקרין, לא מודד, לא מחליט; צורך LineModel + חותמות structural-stamps).
 const { materializeDocument } = require('./materialize');
@@ -749,25 +749,37 @@ function validatePageModel(model, ctx = {}) {
 
 /** geometryHash — טביעת-אצבע גיאומטרית: מיקומים וגדלים סופיים בלבד (בלי טקסט). */
 function geometryHashOf(model) {
-  const canon = model.pages.map(p => ({
-    i: p.index, t: p.type,
-    l: p.lines.map(l => l.projected === false ? '∅' : `${l.id}:${l.x},${l.y},${l.w},${l.h},${l.baselineY}:${(l.words || []).map(w => `${Math.round(w.x * 10) / 10}+${Math.round(w.w * 10) / 10}`).join(',')}`),
-    fn: p.footnotes.map(n => `${n.noteId}:${n.x},${n.y},${n.w},${n.h}`),
-    sn: p.sideNotes.map(s => `${s.noteId}:${s.x},${s.yTop},${s.heightPx}`),
-    d: (p.decorations || []).map(d => `${d.kind}:${d.x},${d.y},${d.w},${d.h}`)
-  }));
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  // **תיקון "Invalid string length" (מסמכים גדולים):** האש אינקרמנטלי עמוד-עמוד —
+  // זהות בתים מלאה עם JSON.stringify(canon) הישן, בלי למרטיאלז מחרוזת בגודל
+  // המודל כולו (V8: ~512MB תווים הסף — RangeError שהפיל מסמכים גדולים בסוף
+  // העימוד, אחרי דקות של עבודת פריסה).
+  return sha256OfJsonArrayElements((function* canonPages() {
+    for (const p of model.pages) {
+      yield {
+        i: p.index, t: p.type,
+        l: p.lines.map(l => l.projected === false ? '∅' : `${l.id}:${l.x},${l.y},${l.w},${l.h},${l.baselineY}:${(l.words || []).map(w => `${Math.round(w.x * 10) / 10}+${Math.round(w.w * 10) / 10}`).join(',')}`),
+        fn: p.footnotes.map(n => `${n.noteId}:${n.x},${n.y},${n.w},${n.h}`),
+        sn: p.sideNotes.map(s => `${s.noteId}:${s.x},${s.yTop},${s.heightPx}`),
+        d: (p.decorations || []).map(d => `${d.kind}:${d.x},${d.y},${d.w},${d.h}`)
+      };
+    }
+  })());
 }
 
 /** contentHash — הוכחת שימור מקור ברמת המודל הסופי (טקסט השורות בסדר הקריאה). */
 function contentHashOf(model) {
-  const canon = model.pages.map(p => ({
-    i: p.index,
-    l: p.lines.map(l => (l.words || []).map(w => w.text).join('\u00A7')),
-    fn: p.footnotes.map(n => `${n.marker || ''}§${n.text}`),
-    sn: p.sideNotes.map(s => s.text)
-  }));
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  // **תיקון "Invalid string length":** כמו geometryHashOf — אינקרמנטלי, בלי
+  // מחרוזת קנון אחת ענקית; זהות בתים עם הייצוג הישן נשמרת.
+  return sha256OfJsonArrayElements((function* canonPages() {
+    for (const p of model.pages) {
+      yield {
+        i: p.index,
+        l: p.lines.map(l => (l.words || []).map(w => w.text).join('\u00A7')),
+        fn: p.footnotes.map(n => `${n.marker || ''}§${n.text}`),
+        sn: p.sideNotes.map(s => s.text)
+      };
+    }
+  })());
 }
 
 module.exports = {

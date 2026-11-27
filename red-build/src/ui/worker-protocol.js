@@ -42,8 +42,46 @@ function serializePageModelTransport(model) {
     model,
     geometryHash: model.geometryHash,
     contentHash: model.contentHash,
-    bytesEstimate: JSON.stringify(model).length
+    // **תיקון "Invalid string length" (מסמכים גדולים):** הערך הישן חושב
+    // JSON.stringify(model).length — מירטיאלז את כל המודל למחרוזת אחת רק
+    // כדי למדוד אותה (מעל ~512MB תווים: RangeError שהפיל את העברת התוצאה
+    // אחרי עימוד מוצלח). אומדן זול ודטרמיניסטי — אותה סדר גודל, אפס מחרוזות
+    // ענקיות. צרכן קיים רק לאבחון (חסם תחתון בבדיקות החוזה) — לא חוזה ערך מדויק.
+    bytesEstimate: estimateJsonBytes(model)
   };
+}
+
+/** אומדן אורך JSON בייטים בלי בניית מחרוזת: סוגריים/פסיקים/נקודותיים,
+ * מפתחות במרכאות, ערכי מחרוזת כולל תוספת נפיחות של תווי בקרה/מרכאות,
+ * מספרים כפי שהם. דטרמיניסטי לחלוטין (אותו מודל ⇒ אותו אומדן). */
+function estimateJsonBytes(value) {
+  let total = 0;
+  const stack = [value];
+  while (stack.length) {
+    const v = stack.pop();
+    if (v === null || v === undefined) { total += 4; continue; }          // null
+    switch (typeof v) {
+      case 'number': total += String(v).length; break;                     // לרבות 1e+21 וכו'
+      case 'boolean': total += (v ? 4 : 5); break;
+      case 'string': total += v.length + 2 + Math.ceil(v.length / 64); break; // תווי בקרה/בריחות — אומדן
+      default: {
+        if (Array.isArray(v)) {
+          total += 2 + Math.max(0, v.length - 1);                          // [ ] ,
+          for (let i = v.length - 1; i >= 0; i--) stack.push(v[i]);
+        } else if (v instanceof Date) {
+          total += 32;
+        } else {
+          const keys = Object.keys(v);
+          total += 2 + Math.max(0, keys.length - 1);                       // { } ,
+          for (let i = keys.length - 1; i >= 0; i--) {
+            total += keys[i].length + 4;                                   // "k":
+            stack.push(v[keys[i]]);
+          }
+        }
+      }
+    }
+  }
+  return total;
 }
 
 /** סריאליזציית תוצאת מנוע → plain JSON עובר structured-clone (D-65). */

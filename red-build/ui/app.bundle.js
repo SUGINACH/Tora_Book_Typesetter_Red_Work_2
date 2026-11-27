@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 72 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 73 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -370,6 +370,7 @@ var __paths = {
   "src/ui/testing-tab.js|../audit/report-schema": "src/audit/report-schema.js",
   "src/ui/testing-tab.js|../engine/core/ledger": "src/engine/core/ledger.js",
   "src/audit/report-schema.js|../engine/layout/dp-planner": "src/engine/layout/dp-planner.js",
+  "src/engine/layout/dp-planner.js|../core/canonical-hash": "src/engine/core/canonical-hash.js",
   "src/engine/layout/dp-planner.js|../core/h3-contract": "src/engine/core/h3-contract.js",
   "src/engine/layout/dp-planner.js|./page-templates": "src/engine/layout/page-templates.js",
   "src/engine/layout/dp-planner.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
@@ -10162,7 +10163,6 @@ const PT_CLASS = {
   'blank': 'page page--blank'
 };
 
-
 // **שלב 8 פרוסה 1-ביקורת (§3.1):** scrubPUAText עבר למודול הניטרלי core/pua-text —
 // הליבה (materialize) כבר אינה מייבאת מהרנדרר. כאן נצרך מהמקור היחיד ומיוצא
 // הלאה לצרכנים קיימים (חוזה המודול נשמר: scrubPUAText ב-export).
@@ -16621,7 +16621,7 @@ __modules["src/engine/layout/dp-planner.js"] = function (require, module, export
 // src/engine/layout/dp-planner.js — Multi-column/page DP planner (REQ-BAL-01/02/04/08/10)
 'use strict';
 
-const crypto = require('crypto');
+const { sha256OfJsonArrayElements } = require('../core/canonical-hash');
 // **חוזה H3 (D-S2H3/CSS parity):** ריפודי פס כותרת 3 ממקור יחיד —
 // אותו חוזה כמו מדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, H3_FOLLOW_MIN_PX, h3BandHeightPx, h3BandRoomThresholdPx } = require('../core/h3-contract');
@@ -17168,14 +17168,20 @@ function reAlignColumns(page) {
 }
 
 function layoutHash(pages) {
-  const canon = pages.map(p => ({
-    i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}`)),
-    // **S4.10:** דפנסיביות — עמודי מנוע המורשת אינם מחויבים לכל השדות
-    // (לפני כן p.sideNotes.length קרס על undefined). לעמודי DP אין שינוי ערך.
-    fn: (p.footnotes || []).length, sn: (p.sideNotes || []).length
-  }));
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  // **תיקון "Invalid string length" (מסמכים גדולים):** האש אינקרמנטלי עמוד-עמוד
+  // בזהות בתים מלאה עם הייצוג הישן (JSON.stringify של מערך הקנון כולו) —
+  // בלי למרטיאלז מחרוזת בגודל המסמך (V8 מגביל ~512MB תווים למחרוזת).
+  return sha256OfJsonArrayElements((function* canonPages() {
+    for (const p of pages) {
+      yield {
+        i: p.index, t: p.type,
+        c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}`)),
+        // **S4.10:** דפנסיביות — עמודי מנוע המורשת אינם מחויבים לכל השדות
+        // (לפני כן p.sideNotes.length קרס על undefined). לעמודי DP אין שינוי ערך.
+        fn: (p.footnotes || []).length, sn: (p.sideNotes || []).length
+      };
+    }
+  })());
 }
 
 /**
@@ -17186,11 +17192,16 @@ function layoutHash(pages) {
  * — נבדק לפני ואחרי פאס העיטורים בpipeline; שינוי אמיתי בשורות ⇒ הבדיקה נכשלת.
  */
 function bodyGeometryHash(pages) {
-  const canon = pages.map(p => ({
-    i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}:${ln.seq != null ? 's' + ln.seq : ''}`))
-  }));
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  // **תיקון "Invalid string length":** כמו layoutHash — אינקרמנטלי, בלי מחרוזת
+  // קנון אחת ענקית. זהות בתים עם הייצוג הישן נשמרת (נעילות/באזליינים לא משתנים).
+  return sha256OfJsonArrayElements((function* canonPages() {
+    for (const p of pages) {
+      yield {
+        i: p.index, t: p.type,
+        c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}:${ln.seq != null ? 's' + ln.seq : ''}`))
+      };
+    }
+  })());
 }
 
 /**
@@ -18608,6 +18619,49 @@ function findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, s
 }
 
 module.exports = { planPages, layoutHash, bodyGeometryHash, lineTokenId, moveLineForward, balancePageSafe, readConfig, LineBreaker, GEO, FLOW_BOTTOM, SINGLE_W, SZ: SZ_CORE, headingItemH, wrapText };
+
+};
+__modules["src/engine/core/canonical-hash.js"] = function (require, module, exports) {
+// src/engine/core/canonical-hash.js — האש קנוני אינקרמנטלי (תיקון "Invalid string length")
+'use strict';
+
+/**
+ * **שורש התקלה "engine: Invalid string length" במסמכים גדולים:**
+ * כל פונקציות ה-hash הקנוניות (contentHash, layoutHash, bodyGeometryHash,
+ * geometryHashOf, contentHashOf) מירטיאלזו את הצורה הקנונית של המסמך כולו
+ * למחרוזת JSON אחת באמצעות JSON.stringify(array) — ואז הזינו אותה ל-sha256.
+ * V8 מגביל אורך מחרוזת ל-2^29-24 תווים (~512MB): מסמך גדול חוצה את הגבול
+ * והעימוד כולו קורס ב-RangeError אחרי דקות של עבודת פריסה.
+ *
+ * הפתרון: אותם בתים בדיוק — בלי מחרוזת ענקית. JSON.stringify של מערך הוא
+ * '[' + JSON.stringify(e1) + ',' + JSON.stringify(e2) + ... + ']' — ולכן הזנה
+ * איבר-איבר ל-createHash מניבה זהות בתים מלאה עם הייצוג הישן, בזיכרון O(איבר)
+ * במקום O(מסמך). כל הנעילות (baseline hashes, locks) נשמרות ללא שינוי ערך.
+ *
+ * @param {Iterable<*>} elems — האיברים הקנוניים (מומלץ generator: בלי לבנות
+ *   מערך ביניים). איבר חייב להיות ניתן ל-JSON (אובייקט/מערך/פרימיטיב).
+ *   undefined → null, בדיוק כמו JSON.stringify בתוך מערך.
+ * @returns {string} hex sha256 — זהה לחלוטין ל-sha256(JSON.stringify([...elems]))
+ */
+const crypto = require('crypto');
+
+function sha256OfJsonArrayElements(elems) {
+  const h = crypto.createHash('sha256');
+  h.update('[', 'utf8');
+  let first = true;
+  for (const elem of elems) {
+    if (!first) h.update(',', 'utf8');
+    // זהות בתים עם JSON.stringify(array): undefined/function בתוך מערך
+    // מוצגים כ-null. בפועל הקנונים כאן איבריהם תמיד אובייקטים/מערכים — אך
+    // השמירה על הכלל הופכת את העזר לנאמנה גם לשימוש עתידי.
+    h.update(elem === undefined || typeof elem === 'function' ? 'null' : JSON.stringify(elem), 'utf8');
+    first = false;
+  }
+  h.update(']', 'utf8');
+  return h.digest('hex');
+}
+
+module.exports = { sha256OfJsonArrayElements };
 
 };
 __modules["src/engine/core/h3-contract.js"] = function (require, module, exports) {

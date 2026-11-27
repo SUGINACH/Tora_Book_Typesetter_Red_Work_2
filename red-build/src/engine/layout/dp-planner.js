@@ -1,7 +1,7 @@
 // src/engine/layout/dp-planner.js — Multi-column/page DP planner (REQ-BAL-01/02/04/08/10)
 'use strict';
 
-const crypto = require('crypto');
+const { sha256OfJsonArrayElements } = require('../core/canonical-hash');
 // **חוזה H3 (D-S2H3/CSS parity):** ריפודי פס כותרת 3 ממקור יחיד —
 // אותו חוזה כמו מדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, H3_FOLLOW_MIN_PX, h3BandHeightPx, h3BandRoomThresholdPx } = require('../core/h3-contract');
@@ -548,14 +548,20 @@ function reAlignColumns(page) {
 }
 
 function layoutHash(pages) {
-  const canon = pages.map(p => ({
-    i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}`)),
-    // **S4.10:** דפנסיביות — עמודי מנוע המורשת אינם מחויבים לכל השדות
-    // (לפני כן p.sideNotes.length קרס על undefined). לעמודי DP אין שינוי ערך.
-    fn: (p.footnotes || []).length, sn: (p.sideNotes || []).length
-  }));
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  // **תיקון "Invalid string length" (מסמכים גדולים):** האש אינקרמנטלי עמוד-עמוד
+  // בזהות בתים מלאה עם הייצוג הישן (JSON.stringify של מערך הקנון כולו) —
+  // בלי למרטיאלז מחרוזת בגודל המסמך (V8 מגביל ~512MB תווים למחרוזת).
+  return sha256OfJsonArrayElements((function* canonPages() {
+    for (const p of pages) {
+      yield {
+        i: p.index, t: p.type,
+        c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}`)),
+        // **S4.10:** דפנסיביות — עמודי מנוע המורשת אינם מחויבים לכל השדות
+        // (לפני כן p.sideNotes.length קרס על undefined). לעמודי DP אין שינוי ערך.
+        fn: (p.footnotes || []).length, sn: (p.sideNotes || []).length
+      };
+    }
+  })());
 }
 
 /**
@@ -566,11 +572,16 @@ function layoutHash(pages) {
  * — נבדק לפני ואחרי פאס העיטורים בpipeline; שינוי אמיתי בשורות ⇒ הבדיקה נכשלת.
  */
 function bodyGeometryHash(pages) {
-  const canon = pages.map(p => ({
-    i: p.index, t: p.type,
-    c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}:${ln.seq != null ? 's' + ln.seq : ''}`))
-  }));
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  // **תיקון "Invalid string length":** כמו layoutHash — אינקרמנטלי, בלי מחרוזת
+  // קנון אחת ענקית. זהות בתים עם הייצוג הישן נשמרת (נעילות/באזליינים לא משתנים).
+  return sha256OfJsonArrayElements((function* canonPages() {
+    for (const p of pages) {
+      yield {
+        i: p.index, t: p.type,
+        c: p.columns.map(col => col.map(ln => `${lineTokenId(ln)}:${(ln.words || []).join('\u00A7')}:${ln.seq != null ? 's' + ln.seq : ''}`))
+      };
+    }
+  })());
 }
 
 /**

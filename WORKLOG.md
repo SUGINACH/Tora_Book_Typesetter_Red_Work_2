@@ -4976,3 +4976,14 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
 - תיקון: שחזור `legacy-settings-map.js` כמו שהוא (אפס תלויות; טבלת disposition טהורה); הסרת הזרקת הדגל המת `settings['_engine-force-unified']` מ-app-shell; `engineProfile` קבוע `'unified'` (מנוע יחיד) עם הסרת ענף ה-legacy-fallback המת — נותר שער השגיאה המפורשת לחוסר PageModel; הערת LEGACY_PT_CLASS המיושנת ב-dom-renderer תוקנה; שער ה-sanity הוחלף לבקרת מנוע-יחיד: pageModel בשני הבנדלים + בקרת שלילה על קריאות `legacyTypeset(`/`renderLegacyPage(`/`projectLegacyDocument(`.
 - אימות (בנייה בלבד, ללא בדיקות): `node tools/build-worker-bundle.js` — worker 98 מודולים, app 72 מודולים; כל נקודות הכניסה (browser-entry/engine-worker-main/export-api/preview-tab/app-shell/imud-library) נטענות; אפס require תלוי בעץ המקור (סריקה סטטית); שערי ה-sanity עוברים על הבנדלים הבנויים.
 - פתוח: מזהי impact-path ישנים (`layout/legacy-imud-flow`) בקטלוג ההגדרות — ניקוי ביחידת ההגדרות; ענף ה-renderPage המת ב-preview-tab (9c.4-marker) ומסלובי export כפולים (exportHtml/exportPdf מול FromModel) — ביחידת איחוד מסלולי הפלט.
+
+
+## 2026-11-27 — תיקון שורש "engine: Invalid string length" במסמכים גדולים
+
+- שורש התקלה (סקירת קוד מלאה של מסלול UI→Worker→Engine→PageModel→transport): שישה אתרים מירטיאלזו נתונים בגודל המסמך כולו למחרוזת JSON אחת לפני ההאשה/העברה — `contentHash` (block-tokenizer, בשלב הפענוח), `layoutHash` + `bodyGeometryHash` (dp-planner, שערי CP4/CP5 באמצע הריצה), `geometryHashOf` + `contentHashOf` (page-model, בסוף העימוד), `bytesEstimate` (worker-protocol — JSON.stringify(model).length רק לצורך מדידה). V8 מגביל מחרוזת ל-2^29-24 תווים (~512MB) ⇒ RangeError "Invalid string length" אחרי דקות של פריסה מוצלחת, בדיוק כדיווח המשתמש.
+- תיקון: מודול יחיד `core/canonical-hash.js` — `sha256OfJsonArrayElements`: הזנה אינקרמנטלית איבר-איבר ל-createHash ('[' + e1 + ',' + … + ']'). זהות בתים מלאה עם JSON.stringify(array) הישן — נבדקה שקילות פונקציות-טהורות מול הנוסחה הישנה (6/6 צורות קנון, כולל עברית/תווי-בקרה/מספרים מדעיים/מערך ריק; מסלול generator זהה). כל הנעילות והבאזליינים נשמרים ללא שינוי ערך. זיכרון O(עמוד)/O(טוקן) במקום O(מסמך).
+- `bytesEstimate` הוחלף באומדן זול ודטרמיניסטי (הליכה על העץ בלי בניית מחרוזת; אותה סדר גודל — 696 מול 635 במדגם). אין צרכן UI; בדיקות החוזה דורשות רק חסם תחתון.
+- זיכרון Worker (דיווח "קטן נכשל אחרי גדול"): `_lastTypesetResult` הוקצה לפני הסריאליזציה — כישלון העברה של תוצאה ענקית השאיר אותה תקועה בזיכרון ה-Worker. עכשיו: סריאליזציה קודמת להשמה; בכישלון — שחרור מיידי (`null`).
+- requires מתים של `crypto` הוסרו משלושת הקבצים (ההאשית עוברת כולה דרך המקור היחיד).
+- אימות (בנייה ושקילות בלבד, ללא הרצת בדיקות): כל נקודות הכניסה נטענות; הבנדלים נבנו (worker/app); שערי sanity של הפריסה עוברים.
+- פתוח: זמן עימוד וזיכרון המודל למסמכים ענקיים הם כרונוס המוצר (המודל חייב להיבנות) — הקריסה מחרוזת-אורך נמחקה; המשתמש מאמת באתר החי עם `very_long_test_text.txt`.
