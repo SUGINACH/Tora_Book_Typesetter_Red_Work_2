@@ -238,11 +238,21 @@ function bootWorkerContext(ctx, options = {}) {
   const post = (message) => ctx.postMessage(message);
   // A real browser Worker always exposes location.href. Unit tests that invoke
   // this bootstrap with a minimal fakeSelf are not production Worker contexts.
-  // Runtime verification is mandatory in real Workers and never falls back there.
   const isRealWorkerContext = !!(ctx && ctx.location && typeof ctx.location.href === 'string' && ctx.location.href);
+  // **תכנית העל 27.11 §27.1.3 (TYP-SHAPING-01) — הכרעה:** ה-runtime ה-staged
+  // (Unicode 18 + HarfBuzz; `production-typography-runtime.js` מצהיר
+  // "staged-runtime-assets-not-production-enabled") אינו נצרך עדיין על ידי
+  // `core/pipeline.js` — ה-pipeline מקבל את `env.typographyRuntime` ואינו
+  // משתמש בו, והמדידה/השבירה/ההקרנות אינן צורות GIDs. לפיכך, עד השלמת
+  // אינטגרציית ShapedRun end-to-end, ה-runtime אינו שער חובה בנתיב
+  // ה-worker הפעיל: כישלון טעינת WASM/נכסים לא יחסום עימוד. ה-runtime עדיין
+  // נטען ומאומת דרך הודעת `typography-runtime-init` המפורשת, ומועבר ל-typeset
+  // רק אם אותחל. **בהשלמת האינטגרציה (itemization לפני פיצול, ShapedRun ב-
+  // LineModel/PageModel, הקרנות GID) — להחזיר את הדגל ל-true.**
+  const REQUIRES_SHAPING_RUNTIME_IN_ACTIVE_PATH = false;
   const handler = createEngineWorkerMain(post, {
     getTypographyRuntime: () => typographyRuntime,
-    requireTypographyRuntime: isRealWorkerContext,
+    requireTypographyRuntime: isRealWorkerContext && REQUIRES_SHAPING_RUNTIME_IN_ACTIVE_PATH,
     ...(typeof options.typeset === 'function' ? { typeset: options.typeset } : {}),
     ...(typeof options.serializeResult === 'function' ? { serializeResult: options.serializeResult } : {})
   });
@@ -321,10 +331,12 @@ function bootWorkerContext(ctx, options = {}) {
       handler(message);
       return;
     }
-    // The actual browser Worker has location.href and must load the verified runtime.
-    // Minimal fakeSelf contexts used by the bundle's synchronous harness have no
-    // Worker location and exercise only the protocol/bootstrap behavior.
-    if (!isRealWorkerContext) {
+    // The actual browser Worker has location.href. Minimal fakeSelf contexts used
+    // by the bundle's synchronous harness have no Worker location and exercise only
+    // the protocol/bootstrap behavior. When the staged shaping runtime is not an
+    // active-path requirement (§27.1.3), typeset proceeds without it: the pipeline
+    // does not consume it yet, and a WASM/asset failure must not block typesetting.
+    if (!isRealWorkerContext || !REQUIRES_SHAPING_RUNTIME_IN_ACTIVE_PATH) {
       handler(message);
       return;
     }
