@@ -437,7 +437,13 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
       const profile = registeredFontsRef.get(fam);
       if (!profile) continue; // נבדק ב-collectFam — הגנה כפולה
       const words = [...famWords.get(fam)].join(' ');
-      const sub = buildSubset(profile, charInventory(words));
+      // **W-11 (תצוגה=ייצוא, גילוי 27.11 — דפוס S5.2-O1 של F1):** תו שחסר במשפחה
+      // (למשל טעם U+05A8 שאינו ב-FrankReal של מילת-החלון) הכשיל את כל
+      // ה-subset (tofu) ⇒ הגופן כולו נפל ל-/F1 והמילה נצבעה בגוף בעוד ה-DOM
+      // מציג אותה בגופן התפקיד. כעת: המלאי = תווים שקיימים בפועל במשפחה;
+      // החסרים נופלים בכותב לרשת הפר-תו (תפקיד→F1→F4) — כמו המחסנית בדפדפן.
+      const famInventory = charInventory(words).filter(ch => glyphIdOf(profile, ch) !== 0);
+      const sub = buildSubset(profile, famInventory);
       if (!sub.ok) continue; // נפילה שקטה ל-/F1 — מתועם בכותב (משפחה בלי תווי המילה)
       const c2g = subsetNewCmap(sub);
       extraFonts.push({
@@ -641,7 +647,13 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName, opts = {}) {
       if (!prof) return null;
       const parts = wordsByRole.get(roleKey) || [];
       if (!parts.length) return null;
-      const sub = buildSubset(prof, charInventory(parts.join(' ')));
+      // **W-11 (תצוגה=ייצוא, 27.11):** מלאי התפקיד = תווים שקיימים בפועל בגופן
+      // התפקיד (דפוס S5.2-O1 של F1). בעבר תו חסר אחד (טעם במילת-חלון מנוקדת)
+      // הכשיל את כל ה-subset ב-tofu ⇒ כל מילות התפקיד נצבעו בגוף הטקסט
+      // ב-PDF בעוד ה-DOM הציגן בגופן התפקיד. החסרים נופלים בכותב לרשת
+      // הפר-תו (תפקיד→F1→F4) — כמו נפילת המחסנית בדפדפן.
+      const roleInventory = charInventory(parts.join(' ')).filter(ch => glyphIdOf(prof, ch) !== 0);
+      const sub = buildSubset(prof, roleInventory);
       return sub.ok ? mkFont(sub) : null;
     };
     // **Iteration-003 (מילת-חלון):** משפחת החלון — FrankReal-Bold כשרשומה
