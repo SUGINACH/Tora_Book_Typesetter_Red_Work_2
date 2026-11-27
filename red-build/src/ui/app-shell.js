@@ -58,17 +58,15 @@ function readSavedSplitPct() {
 
 function createApp(doc, opts = {}) {
   const settings = getDefaultSettings();
-  // **ענף preview לצורך parity (engine/legacy-parity-preview-20261119):** הענף
-  // מפעיל את המנוע המאוחד בנתיב ה־UI/Worker האמיתי — דגל in-band שזורם עם
-  // ההגדרות לאותה נקודת dispatch אחת ב־pipeline (בלי מנגנון מקבילי). ב־main
-  // הערך null ושום דבר אינו מוזרק — ברירת המחדל של main אינה משתנה.
+  // **ענף preview (engine/legacy-parity-preview-20261119):** הענף מוגדר כסביבת
+  // המנוע המאוחד. מרגע הפיכת המאוחד למנוע היחיד (הסרת legacy) אין עוד דגל
+  // dispatch — branchProfile נשאר לתצוגה/לשמירת הגדרות לא-מחוברות בלבד.
   const branchProfile = opts.branchEngineProfile === 'unified' ? 'unified' : null;
   const branchBuildInfo = opts.branchBuildInfo || null; // { commit, builtAt } — מוזרק מ־build-info.json בזמן פריסה
-  if (branchProfile === 'unified') settings['_engine-force-unified'] = true;
   let text = '';
   let result = null;            // תוצאה מסוריאליזת פרוטוקול (D-65)
   let pageModelObj = null;      // **שלב 8 פרוסה 2 (§4.4):** PageModel שהתקבל מה-Worker — מאומת וקפוא מחדש
-  let engineProfile = 'legacy'; // **פרוסה 3 (§2.3):** פרופיל המנוע של התוצאה הנוכחית (legacy/unified)
+  const engineProfile = 'unified'; // **מנוע יחיד (2ae45b9):** אין עוד פרופיל legacy — קבוע לכל התוצאות
   let caretMapObj = null;
   let lightDirty = false, heavyDirty = false;
   let typesetGen = 0; // **S5.2 (5):** דור עימוד — מונה תוצאות שהושלמו; חוזה: st.gen (אודיט חי בוחן שינוי)
@@ -481,17 +479,12 @@ function createApp(doc, opts = {}) {
       } catch (e) {
         pageModelObj = null;
       }
-      // **פרוסה 3 (§2.3):** פרופיל המנוע שרץ (מה-Worker דרך ui-result-v1) —
-      // נשמר לכל רינדור חוזר (גם keepView) כדי שהתצוגה לא תחליף רנדרר
-      // באמצע סשן.
-      engineProfile = 'unified';
-      // **ענף preview (§ג.4 בהוראה):** כשל מפורש כשחסר PageModel או כשהמנוע
-      // נפל בשקט ל־legacy למרות פרופיל הענף — אין fallback שקט ואין המשך תצוגה
-      // כאילו הכול תקין. התצוגה הקיימת נשמרת כמו שהיא, אך מצב המנוע הופך לשגיאה.
+      // **ענף preview (§ג.4 בהוראה):** כשל מפורש כשחסר PageModel — אין fallback
+      // שקט ואין המשך תצוגה כאילו הכול תקין. התצוגה הקיימת נשמרת כמו שהיא,
+      // אך מצב המנוע הופך לשגיאה. (מנוע היחיד הוא המאוחד — בדיקת ה-fallback
+      // ל־legacy בוטלה עמו.)
       if (branchProfile === 'unified') {
-        if (engineProfile === 'legacy') {
-          status.setEngineState('error', { message: 'ענף preview: המנוע נפל ל־legacy למרות פרופיל unified — fallback שקט אסור. דווחו זאת.' });
-        } else if (!pageModelObj) {
+        if (!pageModelObj) {
           status.setEngineState('error', { message: 'ענף preview: תוצאת המנוע המאוחד הגיעה ללא PageModel תקין — אין fallback. דווחו זאת.' });
         }
       }
@@ -538,8 +531,7 @@ function createApp(doc, opts = {}) {
       text = '';
       editor.setText('');
       result = null;
-      pageModelObj = null; // **פרוסה 2:** ניקוי המודל עם המסמך
-      engineProfile = 'legacy'; // **פרוסה 3:** איפוס הפרופיל עם המסמך
+      pageModelObj = null; // **פרוסה 2:** ניקוי המודל עם המסמך (engineProfile קבוע — המנוע היחיד הוא המאוחד)
       caretMapObj = null;
       preview.setResult({ pages: [], report: { findings: [], counts: {} }, trace: { events: [] }, tokens: [], droppedEvents: 0 }, settings);
       testing.setResult({ pages: [], report: { findings: [], counts: {} }, trace: { events: [] }, tokens: [], droppedEvents: 0 });

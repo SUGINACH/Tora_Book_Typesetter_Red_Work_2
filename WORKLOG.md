@@ -4967,3 +4967,12 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
 - Confirmed PDF still uses per-character `cidOf(ch)` and renderer-local visual-order handling; font subsetter begins from Unicode/cmap rather than shaped GIDs.
 - Created `audits/PRODUCTION_SHAPEDRUN_INTEGRATION_CONTRACT_2026-11-25.md`, defining the one-path contract: itemize paragraph before splitting; canonical shaped result feeds `MeasureAPI.measureItem`; cluster-safe word slices feed LineModel; line-edge BOT/EOT is resolved before PageModel; PageModel glyph placements feed DOM/HTML/PDF without reshaping.
 - This is a source-grounded integration contract, not a claim that production code has changed. No production MeasureAPI, LineItems, LineModel, materializer, DOM or PDF code changed. TYP-SHAPING-01 remains open pending implementation and all-target acceptance.
+
+
+## 2026-11-27 — מנוע יחיד: תיקון שבר הפריסה מ-2ae45b9 (legacy-settings-map + שער sanity)
+
+- בסיס: `2ae45b9` (הסרת legacy). הבנייה בפועל נשברה: `imud-library.js:17` דרש `engine/core/legacy-settings-map.js` שנמחק — למרות שהוא מתאם הנתונים החי של ייבוא ברירות המחדל המקוריות וערכות הסגנון (תלמוד/פרשנות/קונטרס) דרך `importImudSettings` — לא מנוע legacy. הבנדל של ה-UI לא נבנה מאז.
+- שער ה-sanity של `preview-engine-parity.yml` דרש `_engine-force-unified` בשני הבנדלים — דגל ש-2ae45b9 הסיר מה-pipeline (בצדק, כמנגנון dispatch כפול) — כך שגם בנייה מוצלחת הייתה נחסמת בפריסה. האתר החי נשאר על `6705780b` (לפני הסרת legacy).
+- תיקון: שחזור `legacy-settings-map.js` כמו שהוא (אפס תלויות; טבלת disposition טהורה); הסרת הזרקת הדגל המת `settings['_engine-force-unified']` מ-app-shell; `engineProfile` קבוע `'unified'` (מנוע יחיד) עם הסרת ענף ה-legacy-fallback המת — נותר שער השגיאה המפורשת לחוסר PageModel; הערת LEGACY_PT_CLASS המיושנת ב-dom-renderer תוקנה; שער ה-sanity הוחלף לבקרת מנוע-יחיד: pageModel בשני הבנדלים + בקרת שלילה על קריאות `legacyTypeset(`/`renderLegacyPage(`/`projectLegacyDocument(`.
+- אימות (בנייה בלבד, ללא בדיקות): `node tools/build-worker-bundle.js` — worker 98 מודולים, app 72 מודולים; כל נקודות הכניסה (browser-entry/engine-worker-main/export-api/preview-tab/app-shell/imud-library) נטענות; אפס require תלוי בעץ המקור (סריקה סטטית); שערי ה-sanity עוברים על הבנדלים הבנויים.
+- פתוח: מזהי impact-path ישנים (`layout/legacy-imud-flow`) בקטלוג ההגדרות — ניקוי ביחידת ההגדרות; ענף ה-renderPage המת ב-preview-tab (9c.4-marker) ומסלובי export כפולים (exportHtml/exportPdf מול FromModel) — ביחידת איחוד מסלולי הפלט.

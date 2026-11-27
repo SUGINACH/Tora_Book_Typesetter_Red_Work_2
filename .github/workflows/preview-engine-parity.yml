@@ -54,14 +54,23 @@ jobs:
           test -s red-build/ui/app.bundle.js
           test -s red-build/ui/engine-worker.bundle.js
 
-      - name: 'Sanity: app and Worker both carry the unified dispatch path'
+      - name: 'Sanity: bundles carry the unified-only engine (2ae45b9+)'
         run: |
-          grep -q '_engine-force-unified' red-build/ui/app.bundle.js \
-            || { echo 'FATAL: app bundle does not inject the unified engine flag'; exit 1; }
-          grep -q '_engine-force-unified' red-build/ui/engine-worker.bundle.js \
-            || { echo 'FATAL: worker bundle lacks the unified dispatch branch'; exit 1; }
+          # מנוע יחיד (2ae45b9): דגל ה-dispatch _engine-force-unified הוסר עם
+          # הסרת legacy. השער החדש: (א) ה-Worker נושא את נתיב ה-PageModel;
+          # (ב) ה-Worker אינו נושא את מנוע המורשת או את המקרן/הרנדרר שלו
+          # (בקרת שלילה — אפס קריאות legacy בבנדל); (ג) האפליקציה נושאת את
+          # מסלול שחזור ה-PageModel.
+          grep -q 'pageModel' red-build/ui/app.bundle.js \
+            || { echo 'FATAL: app bundle lacks the PageModel restore path'; exit 1; }
           grep -q 'pageModel' red-build/ui/engine-worker.bundle.js \
             || { echo 'FATAL: worker bundle lacks PageModel output'; exit 1; }
+          if grep -q 'legacyTypeset(\|renderLegacyPage(\|projectLegacyDocument(' red-build/ui/engine-worker.bundle.js; then
+            echo 'FATAL: worker bundle still contains a legacy engine call path'; exit 1
+          fi
+          # הערה: מזהי impact-path ישנים ('layout/legacy-imud-flow') בקטלוג
+          # ההגדרות והערות תיעוד אינם קריאת מנוע — הבנייה עצמה מוכיחה שאין
+          # require תלוי; הם מטופלים בניקוי הקטלוג (שלב הגדרות/Text IDs).
 
       - name: Write build-info.json (commit + timestamp + profile)
         run: |
