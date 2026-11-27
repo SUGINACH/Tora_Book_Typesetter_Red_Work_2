@@ -1,8 +1,8 @@
 {
  "profile": "unified",
  "branch": "fix/pdf-header-baseline-20261127",
- "commit": "4472617",
- "builtAt": "2026-11-27T14:34:10Z",
+ "commit": "c00a278",
+ "builtAt": "2026-11-27T15:01:25Z",
  "mode": "manual-gh-pages-deploy-no-workflows",
  "note": "§27.1.3: ה-runtime ה-staged (Unicode18+HarfBuzz) אינו עוד שער חובה בנתיב ה-worker הפעיל — pipeline אינו צורך אותו; אתחול מפורש דרך typography-runtime-init נותר. ASSET_VERSION 2026-11-27-shaping-gate"
 }
