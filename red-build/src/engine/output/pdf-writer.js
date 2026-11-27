@@ -477,8 +477,9 @@ function writePdf(opts) {
         const sw = s.w != null ? s.w : s.text.length * 5.5;
         const x = s.x != null ? s.x : (s.pos === 'right' ? pg.width - 60 - sw : s.pos === 'center' ? (pg.width - sw) / 2 : 60);
         const y = pg.header.baselineY != null ? pg.header.baselineY : pg.header.y + 10;
-        // **RC-HDR-20261127:** בסיס פר-סלוט מהחותמת (headerSlotGeo — geo.y+ascent,
-        // זהה ל-DOM) גובר על בסיס ה-header הכללי; הנוסחאות הישנות נפילה בלבד.
+        // **RC-HDR2-20261127:** בסיס פר-סלוט מהחותמת (GEO.HEADER_BASELINE=71.9px
+        // — מעל קו המפריד ב-82.67px, כמו הייחוס) גובר על בסיס ה-header הכללי;
+        // הנוסחאות הישנות נפילה בלבד.
         const sy = s.baselineY != null ? s.baselineY : y;
         // **D-89:** סלוט legacy עם מילים ממוקמות מהמקרן — בסיס/צבע פר-מילה;
         // נפילה לנוסחה הישנה רק כשאין מילים (נתיב DP).

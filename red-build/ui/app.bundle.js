@@ -15995,6 +15995,16 @@ function renderModelPage(mp, settings, doc, opts = {}) {
       const span = doc.createElement('span');
       span.className = `rh rh--${s.pos}`;
       span.style.position = 'absolute';
+      // **RC-HDR2-20261127 (התיקון ב-DOM — כהוראת המשתמש):** עד כאן הספאן
+      // ישב בטופ המיכל (mp.header.y=89.2px) — **מתחת** לקו המפריד (hdr-rule
+      // ב-y=82.67px), בסתירה לייחוס (פס גליפים 42.56–57.56pt ⇒ בסיס 71.9px,
+      // **מעל** הקו). כעת: top פר-סלוט = baselineY − ascent×sizePx (ביחס למיכל),
+      // בדיוק הנוסחה של ה-PDF — הכותרת עולה מעל הקו ומתיישרת עם הייצוא.
+      // נפילה להתנהגות הישנה רק בלי בסיס/עלייה מהחותמת (פרופיל DP).
+      if (s.baselineY != null && s.ascentEm != null && s.sizePt != null) {
+        const spanTop = s.baselineY - s.ascentEm * (s.sizePt * PT_TO_PX) - mp.header.y;
+        span.style.top = `${px2(spanTop)}px`;
+      }
       // **Iteration-006 (G6/RC-F1):** סלוט כותרת = שורה אחת תמיד (חוזה הייחוס —
       // כותרת-מרכז ארוכה נשארת שורה אחת וחופפת את מילות-הצד, p647-653). בלי
       // nowrap הדפדפן שובר לשתי שורות בתיבת 14px ⇒ שורות מודבקות זו על זו.

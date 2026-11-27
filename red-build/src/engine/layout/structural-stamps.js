@@ -309,6 +309,14 @@ function stampHeaderSlots(page, settings, measure) {
     .filter(s => s && s.text);
   if (!slots.length) return false;
   const geo = headerGeometry(page);
+  // **RC-HDR2-20261127:** עוגן הבסיס בפרופיל IMUD — GEO.HEADER_BASELINE (71.9px),
+  // מעל קו המפריד (82.67px) כמו בייחוס. משוחזר לאחר ש-RC-HDR הקודם הסירו בטעות.
+  const imudHdr = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  let hdrAnchor = null;
+  if (imudHdr) {
+    const { GEO } = require('../core/imud-geometry');
+    hdrAnchor = GEO.HEADER_BASELINE;
+  }
   const stamped = slots.map(s => {
     const t = scrubPUAText(String(s.text || ''));
     const sKey = familyFontKeyOf(s.font);
@@ -319,11 +327,12 @@ function stampHeaderSlots(page, settings, measure) {
     // גם לרינדור, והכותרת הודפסה זעירה.
     const slotSize = Number(s.sizePt) > 0 ? Number(s.sizePt) : 9;
     const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, slotSize)));
-    // **RC-HDR-20261127 (פגם כותרת ב-PDF — ״כותרת מעל קו המפריד״):** בסיס
-    // פר-סלוט = geo.y + ascent(גופן הסלוט)×sizePx — בדיוק המיקום שה-DOM מצייר
-    // (span top=geo.y; baseline=top+ascent; נמדד בחי: Livorna 15pt ⇒ 89.2+15=104.2px,
-    // מתחת לקו המפריד ב-82.7px כמו העיצוב המאושר). ascentEm מפרופיל hhea
-    // של גופן הסלוט; נפילה מכוילת 0.75em בלבד כשאין מדידת משפחה.
+    // **RC-HDR2-20261127 (היפוך RC-HDR):** הכותרת העליונה חייבת להיות **מעל**
+    // קו המפריד (hdr-rule ב-y=82.67 — decoration/gate-design) כמו בייחוס
+    // (old-engine: פס גליפים 42.56–57.56pt ⇒ בסיס 71.9px = GEO.HEADER_BASELINE).
+    // RC-HDR הקודם טעה והוריד את הכותרת מתחת לקו "כדי להתאים ל-DOM" — ה-DOM
+    // הוא שהיה שגוי (ספאנים בטופ 89.2px), והתיקון חל עליו (pagemodel-dom-renderer).
+    // ascentEm נשמר פר-סלוט — ה-DOM זקוק לו לחישוב top=baseline−ascent×size.
     const sizePx = slotSize * (96 / 72);
     let ascentEm = 0.75;
     try {
@@ -332,13 +341,16 @@ function stampHeaderSlots(page, settings, measure) {
         if (Number.isFinite(v) && v > 0) ascentEm = v;
       }
     } catch (e) { /* נפילה מכוילת 0.75em */ }
-    return { pos: s.pos, align: s.align, text: t, w, sizePt: slotSize, baselineY: geo.y + ascentEm * sizePx, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
+    return { pos: s.pos, align: s.align, text: t, w, sizePt: slotSize, ascentEm,
+      ...(hdrAnchor != null ? { baselineY: hdrAnchor } : {}),
+      ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
   });
-  // **RC-HDR-20261127:** הדריסה הלגסית baselineY=GEO.HEADER_BASELINE (71.9px —
-  // קבוע legacy-projector מעידן ה-parity שבוטל ב-D-100) הציבה את הכותרת
-  // מעל קו המפריד ב-PDF, בסתירה ל-DOM ולעיצוב המאושר (מתחת לקו).
-  // הוסרה — מקור הסמכות היחיד לבסיס הוא baselineY פר-סלוט מחושב לעיל.
-  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y, slots: stamped };
+  // **RC-HDR2-20261127:** בסיס הכותרת בפרופיל IMUD = GEO.HEADER_BASELINE (71.9px —
+  // מעל קו המפריד ב-82.67px, כמו הייחוס) — גם פר-סלוט (מקור יחיד ל-DOM ול-PDF)
+  // וגם ברמת ה-header (לנפילת materialize/pdf-writer — כמו שהיה טרום RC-HDR).
+  // בפרופיל DP אין עוגן — הנוסחאות הגנריות נשארות נפילה בלבד (התנהגות טרום-RC-HDR).
+  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y,
+    ...(hdrAnchor != null ? { baselineY: hdrAnchor } : {}), slots: stamped };
   return true;
 }
 
