@@ -303,8 +303,8 @@ describe('S10.2 שער 2 — F-06: אין עימוד אוטומטי מכל בק�
     fire(app.editor.textarea, 'paste', { clipboardData: { getData: () => SMALL_DOC } });
     await waitFor(() => app.getState().hasResult, 30000, 'SMALL_DOC result');
     const hashBefore = app.getState().layoutHash;
-    // שינוי כבד דרך בקרה אמיתית בפאנל: grid-col-width-pct (select→input number)
-    app.onSettingChanged('grid-col-width-pct', 52);
+    // שינוי כבד דרך בקרה אמיתית בפאנל: body-font-size-pt (גודל גוף — משנה פריסה בפועל; grid-col-width-pct נעול ניטרלי-גיאומטריה מכוח חוזה 9C3 מאז W-2)
+    app.onSettingChanged('body-font-size-pt', 20);
     assert(app.status.getBlink(), '⚡ חייב לההבהב אחרי שינוי כבד');
     assertEq(app.getState().layoutHash, hashBefore, 'אסור עימוד אוטומטי — hash לא ישתנה');
     assert(!app.engine.busy, 'המנוע פנוי — לא הופעל');
@@ -315,7 +315,7 @@ describe('S10.2 שער 2 — F-06: אין עימוד אוטומטי מכל בק�
     app.status.bolt.click();
     await waitFor(() => app.getState().layoutHash !== hashBefore, 30000, 'bolt retypeset');
     const elapsed = performance.now() - t0;
-    assert(app.getState().layoutHash !== hashBefore, 'העימוד מחדש חייב לשנות את הפריסה (רוחב טור 52%)');
+    assert(app.getState().layoutHash !== hashBefore, 'העימוד מחדש חייב לשנות את הפריסה (גוף 20pt)');
     assert(elapsed < 2000, `הנתיב המיידי איטי מדי: ${elapsed.toFixed(0)}ms`);
     assert(!app.status.getBlink(), 'ההבהוב נפסק אחרי העימוד');
   });
@@ -738,9 +738,13 @@ describe('S10.2 שער 6 — שינוי קל ≤2s; כבד דורש ⚡; טבל�
     }
 
     // שינוי גיאומטרי רגיל נשאר heavy; אין רינדור־קל שמסתיר אותו.
-    const heavy = typeset(SMALL_DOC, Object.assign({}, baseSettings, { 'grid-col-width-pct': 55 }));
+    // **W-3 (27.11):** grid-col-width-pct נעול כניטרלי-גיאומטריה מכוח חוזה 9C3
+    // (imud-geometry מקור יחיד — כמו pipeline.test.js שעודכן ב-W-2); המנגנון החי
+    // מוכח באמצעות body-font-size-pt שמשנה מדידה/שורות בפועל.
+    const heavy = typeset(SMALL_DOC, Object.assign({}, baseSettings, { 'body-font-size-pt': 20 }));
     assert(heavy.layoutHash !== base.layoutHash, 'שינוי כבד חייב לשנות פריסה');
-    assertEq(classifyChange('grid-col-width-pct'), 'heavy');
+    assertEq(classifyChange('body-font-size-pt'), 'heavy');
+    assertEq(classifyChange('grid-col-width-pct'), 'heavy', 'עדיין כבד (אינו render-only) — אך ניטרלי-גיאומטריה לפי 9C3');
 
     throws(() => typeset(SMALL_DOC, Object.assign({}, baseSettings, { 'background-image': 'assets/bg.png' })),
       /unified-unsupported-settings/);
@@ -1085,37 +1089,43 @@ describe('D-84 — רינדור מחלונות (virtualization) לספרים א�
   const { buildPreviewTab } = require('../../src/ui/preview-tab');
 
   it('מסמך 88 עמודים: מצב וירטואלי — placeholders לכולם, חלון חי קטן', () => {
+    // **W-3 (27.11) — חוזה מנוע-יחיד:** התצוגה צורכת PageModel בלבד (options.pageModel,
+    // כמו המוצר); מאז כריתת 9c.4 אין ענף result.pages — והבדיקות ננעלות על החוזה.
     const result = typeset(REAL, getDefaultSettings());
-    assert(result.pages.length > 60, `נדרש >60 עמודים להפעלת וירטואליזציה (קיבלנו ${result.pages.length})`);
+    assert(result.pageModel && result.pageModel.pages.length > 60,
+      `נדרש >60 עמודי PageModel להפעלת וירטואליזציה (קיבלנו ${result.pageModel && result.pageModel.pages.length})`);
     const doc = makeDoc();
     const pv = buildPreviewTab(doc, {});
-    pv.setResult(serializeTypesetResult(result), getDefaultSettings());
+    pv.setResult(serializeTypesetResult(result), getDefaultSettings(), { pageModel: result.pageModel, profile: 'unified' });
     assertEq(pv.isVirtual(), true, 'מעל הסף ⇒ מצב וירטואלי');
-    assertEq(pv.getPageCount(), result.pages.length, 'ספירת העמודים שלמה');
+    assertEq(pv.getPageCount(), result.pageModel.pages.length, 'ספירת העמודים שלמה');
     const allPages = pv.root.querySelectorAll('.preview-page');
-    assertEq(allPages.length, result.pages.length, 'placeholders + חיים = כל העמודים');
+    assertEq(allPages.length, result.pageModel.pages.length, 'placeholders + חיים = כל העמודים');
     const rendered = pv.getRenderedCount();
     assert(rendered > 0 && rendered <= 20, `חלון חי קטן (קיבלנו ${rendered})`);
     const phs = pv.root.querySelectorAll('.preview-page--placeholder');
-    assertEq(phs.length, result.pages.length - rendered, 'placeholders = כולם פחות החלון החי');
-    // מבנה גיאומטרי: ל-placeholder יש רוחב/גובה מהתבנית (מקור יחיד)
-    const t0 = result.pages[0].template;
-    assert(phs.every(p => p.style && p.style.height === `${t0.height}px`), 'גובה placeholder = גובה תבנית');
+    assertEq(phs.length, result.pageModel.pages.length - rendered, 'placeholders = כולם פחות החלון החי');
+    // מבנה גיאומטרי: לכל placeholder רוחב/גובה מה-geometry של עמוד המודל שלו (מקור יחיד)
+    assert(phs.every(p => {
+      const mp = result.pageModel.pages[Number(p.getAttribute('data-page-index'))];
+      return mp && mp.geometry && p.style && p.style.height === `${mp.geometry.height}px`
+        && p.style.width === `${mp.geometry.width}px`;
+    }), 'גובה/רוחב placeholder = geometry של עמוד המודל');
   });
 
   it('קפיצה לעמוד רחוק: נרנדר עצל לפני הגלילה; DOM נשאר קטן', () => {
     const result = typeset(REAL, getDefaultSettings());
     const doc = makeDoc();
     const pv = buildPreviewTab(doc, {});
-    pv.setResult(serializeTypesetResult(result), getDefaultSettings());
-    const target = result.pages.length - 5;
+    pv.setResult(serializeTypesetResult(result), getDefaultSettings(), { pageModel: result.pageModel, profile: 'unified' });
+    const target = result.pageModel.pages.length - 5;
     pv.scrollToPage(target);
     assertEq(pv._lastScrollTarget(), target, 'יעד הגלילה נשמר');
     assert(pv.getRenderedCount() > 0 && pv.getRenderedCount() <= 25, `DOM קטן גם אחרי קפיצה (קיבלנו ${pv.getRenderedCount()})`);
     const phs = pv.root.querySelectorAll('.preview-page--placeholder');
     const stillPh = phs.filter(p => p.getAttribute('data-page-index') === String(target));
     assertEq(stillPh.length, 0, 'עמוד היעד כבר לא placeholder — הוא רונדר');
-    assertEq(pv.root.querySelectorAll('.preview-page').length, result.pages.length, 'הסדר והכמות נשמרים');
+    assertEq(pv.root.querySelectorAll('.preview-page').length, result.pageModel.pages.length, 'הסדר והכמות נשמרים');
     // highlightIssue על עמוד רחוק — גם הוא מרנדר עצל
     pv.highlightIssue({ page: 2, id: 'x', target: '' });
     const phs2 = pv.root.querySelectorAll('.preview-page--placeholder');
@@ -1125,12 +1135,12 @@ describe('D-84 — רינדור מחלונות (virtualization) לספרים א�
 
   it('מסמך קטן (≤60 עמודים): רינדור מלא — ההתנהגות המקורית נשמרת', () => {
     const result = typeset(CORPUS, getDefaultSettings());
-    assert(result.pages.length <= 60, 'הקורפוס הקנוני קטן מהסף');
+    assert(result.pageModel && result.pageModel.pages.length <= 60, 'הקורפוס הקנוני קטן מהסף');
     const doc = makeDoc();
     const pv = buildPreviewTab(doc, {});
-    pv.setResult(serializeTypesetResult(result), getDefaultSettings());
+    pv.setResult(serializeTypesetResult(result), getDefaultSettings(), { pageModel: result.pageModel, profile: 'unified' });
     assertEq(pv.isVirtual(), false, 'מתחת לסף ⇒ רינדור מלא');
-    assertEq(pv.getRenderedCount(), result.pages.length, 'כל העמודים חיים');
+    assertEq(pv.getRenderedCount(), result.pageModel.pages.length, 'כל העמודים חיים');
     assertEq(pv.root.querySelectorAll('.preview-page--placeholder').length, 0, 'אין placeholders');
   });
 });

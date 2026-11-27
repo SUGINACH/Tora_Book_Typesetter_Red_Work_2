@@ -858,14 +858,33 @@ function createApp(doc, opts = {}) {
     // מפתחות שאינם ברישום RED עוברים דרך importImudSettings (טבלת ה-disposition)
     // במקום להישאר "לא מוכרים". ערכי ui-state נשמרים ב-_legacy-ui-state (לא אובדם).
     const { getSettingDefs } = require('../engine/core/settings-registry');
+    // **W-3 (27.11) — שחזור החסר מ-2ae45b9:** הסרת המנוע המאוחד (9c.4) מחקה בטעות
+    // גם את קריאת ה-adapter הזו; legacy-settings-map.js נשאר כמתאם ייבוא הגדרות
+    // בלבד (חוזה התכנית §0.1/§13.4) והסרת הקריאה כאן שברה את טעינת תבניות
+    // המדור הקודם — מפתחות IMUD הושמטו בשקט (s10-ui/S4.6 אדום מאז). הוחזר כמו שהיה.
+    const { importImudSettings } = require('../engine/core/legacy-settings-map');
     const migrated = migrate(raw.settings || {});
     const regKeys = new Set(getSettingDefs().map(r => r.id));
     const known = {};
+    const legacyKeys = {};
     for (const [k, v] of Object.entries(migrated)) {
       if (k === 'settings_version' || k.startsWith('_')) { known[k] = v; continue; }
-      if (regKeys.has(k)) known[k] = v;
+      (regKeys.has(k) ? known : legacyKeys)[k] = v;
     }
-    const { merged, unknownKeys, issues } = mergeWithDefaults(known);
+    let legacySettings = {};
+    if (Object.keys(legacyKeys).length) {
+      // **EXT-9:** הקטלוג המוטמע (אם נטען) מועבר לפתרון מחסניות הגופן —
+      // "Guttman Rashi, Frank Ruhl Libre" ⇒ המשפחה המוטמעת בפועל, כך שהמדידה
+      // (font-metrics) והתצוגה משתמשות באותו גופן (מונע סחף live↔ייצוא EXT-13).
+      const availableFonts = (opts.imudLibrary && typeof opts.imudLibrary.catalogFamilies === 'function')
+        ? opts.imudLibrary.catalogFamilies() : undefined;
+      const imp = importImudSettings(legacyKeys, regKeys, {
+        contentHeightPx: currentContentHeightPx(),
+        ...(availableFonts ? { availableFonts } : {})
+      });
+      legacySettings = imp.settings; // כולל _legacy-ui-state (ערכי UI נשמרים)
+    }
+    const { merged, unknownKeys, issues } = mergeWithDefaults({ ...legacySettings, ...known });
     const unsupportedUnifiedKeys = [];
     if (branchProfile === 'unified') {
       for (const definition of getSettingDefs()) {

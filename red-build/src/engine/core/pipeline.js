@@ -113,6 +113,27 @@ function typeset(rawText, settingsIn, env = {}) {
   // shaar-pages, gate-design, balancing, side-notes, notes-model, export-api —
   // התרגום מסתיים במודל המאוחד. ה-unified engine הוא מקור האמת הבלעדי
   // לגיאומטריה, טיפוגרפיה ופגינציה.
+  // **W-3 (27.11) — שחזור שומר-האמת (הוסר בטעות ב-2ae45b9 עם המנוע הישן):**
+  // הגדרה המסומנת unifiedSupport=false ברישום ושונה מברירת המחדל חייבת כשל
+  // מפורש ולא אי-הפעלה שקטה (עקרון אין-פילבק-שקט; החוזה נבדק ב-s10-ui/D-64).
+  // מופעל תחת דגל הכפייה בלבד — כפי שהיה קודם 2ae45b9 — כדי שלא לשנות את
+  // התנהגות צרכני המנוע שאינם מבקשים להוכיח את החוזה.
+  const forceUnifiedContract = (!!(typeof process !== 'undefined' && process.env
+    && String(process.env.RED_UNIFIED_IMUD) === '1'))
+    || !!(settingsIn && settingsIn['_engine-force-unified'] === true);
+  if (forceUnifiedContract && settingsIn) {
+    const unsupported = getSettingDefs()
+      .filter((definition) => definition.unifiedSupport === false
+        && Object.prototype.hasOwnProperty.call(settingsIn, definition.id)
+        && JSON.stringify(settingsIn[definition.id]) !== JSON.stringify(definition.default))
+      .map((definition) => definition.id);
+    if (unsupported.length) {
+      const error = new Error('unified-unsupported-settings: הגדרות אלו עדיין אינן מחוברות ל-PageModel המאוחד: ' + unsupported.join(', '));
+      error.code = 'unified-unsupported-settings';
+      error.settingKeys = unsupported;
+      throw error;
+    }
+  }
   const settings = derivePlacementFlags({ ...getDefaultSettings(), ...(settingsIn || {}) });
   // **S10 (REQ-UI-03):** מזליף התקדמות — null כשלא סופק (אפס תקורה במסלול הרגיל).
   const onProgress = typeof env.onProgress === 'function' ? env.onProgress : null;
