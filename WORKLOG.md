@@ -5020,3 +5020,71 @@ HEAD של הוכחת runtime: `ce660608e56b0ed1c1c9af45a2958fa68a6f58cd`.
 - אימות ארבע-שלבים חי: בנייה דטרמיניסטית (SHA-256 באנדלים זהים בין המקומי לחי: app 2e053b17…, worker 28de3a2d…) → אתר חי af57770: עימוד 6 עמודים, כולם pmr-page (המקרין היחיד), running-head class=head--sep-gray (ברירת מחדל) ובמעבר הגדרה live — head--sep-black (A/B חי) → ייצוא HTML: class נכון בתוצר, אפס כללי CSS אמיתיים ל-head--sep-*/running-head (אחרי הסרת הערות) → ייצוא PDF חי מה-Worker: 152,994 bytes, 6 עמודים, PDF 1.4 (נתיב ה-PDF לא נגע בו — קנוני ce70ae37def23a7d ודטרמיניזם ללא שינוי).
 - נעילות: canonical 6/6 hash ce70ae37def23a7d (38 עמ') · determinism OK · s13-acceptance 11/11 · s10-ui 39/45 (בסיס; 6 הכישלונות — W-3) · s9-headers 25/25 · s14 53/53 · s12 26/26 · s8d 23/23 · s8e 13/13 · s8f 10/10 · s63 7/7.
 - פתוח: dom-renderer.js+exportPdf/exportHtml — שלב 13; 29 סוויטות השרשרת האדומות — W-10 מוצע; שאריות W-3..W-9 לפי התוכנית.
+
+## 2026-11-27 — W-3 + W-4: s10-ui לחוזה מנוע-יחיד; שחזור שני שומרים שאבדו ב-2ae45b9; אמת-חוזה fn-placement (F-2.2)
+
+הקשר: תוכנית הסגירה של הביקורת המפלצתית (audits/SPLIT/6) — יום 2–3. בסיס 7a95e13
+(לאחר W-2). קומיטים 6a3cd4b (W-3) + e9fa400 (W-4) + f7dfe6a (cache-buster); פריסה
+ידנית gh-pages 8e47715 (ASSET_VERSION 2026-11-27-w3-w4, [skip ci] — אפס workflows).
+
+### W-3 — s10-ui 39/45 → 45/45 (D-84 + D-64/F-06/S4.6)
+
+- **D-84 (3 בדיקות):** מאז כריתת 9c.3/9c.4 preview-tab צורך PageModel בלבד
+  (options.pageModel) — הבדיקות עדיין קראו setResult בלי מודל ⇒ ענף השגיאה
+  המפורשת (0 עמודים/isVirtual=false). הוסבו לחוזה מנוע-היחיד: העברת
+  result.pageModel, ספירות מ-pageModel.pages, וגאומטריית placeholder לפי
+  geometry של עמוד המודל של כל placeholder (מקור יחיד — לא תבניות מורשת).
+- **D-64/F-06 (2 בדיקות):** grid-col-width-pct נעול ניטרלי-גיאומטריה מכוח חוזה
+  9C3 (imud-geometry מקור יחיד; ננעל ב-W-2 ב-pipeline.test.js) — הוכחת "שינוי
+  כבד משנה פריסה" עברה ל-body-font-size-pt (נמדד חי: hash 342c28f1→b3c33aaf);
+  המיון של grid-col-width-pct נשאר heavy (אינו render-only).
+- **רגרסיה 1 — שחזור (מוצר, חמור):** 2ae45b9 מחק בטעות את קריאת
+  importImudSettings מ-loadTemplateJson — מפתחות IMUD של תבניות המדור הקודם
+  (font-body, size-body, f-h2, s-h2, inp-book-title, h2-title-orn-mode,
+  dim-h2-top-w, builder-*) הושמטו בשקט בטעינה. הושברה כמו שהיתה (כולל העברת
+  הקטלוג המוטמע לפתרון מחסניות EXT-9 ושימור _legacy-ui-state);
+  legacy-settings-map.js נשאר מתאם יבוא הגדרות בלבד (תכנית §0.1/§13.4).
+- **רגרסיה 2 — שחזור (מוצר):** 2ae45b9 מחק את שומר unified-unsupported-settings
+  מ-typeset. הושבר כמו שהיה — מופעל תחת דגל הכפייה בלבד (RED_UNIFIED_IMUD=1
+  או _engine-force-unified): הגדרה המסומנת unifiedSupport=false ושונה מברירת
+  המחדל ⇒ כשל מפורש, לא אי-הפעלה שקטה. אף צרכן קיים לא נפגע (נבדק: אף בדיקה
+  שמציבה את הדגל אינה מציבה מפתחות לא-נתמכים).
+
+### W-4 — fn-placement-mode: ברירת מחדל אמיתית (F-2.2 נסגר)
+
+המנוע המאוחד מפעיל את שער תקציב-ההערות בלבד (האופציה legacy) — למנגנון
+body-first (בחירת S75) אין עדיין פורט (משימת "שלב Notes" פתוחה). עד אז עמדה
+ברירת המחדל על body-first — ערך שהמנוע מתעלם ממנו (חוזה מבלבל). הוחלט לפי
+התוכנית (W-4, אפיק ב'): ברירת המחדל = legacy — משקפת את ההתנהגות בפועל.
+אפס שינוי התנהגות במנוע (להגדרה אין ענף התנהגותי; אומת בגריפה); הפקד חסום
+ב-UI (unifiedSupport:false) כמקודם; הערת הרישום והאירוע ב-pipeline מתעדים את
+הכוונה — בהשלמת הפורט תחזור ברירת המחדל ל-body-first כהכרעת S75.
+bindings.generated חודש; הבאנדלים נבנו מחדש.
+
+### אימות
+
+- **שרשרת מלאה (107 סוויטות, עץ סופי f7dfe6a):** ‏79 ירוקות / 28 אדומות —
+  בדיוק קבוצת CHAIN-DEBT-01 פחות s10-ui שהורוקה; **אפס כישלונות חדשים**
+  (השוואת-ערכות מול בסיס 29 המתועד; s10-ui כעת PASS).
+- נעילות ללא שינוי: canonical 6/6 hash ce70ae37def23a7d (38 עמ') ·
+  s13-acceptance 11/11 · s9-headers 25/25 · determinism OK.
+- סוויטות מושפעות ירוקות: registry 9/9 · s61 27/27 · s63 7/7 · s9h 7/7 ·
+  s9i 4/4 · s9j 6/6 · s9k 6/6 · rc-f1 4/4 · s9c-dom-preview 8/8 · pipeline 14/14.
+- **ארבעה שלבים חיים (8e47715):** (1) בנייה דטרמיניסטית — SHA-256 באנדלים
+  זהים בין המקומי לאתר (app e6f826c0…, worker 4d7f8780…); build-info →
+  f7dfe6a. (2) אתר חי: fn-placement-mode='legacy' בהגדרות החיות; טעינת תבנית
+  IMUD היסטורית — כל המיפויים החיים (font-body⇒body-font='Guttman Rashi',
+  size-body⇒12pt, f-h2⇒AlphaBlack 17pt, inp-book-title, orn-scope, ושימור
+  _legacy-ui-state) ו-unknownKeys=[] — הרגרסיה מתוקנת בשימוש אמיתי. (3) עימוד
+  חי 9 עמודים (hash 154037ff) אחרי הזרקת מסמך דרך העורך; 0 שגיאות קונסולה.
+  (4) ייצוא PDF חי מה-Worker: 115,964 bytes, 9 עמ', %PDF-1.4 — ניתוח PyMuPDF:
+  שער+תוכן+פתיחת-חלקים+גוף מלא (690 מילים), כותרות עליונות מעל הקו (y≈51–53pt
+  מול 70.5pt — D-116 נשמר), 0 מילים מחוץ לגבולות.
+- צילום מסך: work/live-verify/w3-w4-live-site.png.
+
+### פתוח (לא משימי היום)
+
+- CHAIN-DEBT-01: 28 סוויטות אדומות שנותרו (הורד של s10-ui) — W-10 כמתוכנן.
+- פורט body-first (שלב Notes) — בהשלמתו תחזור ברירת המחדל ל-body-first (S75).
+- המשך התוכנית: W-5 (ניקוי יבוא) + W-7 (סורק מפתחות-רפאים) → W-8 (עיצובי
+  רקע — פגם #2) + W-9 (ביצועים).
