@@ -453,7 +453,6 @@ var __paths = {
   "src/engine/layout/structural-stamps.js|../core/pua-text": "src/engine/core/pua-text.js",
   "src/engine/layout/structural-stamps.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/layout/structural-stamps.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
-  "src/engine/layout/structural-stamps.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
   "src/engine/layout/structural-stamps.js|../decoration/folio": "src/engine/decoration/folio.js",
   "src/engine/layout/structural-stamps.js|../decoration/gate-design": "src/engine/decoration/gate-design.js",
   "src/engine/typography/font-keys.js|./measure-api": "src/engine/typography/measure-api.js",
@@ -20251,14 +20250,26 @@ function stampHeaderSlots(page, settings, measure) {
     // גם לרינדור, והכותרת הודפסה זעירה.
     const slotSize = Number(s.sizePt) > 0 ? Number(s.sizePt) : 9;
     const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, slotSize)));
-    return { pos: s.pos, align: s.align, text: t, w, sizePt: slotSize, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
+    // **RC-HDR-20261127 (פגם כותרת ב-PDF — ״כותרת מעל קו המפריד״):** בסיס
+    // פר-סלוט = geo.y + ascent(גופן הסלוט)×sizePx — בדיוק המיקום שה-DOM מצייר
+    // (span top=geo.y; baseline=top+ascent; נמדד בחי: Livorna 15pt ⇒ 89.2+15=104.2px,
+    // מתחת לקו המפריד ב-82.7px כמו העיצוב המאושר). ascentEm מפרופיל hhea
+    // של גופן הסלוט; נפילה מכוילת 0.75em בלבד כשאין מדידת משפחה.
+    const sizePx = slotSize * (96 / 72);
+    let ascentEm = 0.75;
+    try {
+      if (sMeasure && typeof sMeasure.ascentEm === 'function') {
+        const v = Number(sMeasure.ascentEm());
+        if (Number.isFinite(v) && v > 0) ascentEm = v;
+      }
+    } catch (e) { /* נפילה מכוילת 0.75em */ }
+    return { pos: s.pos, align: s.align, text: t, w, sizePt: slotSize, baselineY: geo.y + ascentEm * sizePx, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
   });
-  // **Iteration-003 (legacy parity):** בסיס הכותרת המכויל (GEO.HEADER_BASELINE
-  // — כמו legacy-projector) בפרופיל IMUD; בלי זה הנוסחה הגנרית הדפיסה
-  // את הכותרת ~20pt נמוך מדי.
-  const imudHdr = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
-  const { GEO } = require('../core/imud-geometry');
-  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y, ...(imudHdr ? { baselineY: GEO.HEADER_BASELINE } : {}), slots: stamped };
+  // **RC-HDR-20261127:** הדריסה הלגסית baselineY=GEO.HEADER_BASELINE (71.9px —
+  // קבוע legacy-projector מעידן ה-parity שבוטל ב-D-100) הציבה את הכותרת
+  // מעל קו המפריד ב-PDF, בסתירה ל-DOM ולעיצוב המאושר (מתחת לקו).
+  // הוסרה — מקור הסמכות היחיד לבסיס הוא baselineY פר-סלוט מחושב לעיל.
+  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y, slots: stamped };
   return true;
 }
 
@@ -21019,6 +21030,10 @@ function buildPageModel(result, opts = {}) {
           slots: (pp.header.slots || []).map(s2 => ({
             pos: s2.pos, align: s2.align || null, text: s2.text,
             x: r2(s2.x), w: r2(s2.w), sizePt: s2.sizePt != null ? s2.sizePt : null,
+            // **RC-HDR-20261127:** בסיס פר-סלוט מהחותמת (geo.y+ascent — כמו ה-DOM)
+            // חייב לשרוד את הסריאליזציה; עד כאן נוקה כאן ברשימה הלבנה וה-PDF
+            // נפל לבסיס ה-header הכללי.
+            ...(s2.baselineY != null ? { baselineY: r2(s2.baselineY) } : {}),
             ...(s2.fontKey ? { fontKey: s2.fontKey } : {}),
             ...(s2.color ? { color: s2.color } : {})
           }))
@@ -30231,15 +30246,18 @@ function writePdf(opts) {
         const sw = s.w != null ? s.w : s.text.length * 5.5;
         const x = s.x != null ? s.x : (s.pos === 'right' ? pg.width - 60 - sw : s.pos === 'center' ? (pg.width - sw) / 2 : 60);
         const y = pg.header.baselineY != null ? pg.header.baselineY : pg.header.y + 10;
+        // **RC-HDR-20261127:** בסיס פר-סלוט מהחותמת (headerSlotGeo — geo.y+ascent,
+        // זהה ל-DOM) גובר על בסיס ה-header הכללי; הנוסחאות הישנות נפילה בלבד.
+        const sy = s.baselineY != null ? s.baselineY : y;
         // **D-89:** סלוט legacy עם מילים ממוקמות מהמקרן — בסיס/צבע פר-מילה;
         // נפילה לנוסחה הישנה רק כשאין מילים (נתיב DP).
         if (s.words && s.words.length) {
-          for (const w of s.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : y, w.sizePt || s.sizePt || 9, w.fontKey, w.color);
+          for (const w of s.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : sy, w.sizePt || s.sizePt || 9, w.fontKey, w.color);
           continue;
         }
         // **Iteration-003 (תצוגה=ייצוא):** הסלוט המוטבע נושא fontKey (גופן
         // הסלוט מההגדרות — Livorna בייחוס) — עד כאן null קבוע ⇒ /F1 (גוף).
-        emitWord(s.text, x, y, s.sizePt || 9, s.fontKey || null, s.color);
+        emitWord(s.text, x, sy, s.sizePt || 9, s.fontKey || null, s.color);
       }
     }
     // **EXT-4 (ציור עיטורים):** פעולות הציור מגיעות מוכנות מהפרויקטור
