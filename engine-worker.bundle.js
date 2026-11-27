@@ -1020,9 +1020,15 @@ function offsetInSpans(at, spans) {
  */
 function typeset(rawText, settingsIn, env = {}) {
   // **S4.9 (פרופיל העימוד המקורי — הוסר):** המנוע היחיד כעת הוא המנוע המאוחד.
-  // נתיב המורשת (legacy-imud-flow) וכל דגלי הכניסה הכפולה (RED_UNIFIED_IMUD,
-  // _engine-force-unified, _layout-profile='imud' + _imudRaw) הוסרו.
-  // ה-unified engine הוא מקור האמת הבלעדי לגיאומטריה, טיפוגרפיה ופגינציה.
+  // נתיב המורשת (legacy-imud-flow / legacy-projector / legacy-ornaments) ודגלי
+  // הכניסה הכפולה RED_UNIFIED_IMUD ו-_engine-force-unified — הוסרו מהקוד.
+  // **אין למחוק את `_layout-profile='imud'` / `_imudRaw` (F-2.1, audits/SPLIT/2.md):**
+  // אלה אינם דגלי בחירת-מנוע אלא נתוני מקור IMUD גולמיים ש-legacy-settings-map
+  // (::importImudSettings, שורות 496-497) מציב בקצה הקלט; הם נצרכים כתנאי תרגום
+  // בלבד ב-structural-stamps (עוגן RC-HDR2), folio, toc-builder, shaar-content/
+  // shaar-pages, gate-design, balancing, side-notes, notes-model, export-api —
+  // התרגום מסתיים במודל המאוחד. ה-unified engine הוא מקור האמת הבלעדי
+  // לגיאומטריה, טיפוגרפיה ופגינציה.
   const settings = derivePlacementFlags({ ...getDefaultSettings(), ...(settingsIn || {}) });
   // **S10 (REQ-UI-03):** מזליף התקדמות — null כשלא סופק (אפס תקורה במסלול הרגיל).
   const onProgress = typeof env.onProgress === 'function' ? env.onProgress : null;
@@ -27241,6 +27247,15 @@ __modules["src/engine/output/dom-renderer.js"] = function (require, module, expo
 'use strict';
 
 /**
+ * **W-2 (השלמת כריתת 9c.4, 27.11) — תפקיל אמת:** מרנדר את עמודי ה-LineModel
+ * הפנימיים של התוצאה (result.pages — ייצוג הביניים שממנו נבנה ה-PageModel).
+ * צרכניו כיום: בדיקות (אורקל רינדור — s9-headers, s14, s8d ועוד) ופונקציות
+ * הייצוא המורשתיות exportPdf/exportHtml של export-api. **אינו נצרך עוד בנתיב
+ * המוצר** — התצוגה החיה (preview-tab), ייצוא ה-HTML וייצוא ה-PDF מהמנוע
+ * קוראים כולם למקרין הטהור מה-PageModel (pagemodel-dom-renderer) מאז
+ * השלמת 9c.4. מחיקת הקובץ כרוכה בהסרת exportPdf/exportHtml ובהסבת
+ * אורקלי הבדיקות — שלב 13 (cutover), לא W-2.
+ *
  * רנדור עמודים ל‑DOM. כללי יסוד:
  * - U+E000/U+E101 חייבים להיעלם מה‑DOM הסופי (scrub לפני render; נשמרים רק לשלב המדידה).
  * - כיווניות RTL מלאה; no !important על inline של עיטורים (F-09 — מקור שליטה יחיד).
@@ -28576,9 +28591,14 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
    "הקדמה" נדבקת לקצה הימני — אסימטריה 494px). :not(.band) מחזיר את
    המרכוז; רינדור ה-DOM גם קובע text-align-last:auto ישירות ב-mkLine. */
 .band{text-align-last:auto}
-.running-head{display:flex;width:100%}
-.head--sep-gray{border-bottom:1px solid #999}
-.head--sep-black{border-bottom:1.5px solid #000}
+/* **W-2 (השלמת כריתת 9c.4, 27.11 — F-3.1/F-3.4):** כללי ההקרנה של ראנדרר
+   המורשת הוסרו מכאן (.running-head{display:flex} + .head--sep-gray/black).
+   מקור הקו המפריד האמיתי בנתיב המאוחד הוא עיטור hdr-rule מ-gate-design
+   (נצבע ב-PageModel — ב-DOM החי וב-PDF כאחד); מיכל הכותרת של המקרין
+   (pagemodel-dom-renderer) נושא position/left/width/height inline וסלוטיו
+   אבסולוטיים — ה-flex לא פעל מעולם בנתיב זה. class ה-head--sep-* נשאר
+   על האלמנט כסמנטיקה חיה בלבד (F-3.2) — בלי כלל CSS, כדי שתיקון שם
+   המפתח לא יצייר קו-שני פנטום בתחתית המיכל. */
 .footnotes{position:absolute;bottom:8px;left:12px;right:12px;border-top:1px solid transparent;font-size:.8em}
 .footnotes--continuous{border-top:none}
 .fn-rule--regular{border-top:1px solid #000;height:0}
@@ -29237,7 +29257,12 @@ function renderModelPage(mp, settings, doc, opts = {}) {
   // (9) כותרת עליונה — סלוטים במיקומים סופיים מהמודל
   if (mp.header && (mp.header.slots || []).length) {
     const el = doc.createElement('div');
-    el.className = `running-head head--sep-${settings['header-separator-style'] || 'none'}`;
+    // **W-2 (F-3.1/F-3.2, 27.11):** המפתח האמיתי ברישום הוא header-separator-line
+    // (settings-registry:125; headers-builder:168) — לא header-separator-style
+    // (מפתח-רפאים שהחזיר תמיד 'none'). ה-class הוא סמנטיקה חיה לקוראי DOM בלבד:
+    // אין לו כלל CSS (הוסר מ-BASE_CSS באותו שינוי) — הקו עצמו מצויר מעיטור
+    // hdr-rule של gate-design, בדיוק כמו ב-PDF.
+    el.className = `running-head head--sep-${settings['header-separator-line'] || 'none'}`;
     el.style.position = 'absolute';
     el.style.top = `${px2(mp.header.y)}px`;
     el.style.left = '0';

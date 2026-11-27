@@ -1,1 +1,8 @@
-{"profile": "unified", "branch": "fix/pdf-header-baseline-20261127", "commit": "e330e63", "builtAt": "2026-11-27T09:23:37Z", "mode": "manual-gh-pages-deploy-no-workflows", "note": "פריסה ידנית (RC-HDR2 — כותרת עליונה מעל קו המפריד; ASSET_VERSION 2026-11-27-rc-hdr2 לאינוולידציית מטמון)"}
+{
+  "profile": "unified",
+  "branch": "fix/pdf-header-baseline-20261127",
+  "commit": "af57770",
+  "builtAt": "2026-11-27T11:20:00Z",
+  "mode": "manual-gh-pages-deploy-no-workflows",
+  "note": "פריסה ידנית (W-2 — השלמת כריתת 9c.4 בשכבת ההקרנה: הסרת ענף renderPage מהתצוגה, הסרת כללי .running-head/.head--sep-* מ-BASE_CSS, תיקון מפתח-הרפאים ל-header-separator-line; ASSET_VERSION 2026-11-27-w2-9c4)"
+}
