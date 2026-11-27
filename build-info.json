@@ -1,8 +1,8 @@
 {
   "profile": "unified",
   "branch": "fix/pdf-header-baseline-20261127",
-  "commit": "f7dfe6a",
-  "builtAt": "2026-11-27T12:05:00Z",
+  "commit": "b3d6eae",
+  "builtAt": "2026-11-27T13:10:00Z",
   "mode": "manual-gh-pages-deploy-no-workflows",
-  "note": "פריסה ידנית (W-3: s10-ui לחוזה מנוע-יחיד + שחזור שני שומרים שנמחקו ב-2ae45b9 — adapter ייבוא תבניות IMUD ב-loadTemplateJson ושומר unified-unsupported-settings; W-4: ברירת המחדל של fn-placement-mode משקפת את ההתנהגות בפועל legacy — F-2.2; ASSET_VERSION 2026-11-27-w3-w4)"
+  "note": "פריסה ידנית (W-5: נתיב-אחד-לכל-קלט בייבוא — sanitize תרגום/ברירת-מחדל לערכי enum בלתי-חוקיים, F-J1..F-J4; W-7: סורק מפתחות-רפאים שגרתי + תיקון שני רפאים אמיתיים — הקו המפריד האמיתי כעת נשלט מ-header-separator-line הרשום; ASSET_VERSION 2026-11-27-w5-w7)"
 }
