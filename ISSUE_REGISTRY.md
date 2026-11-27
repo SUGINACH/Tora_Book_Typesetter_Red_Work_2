@@ -843,3 +843,24 @@ Detailed contract and acceptance gates:
 `audits/PRODUCTION_SHAPEDRUN_INTEGRATION_CONTRACT_2026-11-25.md`.
 
 Status remains **open**; no production code cutover has been performed.
+
+### CHAIN-DEBT-01 — 29 סוויטות אדומות קיימות-מקדימות בשרשרת npm (27.11.2026, גילוי ב-W-2)
+
+הרצה מלאה של 107 סוויטות המחרוזת (ראשונה מאז הכריתה למנוע-יחיד) על d6b8380
+חשפה 29 סוויטות אדומות — כולן הוכחו קיימות-מקדימות על עץ נקי (worktree):
+- שברי-יבוא למודולים שנמחקו ב-6cc5f76 (legacy-projector, legacy-imud-flow):
+  s8-decoration, s75-notes-flow, s76-notes-flow, s77-user-issues, r03-paren-note-flags
+  ועוד — הבדיקות דורשות אורקל/נתיב של המנוע הישן.
+- בייסליינים/נעילות שלא חודשו אחרי 2ae45b9 (ברירות מנוע-יחיד שינו פריסה):
+  s5-corpus-comparison, s5b-plan-contracts (FX-6), s6b, s6c, s8a, s8b, s8e-חלקי,
+  d108, real-fonts (סביבה), s24, s2-heading3-spacing, stage-snapshots, s52-ui,
+  s60, s62, s65, s67, s69, s72, s9b-toc-d107, s9d-segment1.
+- D-84 וירטואליזציה + D-64/F-06/S4.6 (s10-ui 39/45) — W-3 בתוכנית הסגירה.
+- S74 (s74-pdf-mark-advance) — תלוי-גופן FrankReal; בסביבת הבדיקה נכשל, באתר
+  החי נסגר E4 (ראו דוח פורנזי §4).
+
+אף אחת מהן לא נדגמה בביקורת המפלצתית חלק 6 (המדגם כיסה 15 סוויטות).
+W-2 הוכיח אפס כשלים חדשים והוריק שלוש (pipeline, s9c-pdf-export, s9c-html-export).
+**משימה מוצעת W-10:** הסבת אורקלי הבדיקות של המורשת למקרין המודל + חידוש
+נעילות מתועד — בסמוך לשלב 13 (הסרת dom-renderer/exportPdf/exportHtml עצמם).
+עד אז: השרשרת נבדקת פר-סוויטה מול בסיס מתועד, לא כ-npm test אחד.
