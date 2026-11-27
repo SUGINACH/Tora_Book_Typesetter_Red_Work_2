@@ -884,7 +884,11 @@ function createApp(doc, opts = {}) {
       });
       legacySettings = imp.settings; // כולל _legacy-ui-state (ערכי UI נשמרים)
     }
-    const { merged, unknownKeys, issues } = mergeWithDefaults({ ...legacySettings, ...known });
+    // **F-J1 (W-5, 27.11):** sanitize בנתיב הייבוא — ערך בלתי-חוקי (enum/טווח)
+    // מתורגם דרך ה-disposition (ערך מעידן המקור) או חוזר לברירת המחדל; הפעולה
+    // מתועדת ב-issues. הערך הבלתי-חוקי אינו מגיע למנוע בשקט (נתיב אחד לכל קלט).
+    const { translateLegacyValue } = require('../engine/core/legacy-settings-map');
+    const { merged, unknownKeys, issues } = mergeWithDefaults({ ...legacySettings, ...known }, { sanitizeIllegal: true, translateValue: translateLegacyValue });
     const unsupportedUnifiedKeys = [];
     if (branchProfile === 'unified') {
       for (const definition of getSettingDefs()) {

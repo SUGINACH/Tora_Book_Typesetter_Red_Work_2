@@ -1078,6 +1078,11 @@ describe('רגרסיית רישום — סורקים אחרי ה־UI (REQ-GOV-04
     assertEq(res.deadControls.map(d => d.control), [], 'כל פקד חייב כיתוב UI (הבטחת התיעוד ב־registry.test)');
     assertEq(res.phantomKeys.map(k => k.id), []);
     assertEq(res.orphanMechanisms.map(m => `${m.id}->${m.consumer}`), []);
+    // **W-7 (F-4.1, 27.11): מפתחות-רפאים** — כל settings['k'] מילולי חייב רישום
+    // או רשימת-פנימיים מתועדת (INTERNAL_KEYS בסורק). מונע חזרה של מחלקת
+    // F-3.1 (header-separator-style) — קריאה שנופלת תמיד בשקט.
+    assertEq(res.ghostKeys.map(k => `${k.id}@${(k.files || []).join(',')}`), [],
+      'אפס מפתחות-רפאים (קריאת settings לא-רשומה)');
   });
 });
 

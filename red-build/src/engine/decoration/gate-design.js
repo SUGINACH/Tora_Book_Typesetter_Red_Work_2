@@ -29,8 +29,14 @@ function planGateDesign(page, settings) {
   const out = [];
   const dec = (o) => out.push(o);
   const raw = (settings && settings._imudRaw) || {};
-  const hdrDivider = settings && settings['hdr-divider-style'] != null
-    ? settings['hdr-divider-style'] : (raw['hdr-divider-style'] != null ? raw['hdr-divider-style'] : 'gray');
+  // **W-7 (F-4.1, 27.11) — תיקון מפתח-רפאים + מקור סמכות יחיד:** 'hdr-divider-style'
+  // מעולם לא נרשם ואינו מוצב ב-settings (התרגום ב-dp-planner ממפה אותו למפתח
+  // הרשום) — הקריאה הישנה נפלה תמיד ל-raw וההגדרה החיה 'header-separator-line'
+  // (registry:125) לא השפיעה על הקו האמיתי שמצויר כאן. כעת המפתח הרשום גובר
+  // (ברירת מחדל gray — זהה ל-raw של המקור ⇒ אפס שינוי בברירת המחדל); ה-raw
+  // נשאר נפילה לייבוא ישן בלבד.
+  const hdrDivider = settings && settings['header-separator-line'] != null
+    ? settings['header-separator-line'] : (raw['hdr-divider-style'] != null ? raw['hdr-divider-style'] : 'gray');
 
   if (page.type === 'shaar-sub') {
     dec({ x: 0.55 * GEO.PAGE_W, y: 0, w: 0.45 * GEO.PAGE_W, h: GEO.PAGE_H, kind: 'shaar-panel', kindStyle: 'rect:#F4F4F4' });

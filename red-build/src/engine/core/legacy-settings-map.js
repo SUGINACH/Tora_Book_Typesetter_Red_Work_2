@@ -301,7 +301,10 @@ const DISPOSITIONS = {
 
   // ============ מספור ============
   'page-num-position': { kind: 'mapped', to: 'page-num-position', transform: (v) => NUMPOS_MAP[v] || 'bottom-center' },
-  'page-num-format': { kind: 'mapped', to: 'page-num-format' },
+  // **F-J2 (W-5, 27.11):** 'gematria' של המקור = העברית-החשופה של RED (D-108) —
+  // תרגום בשער הייבוא במקום ענף default נסתר ב-folio.js; הערך הבלתי-חוקי
+  // כבר אינו מגיע למנוע (נבדק גם ב-sanitize של הייבוא).
+  'page-num-format': { kind: 'mapped', to: 'page-num-format', transform: (v) => (v === 'gematria' ? 'hebrew' : v), reason: 'F-J2: gematria (ערכת המקור) ⇒ hebrew של RED — אותה גימטריה חשופה (D-108)' },
   'page-num-frame': { kind: 'mapped', to: 'page-num-frame' },
   'page-num-start-idx': { kind: 'mapped', to: 'page-num-start-idx', transform: parseInt },
   'page-num-initial-value': { kind: 'mapped', to: 'page-num-initial-value', transform: parseInt },
@@ -358,14 +361,7 @@ const DISPOSITIONS = {
   'inp-book-back-contact': { kind: 'mapped', to: 'imud-book-back-contact', reason: '9b.5: פרטי קשר בשער האחורי (D-107)' },
   'inp-book-back-extra': { kind: 'mapped', to: 'imud-book-back-extra', reason: '9b.5: פרטים נוספים בשער האחורי (D-107)' },
   's-note-body': { kind: 'ui-state', reason: 'S6.3: גודל גוף ההערה — נקרא מה-raw (readConfig ⇒ SZ.fnBody; ברירת המחדל של המקור 9)' },
-  's-h0': { kind: 'mapped', to: 'heading-0-size-pt', transform: parseFloat, reason: 'S6.3: גודל H0 — גם נקרא מה-raw בפרופיל המורשת (SZ.h0Title; במקור 26pt)' },
-  's-h1': { kind: 'mapped', to: 'heading-1-size-pt', transform: parseFloat, reason: 'S6.3: גודל H1 — נקרא מה-raw לשער-המשנה (cfg.h1Size; במקור 50pt)' },
-  's-sh-title': { kind: 'mapped', to: 'shaar-title-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shTitle)' },
-  's-sh-sub': { kind: 'mapped', to: 'shaar-subtitle-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shSub)' },
-  's-sh-desc': { kind: 'mapped', to: 'shaar-desc-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shDesc)' },
-  's-sh-sec': { kind: 'mapped', to: 'shaar-sections-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shSec)' },
-  's-sh-author': { kind: 'mapped', to: 'shaar-author-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shAuthor)' },
-  's-sh-year': { kind: 'mapped', to: 'shaar-year-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shYear)' },
+  // **F-J3 (W-5, 27.11):** ערכים כפולים הוסרו — הגדרה יחידה סמכותית לכל מפתח (s-h0/s-h1/s-sh-*; העתקות S6.3 היו זהות מילולית במיפוי — דריסה שקטה של אותה רשומה).
   'f-note-title': { kind: 'mapped', to: 'endnote-title-font', transform: resolveStack, reason: 'S6.3: גופן כותרת ההערות' },
   'f-h0-body': { kind: 'mapped', to: 'heading-0-body-font', transform: resolveStack, reason: 'S6.3: גופן גוף ההקדמה (Frank Ruhl Libre במקור)' },
   's-h0-body': { kind: 'mapped', to: 'heading-0-body-size-pt', transform: parseFloat, reason: 'RC-2a (i004): גודל גוף ההקדמה (s-h0-body=11.5 במקור) — עד כאן לא מופה ייבוא ⇒ ההקדמה זרמה ב-12pt במקום 11.5 (הוכח מה-PDF הישן: p43 כולו 11.5pt בפיץ׳ 15.5 בקירוב)' },
@@ -512,4 +508,21 @@ function importImudSettings(legacy, registryKeys, opts = {}) {
   return { settings, uiState, dispositions, unmapped, report };
 }
 
-module.exports = { DISPOSITIONS, dispositionOf, importImudSettings, firstFamily, resolveStack, pctToPx };
+/**
+ * **F-J1 (W-5, 27.11) — תרגום ערך-בודד מעידן המקור:** למפתחות הכפולים
+ * (גם ברישום RED וגם באוצר-המילים של המקור) שהגיעו מתבנית/פרויקט הישן עם
+ * ערך שאינו חוקי ברישום — מנסים את ה-transform של ה-disposition (כשהיעד
+ * זהה למקור). מחזיר את הערך המתורגם, או undefined כשאין תרגום ישים.
+ * משמש את ה-sanitize של הייבוא (project-io/app-shell) — ערך בלתי-חוקי
+ * לעולם אינו מגיע למנוע בשקט.
+ */
+function translateLegacyValue(key, value, ctx) {
+  const d = DISPOSITIONS[key];
+  if (!d || d.kind !== 'mapped' || d.to !== key || typeof d.transform !== 'function') return undefined;
+  try {
+    const out = d.transform(value, ctx || {});
+    return out === undefined ? undefined : out;
+  } catch (e) { return undefined; }
+}
+
+module.exports = { DISPOSITIONS, dispositionOf, translateLegacyValue, importImudSettings, firstFamily, resolveStack, pctToPx };

@@ -173,7 +173,9 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
 
 /** בניית מסמך HTML עצמאי מעמודי ה‑DOM שכבר רוכמו (string-level; עובד גם Node-side). */
 function buildStandaloneHtml(pagesHtml, settings, meta = {}) {
-  const title = meta.title || settings['book-name'] || 'ספר';
+  // **W-7 (F-4.1, 27.11):** 'book-name' הוא מפתח-רפאים (מעולם לא נרשם/הוצב) —
+  // המקור הרשום לשם הספר הוא imud-book-title.
+  const title = meta.title || settings['imud-book-title'] || 'ספר';
   // **S12 (REQ-EXP-02):** כללי @page מרישום גדלי העמוד — הדפסה מדויקת מהקובץ העצמאי (אין רשת)
   const pageRules = meta.pageRules || '';
   // **03.11:** @font-face מוטמעים (data-URI) — מסופקים מה-UI; עוברים את offline-guard (אין http)

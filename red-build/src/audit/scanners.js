@@ -18,6 +18,35 @@ const path = require('path');
 /** קבצים שאסור לספור אותם כ"צרכנים" — מגדירים את הרישום עצמו. */
 const REGISTRY_FILES = new Set(['settings-registry.js']);
 
+/**
+ * **W-7 (F-4.1, 27.11) — סורק מפתחות-רפאים:** כל גישה מילולית settings['key']
+ * בקוד חייבת להיות (א) מפתח רשום, או (ב) מפתח פנימי מתועד מהרשימה הזו.
+ * עדכון הרשימה מחייב תיעוד הסיבה לכל מפתח (מוסתר בענן למטה).
+ * עקרון: מפתח שהקוד קורא אך אינו רשום ואינו כאן = מפתח-רפאה (כמו
+ * 'header-separator-style' של F-3.1) — הקריאה נופלת תמיד לנפילה-שקטה.
+ */
+const INTERNAL_KEYS = new Set([
+  // נכסי זמן-ריצה פנימיים (קו-תחתון = מבנה נתונים פנימי מתועד, S4.6/§F-2.4):
+  '_layout-profile',       // נתון מקור IMUD (תנאי תרגום בלבד — F-2.1; אינו בורר מנוע)
+  '_imudRaw',              // מקור הגדרות IMUD גולמי לצורך fallbacks מנומקים
+  '_legacy-ui-state',      // ערכי UI של האפליקציה הישנה — נשמרים כנתונים (S4.6)
+  '_customStyles',         // סגנונות מותאמים (S11)
+  '_marks-advance',        // חוזה פנימי: מדידת סימני ניקוד משולבת (F-2.4; 'combined')
+  '_plannerTrace',         // תשריט מתכנן (אבחון)
+  '_inline-font-families', // גופני inline (S11)
+  '_inline-font-markers',  // סמני גופני inline (S11)
+  '_engine-force-unified', // דגל כלי/בדיקות בלבד (שומר ה-unified-unsupported)
+  // מפתחות נגזרים המוצבים בזמן-ריצה (לא רשומים בכוונה — נגזרים מהמקור/מערכת):
+  'f-note-body-size-pt',   // גודל גוף הערה למדידה/פיצול סמן; נקרא עם נפילה 8 (תואם EXT-17 8/8)
+  'note-num-separator',    // מפריד מספר-הערה; נקרא עם נפילה ל-_imudRaw ואז '.' (EXT-17)
+  'shaar-main-box',        // מוצב ע"י theme-sets (D-96) — תיבת עיצוב שער
+  'shaar-back-image',      // מוצב ע"י theme-sets (D-96) — רקע שער-אחורי
+  'settings_version'       // גרסת סכמת תבנית/פרויקט (project-io)
+]);
+
+/** קבצים שאין לסרוק לגלאי-רפאים: הרישום עצמו + הסורק (התייחסות עצמית בתיעוד). */
+const GHOST_SCAN_EXCLUDE = new Set([...REGISTRY_FILES, 'scanners.js']);
+
 /** איסוף כל קטעי הגישה settings[ ... ] (כולל סוגריים מקוננים) מקובץ מקור. */
 function collectAccessSlices(src) {
   const slices = [];
@@ -56,7 +85,7 @@ function matchesDynamic(keyId, dynamicSlices) {
 /**
  * סורקים כ‑CI job קבוע.
  * @param {string} srcRoot - נתיב שורש src
- * @returns {{deadControls:Array, phantomKeys:Array, orphanMechanisms:Array, consumedBy:Map}}
+ * @returns {{deadControls:Array, phantomKeys:Array, orphanMechanisms:Array, ghostKeys:Array, consumedBy:Map}}
  */
 function scanConsumers(srcRoot) {
   const files = [];
@@ -75,7 +104,7 @@ function scanConsumers(srcRoot) {
   const access = all.map(({ f, src }) => ({ f, slices: collectAccessSlices(src) }));
   const dynamicSlices = access.flatMap(a => a.slices).filter(s => s.includes('$'));
 
-  const results = { deadControls: [], phantomKeys: [], orphanMechanisms: [], consumedBy: new Map() };
+  const results = { deadControls: [], phantomKeys: [], orphanMechanisms: [], ghostKeys: [], consumedBy: new Map() };
   const mechanismUse = new Map();
 
   for (const r of registry) {
@@ -99,6 +128,26 @@ function scanConsumers(srcRoot) {
     }
   }
 
+  // **W-7 (F-4.1):** מפתחות-רפאים — כל גישה מילולית settings['key'] בקוד צרכן
+  // חייבת להיות רשומה או פנימית-מתועדת (INTERNAL_KEYS). דינמיקה (${...}) אינה
+  // נסרקת כאן — היא מכוסה בכיוון ההפוך (phantomKeys של מפתחות רשומים).
+  const registeredIds = new Set(registry.map(r => r.id));
+  const ghostSeen = new Map();
+  for (const a of access) {
+    if (GHOST_SCAN_EXCLUDE.has(path.basename(a.f))) continue;
+    for (const s of a.slices) {
+      const m = String(s).match(/^['"`]([A-Za-z_][A-Za-z0-9_-]*)['"`]$/);
+      if (!m) continue;
+      const k = m[1];
+      if (registeredIds.has(k) || INTERNAL_KEYS.has(k)) continue;
+      if (!ghostSeen.has(k)) ghostSeen.set(k, []);
+      ghostSeen.get(k).push(path.basename(a.f));
+    }
+  }
+  for (const [k, fl] of ghostSeen) {
+    results.ghostKeys.push({ id: k, reason: 'literal settings[...] read of an unregistered, undocumented key', files: [...new Set(fl)] });
+  }
+
   // dead controls: control id must appear in some UI html/js binding
   const uiFiles = all.filter(({ f }) => f.includes(path.sep + 'ui' + path.sep)).map(a => a.src).join('\n');
   const anyHtml = files.filter(f => f.endsWith('.html')).map(f => fs.readFileSync(f, 'utf8')).join('\n');
@@ -112,4 +161,4 @@ function scanConsumers(srcRoot) {
   return results;
 }
 
-module.exports = { scanConsumers, REGISTRY_FILES };
+module.exports = { scanConsumers, REGISTRY_FILES, INTERNAL_KEYS };

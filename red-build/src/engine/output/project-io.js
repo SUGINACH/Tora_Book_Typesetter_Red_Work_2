@@ -39,8 +39,13 @@ function migrate(raw) {
   return s;
 }
 
-/** איחוד עם defaults; אי‑התאמות מדווחות ולא משמיטות (audit deltas attributable). */
-function mergeWithDefaults(migrated) {
+/** איחוד עם defaults; אי‑התאמות מדווחות ולא מושמטות (audit deltas attributable).
+ * **F-J1 (W-5, 27.11) — מצב sanitize לנתיבי הייבוא:** ערך בלתי-חוקי (enum/טווח)
+ * מתורגם קודם דרך translateLegacyValue (ערך מעידן המקור); אם אין תרגום ישים —
+ * נופל לברירת המחדל של הרישום. הפעולה מתועדת ב-issue (action) — הערך הבלתי-חוקי
+ * לעולם אינו מגיע למנוע בשקט ("נתיב אחד לכל קלט"). ברירת המחדל (בלי opts)
+ * משמרת את ההתנהגות ההיסטורית (kept) לצרכנים קיימים. */
+function mergeWithDefaults(migrated, opts = {}) {
   const defs = getDefaultSettings();
   // derivePlacementFlags **אחרי** האיחוד — mode הוא מקור־האמת; דגלים שהומרו מקובץ
   // v1 ישן (ללא mode) נגזרים שוב כך שלעולם לא ייווצר מצב סותר מאובדן הערות (BRZ-15).
@@ -49,10 +54,30 @@ function mergeWithDefaults(migrated) {
   // אינם "מפתחות לא מוכרים" — הם מבנה נתונים מתועד; ערכיהם עוברים במיזוג.
   const unknownKeys = Object.keys(migrated).filter(k => !(k in defs) && !k.startsWith('_'));
   const issues = [];
+  const sanitize = !!(opts && opts.sanitizeIllegal);
+  const translateValue = (opts && typeof opts.translateValue === 'function') ? opts.translateValue : null;
   for (const r of registry) {
-    const v = merged[r.id];
-    if (r.type === 'enum' && r.enum && !r.enum.includes(v)) issues.push({ key: r.id, value: v, reason: 'not-in-enum', kept: true });
-    if (r.type === 'number' && ((r.min != null && v < r.min) || (r.max != null && v > r.max))) issues.push({ key: r.id, value: v, reason: 'out-of-range', kept: true });
+    let v = merged[r.id];
+    let illegal = false;
+    if (r.type === 'enum' && r.enum && !r.enum.includes(v)) illegal = true;
+    if (r.type === 'number' && ((r.min != null && v < r.min) || (r.max != null && v > r.max))) illegal = true;
+    if (!illegal) continue;
+    if (sanitize) {
+      let action = 'reverted-to-default';
+      let out = r.default;
+      if (translateValue) {
+        const t = translateValue(r.id, v, (opts && opts.translateCtx) || {});
+        if (t !== undefined) {
+          const okEnum = !(r.type === 'enum' && r.enum && !r.enum.includes(t));
+          const okRange = !(r.type === 'number' && ((r.min != null && t < r.min) || (r.max != null && t > r.max)));
+          if (okEnum && okRange) { out = t; action = 'translated-legacy-value'; }
+        }
+      }
+      merged[r.id] = out;
+      issues.push({ key: r.id, value: v, reason: r.type === 'enum' ? 'not-in-enum' : 'out-of-range', kept: false, action, applied: out });
+    } else {
+      issues.push({ key: r.id, value: v, reason: r.type === 'enum' ? 'not-in-enum' : 'out-of-range', kept: true });
+    }
   }
   return { merged, unknownKeys, issues };
 }
@@ -73,7 +98,9 @@ function importProject(json) {
   const raw = typeof json === 'string' ? JSON.parse(json) : json;
   if (raw.format !== 'tora-typesetter-project') throw new Error('unknown project format');
   const migrated = migrate(raw.settings || {});
-  const { merged, unknownKeys, issues } = mergeWithDefaults(migrated);
+  // **F-J1 (W-5):** ערך בלתי-חוקי בפרויקט מיובא — תרגום/החזרה לברירת מחדל, לא מעבר שקט למנוע.
+  const { translateLegacyValue } = require('../core/legacy-settings-map');
+  const { merged, unknownKeys, issues } = mergeWithDefaults(migrated, { sanitizeIllegal: true, translateValue: translateLegacyValue });
   return { settings: merged, pages: raw.pages || [], meta: raw.meta || {}, unknownKeys, issues };
 }
 
