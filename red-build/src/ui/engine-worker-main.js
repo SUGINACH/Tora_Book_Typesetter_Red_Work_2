@@ -109,7 +109,7 @@ function handleRegisterAssets(msg, post) {
 
 /** טיפול export-request (03.11): PDF/ZIP במנוע המלא — הודף הכבד חי ב־Worker בלבד.
  * הפלט מועתק ל-Uint8Array טהור (בלי byteOffset) — structured-clone/transfer בטוחים. */
-function handleExportRequest(msg, post) {
+async function handleExportRequest(msg, post) {
   try {
     const { exportPdfFromModel, exportProjectZip } = require('../engine/output/export-api');
     if (msg.kind === 'pdf') {
@@ -123,7 +123,16 @@ function handleExportRequest(msg, post) {
         post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: false, error: 'model-required: אין PageModel בזיכרון — הפעילו עימוד לפני ייצוא (אין עימוד שני ואין נתיב חלופי)' });
         return;
       }
-      const res = exportPdfFromModel(_lastTypesetResult.pageModel, msg.settings, u8, msg.fontName);
+      // **עיצובי שערים עשירים (תיקון DOM≠PDF — "שחור ב-DOM, אפור ב-PDF"):
+      // ריסטוריזציה של אותם ה-SVG-ים שה-DOM מציג (OffscreenCanvas ב-Worker)
+      // לפני הכתיבה — ה-PDF מקבל את אותו דיו בדיוק. סביבה ללא OffscreenCanvas
+      // (Node) ⇒ מפה ריקה ⇒ הנתיב הווקטורי הקיים (מתועד; אין נפילה שקטה).
+      let rasters = null;
+      try {
+        const { rasterizeModelDecorations } = require('../engine/output/svg-raster');
+        rasters = await rasterizeModelDecorations(_lastTypesetResult.pageModel);
+      } catch (e) { /* ריסטוריזציה כשלה — ייצוא וקטורי כמו קודם */ }
+      const res = exportPdfFromModel(_lastTypesetResult.pageModel, msg.settings, u8, msg.fontName, rasters ? { rasters } : {});
       if (!res.ok) { post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: false, error: res.error }); return; }
       post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: true, bytes: new Uint8Array(res.bytes), info: res.info || null });
       return;

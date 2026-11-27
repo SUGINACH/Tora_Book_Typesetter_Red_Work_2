@@ -522,8 +522,13 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
  * @param {Uint8Array} fontBytes — גופן הייצוא (TTF) ל-/F1
  * @param {string} [fontName] — שם פרופיל הרישום
  */
-function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
+function exportPdfFromModel(model, settingsIn, fontBytes, fontName, opts = {}) {
   if (typeof Buffer === 'undefined') return { ok: false, error: 'no-buffer' }; // דפדפן — נתיב Node בלבד (מתועד)
+  // **עיצובי שערים עשירים (תיקון DOM≠PDF):** מפת רסטרים מה-Worker
+  // (svg-raster) — `p<page>#<decorationIndex>` → {jpeg,w,h}. העיטור מוקרן
+  // לכותב עם הרסטר במקום הפענוח הווקטורי החלקי (strokes/use/defs נשמטים
+  // בו — שורש "שחור ב-DOM, אפור ב-PDF"). ריק/חסר ⇒ הנתיב הווקטורי כמו קודם.
+  const rasters = (opts && opts.rasters instanceof Map) ? opts.rasters : null;
   if (!model || model.schema !== 'pagemodel-v1' || !Array.isArray(model.pages) || !model.pages.length) {
     return { ok: false, error: 'model-required: נדרש PageModel תקין — אין נתיב עימוד חלופי בייצוא מהמודל' };
   }
@@ -550,7 +555,12 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       footnotes: mp.footnotes || [],
       folio: mp.folio || null,
       header: mp.header || null,
-      decorations: (mp.decorations || []).filter(d => Array.isArray(d.pdfOps) && d.pdfOps.length)
+      decorations: (mp.decorations || [])
+        .map((d, di) => {
+          const r = rasters ? rasters.get(`p${mp.index}#${di}`) : null;
+          return (r && r.jpeg) ? { ...d, raster: r } : d; // המודל קפוא — העתק עם הרסטר, בלי לשנותו
+        })
+        .filter(d => d.raster || (Array.isArray(d.pdfOps) && d.pdfOps.length))
     }));
     // ---- מלאי תווים מהטקסט שמצויר בפועל (מהמודל) ----
     const drawnParts = [];

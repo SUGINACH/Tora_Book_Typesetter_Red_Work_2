@@ -443,6 +443,11 @@ function parseSvgPaint(svg) {
 function parseColor(c) {
   const s = String(c || '').trim();
   if (!s || s === 'none' || s === 'transparent') return null;
+  // **תיקון url(#…):** מילוי דפוס (pattern) אינו צבע אחיד — עד כאן נפל
+  // לברירת המחדל והצורה נצבעה שחור בנתיב הווקטורי של ה-PDF (רקעים שלמים
+  // נמרחו שחור). אין ריצוף דפוס בנתיב זה — הצורה מדולגת (הר�סטר מכסה אותה
+  // בעיצובים העשירים).
+  if (/^url\(/i.test(s)) return null;
   if (s === 'currentColor') return [0, 0, 0];
   let m = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(s);
   if (m) return [parseInt(m[1] + m[1], 16) / 255, parseInt(m[2] + m[2], 16) / 255, parseInt(m[3] + m[3], 16) / 255];

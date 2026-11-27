@@ -1,6 +1,6 @@
 // ui/engine-worker.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת ה־Worker (המנוע המלא — אין לטעון בחוט ה־UI)
-// מודולים: 99 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 100 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -299,6 +299,7 @@ var __paths = {
   "src/ui/engine-worker-main.js|../engine/typography/font-resolver": "src/engine/typography/font-resolver.js",
   "src/ui/engine-worker-main.js|../engine/decoration/asset-registry": "src/engine/decoration/asset-registry.js",
   "src/ui/engine-worker-main.js|../engine/output/export-api": "src/engine/output/export-api.js",
+  "src/ui/engine-worker-main.js|../engine/output/svg-raster": "src/engine/output/svg-raster.js",
   "src/engine/core/pipeline.js|./settings-registry": "src/engine/core/settings-registry.js",
   "src/engine/core/pipeline.js|./h3-contract": "src/engine/core/h3-contract.js",
   "src/engine/core/pipeline.js|../parser/dfa-lexer": "src/engine/parser/dfa-lexer.js",
@@ -653,7 +654,7 @@ function handleRegisterAssets(msg, post) {
 
 /** טיפול export-request (03.11): PDF/ZIP במנוע המלא — הודף הכבד חי ב־Worker בלבד.
  * הפלט מועתק ל-Uint8Array טהור (בלי byteOffset) — structured-clone/transfer בטוחים. */
-function handleExportRequest(msg, post) {
+async function handleExportRequest(msg, post) {
   try {
     const { exportPdfFromModel, exportProjectZip } = require('../engine/output/export-api');
     if (msg.kind === 'pdf') {
@@ -667,7 +668,16 @@ function handleExportRequest(msg, post) {
         post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: false, error: 'model-required: אין PageModel בזיכרון — הפעילו עימוד לפני ייצוא (אין עימוד שני ואין נתיב חלופי)' });
         return;
       }
-      const res = exportPdfFromModel(_lastTypesetResult.pageModel, msg.settings, u8, msg.fontName);
+      // **עיצובי שערים עשירים (תיקון DOM≠PDF — "שחור ב-DOM, אפור ב-PDF"):
+      // ריסטוריזציה של אותם ה-SVG-ים שה-DOM מציג (OffscreenCanvas ב-Worker)
+      // לפני הכתיבה — ה-PDF מקבל את אותו דיו בדיוק. סביבה ללא OffscreenCanvas
+      // (Node) ⇒ מפה ריקה ⇒ הנתיב הווקטורי הקיים (מתועד; אין נפילה שקטה).
+      let rasters = null;
+      try {
+        const { rasterizeModelDecorations } = require('../engine/output/svg-raster');
+        rasters = await rasterizeModelDecorations(_lastTypesetResult.pageModel);
+      } catch (e) { /* ריסטוריזציה כשלה — ייצוא וקטורי כמו קודם */ }
+      const res = exportPdfFromModel(_lastTypesetResult.pageModel, msg.settings, u8, msg.fontName, rasters ? { rasters } : {});
       if (!res.ok) { post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: false, error: res.error }); return; }
       post({ type: 'export-result', jobId: msg.jobId, kind: 'pdf', ok: true, bytes: new Uint8Array(res.bytes), info: res.info || null });
       return;
@@ -18913,6 +18923,11 @@ function parseSvgPaint(svg) {
 function parseColor(c) {
   const s = String(c || '').trim();
   if (!s || s === 'none' || s === 'transparent') return null;
+  // **תיקון url(#…):** מילוי דפוס (pattern) אינו צבע אחיד — עד כאן נפל
+  // לברירת המחדל והצורה נצבעה שחור בנתיב הווקטורי של ה-PDF (רקעים שלמים
+  // נמרחו שחור). אין ריצוף דפוס בנתיב זה — הצורה מדולגת (הר�סטר מכסה אותה
+  // בעיצובים העשירים).
+  if (/^url\(/i.test(s)) return null;
   if (s === 'currentColor') return [0, 0, 0];
   let m = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(s);
   if (m) return [parseInt(m[1] + m[1], 16) / 255, parseInt(m[2] + m[2], 16) / 255, parseInt(m[3] + m[3], 16) / 255];
@@ -26867,8 +26882,13 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
  * @param {Uint8Array} fontBytes — גופן הייצוא (TTF) ל-/F1
  * @param {string} [fontName] — שם פרופיל הרישום
  */
-function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
+function exportPdfFromModel(model, settingsIn, fontBytes, fontName, opts = {}) {
   if (typeof Buffer === 'undefined') return { ok: false, error: 'no-buffer' }; // דפדפן — נתיב Node בלבד (מתועד)
+  // **עיצובי שערים עשירים (תיקון DOM≠PDF):** מפת רסטרים מה-Worker
+  // (svg-raster) — `p<page>#<decorationIndex>` → {jpeg,w,h}. העיטור מוקרן
+  // לכותב עם הרסטר במקום הפענוח הווקטורי החלקי (strokes/use/defs נשמטים
+  // בו — שורש "שחור ב-DOM, אפור ב-PDF"). ריק/חסר ⇒ הנתיב הווקטורי כמו קודם.
+  const rasters = (opts && opts.rasters instanceof Map) ? opts.rasters : null;
   if (!model || model.schema !== 'pagemodel-v1' || !Array.isArray(model.pages) || !model.pages.length) {
     return { ok: false, error: 'model-required: נדרש PageModel תקין — אין נתיב עימוד חלופי בייצוא מהמודל' };
   }
@@ -26895,7 +26915,12 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       footnotes: mp.footnotes || [],
       folio: mp.folio || null,
       header: mp.header || null,
-      decorations: (mp.decorations || []).filter(d => Array.isArray(d.pdfOps) && d.pdfOps.length)
+      decorations: (mp.decorations || [])
+        .map((d, di) => {
+          const r = rasters ? rasters.get(`p${mp.index}#${di}`) : null;
+          return (r && r.jpeg) ? { ...d, raster: r } : d; // המודל קפוא — העתק עם הרסטר, בלי לשנותו
+        })
+        .filter(d => d.raster || (Array.isArray(d.pdfOps) && d.pdfOps.length))
     }));
     // ---- מלאי תווים מהטקסט שמצויר בפועל (מהמודל) ----
     const drawnParts = [];
@@ -30002,6 +30027,27 @@ function writePdf(opts) {
   }
   /** מפת key → {font, name} לציור מיידי ב-emitWord (נתיב יחיד). */
   const extraByKeys = new Map(extraFonts.map((ef, i) => [ef.key, { font: ef.font, name: `F${7 + i}` }]));
+  // **עיצובי שערים עשירים (תיקון DOM≠PDF):** תמונות JPEG מרוסטרות מה-SVG
+  // המקורי (svg-raster — אותו דיו שה-DOM מציב). מזהים דטרמיניסטיים לפי
+  // סדר הופעה ראשון בעמודים; עיטור בעל raster אינו מצויר וקטורית עוד
+  // (התמונה מכסה את מלוא ה-SVG — ציור כפול היה מכפיל דיו).
+  const imageEntries = [];
+  const imageByRaster = new Map();
+  for (const pg of pages) {
+    for (const d of (pg.decorations || [])) {
+      if (!d || !d.raster || !d.raster.jpeg) continue;
+      if (!imageByRaster.has(d.raster)) {
+        const entry = { raster: d.raster, id: pdf.reserve(), name: `Im${imageEntries.length + 1}` };
+        imageByRaster.set(d.raster, entry);
+        imageEntries.push(entry);
+      }
+    }
+  }
+  for (const entry of imageEntries) {
+    const jpeg = entry.raster.jpeg;
+    const head = Buffer.from(`<< /Type /XObject /Subtype /Image /Width ${entry.raster.w} /Height ${entry.raster.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`, 'latin1');
+    pdf.put(entry.id, Buffer.concat([head, Buffer.from(jpeg), Buffer.from('\nendstream', 'latin1')]));
+  }
   const pageIds = pages.map(() => pdf.reserve());
   const contentIds = pages.map(() => pdf.reserve());
   const linkIds = new Map(); // pageIndex → [ids]
@@ -30031,6 +30077,16 @@ function writePdf(opts) {
   // ---- תוכן לכל עמוד (content streams) ----
   const contents = pages.map((pg) => {
     const ops = [];
+    // **עיצובי שערים מרוסטרים — רקע לפני כל דיו אחר:** התמונה מצוירת ראשונה
+    // (מתחת לטקסט ולעיטורים) בתיבת העיטור בדיוק (px→pt, היפוך y) — אותה
+    // גיאומטריה כמו ה-DOM (תיבת העיטור המוחלטת).
+    for (const d of (pg.decorations || [])) {
+      const entry = d && d.raster ? imageByRaster.get(d.raster) : null;
+      if (!entry) continue;
+      const xPt = d.x * PX_TO_PT;
+      const yTopPt = hPt - (d.y + d.h) * PX_TO_PT;
+      ops.push(`q ${round2(d.w * PX_TO_PT)} 0 0 ${round2(d.h * PX_TO_PT)} ${round2(xPt)} ${round2(yTopPt)} cm /${entry.name} Do Q`);
+    }
     // **S6.0 (R5-M2 — צבע דביק):** מצב מילוי נוכחי לכל אורך מסלול התוכן
     // של העמוד. בעבר 'rg' נפלט רק למילים צבועות ולא אופס לעולם ⇒ מילה
     // צבועה (הערת-שוליים אפורה) צבעה את כל הטקסט שאחריה בעמוד — הערות
@@ -30179,6 +30235,7 @@ function writePdf(opts) {
     // חף-תלויות ואוסף אובייקטים בלבד). תמונות רסטר אינן מצוירות כאן (מתועד).
     if (pg.decorations && pg.decorations.length) {
       for (const d of pg.decorations) {
+        if (d && d.raster) continue; // רוסטר כבר צויר למעלה — אין כפילות דיו
         if (Array.isArray(d.pdfOps)) ops.push(...d.pdfOps);
       }
     }
@@ -30429,7 +30486,14 @@ function writePdf(opts) {
     // **S73:** הגופנים הדינמיים באותם משאבים לכל עמוד — סדר קבוע (דטרמיניזם)
     extraFonts.forEach((ef, i) => fontPairs.push([`/F${7 + i}`, ef.ids.type0]));
     const fontRes = `/Font << ${fontPairs.map(([n, id]) => `${n} ${id} 0 R`).join(' ')} >>`;
-    pdf.put(pageIds[i], `<< /Type /Page /Parent ${ID.pages} 0 R /MediaBox ${mediabox} /TrimBox ${trimbox} /BleedBox ${bleedbox} /Resources << ${fontRes} >> /Contents ${contentIds[i]} 0 R${annotsStr} >>`);
+    // תמונות העמוד (עיצובי שערים מרוסטרים) — משאב /XObject לפי הכרך בעמוד
+    const pageImages = [];
+    for (const d of (pg.decorations || [])) {
+      const e = d && d.raster ? imageByRaster.get(d.raster) : null;
+      if (e) pageImages.push(e);
+    }
+    const xobjRes = pageImages.length ? ` /XObject << ${pageImages.map(e => `/${e.name} ${e.id} 0 R`).join(' ')} >>` : '';
+    pdf.put(pageIds[i], `<< /Type /Page /Parent ${ID.pages} 0 R /MediaBox ${mediabox} /TrimBox ${trimbox} /BleedBox ${bleedbox} /Resources << ${fontRes}${xobjRes} >> /Contents ${contentIds[i]} 0 R${annotsStr} >>`);
     pdf.put(contentIds[i], Buffer.concat([
       Buffer.from(`<< /Length ${contents[i].length} >>\nstream\n`, 'latin1'),
       contents[i],
@@ -30780,6 +30844,108 @@ function shareSummary(bundle) {
 }
 
 module.exports = { FORMAT, VERSION, exportExtensions, importExtensions, shareSummary };
+
+};
+__modules["src/engine/output/svg-raster.js"] = function (require, module, exports) {
+// src/engine/output/svg-raster.js — ריסטוריזציית עיצובי SVG עשירים לייצוא PDF (תיקון DOM≠PDF בשערים)
+'use strict';
+
+/**
+ * **שורש התקלה (דיווח משתמש: "השערים ב-DOM שחורים, ב-PDF אפורים"):**
+ * עיצובי השערים המקוריים (shaar_main/sub/back) בנויים מ-<use>/<defs>/
+ * <pattern>/strokes/#-transformים מקוננים — הרחק מעבר לתת-הקבוצה שמפענח
+ * הנתיב הווקטורי (ornament-ink: מילוי בלבד, ללא use/defs). הדיו הכהה של
+ * השערים חי בעיקר ב-strokes (#333/#222) ובהגדרות-defs — שניהם נשמטים
+ * בפענוח הווקטורי, וב-PDF נותרים רק המילויים האפורים הבהירים. הדפדפן
+ * (DOM) מציג את ה-SVG במלואו — מכאן הפער השיטתי.
+ *
+ * **הפתרון — מקור יחיד, בלי מנוע SVG שני:** את אותו ה-SVG בדיוק שה-DOM
+ * מציג (ink.svg מהמודל) מרסטרים פעם אחת בזמן הייצוא — באמצעות מרכיבי
+ * הדפדפן המובנים ב-Worker (OffscreenCanvas + createImageBitmap — אותו
+ * מנוע רינדור שה-DOM משתמש בו) — ומטמיעים את התוצאה ב-PDF כתמונת
+ * JPEG (XObject). DOM ו-PDF מציגים את אותו דיו — זהות חזותית מלאה.
+ *
+ * דטרמיניזם: אותו SVG + אותו יעד ⇒ אותם בתים (ריסטוריזציית canvas
+ * דטרמיניסטית בגרסת דפדפן נתונה). בסביבה ללא OffscreenCanvas (Node) —
+ * מפה ריקה והנתיב הווקטורי הקיים נשאר כמו שהו (מתועד; אין נפילה שקטה
+ * למנגנון אחר — העיטור פשוט ממשיך להיות מוקרן וקטורית כמו קודם).
+ */
+
+/** האם ל-SVG יש רכיבים מעבר לתת-הקבוצה הווקטורית הנתמכת.
+ * שימת לב: זיהוי שמרני — רק כשברור שהפענוח הווקטורי חלקי. */
+function svgNeedsRaster(svg) {
+  const s = String(svg || '');
+  if (!s) return false;
+  if (/<use[\s>]/i.test(s)) return true;          // הפניות defs — לא נתמכות
+  if (/<pattern[\s>]/i.test(s)) return true;      // מילויי דפוס — לא נתמכים
+  // stroke אמיתי על אלמנט צורה (לא stroke="none") — נשמט בפענוח המילוי-בלבד
+  if (/<(?:path|rect|circle|ellipse|polyline|polygon|g)\b[^>]*\bstroke\s*=\s*"(?!none)[^"]*"/i.test(s)) return true;
+  return false;
+}
+
+/** ריסטוריזציה של SVG ל-JPEG בגודל היעד (יחס היעד = תיבת העיטור בעמוד).
+ * meet (contain) במרכז, רקע לבן — בדיוק כמו ה-DOM (background-size:contain
+ * על עמוד לבן; שוליים שקופים ב-DOM נראים לבנים על העמוד — כאן נצבעים לבן).
+ * @returns {Promise<{jpeg:Uint8Array,w:number,h:number}|null} */
+async function rasterSvgToJpeg(svg, outW, outH) {
+  if (typeof OffscreenCanvas === 'undefined' || typeof createImageBitmap !== 'function') return null;
+  const W = Math.max(1, Math.round(outW)), H = Math.max(1, Math.round(outH));
+  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  let bmp = null;
+  try {
+    bmp = await createImageBitmap(blob);
+  } catch (e) {
+    return null; // SVG שהדפדפן אינו מפענח — נשאר הנתיב הווקטורי (מתועד)
+  }
+  try {
+    const canvas = new OffscreenCanvas(W, H);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+    // meet: סקייל אחיד מרבי שנכנס, ממורכז — זהה ל-svgToPdfOps ול-DOM
+    const s = Math.min(W / bmp.width, H / bmp.height);
+    const dw = bmp.width * s, dh = bmp.height * s;
+    ctx.drawImage(bmp, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    const outBlob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.92 });
+    if (!outBlob) return null;
+    const buf = await outBlob.arrayBuffer();
+    return { jpeg: new Uint8Array(buf), w: W, h: H };
+  } catch (e) {
+    return null;
+  } finally {
+    if (bmp && typeof bmp.close === 'function') bmp.close();
+  }
+}
+
+/** עבור כל עיטורי ה-SVG העשירים במודל — ריסטוריזציה לפי תיבת העיטור.
+ * מפתח: `p<pageIndex>#<decorationIndex>` — יציב בין המיפוי ב-export לציור.
+ * @param {object} model — PageModel (לקריאה בלבד; אין שינוי — המודל קפוא)
+ * @param {{scale?:number}} opts — scale: רזולוציית יתר (ברירת מחדל 2 — חדות רטינה)
+ * @returns {Promise<Map<string,{jpeg:Uint8Array,w:number,h:number}>>} */
+async function rasterizeModelDecorations(model, opts = {}) {
+  const scale = Number(opts.scale) > 0 ? Number(opts.scale) : 2;
+  const out = new Map();
+  if (!model || !Array.isArray(model.pages)) return out;
+  if (typeof OffscreenCanvas === 'undefined' || typeof createImageBitmap !== 'function') return out;
+  for (const page of model.pages) {
+    const decos = (page && Array.isArray(page.decorations)) ? page.decorations : [];
+    for (let i = 0; i < decos.length; i++) {
+      const d = decos[i];
+      const ink = d && d.ink;
+      if (!ink || ink.type !== 'svg' || !ink.svg) continue;
+      if (!svgNeedsRaster(ink.svg)) continue;
+      // תיבת היעד: ה-rect של העיטור בעמוד (px) — כפי שה-DOM מציב אותו
+      const w = Number(d.w), h = Number(d.h);
+      if (!(w > 0) || !(h > 0)) continue;
+      const r = await rasterSvgToJpeg(ink.svg, w * scale, h * scale);
+      if (r) out.set(`p${page.index}#${i}`, r);
+    }
+  }
+  return out;
+}
+
+module.exports = { svgNeedsRaster, rasterSvgToJpeg, rasterizeModelDecorations };
 
 };
 

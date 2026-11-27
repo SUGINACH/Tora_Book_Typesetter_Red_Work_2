@@ -285,6 +285,27 @@ function writePdf(opts) {
   }
   /** מפת key → {font, name} לציור מיידי ב-emitWord (נתיב יחיד). */
   const extraByKeys = new Map(extraFonts.map((ef, i) => [ef.key, { font: ef.font, name: `F${7 + i}` }]));
+  // **עיצובי שערים עשירים (תיקון DOM≠PDF):** תמונות JPEG מרוסטרות מה-SVG
+  // המקורי (svg-raster — אותו דיו שה-DOM מציב). מזהים דטרמיניסטיים לפי
+  // סדר הופעה ראשון בעמודים; עיטור בעל raster אינו מצויר וקטורית עוד
+  // (התמונה מכסה את מלוא ה-SVG — ציור כפול היה מכפיל דיו).
+  const imageEntries = [];
+  const imageByRaster = new Map();
+  for (const pg of pages) {
+    for (const d of (pg.decorations || [])) {
+      if (!d || !d.raster || !d.raster.jpeg) continue;
+      if (!imageByRaster.has(d.raster)) {
+        const entry = { raster: d.raster, id: pdf.reserve(), name: `Im${imageEntries.length + 1}` };
+        imageByRaster.set(d.raster, entry);
+        imageEntries.push(entry);
+      }
+    }
+  }
+  for (const entry of imageEntries) {
+    const jpeg = entry.raster.jpeg;
+    const head = Buffer.from(`<< /Type /XObject /Subtype /Image /Width ${entry.raster.w} /Height ${entry.raster.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`, 'latin1');
+    pdf.put(entry.id, Buffer.concat([head, Buffer.from(jpeg), Buffer.from('\nendstream', 'latin1')]));
+  }
   const pageIds = pages.map(() => pdf.reserve());
   const contentIds = pages.map(() => pdf.reserve());
   const linkIds = new Map(); // pageIndex → [ids]
@@ -314,6 +335,16 @@ function writePdf(opts) {
   // ---- תוכן לכל עמוד (content streams) ----
   const contents = pages.map((pg) => {
     const ops = [];
+    // **עיצובי שערים מרוסטרים — רקע לפני כל דיו אחר:** התמונה מצוירת ראשונה
+    // (מתחת לטקסט ולעיטורים) בתיבת העיטור בדיוק (px→pt, היפוך y) — אותה
+    // גיאומטריה כמו ה-DOM (תיבת העיטור המוחלטת).
+    for (const d of (pg.decorations || [])) {
+      const entry = d && d.raster ? imageByRaster.get(d.raster) : null;
+      if (!entry) continue;
+      const xPt = d.x * PX_TO_PT;
+      const yTopPt = hPt - (d.y + d.h) * PX_TO_PT;
+      ops.push(`q ${round2(d.w * PX_TO_PT)} 0 0 ${round2(d.h * PX_TO_PT)} ${round2(xPt)} ${round2(yTopPt)} cm /${entry.name} Do Q`);
+    }
     // **S6.0 (R5-M2 — צבע דביק):** מצב מילוי נוכחי לכל אורך מסלול התוכן
     // של העמוד. בעבר 'rg' נפלט רק למילים צבועות ולא אופס לעולם ⇒ מילה
     // צבועה (הערת-שוליים אפורה) צבעה את כל הטקסט שאחריה בעמוד — הערות
@@ -462,6 +493,7 @@ function writePdf(opts) {
     // חף-תלויות ואוסף אובייקטים בלבד). תמונות רסטר אינן מצוירות כאן (מתועד).
     if (pg.decorations && pg.decorations.length) {
       for (const d of pg.decorations) {
+        if (d && d.raster) continue; // רוסטר כבר צויר למעלה — אין כפילות דיו
         if (Array.isArray(d.pdfOps)) ops.push(...d.pdfOps);
       }
     }
@@ -712,7 +744,14 @@ function writePdf(opts) {
     // **S73:** הגופנים הדינמיים באותם משאבים לכל עמוד — סדר קבוע (דטרמיניזם)
     extraFonts.forEach((ef, i) => fontPairs.push([`/F${7 + i}`, ef.ids.type0]));
     const fontRes = `/Font << ${fontPairs.map(([n, id]) => `${n} ${id} 0 R`).join(' ')} >>`;
-    pdf.put(pageIds[i], `<< /Type /Page /Parent ${ID.pages} 0 R /MediaBox ${mediabox} /TrimBox ${trimbox} /BleedBox ${bleedbox} /Resources << ${fontRes} >> /Contents ${contentIds[i]} 0 R${annotsStr} >>`);
+    // תמונות העמוד (עיצובי שערים מרוסטרים) — משאב /XObject לפי הכרך בעמוד
+    const pageImages = [];
+    for (const d of (pg.decorations || [])) {
+      const e = d && d.raster ? imageByRaster.get(d.raster) : null;
+      if (e) pageImages.push(e);
+    }
+    const xobjRes = pageImages.length ? ` /XObject << ${pageImages.map(e => `/${e.name} ${e.id} 0 R`).join(' ')} >>` : '';
+    pdf.put(pageIds[i], `<< /Type /Page /Parent ${ID.pages} 0 R /MediaBox ${mediabox} /TrimBox ${trimbox} /BleedBox ${bleedbox} /Resources << ${fontRes}${xobjRes} >> /Contents ${contentIds[i]} 0 R${annotsStr} >>`);
     pdf.put(contentIds[i], Buffer.concat([
       Buffer.from(`<< /Length ${contents[i].length} >>\nstream\n`, 'latin1'),
       contents[i],
