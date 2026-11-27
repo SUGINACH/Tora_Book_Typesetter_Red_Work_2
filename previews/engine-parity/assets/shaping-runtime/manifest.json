@@ -42,8 +42,8 @@
     },
     {
       "path": "unicode18-bidi-runtime.js",
-      "bytes": 37811,
-      "sha256": "f8561105050e81113492a10cd30c77ed210b37f8a4ca42fb72fad82f648a81ff"
+      "bytes": 37186,
+      "sha256": "580685c67ffbadf68900ae152253ca9a9e1616a32d8a1864b306967d928009dc"
     },
     {
       "path": "unicode18-bidi-runtime.wasm",

@@ -1,6 +1,6 @@
 // ui/app.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת מעטפת ה־UI (המנוע רץ ב־Worker הנפרד)
-// מודולים: 83 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 72 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -314,15 +314,11 @@ var __paths = {
   "src/ui/app-shell.js|./retypeset-policy": "src/ui/retypeset-policy.js",
   "src/ui/app-shell.js|./page-model-transport": "src/ui/page-model-transport.js",
   "src/ui/app-shell.js|./caret-map": "src/ui/caret-map.js",
-  "src/ui/app-shell.js|../engine/assets/asset-resolver": "src/engine/assets/asset-resolver.js",
-  "src/ui/app-shell.js|../engine/decoration/asset-registry": "src/engine/decoration/asset-registry.js",
   "src/ui/app-shell.js|../engine/core/settings-registry": "src/engine/core/settings-registry.js",
   "src/ui/app-shell.js|./inline-transport": "src/ui/inline-transport.js",
   "src/ui/app-shell.js|../engine/output/export-api": "src/engine/output/export-api.js",
   "src/ui/app-shell.js|../engine/output/export-api": "src/engine/output/export-api.js",
-  "src/ui/app-shell.js|../engine/output/export-api": "src/engine/output/export-api.js",
   "src/ui/app-shell.js|../engine/core/settings-registry": "src/engine/core/settings-registry.js",
-  "src/ui/app-shell.js|../engine/core/legacy-settings-map": "src/engine/core/legacy-settings-map.js",
   "src/ui/app-shell.js|../engine/layout/page-templates": "src/engine/layout/page-templates.js",
   "src/engine/output/project-io.js|../core/settings-registry": "src/engine/core/settings-registry.js",
   "src/ui/editor-tab.js|../engine/decoration/folio": "src/engine/decoration/folio.js",
@@ -351,7 +347,6 @@ var __paths = {
   "src/engine/output/dom-renderer.js|./line-font": "src/engine/output/line-font.js",
   "src/engine/output/dom-renderer.js|./shaar-content": "src/engine/output/shaar-content.js",
   "src/engine/output/dom-renderer.js|../typography/measure-api": "src/engine/typography/measure-api.js",
-  "src/engine/output/dom-renderer.js|../layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
   "src/engine/decoration/page-decorations.js|../layout/page-templates": "src/engine/layout/page-templates.js",
   "src/engine/decoration/asset-registry.js|./svg-sanitize": "src/engine/decoration/svg-sanitize.js",
   "src/engine/decoration/ornament-ink.js|./asset-registry": "src/engine/decoration/asset-registry.js",
@@ -367,17 +362,6 @@ var __paths = {
   "src/engine/typography/font-resolver.js|./measure-api": "src/engine/typography/measure-api.js",
   "src/engine/typography/font-resolver.js|./measure-api": "src/engine/typography/measure-api.js",
   "src/engine/typography/font-resolver.js|./measure-api": "src/engine/typography/measure-api.js",
-  "src/engine/layout/legacy-imud-flow.js|../typography/measure-api": "src/engine/typography/measure-api.js",
-  "src/engine/layout/legacy-imud-flow.js|../core/events": "src/engine/core/events.js",
-  "src/engine/layout/legacy-imud-flow.js|../core/ledger": "src/engine/core/ledger.js",
-  "src/engine/layout/legacy-imud-flow.js|../decoration/headers-builder": "src/engine/decoration/headers-builder.js",
-  "src/engine/layout/legacy-imud-flow.js|../decoration/folio": "src/engine/decoration/folio.js",
-  "src/engine/layout/legacy-imud-flow.js|../output/line-font": "src/engine/output/line-font.js",
-  "src/engine/layout/legacy-imud-flow.js|./furniture-geometry": "src/engine/layout/furniture-geometry.js",
-  "src/engine/layout/legacy-imud-flow.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
-  "src/engine/layout/legacy-imud-flow.js|../core/h3-contract": "src/engine/core/h3-contract.js",
-  "src/engine/layout/legacy-imud-flow.js|../decoration/legacy-ornaments": "src/engine/decoration/legacy-ornaments.js",
-  "src/engine/decoration/legacy-ornaments.js|./ornament-fit": "src/engine/decoration/ornament-fit.js",
   "src/engine/output/pagemodel-dom-renderer.js|../core/pua-text": "src/engine/core/pua-text.js",
   "src/engine/output/pagemodel-dom-renderer.js|../typography/font-keys": "src/engine/typography/font-keys.js",
   "src/engine/output/pagemodel-dom-renderer.js|../decoration/asset-registry": "src/engine/decoration/asset-registry.js",
@@ -386,11 +370,9 @@ var __paths = {
   "src/ui/testing-tab.js|../audit/report-schema": "src/audit/report-schema.js",
   "src/ui/testing-tab.js|../engine/core/ledger": "src/engine/core/ledger.js",
   "src/audit/report-schema.js|../engine/layout/dp-planner": "src/engine/layout/dp-planner.js",
-  "src/audit/report-schema.js|../engine/layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
   "src/engine/layout/dp-planner.js|../core/h3-contract": "src/engine/core/h3-contract.js",
   "src/engine/layout/dp-planner.js|./page-templates": "src/engine/layout/page-templates.js",
   "src/engine/layout/dp-planner.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
-  "src/engine/layout/dp-planner.js|./page-templates": "src/engine/layout/page-templates.js",
   "src/engine/layout/dp-planner.js|../core/ledger": "src/engine/core/ledger.js",
   "src/engine/layout/dp-planner.js|./protections-matrix": "src/engine/layout/protections-matrix.js",
   "src/engine/layout/dp-planner.js|./retreat-loop": "src/engine/layout/retreat-loop.js",
@@ -404,6 +386,8 @@ var __paths = {
   "src/engine/layout/dp-planner.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/layout/dp-planner.js|./constraint-matrix": "src/engine/layout/constraint-matrix.js",
   "src/engine/layout/dp-planner.js|./decision-trace": "src/engine/layout/decision-trace.js",
+  "src/engine/layout/dp-planner.js|../core/settings-registry": "src/engine/core/settings-registry.js",
+  "src/engine/layout/dp-planner.js|../typography/kp-linebreak": "src/engine/typography/kp-linebreak.js",
   "src/engine/layout/protections-matrix.js|./balancing": "src/engine/layout/balancing.js",
   "src/engine/layout/protections-matrix.js|./column-flow": "src/engine/layout/column-flow.js",
   "src/engine/layout/protections-matrix.js|../notes/markers": "src/engine/notes/markers.js",
@@ -418,15 +402,7 @@ var __paths = {
   "src/engine/layout/footnote-budget.js|./footnote-lanes": "src/engine/layout/footnote-lanes.js",
   "src/engine/layout/footnote-budget.js|./notes-model": "src/engine/layout/notes-model.js",
   "src/engine/layout/notes-model.js|../core/imud-geometry": "src/engine/core/imud-geometry.js",
-  "src/engine/layout/notes-model.js|../typography/paragraph-shaping": "src/engine/typography/paragraph-shaping.js",
-  "src/engine/typography/paragraph-shaping.js|./text-item-shaping-plan": "src/engine/typography/text-item-shaping-plan.js",
-  "src/engine/typography/paragraph-shaping.js|./shaped-run": "src/engine/typography/shaped-run.js",
-  "src/ui/page-model-transport.js|../engine/core/page-model-hashes": "src/engine/core/page-model-hashes.js",
-  "src/engine/core/page-model-hashes.js|../assets/hash256": "src/engine/assets/hash256.js",
   "src/ui/caret-map.js|../engine/parser/dfa-lexer": "src/engine/parser/dfa-lexer.js",
-  "src/engine/assets/asset-resolver.js|./hash256": "src/engine/assets/hash256.js",
-  "src/engine/assets/asset-resolver.js|./image-meta": "src/engine/assets/image-meta.js",
-  "src/engine/assets/asset-resolver.js|../import/zip-reader": "src/engine/import/zip-reader.js",
   "src/engine/output/export-api.js|../core/settings-registry": "src/engine/core/settings-registry.js",
   "src/engine/output/export-api.js|./dom-renderer": "src/engine/output/dom-renderer.js",
   "src/engine/output/export-api.js|./html-export": "src/engine/output/html-export.js",
@@ -434,11 +410,6 @@ var __paths = {
   "src/engine/output/export-api.js|../layout/page-templates": "src/engine/layout/page-templates.js",
   "src/engine/output/export-api.js|../import/zip-reader": "src/engine/import/zip-reader.js",
   "src/engine/output/export-api.js|./pdf-mark-policy": "src/engine/output/pdf-mark-policy.js",
-  "src/engine/output/export-api.js|./legacy-projector": "src/engine/output/legacy-projector.js",
-  "src/engine/output/legacy-projector.js|../layout/legacy-imud-flow": "src/engine/layout/legacy-imud-flow.js",
-  "src/engine/output/legacy-projector.js|./line-font": "src/engine/output/line-font.js",
-  "src/engine/output/legacy-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
-  "src/engine/output/legacy-projector.js|../decoration/ornament-ink": "src/engine/decoration/ornament-ink.js",
   "src/ui/imud-library.js|../engine/decoration/asset-registry": "src/engine/decoration/asset-registry.js",
   "src/ui/imud-library.js|../engine/core/legacy-settings-map": "src/engine/core/legacy-settings-map.js",
   "src/ui/imud-library.js|../engine/core/settings-registry": "src/engine/core/settings-registry.js"
@@ -589,7 +560,6 @@ function boot() {
     imudLibrary: imud,
     onRequestTxtImport: () => pickFile('.txt,text/plain', (text) => app.onDocumentAction('import-txt', text)),
     onRequestDocxImport: () => pickBinaryFile('.docx', (bytes, name) => app.importDocxFile(bytes, name)), // **S11**
-    onRequestImageImport: () => pickBinaryFile('.png,image/png,.jpg,.jpeg,image/jpeg', (bytes, name) => app.importImageFile(bytes, name)),
     onRequestExtensionsImport: () => pickFile('.json,application/json', (json) => app.extensions.importFromText(json, 'הרחבות.json')), // **S11**
     onSaveExtensions: (json) => downloadJson('tora-extensions.json', json), // **S11**
     onSaveTemplate: (json) => downloadJson('settings-template.json', json),
@@ -725,8 +695,6 @@ const { WorkerEngineClient, RESTART_ERROR } = require('./worker-client');
 const { classifyChange, getDebounceMs, policyTable } = require('./retypeset-policy');
 const { receivePageModel } = require('./page-model-transport'); // **שלב 8 פרוסה 2 (§4.3):** קליטת PageModel מעבר לגבול ה-Worker
 const { buildCaretMap } = require('./caret-map');
-const { AssetResolver } = require('../engine/assets/asset-resolver');
-const { registerDocumentImage, clearDocumentImages } = require('../engine/decoration/asset-registry');
 
 const TABS = [
   { id: 'editor', label: '✍️ עורך' },
@@ -758,21 +726,15 @@ function readSavedSplitPct() {
 
 function createApp(doc, opts = {}) {
   const settings = getDefaultSettings();
-  // Same verified document resolver feeds Worker measurement/export and the
-  // local data-URI registry feeds the PageModel DOM/standalone HTML renderers.
-  const documentAssets = opts.documentAssets || new AssetResolver();
-  let nextDocumentImageId = 1;
-  // **ענף preview לצורך parity (engine/legacy-parity-preview-20261119):** הענף
-  // מפעיל את המנוע המאוחד בנתיב ה־UI/Worker האמיתי — דגל in-band שזורם עם
-  // ההגדרות לאותה נקודת dispatch אחת ב־pipeline (בלי מנגנון מקבילי). ב־main
-  // הערך null ושום דבר אינו מוזרק — ברירת המחדל של main אינה משתנה.
+  // **ענף preview (engine/legacy-parity-preview-20261119):** הענף מוגדר כסביבת
+  // המנוע המאוחד. מרגע הפיכת המאוחד למנוע היחיד (הסרת legacy) אין עוד דגל
+  // dispatch — branchProfile נשאר לתצוגה/לשמירת הגדרות לא-מחוברות בלבד.
   const branchProfile = opts.branchEngineProfile === 'unified' ? 'unified' : null;
   const branchBuildInfo = opts.branchBuildInfo || null; // { commit, builtAt } — מוזרק מ־build-info.json בזמן פריסה
-  if (branchProfile === 'unified') settings['_engine-force-unified'] = true;
   let text = '';
   let result = null;            // תוצאה מסוריאליזת פרוטוקול (D-65)
   let pageModelObj = null;      // **שלב 8 פרוסה 2 (§4.4):** PageModel שהתקבל מה-Worker — מאומת וקפוא מחדש
-  let engineProfile = 'legacy'; // **פרוסה 3 (§2.3):** פרופיל המנוע של התוצאה הנוכחית (legacy/unified)
+  const engineProfile = 'unified'; // **מנוע יחיד (2ae45b9):** אין עוד פרופיל legacy — קבוע לכל התוצאות
   let caretMapObj = null;
   let lightDirty = false, heavyDirty = false;
   let typesetGen = 0; // **S5.2 (5):** דור עימוד — מונה תוצאות שהושלמו; חוזה: st.gen (אודיט חי בוחן שינוי)
@@ -870,7 +832,6 @@ function createApp(doc, opts = {}) {
     onDocumentAction: (action, payload) => onDocumentAction(action, payload),
     onImportTxt: () => opts.onRequestTxtImport && opts.onRequestTxtImport(),
     onImportDocx: () => opts.onRequestDocxImport && opts.onRequestDocxImport(),
-    onImportImage: () => opts.onRequestImageImport && opts.onRequestImageImport(),
     onClearDocument: () => onDocumentAction('clear', ''),
     onCaretMove: (charIndex) => onCaretMove(charIndex),
     onJumpToPage: (pageIndex) => { switchTab('preview'); preview.scrollToPage(pageIndex); },
@@ -1167,7 +1128,6 @@ function createApp(doc, opts = {}) {
       const started = perf.now();
       const req = engine.requestTypeset({
         text, settings,
-        assets: documentAssets,
         onProgress: (m) => status.setEngineState('working', m) // "עמוד X מתוך Y"
       });
       const jobId = req && req.jobId ? req.jobId : null; // **S1-ה/U-2:** מזהה הריצה לתצוגה
@@ -1187,17 +1147,12 @@ function createApp(doc, opts = {}) {
       } catch (e) {
         pageModelObj = null;
       }
-      // **פרוסה 3 (§2.3):** פרופיל המנוע שרץ (מה-Worker דרך ui-result-v1) —
-      // נשמר לכל רינדור חוזר (גם keepView) כדי שהתצוגה לא תחליף רנדרר
-      // באמצע סשן.
-      engineProfile = (res && res.legacyProfile) ? 'legacy' : 'unified';
-      // **ענף preview (§ג.4 בהוראה):** כשל מפורש כשחסר PageModel או כשהמנוע
-      // נפל בשקט ל־legacy למרות פרופיל הענף — אין fallback שקט ואין המשך תצוגה
-      // כאילו הכול תקין. התצוגה הקיימת נשמרת כמו שהיא, אך מצב המנוע הופך לשגיאה.
+      // **ענף preview (§ג.4 בהוראה):** כשל מפורש כשחסר PageModel — אין fallback
+      // שקט ואין המשך תצוגה כאילו הכול תקין. התצוגה הקיימת נשמרת כמו שהיא,
+      // אך מצב המנוע הופך לשגיאה. (מנוע היחיד הוא המאוחד — בדיקת ה-fallback
+      // ל־legacy בוטלה עמו.)
       if (branchProfile === 'unified') {
-        if (engineProfile === 'legacy') {
-          status.setEngineState('error', { message: 'ענף preview: המנוע נפל ל־legacy למרות פרופיל unified — fallback שקט אסור. דווחו זאת.' });
-        } else if (!pageModelObj) {
+        if (!pageModelObj) {
           status.setEngineState('error', { message: 'ענף preview: תוצאת המנוע המאוחד הגיעה ללא PageModel תקין — אין fallback. דווחו זאת.' });
         }
       }
@@ -1237,9 +1192,6 @@ function createApp(doc, opts = {}) {
   /** פעולות מסמך מפורשות — הדבקה / ייבוא TXT / פתיחה. פעולה שלמה ⇒ עימוד מיידי. */
   function onDocumentAction(action, payload) {
     if (action === 'clear') {
-      documentAssets.clear();
-      clearDocumentImages();
-      nextDocumentImageId = 1;
       // **S6.0 (R8-M1 — ספר רפאים):** ביטול עימוד ממריץ לפני הניקוי —
       // בעבר תוצאה שהגיעה אחרי הניקוי "החייתה" את המסמך שנמחק (עמודים
       // מוצגים מול עורך ריק; ייצוא רץ על טקסט ריק).
@@ -1247,8 +1199,7 @@ function createApp(doc, opts = {}) {
       text = '';
       editor.setText('');
       result = null;
-      pageModelObj = null; // **פרוסה 2:** ניקוי המודל עם המסמך
-      engineProfile = 'legacy'; // **פרוסה 3:** איפוס הפרופיל עם המסמך
+      pageModelObj = null; // **פרוסה 2:** ניקוי המודל עם המסמך (engineProfile קבוע — המנוע היחיד הוא המאוחד)
       caretMapObj = null;
       preview.setResult({ pages: [], report: { findings: [], counts: {} }, trace: { events: [] }, tokens: [], droppedEvents: 0 }, settings);
       testing.setResult({ pages: [], report: { findings: [], counts: {} }, trace: { events: [] }, tokens: [], droppedEvents: 0 });
@@ -1260,11 +1211,6 @@ function createApp(doc, opts = {}) {
       return;
     }
     if (action === 'paste' || action === 'import-txt' || action === 'open') {
-      if (action === 'import-txt' || action === 'open') {
-        documentAssets.clear();
-        clearDocumentImages();
-        nextDocumentImageId = 1;
-      }
       text = String(payload != null ? payload : '');
       editor.setText(text);
       onExplicitRetypeset(); // פעולת מסמך מפורשת — נתיב מיידי (progress מוצג)
@@ -1353,41 +1299,6 @@ function createApp(doc, opts = {}) {
 
   // ================= S11: ייבוא DOCX + החלת המלצות =================
 
-  /** ייבוא תמונת PNG/JPEG: בתים מאומתים נרשמים ב-resolver ומוכנסים במיקום הסמן. */
-  function importImageFile(bytes, fileName) {
-    const name = String(fileName || 'image.png');
-    const extMatch = name.match(/\.([a-z0-9]+)$/i);
-    const ext = extMatch ? extMatch[1].toLowerCase() : '';
-    if (!['png', 'jpg', 'jpeg'].includes(ext)) {
-      status.setNotice('ייבוא תמונה נכשל: נתמכים PNG, JPG ו-JPEG בלבד.');
-      return { ok: false, error: 'unsupported-image-extension' };
-    }
-    const base = name.replace(/\.[^.]+$/, '').replace(/[^\p{L}\p{N}._-]+/gu, '_').replace(/^\.+|\.+$/g, '').slice(0, 64) || 'image';
-    const resourcePath = `images/${nextDocumentImageId++}-${base}.${ext}`;
-    const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
-    const added = documentAssets.addBytes(resourcePath, data, { source: 'user-import', fileName: name });
-    if (!added.ok || !added.asset || !added.asset.measured || !added.asset.measured.ok) {
-      const reason = added.code || (added.asset && added.asset.measured && added.asset.measured.code) || 'invalid-image';
-      status.setNotice('ייבוא התמונה נכשל: הקובץ אינו תמונת PNG/JPEG תקינה (' + reason + ').');
-      return { ok: false, error: reason };
-    }
-    const expectedFormat = ext === 'png' ? 'png' : 'jpeg';
-    if (added.asset.measured.format !== expectedFormat) {
-      status.setNotice('ייבוא התמונה נכשל: סיומת הקובץ אינה תואמת לתוכן הבינארי.');
-      return { ok: false, error: 'image-extension-content-mismatch' };
-    }
-    const registered = registerDocumentImage(resourcePath, data);
-    if (!registered.ok) {
-      status.setNotice('ייבוא התמונה נכשל: לא ניתן לרשום את משאב התצוגה (' + registered.code + ').');
-      return { ok: false, error: registered.code };
-    }
-    const marker = `#${resourcePath}#`;
-    editor.insertTextAtSelection(marker);
-    onExplicitRetypeset();
-    status.setNotice(`התמונה «${name}» הוכנסה למסמך ונרשמה למנוע.`);
-    return { ok: true, resourcePath, assetId: added.assetId };
-  }
-
   /** ייבוא קובץ DOCX (בתים) — המרה במקור היחיד; סירוב פורמט = הודעה עברית בלי קריסה (חוק 14). */
   function importDocxFile(bytes, fileName) {
     const res = importDocx(bytes, fileName);
@@ -1466,31 +1377,20 @@ function createApp(doc, opts = {}) {
       status.setNotice('קיימים שינויים שלא הוחלו — הפעילו עימוד (⚡) לפני ייצוא');
       return { ok: false, kind, reason: 'dirty' };
     }
-    const { exportHtml, exportPdf, exportProjectZip } = require('../engine/output/export-api');
+    const { exportHtml, exportHtmlFromModel, exportProjectZip } = require('../engine/output/export-api');
     try {
       if (kind === 'html') {
         const fontCss = (typeof opts.getExportFontCss === 'function' && opts.getExportFontCss()) || '';
-        // **פרוסה 4 (§3 — HTML מה-PageModel):** בפרופיל המאוחד הייצוא מהמודל
-        // שכבר חושב — אותו מקרין כמו התצוגה החיה; אין typeset נוסף. חסר-מודל
-        // = כשל מפורש (אין נפילה לייצוא מהתוצאה הגולמית — §3). legacy ממשיך
-        // בנתיב הקיים עד שלב 9 (תקופת המעבר, כמו בתצוגה).
-        if (engineProfile === 'unified') {
-          if (!pageModelObj) {
-            status.setNotice('ייצוא HTML בפרופיל המאוחד דורש PageModel — אין נתיב חלופי (הפעילו עימוד מחדש).');
-            return { ok: false, kind, reason: 'no-page-model' };
-          }
-          const { exportHtmlFromModel } = require('../engine/output/export-api');
-          const html = exportHtmlFromModel(pageModelObj, settings, doc, { title: (result.metadata && result.metadata['ספר']) || 'ספר', fontCss });
-          if (opts.onExportFile) opts.onExportFile('html', html, 'book.html');
-          status.setNotice('יוצא HTML עצמאי מה-PageModel (חד־קובץ, offline, אין עימוד שני).');
-          return { ok: true, kind, data: html };
+        // **פרוסה 4 (§3 — HTML מה-PageModel):** המנוע המאוחד מייצא מהמודל
+        // שכבר חושב — אותו מקרין כמו התצוגה החיה; אין typeset נוסף.
+        // חסר-מודל = כשל מפורש (אין נפילה לייצוא מהתוצאה הגולמית).
+        if (!pageModelObj) {
+          status.setNotice('ייצוא HTML דורש PageModel — אין נתיב חלופי (הפעילו עימוד מחדש).');
+          return { ok: false, kind, reason: 'no-page-model' };
         }
-        // **9c.2/9c.4-marker:** נתיב מורשת — צריכת result.pages הגולמיים.
-        // יוסר עם הסרת המנוע ב-9c.4; עד אז האתחול בפרופיל המורשת זקוק לו.
-        // אין fallback בנתיב המאוחד — PageModel חסר = שגיאה מפורשת (לעיל).
-        const html = exportHtml(result, settings, doc, { title: (result.metadata && result.metadata['ספר']) || 'ספר', fontCss });
+        const html = exportHtmlFromModel(pageModelObj, settings, doc, { title: (result.metadata && result.metadata['ספר']) || 'ספר', fontCss });
         if (opts.onExportFile) opts.onExportFile('html', html, 'book.html');
-        status.setNotice('יוצא HTML עצמאי (חד־קובץ, offline).');
+        status.setNotice('יוצא HTML עצמאי מה-PageModel (חד־קובץ, offline, אין עימוד שני).');
         return { ok: true, kind, data: html };
       }
       if (kind === 'pdf') {
@@ -1511,28 +1411,17 @@ function createApp(doc, opts = {}) {
           status.setNotice('ייצוא PDF דורש גופן מוטמע — נא לטעון גופן (TTF) בהגדרות המסמך.');
           return { ok: false, reason: 'no-embedded-font' };
         }
-        // **9c.1 (אין עימוד שני):** הנתיב המקומי (Node/בדיקות) מייצא בפרופיל
-        // המאוחד מה-PageModel שכבר חושב — כמו הנתיב החי ב-Worker. חסר-מודל
-        // (או שאין תוצאת עימוד כלל — הפרופיל עודנו ברירת המחדל) = כשל מפורש;
-        // אין נפילה שקטה ל-exportPdf שמעמד מחדש. פרופיל המורשת ממשיך בנתיב
-        // הקיים עד 9c.4 (הסרת המנוע).
-        if (engineProfile === 'unified' || !result) {
-          if (!pageModelObj) {
-            status.setNotice('ייצוא PDF דורש PageModel — אין נתיב חלופי (הפעילו עימוד קודם).');
-            return { ok: false, kind, reason: 'no-page-model' };
-          }
-          const { exportPdfFromModel } = require('../engine/output/export-api');
-          const res = exportPdfFromModel(pageModelObj, settings, opts.embeddedFont);
-          if (!res.ok) { status.setNotice('ייצוא PDF נכשל: ' + res.error); return res; }
-          if (opts.onExportFile) opts.onExportFile('pdf', res.bytes, 'book.pdf');
-          status.setNotice(`יוצא PDF מה-PageModel — ${res.info.pages} עמודים, ${res.info.outline} סימניות, טקסט נבחר.`);
-          return { ok: true, kind, data: res.bytes, info: res.info };
+        // **המנוע המאוחד בלבד:** ייצוא מה-PageModel שכבר חושב — כמו הנתיב החי ב-Worker.
+        // חסר-מודל (או שאין תוצאת עימוד כלל) = כשל מפורש; אין נפילה שקטה לעימוד מחדש.
+        if (!pageModelObj) {
+          status.setNotice('ייצוא PDF דורש PageModel — אין נתיב חלופי (הפעילו עימוד קודם).');
+          return { ok: false, kind, reason: 'no-page-model' };
         }
-        // **9c.4-marker:** נתיב מורשת — יוסר עם הסרת המנוע ב-9c.4.
-        const res = exportPdf(text, settings, opts.embeddedFont);
+        const { exportPdfFromModel } = require('../engine/output/export-api');
+        const res = exportPdfFromModel(pageModelObj, settings, opts.embeddedFont);
         if (!res.ok) { status.setNotice('ייצוא PDF נכשל: ' + res.error); return res; }
         if (opts.onExportFile) opts.onExportFile('pdf', res.bytes, 'book.pdf');
-        status.setNotice(`יוצא PDF — ${res.info.pages} עמודים, ${res.info.outline} סימניות, טקסט נבחר.`);
+        status.setNotice(`יוצא PDF מה-PageModel — ${res.info.pages} עמודים, ${res.info.outline} סימניות, טקסט נבחר.`);
         return { ok: true, kind, data: res.bytes, info: res.info };
       }
       if (kind === 'zip') {
@@ -1636,29 +1525,14 @@ function createApp(doc, opts = {}) {
     // מפתחות שאינם ברישום RED עוברים דרך importImudSettings (טבלת ה-disposition)
     // במקום להישאר "לא מוכרים". ערכי ui-state נשמרים ב-_legacy-ui-state (לא אובדם).
     const { getSettingDefs } = require('../engine/core/settings-registry');
-    const { importImudSettings } = require('../engine/core/legacy-settings-map');
     const migrated = migrate(raw.settings || {});
     const regKeys = new Set(getSettingDefs().map(r => r.id));
     const known = {};
-    const legacyKeys = {};
     for (const [k, v] of Object.entries(migrated)) {
       if (k === 'settings_version' || k.startsWith('_')) { known[k] = v; continue; }
-      (regKeys.has(k) ? known : legacyKeys)[k] = v;
+      if (regKeys.has(k)) known[k] = v;
     }
-    let legacySettings = {};
-    if (Object.keys(legacyKeys).length) {
-      // **EXT-9:** הקטלוג המוטמע (אם נטען) מועבר לפתרון מחסניות הגופן —
-      // "Guttman Rashi, Frank Ruhl Libre" ⇒ המשפחה המוטמעת בפועל, כך שהמדידה
-      // (font-metrics) והתצוגה משתמשות באותו גופן (מונע סחף live↔ייצוא EXT-13).
-      const availableFonts = (opts.imudLibrary && typeof opts.imudLibrary.catalogFamilies === 'function')
-        ? opts.imudLibrary.catalogFamilies() : undefined;
-      const imp = importImudSettings(legacyKeys, regKeys, {
-        contentHeightPx: currentContentHeightPx(),
-        ...(availableFonts ? { availableFonts } : {})
-      });
-      legacySettings = imp.settings; // כולל _legacy-ui-state (ערכי UI נשמרים)
-    }
-    const { merged, unknownKeys, issues } = mergeWithDefaults({ ...legacySettings, ...known });
+    const { merged, unknownKeys, issues } = mergeWithDefaults(known);
     const unsupportedUnifiedKeys = [];
     if (branchProfile === 'unified') {
       for (const definition of getSettingDefs()) {
@@ -1769,7 +1643,7 @@ function createApp(doc, opts = {}) {
     onExplicitRetypeset, onDocumentAction, onSettingChanged, onResetField,
     onCancelTypeset, // **S1-ה/U-1:** נתיב ביטול מפורש (לבדיקות/אבחון)
     scheduleLightRefresh, activateFinding, saveTemplateJson, loadTemplateJson, buildDebugJson,
-    importDocxFile, importImageFile, applyRecommendation, documentAssets, // ייבוא תמונות + DOCX והחלת המלצות
+    importDocxFile, applyRecommendation, // **S11:** ייבוא DOCX + החלת המלצות
     exportRequest: onExportRequest, // **S12:** ייצוא (html/pdf/zip) — קריאה בלבד
     refreshFontCatalog: (families) => settingsPanel.refreshFontCatalog && settingsPanel.refreshFontCatalog(families), // **03.11**
     imudLibrary: opts.imudLibrary || null, // **03.11:** ספריית IMUD לניפוי/הרחבות
@@ -1935,7 +1809,7 @@ const registry = [
   // ---- הערות (NOTES) ----
   K('note-placement-mode', 'enum', 'footnotes', P.NOTES, 'sel-note-mode', ['core/pipeline', 'layout/dp-planner', 'layout/endnote-pages'], 'fx:note-mode', { enum: ['footnotes', 'endnotes', 'inline'] }),
   K('footnotes-enabled', 'bool', true, P.NOTES, 'chk-fn-enabled', ['layout/footnote-budget', 'core/pipeline'], 'fx:fn-on', { note: 'D-39: קלט משתמש מפורש גובר על נגזרות; mode=footnotes + false ⇒ ההערות בגוף כplaceholder' }),
-  K('footnote-marker-style', 'enum', 'hebrew-geresh', P.NOTES, 'sel-fn-marker', ['notes/markers'], 'fx:fn-marker', { enum: ['hebrew', 'hebrew-geresh', 'parenthesis', 'asterisk', 'decimal'], note: "Iteration-003: 'hebrew' = גימטריה+מפריד (כמו המקור — markerWord); 'hebrew-geresh' = מוסכמת הגיליון (בחירה מפורשת)" }),
+  K('footnote-marker-style', 'enum', 'hebrew', P.NOTES, 'sel-fn-marker', ['notes/markers'], 'fx:fn-marker', { enum: ['hebrew', 'hebrew-geresh', 'parenthesis', 'asterisk', 'decimal'], note: "Iteration-003: 'hebrew' = גימטריה+מפריד (כמו המקור — markerWord); 'hebrew-geresh' = מוסכמת הגיליון (בחירה מפורשת)" }),
   K('footnote-reset-policy', 'enum', 'section', P.NOTES, 'sel-fn-reset', ['notes/markers'], 'fx:fn-reset', { enum: ['continuous', 'page', 'section', 'part'], note: 'S4.26 (דיווח משתמש 05.11): ברירת המחדל איפוס פר-פרק (section/siman) — לא פר-עמוד' }),
   K('footnote-columns', 'number', 1, P.NOTES, 'sel-fn-cols', ['layout/footnote-budget'], 'fx:fn-cols', { enum: [1, 2] }),
   K('footnote-separator-rule', 'enum', 'regular', P.NOTES, 'sel-fn-rule', ['core/materialize', 'core/page-model', 'output/pagemodel-dom-renderer', 'output/export-api'], 'fx:fn-rule', { enum: ['none', 'regular', 'circles', 'sparkle', 'star', 'diamond'], note: 'Unified: יוצר fn-rule decoration ו-pdfOps בתוך PageModel; שינוי מחייב עימוד מחדש' }),
@@ -3071,16 +2945,11 @@ function buildEditorTab(doc, opts) {
   btnDocx.setAttribute('aria-label', 'ייבוא מסמך וורד');
   btnDocx.title = 'ייבוא DOCX: כותרות וורד → כותרות המנוע; הערות וורד → הערות סוגריים; פסקאות → טקסט';
   btnDocx.addEventListener('click', () => opts.onImportDocx && opts.onImportDocx()); // **S11:** נפתח — המנוע נבנה
-  const btnImage = doc.createElement('button');
-  btnImage.type = 'button'; btnImage.className = 'btn'; btnImage.textContent = '🖼 הוספת תמונה';
-  btnImage.setAttribute('aria-label', 'הוספת תמונת PNG או JPEG למסמך');
-  btnImage.title = 'הוספת PNG/JPEG במקום הסמן; המנוע ישמור את הנכס וימדוד אותו מתוך הבתים';
-  btnImage.addEventListener('click', () => opts.onImportImage && opts.onImportImage());
   const btnClear = doc.createElement('button');
   btnClear.type = 'button'; btnClear.className = 'btn btn--ghost'; btnClear.textContent = '🗑 נקה';
   btnClear.setAttribute('aria-label', 'ניקוי העורך');
   btnClear.addEventListener('click', () => opts.onClearDocument && opts.onClearDocument());
-  bar.appendChild(btnTxt); bar.appendChild(btnDocx); bar.appendChild(btnImage); bar.appendChild(btnClear);
+  bar.appendChild(btnTxt); bar.appendChild(btnDocx); bar.appendChild(btnClear);
   root.appendChild(bar);
 
   // ---- מונים (תווים/מילים/שורות/פסקאות) — חי ----
@@ -3163,23 +3032,8 @@ function buildEditorTab(doc, opts) {
   }
   function getText() { return area.value; } // מקור נקי — סמנים אינם חלק ממנו (F-01)
 
-  /** הכנסת סמן/טקסט במיקום הסמן בלי להחליף את המסמך כולו. */
-  function insertTextAtSelection(value) {
-    const insert = String(value == null ? '' : value);
-    const start = Number.isInteger(area.selectionStart) ? area.selectionStart : area.value.length;
-    const end = Number.isInteger(area.selectionEnd) ? area.selectionEnd : start;
-    area.value = area.value.slice(0, start) + insert + area.value.slice(end);
-    const caret = start + insert.length;
-    if (area.setSelectionRange) area.setSelectionRange(caret, caret);
-    else area.selectionStart = area.selectionEnd = caret;
-    updateCounters();
-    if (opts.onTextChange) opts.onTextChange(area.value);
-    fireCaret();
-    return { start, end, caret, text: area.value };
-  }
-
   setText('');
-  return { root, setText, getText, insertTextAtSelection, setPageBreaks, updateCounters, setCaret, textarea: area, docxButton: btnDocx, imageButton: btnImage,
+  return { root, setText, getText, setPageBreaks, updateCounters, setCaret, textarea: area, docxButton: btnDocx,
     generateFixedButton: btnGenFixed, generateRandomButton: btnGenRandom };
 }
 
@@ -8587,7 +8441,7 @@ const MM_TO_PX = 96 / 25.4;
 const PAGE_SIZES = {
   // **S5.2 (O14 — A4 מדויק):** 210×297מ״מ @96dpi = 793.70×1122.52px — הערכים
   // המעוגלים (794×1123) הזיזו את גוף ה-DP ב-0.3px ויצרו MediaBox שאינו זהה
-  // לגיאומטריית המורשת (793.7×1122.5). כעת זהה ל-GEO של legacy-imud-flow.
+  // לגיאומטריית החוזה המכויל (793.7×1122.5). כעת זהה ל-GEO של החוזה המשותף.
   // **S6.0:** הערכים בפועל ללא עיגול — 793.70×1122.52 (הערת O14 טענה
   // זהות ל-GEO אך הקוד עיגל ל-794×1123 — ההערה לא יושמה מעולם).
   A4: { w: 210 * MM_TO_PX, h: 297 * MM_TO_PX },
@@ -8602,23 +8456,17 @@ const PAGE_SIZES = {
  * @param {boolean} isRecto
  */
 // **שלב ההעברה למנוע המאוחד — מקטע 1 (גאומטריית עמוד וטורים):**
-// כשפרופיל IMUD פעיל (הגדרות שמקורן ב-default_settings.json של התוכנה
-// המקורית — importImudSettings מסמן _layout-profile='imud' ומצרף _imudRaw),
 // הגריד נבנה **מהחוזה המכויל מהייחוס** (core/imud-geometry.js) ולא מהאחוזים
 // הגנריים. הפער שתוקן (דוח חקירת האתר החי 19.11, ג.10): האחוזים הגנריים
 // (grid-col-width-pct=40% מהתוכן) ייצרו חור מרכזי של 134.9px בין הטורים,
 // מול מרזב 13.48px במקור; שוליים של 7.5% מול 120.72px (15.2%) במקור.
-// לא ערכי קסם: המקור הוא החוזה המשותף ששני המנועים צורכים.
+// לא ערכי קסם: המקור הוא החוזה המשותף.
 const {
   GEO, FLOW_BOTTOM, SINGLE_W, H0_AREA_H, H2_AREA_H, H2_SPAN_AREA_H, H2_TITLE_LINE_PITCH_PX, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM
 } = require('../core/imud-geometry');
 const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
 
-function isImudProfile(settings) {
-  return !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
-}
-
-/** תבנית עמוד מהחוזה המכויל של IMUD — אותה גאומטריה שהמורשת מייצרת. */
+/** תבנית עמוד מהחוזה המכויל — אותה גאומטריה שהמנוע המאוחד מייצר. */
 function buildImudPageTemplate(type, settings, isRecto, opts = {}) {
   const twoCol = !( [PAGE_TYPES.PREFACE, PAGE_TYPES.SHAAR_MAIN, PAGE_TYPES.SHAAR_SUB,
     PAGE_TYPES.SHAAR_BACK, PAGE_TYPES.TOC_GENERAL, PAGE_TYPES.TOC_DETAIL,
@@ -8670,11 +8518,9 @@ function buildImudPageTemplate(type, settings, isRecto, opts = {}) {
 }
 
 function buildPageTemplate(type, settings, isRecto = true, opts = {}) {
-  // **מקטע 1:** פרופיל IMUD ⇒ החוזה המכויל (לא הגריד הגנרי). הנתיב הלא-IMUD
-  // (קורפוס ה-DP הכללי) אינו משתנה כלל — אותן נוסחאות אחוזים כמו קודם.
-  // **G3/RC-3 (i004):** opts מועבר הלאה — h2SpanExempt של פתיחות-סימן (עד כאן
-  // המעטפת בלעה אותו והתבנית חזרה תמיד לאזור הרגיל).
-  if (isImudProfile(settings)) return buildImudPageTemplate(type, settings, isRecto, opts);
+  // **מקטע 1:** החוזה המכויל (לא הגריד הגנרי).
+  // **G3/RC-3 (i004):** opts מועבר הלאה — h2SpanExempt של פתיחות-סימן.
+  return buildImudPageTemplate(type, settings, isRecto, opts);
   const size = PAGE_SIZES[settings['page-size']] || PAGE_SIZES.A4;
   const marginSide = size.w * settings['grid-margin-side-pct'] / 100;
   const binding = settings['binding-offset-px'] || 0;
@@ -8726,6 +8572,14 @@ function buildPageTemplate(type, settings, isRecto = true, opts = {}) {
   };
 }
 
+/**
+ * Since the legacy engine is removed, we always use IMUD geometry.
+ * This function is kept for backward compatibility with code that checks it.
+ */
+function isImudProfile(settings) {
+  return true;
+}
+
 module.exports = { PAGE_TYPES, PAGE_SIZES, buildPageTemplate, buildImudPageTemplate, isImudProfile, MM_TO_PX };
 
 };
@@ -8736,17 +8590,14 @@ __modules["src/engine/core/imud-geometry.js"] = function (require, module, expor
 /**
  * **שלב ההעברה למנוע המאוחד — מקטע 1 (גאומטריית עמוד וטורים).**
  *
- * עד כאן חיו הקבועים הללו רק בתוך `layout/legacy-imud-flow.js` — והמנוע
+ * עד כאן חיו הקבועים הללו רק בתוך מנוע המורשת — והמנוע
  * המאוחד בנה גריד גנרי מאחוזים (grid-col-width-pct וכו') שאין לו מיפוי
  * מפתחות IMUD. התוצאה הנמדדת: חור מרכזי של 134.9px בין הטורים מול מרזב
  * 13.48px במקור (דוח חקירת האתר החי, 19.11, ג.10).
  *
  * כעת הגאומטריה המכוילת מהייחוס היא **מודול חוזה משותף** — בדיוק כמו
- * `core/h3-contract.js` שכבר משותף לשני המנועים. שני הצרכנים:
- *   1. `layout/legacy-imud-flow.js` — מייבא את אותם הערכים (אפס שינוי
- *      התנהגות; מוכח ב-digest זהה של הקורפוסים).
- *   2. `layout/page-templates.js` — כשפרופיל IMUD פעיל (הגדרות שמקורן
- *      ב-default_settings.json של המקור), תבנית העמוד נבנית מהחוזה
+ * `core/h3-contract.js`. הצרכן היחיד:
+ *   `layout/page-templates.js` — תבנית העמוד נבנית מהחוזה
  *      הזה ולא מהאחוזים הגנריים.
  *
  * החוזה המלא (מיקומים, גדלים, פורמטים): audits/ENGINE_CONTRACT_9C3.md.
@@ -8825,8 +8676,7 @@ const ORPHAN_RECLAIM_BUFFER = 12; // v21: באפר "חירום" בתחתית ה�
 const RECLAIM_BELOW_BASE = 2;     // v21: היתר כיווץ מתחת לבסיס לשורה (px)
 
 // ---------- גדלי גופן (pt — כמו הגדרות המקור; פיקסלים = pt×4/3) ----------
-// ליבה סטטית בלבד: legacy-imud-flow מוטט חלק מהשדות מההגדרות (S6.3) —
-// המוטציה נשארת שם; המנוע המאוחד קורא את ערכי ברירת המחדל מכאן.
+// ליבה סטטית בלבד: המנוע המאוחד קורא את ערכי ברירת המחדל מכאן.
 const SZ_CORE = {
   body: 12, h0Title: 17, h0Body: 11.5, h2: 17, siman: 20, h3: 13.5,
   h4: 12.5, h5: 11.5, h6: 10.5, parenDelta: -2,
@@ -10120,7 +9970,7 @@ function buildPreviewTab(doc, opts) {
     // **פרוסה 3 (§2.3):** קביעת הפרופיל — מפורשת מהקריאה; ברירת המחדל
     // לתוצאות ללא סימון היא legacy (מצב המעבר). בפרופיל unified חסר-מודל
     // = שגיאה מפורשת וגלויה — שום נפילה שקטה לרנדרר הישן (§2.3).
-    profile = (options && options.profile) || (serializedResult.legacyProfile ? 'legacy' : (options && options.pageModel ? 'unified' : 'legacy'));
+    profile = (options && options.profile) || (options && options.pageModel ? 'unified' : 'unified');
     const modelPages = (options && options.pageModel && Array.isArray(options.pageModel.pages)) ? options.pageModel.pages : null;
     profileError = null;
     if (profile === 'unified' && !modelPages) {
@@ -10308,16 +10158,8 @@ const PT_CLASS = {
   // המאוחד מייצר עמודי blank (מילוי לפני שער-משנה שחייב recto — נמדד:
   // 8 עמודים כאלה ב-very_long, תמיד צמודים ל-shaar-sub). בלי המיפוי הם
   // קיבלו className='page' בלי page--* ⇒ TYPE_UNKNOWN באודיט החי (סיווג
-  // העמוד לא זיהה אף מחלקה). אותה מחלקה בדיוק כמו LEGACY_PT_CLASS.
+  // העמוד לא זיהה אף מחלקה). מחלקת CSS ייעודית לכל סוג עמוד.
   'blank': 'page page--blank'
-};
-
-// **S4.10:** סוגי עמודי מנוע המורשת (legacy-imud-flow) — מיפוי למחלקות ה-CSS.
-// 'toc-detailed' אצלנו (בייחוס toc-detail) ו-'blank' ייחודי למורשת.
-const LEGACY_PT_CLASS = {
-  'toc-detailed': 'page page--toc page--toc-detail',
-  'blank': 'page page--blank',
-  'sign-open': 'page page--sign-open'
 };
 
 // **שלב 8 פרוסה 1-ביקורת (§3.1):** scrubPUAText עבר למודול הניטרלי core/pua-text —
@@ -11023,8 +10865,7 @@ function shaarColorOfCls(cls, settings) {
 
 /** **S73:** החזרת צבע שאינו שחור (ערך כהה/חסר ⇒ null — ירושת שחור ב-CSS). */
 function nonBlack(hex) {
-  // A configured black color is explicit; only an absent/invalid value inherits.
-  return (hex && /^#[0-9a-f]{6}$/i.test(hex)) ? hex : null;
+  return (hex && /^#[0-9a-f]{6}$/i.test(hex) && hex.toLowerCase() !== '#000000') ? hex : null;
 }
 
 /**
@@ -11035,652 +10876,7 @@ function nonBlack(hex) {
  * שני הנתיבים הציגו עמודים בלי כותרת עליונה בזמן שהבדיקות העבירו את הארגומנט
  * במפורש ולא תפסו את הנתק (דיווח משתמש 3: "אין כותרות עליונות").
  */
-/**
- * **S4.10 — רנדור DOM של עמוד legacy-imud-flow (התצוגה החיה).**
- *
- * הגיאומטריה כולה כבר מחושבת במנוע המורשת ב-px@96 (מכויל מהייחוס):
- * פסים (סימן/h2/h0/h3), שערים, טורים (ימני 403.61 / שמאלי 120.72, רוחב 269.41),
- * הערות תחתית, הערות צד בשוליים, שורות TOC, כותרת עליונה תלת-סלוטית ועמודון.
- * הרנדר מצייר אותה גיאומטריה בדיוק — מה שרואים בתצוגה = מה שיוצא ב-PDF
- * (legacy-projector) — אותו מקור אמת אחד.
- */
-function renderLegacyPage(pg, settings, doc) {
-  const { GEO, SZ, parenCenterRaisePx } = require('../layout/legacy-imud-flow');
-  const BAND_X = GEO.COL_L_X;
-  const BAND_W = 2 * GEO.COL_W + 13.48;
-  // **S4.26 (גופני ברירת המחדל בכל האלמנטים):** גוף ההערה, הערות-הצד,
-  // הכותרות ושורות ה-TOC — כל אחד מקבל את הגופן שהוגדר לו (עד כאן הכל
-  // ירש את גופן הגוף). הכותרות מודגשות (כמו ה-DavidLibre-Bold של הייחוס).
-  const imudSetAll = (settings && settings._imudRaw) || {};
-  const fontOf = (k) => { const v = settings[k]; return v ? fontStack(v) : null; };
-  const headingFontOf = (level) => fontOf('heading-' + level + '-font');
-  const HEADING_LEVEL_OF_BAND = { 'h0-title': 0, 'h2-siman': 2, 'h2-title': 2, 'h3-title': 3 };
-  const root = doc.createElement('article');
-  root.className = LEGACY_PT_CLASS[pg.type] || PT_CLASS[pg.type] || 'page';
-  root.dataset.pageIndex = String(pg.index);
-  root.setAttribute('id', `page-${pg.index}`);
-  root.dir = 'rtl';
-  root.style.width = `${GEO.PAGE_W}px`;
-  root.style.height = `${GEO.PAGE_H}px`;
-  root.style.position = 'relative';
-  root.style.overflow = 'hidden';
-  const bf = settings['body-font'];
-  if (bf) root.style.fontFamily = fontStack(bf);
-  // **S73:** צבע גוף הטקסט מההגדרות (body-color; שחור ⇒ ירושת ברירת מחדל)
-  const bodyColS = nonBlack(settings['body-color']);
-  if (bodyColS) root.style.color = bodyColS;
-  const pt2px = (pt) => pt * (96 / 72);
-  const position = (el, x, y, w, h) => {
-    el.style.position = 'absolute';
-    el.style.left = `${x}px`; el.style.top = `${y}px`;
-    if (w != null) el.style.width = `${w}px`;
-    if (h != null) el.style.height = `${h}px`;
-  };
-  // **S5.1 (איחוד מודל הבסיס — "תצוגה = ייצוא"):** גובה השורה בתצוגה = גובה
-  // התיבה מהמודל (בדיוק כמו baselineOf של המקרן ל-PDF וכמו line-height:1.34
-  // של המקור). בעבר היה קבוע 1.1 — הטקסט ישב בראש התיבה ולא ממרוז בה,
-  // בזמן שה-PDF מרכז — הפרש אנכי שיטתי בכל שורה (2–4px).
-  const mkLine = (text, sizePt, align, lhPx = 0) => {
-    const el = doc.createElement('div');
-    el.className = 'line';
-    el.setAttribute('dir', 'rtl');
-    el.style.fontSize = `${pt2px(sizePt)}px`;
-    el.style.lineHeight = (lhPx && lhPx > 0) ? `${lhPx}px` : '1.1';
-    el.style.whiteSpace = 'nowrap';
-    el.style.overflow = 'visible';
-    el.style.textAlign = align;
-    // **S4.24 (מרכוז פסים בתצוגה החיה):** כלל ה-text-align-last:justify של
-    // BASE_CSS (.line:not(.line--last):not(.line--heading)) חל גם על קווי
-    // הפס וההערות-צד (class="line …") — שורה בודדת בבלוק נחשבת "אחרונה"
-    // וה-justify דרס את ה-center/right: מילים פזורות מקצה לקצה, מילה
-    // בודדת נדבקת לקצה הימני (נמדד בחי: "הקדמה" אסימטריה 494px). ערך
-    // inline גובר על הכלל.
-    el.style.textAlignLast = 'auto';
-    el.textContent = scrubPUAText(text);
-    return el;
-  };
-
-  // ---- כותרת עליונה תלת-סלוטית (פס 42.6–57.6pt ⇒ px) ----
-  // **D-89:** צבע כחול-הייחוס #0F1749 — כמו במקרן ה-legacy (נמדד בייחוס).
-  const hs = pg.headerSlots;
-  if (hs && (hs.right || hs.center || hs.left)) {
-    const hdr = doc.createElement('div');
-    hdr.className = 'running-head';
-    hdr.setAttribute('dir', 'rtl');
-    // **S5.1 (מיקום סלוטי הכותרת מהייחוס):** התיבה הקודמת [60, 733.7] הצמידה
-    // את הסלוטים לקצוות הדף — 94px/97px ממיקום הטקסט בייחוס (עמ' 12:
-    // ימין x1=479.84pt=639.8px, שמאל x0=117.68pt=156.9px, מרכז 297.65pt).
-    // הקבועים משוקפים מ-mk() של המקרן (COL_R_X+COL_W−33 / COL_L_X+33) —
-    // מרכז התיבה = מרכז הדף בדיוק. התצוגה = הייצוא = הייחוס.
-    // **S5.2 (O3 — ריתוק דטרמיניסטי של הבסיס):** במקום flex baseline
-    // (תלוי-פלטפורמה: 67.6–73.6px מול 71.9 ב-PDF) — סלוטים אבסולוטיים
-    // בתוך אותה תיבה; הבסיס = HEADER_BASELINE (71.9) באמצעות line-height:1
-    // + מטריקות DavidLibre-Bold (asc 0.7461 / desc 0.2192 ⇒ היסט 0.7635·S),
-    // ומשקל 700 מפורש (פנים ה-Bold הרשומים). מרכז = מרכז הדף (כמו ה-PDF),
-    // לא מרכז space-between.
-    position(hdr, GEO.COL_L_X + 33, 52, (GEO.COL_R_X + GEO.COL_W - 33) - (GEO.COL_L_X + 33), 22);
-    const HDR_BASELINE_Y = 71.9;
-    const DLB_BASELINE_FACTOR = 0.5 + (0.7461 - 0.2192) / 2; // DavidLibre-Bold, line-height:1
-    // **S73 (צבע כותרת עליונה מההגדרות):** header-{recto,verso}-{right,center,left}-color —
-    // ברירת מחדל שחורה (הכחול הקבוע #0F1749 של D-89 הוחלף בהגדרה — בקשת
-    // משתמש מפורשת: ברירת המחדל של כל הגופנים ללא יוצא מן הכלל = שחור).
-    // **S77 (בקשה 3):** גופן/צבע/גודל/יישור/רוחב לפי הצד הפיזי של העמוד
-    // (עד כאן: מפתחי recto קבועים לכל העמודים); היישור והרוחב מההגדרות
-    // (ברירות המחדל right/center/left + 33% משחזרות את העיגון הקודם במדויק).
-    const hdrSide = (pg.index % 2 === 0) ? 'recto' : 'verso'; // עמוד 1 (אינדקס 0) = recto
-    const slots = [
-      ['rh rh--r', hs.right, SZ.hdrR, `header-${hdrSide}-right-font`, `header-${hdrSide}-right-color`, `header-${hdrSide}-right-size-pt`, `header-${hdrSide}-right-align`, `header-${hdrSide}-right-width-pct`, 'right'],
-      ['rh rh--c', hs.center, SZ.hdrC, `header-${hdrSide}-center-font`, `header-${hdrSide}-center-color`, `header-${hdrSide}-center-size-pt`, `header-${hdrSide}-center-align`, `header-${hdrSide}-center-width-pct`, 'center'],
-      ['rh rh--l', hs.left, SZ.hdrL, `header-${hdrSide}-left-font`, `header-${hdrSide}-left-color`, `header-${hdrSide}-left-size-pt`, `header-${hdrSide}-left-align`, `header-${hdrSide}-left-width-pct`, 'left']
-    ];
-    for (const [cls, txt, sz, fk, ck, szk, ak, wk, posKind] of slots) {
-      if (!txt) continue;
-      const s = doc.createElement('span');
-      s.className = cls;
-      s.textContent = txt;
-      // **S77:** גודל הסלוט מההגדרה (ברירת המחדל המיובאת = הקבועים המכוילים)
-      const szPt = Number(settings[szk]) > 0 ? Number(settings[szk]) : sz;
-      const szPx = pt2px(szPt);
-      s.style.fontSize = `${szPx}px`;
-      const ff = fontOf(fk);
-      if (ff) s.style.fontFamily = ff; // **S4.26:** גופן הסלוט מההגדרות (ברירת מחדל: David Libre)
-      s.style.fontWeight = '700';
-      const sc = nonBlack(settings[ck]);
-      if (sc) s.style.color = sc; // **S73:** צבע הסלוט מההגדרות
-      s.style.position = 'absolute';
-      s.style.lineHeight = '1';
-      // **Iteration-006 (G6/RC-F1):** סלוט כותרת = שורה אחת תמיד (חוזה הייחוס;
-      // כותרת-מרכז ארוכה נשארת שורה אחת גם כשהיא חופפת את מילות-הצד).
-      s.style.whiteSpace = 'nowrap';
-      s.style.top = `${(HDR_BASELINE_Y - 52) - szPx * DLB_BASELINE_FACTOR}px`;
-      // **S77:** תיבת הסלוט = רוחב% מהפס; היישור בתוכה מההגדרה. ברירות המחדל
-      // (33% + right/center/left) משחזרות את העיגון הקודם: ימין צמוד ימינה,
-      // מרכז במרכז, שמאל צמוד שמאלה.
-      const bandW = (GEO.COL_R_X + GEO.COL_W - 33) - (GEO.COL_L_X + 33);
-      const wPct = Number(settings[wk]);
-      const boxW = Math.max(0, (Number.isFinite(wPct) && wPct > 0 && wPct <= 100 ? wPct : 33) / 100) * bandW;
-      const align = settings[ak] || posKind;
-      if (posKind === 'right') { s.style.right = '0'; s.style.width = `${boxW}px`; s.style.textAlign = align; }
-      else if (posKind === 'left') { s.style.left = '0'; s.style.width = `${boxW}px`; s.style.textAlign = align; }
-      else { s.style.left = `${(bandW - boxW) / 2}px`; s.style.width = `${boxW}px`; s.style.textAlign = align; }
-      hdr.appendChild(s);
-    }
-    root.appendChild(hdr);
-  }
-
-  // ---- פסים: סימן/h2/h0/h3 — ממורכזים ברוחב הפס ----
-  for (const b of (pg.bands || [])) {
-    const el = mkLine(b.text, b.sizePt, 'center', b.lineHeightPx || b.h || pt2px(b.sizePt) * 1.1);
-    el.className += ` band band--${b.kind || 'title'}`;
-    // **S4.26 + S6.3:** גופן הפס — מהשורה עצמה (b.font — כותרת ההערות
-    // ⇒ David Libre) או מההגדרות לפי הרמה + הדגשה (כמו הייחוס).
-    const hLv = HEADING_LEVEL_OF_BAND[b.kind];
-    const bf = b.font ? fontStack(b.font) : (hLv != null ? headingFontOf(hLv) : null);
-    if (bf) { el.style.fontFamily = bf; if (hLv != null) el.style.fontWeight = '700'; }
-    // **S73:** צבע הפס מההגדרות — כותרת עמודי ההערות ⇒ endnote-title-color;
-    // רמה ⇒ heading-N-color; כמו המקרן (ברירת מחדל שחורה).
-    const bc = b.kind === 'endnote-title'
-      ? nonBlack(settings['endnote-title-color'])
-      : (hLv != null ? nonBlack(settings[`heading-${hLv}-color`]) : null);
-    if (bc) el.style.color = bc;
-    position(el, BAND_X, b.y, BAND_W, b.h);
-    root.appendChild(el);
-  }
-
-  // ---- תוכן השערים ----
-  // **D-89:** צבע פר-שורה (בלוקי השער האחורי — הקבועים של renderBackShaar)
-  // ותיבת התוכן של כל שער — כמו במקרן ה-legacy (sub: מרכז 245.7px; back: 548px;
-  // main: 396.85px — מכויל מהייחוס עמ' 1/2/7).
-  {
-    const MMpx = 96 / 25.4;
-    const GATE_BOX = {
-      'shaar-main': { x: 15 * MMpx, w: GEO.PAGE_W - 30 * MMpx },
-      'shaar-back': { x: 95 * MMpx, w: 377.98 },
-      'shaar-sub': { x: 15 * MMpx, w: GEO.PAGE_W - 110 * MMpx }
-    };
-    const gbox = GATE_BOX[pg.type] || { x: BAND_X, w: BAND_W };
-    for (const g of (pg.gateLines || [])) {
-      const el = mkLine(g.text, g.sizePt, 'center', pt2px(g.sizePt) * 1.3);
-      el.className += ' band band--gate';
-      position(el, gbox.x, g.y, gbox.w, pt2px(g.sizePt) * 1.3);
-      // **S6.3 (גופני השערים — חוברו):** כל שורת שער נושאת את הגופן שהוגדר
-      // לה (f-sh-title ⇒ Lia Sgula לכותרת, f-sh-sub ⇒ Livorna לכותרת-המשנה,
-      // …) והמודל מודד אותה באותו גופן (wrapGate ב-legacy-imud-flow) —
-      // אין עוד סחף מדידה↔רינדור; ההסתייגות ההיסטורית של S4.26 בטלה.
-      if (g.font) {
-        el.style.fontFamily = fontStack(g.font);
-      }
-      if (Array.isArray(g.color)) {
-        el.style.color = `rgb(${Math.round(g.color[0] * 255)},${Math.round(g.color[1] * 255)},${Math.round(g.color[2] * 255)})`;
-      }
-      root.appendChild(el);
-    }
-  }
-
-  // ---- טורים: ימני ואז שמאלי; preface/shaar/toc = טור רחב יחיד ----
-  const isSingle = pg.type === 'preface' || pg.type === 'toc-general' || pg.type === 'toc-detailed'
-    || String(pg.type || '').startsWith('shaar');
-  const colDefs = isSingle
-    ? [{ x: GEO.COL_L_X, w: BAND_W }]
-    : [{ x: GEO.COL_R_X, w: GEO.COL_W }, { x: GEO.COL_L_X, w: GEO.COL_W }];
-  const colsWrap = doc.createElement('div');
-  colsWrap.className = 'columns';
-  pg.columns.forEach((colLines, ci) => {
-    const def = colDefs[Math.min(ci, colDefs.length - 1)];
-    const colEl = doc.createElement('section');
-    colEl.className = 'column';
-    position(colEl, def.x, GEO.FLOW_TOP, def.w, GEO.FLOW_H);
-    colEl.style.overflow = 'visible';
-    for (const ln of colLines) {
-      const el = doc.createElement('div');
-      // **S4.11:** line--heading מסמן שורות כותרת מרובעות (ממורכזות מטבען)
-      // — האודיט החי מדלג עליהן בבדיקת היישור בלי סובלנות על סמך יחס.
-      el.className = 'line' + (ln.isLast ? ' line--last' : '') + (ln.kind === 'heading' ? ' line--heading' : '');
-      el.setAttribute('dir', 'rtl');
-      el.style.position = 'absolute';
-      el.style.right = '0';
-      el.style.top = `${(ln.y || 0) - GEO.FLOW_TOP}px`;
-      el.style.width = `${def.w}px`;
-      // **תיבת השורה = גובה המסגרת מהמנוע (pitch):** בלי גובה מפורש, שורת
-      // חלון (1.5×) מנפחת את התיבה וחופפת את השורה הבאה במדידת ה-DOM
-      // (האודיט החי מדווח LINE_OVERLAP). התוכן עשוי לגלוש ויזואלית — כמו
-      // line-height:0.85 של מילת-החלון במקור — אבל התיבה נשארת בגובה הפס.
-      el.style.height = `${ln.heightPx || 16}px`;
-      el.style.fontSize = `${pt2px(ln.sizePt || SZ.body)}px`;
-      // **S5.1 (איחוד מודל הבסיס):** שורות גוף/חלון — line-height = גובה
-      // התיבה מהמודל (מרכוז half-leading, כמו baselineOf ב-PDF וכמו
-      // line-height:1.34=21.44px של המקור; בסיס השורה הראשונה ≈122px מול
-      // 107.2+14.8 בייחוס). כותרות inline נשארות בראש התיבה ('1') — כמו
-      // הייחוס (S4.14: גליפי הכותרת בראש השורה) וכמו y+0.6 במקרן.
-      el.style.lineHeight = ln.kind === 'heading' ? '1' : `${ln.heightPx || 16}px`;
-      el.style.overflow = 'visible';
-      // **S4.23 (דיווח משתמש: "יישור שורות לא נכון" בתצוגה החיה):** שורות גוף
-      // מלאות עוברות ל-white-space:normal + text-align:justify
-      // **וגם text-align-last:justify** — בדיוק כמו BASE_CSS של שאר הנתיבים
-      // (03.11(ד): "טורים מיושרים באופן מושלם"). שתי הסיבות שבגללן התצוגה
-      // הייתה קטסטרופה (נמדד בפועל: פערי קצה-שמאל 2..53px, חלקן גלשו מהטור):
-      //   1) inline nowrap דרס את BASE_CSS — ו-justify על שורת nowrap הוא
-      //      אפס-פעולה;
-      //   2) **גם בלי nowrap**: לפי הוראת CSS שורה יחידה בבלוק נחשבת "השורה
-      //      האחרונה" ולעולם אינה נמתחת ע"י justify. כל .line כאן הוא בלוק
-      //      בן-שורה-אחת מתוכנן (השבירה כבר נעשתה במנוע) — ולכן הדבר היחיד
-      //      שמותח אותה הוא text-align-last:justify (נתמך בכרום/פיירפוקס).
-      // הדפדפן מותח רווחים בין-מילים — אותה נוסחה של המקרן ל-PDF
-      // (projectLine: spaceW=(colW-sumW)/gaps) — התצוגה = הייצוא.
-      // שורות אחרונות/כותרות נשארות nowrap+center (חד-שורתיות מטבען;
-      // מסומנות ומדולגות באודיט). סדר ההצהרות חשוב: רק שורות גוף מלאות
-      // מקבלות את text-align-last — אחרת הוא היה מיישר גם שורות אחרונות
-      // (שהגדרתן center/right) ומקורן של הסמנים.
-      // **S5.2 (S5 — חיווט body-last-line-align במורשת):** ברירת המחדל 'center'
-      // = ההתנהגות הקיימת בדיוק; 'right' = הצמדה לתחילת השורה (ימין ב-RTL),
-      // 'stretch' = יישור מלא גם לשורה האחרונה. בעבר המפתח סווג 'light' אך
-      // מעולם לא מומש בנתיב החי — שינוי הגדרה לא שינה דבר.
-      const lastAlign = String((settings && settings['body-last-line-align']) || 'center');
-      if (ln.kind === 'heading') {
-        el.style.whiteSpace = 'nowrap';
-        el.style.textAlign = 'center';
-      } else if (ln.isLast) {
-        if (lastAlign === 'right') {
-          el.style.whiteSpace = 'nowrap';
-          el.style.textAlign = 'right';
-        } else if (lastAlign === 'stretch') {
-          el.style.whiteSpace = 'normal';
-          el.style.textAlign = 'justify';
-          el.style.textAlignLast = 'justify';
-        } else {
-          el.style.whiteSpace = 'nowrap';
-          el.style.textAlign = 'center';
-        }
-      } else {
-        el.style.whiteSpace = 'normal';
-        el.style.textAlign = 'justify';
-        el.style.textAlignLast = 'justify';
-      }
-      // **S4.26 (גופן כותרות inline):** h4/h5/h6 בגופן הרמה מההגדרות + הדגשה
-      if (ln.kind === 'heading' && ln.level != null) {
-        const hf = headingFontOf(ln.level);
-        if (hf) { el.style.fontFamily = hf; el.style.fontWeight = '700'; }
-        // **S73:** צבע הכותרת מההגדרות (heading-N-color) — כמו המקרן
-        const hc = nonBlack(settings[`heading-${ln.level}-color`]);
-        if (hc) el.style.color = hc;
-      }
-      // **S4.26 (חלון קלאסי שקוע — שורה 1 עוטפת את החלון):** במקור מילת-החלון
-      // מרחפת (float:right, height:1.25em) והטקסט עוטף אותה בשתי השורות
-      // הראשונות. שורה 1 (window בלי windowWords) מוצרת ברוחב החלון ומוזזת
-      // מימין — המודל כבר מדד אותה ברוחב המוקטן (limitOf של breakPara);
-      // עד כאן היא נמתחה בחזרה לרוחב מלא. המחלקה מסמנת לאודיט לדלג על בדיקת
-      // היישור (השפה הימנית תפוסה ע"י החלון — בכוונה).
-      if (ln.window && !ln.windowWords && ln.windowW) {
-        el.className += ' line--window-wrap';
-        el.style.right = `${ln.windowW}px`;
-        el.style.width = `${Math.max(40, def.w - ln.windowW)}px`;
-      }
-      if (ln.window && ln.windowWords && ln.windowWords.length) {
-        // מילת-חלון (1.5×) בשפה הימנית + הטקסט — תיבה אחת, בסיס משותף
-        // **S4.15:** גופן החלון של המקור — FrankReal משקל 900 (הוכח מהייחוס:
-        // 116 מילות-חלון נמדדו — התאמה מושלמת ל-FrankReal-Bold.ttf). המשפחות
-        // הנופלות מגובוות ב-CSS (BASE_CSS: .w--window) — ברירת מחדל גוף.
-        const win = doc.createElement('span');
-        win.className = 'w w--window';
-        win.textContent = scrubPUAText(ln.windowWords.join(' ')) + ' ';
-        win.style.fontSize = `${pt2px((ln.sizePt || SZ.body) * 1.5)}px`;
-        // **S73:** צבע מילת-החלון — first-word-color (ברירת מחדל שחורה) — כמו המקרן
-        const winCol = nonBlack(settings['first-word-color']);
-        if (winCol) win.style.color = winCol;
-        // **S5.1:** בסיס החלון 2px מתחת לבסיס שורת הטקסט — כמו winBase=baseY+2
-        // במקרן (מכויל מהייחוס: חלון 155.25 מול שורה 153.75, ~1.5pt). בלי זה
-        // החלון יושב על בסיס משותף עם הגוף וגבוה ב-2px ב-PDF.
-        win.style.verticalAlign = '-2px';
-        el.appendChild(win);
-      }
-      // **D-89 (דיווח משתמש: "כל מילה שצמודה לנקודה מופיעה בגופן קטן"):**
-      // סמני ההערות מוקטנים לפי markerIdx של המודל — בדיוק כמו במקרן
-      // ה-legacy/PDF. מספור האיות ("א. ב. ג.") נשאר בגודל הגוף — כמו הייחוס.
-      // **S4.24 (אודיט חי מלא על הקובץ הגדול — 154 ממצאי דיו):** מילים בתוך
-      // סוגריים מרונדרות כאן בגודל השורה (12pt) בעוד השובר מודד אותן בגודל
-      // הסוגריים (10pt — parenDelta; הייחוס: פסקאות-הסוגריים כולן ב-10.0pt).
-      // תוצאה: שורה אחרונה/כותרת של פסקת-סוגריים רחבה מהטור ב-×1.2 וגולשת
-      // ממנו שמאלה (נמדד באתר החי: 78 INK_OUTSIDE_COLUMN עד 156px, 73
-      // LAST_NOT_CENTERED, 3 HEAD_NOT_CENTERED — כולן שורות-סוגריים).
-      // התיקון משקף את placeWords של המקרן ל-PDF: מילת-סוגריים ב-span
-      // בגודל 10pt, מוגבהת ב-0.33×גודל-השורה (בסיס משותף כמו baselineY).
-      // בנוסף: (א) כותרות אינן מקבלות כיווץ-סוגריים (השבירה מודדת אותן
-      // בגודל הכותרת); (ב) מילת-RLM בלבד מודבקת לשכנתה — בלי רווח פנטום
-      // שמ�זיז את המרכוז (נמדד: אסימטריה 3.8px); (ג) הרווח בין שתי מילים
-      // בתוך (...) ב-span של 10pt — כמו spaceBetween בשבירה (התצוגה =
-      // הייצוא, כמו S4.23).
-      {
-        const markerSet = new Set(Array.isArray(ln.markerIdx) ? ln.markerIdx : []);
-        const imudSet = (settings && settings._imudRaw) || {};
-        const markerSz = Number(imudSet['note-marker-size']) || 8;
-        const parenPx = pt2px(SZ.body + SZ.parenDelta);
-        const hostPx = pt2px(ln.sizePt || SZ.body);
-        // **S4.26 (דיווח משתמש: "ממוקם גבוה ביחס לטקסט הרגיל"):** מרכוז אנכי
-        // — מרכז גובה הסוגריים מותאם למרכז גובה הטקסט הרגיל (אותו מודל
-        // תיבת-שורה כמו baselineY של המקרן: parenCenterRaisePx). במקום ההגבהה
-        // העיוורת 0.33×גודל-השורה (5.3px!) — עכשיו ≈0.7px בלבד.
-        const parenRaise = parenCenterRaisePx(pg.ascentEm, ln.sizePt || SZ.body, SZ.body + SZ.parenDelta).toFixed(2);
-        const isHeading = ln.kind === 'heading';
-        const srcWords = ln.words || [];
-        const nW = srcWords.length;
-        // **S4.24 (דגלי קצה מהמודל — מקור יחיד):** parenStarts/parenEnds
-        // של השבירה; נפילה — שחזור עומק-תווים (אותו אלגוריתם כמו breakPara).
-        let parenIdx = null, pStarts = null, pEnds = null;
-        if (!isHeading && Array.isArray(ln.parenFlags) && ln.parenFlags.length === nW) {
-          parenIdx = new Set();
-          ln.parenFlags.forEach((p, i) => { if (p) parenIdx.add(i); });
-          if (Array.isArray(ln.parenStarts) && ln.parenStarts.length === nW && Array.isArray(ln.parenEnds) && ln.parenEnds.length === nW) {
-            pStarts = ln.parenStarts; pEnds = ln.parenEnds;
-          }
-        } else if (!isHeading && nW) {
-          parenIdx = new Set();
-          const st = [], en = [];
-          let depth = 0;
-          srcWords.forEach((w, i) => {
-            let any = false, s = false, e = false;
-            for (let c = 0; c < w.length; c++) {
-              const ch = w[c];
-              if (ch === '(') depth++;
-              const inP = depth > 0;
-              if (inP) any = true;
-              if (c === 0) s = inP;
-              e = inP;
-              if (ch === ')' && depth > 0) depth--;
-            }
-            if (any) parenIdx.add(i);
-            st.push(s); en.push(e);
-          });
-          pStarts = st; pEnds = en;
-        }
-        // **S4.24 (מילים של תווי-כיוון בלבד — בלי רווח פנטום):** מילה המורכבת
-        // מתווי כיוון (RLM/LRM וכו') היא ברוחב אפס, אבל הרווח שמפריד אותה
-        // משכנתה נכלל בתיבת השורה ומזיז את המרכוז (נמדד בחי: אסימטריה
-        // 3.8px בשורות אחרונות, עמ' 572). הדבקה לשכן — הכיווניות נשמרת,
-        // הרווח הפנטום נעלם; נמדד-לעולם-גדול מהרינדר ⇒ אין חשש לגלישה.
-        const FORMAT_WORD_RE = /^[\u200e\u200f\u2066-\u2069\u202a-\u202e\u00ad]+$/;
-        const items = [];
-        for (let wi = 0; wi < nW; wi++) {
-          const w = srcWords[wi];
-          if (FORMAT_WORD_RE.test(w)) {
-            if (items.length) { items[items.length - 1].text += w; continue; }
-            items.push({ text: w, wi: -1 }); // מובילה — תודבק למילה הבאה
-            continue;
-          }
-          const it = { text: w, wi };
-          if (items.length === 1 && items[0].wi === -1) { it.text = items[0].text + w; items[0] = it; }
-          else items.push(it);
-        }
-        for (let k = 0; k < items.length; k++) {
-          const it = items[k];
-          const w = it.text;
-          const wi = it.wi;
-          if (wi >= 0 && markerSet.has(wi)) {
-            const m = doc.createElement('span');
-            m.className = 'w w--fnmarker';
-            m.textContent = scrubPUAText(w);
-            m.style.fontSize = `${pt2px(markerSz)}px`;
-            m.style.verticalAlign = 'super';
-            // **S74 (בעיה 2 — בקשת משתמש 12.11, תצוגה בלבד):** תיבת השורה
-            // נמדדת מהטקסט הרגיל בלבד — הסמן העילי "מפלח" את מרווח הבין-שורות
-            // ואינו מגדיל אותו. בלי line-height:0 תיבת הסמן (בגובה השורה
-            // המוריש) מוגבהת ע"י vertical-align ומנפחת את תיבת השורה — הבסיס
-            // יורד והמרווח לשורה הקודמת מתרחב (ב-PDF הבסיסים קבועים והבעיה
-            // אינה קיימת — דיווח המשתמש). אותו דפוס כמו .w--window (0.85)
-            // שכבר מוכיח שתיבת שורה לא מתנפחת מגוף מוקטן/מוגבה.
-            m.style.lineHeight = '0';
-            el.appendChild(m);
-          } else if (!isHeading && wi >= 0 && parenIdx && parenIdx.has(wi)) {
-            const s = doc.createElement('span');
-            s.className = 'w w--paren';
-            s.textContent = scrubPUAText(w);
-            s.style.fontSize = `${parenPx}px`;
-            s.style.verticalAlign = `${parenRaise}px`;
-            el.appendChild(s);
-          } else {
-            el.appendChild(doc.createTextNode(scrubPUAText(w)));
-          }
-          if (k < items.length - 1) {
-            // **S4.24 (רווח בגודל הסוגריים בתוך ה-span):** כמו spaceBetween
-            // בשבירה — הרווח בין שתי מילים ששני צדדיהן בתוך (...) ב-10pt.
-            // בלי זאת שורת-סוגריים אחרונה גולשת מהטור (נמדד בחי: 4px, עמ' 403).
-            const a = items[k].wi, b = items[k + 1].wi;
-            const parenSpace = !isHeading && a >= 0 && b === a + 1 && pStarts && pEnds && !!pEnds[a] && !!pStarts[b];
-            if (parenSpace) {
-              const sp = doc.createElement('span');
-              sp.className = 'w w--paren-space';
-              sp.style.fontSize = `${parenPx}px`;
-              sp.textContent = ' ';
-              el.appendChild(sp);
-            } else {
-              el.appendChild(doc.createTextNode(' '));
-            }
-          }
-        }
-      }
-      if (ln.tokenId != null) el.dataset.tokenId = String(ln.tokenId);
-      colEl.appendChild(el);
-    }
-    colsWrap.appendChild(colEl);
-  });
-  root.appendChild(colsWrap);
-
-  // ---- הערות צד בטורי השוליים ----
-  // **S4.26:** גופן הערות-הצד מההגדרות (ברירת מחדל: Hadassah Friedlaender
-  // — כמו המדידה במנוע וכמו הייחוס); עד כאן ירשו את גופן הגוף.
-  {
-    const mnFont = fontOf('heading-7-font');
-    // **S73:** צבע הערות-צד — heading-7-color (הגופן בפועל); שחור כברירת מחדל
-    const mnCol = nonBlack(settings['heading-7-color']);
-    for (const mn of (pg.marginNotes || [])) {
-      const x = mn.side === 'right' ? GEO.MARGIN_R_X : GEO.MARGIN_L_X;
-      for (const l of (mn.lines || [])) {
-        // **S74 (בעיה 4 — בקשת משתמש 12.11):** כותרות-הצד ממורכזות כברירת
-        // מחדל — כמו במקרן ה-PDF (placeWords 'center' / align:'center') וכמו
-        // הייחוס. עד כאן התצוגה הצמידה אותן לימין — אי-התאמה בין הנתיבים.
-        const el = mkLine(l.text, SZ.marginNote, 'center', GEO.MN_PITCH);
-        el.className += ' margin-note';
-        if (mnFont) el.style.fontFamily = mnFont;
-        if (mnCol) el.style.color = mnCol;
-        position(el, x, l.y, GEO.MARGIN_W, GEO.MN_PITCH);
-        root.appendChild(el);
-      }
-    }
-  }
-
-  // ---- הערות שוליים (תחתית) ----
-  // **S4.26 (דיווח משתמש — בעיות 3–5):** (א) מצב רציף (ברירת מחדל): כל
-  // הערות העמוד זורמות בבלוק אחד — הערה הבאה פותחת באותה שורה שבה הסתיימה
-  // קודמתה (רווח-כפול בין הערות); (ב) יישור לשני הצדדים — שורות הביניים
-  // מתוחות, השורה האחרונה לימין (כמו .note-line של המקור); (ג) המשך
-  // מקודם — '(המשך)' בלי אות סימון; (ד) גופן גוף-ההערה מההגדרות
-  // (f-note-body — Frank Ruhl Libre) — כמו המדידה (fnApi) במנוע.
-  {
-    const fnFont = fontOf('f-note-body-font') || fontOf('body-font');
-    // **S73:** צבע גוף ההערה — f-note-body-color (ברירת מחדל שחורה) — כמו המקרן
-    const fnCol = nonBlack(settings['f-note-body-color']);
-    const listingSz = Number(imudSetAll['note-listing-num-size']) || 8;
-    for (const fn of (pg.footnotes || [])) {
-      // **S4.26:** זרימה שפותחת בהמשך — מסומנת fn--continuation (כמו block)
-      const firstTok = fn.continuous && fn.lines[0] && (fn.lines[0].words || []).find(t => !t.gap);
-      const flowIsCont = !!(firstTok && firstTok.t === '(המשך)');
-      const el = doc.createElement('div');
-      el.className = 'footnote' + ((fn.cont || flowIsCont) ? ' fn--continuation' : '') + (fn.continuous ? ' fn--flow' : '');
-      el.setAttribute('dir', 'rtl');
-      const lines = fn.lines || [];
-      const y0 = lines[0] ? lines[0].y : GEO.FLOW_TOP;
-      const h = lines.length * GEO.FN_PITCH;
-      position(el, GEO.COL_L_X, y0, BAND_W, h);
-      el.style.fontSize = `${pt2px(SZ.fnBody)}px`;
-      el.style.lineHeight = `${GEO.FN_PITCH}px`;
-      if (fnFont) el.style.fontFamily = fnFont;
-      if (fnCol) el.style.color = fnCol; // **S73:** צבע גוף ההערה
-      el.style.textAlign = 'justify';
-      // **S74 (בעיה 7 — בקשת משתמש 12.11):** השורה האחרונה של מרזב ההערות
-      // (של כל ההערות בעמוד יחד — לא של כל הערה בנפרד) ממורכזת; חריג:
-      // הערה שממשיכה לעמוד הבא (centerLast=false מהמנוע) — נשארת לימין.
-      // **S77 (בקשה 1):** חיתוך תוך-הערה (cutLast מהמנוע) — השורה האחרונה
-      // היא שורת-ביניים לכל דבר ומיושבת לשני הצדדים (מלאה), כמו ב-PDF.
-      el.style.textAlignLast = fn.centerLast ? 'center' : (fn.cutLast ? 'justify' : 'right');
-      el.style.whiteSpace = 'normal';
-      // **S74 (בעיה 5):** סמני הרישום — FRL (נמדד בייחוס עמ' 31/37: הסמן
-      // FRL 8pt, גוף ההערה Assistant ExtraLight) — גופן משלהם בתוך הזרם.
-      const fnMarkFont = fontStack('Frank Ruhl Libre');
-      if (fn.continuous) {
-        // זרימה רציפה — הדפדפן שובר ומיישב (אותו רוחב/גופן כמו fnFlowFor);
-        // סמנים בגודל הרישום; רווח-כפול בין הערות (nbsp — כמו הגאפ במודל).
-        let prevGap = true;
-        for (const l of lines) {
-          for (const t of (l.words || [])) {
-            if (t.gap) { el.appendChild(doc.createTextNode('\u00A0 ')); prevGap = true; continue; }
-            if (!prevGap) el.appendChild(doc.createTextNode(' '));
-            prevGap = false;
-            const s = doc.createElement('span');
-            if (t.mk) {
-              s.className = 'w w--fnmarker';
-              s.style.fontSize = `${pt2px(listingSz)}px`;
-              if (fnMarkFont) s.style.fontFamily = fnMarkFont; // **S74 (בעיה 5):** הסמן ב-FRL
-            }
-            s.textContent = scrubPUAText(t.t);
-            el.appendChild(s);
-          }
-        }
-      } else {
-        // מצב block — כל הערה בלוק משלה, מיושבת לשני הצדדים (בעבר: לימין בלבד)
-        if (fn.cont) {
-          const p = doc.createElement('span');
-          p.className = 'fn-cont';
-          p.textContent = '(המשך) ';
-          el.appendChild(p);
-        }
-        if (fn.marker) {
-          const m = doc.createElement('span');
-          m.className = 'w w--fnmarker';
-          m.style.fontSize = `${pt2px(listingSz)}px`;
-          if (fnMarkFont) m.style.fontFamily = fnMarkFont; // **S74 (בעיה 5):** הסמן ב-FRL
-          m.textContent = scrubPUAText(fn.marker);
-          el.appendChild(m);
-          el.appendChild(doc.createTextNode(' '));
-        }
-        el.appendChild(doc.createTextNode(scrubPUAText(lines.map(l => (Array.isArray(l.words) ? l.words : String(l.words).split(' ')).join(' ')).join(' '))));
-      }
-      root.appendChild(el);
-    }
-  }
-
-  // ---- תוכן-עניינים: כותרת + שורות (כותרת מימין במדרגות, מספר משמאל) ----
-  if (pg.toc) {
-    if (pg.toc.title) {
-      const el = mkLine(pg.toc.title, SZ.tocTitle, 'center', 30);
-      el.className += ' toc-title';
-      position(el, BAND_X, GEO.FLOW_TOP + 136, BAND_W, 30);
-      root.appendChild(el);
-    }
-    for (const r of (pg.toc.rows || [])) {
-      // **S6.0 (F5):** שורת TOC עטופה — כל שורה-בת היא שורת flex בפס 26px
-      // משלה; הגיליון (מספר) רק בשורה הראשונה. שורות חד-שורתיות זהות
-      // לחלוטין לפלט הקודם (אותן מחלקות, אותו מיקום).
-      const rowLines = (r.lines && r.lines.length ? r.lines : [r.text]).filter(t => String(t || '').trim());
-      rowLines.forEach((rowText, rli) => {
-        const row = doc.createElement('div');
-        row.className = 'toc-row';
-        row.setAttribute('dir', 'rtl');
-        position(row, GEO.TOC_NUM_X, r.y + rli * 26, (r.x1 || 560) - GEO.TOC_NUM_X, 26);
-        row.style.display = 'flex';
-        row.style.justifyContent = 'space-between';
-        row.style.fontSize = `${pt2px(r.sizePt || 10.5)}px`;
-        // **S5.1:** גובה שורת TOC = התיבה (26px) — כמו baselineOf(r.y, 26, ...) במקרן
-        row.style.lineHeight = '26px';
-        // **S4.26 + S6.3:** גופן שורות ה-TOC — מההגדרות המקוריות
-        // (f-gtoc-*/f-dtoc-* ⇒ David Libre; שדה r.font מהמודל, שנמדד
-        // באותו גופן) + הדגשה — כמו הייחוס (DavidLibre-Bold).
-        const tf = r.font ? fontStack(r.font) : headingFontOf(r.level != null ? r.level : 2);
-        if (tf) { row.style.fontFamily = tf; row.style.fontWeight = '700'; }
-        // **S73:** צבע שורת ה-TOC — heading-N-color של הרמה — כמו המקרן
-        const tocLvl = r.level != null ? r.level : 2;
-        const tcol = nonBlack(settings[`heading-${tocLvl}-color`]);
-        if (tcol) row.style.color = tcol;
-        const t = doc.createElement('span');
-        t.className = 'toc-text';
-        t.style.marginRight = `${Math.max(0, 560 - (r.x1 || 560))}px`; // מדרגות לפי רמה
-        t.textContent = scrubPUAText(rowText || '');
-        row.appendChild(t);
-        if (r.folio && rli === 0) {
-          // Legacy TOC uses a separate flex row rather than the generic
-          // renderTocRows helper; include its leader explicitly so live DOM
-          // and standalone HTML do not silently lose this part of the design.
-          const dots = doc.createElement('span');
-          dots.className = 'toc-dots';
-          row.appendChild(dots);
-          const n = doc.createElement('span');
-          n.className = 'toc-num';
-          n.style.fontSize = `${pt2px(SZ.tocNum)}px`;
-          n.textContent = r.folio;
-          row.appendChild(n);
-        }
-        root.appendChild(row);
-      });
-    }
-  }
-
-  // ---- עמודון ----
-  if (pg.folioDisplay) {
-    const folio = doc.createElement('div');
-    folio.className = 'folio';
-    folio.setAttribute('dir', 'rtl');
-    position(folio, 0, GEO.FOLIO_BASELINE - 14, GEO.PAGE_W, 18);
-    folio.style.textAlign = 'center';
-    // **S73 (גופן/גודל/צבע גיליון מההגדרות):** page-num-font ('' = גוף הטקסט —
-    // התנהגות קודמת), page-num-size-pt (ברירת מחדל 10 = SZ.folio), page-num-color
-    // (ברירת מחדל שחורה) — כמו המקרן. התיבה והבסיס נשארים מכוילים (FOLIO_BASELINE).
-    const pnFam = settings['page-num-font'] || '';
-    if (pnFam) folio.style.fontFamily = fontStack(pnFam);
-    const pnSz = Number(settings['page-num-size-pt']);
-    folio.style.fontSize = `${pt2px(pnSz > 0 ? pnSz : SZ.folio)}px`;
-    const pnCol = nonBlack(settings['page-num-color']);
-    if (pnCol) folio.style.color = pnCol;
-    // **S5.1:** line-height מכויל כך שהבסיס יורד בדיוק ל-FOLIO_BASELINE (1054.5)
-    // תחת מודל תיבת-השורה (A≈0.925, D≈0.388 בגופן הגוף ⇒ lh≈21.4px) — כמו
-    // המקרן, שמצייר את הגיליון בבסיס 1054.5 בדיוק. בעבר ירש normal וישב ~3.5px גבוה.
-    folio.style.lineHeight = '21.4px';
-    folio.textContent = pg.folioDisplay;
-    root.appendChild(folio);
-  }
-
-  // ---- עיטורים (D-89: פאנלי השערים, גל השער-משנה, מסגרת השער הראשי, כלל הכותרת) ----
-  // אותו דיו כמו ב-PDF (ornament-ink — מקור יחיד): rect ⇒ div צבוע; svg ⇒ רקע
-  // data-URI. הפאנלים נכנסים ראשונים (מאחורי הטקסט) והעיטורים אחרונים (מעל).
-  if (Array.isArray(pg.decorations) && pg.decorations.length) {
-    const inks = pg.decorations.map((d) => ({ d, ink: d.image ? { type: 'image', uri: d.image } : ornamentInk(d.kindStyle) }));
-    for (const { d, ink } of inks) {
-      if (!ink) continue;
-      if (ink.type === 'rect') {
-        const r = doc.createElement('div');
-        r.className = 'deco deco--rect';
-        position(r, d.x, d.y, d.w, d.h);
-        r.style.backgroundColor = `rgb(${Math.round(ink.color[0] * 255)},${Math.round(ink.color[1] * 255)},${Math.round(ink.color[2] * 255)})`;
-        if (d.kind === 'shaar-panel') { r.style.zIndex = '0'; root.insertBefore(r, root.firstChild); }
-        else root.appendChild(r);
-      } else if (ink.type === 'svg' || ink.type === 'image') {
-        const r = doc.createElement('div');
-        r.className = 'deco deco--' + (ink.type === 'svg' ? 'svg' : 'img');
-        position(r, d.x, d.y, d.w, d.h);
-        r.style.backgroundImage = `url("${ink.uri}")`;
-        r.style.backgroundRepeat = 'no-repeat';
-        r.style.backgroundPosition = 'center';
-        r.style.backgroundSize = 'contain';
-        root.appendChild(r);
-      }
-    }
-  }
-  return root;
-}
-
 function renderPage(page, settings, doc, header) {
-  // **S4.10 — עמודי מנוע המורשת:** לעמודי legacy-imud-flow יש צורה משלהם
-  // (גיאומטריה מפורשת ב-px: bands/gateLines/columns/footnotes/marginNotes/toc)
-  // שאינה תואמת את חוזה ה-DP — הרנדר הכללי קרס על template.columns חסר
-  // והתצוגה החיה הציגה 0 עמודים. רנדר ייעודי נאמן לגיאומטריית המורשת.
-  if (page && page.legacy) return renderLegacyPage(page, settings, doc);
   if (header == null && page && page.header) header = page.header;
   if (!page.template) {
     // עמודי הערות שלא חוברו לרצף המספור — תבנית ברירת מחדל חוקית (A4) במקום קריסה
@@ -12670,50 +11866,6 @@ const { sanitizeSvg } = require('./svg-sanitize');
 
 /** הרישום עצמו: collection → Map(id → item). */
 const collections = new Map();
-/** קבצי תמונה שהמשתמש ייבא למסמך בדפדפן — הפניה יחסית → data URI בטוח. */
-const documentImages = new Map();
-
-function base64OfBytes(value) {
-  const bytes = value instanceof Uint8Array
-    ? value
-    : (value instanceof ArrayBuffer ? new Uint8Array(value) : new Uint8Array(value || []));
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let out = '';
-  for (let i = 0; i < bytes.length; i += 3) {
-    const a = bytes[i], hasB = i + 1 < bytes.length, hasC = i + 2 < bytes.length;
-    const b = hasB ? bytes[i + 1] : 0;
-    const c = hasC ? bytes[i + 2] : 0;
-    out += alphabet[a >> 2];
-    out += alphabet[((a & 3) << 4) | (b >> 4)];
-    out += hasB ? alphabet[((b & 15) << 2) | (c >> 6)] : '=';
-    out += hasC ? alphabet[c & 63] : '=';
-  }
-  return out;
-}
-
-/** רישום תמונת מסמך מקומית לתצוגת DOM/HTML; המודל עצמו שומר רק ref ו-assetId. */
-function registerDocumentImage(ref, bytes) {
-  if (typeof ref !== 'string' || !ref || ref.startsWith('/') ||
-      ref.includes('\\') || ref.split('/').some(part => !part || part === '.' || part === '..') ||
-      /^[a-z][a-z0-9+.-]*:/i.test(ref)) {
-    return { ok: false, code: 'invalid-document-image-ref' };
-  }
-  const match = ref.match(/\.(png|jpe?g)$/i);
-  if (!match) return { ok: false, code: 'unsupported-document-image-type' };
-  const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
-  if (!data.length) return { ok: false, code: 'empty-document-image' };
-  const mime = match[1].toLowerCase() === 'png' ? 'image/png' : 'image/jpeg';
-  documentImages.set(ref, {
-    uri: `data:${mime};base64,${base64OfBytes(data)}`,
-    mime,
-    byteLength: data.length
-  });
-  return { ok: true, ref, byteLength: data.length };
-}
-
-function clearDocumentImages() {
-  documentImages.clear();
-}
 
 /** קידוד SVG כ-data-URI (UTF-8 percent-encoding — תואם url("...") ב-CSS). */
 function svgDataUri(svg) {
@@ -12775,12 +11927,7 @@ function listCollection(collection) {
  * @returns {{resolved:boolean, uri:string|null, item:object|null}}
  */
 function resolveAssetRef(ref) {
-  if (typeof ref !== 'string' || !ref.startsWith('imud:')) {
-    const documentImage = typeof ref === 'string' ? documentImages.get(ref) : null;
-    return documentImage
-      ? { resolved: true, uri: documentImage.uri, item: documentImage, source: 'document-image' }
-      : { resolved: false, uri: ref || null, item: null };
-  }
+  if (typeof ref !== 'string' || !ref.startsWith('imud:')) return { resolved: false, uri: ref || null, item: null };
   const parts = ref.split(':');
   if (parts.length !== 3) return { resolved: false, uri: null, item: null };
   const [, col, id] = parts;
@@ -12798,13 +11945,9 @@ function isImudRef(ref) {
 /** ניקוי מלא (בדיקות/isolation). */
 function resetAssets() {
   collections.clear();
-  documentImages.clear();
 }
 
-module.exports = {
-  registerAssets, registerDocumentImage, clearDocumentImages,
-  resolveAssetRef, isImudRef, listCollection, assetCount, resetAssets, svgDataUri
-};
+module.exports = { registerAssets, resolveAssetRef, isImudRef, listCollection, assetCount, resetAssets, svgDataUri };
 
 };
 __modules["src/engine/decoration/svg-sanitize.js"] = function (require, module, exports) {
@@ -14326,18 +13469,16 @@ function _itemCacheKey(item, style, ctx) {
   const raw = (v) => JSON.stringify(v == null ? '' : String(v));
   const env = environmentFingerprint();
   const sItem = [
-    'item-key-v5',
+    'item-key-v3',
     MEASURE_ENGINE_VERSION,
     (ctx && ctx.environmentFingerprint) || '',
     raw(it.kind),
     raw(it.id),
     _canonicalStringify(it.payload !== undefined ? it.payload : it),
-    _canonicalStringify(it.shapingSlices || null),
     _canonicalStringify(it.constraints || null),
     _canonicalStringify(style || null),
     raw(ctx && ctx.direction),
     raw(ctx && ctx.language),
-    raw(ctx && ctx.settings && ctx.settings['_marks-advance']),
     _canonicalStringifyStable((ctx && ctx.constraints) || null),
     raw(ctx && ctx.constraintsKey),
     raw(ctx && ctx.assetId),
@@ -14399,108 +13540,6 @@ function _sharedMeasureApi(impl, family, settingsSizePt) {
   return api;
 }
 
-/**
- * Measure a pre-shaped TextItem from canonical HarfBuzz advances. This remains
- * the single MeasureAPI boundary; there is no second line-width service.
- * Unresolved visible text is rejected; only bidi controls may have zero advance.
- */
-function measureShapedTextItem(item, style, ctx, sizePt, lineHeight, dir, lang) {
-  const slices = item.shapingSlices;
-  if (!slices || slices.contractVersion !== 'paragraph-shaped-slices-set-v1' ||
-      !Array.isArray(slices.slices) || !Array.isArray(slices.shapedRuns) ||
-      !Array.isArray(slices.nonShapingRuns) || !Number.isSafeInteger(slices.glyphCount) ||
-      slices.glyphCount < 0) {
-    return { ok: false, code: 'invalid-shaping-slices', message: 'Canonical ShapedTextItem slices are missing or malformed' };
-  }
-  const actualGlyphCount = slices.shapedRuns.reduce((sum, run) =>
-    sum + (run && Array.isArray(run.glyphs) ? run.glyphs.length : -1000000), 0);
-  if (actualGlyphCount !== slices.glyphCount) {
-    return { ok: false, code: 'shaping-glyph-count-mismatch', message: 'Shaping slice glyphCount does not match its ShapedRun records' };
-  }
-  for (const slice of slices.slices) {
-    if (!slice || slice.contractVersion !== 'paragraph-shaped-slices-v1' ||
-        !slice.sourceRange || !Array.isArray(slice.pieces)) {
-      return { ok: false, code: 'invalid-shaping-slice', message: 'A paragraph shaping slice is malformed' };
-    }
-    let cursor = slice.sourceRange.start;
-    for (const piece of slice.pieces) {
-      if (!piece || !piece.sourceRange || piece.sourceRange.start !== cursor ||
-          !Number.isSafeInteger(piece.sourceRange.end) || piece.sourceRange.end <= cursor) {
-        return { ok: false, code: 'shaping-source-coverage-gap', message: 'Shaping pieces do not form a contiguous source partition' };
-      }
-      cursor = piece.sourceRange.end;
-    }
-    if (cursor !== slice.sourceRange.end) {
-      return { ok: false, code: 'shaping-source-coverage-gap', message: 'Shaping pieces do not cover the complete source slice' };
-    }
-  }
-  const sizePx = ptToPx(sizePt);
-  const segments = [];
-  const diagnostics = [];
-  let advance = 0;
-  let ascentEmMax = 0;
-  let descentEmMax = 0;
-  for (const run of slices.shapedRuns) {
-    if (!run || run.kind !== 'ShapedRun' || run.contractVersion !== 'shaped-run-v1' ||
-        !Array.isArray(run.glyphs) || !run.font || !run.font.fontId ||
-        !Number.isSafeInteger(run.font.unitsPerEm) || run.font.unitsPerEm <= 0 ||
-        !run.font.sourceHash) {
-      return { ok: false, code: 'invalid-shaped-run', message: 'A canonical ShapedRun has invalid font or glyph data' };
-    }
-    const resolved = fontResolver.resolveFontById(run.font.fontId);
-    if (!resolved.ok || !resolved.record || resolved.record.sourceHash !== run.font.sourceHash ||
-        resolved.record.unitsPerEm !== run.font.unitsPerEm) {
-      return { ok: false, code: 'shaped-font-identity-mismatch', message: 'ShapedRun font identity no longer matches the canonical FontResolver' };
-    }
-    const api = MeasureAPI.forFontId(run.font.fontId, {
-      'body-font-size-pt': sizePt,
-      ...(ctx && ctx.settings && ctx.settings['_marks-advance'] === 'combined' ? { '_marks-advance': 'combined' } : {})
-    });
-    if (!api) {
-      return { ok: false, code: 'shaped-font-measurement-unavailable', message: 'No canonical metric profile exists for ShapedRun font ' + run.font.fontId };
-    }
-    const glyphAdvance = run.glyphs.reduce((sum, glyph) => {
-      if (!glyph || !Number.isFinite(glyph.xAdvance)) return NaN;
-      return sum + glyph.xAdvance;
-    }, 0);
-    if (!Number.isFinite(glyphAdvance) || glyphAdvance < 0 ||
-        !run.advance || !Number.isFinite(run.advance.x) || Math.abs(glyphAdvance - run.advance.x) > 1e-7) {
-      return { ok: false, code: 'invalid-shaped-advance', message: 'ShapedRun glyph advances are invalid or inconsistent with the run advance' };
-    }
-    const advancePx = glyphAdvance / run.font.unitsPerEm * sizePx;
-    advance += advancePx;
-    ascentEmMax = Math.max(ascentEmMax, api.ascentEm());
-    descentEmMax = Math.max(descentEmMax, api.descentEm());
-    segments.push({
-      fontId: run.font.fontId, text: run.text, advancePx,
-      family: resolved.record.face, shaped: true, glyphCount: run.glyphs.length
-    });
-  }
-  for (const run of slices.nonShapingRuns) {
-    if (!run || run.kind !== 'bidi-control' || typeof run.text !== 'string') {
-      return { ok: false, code: 'unshaped-visible-text', message: 'Visible or unresolved text cannot bypass HarfBuzz measurement' };
-    }
-    segments.push({ fontId: null, text: run.text, advancePx: 0, bidiControl: true });
-  }
-  const advanceFactor = style && Number.isFinite(style.advanceFactor) && style.advanceFactor > 0
-    ? style.advanceFactor : 1;
-  if (advanceFactor !== 1) {
-    advance *= advanceFactor;
-    for (const segment of segments) segment.advancePx *= advanceFactor;
-  }
-  for (const run of slices.shapedRuns) {
-    for (const diagnostic of (run.diagnostics || [])) diagnostics.push(diagnostic);
-  }
-  return {
-    ok: true, kind: item.kind, itemId: item.id, unit: 'px', direction: dir, language: lang,
-    advance, width: advance,
-    inkBounds: { left: 0, right: advance, top: -ascentEmMax * sizePx, bottom: descentEmMax * sizePx, source: 'advance-approximation' },
-    ascent: ascentEmMax * sizePx, descent: descentEmMax * sizePx, baseline: ascentEmMax * sizePx,
-    height: sizePx * lineHeight, segments,
-    breakOpportunities: item.kind === 'text' ? _textBreaks((item.payload && item.payload.runs) || []) : [],
-    shaping: { engine: 'harfbuzz', glyphCount: slices.glyphCount }, diagnostics
-  };
-}
 function measureItem(item, style, ctx) {
   if (!item || typeof item !== 'object') return { ok: false, code: 'no-item', message: 'measureItem: פריט חסר' };
   const sizePt = (style && Number.isFinite(style.sizePt)) ? style.sizePt : 12;
@@ -14514,9 +13553,7 @@ function measureItem(item, style, ctx) {
   let out;
   const kind = item.kind;
 
-  if ((kind === 'text' || kind === 'glue') && item.shapingSlices) {
-    out = measureShapedTextItem(item, style, ctx, sizePt, lineHeight, dir, lang);
-  } else if (kind === 'text') {
+  if (kind === 'text') {
     const runs = (item.payload && item.payload.runs) || [];
     if (!runs.length) {
       out = { ok: false, code: 'text-no-runs', message: `פריט טקסט ללא ריצות: ${item.id}` };
@@ -14532,15 +13569,10 @@ function measureItem(item, style, ctx) {
       let advance = 0;
       let ascentEmMax = 0, descentEmMax = 0;
       const diagnostics = [];
-      // Preserve the line-layout combining-mark policy in canonical font metrics.
-      const measureSettings = { 'body-font-size-pt': sizePt };
-      if (ctx && ctx.settings && ctx.settings['_marks-advance'] === 'combined') {
-        measureSettings['_marks-advance'] = 'combined';
-      }
       for (let ri = 0; ri < runs.length; ri++) {
         const run = runs[ri];
         const fontId = (style && style.fontIds && style.fontIds[ri]) || (style && style.fontIds && style.fontIds[0]) || null;
-        const api = fontId ? MeasureAPI.forFontId(fontId, measureSettings) : null;
+        const api = fontId ? MeasureAPI.forFontId(fontId, { 'body-font-size-pt': sizePt }) : null;
         if (api) {
           const w = api.measureTextWidth(run.text, sizePt, 0);
           segments.push({ fontId, text: run.text, advancePx: w, family: api.fontProfileName });
@@ -14553,7 +13585,7 @@ function measureItem(item, style, ctx) {
             defaultFamily: style && style.defaultFamily
           });
           if (res.ok) {
-            const api2 = MeasureAPI.forFontId(res.fontId, measureSettings);
+            const api2 = MeasureAPI.forFontId(res.fontId, { 'body-font-size-pt': sizePt });
             const w = api2.measureTextWidth(run.text, sizePt, 0);
             segments.push({ fontId: res.fontId, text: run.text, advancePx: w, family: res.record.face, fallbackUsed: res.fallbackUsed });
             ascentEmMax = Math.max(ascentEmMax, api2.ascentEm());
@@ -14791,9 +13823,7 @@ function clearItemMeasureCache() { _itemMeasureCache.clear(); }
 MeasureAPI.forFontId = function forFontId(fontId, settings) {
   const font = fontResolver.fontOf(fontId);
   if (!font) return null;
-  const sizeKey = settings && settings['body-font-size-pt'] != null ? String(settings['body-font-size-pt']) : '';
-  const marksKey = settings && settings['_marks-advance'] === 'combined' ? 'mkC' : 'mkH';
-  const key = `id:${String(fontId)}|${sizeKey}|${marksKey}`;
+  const key = String(fontId);
   if (!_familyApiCache.has(key)) {
     const api = new MeasureAPI({ ...(settings || {}), 'body-font': fontResolverAliasOf(fontId) || key }, 'font-metrics');
     // קשירה ישירה לפרנסר של הזהות — לא דרך רישום שם (הזהות היא המקור)
@@ -16160,48 +15190,6 @@ const _aliases = new Map();
 let _clearSync = false;
 
 /**
- * fvar defaults come from the actual font bytes. No generic axis coordinates
- * are invented for variable fonts; static fonts correctly return an empty list.
- */
-function parseDefaultVariationAxes(font) {
-  const table = font && font.tables && font.tables.fvar;
-  if (!table) return Object.freeze([]);
-  const bytes = font.bytes;
-  const start = table.offset;
-  const length = table.length;
-  const readU16 = (at) => (bytes[at] << 8) | bytes[at + 1];
-  const readTag = (at) => String.fromCharCode(bytes[at], bytes[at + 1], bytes[at + 2], bytes[at + 3]);
-  if (!bytes || !Number.isSafeInteger(start) || !Number.isSafeInteger(length) ||
-      start < 0 || length < 16 || start + length > bytes.length) {
-    throw new Error('The fvar table range is invalid');
-  }
-  const major = readU16(start);
-  const minor = readU16(start + 2);
-  const axesOffset = readU16(start + 4);
-  const axisCount = readU16(start + 8);
-  const axisSize = readU16(start + 10);
-  if (major !== 1 || minor > 0 || axisCount > 64 || axisSize < 20 ||
-      axesOffset < 16 || axesOffset > length || axisCount * axisSize > length - axesOffset) {
-    throw new Error('The fvar header or axis records are unsupported or out of bounds');
-  }
-  const seen = new Set();
-  const axes = [];
-  for (let index = 0; index < axisCount; index++) {
-    const at = start + axesOffset + index * axisSize;
-    const tag = readTag(at);
-    const raw = ((bytes[at + 8] << 24) | (bytes[at + 9] << 16) |
-      (bytes[at + 10] << 8) | bytes[at + 11]) | 0;
-    const value = raw / 65536;
-    if (!/^[A-Za-z0-9]{4}$/.test(tag) || seen.has(tag) || !Number.isFinite(value)) {
-      throw new Error('The fvar axis records contain an invalid tag or default value');
-    }
-    seen.add(tag);
-    axes.push(Object.freeze({ tag, value }));
-  }
-  return Object.freeze(axes);
-}
-
-/**
  * רישום גופן קנוני — בתים אמיתיים + כינוי.
  * @param {string} alias — כינוי המשפחה מההגדרות (למשל 'Frank Ruhl Libre')
  * @param {Uint8Array|Buffer} bytes
@@ -16213,12 +15201,6 @@ function registerFont(alias, bytes, meta = {}) {
   if (!bytes || !bytes.length) return { ok: false, code: 'empty-bytes', message: `גופן ללא בתים: ${alias}` };
   const parsed = fm.parseFont(bytes);
   if (!parsed.ok) return { ok: false, code: 'unparseable-font', message: `פענוח הגופן נכשל (${alias}): ${parsed.error}` };
-  let defaultVariationAxes;
-  try {
-    defaultVariationAxes = parseDefaultVariationAxes(parsed.font);
-  } catch (error) {
-    return { ok: false, code: 'invalid-font-variation-table', message: `טבלת הצירים של הגופן פגומה (${alias}): ${error.message}` };
-  }
   const sourceHash = sha256Hex(bytes);
   const fontId = `fnt-${sourceHash.slice(0, 14)}`;
   let record = _fonts.get(fontId);
@@ -16237,7 +15219,6 @@ function registerFont(alias, bytes, meta = {}) {
       fingerprint: sourceHash.slice(14, 28), // טביעת אצבע משלימה (מעבר המזהה)
       unitsPerEm: parsed.font.unitsPerEm,
       numGlyphs: parsed.font.numGlyphs,
-      defaultVariationAxes,
       metrics: {
         unitsPerEm: parsed.font.unitsPerEm,
         ascenderEm: parsed.font.ascender / parsed.font.unitsPerEm,
@@ -16413,12 +15394,6 @@ function resolveFontById(fontId) {
   return { ok: true, fontId: String(fontId), record: rec, fallbackUsed: false, fallbackChain: [{ alias: rec.face, fontId: String(fontId), chosen: true, reason: 'by-id' }], diagnostics: [] };
 }
 
-/** צירי ברירת־המחדל האמיתיים מטבלת fvar; גופן סטטי מחזיר []. */
-function defaultVariationAxesOf(fontId) {
-  const rec = _fonts.get(String(fontId));
-  return rec ? rec.defaultVariationAxes : null;
-}
-
 /** הפרנסר החי לפי מזהה — הגישה הקנונית של MeasureAPI למטריקות אמת. */
 function fontOf(fontId) {
   const rec = _fonts.get(String(fontId));
@@ -16471,4259 +15446,9 @@ function fontCount() { return _fonts.size; }
 function aliasCount() { return _aliases.size; }
 
 module.exports = {
-  registerFont, resolveFont, resolveFontForGrapheme, resolveFontById,
-  defaultVariationAxesOf, fontOf, fontIdOfAlias,
+  registerFont, resolveFont, resolveFontForGrapheme, resolveFontById, fontOf, fontIdOfAlias,
   clearFontResolver, unregisterAlias, fontCount, aliasCount
 };
-
-};
-__modules["src/engine/layout/legacy-imud-flow.js"] = function (require, module, exports) {
-// src/engine/layout/legacy-imud-flow.js — פורט נאמן של מנוע העימוד המקורי (פרופיל IMUD).
-'use strict';
-
-/**
- * **S4.9 (בקשת המשתמש 03.11: "בדיקה מתמטית ומוחלטת"):** פרופיל העימוד המקורי.
- *
- * מקורות האמת (שניהם מחויבים במאגר):
- *   1. audits/layout-reference.json — החילוץ המתמטי של פלט הגרסה הישנה (הצהובה)
- *      מקובצי ה-PDF שהעלה המשתמש, כולל הסימון הגיאומטרי הבלתי-נראה.
- *   2. audit/IMUD_TORANI/typesetter.js — קוד המקור של המנוע המקורי (הכתום).
- *
- * הפורט משחזר את ההתנהגות הנצפית של המקור: מבנה מסמך (שערים, תוכן-עניינים כפול,
- * עמוד חלק, פרקים), בלוקים דו-טוריים מאוזנים, שבירת שורות גרידה עם חלון מילה-ראשונה,
- * קשיחת שתי מילים אחרונות, הערות-שוליים בתחתית העמוד והערות צד בטורי השוליים —
- * הכל בגיאומטריה המדויקת של הייחוס.
- *
- * הפרופיל מופעל כאשר ההגדרות מגיעות מ-default_settings.json המקורי
- * (importImudSettings מסמן layout-profile='imud' ומצרף את ה-JSON הגולמי תחת
- * _imudRaw). המנוע הכללי (DP) נשאר לשאר הפרופילים — התנהגות המקור היא המפרט.
- */
-
-const crypto = require('crypto');
-const { MeasureAPI, registeredFonts: registeredMeasureFonts, registerFont: registerMeasureFont, resolveMeasureImpl } = require('../typography/measure-api');
-const { EventLog } = require('../core/events');
-const { Ledger } = require('../core/ledger');
-// **S77 (בקשה 3 — חיבור הגדרות הכותרת העליונה לנתיב המורשת):** resolveSlot
-// (מקור יחיד לפענוח מקורות הסלוטים) + חיצוץ החצאים — אותה נוסחה כמו hdrR/hdrL.
-// headers-builder אינו דורש כלום — אין תלות מעגלית.
-const { resolveSlot: resolveHdrSlotText, trimEdgePunctuation: hdrTrimPunct } = require('../decoration/headers-builder');
-// **D-108 (19.11):** פורמט הפוליו הקנוני של שני המנועים — גימטריה חשופה
-// (בלי גרש/גרשיים ובלי מפריד אלפים) חי ב-decoration/folio.js לצד שאר
-// המספור; מסלול המורשת קורא אותו ל-folioDisplay ולתוויות ה-TOC בלבד.
-// toGematria המקומי נשאר לשדות שאינם פוליו (סמני הערות, סימנים) — D-108:
-// "אין להסיק מכלל זה דבר על סימני ציטוט/גרש בהערות...".
-const { toBareGematria } = require('../decoration/folio');
-// **S73 (צבע פר-גופן):** המרת '#RRGGBB' מההגדרות ל-[r,g,b] לשורות השער —
-// מודול נטול-תלויות (אין מעגל: line-font לא דורש דבר).
-const { hexColorToRgb } = require('../output/line-font');
-const { RUNNING_HEAD_TOP_INSET_PX } = require('./furniture-geometry');
-
-// ---------- גיאומטריה (px @96dpi; PDF = px×0.75) — מכויל מהייחוס ----------
-// **שלב ההעברה למנוע המאוחד — מקטע 1:** הקבועים הגאומטריים עברו למודול
-// החוזה המשותף `core/imud-geometry.js` (מקור אמת יחיד — כמו h3-contract).
-// הערכים זהים מילולית; ההוכחה: digest הקורפוסים אינו משתנה. ההערות
-// ההיסטוריות (S4.13/S4.14 — הכיול מול הייחוס המסומן) נשמרות שם.
-const {
-  GEO, FLOW_BOTTOM, H2_AREA_H, H0_AREA_H, SINGLE_W, TITLE_W_PCT, H23_TITLE_W,
-  H0_LINE_H, TOC_TITLE_BLOCK_H, TOC_FIRST_TOP, TOC_CONT_TOP, TOC_STRETCH_BOTTOM,
-  PAGE_STRETCH_MAX, JUSTIFY_MAX_GAP, JUSTIFY_MAX_LH_EXTRA, ORPHAN_RECLAIM_BUFFER, RECLAIM_BELOW_BASE
-} = require('../core/imud-geometry');
-
-// גדלי גופן (pt — כמו הגדרות המקור; פיקסלים = pt×4/3)
-const SZ = {
-  body: 12, h0Title: 17, h0Body: 11.5, h2: 17, siman: 20, h3: 13.5,
-  h4: 12.5, h5: 11.5, h6: 10.5, parenDelta: -2,
-  fnBody: 8.5, fnMarker: 8, marginNote: 6, folio: 10.5,
-  hdrR: 15, hdrC: 11, hdrL: 15, divider: 6.75,
-  tocNum: 10.5, tocTitle: 17,
-  tocLevel: { 1: 12, 2: 11, 3: 10.5, 4: 10, 5: 9.5, 6: 9, 7: 8.8 }
-};
-
-const HEADING_MODES = {
-  0: 'new_page_1col', 1: 'sub_shaar', 2: 'new_page_1col', 3: 'span_1col',
-  4: 'inline_2col', 5: 'inline_2col', 6: 'inline_2col', 7: 'side_note'
-};
-
-// ---------- עזרים ----------
-function toGematria(num) {
-  num = parseInt(num, 10);
-  if (isNaN(num) || num <= 0) return '';
-  if (num === 15) return 'טו';
-  if (num === 16) return 'טז';
-  // **מגן ספרים גדולים:** מעל 999 — חלק האלפים בגימטריה + גרשיים (לא נצפה
-  // בייחוס; מונע undefined ושומר דטרמיניזם — הקורפוס הגדול מגיע ל־~730).
-  // **D-108 (19.11):** פונקציה זו אינה עוד מקור פורמט הפוליו — הפוליו ותוויות
-  // ה-TOC משתמשים ב-toBareGematria (חשוף בכל ערך, גם באלפים). הגרש כאן
-  // נשאר לשדות שאינם פוליו בלבד — סמני הערות (markerWord) וסימנים — לפי
-  // D-31; שינויים בהם אסורים במסגרת D-108 ("אין להסיק מכלל זה דבר על
-  // סימני ציטוט/גרש בהערות, בגוף הטקסט או בשדות אחרים").
-  if (num >= 1000) {
-    const th = Math.floor(num / 1000);
-    return toGematria(th) + '\u05F3' + toGematria(num % 1000);
-  }
-  const hundreds = ['', 'ק', 'ר', 'ש', 'ת', 'תק', 'תר', 'תש', 'תת', 'תתק'];
-  const tens = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
-  const ones = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
-  let str = '';
-  let h = Math.floor(num / 100);
-  if (h > 0) { str += hundreds[Math.min(h, 9)]; num %= 100; }
-  const t = Math.floor(num / 10), o = num % 10;
-  if (t === 1 && (o === 5 || o === 6)) str += (o === 5) ? 'טו' : 'טז';
-  else str += tens[t] + ones[o];
-  return str;
-}
-
-function stripEditorialNotes(text) {
-  return String(text || '')
-    .replace(/##[\s\S]*?##/g, '')
-    .replace(/[ \t]{2,}/g, ' ')
-    .replace(/\s+([,.:;!?])/g, '$1')
-    .trim();
-}
-
-const META_FIELDS = [
-  ['bookTitle', /^(?:שם הספר[:\s]*)?שם הספר\s*[-–—:]\s*/i],
-  ['subject', /^(?:נושא(?:\\|\/)כותרת משנה[:\s]*)?נושא\s*[-–—:]\s*/i],
-  ['desc', /^(?:נושא מפורט\s*(?:\\|\/)\s*תיאור[:\s]*)?נושא מפורט\s*[-–—:]\s*/i],
-  ['edition', /^(?:פרטי מהדורא\s*(?:\\|\/)\s*חלקים[:\s]*)?פרטי מהדורא\s*[-–—:]\s*/i],
-  ['author', /^(?:שם המחבר[:\s]*)?שם המחבר\s*[-–—:]\s*/i],
-  ['copyright', /^שמירת זכויות\s*[-–—:]\s*/i],
-  ['publisher', /^פרטי הוצאה לאור\s*[-–—:]\s*/i],
-  ['contact', /^פרטי קשר\s*[-–—:]\s*/i],
-  ['extra', /^פרטים נוספים\s*[-–—:]\s*/i],
-  ['year', /^(?:מקום ושנת הוצאה[:\s]*)?מקום ושנת הוצאה\s*[-–—:]\s*/i]
-];
-
-function parseMetadata(rawText) {
-  const meta = {};
-  const clean = [];
-  for (const line of String(rawText).split('\n')) {
-    const t = line.trim();
-    let hit = false;
-    for (const [key, re] of META_FIELDS) {
-      if (re.test(t)) { meta[key] = t.replace(re, '').trim(); hit = true; break; }
-    }
-    if (!hit) clean.push(line);
-  }
-  return { meta, text: clean.join('\n') };
-}
-
-/** תוחמי הערות: [ ... ] — זיהוי זוגות (כמו findDelimiterMatches במקור). */
-function findNotes(text, open, close) {
-  const out = [];
-  if (!open || !close) return out;
-  let from = 0;
-  for (;;) {
-    const s = text.indexOf(open, from);
-    if (s === -1) break;
-    const e = text.indexOf(close, s + open.length);
-    if (e === -1) break;
-    out.push({ start: s, end: e + close.length, text: text.slice(s + open.length, e) });
-    from = e + close.length;
-  }
-  return out;
-}
-
-function hasUnclosedNote(text, open, close) {
-  if (!open || !close) return false;
-  const s = text.indexOf(open);
-  if (s === -1) return false;
-  return text.indexOf(close, s + open.length) === -1;
-}
-
-/** קריאת קונפיגורציה מה-JSON המקורי (עם ברירות המחדל ההיסטוריות).
- * **S77 (בקשה 3 — "הרבה הגדרות שלא מחוברות"): גשר חי מהרישום.** עד כאן
- * המנוע קרא את הקונפיגורציה מה-raw בלבד (_imudRaw) — והגדרות הרישום
- * שמקבילות לו (גדלים/מתגים/טקסטים) לא עשו דבר בפרופיל המורשת (הנתיב
- * החי; נמדר באתר החי: body/shaar/heading sizes, מתגי שערים ותכנים —
- * שינוי לא השפיע). כעת: לכל מפתח raw עם מפתח רישום מקביל — ההגדרה
- * החיה גוברת. הייבוא של ברירות המחדל ממפה את אותם הערכים בדיוק,
- * ולכן ברירת המחדל אינה משתנה (הוכחת digest); שינוי חי בפאנל משפיע
- * מיד. מפתחות גיאומטריים (size-body/line-height-body/s-h2..s-h7)
- * אינם בגשר — הם מצומדים לקבועים מכוילים (LINE_H/מפתחי פס/עיגון)
- * ודורשים העברת כיול ייעודית (מתועד בקובץ המעבר). */
-const RED_SETTING_BRIDGE_S77 = {
-  's-h0': 'heading-0-size-pt',
-  's-h1': 'heading-1-size-pt',
-  's-sh-sub': 'shaar-subtitle-size-pt',
-  's-sh-title': 'shaar-title-size-pt',
-  's-sh-desc': 'shaar-desc-size-pt',
-  's-sh-sec': 'shaar-sections-size-pt',
-  's-sh-author': 'shaar-author-size-pt',
-  's-sh-year': 'shaar-year-size-pt',
-  'fn-delim-open': 'fn-delim-open',
-  'fn-delim-close': 'fn-delim-close',
-  'en-line-prefix': 'en-line-prefix',
-  'drop-word-mode': 'first-word-mode',
-  'drop-word-count': 'first-word-length',
-  'drop-word-min-lines': 'first-word-threshold-lines',
-  'show-main-shaar': 'shaar-main-enabled',
-  'show-back-shaar': 'shaar-back-enabled',
-  'show-sub-shaar': 'shaar-sub-enabled',
-  'fn-title-text': 'endnote-title-text',
-  'enable-general-toc': 'toc-general-enabled',
-  'enable-detailed-toc': 'toc-detail-enabled',
-  'general-toc-count-numbering': 'general-toc-count-numbering',
-  'detailed-toc-count-numbering': 'detailed-toc-count-numbering',
-  'imbalance-max-delta-px': 'imbalance-max-delta-px'
-};
-function readConfig(imud, settings) {
-  const g = (k, d) => {
-    // **S77:** הגדרה חיה של הרישום גוברת על ה-raw (הייבוא מסנכרן את ברירות
-    // המחדל — התנהגות ברירת המחדל נשמרת במדויק)
-    // **תרגום אוצר-מילים:** 'drop' של הרישום = 'window' של המקור (אותו
-    // מנגנון מילת-חלון — כך מיפוי הייבוא); המנוע המורשת בודק 'window'.
-    if (k === 'drop-word-mode' && settings) {
-      const fm = settings['first-word-mode'];
-      if (fm != null && fm !== '') return fm === 'drop' ? 'window' : String(fm);
-    }
-    const rk = settings ? RED_SETTING_BRIDGE_S77[k] : null;
-    if (rk && settings[rk] !== undefined && settings[rk] !== null && settings[rk] !== '') return settings[rk];
-    return (imud && imud[k] !== undefined && imud[k] !== '' ? imud[k] : d);
-  };
-  const b = (k, d) => {
-    const v = g(k, d);
-    return v === true || v === 'true' || v === '1' || v === 1;
-  };
-  const n = (k, d) => {
-    const v = parseFloat(g(k, d));
-    return isNaN(v) ? d : v;
-  };
-  return {
-    fnOpen: String(g('fn-delim-open', '[')),
-    fnClose: String(g('fn-delim-close', ']')),
-    endPrefix: String(g('en-line-prefix', 'הערת סיום -')),
-    dropWordMode: String(g('drop-word-mode', 'window')),
-    dropWordCount: n('drop-word-count', 1),
-    dropWordMinLines: n('drop-word-min-lines', 2),
-    avoidRunt: b('avoid-runt-word', true),
-    autoSimanH2: b('h2-auto-siman', true),
-    resetSimanOnH1: b('h2-reset-siman', true),
-    showMainShaar: b('show-main-shaar', true),
-    showBackShaar: b('show-back-shaar', false),
-    showSubShaar: b('show-sub-shaar', true),
-    countSubShaar: b('sub-shaar-count-numbering', true),
-    countGeneralToc: b('general-toc-count-numbering', true),
-    countDetailedToc: b('detailed-toc-count-numbering', true),
-    enableGeneralToc: b('enable-general-toc', true),
-    enableDetailedToc: b('enable-detailed-toc', true),
-    oddH0: b('odd-h0', true),
-    oddH1: b('odd-h1', true),
-    oddH2: b('odd-h2', false),
-    // **EXT-17 (גדלים נפרדים לסמן הערה/מספור ברשימה/מפריד):** במקור שלוש
-    // הגדרות עצמאיות — אצלנו היו נגזרות מגודל הגוף. ברירות המחדל של המקור:
-    // ‏8/‏8/'.' (מילה-סמן בגוף, סמן ברשימת ההערות, המפריד אחרי המספר).
-    fnMarkerSize: n('note-marker-size', 8),
-    fnListingNumSize: n('note-listing-num-size', 8),
-    fnNumSeparator: String(g('note-num-separator', '.')),
-    // **D-89 (כלל הכותרת התחתון):** hdr-divider-style של המקור (black/gray/none).
-    // פרופיל המורשת מכויל לייחוס — שם הכלל נמדד שחור מלא (43,62)-(553,63)pt
-    // בכל עמודי הגוף/התוכן; 'none' מבטל.
-    hdrDivider: String(g('hdr-divider-style', 'black')),
-    // **D-89 (עיצוב שערים):** עיטור שער-המשנה מ-section_dividers.json
-    // (shaar-sub-divider; 'none' = גל המובנה של המקור — כמו renderSubShaar).
-    shaarSubDivider: String(g('shaar-sub-divider', 'none')),
-    // **EXT-19 (כותרות מתחלפות):** החלפת החצאים בעמודים זוגיים (ברירת
-    // המחדל במקור: כבוי — שני החצאים קבועים; hdr-title-split כבר ממומש
-    // בפיצול שם הספר לחצאים ב-setHeader).
-    hdrAlternating: b('hdr-alternating', false),
-    hdrRType: String(g('hdr-r-type', 'book_title_split_r')),
-    hdrCType: String(g('hdr-c-type', 'h2_without_siman')),
-    hdrLType: String(g('hdr-l-type', 'book_title_split_l')),
-    gtocShow: imud && 'gtoc-show' in imud ? imud['gtoc-show'] : [1, 2, 3, 4, 5, 6],
-    dtocShow: imud && 'dtoc-show' in imud ? imud['dtoc-show'] : [2, 3, 4, 5, 6],
-    // **S5.2 (F2 — הערות סיום):** כותרת עמודי הערות-הסיום מהמקור
-    // (fn-title-text; ממופה ב-legacy-settings-map ל-endnote-title-text).
-    fnTitleText: String(g('fn-title-text', 'הערות')),
-    // **S6.3 (חיבור הגדרות — "וכמויות של הגדרות שלא מחוברות"):** טקסטי
-    // השער האחורי משדות הפאנל של המקור (inp-book-back-*) — במקור הם
-    // מקור התוכן של renderBackShaar; המטא-דאטה של המסמך רק מילאה את
-    // השדות. ערך ריק בהגדרה ⇒ נפילה למטא (התנהגות קודמת).
-    backCopyright: String(g('inp-book-back-copyright', '')),
-    backPublishing: String(g('inp-book-back-publishing', '')),
-    backContact: String(g('inp-book-back-contact', '')),
-    backExtra: String(g('inp-book-back-extra', '')),
-    // **S6.3:** גדלים מההגדרות — עד כאן היו קשיחים ב-SZ/בקוד (מכוילי
-    // ייחוס); ערכי המקור גוברים (ברירות המחדל של default_settings.json).
-    h0Size: n('s-h0', 17),
-    h1Size: n('s-h1', 50),
-    h1SubSize: n('s-sh-sub', 21),
-    shTitle: n('s-sh-title', 46),
-    shSub: n('s-sh-sub', 21),
-    shDesc: n('s-sh-desc', 12),
-    shSec: n('s-sh-sec', 11.5),
-    shAuthor: n('s-sh-author', 15),
-    shYear: n('s-sh-year', 12),
-    fnBodySize: n('s-note-body', 8.5),
-    gtocSizes: { 1: n('s-gtoc-1', 12), 2: n('s-gtoc-2', 11), 3: n('s-gtoc-3', 10.5), 4: n('s-gtoc-4', 10), 5: n('s-gtoc-5', 9.5), 6: n('s-gtoc-6', 9), 7: n('s-gtoc-7', 8.8) },
-    dtocSizes: { 1: n('s-dtoc-1', 12), 2: n('s-dtoc-2', 11), 3: n('s-dtoc-3', 10.5), 4: n('s-dtoc-4', 10), 5: n('s-dtoc-5', 9.5), 6: n('s-dtoc-6', 9), 7: n('s-dtoc-7', 8.8) },
-    // **S6.3 (בקשת משתמש — "אי איזון = שני טורים מאותו בלוק שאינם
-    // מסתיימים בגובה זהה סימטרי"):** סף אי-האיזון מההגדרות (במקום
-    // 60px קשיח) — imbalance-max-delta-px של המרשם (ברירת מחדל 5).
-    imbalanceMax: (() => { const v = parseFloat(imud && imud['imbalance-max-delta-px']); return isNaN(v) || v <= 0 ? 5 : v; })()
-  };
-}
-
-// ---------- טוקניזציה (כמו performTypeset של המקור) ----------
-/** **9c (§5.1):** דקדוק הכותרות של המורשת — מיוצא ממקום השימוש בפועל
- * (tokenizeDoc) כדי שכלי האבחון tools/stage9/diff-h7-grammar.js ייבא אותו
- * ולא יחזיק עותק עצמאי שמתיישן. קבוצות: 1=רמה, 2=מספר, 3=טקסט. */
-const LEGACY_HEADING_RE = /^כותרת\s*(\d+)(?:\s+מספר\s+(\d+))?.*?[-–—]\s*(.*)$/;
-
-function tokenizeDoc(rawText, cfg) {
-  let text = stripEditorialNotes(rawText);
-  const { meta, text: noMeta } = parseMetadata(text);
-  text = noMeta;
-  const isHeadingLine = (s) => /^כותרת\s*\d/.test(s.trim());
-  if (cfg.fnOpen) {
-    // **תיקון הדבקת שורת-הערה (נמצא בקורפוס הגדול, 04.11):** בעבר ההדבקה
-    // '\s+[' חצתה שורות גם לתוך כותרות — הערה שבאה אחרי 'כותרת 7' נבלעה
-    // לתוך הערת-הצד, והערת-צד נוספת שאחריה דרסה אותה סופית (3 הערות אבדו,
-    // 1,353 מילים בשימור התוכן). כעת: שורת-הערה נדבקת לפסקה הקודמת **בלבד**
-    // (במקור ההדבקה פעלה בתוך בלוק טקסט אחד; כותרת פותחת בלוק חדש);
-    // אחרי כותרת היא נשארת פסקה עצמאית — שורת סמן + הערה בתחתית — והתוכן
-    // נשמר במלואו. הדבקה בתוך-שורה ('מילה [הערה]') נשמרת כפי שהייתה.
-    const esc = cfg.fnOpen.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const src = text.split('\n');
-    const out = [];
-    for (let i = 0; i < src.length; i++) {
-      const ln = src[i];
-      if (out.length && ln.trim().startsWith(cfg.fnOpen)) {
-        let j = out.length - 1;
-        while (j >= 0 && !out[j].trim()) j--;
-        if (j >= 0 && !isHeadingLine(out[j])) {
-          out[j] = out[j].replace(/\s+$/, '') + ln.trim();
-          continue;
-        }
-      }
-      out.push(ln);
-    }
-    text = out.join('\n').replace(new RegExp('[ \\t]+(' + esc + ')', 'g'), '$1');
-  }
-  const lines = text.split('\n');
-  const tokens = [];
-  let pendingSideNote = null;
-  let pendingEndNote = null;
-  const endPrefix = cfg.endPrefix;
-
-  for (let i = 0; i < lines.length; i++) {
-    let line = lines[i].trim();
-    if (!line) continue;
-    while (hasUnclosedNote(line, cfg.fnOpen, cfg.fnClose) && i + 1 < lines.length) {
-      const next = lines[i + 1].trim();
-      if (!next) break;
-      i++; line += ' ' + next;
-    }
-    if (endPrefix && line.startsWith(endPrefix)) {
-      pendingEndNote = line.slice(endPrefix.length).replace(/^[:\-–—]\s*/, '').trim();
-      continue;
-    }
-    const hMatch = line.match(LEGACY_HEADING_RE); // **9c (§5.1):** מקור יחיד — הייצוא משמש גם את כלי האבחון
-    if (hMatch) {
-      const lvl = parseInt(hMatch[1], 10);
-      const txt = (hMatch[3] || '').trim();
-      const num = hMatch[2] ? parseInt(hMatch[2], 10) : null;
-      if (lvl === 7 && HEADING_MODES[7] === 'side_note') {
-        // **תיקון הצטברות הערות-צד (נמצא בקורפוס הגדול):** שתי כותרות 7 בלי
-        // פסקה ביניהן (למשל h7 ← h3 ← h7 ← פסקה) — בעבר השנייה דרסה את הראשונה
-        // ותוכנה אבד. כעת הן מצטברות; ב-no_long אין אף מקרה כזה (0 סיכון פריטי).
-        pendingSideNote = pendingSideNote ? pendingSideNote + ' — ' + txt : txt;
-      } else {
-        tokens.push({ id: tokens.length, type: 'h' + lvl, level: lvl, text: txt, num });
-      }
-    } else {
-      tokens.push({
-        id: tokens.length, type: 'p', text: line,
-        sideNote: pendingSideNote, endNote: pendingEndNote
-      });
-      pendingSideNote = null; pendingEndNote = null;
-    }
-  }
-  // **S5.2 (מיפוי מוקשים F4):** פלוש שאריות בסוף מסמך — הערת-צד (h7) או
-  // הערת-סיום שהמתינו לפסקה שלא באה אבדו בשקט (pendingSideNote/pendingEndNote
-  // מעולם לא נצרכו). כעת: הערת-צד זנבורית נשפכת כפסקה גלויה (התוכן נשמר
-  // ונראה — עדיף על אובדן), והערת-סיום זנבורית נסגרר לפסקה ריקה הנושאת
-  // את ה-endNote (עמודי הערות-הסיום אוספים מהטוקנים ישירות).
-  if (pendingSideNote || pendingEndNote) {
-    tokens.push({
-      id: tokens.length, type: 'p',
-      text: pendingSideNote || '',
-      sideNote: null, endNote: pendingEndNote,
-      syntheticTail: true
-    });
-  }
-  return { meta, tokens };
-}
-
-// ---------- שבירת שורות: פורט של getLinesFromParagraph ----------
-/**
- * גרידה כמו הדפדפן במקור: מילים נמדדות בגופן הגוף; הערה [...] מוצגת במדידה
- * כ"א" (הסמן); המילה הראשונה בחלון (1.5×) מכווצת את שתי השורות הראשונות;
- * שתי המילים האחרונות קשורות ברווח בלתי-שביר (מניעת מילה יתומה).
- */
-
-/** **D-92 (רווח-ביטחון התאמת-דפדפן — "0 בעיות עימוד" בעין):** התצוגה החיה
- * מרנדרת כל שורה מתוכננת כבלוק עם white-space:normal — הדפדפן רשאי
- * לשבור אותה מחדש. מדידת המנוע (impl B, hmtx אמת) זהה לדפדפן ברמת
- * הגליף, אבל הדפדפן צובר תת-פיקסל (LayoutUnit 1/64px לגליף): שורה
- * שנמדדה בדיוק ברוחב הטור (269.41px, אמ' 46 טור 1) רונדרה בפועל
- * ‏269.4844px — גלישה 0.078px — והדפדפן עטף את מילתה האחרונה לשורה
- * ויזואלית שנייה שחופפת את השורה שמתחתיה (74 שורות כאלה בקובץ הגדול,
- * ‏122 עמודים — נמדד בחי). לכן כל תנאי ההתאמה דורשים רווח-ביטחון: שורה
- * מתקבלת רק אם היא נכנסת ברוחב פחות FIT_EPS. ההצטברות השיטתית
- * (התוצאה תמיד ≤ רוחב הטור פחות אפסילון) מבטיחה שהדפדפן לעולם לא
- * יצטרך לשבור — התוכנית = הרינדור (עקרון התצוגה=הייצוא). */
-const FIT_EPS = 0.75; // px — מכסה צבירת תת-פיקסל של עד ~96 גליפים בשורה (96/128)
-class LineBreaker {
-  constructor(api, cfg, windowApi = null, headingApi = null) {
-    this.api = api;
-    this.cfg = cfg;
-    // **S4.15 (גופן מילת-החלון):** מילת-החלון נמדדת ב-FrankReal-Bold (כמו
-    // המקור — .first-word-window{font-family:'FrankReal';font-weight:900}),
-    // לא בגופן הגוף. אם לא נרשם — נפילה שקופה לגוף (התנהגות קודמת).
-    this.win = windowApi;
-    this.winCache = new Map();
-    // **S4.26 (גופן כותרות):** כותרות נמדדות ב-DavidLibre-Bold (כמו
-    // הרינדור בפועל) — בלי גופן רשום נופלים לגופן הגוף.
-    this.hApi = headingApi;
-    this.hCache = new Map();
-    this.cache = new Map();
-  }
-  w(text, sizePt) {
-    const key = sizePt + '|' + text;
-    let v = this.cache.get(key);
-    if (v === undefined) { v = this.api.measureTextWidth(text, sizePt, 0); this.cache.set(key, v); }
-    return v;
-  }
-  /** **S4.26 + S6.3:** מדידת כותרת — ברירת מחדל DavidLibre-Bold (כמו
-   * קודם); **S6.3:** apiOverride = הגופן האמיתי של הרמה (AlphaBlack/Alpha/
-   * Lia Sgula — לפי f-h* בהגדרות) כשהוא רשום במנוע. מטמון נפרד פר-API
-   * (על האובייקט עצמו — מפתח לא מתנגש בין גופנים שונים). */
-  hw(text, sizePt, apiOverride) {
-    const useApi = apiOverride || this.hApi;
-    if (!useApi) return this.w(text, sizePt);
-    if (!useApi._hwCache) useApi._hwCache = new Map();
-    const key = sizePt + '|' + text;
-    let v = useApi._hwCache.get(key);
-    if (v === undefined) { v = useApi.measureTextWidth(text, sizePt, 0); useApi._hwCache.set(key, v); }
-    return v;
-  }
-  /** מדידת טקסט חלון (FrankReal-Bold 1.5×) — עם מטמון נפרד. */
-  wWin(text, sizePt) {
-    if (!this.win) return this.w(text, sizePt);
-    const key = sizePt + '|' + text;
-    let v = this.winCache.get(key);
-    if (v === undefined) { v = this.win.measureTextWidth(text, sizePt, 0); this.winCache.set(key, v); }
-    return v;
-  }
-
-  /** מילים למדידה + מילים לפלט + טווחי הערות (אטומיות כמו במקור). */
-  splitWords(text, opts) {
-    const { fnOpen, fnClose } = this.cfg;
-    const safe = String(text).trim();
-    const notes = findNotes(safe, fnOpen, fnClose);
-    let atomic = safe;
-    for (const n of notes) {
-      const inner = safe.slice(n.start + fnOpen.length, n.end - fnClose.length).replace(/\s+/g, '\uE000');
-      atomic = atomic.slice(0, n.start + fnOpen.length) + inner + atomic.slice(n.end - fnClose.length);
-    }
-    const words = atomic.split(/\s+/).filter(Boolean);
-    const escO = fnOpen.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const escC = fnClose.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const inWord = new RegExp(escO + '[\\s\\S]*?' + escC, 'g');
-    // **S6.0 (F4+F15 — מדידת סמן אמיתית):** הסמן שמרונדר בפועל הוא
-    // toGematria(num)+'.' בגודל הרישום (8pt, גופן ההערות FRL) — לא 'א' בגודל
-    // הגוף. בפרקים עם ≥11 הערות הסמן הדו-תווי רחב מ-'א'@12pt ב-2.5–4.8px
-    // (וב-סמני 7 תווים עד ~25px) ⇒ שורות נמדדו צר מהרינדור והדיו גלש מהטור.
-    // כעת splitWords מקבל אופציות {markerOf, markerSizePt, markerMeasure}
-    // ומודד את הסמן האמיתי בגודלו האמיתי; הרווחים סביב סמן מודבק מדויקים
-    // (בעבר נמדר רווח אחד עודף — F15). בלי אופציות — התנהגות 'א' ההיסטורית.
-    const markerOf = (opts && typeof opts.markerOf === 'function') ? opts.markerOf : null;
-    const markerSzPt = (opts && Number.isFinite(opts.markerSizePt)) ? opts.markerSizePt : null;
-    const markerMw = (opts && typeof opts.markerMeasure === 'function') ? opts.markerMeasure : null;
-    const bodySzPt = (opts && Number.isFinite(opts.bodySizePt)) ? opts.bodySizePt : null;
-    // **S6.0 (F4):** מדידת חלקי הגוף (קידומת/סיומת/רווחים) במודד של הפסקה —
-    // גופן הגוף/ההקדמה; הסמן עצמו בגופן ההערות (markerMeasure) בגודל הרישון.
-    const bodyMw = (opts && typeof opts.bodyMeasure === 'function') ? opts.bodyMeasure : markerMw;
-    const canMeasureMarker = !!(markerOf && markerMw && markerSzPt != null && bodySzPt != null);
-    const dispW = new Array(words.length).fill(null); // רוחב מדויק למילים עם סמן
-    let noteOrdinal = 0;
-    const markerTextOf = () => {
-      if (!markerOf) return 'א';
-      return LineBreaker.markerWord(markerOf(noteOrdinal), this.cfg.fnNumSeparator);
-    };
-    const disp = words.map((word, wi) => {
-      if (word.startsWith(fnOpen) && word.endsWith(fnClose)) {
-        const mText = markerOf ? markerTextOf() : 'א';
-        noteOrdinal++;
-        if (markerOf && markerMw && markerSzPt != null) dispW[wi] = markerMw(mText, markerSzPt);
-        return markerOf ? mText : 'א';
-      }
-      // **S4.26 (תיקון שורש — סמן מודבק למילה):** הערה המודבקת למילה
-      // ('וכו'.[...]') נמדדה כאן כמילה אחת בלי רווח — אבל emitLinesWithMarkers
-      // פולט את הסמן כפריט נפרד **עם רווחים** משני צדדיו (כמו בייחוס:
-      // 'מחשבת). א. העבודה.') ⇒ השורה המרונדרת רחבה ברווח מהנמדדת וגולשת
-      // מהטור (נצפה: 272.5px מול 269.4 — INK_OUTSIDE 3.2px בעמ' 114 של
-      // הקובץ הגדול). ההחלפה כוללת את הרווחים — המדידה = הרינדור.
-      // **S6.0 (F4+F15):** סמן מודבק — מדידה מפורקת: קידומת@גוף + רווח +
-      // סמן@רישון + רווח + סיומת@גוף (בדיוק כמו הרינדור; בעבר ' א ' הוסיף
-      // רווח אחד עודף ~4.2px ואת הסמן בגודל הגוף).
-      if (canMeasureMarker) {
-        const m = word.match(inWord);
-        if (m) {
-          const full = word.replace(inWord, '\u0001');
-          const parts = full.split('\u0001');
-          if (parts.length === 2) {
-            const mText = markerTextOf();
-            noteOrdinal++;
-            dispW[wi] = (parts[0] ? bodyMw(parts[0], bodySzPt) + bodyMw(' ', bodySzPt) : 0)
-              + markerMw(mText, markerSzPt)
-              + (parts[1] ? bodyMw(' ', bodySzPt) + bodyMw(parts[1], bodySzPt) : 0);
-            return parts[0] + ' ' + mText + ' ' + parts[1];
-          }
-        }
-      }
-      return word.replace(inWord, ' א ');
-    });
-    const out = words.map(word => word.replace(/\uE000/g, ' '));
-    return { words, disp, out, notes, dispW };
-  }
-
-  /** החלפת מילת-הערה בסמן הגימטריה (בפלט בלבד). */
-  static markerWord(n, sep) { return toGematria(n) + (sep != null ? sep : '.'); }
-
-  /**
-   * שבירה גרידה של פסקה.
-   * **S4.9 (מדידת סוגריים):** מילים בתוך (...) נמדדות בגודל הסוגריים המוקטן
-   * (size-body + s-paren, כלומר 12-2=10pt) — כך פסקאות עם סוגריים אצל המקור
-   * מתקצרות בשורות (הרינדור עצמו ב-10pt ממילא).
-   * **S4.15 (גופן הקדמה):** measureApi — גופן מדידה חלופי לפסקה זו (גוף
-   * ההקדמה מרונדר במקור ב-'Frank Ruhl Libre' 11.5pt — --fn-h0-body — לא
-   * בגופן הגוף; הוכח מסימון הייחוס: שורות ההקדמה נשברות בדיוק לפי רוחבי
-   * FRL ולא Guttman — שורת 'לבאר… ואיזה' 482.9px בגוף מול 474 ב-FRL).
-   * @returns {{lines:Array<{words:string[], window:boolean, heightPx:number}>, hasWindow:boolean, windowWords:string[]|null, notes:Array}}
-   */
-  breakPara(text, colWidthPx, sizePt, allowWindow, measureApi = null, opts = null) {
-    const cfg = this.cfg;
-    const mw = measureApi
-      ? (t, sz) => measureApi.measureTextWidth(t, sz, 0)
-      : (t, sz) => this.w(t, sz);
-    const { disp, out, notes, dispW } = this.splitWords(text, opts);
-    const spaceW = mw(' ', sizePt);
-    // טווחי סוגריים מאוזנים — מילים בתוכם נמדדות בגודל מוקטן
-    // **S4.13 (תיקון שורש — זיהוי ברמת תווים כמו findParenMatches במקור):**
-    // הזיהוי הקודם (מילה-שמתחילה-ב-( עד מילה-שמסתיימת-ב-)) החמיץ את המקרה
-    // הנפוץ 'מחשבת).' — סוגר עם פיסוק אחריו — וכל טווחי הסוגריים בפסקאות
-    // כאלה נמדדו בגודל מלא (12pt במקום 10pt) ⇒ שורות קצרות יותר בשבירה
-    // מול הייחוס. המקור סופר עומק סוגריים לכל אורך הטקסט (מקונן, חוצה
-    // מילים); כאן: מילה שנמצאת בתוך עומק>0 או נוגעת בסוגר — מוקטנת.
-    // **S4.16 (סוגריים ברמת תווים — מדידה מעורבת בתוך מילה אחת):** תוחם
-    // הסוגריים במקור הוא span על '(…)' **בדיוק** — ואילו תווים מחוץ לטווח
-    // בתוך אותה מילה (ה-'.' שב'מחשבת).' למשל) נמדדים בגודל הגוף. ההוכחה
-    // מהייחוס (עמ' 11, טור ימין, פסקת 'בחלק המעשה של האיסור'): השורה
-    // 'מעשה. … מחשבת). א. העבודה. ב.' נמדדת בדפדפן 269.9px > 269.4 — 'ב.'
-    // נדחה לשורה הבאה (כמו בייחוס); במדידת המילה 'מחשבת).' כולה ב-10pt
-    // השורה 269.0px ו-'ב.' נכנס — הפרש של 0.5px שהזיז את שבירת הפסקה
-    // וגרר דריפט עימוד. כעת כל מילה נמדדת כסכום מקטעים לפי שיוך התו
-    // לטווח הסוגריים, והרווח בין מילים הוא בגודל הסוגריים רק כששני
-    // קצוות השכנות בתוך הטווח (הרווח בתוך ה-span).
-    const parenSize = SZ.body + SZ.parenDelta; // 12-2 = 10pt (קבוע כמו במקור)
-    const wordWs = new Array(out.length);
-    const wordParen = new Array(out.length);
-    const endsInParen = new Array(out.length);
-    const startsInParen = new Array(out.length);
-    {
-      let depth = 0;
-      for (let i = 0; i < out.length; i++) {
-        const wd = disp[i];
-        // **S6.0 (F4):** מילה עם סמן הערה — רוחב מדויק שחושב ב-splitWords
-        // (סמן@רישון + רווחים) — עוקף את מדידת הפילוח (שמדדה את הסמן בגודל
-        // הגוף/הסוגריים).
-        if (dispW && dispW[i] != null) {
-          wordWs[i] = dispW[i];
-          if (out[i].startsWith(cfg.fnOpen) && out[i].endsWith(cfg.fnClose)) {
-            // הערה עצמאית (כל המילה היא הערה) — אין בה סוגריים של הגוף: דגלים כבעבר.
-            wordParen[i] = false;
-            startsInParen[i] = false;
-            endsInParen[i] = false;
-            continue;
-          }
-          // **R-03 (יובא מ-Red PR #48 — תיקון שורש):** מילה עם סמן מודבק ('רשות)[הערה]'
-          // / 'הלכה[הערה]') נושאת גם תווי סוגריים של הגוף. בעבר 'continue' כאן דילג על מונה
-          // העומק: ')' שלפני הסמן לא הוריד אותו (הדלפה שסימנה את כל שאר הפסקה כ"בתוך
-          // סוגריים" — מדידה מוקטנת שגויה ושבירה מוטה), ומילה בתוך הטווח קיבלה דגלים כבויים.
-          // הרוחב המדויק (dispW — S6.0/F4) נשמר במלואו; רק הדגלים והעומק מתוקנים.
-          let anyParen = false;
-          for (let c = 0; c < wd.length; c++) {
-            const ch = wd[c];
-            if (ch === '(') depth++;
-            const inParen = depth > 0;
-            if (inParen) anyParen = true;
-            if (c === 0) startsInParen[i] = inParen;
-            endsInParen[i] = inParen;
-            if (ch === ')' && depth > 0) depth--;
-          }
-          wordParen[i] = anyParen;
-          continue;
-        }
-        let w = 0, seg = '', segParen = false;
-        let anyParen = false;
-        for (let c = 0; c < wd.length; c++) {
-          const ch = wd[c];
-          if (ch === '(') depth++;                 // '(' עצמו בתוך ה-span
-          const inParen = depth > 0;
-          if (inParen) anyParen = true;
-          if (c === 0) startsInParen[i] = inParen;
-          if (seg === '') { seg = ch; segParen = inParen; }
-          else if (inParen === segParen) { seg += ch; }
-          else { w += mw(seg, segParen ? parenSize : sizePt); seg = ch; segParen = inParen; }
-          endsInParen[i] = inParen;
-          if (ch === ')' && depth > 0) depth--;    // ')' עצמו בתוך ה-span
-        }
-        if (seg) w += mw(seg, segParen ? parenSize : sizePt);
-        wordWs[i] = w;
-        wordParen[i] = anyParen;
-      }
-    }
-    // **S4.15 (רווחים בתוך סוגריים בגודל הסוגריים):** במקור הסוגריים הן span
-    // עם font-size מוקטן — גם הרווחים הפנימיים שלו ב-10pt, לא בגודל הגוף.
-    // ההוכחה מהייחוס (הקדמה, פסקה 2): 'שמציאות…התורה) חלק' נכנסת לשורה
-    // המוצרת (511.4px) רק כשהרווחים הפנימיים ב-10pt — ברווחי 11.5 השורה
-    // גולשת ב-~10px ו-'חלק' נופל לשורה הבאה (בניגוד לייחוס).
-    const parenSpaceW = mw(' ', parenSize);
-    const spaceBetween = (i, j) => (endsInParen[i] && startsInParen[j]) ? parenSpaceW : spaceW;
-    if (!out.length) return { lines: [], hasWindow: false, windowWords: null, notes };
-
-    // חלון מילה-ראשונה: אמדן שורות כמו המדידה הכפולה במקור
-    const totalW = wordWs.reduce((a, b) => a + b, 0) + spaceW * Math.max(0, out.length - 1);
-    const estLines = Math.max(1, Math.ceil(totalW / colWidthPx));
-    const firstHasNote = out.slice(0, Math.min(cfg.dropWordCount, out.length))
-      .some(w => w.includes(cfg.fnOpen));
-    // **S4.13 (createDropWord של המקור):** פסקה שמתחילה בסוגריים — בלי חלון
-    // ("פסקה שמתחילה בסוגריים ( ) — בלי עיצוב מילה ראשונה"). ההוכחה מהייחוס:
-    // פסקת "(הדברים פשוטים...)" בהקדמה מודפסת אצל המקור בלי מילת-חלון כלל
-    // (כל השורות ברוחב מלא), ואצלנו הופיע "(הדברים" כחלון 1.5× בגודל 17.25.
-    const startsWithParen = /^\(/.test(String(text).trim());
-    let useWindow = false, windowW = 0, windowWords = null;
-    if (allowWindow && !startsWithParen && cfg.dropWordMode === 'window' && estLines >= cfg.dropWordMinLines && !firstHasNote) {
-      useWindow = true;
-      windowWords = out.slice(0, cfg.dropWordCount);
-      // **S4.15:** המדידה בגופן החלון של המקור (FrankReal-Bold @ 900) — הוכח
-      // מהייחוס: 116 מילות-חלון בודדות נמדדו מול שבעה מועמדים ו-FrankReal-Bold
-      // התאים בשגיאה ממוצעת 0.03px ('וזה' 25.1/25.1, 'אך' 22.0/22.0, 'והיפך'
-      // 45.2 — מול 39px בגופן הגוף). רוחב שגוי = גלישה שונה של שתי השורות
-      // הראשונות של כל פסקת-חלון = הפרש P7/P6 הדומיננטי.
-      // **D-92:** הרווח אחרי מילת-החלון — ברינדור הוא רווח אמיתי בגופן החלון
-      // בגודל 1.5× (חלק מה-span, נמדד — לא קבוע 6px) + רווח-ביטחון התאמת-דפדפן.
-      windowW = this.wWin(disp.slice(0, cfg.dropWordCount).join(' '), sizePt * 1.5)
-        + this.wWin(' ', sizePt * 1.5) + FIT_EPS;
-    }
-
-    // **S4.15 (ביטול קשיחת-הזוג ברינדור):** קשיחת שתי המילים האחרונות (nbsp)
-    // קיימת בגרסת הארכיון v20.5 בלבד — ה-typesetter הראשי שיצר את הייחוס
-    // מרנדר ברווחים רגילים (createDropWord מחבר ב-' ' פשוט; ה-nbsp רק במדידת
-    // joinMeasuredLine). ההוכחה מהייחוס: פסקת ההקדמה הראשונה — '…מזה ואיזה'
-    // בשורה 2 ו-'מזה.' בשורה 3 — הזוג האחרון דווקא מפוצל, בדיוק כגלישה
-    // גרידה חופשית. הקשיחה הוצאה מהרינדור; היא נשארת רלוונטית רק לאמדן
-    // השורות במקור (שאינו משפיע על הפלט).
-    let flowStart = useWindow ? cfg.dropWordCount : 0;
-    // **S6.0 (F1 — בליעת חלון):** פסקה שכל מילותיה נצרכו כחלון
-    // (מילה בודדת רחבה מהטור שגורמת estLines≥minLines, או drop-word-count
-    // ≥ מספר המילים) — לולאת הזרימה לא רצה כלל, lines=[] ומילות החלון
-    // מעולם לא מוצגות (הן נצרפות רק לשורה 0 שאינה קיימת) ⇒ אובדן תוכן
-    // מלא של הפסקה. תוקם: במקרה כזה אין חלון — הפסקה ממודדת ומוצגת במלואה.
-    if (flowStart >= out.length) {
-      useWindow = false; windowW = 0; windowWords = null; flowStart = 0;
-    }
-    const pairStart = -1; // אין קשיחה ברינדור (הוכחה לעיל)
-    const bindPair = false;
-
-    const lines = [];
-    let cur = [], curPf = [], curW = 0, lineNo = 0, lastIdx = -1;
-    // **S4.24 (דגלי קצה סוגריים לפלט):** startsInParen/endsInParen של כל
-    // מילה נשמרים גם על השורה הפלוטה — מקור יחיד לרווח-הסוגריים (10pt)
-    // ברינדור ה-DOM ובמקרן ה-PDF; בלעדיהם הרווח בין שתי מילים בתוך (...) רונדר
-    // בגודל השורה והשורה גולשת מהטור (נמדד בחי: 4px, עמ' 403).
-    let curPs = [], curPe = [];
-    const limitOf = () => (useWindow && lineNo < 2) ? colWidthPx - windowW : colWidthPx;
-
-    if (useWindow) {
-      // שורות 0–1: החלון בשפה הימנית; הזרימה ברוחב מוקטן. מילות החלון אינן בזרימה.
-    }
-    for (let i = flowStart; i < out.length; i++) {
-      const bindHere = bindPair && i === pairStart; // המילה הלפני-אחרונה — נבדקת עם יורשתה
-      const w1 = wordWs[i];
-      const spBefore = cur.length ? spaceBetween(lastIdx, i) : 0;
-      const w2 = bindHere ? wordWs[i + 1] + spaceBetween(i, i + 1) : 0;
-      const addW = spBefore + w1 + (bindHere ? w2 : 0);
-      // **D-92:** limitOf() - FIT_EPS — רווח-ביטחון: הדפדפן צובר תת-פיקסל ברינדור
-      // ושורה ללא רווח נעטפת בו לשתי שורות ויזואליות החופפות את השורה שמתחת.
-      if (cur.length && curW + addW > limitOf() - FIT_EPS) {
-        lines.push({ words: cur, parenFlags: curPf, parenStarts: curPs, parenEnds: curPe, window: useWindow && lineNo < 2 });
-        cur = []; curPf = []; curW = 0; curPs = []; curPe = []; lineNo++;
-      }
-      cur.push(out[i]);
-      curPf.push(!!wordParen[i]);
-      curPs.push(!!startsInParen[i]);
-      curPe.push(!!endsInParen[i]);
-      curW += (cur.length > 1 ? spaceBetween(lastIdx, i) : 0) + w1;
-      lastIdx = i;
-      if (bindHere) {
-        cur.push(out[i + 1]);
-        curPf.push(!!wordParen[i + 1]);
-        curPs.push(!!startsInParen[i + 1]);
-        curPe.push(!!endsInParen[i + 1]);
-        curW += spaceBetween(i, i + 1) + wordWs[i + 1];
-        lastIdx = i + 1;
-        i++;
-      }
-    }
-    if (cur.length) lines.push({ words: cur, parenFlags: curPf, parenStarts: curPs, parenEnds: curPe, window: useWindow && lineNo < 2 });
-    for (const l of lines) l.heightPx = GEO.LINE_H;
-    return { lines, hasWindow: useWindow, windowWords, windowW, notes };
-  }
-}
-
-// =====================================================================
-//  הרכבת המסמך — פורט של performTypeset (מבנה, בלוקים, עימוד)
-//  מודל: עמוד = מחסנית אנכית של פסים (span של h3) ובלוקים דו-טוריים מאוזנים.
-// =====================================================================
-
-// **S4.19:** פטור עמודי h2+span מה-spacer המלא — כיול S4.14 (261.3) נשאר להם.
-const H2_SPAN_EXEMPT = (
-  (typeof process !== 'undefined' && process.env && process.env.RED_H2_SPAN_EXEMPT) !== '0'
-);
-// **חוזה H3 ממקור יחיד (core/h3-contract.js):** ה-CSS המקורי (Orange/Yellow/Green)
-// קובע .h3-title-text { line-height:1.22 } ו-.block-h3-span { padding:8px 0 4px;
-// margin-bottom:4px } — ה-pitch הוא line-height הטקסט בלבד (13.5pt×96/72×1.22 =
-// 21.96px), לא 34px שכללו בטעות את הריפוד העליון בכל שורת המשך. הריפוד העליון
-// 8px פעם אחת לפני השורה הראשונה; הריפוד התחתון 4px וה-margin-bottom 4px פעם
-// אחת אחרי השורה האחרונה. כותרת חד-שורתית: 8+21.96+4+4 ≈ 38px (S4.14 נשמר).
-// **אותו חוזה משותף למנוע המאוחד** (pipeline/dp-planner) — אין העתקה מקומית.
-const { h3LineHeightPx, H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX } = require('../core/h3-contract');
-const H3_SPAN_LINE_H = h3LineHeightPx(SZ.h3);
-const H3_SPAN_TOP_PAD_PX = H3_TOP_PAD_PX;
-const H3_SPAN_BOTTOM_PAD_PX = H3_BOTTOM_PAD_PX;
-const H3_SPAN_MARGIN_BOTTOM_PX = H3_MARGIN_BOTTOM_PX;
-const H3_SPAN_H = H3_SPAN_LINE_H + H3_SPAN_BOTTOM_PAD_PX;
-
-// **S4.18:** רצפת מרווח-הפסקה בכיווץ משיכת-יתום — נמדד מהייחוס (עמ' 14 שמאל:
-// מרווחי פסקה 22.4-24.4px ⇒ gap 1-3px; הרצפה 2). דריסה: RED_GAP_COMPRESS_FLOOR.
-const GAP_COMPRESS_FLOOR = parseFloat(
-  (typeof process !== 'undefined' && process.env && process.env.RED_GAP_COMPRESS_FLOOR) || '2'
-);
-// **S4.17 (כיוול מהייחוס):** גג הכיווץ-מתחת-לבסיס למשיכת יתום. ההוכחות מהייחוס:
-// עמ' 14 שמאל — המשיכה הצליחה עם כיווץ של ~20px (19.9 נדרשו); עמ' 15 שמאל —
-// משיכה שדרשה ~44px כיווץ **נכשלה** במקור (הזנב עבר לעמ' 16 למרות שהקיבולת
-// הנומינלית 2px×44 שורה הספיקה); עמ' 20 שמאל — כיווץ ~26-34px הצליח. כלומר
-// המנוע שייצר את הייחוס מגביל את הכיווץ בפועל לסדר ~30px לעמוד, לא לקיבולת
-// המלאה. הקבוע מכויל לכך (ניתן לדריסה סביבתית לניסויים: RED_RECLAIM_COMPRESS_MAX).
-const RECLAIM_COMPRESS_MAX = parseFloat(
-  (typeof process !== 'undefined' && process.env && process.env.RED_RECLAIM_COMPRESS_MAX) || '0'
-);
-// **S72 (שיפור 1 — עומס משותף ליישור תחתיות):** גג כיווץ-מתחת-לבסיס בכיווץ
-// היישור (2px לשורה, עד 30px לעמוד — הסדר הגודל שנמדד בייחוס המקור:
-// 74 זוגות פסים ב-19-20px מול בסיס 21.44). נפרד מ-RECLAIM_COMPRESS_MAX
-// (הרדום=0) של משיכת-היתום — כאן הכלי עובד רק כשהמתיחה לבדה לא סגרה.
-const ALIGN_COMPRESS_MAX = parseFloat(
-  (typeof process !== 'undefined' && process.env && process.env.RED_ALIGN_COMPRESS_MAX) || '30'
-);
-// **S4.17 (מתג ראשי) / **S72 (שיפור 2 — D-101) עדכון:** מתיחת סוף-העמוד
-// (stretchLastBlockToBottom) מופעלת כעת כברירת מחדל בגוף הזרימה — הוראת
-// המשתמש המפורשת (11.11) ליישור תחתיות הטורים + הוכחת ההיסטוגרם מהייחוס
-// (~230 פסים ב-23-24.4px). מה שנותר מאחורי הדגל הסביבתי
-// RED_ENABLE_STRETCH_RECLAIM: משיכת זנב-היתום (tryReclaimOrphanTail) בלבד —
-// היא המזיזה שורות בין עמודים (מקור הסיכון שתואר ב-S4.17 — LINE_BELOW_COLUMN
-// באודיט החי), ואינה נחוצה ליישור התחתיות. דריסות הניסויים נשארות בתוקף.
-const STRETCH_RECLAIM_ENABLED = (
-  (typeof process !== 'undefined' && process.env && process.env.RED_ENABLE_STRETCH_RECLAIM === '1')
-);
-// **S4.19 (מודל ההתאמה של ה-DOM — השלמת שרשרת הראיות של S4.16/S4.18):**
-// המקור בודק התאמה ב-computeBestFitLine דרך `targetCol.scrollHeight <=
-// remPageHeight - reservedNow(txt)` — scrollHeight/clientHeight הם **שלמים**
-// (קוונטיזציה של הדפדפן), והגובה הנמדד כולל את margin-bottom:7px של
-// הפסקה הנבדקת עצמה (p{margin-bottom:7px} ב-CSS המקור; הטור הוא פריט-גריד
-// = הקשר פורמט עצמאי, השוליים אינם קורסים החוצה). ההוכחה מהייחוס:
-// תחתיות התוכן של 88 הטורים בעמודי הגוף אינן עולות על ~1015.2px
-// (bbox) — כלומר line-box+margin ≤ 1022.2 — בעוד שהמודל האריתמטי המדויק
-// שלנו (בלי המרווח) מגיע עד 1022.2 בפועל (עמ' 11/12/30 אצלנו) — הפרש
-// שיטתי של 7px ≈ שליש שורה לטור, שהוא בדיוק "רעש הגבול" שנמדד ב-S4.18.
-// דריסות לניסויים: RED_FIT_MODEL=dom (ברירת המחדל להלן), RED_FIT_ROUND=
-// round|floor|ceil (כיוון הקוונטיזציה), RED_FIT_MARGIN (ברירת מחדל 7).
-const FIT_MODEL = (
-  (typeof process !== 'undefined' && process.env && process.env.RED_FIT_MODEL) || 'dom'
-);
-const FIT_ROUND = (
-  (typeof process !== 'undefined' && process.env && process.env.RED_FIT_ROUND) || 'round'
-);
-const FIT_MARGIN = parseFloat(
-  (typeof process !== 'undefined' && process.env && process.env.RED_FIT_MARGIN) || '7'
-);
-const snapPx = (x) => (
-  FIT_ROUND === 'floor' ? Math.floor(x) : FIT_ROUND === 'ceil' ? Math.ceil(x) : Math.round(x)
-);
-// ברירת המחדל 0 (רדום): הסריקה האמפירית (cap=0/12/20/30/45/100) הראתה שכל
-// גג > 0 מפעיל משיכות בנקודות שבהן המקור לא ביצע אותן — כי המילוי שלנו שונה
-// ב±1-2 שורות לעמוד משל המקור (רעש תת-פיקסל של הדפדפן; ראה טבלת 67 הטורים
-// ב-S4.17), ולכן המשיכות מחריפות את ההסט במקום לצמצמו (P7: ‏0.9451→0.9279).
-// cap=0 הוכח זהה-ביטים לפני הפורט בשני הקורפוסים (legacy-33a08 ל-no_long,
-// legacy-89678 ל-very_long) — המנגנון במקום לצורך כיוול עתידי אחרי סגירת
-// רעש המילוי, ואינו משנה כלום עד אז (דריסה: RED_RECLAIM_COMPRESS_MAX).
-
-/** גובה פריט כותרת inline (h4/h5/h6) בטור — גודל×1.45.
- * **S4.14 (מדידה שיטתית מעוגני הייחוס):** מרחק תווית-hN → עוגן הפסקה הבא
- * באותו טור, על פני כל המסמך: h4=24-25px (32 מדידות; 12.5pt), h5=22px
- * (7 מדידות; 11.5pt), h6=20px (5 מדידות; 10.5pt) — כלומר גודל×1.45 בדיוק
- * (24.2/22.2/20.3). הנוסחה הקודמת ×1.22+6 נתנה 26.3/24.7 — גבוהה ב-2 עד 2.5px
- * לכל כותרת, והפער הצטבר לשורה שלמה בעמודים עם כותרות מרובות. */
-function headingItemH(level) {
-  const sz = ({ 4: SZ.h4, 5: SZ.h5, 6: SZ.h6 })[level] || SZ.body;
-  return sz * (96 / 72) * 1.45;
-}
-
-/** גלישת שורות גרידה גנרית (להערות). */
-function wrapText(text, api, widthPx, sizePt) {
-  const words = String(text).split(/\s+/).filter(Boolean);
-  const lines = [];
-  let cur = [], curW = 0;
-  const spaceW = api.measureTextWidth(' ', sizePt, 0);
-  for (const w of words) {
-    const ww = api.measureTextWidth(w, sizePt, 0);
-    const add = ww + (cur.length ? spaceW : 0);
-    // **D-92:** רווח-ביטחון התאמת-דפדפן (הערות השוליים מרונדרות מחדש ב-DOM).
-    if (cur.length && curW + add > widthPx - FIT_EPS) { lines.push(cur.join(' ')); cur = [w]; curW = ww; }
-    else { cur.push(w); curW += add; }
-  }
-  if (cur.length) lines.push(cur.join(' '));
-  return lines;
-}
-
-/** **S4.26 (דיווח משתמש 05.11 — "טקסט מוסגר ממוקם גבוה")**: הפרש הבסיס שמרכז
- * אנכית טקסט-סוגריים מוקטן מול טקסט השורה המארח — מרכז גובה האחד מותאם
- * למרכז גובה השני. מודל תיבת השורה של המנוע (baselineOf): גובה התוכן
- * = (ascent+0.2)·גודל ⇒ מרכז הגובה יושב (ascent−0.2)/2·גודל מעל הבסיס;
- * הפרש המרכזים בין גוף לסוגריים = (ascent−0.2)·(S_host−S_paren)/2.
- * (בעבר הוגבה הסוגריים בעיוורון ב-0.33×גודל-השורה ≈ 5.3px — הרבה מעל
- * המרכוז; עכשיו ≈ 0.7px בלבד.) */
-function parenCenterRaisePx(ascentEm, hostPt, parenPt) {
-  const a = (Number.isFinite(ascentEm) && ascentEm > 0.1) ? ascentEm : 0.80;
-  return Math.max(0, (a - 0.2) * (hostPt - parenPt) * (96 / 72) / 2);
-}
-
-/**
- * legacyTypeset — הנתיב החי לפרופיל IMUD (התנהגות המקור = המפרט).
- */
-function legacyTypeset(rawText, settings, env) {
-  const cfg = readConfig(settings._imudRaw || {}, settings);
-  // **S77 (בקשה 3):** footnotes-enabled=false — הפסקת חילוץ ההערות לחלוטין
-  // (עד כאן ההגדרה לא נקראה כלל בנתיב המורשת; המפרידים מתרוקנים — findNotes
-  // מחזיר רשימה ריקה, הסמנים אינם מוצבים בגוף ואין מרזב).
-  if (settings['footnotes-enabled'] === false) { cfg.fnOpen = ''; cfg.fnClose = ''; }
-  // **S6.3 (חיבור הגדרות):** גדלים שהיו קשיחים ב-SZ נקראים מההגדרות.
-  // המוטציה דטרמיניסטית — כל קריאה מציבה ערכים מוחלטים מ-cfg (ברירות
-  // המחדל של readConfig = הערכים ההיסטוריים המכוילים; ערכי המקור גוברים).
-  SZ.h0Title = cfg.h0Size;
-  SZ.fnBody = cfg.fnBodySize;
-  SZ.tocLevel = { 1: cfg.gtocSizes[1], 2: cfg.gtocSizes[2], 3: cfg.gtocSizes[3], 4: cfg.gtocSizes[4], 5: cfg.gtocSizes[5], 6: cfg.gtocSizes[6], 7: cfg.gtocSizes[7] };
-  // **S4.24 (ייבוא ברירות המחדל של המקור למדיניות הערות-שוליים):** המדיניות
-  // נקראת מההגדרות הממוזגות ונופלת ל-_imudRaw (default_settings.json של
-  // המקור — 264 המפתחות, כולל fn-bar-max-height-px=220) ואז לברירת המחדל
-  // של המקור. block ⇒ תקרת מרזב; continuous ⇒ ללא תקרה (D-34, כמו dp-planner).
-  // split ⇒ החלק הראשון במרזב העמוד, השאר לראש תור העמוד הבא עם '(המשך)'.
-  const rawSet = settings._imudRaw || {};
-  const fnSet = (k, d) => (settings[k] != null ? settings[k] : (rawSet[k] != null ? rawSet[k] : d));
-  // **S4.26 (דיווח משתמש 05.11 — בעיות 3–5 בהערות השוליים):**
-  // (א) תקרת המרזב: ברירת המחדל עוברת מ-220px הקבוע ל**קיבולת העמוד
-  //     המלאה** ("הערות ארוכות... לא ממלאות את כל גובה העמוד הקיים, ובעקבות
-  //     כך עוברות לעמוד שלישי") — הערה ארוכה ממלאת את העמוד עד תומו לפני
-  //     שהיא נחתכת. התקרה שומרת תמיד שורת-גוף אחת לפחות בעמוד פתיחה רגיל
-  //     (FLOW_H − 38.5 − שורת-גוף) — ערך מפורש בהגדרה נחתם לטווח הבטוח.
-  // (ב) מצב continuous כברירת מחדל ("הערה הבאה מתחילה מיד באותה שורה שהסתיימה
-  //     הערה קודמת") — גם בו יש תקרה (בעבר היה אינסוף ⇒ חריגה מהעמוד).
-  // (ג) מספור פר-פרק ("איפוס מספרי הערות בכל פרק (כותרת 2) ולא בכל עמוד")
-  //     — fn-reset-mode=siman; page שומר על ההתנהגות ההיסטורית.
-  const FN_BODY_LINE_PX = SZ.body * (96 / 72) * 1.34; // 21.44 — שורת גוף אחת
-  const FN_FULL_CAP_PX = Math.max(
-    GEO.FN_PITCH,
-    Math.floor((GEO.FLOW_H - 38.5 - FN_BODY_LINE_PX) / GEO.FN_PITCH) * GEO.FN_PITCH
-  );
-  const fnLayoutMode = String(fnSet('fn-layout-mode', 'continuous'));
-  const fnPolicy = String(fnSet('long-footnote-policy', 'split'));
-  const fnResetMode = String(fnSet('fn-reset-mode', 'siman'));
-  const fnBarMaxRaw = Number(fnSet('fn-bar-max-height-px', 0));
-  // **S75 (בקשה 1 — 12.11, מנגנון הצבת ההערות):** הגדרה חדשה fn-placement-mode
-  // בוחרת בין שני מנגנוני ההצבה — ברירת המחדל **body-first** (החדש):
-  //   (1) הגוף ממלא את אזור הטקסט העיקרי תמיד — פסקה נושאת-הערות אינה
-  //       נדחקת לעמוד הבא בגלל גודל ההערות (ביטול שער התקציב; דיווח המשתמש:
-  //       חור ענק בתחתית העמוד ו-3 עמודים רצופים של שורת-גוף אחת);
-  //   (2) המרזב נכנס בחלל שמתחת לגוף עד **תקרה יחסית** — ברירת המחדל האוטומטית
-  //       (fn-bar-max-height-px=0) היא 50% מגובה הזרימה במקום קיבולת העמוד
-  //       המלאה; הערה שאינה נכנסת בשלמותה מוצבת **חלקית כפי יכולת ההכלה
-  //       של העמוד** והמשכה זורם לעמוד הבא;
-  //   (3) רצפת ההתחלות — כל הערה טרייה מתחילה בעמוד שבו הסמן שלה הוצב
-  //       (עדיפות 2 של המשתמש; עדיפות 1 = הכלה מלאה כשהצורך נכנס בתקרה);
-  //   (4) ההמשכים זורמים במרזבי העמודים הבאים **במקביל** למילוי הגוף
-  //       ("הגוף ימשיך למלא את העמודים הבאים באופן נורמלי, במקביל להמשך
-  //       זרימת ההערות במרזבים").
-  // legacy = מנגנון S74 המלא (שער תקציב-ההערות + קיבולת עמוד מלאה) — ללא שינוי.
-  // הקריאה מילולית (settings['fn-placement-mode']) — כך מזהה סורק הצרכנים
-  // (REQ-GOV-04) את המפתח כצרוף אמיתי ולא כמפתח רפאים.
-  const fnPlacementModeRaw =
-    settings['fn-placement-mode'] != null ? settings['fn-placement-mode']
-      : (rawSet['fn-placement-mode'] != null ? rawSet['fn-placement-mode'] : 'body-first');
-  const fnBodyFirst = String(fnPlacementModeRaw) === 'body-first';
-  const FN_BODY_FIRST_CAP_PX = Math.min(
-    FN_FULL_CAP_PX,
-    Math.max(GEO.FN_PITCH, Math.floor((GEO.FLOW_H * 0.5) / GEO.FN_PITCH) * GEO.FN_PITCH)
-  );
-  const fnBarMax = (Number.isFinite(fnBarMaxRaw) && fnBarMaxRaw > 0)
-    ? Math.min(fnBarMaxRaw, FN_FULL_CAP_PX)
-    : (fnBodyFirst ? FN_BODY_FIRST_CAP_PX : FN_FULL_CAP_PX);
-  const fnSplitEnabled = fnPolicy === 'split';
-  // **S4.24 (שימור תוכן):** המשכי הערות שנקצצו בתקרת המרזב — ברמת ה-typeset
-  // (חוצה עמודים ומקטעים); לעולם לא מאבדים שורת הערה.
-  const pendingFootnotes = [];
-  // **S4.26 (מספור פר-פרק):** מונה רץ בתוך הפרק; נשמר במפה כדי שהסמן בגוף
-  // והסמן ברישום יהיו זהים גם כשהפסקה חוצת-עמודים מציגה את ההערה שוב.
-  // איפוס בכל פתיחת מקטע h2/h0 (ראה flowSection).
-  let fnChapterCounter = 0;
-  const fnNoteNumbers = new Map(); // noteText -> מספר בפרק הנוכחי
-  // **EXT-13:** גופן רשום ⇒ מדידת אמת גם ברירת מחדל 'table' (live==ייצוא).
-  const impl = resolveMeasureImpl(settings);
-  // **S4.13 (רישום גופן הערות-הצד):** הקריאה יכולה לספק את בתי הגופן
-  // (env.marginFontBytes) — נרשם כאן פעם אחת; הגלישה מידדת במטריקות שלו.
-  if (env && env.marginFontBytes && !registeredMeasureFonts.has('Hadassah Friedlaender')) {
-    registerMeasureFont('Hadassah Friedlaender', env.marginFontBytes);
-  }
-  // **S4.15 (גופן מילת-החלון — FrankReal-Bold):** env.windowFontBytes נרשם
-  // כאן (נתיב הפריטה/הייצוא); באפליקציה החיה הגופן נרשם דרך register-font
-  // תחת השם 'FrankReal' — שני הנתיבים מזוהים כאן. בלי גופן רשום: המדידה
-  // נופלת לגופן הגוף (התנהגות קודמת, בדיקות קיימות לא נשברות).
-  if (env && env.windowFontBytes && !registeredMeasureFonts.has('FrankReal-Bold')) {
-    registerMeasureFont('FrankReal-Bold', env.windowFontBytes);
-  }
-  // **S4.26 (דיווח משתמש 05.11 — "האתר לא משתמש בגופני ברירת המחדל"):** גופן
-  // הכותרות של המקור בפועל — DavidLibre-Bold (הוכח מהייחוס: כל שורות
-  // הכותרות/ה-TOC ב-DavidLibre-Bold; המחסנית 'AlphaBlack','David Libre'
-  // נפלה אצל המשתמש המקורי ל-David Libre — והכותרות מודגשות). הכותרות
-  // נמדדות במטריקות שלו (שבירת כותרות ארוכות) ומרונדרות בו (bold 700).
-  if (env && env.headingFontBytes && !registeredMeasureFonts.has('DavidLibre-Bold')) {
-    registerMeasureFont('DavidLibre-Bold', env.headingFontBytes);
-  }
-  // **S4.15 (גופן ההקדמה — Frank Ruhl Libre 11.5pt):** גוף ההקדמה במקור
-  // (--fn-h0-body) מרונדר ב-'Frank Ruhl Libre', לא בגופן הגוף — הוכח
-  // מסימון הייחוס: אילוצי שבירת שורות ההקדמה מתקיימים ברוחבי FRL
-  // (שורת 'לבאר… ואיזה' נכנסת ב-474px ב-FRL מול 482.9px בגוף — והייחוס
-  // הכניס אותה). באפליקציה החיה הגופן נרשם דרך register-font (המשפחה
-  // 'Frank Ruhl Libre' בקטלוג). בלי גופן רשום — נפילה לגופן הגוף.
-  if (env && env.prefaceFontBytes && !registeredMeasureFonts.has('Frank Ruhl Libre')) {
-    registerMeasureFont('Frank Ruhl Libre', env.prefaceFontBytes);
-  }
-  let prefaceApi = null;
-  let fnApi = null; // גוף ההערות — גופן ברירת המחדל של הרינדור בפועל (S74); נפילות מתועדות להלן
-  let fnMarkApi = null; // **S74 (בעיה 5):** סמני הרישום — FRL 8pt (נמדד בייחוס עמ' 31/37)
-  if (impl === 'font-metrics' && registeredMeasureFonts.has('Frank Ruhl Libre')) {
-    prefaceApi = new MeasureAPI(
-      { 'body-font': 'Frank Ruhl Libre', 'body-font-size-pt': SZ.h0Body, 'body-line-height': 1.45 },
-      'font-metrics'
-    );
-    // **S4.15 (גופן גוף ההערות):** --fn-note-body של המקור = 'Frank Ruhl
-    // Libre' 8.5pt — לא גופן הגוף. הוכחה מהייחוס: ההערה הארוכה של עמ' 11
-    // ('חלוקת המלאכות…') — הייחוס שובר את השורה לפני 'כלולה' ואנחנו אחרי
-    // ('…בדבר' / 'כלולה ההוצאה…') — הפרשי רוחב FRL מול גוף. אותו גופן
-    // כמו ההקדמה — אותו API עם גודל שונה.
-    fnMarkApi = new MeasureAPI(
-      { 'body-font': 'Frank Ruhl Libre', 'body-font-size-pt': cfg.fnListingNumSize, 'body-line-height': 1.5 },
-      'font-metrics'
-    );
-  }
-  // **S74 (בעיה 5 — בקשת משתמש 12.11, גופן גוף ההערה):** ברירת המחדל של
-  // **הרינדור בפועל** של הגרסה הישנה — Assistant ExtraLight 8.5pt — נמדדה
-  // ישירות מהייחוס (עמ' 31/37: כל שורות גוף ההערה Assistant-ExtraLight 8.5pt;
-  // הסמן בלבד ב-FRL 8pt). הגדרת f-note-body של המקור לא חוברה לרינדור
-  // בפועל בגרסה הישנה — הרינדור הוא המפרט. גוף ההערה נמדד לפי
-  // f-note-body-font (ברירת המחדל המתוקנת) כשהמשפחה רשומה; נפילה: FRL
-  // רשום ואז גוף המסמך (הנפילות ההיסטוריות המתועדות).
-  const fnBodyFamily = settings['f-note-body-font'];
-  if (impl === 'font-metrics' && fnBodyFamily && registeredMeasureFonts.has(fnBodyFamily)) {
-    fnApi = new MeasureAPI(
-      { 'body-font': fnBodyFamily, 'body-font-size-pt': SZ.fnBody, 'body-line-height': 1.5 },
-      'font-metrics'
-    );
-  } else if (impl === 'font-metrics' && registeredMeasureFonts.has('Frank Ruhl Libre')) {
-    fnApi = new MeasureAPI(
-      { 'body-font': 'Frank Ruhl Libre', 'body-font-size-pt': SZ.fnBody, 'body-line-height': 1.5 },
-      'font-metrics'
-    );
-  }
-  const api = new MeasureAPI(settings, impl);
-  if (!fnApi) fnApi = api; // בלי גופן רשום — הערות בגופן הגוף (התנהגות קודמת)
-  if (!fnMarkApi) fnMarkApi = fnApi; // **S74:** בנפילה נמדד הסמן בגופן גוף ההערה
-  let windowApi = null;
-  const windowFontName = registeredMeasureFonts.has('FrankReal-Bold') ? 'FrankReal-Bold'
-    : (registeredMeasureFonts.has('FrankReal') ? 'FrankReal' : null);
-  if (impl === 'font-metrics' && windowFontName) {
-    windowApi = new MeasureAPI(
-      { 'body-font': windowFontName, 'body-font-size-pt': SZ.body, 'body-line-height': 1.34 },
-      'font-metrics'
-    );
-  }
-  // **S4.26:** מדידת כותרות ב-DavidLibre-Bold (כמו הרינדור) — בלי גופן
-  // רשום נופלים לגופן הגוף (התנהגות קודמת, מתועדת).
-  let headingApi = null;
-  if (impl === 'font-metrics' && registeredMeasureFonts.has('DavidLibre-Bold')) {
-    headingApi = new MeasureAPI(
-      { 'body-font': 'DavidLibre-Bold', 'body-font-size-pt': SZ.body, 'body-line-height': 1.34 },
-      'font-metrics'
-    );
-  }
-  // **S6.3 (גופני ברירת המחדל של הכותרות — "ולמה כל גופני ברירת המחדל
-  // של כל סוגי הטקסט והכותרות לא מיושמים?"):** כל רמת כותרת נמדדת בגופן
-  // שהוגדר לה בפועל (f-h0/f-h2 ⇒ AlphaBlack, f-h1 ⇒ Lia Sgula, f-h3 ⇒
-  // Alpha …) כשהוא רשום במנוע — המדידה = הרינדור (אין סחף מודל↔דיו).
-  // בלי גופן רשום: DavidLibre-Bold (headingApi) ואז גוף המסמך — הנפילות
-  // ההיסטוריות המתועדות.
-  const _fontApiCache = new Map();
-  const fontApiFor = (family) => {
-    if (!family || !registeredMeasureFonts.has(family)) return null;
-    if (_fontApiCache.has(family)) return _fontApiCache.get(family);
-    const a = new MeasureAPI(
-      { 'body-font': family, 'body-font-size-pt': SZ.body, 'body-line-height': 1.34 },
-      'font-metrics'
-    );
-    _fontApiCache.set(family, a);
-    return a;
-  };
-  const h0Font = fontApiFor(settings['heading-0-font']) || null;
-  const h1Font = fontApiFor(settings['heading-1-font']) || null;
-  const h2Font = fontApiFor(settings['heading-2-font']) || null;
-  const h3Font = fontApiFor(settings['heading-3-font']) || null;
-  const h4Font = fontApiFor(settings['heading-4-font']) || null;
-  const h5Font = fontApiFor(settings['heading-5-font']) || null;
-  const h6Font = fontApiFor(settings['heading-6-font']) || null;
-  const h7Font = fontApiFor(settings['heading-7-font']) || null;
-  const headingApiFor = (lv) => (({ 0: h0Font, 1: h1Font, 2: h2Font, 3: h3Font, 4: h4Font, 5: h5Font, 6: h6Font, 7: h7Font })[lv]) || null;
-  // הערות-צד הן H7: אותו heading-7-font שמקרין ה-DOM. בעבר העימוד
-  // קיבע את מדידתן ל-Hadassah גם כאשר המשתמש שינה את גופן H7, ולכן
-  // שבירת השורות לא תאמה לרוחב הגופן שהוצג בפועל.
-  const marginApi = h7Font || api;
-  const brk = new LineBreaker(api, cfg, windowApi, headingApi);
-  const { meta, tokens } = tokenizeDoc(rawText, cfg);
-
-  const bookTitle = (meta.bookTitle || 'ספר').trim();
-  const tw = bookTitle.split(/\s+/);
-  const mid = Math.ceil(tw.length / 2);
-  const hdrR = tw.slice(0, mid).join(' ');
-  const hdrL = tw.slice(mid).join(' ');
-
-  // **S77 (בקשה 3 — "הרבה הגדרות שלא מחוברות"): הגדרות הכותרת העליונה
-  // מחוברות לנתיב המורשת.** עד כאן המנוע הרכיב את הכותרת הרצה בקוד קשיח
-  // (חצאי שם הספר + הפרק הנוכחי) ו-45 הגדרות header-* לא עשו כלום בפרופיל
-  // המורשת (הנתיב החי). כעת: כשמסופקים מקורות סלוט (הייבוא של IMUD ממפה
-  // אותם אוטומטית — book_title_split_r/l ⇒ החצאים הקבועים) הסלוטים
-  // נפענחים מההגדרות לכל עמוד לפי צדו הפיזי; ברירת המחדל המיובאת משחזרת
-  // את ההתנהגות המכוילת **במדויק** (ימין=חצי ראשון, מרכז=פרק, שמאל=חצי
-  // שני; ללא החלפה — hdr-alternating כבוי במקור). בלי הגדרות — ההתנהגות
-  // הוותיקה כמו שהיא (קריאות גולמיות/בדיקות ישנות).
-  const HDR_SIDES_S77 = ['recto', 'verso', 'opening'];
-  const hdrSourcesS77 = {};
-  let hdrAnySourceS77 = false;
-  for (const side of HDR_SIDES_S77) {
-    hdrSourcesS77[side] = {};
-    for (const pos of ['right', 'center', 'left']) {
-      const k = `header-${side}-${pos}-source`;
-      const v = settings[k];
-      hdrSourcesS77[side][pos] = v != null ? String(v) : null;
-      if (v != null) hdrAnySourceS77 = true;
-    }
-  }
-  const hdrEnabledS77 = settings['header-enabled']; // ברירת מחדל true — מופעל
-  const hdrDedicatedS77 = settings['header-opening-dedicated'] === true;
-
-  // ---- מקטעים (כמו המקור: h1→sub_shaar, h0/h2→new_page, השאר inline) ----
-  const sections = [];
-  let cur = { tokens: [] };
-  for (const t of tokens) {
-    const mode = t.type[0] === 'h' ? (HEADING_MODES[t.level] || 'inline_2col') : 'inline_2col';
-    if (mode === 'sub_shaar') {
-      if (cur.tokens.length) sections.push(cur);
-      sections.push({ subShaar: t, tokens: [] });
-      cur = { tokens: [] };
-    } else if (mode === 'new_page_1col' || mode === 'new_page_2col') {
-      if (cur.tokens.length) sections.push(cur);
-      cur = { newPage: t, tokens: [] };
-    } else {
-      cur.tokens.push(t);
-    }
-  }
-  // **S5.2 (מיפוי מוקשים F3):** סעיף שנפתח ב-newPage (h0/h2 פותח עמוד) אך לא
-  // קיבל אף token אחריו — בעבר לא נדחף כלל: הכותרת אבדה (לא נוצר עמוד שער
-  // לפרק) ושורת תוכן-העניינים שלו קיבלה folio ריק. כעת הסעיף נדחף גם ריק —
-  // עמוד הפתיחה נבנה עם הכותרת בלבד.
-  if (cur.tokens.length || cur.newPage) sections.push(cur);
-
-  const pages = [];
-  const headingFolio = new Map();
-  let simanCounter = 0;
-  let currentH2 = '';
-  let currentH1 = '';
-  let pending = null; // {token, lines, lineIdx} — המשך פסקה חתוכה בין עמודים/טורים
-
-  function blankPageObj(type) {
-    return {
-      index: -1, type, legacy: true, pageNumber: null, folioDisplay: '',
-      headerSlots: null, bands: [], columns: [[], []], marginNotes: [], footnotes: [],
-      sideNotes: [], // **תיקון S4.10:** חוזה התוצאה — dp-planner.layoutHash ו-serialize
-      // קוראים p.sideNotes.length גם על תוצאות מורשת (בלי זה ה-worker קורס
-      // והאפליקציה החיה מציגה 0 עמודים — נמצא בביקורת הדפדפן).
-      fnSep: false, toc: null, _metadata: meta,
-      // **S4.26:** ascentEm של גופן המדידה — למרכוז האנכי של טקסט-הסוגריים
-      // ברינדור ה-DOM (אותו מודל תיבת-שורה כמו baselineOf של המקרן).
-      ascentEm: api.ascentEm(),
-      // **S4.10:** תבנית מלאה — גם צרכני DP (כגון הקרנות/בדיקות) שקוראים
-      // template.columns/contentBox.height לא יקרסו על תוצאת מורשת.
-      template: {
-        width: GEO.PAGE_W, height: GEO.PAGE_H,
-        columns: [{ x: GEO.COL_R_X, w: GEO.COL_W }, { x: GEO.COL_L_X, w: GEO.COL_W }],
-        gutter: 13.48,
-        headerTop: GEO.FLOW_TOP - RUNNING_HEAD_TOP_INSET_PX,
-        contentBox: { top: GEO.FLOW_TOP, bottom: FLOW_BOTTOM, height: GEO.FLOW_H }
-      }
-    };
-  }
-  function newPage(type) {
-    const pg = blankPageObj(type);
-    pages.push(pg);
-    return pg;
-  }
-  // **S77:** ההקשר נשמר לפענוח הסלוטים בסוף (כשהאינדקסים הסופיים ידועים):
-  // h1/h2 נוכחיים בזמן יצירת העמוד. לעמודי TOC/הערות — כותרת העמוד עצמו
-  // (כך מקור 'h2' משמר את המרכז הוותיק גם שם).
-  const setHeader = (pg, center) => {
-    pg.headerSlots = { right: hdrR, center: center || '', left: hdrL };
-    pg._hdrCtx = { h1: currentH1 || '', h2: center || '' };
-  };
-
-  // ---------- עמודי שער ----------
-  // **S4.9:** תוכן השערים מהמטא-דאטה של המסמך — במיקומים המכוינים מהייחוס
-  // (shaar-main: כותרת 46pt ב-128pt, משנה 21pt, תיאור 12pt, מהדורה 11.5pt, מחבר 15pt;
-  //  shaar-back: זכויות/פרטים; shaar-sub: כותרת ה-h1 ב-36pt + המשך ב-21pt).
-  function gateLinesFor(type, h1Token) {
-    const pt = (v) => v / 0.75;
-    // **S73 (צבע פר-גופן מההגדרות — ברירת מחדל שחורה):** צבע כל שורת שער
-    // מההגדרה המשויכת לה (shaar-title-color לכותרת וכו'). עד כאן היו צבעים
-    // קבועים מהייחוס (#0F172A/#0F1749) שלא ניתנו לשינוי; בקשת משתמש
-    // מפורשת: ברירת המחדל של כל הגופנים — ללא יוצא מן הכלל — שחורה.
-    // ה-DOM וה-PDF קוראים את אותו שדה (g.color). הגישה מילולית —
-    // דרישת סורק ה-phantom-key (REQ-GOV-05).
-    const colOf = (hex) => (hex ? hexColorToRgb(hex) : null); // שחור/חסר ⇒ null — ברירת מחדל שחורה ברינדור
-    // **D-89 (עטיפת שורות שער):** במקור תיבות השער הן div-ים ברוחב קבוע —
-    // טקסט ארוך נעטף אוטומטית. כאן השורה נמדדת ונחתכת לשורות במקום לגלוש
-    // מהתיבה (כותרת-המשנה של השער בקורפוס ההשוואה רחבה מהתיבה במדידת
-    // Frank Ruhl ונחתכה בקצה הדף). מפגש שורות: גובה שורה = גודל×1.3.
-    const wrapGate = (text, sizePt, boxWpx, fontApi = null) => {
-      const words = String(text || '').split(/\s+/).filter(Boolean);
-      const lines = [];
-      let cur = '';
-      const meas = fontApi || api;
-      for (const w of words) {
-        const cand = cur ? cur + ' ' + w : w;
-        // **S6.0 (F9):** רווח-ביטחון FIT_EPS גם כאן — הנקודה היחידה בקובץ שלא
-        // הייתה מוגנת מצבירת תת-פיקסל של הדפדפן (D-92) — שורת שער בגבול
-        // תיעטף בדפדפן ותחפוף את שורת השער שמתחתיה.
-        if (!cur || meas.measureTextWidth(cand, sizePt, 0) <= boxWpx - FIT_EPS) cur = cand;
-        else { lines.push(cur); cur = w; }
-      }
-      if (cur) lines.push(cur);
-      return lines;
-    };
-    // **S6.3 (גופני השערים):** כל שורת שער נמדדת ונרפדת בגופן שהוגדר לה
-    // (f-sh-title ⇒ Lia Sgula לכותרת, f-sh-sub ⇒ Livorna לכותרת-המשנה, …)
-    // — המדידה בגופן האמיתי (כשרשום) והרינדור ב-dom-renderer לפי שדה
-    // ה-font שמוצמד לשורה. בלי גופן רשום — גוף המסמך (התנהגות D-89).
-    const shTitleFontApi = fontApiFor(settings['shaar-title-font']);
-    const shSubFontApi = fontApiFor(settings['shaar-subtitle-font']);
-    const shDescFontApi = fontApiFor(settings['shaar-desc-font']);
-    const shSecFontApi = fontApiFor(settings['shaar-sections-font']);
-    const shAuthorFontApi = fontApiFor(settings['shaar-author-font']);
-    const shYearFontApi = fontApiFor(settings['shaar-year-font']);
-    const h1FontApi = fontApiFor(settings['heading-1-font']);
-    const h1SubFontApi = fontApiFor('David Libre');
-    if (type === 'shaar-main') {
-      // **D-89:** צבעי הייחוס — הכותרת/המהדורה/המחבר ב-#0F172A (נמדד בעמ' 1,
-      // 46pt/11pt/15pt), הנושא והתיאור ב-#0F1749 (מצוירים שם כקטועים).
-      // **S6.3:** גדלים מההגדרות (s-sh-*) + גופן לכל שורה (f-sh-*) + עטיפת
-      // הכותרת בגופן שלה (במקור: div עם רוחב התיבה — עוטף אוטומטית).
-      const out = [];
-      const mainBoxW = GEO.PAGE_W - 30 * (96 / 25.4);
-      const titleLines = wrapGate(meta.bookTitle, cfg.shTitle, mainBoxW, shTitleFontApi);
-      const lineHOf = (sz) => sz * (96 / 72) * 1.3;
-      // **S6.3 (בטיחות עטיפה):** כותרת שנעטפה לשניים דוחפת את הכותרת-המשנה
-      // לפחות 25px מתחתית שורתה האחרונה — אין חפיפת שורות שער (בדיקת
-      // BAND_INK_OUTSIDE של האודיט החיה תופסת חפיפה כזאת).
-      const titleBottom = pt(128.1) + titleLines.length * lineHOf(cfg.shTitle);
-      const subY = Math.max(pt(225.2), titleBottom + 25);
-      titleLines.forEach((l, i) => out.push({
-        text: l, sizePt: cfg.shTitle, y: pt(128.1) + i * lineHOf(cfg.shTitle),
-        color: colOf(settings['shaar-title-color']), font: settings['shaar-title-font'] || null
-      }));
-      wrapGate(meta.subject, cfg.shSub, mainBoxW, shSubFontApi).forEach((l, i) => out.push({
-        text: l, sizePt: cfg.shSub, y: subY + i * lineHOf(cfg.shSub),
-        color: colOf(settings['shaar-subtitle-color']), font: settings['shaar-subtitle-font'] || null
-      }));
-      wrapGate(meta.desc, cfg.shDesc, mainBoxW, shDescFontApi).forEach((l, i) => out.push({
-        text: l, sizePt: cfg.shDesc, y: pt(410.3) + i * cfg.shDesc * (96 / 72) * 1.3,
-        color: colOf(settings['shaar-desc-color']), font: settings['shaar-desc-font'] || null
-      }));
-      out.push({ text: meta.edition || '', sizePt: cfg.shSec, y: pt(558.0), singleOp: true, color: colOf(settings['shaar-sections-color']), font: settings['shaar-sections-font'] || null });
-      out.push({ text: meta.author || '', sizePt: cfg.shAuthor, y: pt(713.5), singleOp: true, color: colOf(settings['shaar-author-color']), font: settings['shaar-author-font'] || null });
-      return out.filter(g => g.text);
-    }
-    if (type === 'shaar-back') {
-      // **S6.0 (F8 — עטיפת שער-אחורי):** שדות השער האחורי לא נעטפו מעולם —
-      // שורת זכויות/הוצאה/קשר ארוכה גלשה עד 1,754px מחוץ לעמוד (נמדד).
-      // כעת נעטפות ברוחב תיבת השער (378px — כמו תיבת המשנה של שער-המשנה)
-      // בפסים של גודל×1.3 — אותו דפוס wrapGate של שאר שורות השער.
-      // **S6.3 (חיבור הגדרות):** מקור הטקסט = שדות הפאנל של המקור
-      // (inp-book-back-* מ-default_settings) במפורש; המטא-דאטה של
-      // המסמך רק ממלאת את השדות (כמו במקור) — נפילה כשהשדה ריק.
-      // **S74 (בעיה 5 — גופן השער האחורי):** כל שורות השער האחורי בגופן
-      // ההגדרה shaar-back-text-font — ברירת המחדל שלו תוקנה לגופן ברירת
-      // המחדל האמיתי של הגרסה הישנה (Assistant ExtraLight — נמדד בייחוס
-      // עמ' 2: כל 5 השורות Assistant-ExtraLight בגדלים 13.5/10/11/10/9.5pt).
-      // עד כאן השורות לא נשאו גופן כלל — הן ירשו את גופן הגוף בניגוד למקור.
-      // העטיפה נמדדת באותו גופן (wrapGate) — המדידה = הרינדור.
-      const shBackFontApi = fontApiFor(settings['shaar-back-text-font']);
-      const backFont = settings['shaar-back-text-font'] || null;
-      const backBoxW = GEO.PAGE_W - 110 * (96 / 25.4);
-      const copyright = cfg.backCopyright || meta.copyright || '';
-      const publisher = cfg.backPublishing || meta.publisher || '';
-      const contact = cfg.backContact || meta.contact || '';
-      const extra = cfg.backExtra || meta.extra || '';
-      const out = [];
-      if (copyright) out.push({ text: 'כל הזכויות שמורות', sizePt: 13.5, y: pt(191.8), color: colOf(settings['shaar-back-text-color']), font: backFont });
-      wrapGate(copyright, 10, backBoxW, shBackFontApi).forEach((l, i) => out.push({
-        text: l, sizePt: 10, y: pt(216.4) + i * 10 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color']), font: backFont
-      }));
-      wrapGate(publisher, 11, backBoxW, shBackFontApi).forEach((l, i) => out.push({
-        text: l, sizePt: 11, y: pt(357.3) + i * 11 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color']), font: backFont
-      }));
-      wrapGate(contact, 10, backBoxW, shBackFontApi).forEach((l, i) => out.push({
-        text: l, sizePt: 10, y: pt(500.9) + i * 10 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color']), font: backFont
-      }));
-      wrapGate(extra, 9.5, backBoxW, shBackFontApi).forEach((l, i) => out.push({
-        text: l, sizePt: 9.5, y: pt(644.3) + i * 9.5 * (96 / 72) * 1.3, color: colOf(settings['shaar-back-text-color']), font: backFont
-      }));
-      return out.filter(g => g.text);
-    }
-    if (type === 'shaar-sub' && h1Token) {
-      const parts = h1Token.text.split(/[-–—]/).map(s => s.trim()).filter(Boolean);
-      const first = parts[0] || h1Token.text;
-      const rest = parts.slice(1).join(' - ');
-      const hasSub = !!String(rest || '').trim();
-      // **D-89:** כותרת השער ב-#0F172A — נמדד בייחוס עמ' 7; המשנה שחורה
-      // ונעטפת לרוחב תיבת השער (378px) כמו ה-div במקור.
-      // **S6.3:** גודל הכותרת מההגדרות (s-h1; במקור 50pt) וגופן הרמה
-      // (f-h1 ⇒ Lia Sgula); ההמשך ב-f-h1-sub של המקור (David Libre).
-      const subBoxW = GEO.PAGE_W - 110 * (96 / 25.4);
-      const h1Lines = wrapGate(first, cfg.h1Size, subBoxW, h1FontApi);
-      const h1LineH = cfg.h1Size * (96 / 72) * 1.3;
-      // **S6.3 (בטיחות עטיפה):** כמו בשער הראשי — ההמשך לפחות 25px מתחת
-      // לשורת הכותרת האחרונה.
-      // **S74 (בעיה 3 — חפיפת טקסט/עיטור בשערי המשנה):** כשיש כותרת-משנה
-      // מוצב גל-העיטור בין שני חלקי הכותרת, מעוגן לראש כותרת-המשנה
-      // (subTop−40.8 — היחס המכויל מהייחוס: 585.5 = 626.3−40.8). בעבר היה
-      // מיקום קבוע (585.5) — כותרת שנעטפה לשורות חדרה לתוכו. כעת מרווח
-      // הבטיחות מתחת לכותרת גדל להכיל את העיטור המעוגן (40.8px) — והעיטור
-      // עוקב אחרי הכותרת-משנה בפועל, גם כשהיא נדחפת מטה מעטיפת הכותרת.
-      const h1Bottom = pt(345.7) + h1Lines.length * h1LineH;
-      const restY = Math.max(pt(469.7), h1Bottom + (hasSub ? 40.8 : 25));
-      const out = h1Lines.map((l, i) => ({
-        text: l, sizePt: cfg.h1Size, y: pt(345.7) + i * h1LineH,
-        color: colOf(settings['heading-1-color']), font: settings['heading-1-font'] || null
-      }));
-      wrapGate(rest, cfg.h1SubSize, subBoxW, h1SubFontApi).forEach((l, i) => out.push({
-        text: l, sizePt: cfg.h1SubSize, y: restY + i * cfg.h1SubSize * (96 / 72) * 1.3, color: colOf(settings['shaar-subtitle-color']), font: 'David Libre', sub: true
-      }));
-      return out.filter(g => g.text);
-    }
-    return [];
-  }
-  if (cfg.showMainShaar) { const g0 = newPage('shaar-main'); g0.gateLines = gateLinesFor('shaar-main'); }
-  if (cfg.showBackShaar) { const g1 = newPage('shaar-back'); g1.gateLines = gateLinesFor('shaar-back'); }
-
-  // ---------- זרימת מקטע ----------
-  function flowSection(sec) {
-    const toks = sec.tokens;
-    let ti = 0;
-    let sectionFirst = true;
-    const isH0 = sec.newPage && sec.newPage.level === 0;
-    const isH2 = sec.newPage && sec.newPage.level === 2;
-    // **S4.26 (איפוס מספור פר-פרק):** כל פתיחת מקטע h2/h0 פותחת ספירה חדשה
-    // (דיווח משתמש: "איפוס מספרי הערות בכל פרק (כותרת 2) ולא בכל עמוד").
-    // מצב page שומר על המספור העמודי ההיסטורי; continuous אינו מאפס לעולם.
-    if ((isH0 || isH2) && fnResetMode === 'siman') {
-      fnChapterCounter = 0;
-      fnNoteNumbers.clear();
-    }
-    // **S4.24 (תיקון שורש חפיפות גוף/הערות):** paraNotes ו-tokPages עברו
-    // להיקף ה**מקטע** (היו per-page). פסקה שנחתכה בין עמודים חוזרת
-    // לעמוד הבא עם pending — אבל requeueParaNotes שלה מצא מפה ריקה
-    // וההערה נכנסה לתור רק בזמן הפליטה (אחרי בדיקת ההתאמה!) — הגוף
-    // מולא עד תחתית הזרימה בלי תקציב, ואזור ההערות נבנה מעליו. נמדד
-    // במודל: 50 עמודים עם חפיפה עד 675px. עכשיו ההערות של המשך-פסקה
-    // נכנסות לתור **לפני** המילוי — כמו התקציב-המוקדם של פסקה חדשה
-    // (וכמו שהמקור מתנהג: התקציב מצטמצם בכל עמוד שבו לפסקה שורות).
-    const paraNotes = new Map(); // tokenId -> [{text}] (מופקות בפעם הראשונה)
-    const tokPages = new Map();  // tokenId -> Set(pageIndex)
-
-    while (ti < toks.length || pending || (sectionFirst && sec.newPage)) {
-      // **S5.2 (F3):** סעיף עם newPage ובלי אף token — עמוד הפתיחה (הכותרת)
-      // עדיין חייב להיווצר; בלי התנאי הזה הלולאה לא רצה כלל והכותרת אבדה.
-      const pageIsSectionOpen = sectionFirst && !!sec.newPage; // **S4.19:** להזזת אזור-h2/h0 בסוף העמוד
-      const pg = newPage(isH0 ? (sectionFirst ? 'preface' : 'regular')
-        : (sectionFirst && isH2 ? 'sign-open' : 'regular'));
-      if (pageIsSectionOpen) pg._secStartLevel = sec.newPage.level; // **EXT-15:** פתיחת מקטע — לכלל העמוד האי-זוגי
-      let top = GEO.FLOW_TOP;
-      if (sectionFirst && sec.newPage) {
-        if (isH0) {
-          // **S4.24 (כותרת-h0 ארוכה מהפס — עטיפה):** שורות נוספות בפסים של 30px
-          // מתחת למיקום המכויל (309.0) — השורה הראשונה זהה לחלוטין לחד-שורתי.
-          // **S74 (בעיה 1 — שמירת הרווח התחתון בעטיפה):** כל שורה עטופה נוספת
-          // דוחפת את ראש הזרימה בפס השורה שלה (30px) — המרווח שמתחת לכותרת
-          // חד-שורתית נשמר גם כשהכותרת נעטפת. בעבר top נשאר קבוע והשורות
-          // העודפות חפפו את ראש הזרימה (בעיה 1: "רווח תחתון לא נשמר בשבירה").
-          const h0Lines = wrapText(sec.newPage.text, { measureTextWidth: (t, sz) => brk.hw(t, sz, h0Font) }, SINGLE_W, SZ.h0Title);
-          (h0Lines.length ? h0Lines : ['']).forEach((h0seg, li) => pg.bands.push({ kind: 'h0-title', text: h0seg, sizePt: SZ.h0Title, y: 309.0 + li * 30, h: 30, tokenId: li === 0 ? sec.newPage.id : null }));
-          top = GEO.FLOW_TOP + H0_AREA_H + (h0Lines.length - 1) * 30;
-          currentH2 = sec.newPage.text;
-        } else if (isH2) {
-          // **S4.19 (שני אזורי-h2 — מדידה מהייחוס):** עמוד h2 שהמקטע שלו נפתח
-          // בכותרת-רוחבית (h3-span) ממשיך להשתמש בכיול S4.14 (261.3 — נמדר מעמ' 11
-          // וכולל בתוכו את ה-fn-shift, העיטורים ואזור ה-span יחד); עמוד h2 רגיל
-          // (בלי span — עמ' 24/38) משתמש ב-spacer המלא 284.25. דריסה לניסויים:
-          // RED_H2_SPAN_EXEMPT=0 מבטל את הפטור.
-          const spanExempt = toks.length && toks[0].type[0] === 'h'
-            && (HEADING_MODES[toks[0].level] || 'inline_2col') === 'span_1col'
-            && H2_SPAN_EXEMPT;
-          const areaH = spanExempt ? 261.3 : H2_AREA_H;
-          if (cfg.autoSimanH2) {
-            simanCounter++;
-            pg.bands.push({ kind: 'h2-siman', text: 'סימן ' + toGematria(simanCounter), sizePt: SZ.siman, y: spanExempt ? 284.9 : 307.88, h: 36, tokenId: null });
-          }
-          const disp = sec.newPage.text.replace(/^סימן\s+[א-ת]+[:\-–—\s]*/i, '').trim();
-          // **S4.24 (כותרת-h2 ארוכה מהפס — עטיפה):** נמדד בחי — "בענין הזכרת
-          // שבת ור"ח בברהמ"ז…" 555.4px > 552.3 — גלישה שקטה. שורות נוספות
-          // בפסים של 30px מתחת למיקום המכויל; הראשונה זהה לחלוטין.
-          // **S74 (בעיה 1):** רוחב העטיפה = 60% מרוחב הפס (H23_TITLE_W) —
-          // כותרת ארוכה נשברת לשורות ממורכזות במקום למלא את הפס; וכל שורה
-          // עטופה דוחפת את ראש הזרימה בפס שלה — הרווח התחתון המוגדר נשמר.
-          const h2Lines = wrapText(disp, { measureTextWidth: (t, sz) => brk.hw(t, sz, h2Font) }, H23_TITLE_W, SZ.h2);
-          (h2Lines.length ? h2Lines : ['']).forEach((h2seg, li) => pg.bands.push({ kind: 'h2-title', text: h2seg, sizePt: SZ.h2, y: (spanExempt ? 321.1 : 344.05) + li * 30, h: 30, tokenId: li === 0 ? sec.newPage.id : null }));
-          currentH2 = disp;
-          // **S4.9 (תיקון קריטי):** הזרימה מתחילה מתחת לאזור ה-h2 (סימן+כותרת) —
-          // בלי זה הבלוקים מוצבים מראש העמוד, מתנגשים בכותרות וגוררים
-          // הסחת עימוד של ~29 שורות בכל עמוד פתיחת סימן.
-          // **S74 (בעיה 1):** +(שורות-1)×30 — שמירת הרווח התחתון בעטיפה.
-          top = GEO.FLOW_TOP + areaH + (h2Lines.length - 1) * 30;
-          pg._h2SpanExempt = spanExempt; // **S4.19:** לביטול הזזת ה-fn בסוף העמוד
-        }
-      }
-      setHeader(pg, currentH2);
-      sectionFirst = false;
-
-      const fnQueue = [];
-      let fnReserved = 0;
-      // **S75 (בקשה 1 — body-first):** תקרת התקציב לאורך המילוי — החלל שמתחת
-      // לגוף שכבר הונח (עם שורת-גוף אחת לפחות). התקציב לעולם לא חופף את
-      // הגוף ולא נוטל את מלוא העמוד: ההמשכים זורמים במקביל למילוי הגוף.
-      // במצב legacy — ללא שינוי (לולאת ה-F2 של S6.0 בלבד).
-      let fnReserveClampPx = Infinity;
-      const applyFnReserve = () => {
-        fnReserved = fnQueue.length
-          ? (fnBodyFirst ? Math.min(fnReserveFor(fnQueue), fnReserveClampPx) : fnReserveFor(fnQueue))
-          : 0;
-      };
-      if (fnBodyFirst) fnReserveClampPx = Math.max(GEO.FN_PITCH, FLOW_BOTTOM - top - GEO.LINE_H);
-      // **S4.24 (המשכי הערות מקוצצות):** בראש תור כל עמוד — ההמשכים
-      // מהעמוד הקודם (כמו pendingBarNotes בנתיב ה-DP: המשכים מהעמוד
-      // הקודם קודם כל — שמירת סדר ההערות). הם נכנסים לתקציב מיד — לפני
-      // כל מילוי טורים.
-      if (pendingFootnotes.length) {
-        fnQueue.push(...pendingFootnotes.splice(0));
-        if (fnBodyFirst) {
-          // **S75:** בלי לולאת ה-F2 — ה-clamp חוסם את התקציב מעל החלל שמתחת
-          // ל-top (שורת-גוף אחת לפחות מובטחת ממילא), וההמשכים נשארים שלמים
-          // בתור — ההצבה נחתכת לפי החלל בפועל והעודף ממשיך בעמוד הבא.
-          applyFnReserve();
-        } else {
-          fnReserved = fnReserveFor(fnQueue);
-          // **S6.0 (F2 — המשכים מול פתיחת מקטע):** עמוד פתיחת h2/h0 מתחיל את
-          // הזרימה מתחת לפס הכותרת (top≈391/356); carry מלא (851.7+38.5) היה
-          // מקפיץ את תחתית הטור מעל ה-top ⇒ אפס שורות גוף ואילוץ fit=1
-          // שמציב שורה בתוך אזור ההערות (חפיפת גוף/הערות של עד 46px).
-          // תוקם: ה-carry מוגבל לתקציב שמשאיר שורת-גוף אחת לפחות מתחת
-          // ל-top; העודף חוזר ל-pendingFootnotes וזורם בעמוד הבא (סדר נשמר).
-          // בעמוד רגיל ה-cap (893.56) גבוה מהתקרה המלאה (890.2) — אין שינוי.
-          const fnCarryCap = Math.max(0, FLOW_BOTTOM - top - GEO.LINE_H);
-          while (fnQueue.length && fnReserveFor(fnQueue) > fnCarryCap) {
-            pendingFootnotes.unshift(fnQueue.pop());
-          }
-          fnReserved = fnQueue.length ? fnReserveFor(fnQueue) : 0;
-        }
-      }
-      // **תיקון כפילות הערות בעמוד (נמצא בקורפוס הגדול):** בעבר היו שלושה מסלולי
-      // דחיפה לתור — תקציב-מוקדם, המשך-פסקה ומיקום-שורה — ושניים מהם לא בדקו
-      // דה-דופ, ולכן הערה של פסקה שנפתחה ומוקמה באותו עמוד הופיעה פעמיים
-      // (very_long: 70 עמודים עם הערות כפולות). כעת כל הכניסה לתור דרך
-      // enqueueNote — הערה קיימת לא נוספת שנית, והסמן נגזר ממקומה בתור:
-      // מספור עמודי עוקב מ־א ואילך, זהה בין סמן הגוף לראש ההערה בתחתית
-      // (הוכח מהייחוס: כל אזורי ההערות של המקור פותחים ב־א', והערה של
-      // פסקה חוצת-עמודים חוזרת בעמוד ההמשך עם סמן א' מחדש).
-      const enqueueNote = (text, dup, key) => {
-        // **S6.0 (F3 — כפילויות מזוהות לא נכון):** הדה-דופ לפי טקסט בלבד מזג
-        // שתי הערות שונות עם טקסט זהה ([שם] פעמיים בפרק — נפוץ בספרות תורנית)
-        // לרשומה אחת ⇒ אובדן תוכן (missing בחשבונאות). כעת הזהות היא מפתח
-        // מופע (token#ordinal); רשומות היסטוריות בלי מפתח ממשיכות להתאים
-        // לפי טקסט/srcText (המשכים מועברים מעמוד קודם — S4.26 נשמר).
-        const keyOf = (q) => (q && q.key != null ? q.key : null);
-        const k = key != null ? key : text;
-        let idx = fnQueue.findIndex(q => keyOf(q) != null
-          ? keyOf(q) === k
-          : (q.text === text || q.srcText === text));
-        if (idx < 0) {
-          // **S4.26 (מספור פר-פרק):** מספר יציב להערה בתוך הפרק — סמן הגוף
-          // וסמן הרישום זהים גם בהצגה חוזרת (פסקה חוצת-עמודים). מצב page
-          // ממשיך לגזור מקום בתור (התנהגות היסטורית).
-          let num = null;
-          if (fnResetMode === 'siman') {
-            num = fnNoteNumbers.get(k);
-            if (num == null) { fnChapterCounter++; num = fnChapterCounter; fnNoteNumbers.set(k, num); }
-          }
-          fnQueue.push({ text, dup, num, cont: false, key: key != null ? key : undefined });
-          idx = fnQueue.length - 1;
-        }
-        const q = fnQueue[idx];
-        const mkNum = (q && q.num != null) ? q.num
-          : (fnResetMode === 'siman' && fnNoteNumbers.has(k) ? fnNoteNumbers.get(k) : idx + 1);
-        // **EXT-17:** המפריד אחרי המספר — הגדרת המקור (note-num-separator).
-        return LineBreaker.markerWord(mkNum, cfg.fnNumSeparator);
-      };
-      // **S4.9 (התנהגות המקור הנצפית):** הערות של פסקה מופיעות ומוזרמות לתקציב
-      // בכל עמוד שבו לפסקה שורות — גם בהמשכים (הייחוס מציג את הערה-א בעמודים
-      // 11 וגם 12, והתקציב מצטמצם כבר בעמוד הראשון של הפסקה).
-      const requeueParaNotes = (tokenId) => {
-        const notes = paraNotes.get(tokenId);
-        if (!notes) return;
-        // **S6.0 (F3):** התאמת המשכים לפי מפתח המופע כשקיים — ולפי
-        // טקסט/srcText כשלא (רשומות היסטוריות) — שומר על הגנת S4.26 מפני
-        // הכפלת הערה שכבר זורמת, בלי למזג הערות שונות בעלות טקסט זהה.
-        const matchKey = (c) => (c && c.key != null ? c.key : (c && (c.srcText || c.text)));
-        for (const n of notes) {
-          // **S4.24:** הערה שקוצצה בתקרת המרזב ועודנה ממתינה בהמשכים — לא
-          // חוזרת שנית במלואה (ההמשך הקצוץ ממשיך אותה); המקוריות נשמרת
-          // ב-srcText לזיהוי.
-          // **S4.26 (תיקון שכפול):** גם המשך שכבר נכנס לתור העמוד (אחרי
-          // ה-splice בפתיחת העמוד) חוסם את ההוספה החוזרת — בעבר ההערה
-          // זרמה פעמיים במקביל (ההמשך + ההערה המלאה מחדש): הערה של 4,500
-          // מילים תפסה 13 עמודי הערות במקום 7, עם חזרה שלמה של הטקסט.
-          if (pendingFootnotes.some(c => (n.key != null ? matchKey(c) === n.key : (c.srcText || c.text) === n.text))) continue;
-          if (fnQueue.some(q => (n.key != null ? matchKey(q) === n.key : (q.srcText || q.text) === n.text))) continue;
-          enqueueNote(n.text, true, n.key);
-        }
-        applyFnReserve();
-      };
-
-      // **S75 (בקשה 1):** הסרת הערות הפסקה מהתור כשהפסקה לא הציבה שום שורה
-      // בעמוד זה (fit0/אלמנה) — ההערה חייבת להתחיל בעמוד הסמן, והסמן עבר
-      // לעמוד הבא; בלי זה ההערה הייתה מתחילה עמוד לפני הסמן שלה. המספור
-      // הפרקי יציב (fnNoteNumbers) — אותו סמן נבנה מחדש בעמוד הבא.
-      const rollbackParaNotesFromQueue = (tokenId) => {
-        if (!fnBodyFirst || tokenId == null) return;
-        const prefix = String(tokenId) + '#';
-        const before = fnQueue.length;
-        for (let i = fnQueue.length - 1; i >= 0; i--) {
-          const q = fnQueue[i];
-          if (q && q.key != null && String(q.key).startsWith(prefix)) fnQueue.splice(i, 1);
-        }
-        if (fnQueue.length !== before) applyFnReserve();
-      };
-
-      // ---- מבנה העמוד: מחסנית של פסים ובלוקים; מילוי דו-טורי (ימני ואז שמאלי) ----
-      const stack = [];
-      let block = null;
-      const openBlock = (yTop) => {
-        block = { yTop, cols: [[], []], cursor: [yTop, yTop], fill: 0 };
-        stack.push(block);
-      };
-      const blockBottom = () => block ? Math.max(block.cursor[0], block.cursor[1]) : top;
-      const colBottom = () => FLOW_BOTTOM - fnReserved;
-
-      // **S4.13 (rollbackTrailingHeadings של המקור):** כותרות עוקבות בסוף הטור
-      // הנוכחי חוזרות יחד עם הפסקה שלא נכנסה — כדי שכותרת לא תישאר יתומה
-      // בתחתית הטור (המקור: tokenIndex -= rollbackTrailingHeadings(targetCol)).
-      // מחזיר כמה הוסרו; מעדכן את ה-cursor של הטור.
-      const rollbackTrailingHeadings = () => {
-        if (!block) return 0;
-        // **S4.24:** כותרת ארוכה = מספר יחידות (עטיפה) — המספר המוחזר הוא
-        // מספר ה**טוקנים** הנפרדים (לפי tokenId), לא מספר היחידות — ti
-        // מופחת בו ובעבר (כותרת=יחידה אחת) שני המספרים היו זהים.
-        const seen = new Set();
-        while (block.cols[block.fill].length) {
-          const lastU = block.cols[block.fill][block.cols[block.fill].length - 1];
-          if (lastU.kind !== 'heading') break;
-          block.cols[block.fill].pop();
-          block.cursor[block.fill] -= lastU.h;
-          if (lastU.tokenId != null) seen.add(lastU.tokenId);
-        }
-        return seen.size;
-      };
-
-      // **S72:** דגל דיווח אי-איזון לעמוד הנוכחי — מונע דיווח כפול בין
-      // finalizeBlock (סגירות מוקדמות) לבין הדיווח שאחרי מתיחת סוף-העמוד.
-      let imbalanceReported = false;
-
-      // **S4.13 (היגיון סיום בלוק — העתק מהמקור, שורות 3946-3997):** במקור כל
-      // בלוק מסתיים באחד מארבעה: (1) סוף פרק → איזון תמיד; (2) הטוקן הבא
-      // כותרת-רוחבית (span_1col) → איזון; (3) הטור הימני גולש לגובה הפנוי או
-      // הפרש הטורים > 60px → איזון; (4) אחרת — המילוי נשמר (במקור: מתיחה
-      // אנכית עדינה של הטור הקצר, שאינה מזיזה נקודות חיתוך ולכן לא ממומשת
-      // כאן — **S72 (שיפור 1): כעת מיושמת** ב-alignBlockBottoms, לכל
-      // הסעיפים, אחרי הפיצול ולפני המדידה). ה-S4.12 איזן בלי-תנאי
-      // בכל נקודות היציאה — עכשיו נאמן למקור.
-      const finalizeBlock = (blk, nextTok, sectionEnd, pageClose = false, reason = '') => {
-        if (!blk || isH0) return;
-        if (!(blk.cols[0].length || blk.cols[1].length)) return;
-        const availH = colBottom() - blk.yTop;
-        /** **S6.2:** דיווח שארית בלתי-פתירה אחרי איזון — כולל טור ריק לחלוטין
-         * (בקשת המשתמש המפורשת: "בדיקת אי האיזון תופסת גם מקרים שטור אחד
-         * ריק לחלוטין"). מדווח רק כשמילא המקום לתקן: איזון רץ ולא הצליח
-         * (מגבלות אלמנה/יתום min-2, או פסקה בת 2-3 שורות שאינה ניתנת
-         * לפיצול) — כמו 5 העמודים המגבלים בייחוס המקור עצמו. */
-        const balanceAndReport = (why) => {
-          balanceBlock(blk, availH);
-          // **S72 (שיפור 1 — סדר החלה נכון):** מתיחת יישור-התחתיות אחרי
-          // הפיצול ולפני המדידה — ה-ledger מדווח רק את השארית האמיתית
-          // אחרי שני הכלים (הזזת שורות ← מתיחה עדינה), לא שארית ביניים.
-          alignBlockBottoms(blk);
-          // **S1-ב:** הן התנאי והן הנתונים ברשומה — ברמת העמוד (pageEffCols),
-          // לא ברמת הבלוק הנסגר. בלוק קצר שנסגר בטור ימני בלבד באמצע עמוד
-          // מלא הוא טיפוגרפיה תקינה ואינו מדווח; עמוד שטורו השמאלי ריק באמת
-          // ממשיך להיות מדווח וממופה לאינדקס הסופי.
-          const eff = pageEffCols();
-          const aH = colVisualH(eff[0]);
-          const bH = colVisualH(eff[1]);
-          // **S6.3:** הסף מההגדרות (imbalance-max-delta-px; היה 60px קשיח —
-          // שלוש שורות ומעלה לא דווחו כלל). הגרנולריות של איזון בגבולות שורה
-          // היא פיץ' אחד (~16px) — מה שנותר מעל הסף אחרי הפיצול האופטימלי
-          // והמתיחה העדינה הוא אי-איזון אמיתי בלתי-פתיר (אלמנה/יתום min-2,
-          // או קיבולת מתיחה שאזלה) ומדווח. **S72:** המדידה בגובה-דיו —
-          // תחתית הטקסט הנראה, כהגדרת המשתמש.
-          if (eff[1].length === 0 || Math.abs(aH - bH) > cfg.imbalanceMax) {
-            imbalanceReported = true;
-            const rec = ledger.create('column-imbalance', `balance@p${pages.length - 1}`, pages.length - 1,
-              { emptyCol: eff[1].length === 0, deltaPx: Math.round(Math.abs(aH - bH)), reason: why }, 'legacy-flow');
-            ledger.transition(rec.issue_id, 'persists', 'legacy-flow',
-              `unfixable after split+stretch (reason=${why})`);
-          }
-        };
-        if (sectionEnd) { balanceAndReport('section-end'); return; }
-        const nextIsSpan = nextTok && nextTok.type[0] === 'h'
-          && (HEADING_MODES[nextTok.level] || 'inline_2col') === 'span_1col';
-        if (nextIsSpan) {
-          balanceAndReport('before-span');
-          return;
-        }
-        // **S6.2 (בקשת משתמש — "ולמה איזון טורים לא מיושם?"): החזרת סעיף 3
-        // של המקור בסגירות-עמוד שהבלוק סופי בהן.** S4.14 ביטל את האיזון
-        // בכל סגירת עמוד על בסיס עמ' 31/44/48 בייחוס — אך אלה סגירות
-        // "העמוד התמלא" (חיתוך p-cut בתחתית הטור; שתי הסגירות הללו נשארות
-        // ללא איזון, כמקור). מדידה מחדש של הייחוס כולו (layout-reference.json,
-        // 43 עמודי גוף דו-טוריים) מראה: **0** עמודים עם טור שמאלי ריק לגמרי
-        // ו-38/43 מאוזנים — כלומר המקור כן איזן כשהבלוק נקטע מוקדם (שער
-        // תקציב ההערות, span שלא נכנס, כותרת שלא נכנסה). הסף 60px = סף
-        // המקור עצמו (סעיף 3). סגירת "עמוד מלא" (חיתוך בתחתית הטור) אינה
-        // עוברת לכאן — pageClose=false בשני נתיבי החיתוך.
-        if (pageClose) {
-          const rH = colHeightUnits(blk.cols[0]);
-          const lH = colHeightUnits(blk.cols[1]);
-          // **S6.3:** סף ההפעלה מההגדרות (היה 60px קשיח) — איזון בכל
-          // סגירת עמוד שהטורים אינם סימטריים (בקשת המשתמש המפורשת).
-          if (blk.cols[1].length === 0 || Math.abs(rH - lH) > cfg.imbalanceMax) {
-            balanceAndReport(reason || 'page-close');
-          }
-        }
-      };
-
-      // ================= S4.17: חילוץ סמנים + מתיחה/כיווץ/משיכת זנב =================
-      // (העתק נאמן של stretchPageToBottom + tryReclaimOrphanTail + מערכת
-      // compressColumnBy של v21-glm — ההוכחות מהייחוס בבלוק הקבועים למעלה)
-
-      /** חילוץ שורות עם סמני הערות — משותף למילוי הרגיל ולמשיכת הזנב היתום
-       * (במקור: applyDelimiterStyles על חתיכת ה-p בכל נתיב הצבה). */
-      const emitLinesWithMarkers = (tok, lines, startIdx, count) => {
-        const emitted = [];
-        // **S6.0 (F3):** אורדינל ההערה בפסקה — נגזר מהמיקום המוחלט בשורות
-        // (עמיד לפליטות חוזרות: אותו מיקום ⇒ אותו מפתח ⇒ אותו סמן/רשומה).
-        const notesUpTo = (lineAbs, wordIdx, beforeStart) => {
-          let c = 0;
-          for (let lj = 0; lj < lineAbs; lj++) {
-            for (const lw of (lines[lj] ? lines[lj].words : [])) c += findNotes(lw, cfg.fnOpen, cfg.fnClose).length;
-          }
-          const lws = lines[lineAbs] ? lines[lineAbs].words : [];
-          for (let wi2 = 0; wi2 < wordIdx; wi2++) c += findNotes(lws[wi2], cfg.fnOpen, cfg.fnClose).length;
-          c += findNotes(lws[wordIdx] || '', cfg.fnOpen, cfg.fnClose).filter(x => x.start < beforeStart).length;
-          return c;
-        };
-        for (let k = 0; k < count; k++) {
-          const ln = lines[startIdx + k];
-          const words = [];
-          const flags = [];
-          const starts = []; // **S4.24:** דגלי קצה-סוגריים — ממופים דרך פיצול הסמנים
-          const ends = [];
-          const markerIdx = []; // אינדקסים של סמני ההערות (להסרה מדויקת במודל)
-          for (let wi = 0; wi < ln.words.length; wi++) {
-            const w = ln.words[wi];
-            // **S4.19:** דגל הסוגריים של המילה המקורית — מועבר לכל חלקיה
-            // (קידומת/סיומת סביב סמן הערה); הסמן עצמו אינו טקסט-סוגריים.
-            const wp = ln.parenFlags && wi < ln.parenFlags.length ? !!ln.parenFlags[wi] : false;
-            // **S4.24:** דגלי קצה — הפריט הראשון של המילה יורש את starts,
-            // האחרון את ends (הרווחים הפנימיים סביב הסמן — כמו שנמדדו).
-            const wS = ln.parenStarts && wi < ln.parenStarts.length ? !!ln.parenStarts[wi] : false;
-            const wE = ln.parenEnds && wi < ln.parenEnds.length ? !!ln.parenEnds[wi] : false;
-            const firstAt = words.length;
-            const wNotes = findNotes(w, cfg.fnOpen, cfg.fnClose);
-            if (wNotes.length) {
-              let pos = 0;
-              for (const n of wNotes) {
-                const prefix = w.slice(pos, n.start);
-                if (prefix) { words.push(prefix); flags.push(wp); starts.push(false); ends.push(false); }
-                if (n.text) {
-                  // **S6.0 (F3):** מפתח מופע — token#ordinal; שתי הערות שונות
-                  // בעלות טקסט זהה ([שם] פעמיים) מקבלות רשומות וסמנים נפרדים.
-                  const ord = notesUpTo(startIdx + k, wi, n.start);
-                  const noteKey = `${tok.id}#${ord}`;
-                  const marker = enqueueNote(n.text, undefined, noteKey);
-                  if (!paraNotes.has(tok.id)) paraNotes.set(tok.id, []);
-                  if (!paraNotes.get(tok.id).some(x => x.key === noteKey)) {
-                    paraNotes.get(tok.id).push({ text: n.text, key: noteKey });
-                  }
-                  applyFnReserve(); // **S75:** גם בפליטת סמן — תקציב דרך נקודה אחת (clamp ב-body-first)
-                  markerIdx.push(words.length);
-                  words.push(marker);
-                  flags.push(false);
-                  starts.push(false); ends.push(false);
-                }
-                pos = n.end;
-              }
-              const suffix = w.slice(pos);
-              if (suffix) { words.push(suffix); flags.push(wp); starts.push(false); ends.push(false); }
-            } else {
-              words.push(w);
-              flags.push(wp);
-              starts.push(false); ends.push(false);
-            }
-            // **S4.24:** הפריט הראשון של המילה יורש את דגל ה-starts, האחרון את
-            // ה-ends — הרווחים הפנימיים סביב סמן הערה נשארים בגודל השורה
-            // (כך נמדדו בשבירה; הסמן אינו טקסט-סוגריים).
-            starts[firstAt] = wS;
-            ends[words.length - 1] = wE;
-          }
-          emitted.push({ ...ln, words, markerIdx, parenFlags: flags, parenStarts: starts, parenEnds: ends });
-        }
-        return emitted;
-      };
-
-      /** הטורים האפקטיביים של בלוק — אחרי איזון ה-split הם הסמכות (layoutStack
-       * קורא מהם); מתיחה/כיווץ/משיכה חייבות לפעול על אותן יחידות בדיוק. */
-      const effCols = (blk) => blk.split ? [blk.split.r, blk.split.l] : [blk.cols[0], blk.cols[1]];
-      /** **S1-ב (אמת-דיווח ברמת העמוד):** עמודות אפקטיביות מאוחדות של כל
-       * הבלוקים במחסנית העמוד. רשומות אי-האיזון נקראות על-ידי המשתמש, ה-UI
-       * והבדיקות כטענה על **העמוד** ("טור שמאלי ריק לחלוטין" — בקשת המשתמש
-       * המפורשת), אך נמדדו עד כה על **הבלוק הנסגר בלבד**: בעמוד רב-בלוקים
-       * נרשם emptyCol=true על עמוד שטורו השמאלי מלא מבלוקים קודמים (הוכחה:
-       * מסמך הבדיקה הקבוע לאחר D-98 — רשומות שהצביעו על עמודים עם 13/29/21
-       * שורות בטור השמאלי). המדידה עוברת לרמת העמוד; לוגיקת האיזון
-       * עצמה (balanceBlock, סעיף 3 של המקור) אינה מושפעת — השינוי בדיווח
-       * בלבד, וה-layoutHash אינו כולל את ה-ledger (הוכחה בבדיקת הרצה). */
-      const pageEffCols = () => {
-        const r = [], l = [];
-        for (const b of stack) {
-          if (b.type === 'span') continue;
-          const e = effCols(b);
-          r.push(...e[0]);
-          l.push(...e[1]);
-        }
-        return [r, l];
-      };
-
-      /** **S72 (שיפור 1 — יישור תחתיות בסיום בלוק; השלמת סעיף 4 של S4.13):**
-       * המקור מסיים כל בלוק באחד מארבעה; בסעיף 4 ("אחרת — המילוי נשמר")
-       * הוא מבצע "מתיחה אנכית עדינה של הטור הקצר" — שלא מומשה בפורט
-       * (ראה ההערה ב-S4.13 לעיל). הוראת המשתמש המפורשת (11.11): "שבכל
-       * בלוק של שני טורים, קצה התחתון של הטקסט שבשני הטורים יהיה שווה"
-       * — כאן היא מומשה, וגם לאחר איזון הפיצול (סעיפים 1-3) לסגירת
-       * שארית הקוונטיזציה (פיץ' שלם אחד שחלוקת שורות אינה יכולה לסגור).
-       * תנאי ההפעלה ("הכלי עובד רק במקרה הנצרך לו"): בלוק דו-טורי סופי,
-       * שני הטורים לא-ריקים, ו-Δ מעל הסף (imbalance-max-delta-px).
-       * המכניקה — justifyColUnits של v21 (ריווח-פסקה עד 9 + פס עד +3px
-       * לשורה) — מוכוונת אל תחתית הטור הארוך ואינה עוברת אותה לעולם:
-       * blockBottom()=max(cursor) אינו משתנה (רק הסמן הקצר עולה), ולכן
-       * span/בלוק/עמוד/תקציב-הערות שאחרי אינם זזים; אף שורה אינה עוברת
-       * בין טורים — הוכחת נייטרליות: layoutHash זהה ביט-לביט (נאמד ב-S722). */
-      const alignBlockBottoms = (blk, opts = {}) => {
-        if (!blk || blk.type === 'span') return { stretched: false, delta: 0 };
-        const cols = effCols(blk);
-        if (!(cols[0].length && cols[1].length)) {
-          return {
-            stretched: false, emptyCol: true,
-            delta: Math.abs(colVisualH(cols[0]) - colVisualH(cols[1]))
-          };
-        }
-        // **S72:** מדידת גובה-דיו (בלי מרווח-הזנב) — ההגדרה שנתן המשתמש
-        // היא שוויון תחתיות הטקסט הנראה, לא של תיבות-השוליים.
-        const rV = colVisualH(cols[0]);
-        const lV = colVisualH(cols[1]);
-        const delta = Math.abs(rV - lV);
-        if (delta <= cfg.imbalanceMax) return { stretched: false, delta, within: true };
-        const shortI = rV < lV ? 0 : 1;
-        const shortCol = cols[shortI];
-        const tGapShort = trailingGapOf(shortCol);
-        const tGapTall = trailingGapOf(cols[1 - shortI]);
-        // **S72 (נייטרליות מלאה — opts.keepMax):** בקריאה היחידה שבה המילוי
-        // ממשיך אחרי הבלוק (איזון שלפני span שנכנס), תחתית-המודל של הבלוק
-        // (max cursor — הבסיס להחלטות כניסת-span/שער-תקציב/שבירה) חייבת
-        // להישאר זהה ביט-לביט: היעד חסום כך שגובה-המודל של הטור הקצר
-        // (כולל מרווח-הזנב שלו) לא יעבור את תחתית-המודל המקורית. בשאר
-        // הקריאות (סגירות עמוד — העמוד נסגר מיד) אין צרכן ל-cursor והיעד
-        // חופשי. תקרה נוספת בשני המצבים: תחתית הזרימה/התקציב (colBottom).
-        const maxBefore = Math.max(blk.cursor[0], blk.cursor[1]);
-        const visCeilKeepMax = Math.max(rV, lV) + Math.max(0, tGapTall - tGapShort);
-        const targetVis = Math.min(
-          Math.max(rV, lV),
-          colBottom() - blk.yTop,
-          opts.keepMax ? visCeilKeepMax : Number.POSITIVE_INFINITY
-        );
-        const targetAbs = blk.yTop + targetVis + tGapShort;
-        justifyColUnits(shortCol, blk.yTop, targetAbs, delta + 1, JUSTIFY_MAX_LH_EXTRA);
-        // **S72 (עומס משותף — v21 compressColumnBy):** אם המתיחה לבדה לא סגרה
-        // (קיבולת 3px/שורה אזלה — טורים קצרים של 3-6 שורות), הטור הארוך
-        // מכווץ בחזרה לקראת הקצר במנגנון הכיווץ של המקור: מרווח→פס-עד-
-        // הבסיס→2px מתחת לבסיס לשורה, בגג כולל 30px לעמוד (כפי שנמדד
-        // בייחוס — 74 זוגות פסים ב-19-20px = בסיס−2). הגנות: מרווח-הזנב
-        // של היחידה האחרונה מוחלף זמנית ב-0 (אינו דיו — כיווצו אינו מזיז
-        // את תחתית הטקסט) ומוחזר; הכמות המשוחררת מדויקת לפער בלבד.
-        let afterStretch = Math.abs(colVisualH(cols[0]) - colVisualH(cols[1]));
-        if (afterStretch > cfg.imbalanceMax) {
-          const tallCol = cols[1 - shortI];
-          const lastU = tallCol[tallCol.length - 1];
-          const savedGap = lastU && lastU.kind === 'para'
-            ? (lastU.gapPx != null ? lastU.gapPx : 7) : null;
-          if (savedGap != null) lastU.gapPx = 0;
-          compressColUnits(tallCol, afterStretch, RECLAIM_BELOW_BASE, ALIGN_COMPRESS_MAX);
-          if (savedGap != null) lastU.gapPx = savedGap;
-        }
-        const nR = colHeightUnits(cols[0]);
-        const nL = colHeightUnits(cols[1]);
-        if (opts.keepMax) {
-          // תחתית-המודל נשמרת בדיוק (ההחלטות בזרימה אינן מושפעות כלל)
-          blk.cursor[0] = maxBefore;
-          blk.cursor[1] = maxBefore;
-        } else {
-          blk.cursor[0] = blk.yTop + nR;
-          blk.cursor[1] = blk.yTop + nL;
-        }
-        return { stretched: true, delta, deltaAfter: Math.abs(colVisualH(cols[0]) - colVisualH(cols[1])) };
-      };
-
-      /** v21 columnStretchCapacity: כמה px אפשר למתוח טור — ריווח-פסקה עד
-       * JUSTIFY_MAX_GAP + תוספת פס עד JUSTIFY_MAX_LH_EXTRA (האחרון של הטור
-       * לא מקבל ריווח — כמו i < kids.length-1 במקור). */
-      const colStretchCap = (units) => {
-        let cap = 0;
-        units.forEach((u, i) => {
-          if (u.kind !== 'para') return;
-          if (i < units.length - 1) cap += Math.max(0, JUSTIFY_MAX_GAP - ((u.gapPx != null ? u.gapPx : 7) - 7));
-          const lh = u.lhPx != null ? u.lhPx : u.pitch;
-          cap += u.lines.length * Math.max(0, JUSTIFY_MAX_LH_EXTRA - (lh - u.pitch));
-        });
-        return cap;
-      };
-
-      /** v21 justifyColumnVertically — שלבי הריווח והפס בלבד. word-spacing מדולג
-       * בכל הנתיבים: הוכח מהייחוס שכיווץ/מתיחת רווחי-מילים לא שינו שם שום
-       * שבירת שורה (כל השורות זהות לשלנו), וריווח-מילים משנה גובה **רק** דרך
-       * עטיפה מחדש — כלומר לא פינה שום גובה בפועל. דילוג = נאמן לתוצאה. */
-      const justifyColUnits = (units, yTop, targetAbs, maxStretch, lhCapExtra) => {
-        let diff = targetAbs - (yTop + colHeightUnits(units));
-        if (!(diff > 0.5 && diff <= maxStretch)) return;
-        // שלב 1: ריווח בין פסקאות (paddingBottom עד JUSTIFY_MAX_GAP)
-        const gapKids = units.filter((u, i) => u.kind === 'para' && i < units.length - 1);
-        if (gapKids.length) {
-          const per = diff / gapKids.length;
-          for (const u of gapKids) {
-            const curPad = (u.gapPx != null ? u.gapPx : 7) - 7;
-            const add = Math.max(0, Math.min(per, JUSTIFY_MAX_GAP - curPad));
-            if (add > 0) u.gapPx = 7 + curPad + add;
-          }
-          diff = targetAbs - (yTop + colHeightUnits(units));
-          if (!(diff > 0.5)) return;
-        }
-        // שלב 2: מתיחת גובה-שורה — 8 מעברים × 50% מהשארית, בדיקה לפני כל
-        // פסקה (מניעת overshoot כמו במקור), תקרה min(lhCapExtra, 3)
-        const cap = Math.min(lhCapExtra, JUSTIFY_MAX_LH_EXTRA);
-        for (let pass = 0; pass < 8; pass++) {
-          const rest = targetAbs - (yTop + colHeightUnits(units));
-          if (!(rest > 0.5)) break;
-          const infos = units.filter(u => u.kind === 'para')
-            .map(u => ({ u, lh: u.lhPx != null ? u.lhPx : u.pitch, lines: u.lines.length }));
-          const totalLines = infos.reduce((a, x) => a + x.lines, 0);
-          if (!(totalLines > 0)) break;
-          const e = (rest / totalLines) * 0.5;
-          let changed = false;
-          for (const x of infos) {
-            const currentRest = targetAbs - (yTop + colHeightUnits(units));
-            if (currentRest <= 0.5) break;
-            const newLh = Math.min(x.lh + e, x.u.pitch + cap);
-            if (newLh <= x.lh + 0.01) continue;
-            x.u.lhPx = newLh;
-            changed = true;
-          }
-          if (!changed) break;
-        }
-      };
-
-      /** v21 compressColumnBy שלבים 1-3 (word-spacing מדולג — ראה justifyColUnits):
-       * padding → פס עד הבסיס → עד allowBelowBase מתחת לבסיס; בסדר היחידות —
-       * הפסקאות הראשונות של הטור סופגות ראשונות (בדיוק כמו שנמדד בייחוס). */
-      const compressColUnits = (units, neededPx, allowBelowBase, maxBelowTotal) => {
-        if (!(neededPx > 0)) return 0;
-        let freed = 0;
-        // **S4.18 (כיווץ מרווח-בסיס — ההוכחה מהייחוס):** המנוע המקורי דוחס את
-        // מרווח הפסקה הבסיסי עצמו, לא רק padding עודף: בעמ' 14 שמאל נמדדו
-        // מרווחי-פסקה 22.4-24.4px (בסיס 21.44 + ‏1-3px gap) מול 29px רגיל —
-        // כלומר gap 7→1-3. בלי שלב זה המשיכה של p14 דרשה 31.9px below-base
-        // (רק cap≥32 הצליח) בעוד המקור השלים אותה ב-gap ~16px + below ~16px.
-        // הרצפה 2px = התחתית הנמדדת בייחוס (מרווח 23.4px).
-        if (maxBelowTotal == null || !isFinite(maxBelowTotal) || maxBelowTotal > 0) {
-          for (const u of units) {
-            if (freed >= neededPx) break;
-            if (u.kind !== 'para') continue;
-            const curGap = u.gapPx != null ? u.gapPx : 7;
-            if (curGap > GAP_COMPRESS_FLOOR) {
-              const reduce = Math.min(curGap - GAP_COMPRESS_FLOOR, neededPx - freed);
-              u.gapPx = curGap - reduce;
-              freed += reduce;
-            }
-          }
-        }
-        for (const u of units) {
-          if (freed >= neededPx) break;
-          if (u.kind !== 'para') continue;
-          const curPad = (u.gapPx != null ? u.gapPx : 7) - 7;
-          if (curPad > 0) {
-            const reduce = Math.min(curPad, neededPx - freed);
-            u.gapPx = 7 + (curPad - reduce);
-            freed += reduce;
-          }
-        }
-        for (const u of units) {
-          if (freed >= neededPx) break;
-          if (u.kind !== 'para') continue;
-          const lh = u.lhPx != null ? u.lhPx : u.pitch;
-          if (lh <= u.pitch) continue;
-          const maxReduce = (lh - u.pitch) * u.lines.length;
-          if (maxReduce <= 0) continue;
-          const reduce = Math.min(maxReduce, neededPx - freed);
-          u.lhPx = lh - reduce / u.lines.length;
-          freed += reduce;
-        }
-        if (allowBelowBase > 0) {
-          // **S4.17 (כיוול מהייחוס):** כיווץ-מתחת-לבסיס מוגבל בגג כולל
-          // (maxBelowTotal) — כפי שהמקור מתנהג בפועל (ראה RECLAIM_COMPRESS_MAX).
-          let belowBudget = (maxBelowTotal != null && isFinite(maxBelowTotal))
-            ? Math.max(0, maxBelowTotal) : Infinity;
-          for (const u of units) {
-            if (freed >= neededPx || belowBudget <= 0) break;
-            if (u.kind !== 'para') continue;
-            const lh = u.lhPx != null ? u.lhPx : u.pitch;
-            const maxReduce = Math.min(allowBelowBase * u.lines.length, belowBudget);
-            if (maxReduce <= 0) continue;
-            const reduce = Math.min(maxReduce, neededPx - freed);
-            u.lhPx = lh - reduce / u.lines.length;
-            freed += reduce;
-            belowBudget -= reduce;
-          }
-        }
-        return freed;
-      };
-
-      /** v21 stretchPageToBottom + stretchLastBlockToBottom: מתיחת הבלוק האחרון
-       * של עמוד שהפרק ממשיך אחריו עד תחתית שטח הגוף; שני הטורים לאותו יעד
-       * (יעד = מינימום(תחתית−2, השגת הטור החלש)). דו-טורי בלבד — להקדמה
-       * (טור-יחיד) אין משיכת-יתום במקור, ומתיחתה אינה מזיזה שום שורה בין
-       * עמודים, ולכן אינה מיושמת כאן. */
-      const stretchLastBlockToBottom = () => {
-        const lastBlk = stack[stack.length - 1];
-        if (!lastBlk || lastBlk.type === 'span') return;
-        const cols = effCols(lastBlk);
-        if (!(cols[0].length || cols[1].length)) return;
-        // **S72 (שיפור 2 — יעד בגובה-דיו):** שני הטורים נמתחים עד אותה
-        // תחתית-דיו; היעד של כל טור במונחי המודל כולל את מרווח-הזנב שלו
-        // (פסקה=7px, כותרת=0) — כך התחתיות הנראות מתיישרות גם כשהמילוי
-        // התפרס בלי איזור וגם כשסוגי היחידות האחרונות שונים.
-        const tR = trailingGapOf(cols[0]), tL = trailingGapOf(cols[1]);
-        const rV = colHeightUnits(cols[0]) - tR;
-        const lV = colHeightUnits(cols[1]) - tL;
-        const topV = Math.max(rV, lV);
-        const free = (colBottom() - (lastBlk.yTop + topV)) - 1;
-        if (!(free > 0.5 && free <= PAGE_STRETCH_MAX)) return;
-        const reach = Math.min(rV + colStretchCap(cols[0]), lV + colStretchCap(cols[1]));
-        const target = Math.min(topV + free - 2, reach);
-        if (target - topV < 0.5) return;
-        justifyColUnits(cols[0], lastBlk.yTop, lastBlk.yTop + target + tR, PAGE_STRETCH_MAX + 40, JUSTIFY_MAX_LH_EXTRA);
-        justifyColUnits(cols[1], lastBlk.yTop, lastBlk.yTop + target + tL, PAGE_STRETCH_MAX + 40, JUSTIFY_MAX_LH_EXTRA);
-        lastBlk.cursor[0] = lastBlk.yTop + colHeightUnits(cols[0]);
-        lastBlk.cursor[1] = lastBlk.yTop + colHeightUnits(cols[1]);
-      };
-
-      /** v21 tryReclaimOrphanTail: זנב פסקה יתום של 1-2 שורות נמשך חזרה לעמוד
-       * ע"י כיווץ הטור השמאלי (עד 2px מתחת לבסיס לשורה) + באפר גלישה 12px.
-       * ההערות שבשורות הזנב נכנסות לתור העמוד **לפני** בדיקת המקום (כמו
-       * applyDelimiterStyles(!isDryRun) במקור), ואינן מוסגרות בחזרה גם אם
-       * המשיכה נכשלת — המקור לא מגלגל את התור לאחור. */
-      const tryReclaimOrphanTail = () => {
-        if (!pending) return false;
-        const remaining = pending.lines.length - pending.lineIdx;
-        if (remaining < 1 || remaining > 2) return false;
-        // **S4.18 (תנאי סוף-פסקה — ההוכחה מהייחוס):** המשיכה האמיתית היחידה
-        // של הייחוס (עמ' 14: 'ודיקא נמי' ×2) היא זנב **סוף פסקה** — השורות
-        // האחרונות של הפסקה חוזרות לעמוד. זנבות אמצע-פסקה (פסאודו-יתומים
-        // שנוצרים מהזזת גבול 1-2 שורות, כמו עמ' 22/33/39/43 שנצפו במודל)
-        // המקור אינו מושך — הפסקה ממשיכה לזרום בעמוד הבא כרגיל.
-        if (pending.lineIdx + remaining < pending.lines.length) return false;
-        if (isH0) return false; // המקור מושך יתומים רק בבלוקים דו-טוריים
-        const lastBlk = stack[stack.length - 1];
-        if (!lastBlk || lastBlk.type === 'span') return false;
-        const cols = effCols(lastBlk);
-        const lCol = cols[1];
-        const blockBottomNow = Math.max(lastBlk.cursor[0], lastBlk.cursor[1]);
-        const currentFree = colBottom() - blockBottomNow - 1;
-        // **S4.17 (כיוול מהייחוס):** הקיבולת למשיכה = ביטול המתיחה (padding +
-        // פס-עד-הבסיס — התקציב שהמתיחה עצמה הוסיפה) + כיווץ-מתחת-לבסיס בגג
-        // הנצפה בייחוס (~30px). בלי הגג, משיכה של 2 שורות בעמוד מלא (כיווץ
-        // ~44px) הייתה מצליחה בזמן שהמקור דחה אותה (הוכחה: עמ' 15←16 בייחוס —
-        // הזנב עבר עמוד למרות קיבולת נומינלית של 2px×44 שורות; לעומת זאת עמ' 14
-        // שמאל נמשך עם כיווץ ~20px ועמ' 20 שמאל עם ~26-34px).
-        let undoStretchCap = 0, lineCount = 0, gapCap = 0;
-        for (const u of lCol) {
-          if (u.kind !== 'para') continue;
-          undoStretchCap += Math.max(0, (u.gapPx != null ? u.gapPx : 7) - 7);
-          const lh = u.lhPx != null ? u.lhPx : u.pitch;
-          if (lh > u.pitch) undoStretchCap += (lh - u.pitch) * u.lines.length;
-          lineCount += u.lines.length;
-          // **S4.18:** קיבולת כיווץ מרווח-הבסיס (7→רצפה) — השלב הראשון של
-          // compressColUnits חייב להיכנס לשער הקיבולת, אחרת משיכות שהמקור
-          // מבצע (עמ' 14: gap ~20px + below ~16px) נדחות בשער לפני שמתחילות.
-          gapCap += Math.max(0, (u.gapPx != null ? u.gapPx : 7) - GAP_COMPRESS_FLOOR);
-        }
-        const totalCap = undoStretchCap + gapCap
-          + Math.min(RECLAIM_BELOW_BASE * lineCount, RECLAIM_COMPRESS_MAX);
-        // סמני ההערות של שורות הזנב — נכנסים לתור ומגדילים את התקציב מיד
-        const tok = pending.token;
-        const emitted = emitLinesWithMarkers(tok, pending.lines, pending.lineIdx, remaining);
-        const orphanH = remaining * GEO.LINE_H; // p-end המשכי בגובה בסיס (בלי חלון)
-        const neededPx = orphanH + 2;
-        if (currentFree + totalCap + ORPHAN_RECLAIM_BUFFER < neededPx) return false;
-        const compressNeeded = Math.max(0, neededPx - currentFree);
-        if (compressNeeded > 0) compressColUnits(lCol, compressNeeded, RECLAIM_BELOW_BASE, RECLAIM_COMPRESS_MAX);
-        // הנחת הזנב בטור השמאלי — p-end המשכי לכל דבר (בלי חלון/הערת-צד)
-        lCol.push({
-          kind: 'para', tokenId: tok.id, lines: emitted, from: pending.lineIdx,
-          isEnd: true, isCont: true, hasWindow: false, windowWords: null, windowW: 0,
-          pitch: GEO.LINE_H, lhPx: GEO.LINE_H, gapPx: 7,
-          sizePt: SZ.body, font: settings['body-font'] || null, sideNote: null
-        });
-        lastBlk.cursor[1] = lastBlk.yTop + colHeightUnits(lCol);
-        // וידוא גלישה: התקציב כולל כבר את הערות הזנב (המקור בודק reservedNow בשנית)
-        const newFree = colBottom() - Math.max(lastBlk.cursor[0], lastBlk.cursor[1]) - 1;
-        if (newFree < -ORPHAN_RECLAIM_BUFFER) {
-          lCol.pop();
-          lastBlk.cursor[1] = lastBlk.yTop + colHeightUnits(lCol);
-          return false;
-        }
-        pending = null;
-        ti++;
-        return true;
-      };
-
-      fillPage: while (ti < toks.length || pending) {
-        const tok = pending ? pending.token : toks[ti];
-        const mode = tok.type[0] === 'h' ? (HEADING_MODES[tok.level] || 'inline_2col') : 'inline_2col';
-
-        if (mode === 'span_1col' && !pending) {
-          // **S4.12 (איזון לפני החלטת ה-span, כמו המקור):** בלוק שמולא חמדנית
-          // (טור ימני מלא, שמאלי חלקי) מנפח את blockBottom ופוסל span שהיה
-          // נכנס בקלות אחרי איזון — ההוכחה: עמוד עם 27/2 שורות שדחה span
-          // בעוד איזון (15/14) מוריד את blockBottom ב-250px. המקור מאזן את
-          // הבלוק בכל יציאה מלולאת המילוי לפני החלטת המשך/עצירה.
-          if (block && !isH0 && (block.cols[0].length || block.cols[1].length)) {
-            balanceBlock(block, colBottom() - block.yTop);
-            // **S72 (שיפור 1):** יישור תחתיות גם באיזון שלפני span — הבלוק
-            // סופי (בלוק חדש נפתח מתחת לפס). **keepMax:** המילוי ממשיך
-            // בעמוד (ה-span נבדק ונכנס) — תחתית-המודל נשמרת ביט-לביט
-            // והחלטת הכניסה של ה-span (colBottom−curY) זהה בדיוק.
-            alignBlockBottoms(block, { keepMax: true });
-          }
-          const curY = block ? blockBottom() : top;
-          // **S4.13:** סף 60px — כמו המקור (if (currentAvailH < 60) break
-          // לפני הצבת כותרת רוחבית); היה H3_SPAN_H+6≈46.
-          // **S4.24 (כותרת-רוחב ארוכה מהפס — עטיפה ברוחב הפס):** מוכרז לפני
-          // בדיקת הסף (הסף תלוי במספר השורות). עד כאן הונחה כותרת ה-span
-          // כולה כשורה בודדת בלתי-נפרדת — ארוכה מרוחב הפס (552.3px) גלשה
-          // ממנו (נמדד בחי: "ו. אחידות מעשה השחיטה וספיקות הגמרא" גלשה
-          // 96px, עמ' 571). המקור עוטף ברוחב הפס; כל שורה עטופה = פס נפרד
-          // בגיאומטריה המכוילת (H3_SPAN_H) — שורה ראשונה זהה לחלוטין.
-          // **S74 (בעיה 1):** כותרת-הרוחב (3) נעטפת ברוחב 60% מרוחב הפס —
-          // כמו כותרת 2; שורות ממורכזות. פס ה-span עצמו (H3_SPAN_H לכל שורה)
-          // כבר שומר את הרווח שמתחתיו מעצם מבנהו — אין תיקון נוסף נדרש.
-          const spanLines = wrapText(tok.text, { measureTextWidth: (t, sz) => brk.hw(t, sz, h3Font) }, H23_TITLE_W, SZ.h3);
-          // **S4.13:** סף 60px — כמו המקור (if (currentAvailH < 60) break
-          // לפני הצבת כותרת רוחבית); היה H3_SPAN_H+6≈46. **S4.24:** כותרת
-          // מרובת-שורות דורשת מקום לכל שורותיה.
-          // **S6.2:** סגירת עמוד כשה-span לא נכנס — הבלוק סופי בעמוד זה
-          // ולכן מאוזן לפני השבירה (PT-06: "הטורים שלפניו מאוזנים" — גם כשה-H3
-          // עצמו נופל לעמוד הבא). finalizeBlock עם nextTok=tok (h3=span)
-          // מאזן דרך מסלול nextIsSpan.
-          const spanBlockHeight = H3_SPAN_TOP_PAD_PX + spanLines.length * H3_SPAN_LINE_H + H3_SPAN_BOTTOM_PAD_PX + H3_SPAN_MARGIN_BOTTOM_PX;
-          // **שימור סמנטיקת הסף של S4.13/S4.24 (בלוק + ~שורת גוף עוקבת):**
-          // הנוסחה הישנה 60+(n-1)*34 פירושה בלוק הכותרת (38+(n-1)*34) + 22px
-          // תוכן מינימלי אחריו. הגאומטריה החדשה מקטינה את הבלוק, אך הכלל נשמר:
-          // דרוש מקום לבלוק כולו + 22px עוקבים; הרצפה 60 שומרת על החד-שורתי
-          // ביט-מדויק (60 = 38+22 הישן). סף "בלוק בלבד" החזיר אלמנות כותרת
-          // דו-שורתיות בסוף עמוד (S74 בעיה 6 — נמדד: 4 אלמנות חדשות בקורפוס).
-          const H3_FOLLOW_MIN_PX = 22; // 60−38 הישן — מקום מינימלי לתוכן עוקב
-          if (colBottom() - curY < Math.max(60, spanBlockHeight + H3_FOLLOW_MIN_PX)) {
-            // **S74 (בעיה 6 — אלמנת כותרת בסוף טור):** כותרות inline שנצברו
-            // בסוף הטור חוזרות עם ה-span לעמוד הבא — אחרת הן נותרות אלמנות
-            // בתחתית הטור (המקור מגלגל כותרות-זנב בכל נקודת יציאה מהמילוי).
-            ti -= rollbackTrailingHeadings();
-            finalizeBlock(block, tok, false);
-            break fillPage;
-          }
-          // **D-S2H3 — גאומטריית המקור, בלי שכפול הריפוד העליון:**
-          // שורות הביניים נעות ב-line-height המקורי (1.22); הריפוד העליון 8px
-          // נצרך פעם אחת, וה-padding-bottom + margin-bottom (4+4) פעם אחת בסוף.
-          for (let li = 0; li < spanLines.length; li++) {
-            const isLastLine = li === spanLines.length - 1;
-            stack.push({
-              type: 'span', text: spanLines[li], y: curY + li * H3_SPAN_LINE_H,
-              h: isLastLine ? H3_SPAN_H : H3_SPAN_LINE_H,
-              lineHeightPx: H3_SPAN_LINE_H, tokenId: li === 0 ? tok.id : null
-            });
-          }
-          openBlock(
-            curY + H3_SPAN_TOP_PAD_PX
-              + (spanLines.length - 1) * H3_SPAN_LINE_H
-              + H3_SPAN_H + H3_SPAN_MARGIN_BOTTOM_PX
-          );
-          ti++;
-          continue;
-        }
-        if (tok.type[0] === 'h') {
-          if (!block) openBlock(top);
-          // **S4.24 (כותרות inline ארוכות מהטור — עטיפה ברוחב הטור):** עד כאן
-          // הונחה הכותרת כולה כשורה בודדת בלתי-נפרדת (words:[u.text] בפליטה)
-          // — כותרת הרחבה מרוחב הטור לא נשברה לעולם ודיו הגליש מהטור שמאלה
-          // (נמדד באתר החי על הקובץ הגדול: 3 כותרות — 5.3/11.8/155.8px,
-          // עמ' 61/97/105). המקור עוטף כותרות inline ברוחב הטור (שורות
-          // ממורכזות, פס 1.45× — הכיול של S4.14). עטיפה בגלישת המנוע בגודל
-          // הכותרת; כל שורה עטופה = יחידה; התאמת הגובה בודקת את הכותרת
-          // כולה (scrollHeight של האלמנט במקור — לא שורה-שורה).
-          const headSz = ({ 4: SZ.h4, 5: SZ.h5, 6: SZ.h6 })[tok.level] || SZ.body;
-          const headColW = isH0 ? SINGLE_W : GEO.COL_W;
-          const headLines = wrapText(tok.text, { measureTextWidth: (t, sz) => brk.hw(t, sz, headingApiFor(tok.level)) }, headColW, headSz);
-          const headSegs = headLines.length ? headLines : [''];
-          const h = headingItemH(tok.level);
-          const hTotal = headSegs.length * h;
-          // **S4.19 (מודל ה-DOM):** גם בדיקת הכותרת במקור עוברת scrollHeight
-          // (שלם) מול התקציב — אותה קוונטיזציה כמו בדיקת הפסקה.
-          const hFits = FIT_MODEL === 'dom'
-            ? snapPx(block.cursor[block.fill] - block.yTop + hTotal) <= Math.floor(colBottom() - block.yTop)
-            : block.cursor[block.fill] + hTotal <= colBottom();
-          if (!hFits) {
-            if (block.fill === 0 && !isH0 && !(block.cols[0].length === 0)) {
-              // **S4.13:** גם כאן המקור מחזיר כותרות זנב לפני מעבר טור —
-              // כותרת שנותרה אחרונה בטור הימני תיפלט עם הפסקה הבאה בשמאלי.
-              // **S75 (תיקון שורש — אובדן כותרת-זנב במעבר טור, 12.11):** עד
-              // כאן ההחזרה הקטינה את ti אך האיטרציה הנוכחית המשיכה במסלול
-              // ההצבה שלה — הכותרת שלא נכנסה הוצבה בטור השמאלי, ti++ קודם
-              // שוב, והכותרות המוחזרות נדלגו לצמיתות (והנוכחית הוצבה
-              // פעמיים). נצפה ב-body-first: h5 "ראיה מהגמרא" אבדה כשה-h6
-              // שאחריה לא נכנס בטור הימני (חשבונאות התוכן תפסה 2 מילים
-              // חסרות). כעת: מעבר הטור + continue — הלולאה מתחילה מחדש
-              // מהטוקן שהוחזר, והכותרות המוחזרות מוצבות בטור השמאלי לפני
-              // הכותרת שלא נכנסה. נייטרלי כשאין כותרות-זנב (rollback=0 —
-              // הטוקן הנוכחי פשוט מוצב מחדש בטור השמאלי, אותה תוצאה).
-              ti -= rollbackTrailingHeadings();
-              block.fill = 1; // המשך בטור השמאלי
-              continue;       // האיטרציה מתחילה מחדש מהטוקן שהוחזר (ti כבר מעודכן)
-            } else if (block.cols[block.fill].length || block.cols[0].length) {
-              // **S4.13:** סיום הבלוק לפני שבירת העמוד — כמו המקור (כל בלוק
-              // מסתיים בהיגיון הארבעה; כאן הטוקן הבא הוא הכותרת שלא נכנסה).
-              ti -= rollbackTrailingHeadings();
-              // **S6.2:** pageClose — הכותרת נופלת לראש העמוד הבא והבלוק
-              // סופי כאן; סעיף 3 של המקור (טור ריק/הפרש > 60px ⇒ איזון).
-              finalizeBlock(block, tok, false, true, 'heading-no-fit');
-              break fillPage;
-            }
-          }
-          for (const seg of headSegs) {
-            block.cols[block.fill].push({ kind: 'heading', level: tok.level, text: seg, h, tokenId: tok.id });
-          }
-          block.cursor[block.fill] += hTotal;
-          ti++;
-          continue;
-        }
-
-        // ---- פסקה ----
-        if (!block) openBlock(top);
-        const isH0Body = isH0;
-        const bodySz = isH0Body ? SZ.h0Body : SZ.body;
-        const pitch = isH0Body ? H0_LINE_H : GEO.LINE_H;
-        const colW = isH0Body ? SINGLE_W : GEO.COL_W;
-        let lines, hasWindow = false, windowWords = null, windowW = 0;
-        const isCont = !!pending;
-        if (pending) {
-          lines = pending.lines;
-          // המשך פסקה — ההערות שלה חוזרות לתור העמוד (כמו במקור)
-          requeueParaNotes(tok.id);
-        } else {
-          tokPages.set(tok.id, new Set([pages.length - 1]));
-          const r = brk.breakPara(tok.text, colW, bodySz, true, isH0Body ? prefaceApi : null,
-            // **S6.0 (F4):** מדידת סמן אמיתית — הסמן שיוקצה להערה ה-i של
-            // הפסקה במצב siman הוא fnChapterCounter+i+1 (כל ההערות הקודמות
-            // בפרק כבר ממוספרות בשלב זה; הפסקה ממודדת פעם אחת לפני הפליטה).
-            // במצב page המספר נגזר ממקום בתור בזמן תצוגה — אינו צפוי; נותרת
-            // ההתנהגות ההיסטורית ('א' בגודל הגוף).
-            fnResetMode === 'siman' ? {
-              markerOf: (i) => fnChapterCounter + i + 1,
-              markerSizePt: cfg.fnListingNumSize,
-              markerMeasure: (t, sz) => fnApi.measureTextWidth(t, sz, 0),
-              bodySizePt: bodySz,
-              bodyMeasure: (t, sz) => (isH0Body && prefaceApi ? prefaceApi : { measureTextWidth: (tt, ss) => brk.w(tt, ss) }).measureTextWidth(t, sz, 0)
-            } : null);
-          lines = r.lines; hasWindow = r.hasWindow; windowWords = r.windowWords;
-          // **S4.15:** רוחב החלון המדוד (FrankReal-Bold 1.5× + 6px) נשמר על
-          // החתיקה — מקור יחיד לפרויקטור (בלי מדידה חוזרת בגופן אחר).
-          windowW = r.windowW || 0;
-        }
-        const startIdx = pending ? pending.lineIdx : 0;
-        const total = lines.length - startIdx;
-        // **S5.2 (F4):** פסקה ריקה (למשל ה-syntheticTail של הערת-סיום זנבורית)
-        // — אין שורות להציב; מדלגים בבטחה (ה-endNote נאסף מהטוקנים ישירות,
-        // ואין תוכן-מקור לאבד). בלי זה — fit מאולץ 1 על מערך ריק ⇒ קריסת ln.words.
-        if (total <= 0) { pending = null; ti++; continue; }
-
-        // תקציב מוקדם: כל ההערות של הפסקה (מהשבירה המלאה) נכנסות לתור העמוד
-        // כבר בעמוד הראשון שלה — כך התקציב מצטמצם מוקדם כמו במקור.
-        if (!isCont) {
-          const allNotes = [];
-          for (const lw of lines) {
-            for (const w of lw.words) {
-              // **תיקון מרובה-הערות במילה:** הדבקת '\s+[' בטוקניזר עשויה ליצור
-              // מילה כמו 'אותו[n1][n2]'. בעבר נלקח מ-[ הראשון עד-] האחרון
-              // והערות סמוכות התמזגו לאחת ענקית (נמצא בקורפוס הגדול:
-              // הערה של 1,288 מילים במקום שתיים). findNotes מפריד את כולן.
-              for (const n of findNotes(w, cfg.fnOpen, cfg.fnClose)) {
-                if (n.text) allNotes.push(n.text);
-              }
-            }
-          }
-          if (allNotes.length) {
-            if (!paraNotes.has(tok.id)) {
-              paraNotes.set(tok.id, allNotes.map((t, i) => ({ text: t, key: `${tok.id}#${i}` })));
-            }
-            // **S4.24 (שער התקציב — תיקון שורש חפיפות גוף/הערות):** לפני
-            // הזרמת ההערות לתור — התוכן שכבר הונח בעמוד חייב להישאר מעל
-            // תחתית התקציב החדש. פסקה קודמת (בלי הערות) עשויה הייתה למלא
-            // את הטור עד תחתית הזרימה בזמן שהתור היה ריק; אם ההערות של
-            // הפסקה הזו יוזרמו עכשיו, אזור ההערות ייבנה מעל אותן שורות
-            // (נמדד במודל: gap שלילי עד -210px). במקור (DOM חי) ה-reflow
-            // דוחף את הפסקה המאוחרת לעמוד הבא — הפסקה כולה, עם הערותיה,
-            // עוברת לעמוד הבא והתור של העמוד הנוכחי נשאר נקי מהן.
-            const matchKeyEarly = (c) => (c && c.key != null ? c.key : (c && (c.srcText || c.text)));
-            const prospective = [...fnQueue];
-            for (const n of paraNotes.get(tok.id)) {
-              // **S4.26:** דה-דופ גם מול המשכים שבתור (srcText) — אחרת התקציב
-              // מכפיל את ההערה ודוחס את הגוף ללא צורך.
-              // **S6.0 (F3):** ההתאמה לפי מפתח המופע כשקיים — טקסט זהה
-              // בשתי פסקאות ([שם] פעמיים) אינו מדולג עוד.
-              if (!prospective.some(q => (n.key != null ? matchKeyEarly(q) === n.key : (q.srcText || q.text) === n.text))) {
-                prospective.push({ text: n.text, key: n.key });
-              }
-            }
-            let placedB = top;
-            for (const seg of stack) {
-              if (seg.type === 'span') { placedB = Math.max(placedB, seg.y + seg.h); continue; }
-              placedB = Math.max(placedB, seg.cursor[0], seg.cursor[1]);
-            }
-            if (fnBodyFirst) {
-              // **S75 (בקשה 1 — ביטול הדחיפה):** אין שער תקציב — הפסקה עם
-              // הערותיה אינה נופלת לעמוד הבא בגלל **גודל** ההערות (דיווח
-              // המשתמש: חור ענק בתחתית העמוד). ההערות נכנסות לתור מיד, והתקציב
-              // נלקח מהחלל שמתחת לגוף. הדחיפה היחידה: העמוד מלא **פיזית** —
-              // גם שורת-הפסקה הראשונה וגם שורת-הערה אחת + המפריד אינם נכנסים
-              // מתחת לגוף שהונח (שבירה רגילה של עמוד מלא, לא בגלל ההערות).
-              // רצפת ההתחלות מובטחת כשהיא נכנסת בחלל (התקציב לא יורד ממנה);
-              // כשהיא גדולה מהחלל הפיזי — ההערות ממלאות את החלל והאחרונות
-              // נופלות טריות לעמוד הבא (אילוץ פיזי; מתועד).
-              if (placedB + pitch + 38.5 + GEO.FN_PITCH > FLOW_BOTTOM + 0.01) {
-                ti -= rollbackTrailingHeadings();
-                finalizeBlock(block, tok, false, true, 'fn-starts-gate');
-                break fillPage;
-              }
-            } else {
-              // **S4.24 (שער התקציב — תיקון שורש חפיפות גוף/הערות):** לפני
-              // הזרמת ההערות לתור — התוכן שכבר הונח בעמוד חייב להישאר מעל
-              // תחתית התקציב החדש. פסקה קודמת (בלי הערות) עשויה הייתה למלא
-              // את הטור עד תחתית הזרימה בזמן שהתור היה ריק; אם ההערות של
-              // הפסקה הזו יוזרמו עכשיו, אזור ההערות ייבנה מעל אותן שורות
-              // (נמדד במודל: gap שלילי עד -210px). במקור (DOM חי) ה-reflow
-              // דוחף את הפסקה המאוחרת לעמוד הבא — הפסקה כולה, עם הערותיה,
-              // עוברת לעמוד הבא והתור של העמוד הנוכחי נשאר נקי מהן.
-              const prospectiveBottom = FLOW_BOTTOM - fnReserveFor(prospective);
-              // **S6.2 (שער התקציב הפרוספקטיבי):** הפסקה עם הערותיה נופלת
-              // שלמה לעמוד הבא — אבל הבלוק הנוכחי סופי בעמוד זה וחייב איזון
-              // (סעיף 3 של המקור; בלי זה נוצרים טורים שמאליים ריקים — 33 עמודים
-              // במסמך הבדיקה הקבוע לפני התיקון, מול 0 בייחוס המקור).
-              if (placedB > prospectiveBottom + 1.5) {
-                // **S74 (בעיה 6 — אלמנת כותרת בסוף טור):** שער תקציב-ההערות סוגר
-                // את העמוד כשהפסקה (עם הערותיה) נופלת לעמוד הבא — אבל כותרות
-                // inline שכבר הוצבו בתחתית הטור נשארו שם לבד (נצפה בחי: עמ' עט,
-                // כותרת 4 "מלאכות יצירה" אלמנה בתחתית הטור השמאלי). הן חוזרות
-                // עם הפסקה — כמו שאר נקודות היציאה (fit0/heading-no-fit).
-                ti -= rollbackTrailingHeadings();
-                finalizeBlock(block, tok, false, true, 'fn-budget-gate');
-                break fillPage;
-              }
-            }
-            for (const n of paraNotes.get(tok.id)) {
-              // **S4.26 (תיקון שכפול — המשך):** הערה שהמשכה כבר בתור/בהמתנה
-              // לא נוספת שוב במלואה (אחרת היא זורמת פעמיים: ההמשך + עותק
-              // מלא — נצפה 9,000 מילים במקום 4,500 בהערת-בדיקה).
-              // **S6.0 (F3):** הדה-דופ וההוספה לפי מפתח המופע — כך שתי
-              // הערות שונות בעלות טקסט זהה נכנסות שתיהן לתקציב ולתור.
-              if (pendingFootnotes.some(c => (n.key != null ? matchKeyEarly(c) === n.key : (c.srcText || c.text) === n.text))) continue;
-              if (fnQueue.some(q => (n.key != null ? matchKeyEarly(q) === n.key : (q.srcText || q.text) === n.text))) continue;
-              enqueueNote(n.text, true, n.key);
-            }
-            // **S75 (בקשה 1):** התקציב נלקח מהחלל שמתחת לגוף שכבר הונח —
-            // שורת-גוף אחת לפחות לפסקה זו עצמה מובטחת מעל המרזב (בלי זה
-            // התקציב היה יכול להרים את תחתית-הטור מעל התוכן הקיים).
-            if (fnBodyFirst) {
-              fnReserveClampPx = Math.min(fnReserveClampPx,
-                Math.max(GEO.FN_PITCH, FLOW_BOTTOM - placedB - GEO.LINE_H));
-            }
-            applyFnReserve();
-          }
-        }
-
-        let fit = 0;
-        // **S4.19 (מודל ה-DOM):** המקור מודד את גובה הטור דרך scrollHeight —
-        // שלם, יחסי לראש הטור, וכולל את margin-bottom של הפסקה הנבדקת.
-        // ההשוואה: scrollHeight_int ≤ remPageHeight_int − reservedNow — כלומר
-        // בפועל snap(colRel + k·pitch + margin) ≤ floor(availRel). במודל
-        // המדויק הקודם (ברירת המחדל עד כאן) חסר המרווח — הטורים שלנו קיבלו
-        // 7px קיבולת עודפת ≈ שליש שורה, וזה מקור הסחף בגבולות העמודים.
-        if (FIT_MODEL === 'dom') {
-          const yTopRef = block.yTop;
-          const availRel = Math.floor(colBottom() - yTopRef);
-          for (let k = 1; k <= total; k++) {
-            const colRel = snapPx(block.cursor[block.fill] - yTopRef + k * pitch + FIT_MARGIN);
-            if (colRel <= availRel) fit = k; else break;
-          }
-        } else {
-          for (let k = 1; k <= total; k++) {
-            if (block.cursor[block.fill] + k * pitch <= colBottom() + 0.01) fit = k; else break;
-          }
-        }
-        // אלמנה/יתומה (chooseSplitLines של המקור)
-        if (fit > 0 && fit < total) {
-          const canPush = block.cols[0].length > 0 || block.cols[1].length > 0 || stack.length > 1;
-          if (fit === 1 && canPush) fit = 0;
-          else if (total - fit === 1 && fit > 1) fit -= 1;
-          else if (total - fit === 1 && fit === 1 && canPush) fit = 0;
-        }
-        if (fit === 0) {
-          // **S4.13 (rollbackTrailingHeadings של המקור):** כותרות שנצברו בסוף
-          // הטור הנוכחי חוזרות עם הפסקה שלא נכנסה — אחרת הן מתייתמות בתחתית
-          // הטור (המקור: tokenIndex -= rollbackTrailingHeadings(targetCol)
-          // לפני כל break מפני placeLines=0).
-          ti -= rollbackTrailingHeadings();
-          // הטור הנוכחי מלא — מעבר לטור השמאלי (בלוק דו-טורי); אחרת עמוד הבא
-          if (block.fill === 0 && !isH0 && block.cols[0].length > 0) {
-            block.fill = 1;
-            continue;
-          }
-          const anyContent = stack.length > 1 || block.cols[0].length > 0 || block.cols[1].length > 0;
-          if (!anyContent) fit = 1; // התקדמות מאולצת — שורה אחת לפחות
-          else {
-            // **S75 (בקשה 1):** הפסקה לא הציבה שום שורה בעמוד זה — הערותיה
-            // שהוזרמו בתקציב-המוקדם חוזרות מהתור (rollbackParaNotesFromQueue):
-            // הן חייבות להתחיל בעמוד הסמן, והסמן עבר לעמוד הבא. חל רק על
-            // החתיכה הראשונה של הפסקה (!isCont) — המשכי-פסקה כבר זורמים
-            // מעמוד הפתיחה שלהם.
-            if (!isCont) rollbackParaNotesFromQueue(tok.id);
-            if (!isH0 && (block.cols[0].length || block.cols[1].length)) {
-            // **S4.14 (הוכחה מבנית מהייחוס — אין המשך-מטה בלי span):** בכל
-            // 54 עמודי הייחוס אין אף עמוד עם שני בלוקים שאין ביניהם block-h3-span
-            // (כל 12 העמודים הרב-בלוקיים — block+span+block בדיוק). כשהעמוד
-            // התמלא המקור מותח את הבלוק לתחתית (stretchPageToBottom) ושובר
-            // עמוד — לולאת הבלוקים שלו רצה רק כשהטוקן הבא הוא span. ההמשך-מטה
-            // של S4.12/S4.13 הכניס תוכן עודף לעמודים מלאים (עמ' 31: ‏80 שורות
-            // אצלנו מול 71 בייחוס — 2 פסקאות שלמות הוכנסו בכוח).
-            // **S6.2:** pageClose — בדרך כלל העמוד מלא (איזון = no-op); המסלול
-            // כאן גם כשהכלל "אלמנה בודדת ⇒ דחיפה" (fit=1→0) או rollback
-            // כותרות-זנב פינו את הטור — אז סעיף 3 של המקור מאזן את השארית.
-            finalizeBlock(block, pending ? pending.token : toks[ti], ti >= toks.length && !pending, true, 'fit0');
-            break fillPage;
-          }
-          else break fillPage;
-          }
-        }
-
-        // סמני הערות בשורות המוצבות — חילוץ משותף עם נתיב משיכת הזנב (S4.17).
-        // **S4.9:** הערה עשויה להיות מוצמדת למילה שלפניה ("השבוע.[חלוקת...]")
-        // — זיהוי לפי אינדקס התוחמים בתוך המילה (כמו findDelimiterMatches
-        // במקור), לא רק מילה שלמה שמתחילה ב-[. **תיקון מרובה-הערות במילה:**
-        // findNotes מפצל מילה מודבקת לכל ההערות שבה — כל אחת עם סמן משלה.
-        const emitted = emitLinesWithMarkers(tok, lines, startIdx, fit);
-        const isEnd = startIdx + fit >= lines.length;
-        block.cols[block.fill].push({
-          kind: 'para', tokenId: tok.id, lines: emitted, from: startIdx,
-          isEnd, isCont, hasWindow: hasWindow && !isCont, windowWords, windowW,
-          pitch, lhPx: pitch, gapPx: 7,
-          // **S6.3:** גופן היחידה — גוף ההקדמה בגופן ההקדמה (f-h0-body ⇒
-          // Frank Ruhl Libre) כמו המדידה (prefaceApi); שאר הגוף בגוף הגוף.
-          sizePt: bodySz, font: isH0Body ? (settings['heading-0-body-font'] || 'Frank Ruhl Libre') : (settings['body-font'] || null),
-          sideNote: (!isCont && tok.sideNote) ? tok.sideNote : null
-        });
-        block.cursor[block.fill] += fit * pitch;
-        // **S4.13 (מרווח לכל חתיקה — כמו ה-DOM של המקור):** p{margin-bottom:7px}
-        // חל על **כל** אלמנט <p> — כולל p-cut (חתיכה גזורה) — והגובה שהמקור מודד
-        // (scrollHeight) כולל את המרווח של כל חתיקה שהוצבה. הקליברציה של S4.9
-        // ("רק בסוף פסקה") עבדה כשחתיכות היו נדירות; עם איזון מפצל-שורות מספרן
-        // מתרבה וההפרש (7px לכל גזירה) מצטבר לעמוד שלם — 53 מול 54 בייחוס.
-        block.cursor[block.fill] += 7;
-        if (isEnd) { pending = null; ti++; }
-        else {
-          pending = { token: tok, lines, lineIdx: startIdx + fit };
-          // הפסקה נחתכה — אם הטור השמאלי עוד פנוי, ממשיכים בו; אחרת עמוד הבא
-          if (block.fill === 0 && !isH0 && block.cols[0].length > 0) {
-            block.fill = 1;
-          } else if (!isH0 && (block.cols[0].length || block.cols[1].length)) {
-            // **S4.13 (איזון-והמשך כמו המקור):** חיתוך בטור השמאלי מסיים את
-            // **S4.14 (כמו מסלול fit=0 לעיל):** חיתוך פסקה בתחתית הטור
-            // השמאלי = העמוד התמלא; המקור מותח את הבלוק לתחתית ושובר עמוד
-            // (הוכחה מבנית: אין בלוק-המשך בלי span בכל הייחוס).
-            finalizeBlock(block, tok, false);
-            // **S72 (שיפור 1 — השלמה לסגירות p-cut):** finalizeBlock שומר את
-            // המילוי כאן (נאמן למקור — pageClose=false), ומתיחת סוף-העמוד
-            // אינה רצה כשfree>48 (עמוד שנסגר מוקדם מרעש מדידה/מגבלות
-            // אלמנה). כאן יישור התחתיות בלבד — מתיחת הטור הקצר אל הארוך
-            // (+עומס משותף במידת הצורך), בלי הזזת שורות ובלי מילוי מלאכותי
-            // (K-4): "הכלי עובד רק במקרה הנצרץ לו".
-            alignBlockBottoms(block);
-            break fillPage;
-          }
-          else {
-            break fillPage;
-          }
-        }
-      }
-
-      // **S4.17 (יישור תחתית + משיכת זנב-יתום — כמו המקור):** בסוף כל עמוד
-      // שהפרק ממשיך אחריו רצים stretchPageToBottom ואז tryReclaimOrphanTail.
-      // בלי זה כל נקודת חיתוך משאירה 1-2 שורות בעמוד הבא — בדיוק הזוגות
-      // delete+insert השכנים שנצפו ב-P7 (עמ' 14 שמאל: 45 שורות בייחוס מול 44).
-      let sectionEnded = ti >= toks.length && !pending;
-      let reclaimed = false;
-      // **S72 (שיפור 2 — D-101):** מתיחת סוף-העמוד (stretchPageToBottom של
-      // v21) מופעלת כברירת מחדל. עד כאן הייתה כבויה מאחורי
-      // RED_ENABLE_STRETCH_RECLAIM (S4.17) בגלל רעש מדידת-טבלאות; אך:
-      // (א) הוראת המשתמש המפורשת (11.11) — "קצה התחתון של הטקסט שבשני
-      // הטורים יהיה שווה" — היא בדיוק המכניקה של המקור לסגירות "עמוד
-      // מלא" (ההוכחה מהייחוס: ~230 פסים ב-23-24.4px = בסיס 21.44 + עד
-      // 3px מתיחה — JUSTIFY_MAX_LH_EXTRA);
-      // (ב) הסיכון שתואר ב-S4.17 (LINE_BELOW_COLUMN באודיט החי) נבע
-      // ממשיכת-הזנב (tryReclaimOrphanTail) שמזיזה שורות בין עמודים —
-      // והיא נותרת כבויה (opt-in) — כאן מופעלת המתיחה בלבד;
-      // (ג) המתיחה עצמה אינה מזיזה אף שורה וחסומה מוכחות: free≤48
-      // (PAGE_STRETCH_MAX), יעד≤colBottom−3, קיבולת colStretchCap
-      // נמדדת לפני ההחלה, ושני הטורים נמתחים לאותו יעד (התחתיות מתיישרות
-      // גם אם המילוי התפרס בלי איזון — "הכלי עובד רק במקרה הנצרץ לו").
-      if (!isH0 && !sectionEnded) {
-        stretchLastBlockToBottom();
-        if (STRETCH_RECLAIM_ENABLED) {
-          reclaimed = tryReclaimOrphanTail();
-          if (reclaimed) sectionEnded = ti >= toks.length; // pending כבר null
-        }
-        // **S72 (אמת דיווח):** שארית נדירה אחרי המתיחה — ברמת העמוד
-        // (pageEffCols), באותו פורמט רשומה כמו שאר רשומות אי-האיזון.
-        // רק אם finalizeBlock לא דיווח כבר על העמוד הזה (מניעת כפילות).
-        if (!imbalanceReported) {
-          const eff = pageEffCols();
-          if (eff[0].length && eff[1].length) {
-            const aH = colVisualH(eff[0]);
-            const bH = colVisualH(eff[1]);
-            if (Math.abs(aH - bH) > cfg.imbalanceMax) {
-              const rec = ledger.create('column-imbalance', `balance@p${pages.length - 1}`, pages.length - 1,
-                { emptyCol: false, deltaPx: Math.round(Math.abs(aH - bH)), reason: 'page-stretch-residual' }, 'legacy-flow');
-              ledger.transition(rec.issue_id, 'persists', 'legacy-flow',
-                `post page-stretch residual (caps exhausted or free>${PAGE_STRETCH_MAX})`);
-            }
-          }
-        }
-      }
-      // סגירת הבלוק האחרון: אם המקטע נגמר — איזון. אחרי משיכת-יתום שסגרה
-      // את המקטע המקור אינו מאזן מחדש — המשיכה עצמה היא סוף הפרק.
-      // **S6.2:** עובר דרך finalizeBlock — כך גם סוף-המקטע מדווח ב-ledger
-      // כשנותר טור ריק/הפרש בלתי-פתיר (מגבלות min-2), במקום איזון שקט.
-      if (block && sectionEnded && !reclaimed && !isH0 && (block.cols[0].length || block.cols[1].length)) {
-        finalizeBlock(block, null, true, false, 'section-end');
-      }
-
-      // ---- פריסת המחסנית לעמוד: פסים + בלוקים → טורים עם y מפורש ----
-      layoutStack(pg, stack, top);
-
-      // ---- הערות שוליים בתחתית (bottom-anchored) ----
-      if (fnQueue.length) {
-        // **S76:** אפשרויות הקיבולת — (א) flexSpacer: עמוד פתיחת מקטע
-        // (h0/h2, בלי פטור-span) שבו ה-spacer של המקור מתכווץ ב-0.22×גובה
-        // אזור-ההערות — ההצבה נוטלת את החלל המתפנה (משוואת שיווי-המשקל
-        // ב-placeFootnoteArea); (ב) budgetLines: קווי-התקציב שהגוף כיבד
-        // (fnReserved כולל ה-clamp) — רצפת ההצבה.
-        placeFootnoteArea(pg, fnQueue, {
-          flexSpacer: fnBodyFirst && pageIsSectionOpen && (isH0 || isH2) && !pg._h2SpanExempt,
-          budgetLines: fnBodyFirst ? Math.round((fnReserved - 38.5) / GEO.FN_PITCH) : null
-        });
-        // **S4.24 (דיאג):** RED_DEBUG_FN=1 מדפיס לכל עמוד עם הערות את התקציב
-        // מול המוצב בפועל (אחרי הפריסה) — כלי אבחון לחפיפות גוף/הערות.
-        // אינו משפיע על הפלט.
-        if (typeof process !== 'undefined' && process.env && process.env.RED_DEBUG_FN) {
-          let bb = 0;
-          for (const col of pg.columns) for (const ln of col) bb = Math.max(bb, (ln.y || 0) + (ln.heightPx || 16));
-          const placedH = (pg.footnotes || []).reduce((a, f) => a + f.lines.length * GEO.FN_PITCH, 0);
-          console.error(`[fn] page=${pages.length - 1} type=${pg.type} reserved=${fnReserved.toFixed(1)} placedH=${placedH.toFixed(1)} fnTop=${(FLOW_BOTTOM - placedH).toFixed(1)} bodyBottom=${bb.toFixed(1)} gap=${((FLOW_BOTTOM - placedH) - bb).toFixed(1)} queue=${fnQueue.length} carry=${pendingFootnotes.length}`);
-        }
-        // **S4.19 (הזזת אזור ה-h2/h0 כשיש הערות — ה-flex של המקור):** ה-fn-area
-        // מוכנס ל-wrapper לפני הפוטר ⇒ ה-flow מתכווץ ⇒ ה-spacer (flex-basis 22%)
-        // מתכווץ ב-0.22×גובה-ההערות וכל אזור הכותרת והתוכן זזים למעלה ביחד.
-        // ההערות עצמן מעוגנות לתחתית ה-flow ואינן זזות. מיושם רק בעמוד הפתיחה
-        // של h2/h0 (שם קיים spacer) ורק כשיש הערות בעמוד (ההוכחה: עמ' 11 —
-        // 0.22×105.3=23.2px ≈ הפרש 22.98px שנמדד בין עמ' 11 לעמ' 24/38).
-        if (pageIsSectionOpen && (isH0 || isH2) && !pg._h2SpanExempt) {
-          // **S75 + S76 (ליקוי 1):** ב-body-first ההזזה לפי גובה אזור-ההערות
-          // **בפועל** (ההצבה + המפריד) — ה-flex של המקור מגיב לשטח האמיתי,
-          // וההצבה (משוואת 0.78) כבר התחשבה בהזזה זו: אין חפיפה ואין מרווח
-          // עודף. ב-legacy — ללא שינוי (fnReserveFor הגולמי, התנהגות S74).
-          const fnPlacedH = (pg.footnotes || []).reduce((a, f) => a + (f.lines || []).length * GEO.FN_PITCH, 0);
-          const shift = 0.22 * (fnBodyFirst ? (fnPlacedH + 38.5) : fnReserveFor(fnQueue));
-          if (shift > 0.01) {
-            for (const b of pg.bands) b.y -= shift;
-            for (const col of pg.columns) for (const ln of col) ln.y -= shift;
-            for (const mn of pg.marginNotes) {
-              mn.anchorY -= shift;
-              for (const l of mn.lines) l.y -= shift;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /** **S4.24: הנחת אזור ההערות בתחתית העמוד — עם תקרת מרזב ופיצול.**
-   * מקור יחיד לפריסה בפועל: fnItemsFor (אותו חישוב כמו התקציב — הצדדים
-   * אינם יכולים להתפצל). מדיניות split (ברירת המחדל של המקור,
-   * long-footnote-policy=split + fn-bar-max-height-px=220): מוצגות לכל היותר
-   * ⌈220/16.7⌉=13 שורות בעמוד; הערה שאינה נכנסת נחתכת בגבול שורה — החלק
-   * הראשון מונח, השאר עובר לראש התור של העמוד הבא עם cont=true (מוצג
-   * '(המשך)'). בלי תקרה (continuous / policy אחרת) — התנהגות המקור: המרזב
-   * גדל כרצונו. העיגון לתחתית נשמר (yy = FLOW_BOTTOM − גובה-מוצג). */
-  function placeFootnoteArea(pg, queue, opts) {
-    if (!queue.length) return;
-    pg.fnSep = true;
-    let maxLines = Math.max(1, Math.floor((fnSplitEnabled ? fnBarMax : FN_FULL_CAP_PX) / GEO.FN_PITCH));
-    // **S6.0 (F7):** תקרה גם במדיניות שאינה split — בלי תקרה המרזב גדל
-    // מעל ראש הזרימה (מחוץ לעמוד) והגוף נדחס לתוכו. התקרה במצב שאינו-split
-    // היא קיבולת העמוד המלאה (FN_FULL_CAP_PX) — כמו ברירת המחדל.
-    // **S75 (בקשה 1 — body-first):** ההצבה בפועל לפי החלל שנותר מתחת לגוף
-    // בפועל (עגן תחתי + מפריד 38.5) — לעולם לא חופפת את הגוף. התקרה היחסית
-    // (fnBarMax) מגבילה את התקציב **בזמן המילוי**; כאן נלקח מה שהעמוד יכול
-    // להכיל באמת ("תוצב חלקית כפי יכולת ההכלה של העמוד") — וכשהגוף נגמר
-    // מוקדם (סוף מקטע וכד') המרזב גדל לשטח הפנוי (עדיפות 1 של המשתמש:
-    // הכלה מלאה). תקרה מפורשת של המשתמש (fn-bar-max-height-px>0) מגבילה
-    // גם את ההצבה עצמה.
-    // **S76 (ליקוי 1+3 — 12.11, "הערות ממשיכות למרות שיש מקום / השורה
-    // האחרונה לא מלאה"):** שני תיקוני שורש בקיבולת ההצבה:
-    //   (א) **חלל ה-flex בעמוד פתיחת מקטע** — המקור (S4.19) מכווץ את
-    //       ה-spacer ב-0.22×גובה אזור-ההערות ומזיז את הגוף למעלה; ההצבה
-    //       נוטלת את החלל המתפנה: שיווי המשקל (bb−0.22H)+38.5 ≤ FLOW_BOTTOM−H
-    //       נותן H ≤ (FLOW_BOTTOM−bb)/0.78. בלי זה נמדר ב-very_long (ספר
-    //       המשתמש) עמ' 690: תור של 29 שורות, הוצבו 28 בלבד ומרווח גלוי
-    //       של 114.8px מתחת לגוף — "יש מספיק מקום להכלתם בשלימות".
-    //   (ב) **רצפת התקציב** — ה-fit מרשה לדיו-הגוף להסתיים עד colBottom+0.01
-    //       (ומודל הדיו חורג עוד כמה px); ה-floor על החלל שמתחת לדיו מאבד
-    //       שורת מרזב שלמה לפיקסלים בודדים — רצפת ההתחלות נפלה מהעמוד
-    //       (נמדר: עמ' 691 — הערה טרייה נפתחה בעמוד שאחרי הסמן שלה) ונותר
-    //       מרווח-זנב של שורה. ההצבה לא תרד מקווי-התקציב שהגוף כיבד
-    //       (fnReserved כולל ה-clamp — חסם חפיפה מוכח: ה-gutter-top
-    //       = colBottom+38.5 ≥ דיו-הגוף+38.5).
-    if (fnBodyFirst) {
-      let bb = 0;
-      for (const col of pg.columns || []) for (const ln of col) bb = Math.max(bb, (ln.y || 0) + (ln.heightPx || 16));
-      const capByFull = Math.floor(FN_FULL_CAP_PX / GEO.FN_PITCH);
-      const flexSpacer = !!(opts && opts.flexSpacer);
-      const availPx = flexSpacer ? (FLOW_BOTTOM - bb) / 0.78 - 38.5 : (FLOW_BOTTOM - bb - 38.5);
-      let canLines = Math.min(capByFull, Math.floor(availPx / GEO.FN_PITCH));
-      const budgetLines = (opts && Number.isFinite(opts.budgetLines)) ? Math.max(0, Math.floor(opts.budgetLines)) : 0;
-      if (budgetLines > 0) canLines = Math.max(canLines, Math.min(budgetLines, capByFull));
-      if (Number.isFinite(fnBarMaxRaw) && fnBarMaxRaw > 0) {
-        canLines = Math.min(canLines, Math.floor(fnBarMax / GEO.FN_PITCH));
-      }
-      maxLines = Math.max(0, canLines); // **S75:** 0 = אין חלל — הכול ממשיך לעמוד הבא (בלי חפיפה)
-    }
-    // **S4.26 (זרימה רציפה — ברירת המחדל):** כל הערות העמוד זורמות כרצף אחד;
-    // הערה הבאה מתחילה באותה שורה שבה הסתיימה קודמתה. המשך מוצג בלי אות
-    // סימון. חיתוך בגבול שורה בתקרת הקיבולת; השארית מקובצת לפי הערה —
-    // הערה שכבר החלה כאן → המשך (cont), הערה שלא החלה → פריט טרי (עם
-    // מספרה הפרקי) בראש תור העמוד הבא.
-    if (fnLayoutMode === 'continuous') {
-      const built = fnFlowFor(queue);
-      // **S75 (בקשה 1) + **S76 (ליקוי 3):** החיתוך ממלא את הקיבולת עד תום
-      // — המרזב נחתך רק כשהעמוד מלא פיזית, והשורה האחרונה שהוצבה היא
-      // שורת ביניים מיושבת (מלאה). פילבק "סמן-בלבד" (S75) הוסר: בזרימה
-      // הרציפה הסמן אינו לבד בשורה ממילא (הוא בן-זוג לזנב ההערה הקודמת;
-      // סמן ברוחב שורה שלם אינו קיים), וההדחקה שלו הותירה שורות מרזב
-      // ריקות + שורה אחרונה קצרה — בדיוק הליקוי שדווח ("הערה ממשיכה בעוד
-      // השורה האחרונה לא מלאה"). הגנת "סמן-בלבד" ברמת התקציב נותרה
-      // (fnBodyFirstLines — "התחלה" = שורה עם מילה, לא סמן בלבד).
-      const cut = Math.min(maxLines, built.flowLines.length);
-      // **S76 (ניפוי):** RED_DEBUG_FN_CUT=1 — מדפיס את ניתוח החיתוך של כל
-      // עמוד עם הערות. אינו משפיע על הפלט.
-      if (typeof process !== 'undefined' && process.env && process.env.RED_DEBUG_FN_CUT) {
-        console.error(`[fncut] page=${pages.length - 1} type=${pg.type} maxLines=${maxLines} flow=${built.flowLines.length} cut=${cut} contRest=${cut < built.flowLines.length}`);
-      }
-      const placed = built.flowLines.slice(0, cut);
-      const rest = built.flowLines.slice(cut);
-      // **S77 (בקשה 1 — "השורה האחרונה של הערה שממשיכה לעמוד הבא אינה
-      // מלאה / לא מיושבת לשני הצדדים"):** כשהחיתוך נופל **בתוך** הערה (השורה
-      // האחרונה שהוצבה אינה סוף הערה — היא ממשיכה בעמוד הבא), שורת החיתוך
-      // היא שורת-ביניים לכל דבר: היא חייבת להיות מיושבת לשני הצדדים (מלאה)
-      // — כמו שאר שורות הביניים. עד כאן היא סומנה isLast במקרנים ונשארה
-      // מרופטת. זיהוי: הטוקן האחרון שהוצב והראשון שנשאר שייכים לאותה הערה
-      // (אותו noteIdx). חיתוך בגבול הערה — השורה האחרונה היא סוף טבעי של
-      // ההערה הקודמת ⇒ cutLast=false (התנהגות קודמת נשמרת).
-      let midNoteCut = false;
-      if (placed.length && rest.length) {
-        const realOf = (arr) => (arr || []).filter(t => t && !t.gap);
-        const lp = realOf(placed[placed.length - 1]);
-        const fr = realOf(rest[0]);
-        const lastTok = lp.length ? lp[lp.length - 1] : null;
-        const firstTok = fr.length ? fr[0] : null;
-        midNoteCut = !!(lastTok && firstTok && lastTok.noteIdx != null && lastTok.noteIdx === firstTok.noteIdx);
-      }
-      if (placed.length) {
-        const lines = [];
-        let yy = FLOW_BOTTOM - placed.length * GEO.FN_PITCH;
-        for (const tl of placed) { lines.push({ words: tl, y: yy }); yy += GEO.FN_PITCH; }
-        // **S74 (בעיה 7 — בקשת משתמש 12.11):** השורה האחרונה של מרזב ההערות
-        // (של כל ההערות יחד) ממורכזת. חריג מפורש:
-        // הערה שממשיכה לעמוד הבא (rest לא ריק ⇒ המרזב נחתך באמצע הערה) —
-        // שורתה האחרונה בעמוד זה נשארת מיושבת לימין, כמו שאר שורות הביניים.
-        // **S77:** cutLast=true בחיתוך תוך-הערה — השורה האחרונה מיושבת לשני
-        // הצדדים (מלאה) בתצוגה וב-PDF; centerLast נותר כלעצמו (סמנטיקה
-        // נעולה בבדיקות s75/s76 — false כל שיש המשך).
-        pg.footnotes.push({ continuous: true, lines, centerLast: rest.length === 0, cutLast: midNoteCut });
-      }
-      if (rest.length) {
-        const started = new Set();
-        // **F-BL2 (17.11 — סמן-הערה שנבלע בחיתוך שורת המרזב):** "החלה" מוכח
-        // רק על-ידי טוקן שהוצג בפועל — סמן (mk) או מילת טקסט. טוקן הרווח-הכפל
-        // (gap, w=0) ו-'(המשך)' אינם מוכיחים דבר: חיתוך שנופל בדיוק בין הרווח
-        // לסמן סימן את ההערה כ"החלה" בשקט ⇒ ההמשך נפתח ב-'(המשך)' בלי שהסמן
-        // הוצג אי-פעם (נמדד בחי: יז. עמ' 571→572, כג. עמ' 667 — שני
-        // MARKER_NOTE_MATCH ב-full-math-audit). ההמשך כעת נושא את הסמן.
-        for (const tl of placed) for (const t of tl) {
-          if (t && !t.gap && t.t !== '(המשך)') started.add(t.noteIdx);
-        }
-        let curIdx = null, curTxt = [];
-        const flushRest = () => {
-          if (curIdx == null || !curTxt.length) return;
-          const src = built.items[curIdx].note || {};
-          const began = started.has(curIdx);
-          pendingFootnotes.push({
-            text: curTxt.join(' '),
-            cont: began || !!src.cont,
-            num: (!began && src.num != null) ? src.num : undefined,
-            srcText: src.srcText || src.text || curTxt.join(' '),
-            key: src.key // **S6.0 (F3):** זהות המופע נשמרת גם בהמשך חוצה-עמודים
-          });
-        };
-        for (const tl of rest) {
-          for (const t of tl) {
-            // **S4.26:** סמנים ו-(המשך) אינם טקסט — המספר נשמר ב-num (והסמן
-            // נוסף מחדש בעמוד הבא רק להערה שלא החלה); ההמשך מקבל '(המשך)'
-            // מ-fnFlowFor בעמוד הבא לפי cont=true.
-            if (t.gap || t.mk || t.t === '(המשך)') continue;
-            if (t.noteIdx !== curIdx) { flushRest(); curIdx = t.noteIdx; curTxt = []; }
-            curTxt.push(t.t);
-          }
-        }
-        flushRest();
-      }
-      return;
-    }
-    const items = fnItemsFor(queue);
-    const placed = []; // {note, marker, lines(strings), cont}
-    let usedLines = 0;
-    let lastPlacedCut = false; // **S74 (בעיה 7):** האם ההערה האחרונה שהוצבה נחתכה (ממשיכה לעמוד הבא)
-    for (const it of items) {
-      const need = it.lines.length;
-      if (usedLines + need <= maxLines) {
-        placed.push({ note: it.note, marker: it.marker, lines: it.lines, cont: !!it.note.cont });
-        usedLines += need;
-        lastPlacedCut = false;
-        continue;
-      }
-      if (!fnSplitEnabled) {
-        // **S6.0 (F7):** מדיניות שאינה split — הערה שאינה נכנסת לתקציב הנוכחי
-        // עוברת שלמה לעמוד הבא (move-whole); הערה גדולה מקיבולת עמוד שלם
-        // נחתכת בגבול הפיזי (העמוד אינו יכול להכיל יותר — בעבר הוצבה שלמה
-        // והמרזב גלש מעל ראש הזרימה מחוץ לעמוד).
-        if (need <= maxLines) {
-          pendingFootnotes.push({ text: it.note.text, cont: it.note.cont, num: it.note.num, srcText: it.note.srcText || it.note.text, key: it.note.key });
-          continue;
-        }
-      }
-      const remainLines = maxLines - usedLines;
-      if (remainLines >= 1) {
-        // **S4.9:** השורה הראשונה של כל הערה קצרה ברוחב הסמן — אחרת המילים
-        // גולשות מעבר לשפה השמאלית של הדף. הגלישה של ההמשך נעשית מחדש
-        // בעמוד הבא (ברוחב הסמן שלו) — הטקסט הוא מה שנשמר, לא השורות.
-        // **S77 (בקשה 1):** cut=true — שורת החיתוך היא שורת-ביניים (ההערה
-        // ממשיכה בעמוד הבא) ותיושב לשני הצדדים בתצוגה וב-PDF.
-        placed.push({ note: it.note, marker: it.marker, lines: it.lines.slice(0, remainLines), cont: !!it.note.cont, cut: true });
-        const restText = it.lines.slice(remainLines).join(' ');
-        pendingFootnotes.push({ text: restText, cont: true, srcText: it.note.srcText || it.note.text, key: it.note.key });
-        usedLines = maxLines;
-        lastPlacedCut = true; // **S74 (בעיה 7):** נחתכה — השורה האחרונה אינה סוף הערה
-      } else {
-        // אין עוד תקציב במרזב — ההערה כולה עוברת לעמוד הבא (מספרה הפרקי
-        // נשמר — S4.26 — כדי שהסמן בגוף וברישום יישארו זהים)
-        pendingFootnotes.push({ text: it.note.text, cont: it.note.cont, num: it.note.num, srcText: it.note.srcText || it.note.text, key: it.note.key });
-      }
-    }
-    const totalH = placed.reduce((a, p) => a + p.lines.length * GEO.FN_PITCH, 0);
-    let yy = FLOW_BOTTOM - totalH;
-    for (const p of placed) {
-      const it = { marker: p.marker, lines: [], cont: p.cont };
-      if (p.cut) it.cutLast = true; // **S77 (בקשה 1):** שורת החיתוך — מיושבת לשני הצדדים
-      for (const l of p.lines) { it.lines.push({ words: String(l).split(' '), y: yy }); yy += GEO.FN_PITCH; }
-      pg.footnotes.push(it);
-    }
-    // **S74 (בעיה 7):** במצב block — רק ההערה האחרונה של העמוד מקבלת מרכוז
-    // שורה-אחרונה, ורק אם לא נחתכה (המשך בעמוד הבא ⇒ בלי מרכוז).
-    if (placed.length) {
-      const lastRec = pg.footnotes[pg.footnotes.length - 1];
-      if (lastRec) lastRec.centerLast = !lastPlacedCut;
-    }
-  }
-
-  /** **S4.24 (מקור יחיד לחישוב פריטי ההערות):** אותה הפקה בדיוק — סמן לפי
-   * מקום בתור (markerWord(i+1)), רוחבו בגודל הרישום, וגלישה ב-SINGLE_W−רוחב-
-   * הסמן — משרתת גם את התקציב (fnReserveFor) וגם את הפריסה בפועל. בעבר
-   * השתיים חישבו בנפרד (התקציב מדד את כולם ברוחב הסמן של ההערה הראשונה
-   * בלבד) וסטו זו מזו בסמנים ארוכים; כעת הצדדים אינם יכולים להתפצל. */
-  function fnItemsFor(queue) {
-    // **S4.26:** סמן לפי המספר הפרקי של ההערה (או מקום בתור במצב page);
-    // **המשך (cont) — בלי סמן כלל** (דיווח משתמש: "להסיר את אות הסימון מהערה
-    // שהיא המשך של הערה מעמוד קודם"). רוחב הסמן בגודל הרישום — כמו שמוצג.
-    let pagePos = 0;
-    return queue.map((n) => {
-      let marker = '', mkW = 0;
-      if (!n.cont) {
-        const num = (n.num != null) ? n.num : ++pagePos;
-        marker = LineBreaker.markerWord(num, cfg.fnNumSeparator);
-        // **S74 (בעיה 5):** הסמן נמדד בגופן הרישום של המקור (FRL — נמדד
-        // בייחוס עמ' 31/37); גוף ההערה בגופן גוף ההערה (fnApi).
-        mkW = fnMarkApi.measureTextWidth(marker, cfg.fnListingNumSize, 0)
-          + fnApi.measureTextWidth(' ', SZ.fnBody, 0);
-      }
-      const lines = wrapText(n.text, fnApi, SINGLE_W - mkW, SZ.fnBody);
-      return { note: n, marker, lines, mkW };
-    });
-  }
-
-  /** **S4.26 (זרימה רציפה):** כל הערות העמוד זורמות כרצף אחד — הערה הבאה
-   * מתחילה באותה שורה שבה הסתיימה קודמתה (כמו continuous-mode של המקור:
-   * ‏.note-line{display:inline} + רווח-כפול בין הערות). סמני הערות הטריות
-   * מוצגים בגודל הרישום בתוך הזרם; המשך נפתח ב-'(המשך)' בלבד. מחזיר
-   * שורות זרימה — כל שורה רשימת טוקנים {t, mk?, gap?, noteIdx} — מקור
-   * יחיד לתקציב (fnReserveFor) ולפריסה (placeFootnoteArea). */
-  function fnFlowFor(queue) {
-    const items = fnItemsFor(queue);
-    const spaceW = fnApi.measureTextWidth(' ', SZ.fnBody, 0);
-    // רווח-כפול בין הערות (כמו margin-right:1em במקור): טוקן רווח ברוחב 0 —
-    // הזוגות סביבו מוסיפים שני רווחי-מילה רגילים (מילה·רווח·[רווח]·רווח·מילה
-    // = פעמיים רווח) — אותו דבר ב-DOM (nbsp) וב-PDF (שני גאפים).
-    const tokens = [];
-    items.forEach((it, i) => {
-      if (i > 0) tokens.push({ t: '', gap: true, noteIdx: i, w: 0 });
-      if (it.note.cont) {
-        const p = '(המשך)';
-        tokens.push({ t: p, w: fnApi.measureTextWidth(p, SZ.fnBody, 0), noteIdx: i });
-      }
-      if (it.marker) {
-        tokens.push({ t: it.marker, mk: true, sizePt: cfg.fnListingNumSize, w: fnMarkApi.measureTextWidth(it.marker, cfg.fnListingNumSize, 0), noteIdx: i });
-      }
-      for (const wd of String(it.note.text).split(/\s+/).filter(Boolean)) {
-        tokens.push({ t: wd, w: fnApi.measureTextWidth(wd, SZ.fnBody, 0), noteIdx: i });
-      }
-    });
-    const flowLines = [];
-    let cur = [], curW = 0;
-    for (const tk of tokens) {
-      const tw = tk.w != null ? tk.w : 0;
-      const add = tw + (cur.length ? spaceW : 0);
-      // **D-92:** רווח-ביטחון התאמת-דפדפן — זרימת ההערות מרונדרת מחדש כבלוק
-      // אחד (white-space:normal) ושורה ללא רווח גולשת מתיבתה המתוכננת.
-      if (cur.length && curW + add > SINGLE_W - FIT_EPS) { flowLines.push(cur); cur = [tk]; curW = tw; }
-      else { cur.push(tk); curW += add; }
-    }
-    if (cur.length) flowLines.push(cur);
-    return { items, flowLines };
-  }
-
-  /** **S75 (בקשה 1): קווי התחלה וצורך — מקור יחיד לתקרת body-first.**
-   * need = סך שורות הזרימה של כל התור (continuous: fnFlowFor; block: fnItemsFor);
-   * starts = השורה (1-based) שבה מתחילה ההערה הטרייה האחרונה (cont=false) —
-   * זו רצפת ההתחלות: התקציב לא יורד ממנה, ולכן כל הערה שהסמן שלה הוצב
-   * בעמוד מתחילה בו (עדיפות 2 של המשתמש; עדיפות 1 = הכלה מלאה כשהצורך
-   * כולו נכנס בתקרה). נגזר מאותן בניות זרימה של התקציב וההצבה — הצדדים
-   * לא מתפצלים. */
-  function fnBodyFirstLines(queue) {
-    if (fnLayoutMode === 'continuous') {
-      const built = fnFlowFor(queue);
-      let starts = 0;
-      const seen = new Set();
-      for (let i = 0; i < built.flowLines.length; i++) {
-        for (const t of built.flowLines[i]) {
-          if (t.noteIdx == null || seen.has(t.noteIdx)) continue;
-          // **S75:** "התחלה" = שורה עם מילה מגוף ההערה — לא שורת סמן בלבד
-          // (סמן ללא מילים הותיר "הערה ריקה" בעמוד הסמן; נמדר ב-very_long
-          // עמ' 562 — סמן יא. בלבד). סמן, רווח-כפול ותווית (המשך) אינם תוכן.
-          if (t.gap || t.mk || t.t === '(המשך)') continue;
-          seen.add(t.noteIdx);
-          const it = built.items[t.noteIdx];
-          if (it && it.note && !it.note.cont) starts = i + 1;
-        }
-      }
-      return { need: built.flowLines.length, starts: Math.min(starts, built.flowLines.length) };
-    }
-    let need = 0, starts = 0;
-    for (const it of fnItemsFor(queue)) {
-      need += it.lines.length;
-      if (!it.note.cont) starts = need - it.lines.length + 1;
-    }
-    return { need, starts: Math.min(starts, need) };
-  }
-
-  function fnReserveFor(queue) {
-    if (!queue.length) return 0;
-    // **S75 (בקשה 1 — body-first):** התקציב = מה שהמרזב צריך, עד התקרה
-    // היחסית (fnBarMax — 50% מגובה הזרימה בברירת המחדל), ולא מתחת לרצפת
-    // ההתחלות — הגוף ממלא את כל השאר ("מילוי אזור הטקסט העיקרי"). התקציב
-    // בפועל נתפס עוד יותר ב-applyFnReserve לחלל שמתחת לגוף שהונח.
-    if (fnBodyFirst) {
-      const { need, starts } = fnBodyFirstLines(queue);
-      const capLines = Math.max(1, Math.floor(fnBarMax / GEO.FN_PITCH));
-      // **S75:** רצפת ההתחלות חתוכה לקיבולת הפיזית של העמוד — התקציב לעולם
-      // אינו דורש יותר ממה שהעמוד מסוגל להכיל; החלל בפועל מוגבל עוד יותר
-      // ב-applyFnReserve (ה-clamp לחלל שמתחת לגוף שהונח).
-      const capByFull = Math.floor(FN_FULL_CAP_PX / GEO.FN_PITCH);
-      const eff = Math.max(Math.min(need, capLines), Math.min(starts, capByFull, need));
-      return eff * GEO.FN_PITCH + 38.5;
-    }
-    // **S4.13 (כיול מהייחוס):** אותה נוסחת גלישה כמו הרינדור בפועל (השורה
-    // הראשונה קצרה ברוחב הסמן) — הצדדים חייבים להסכים על מספר השורות.
-    let total = fnItemsFor(queue).reduce((a, it) => a + it.lines.length * GEO.FN_PITCH, 0);
-    // **S4.26 (זרימה רציפה):** שורות הזרימה המשותפת — מקור יחיד (fnFlowFor).
-    if (fnLayoutMode === 'continuous') {
-      total = fnFlowFor(queue).flowLines.length * GEO.FN_PITCH;
-    }
-    // **S4.24 (תקרת המרזב):** במצב block עם מדיניות split המרזב מוגבל
-    // ב-fn-bar-max-height-px — התקציב מכסה רק את מה שיוצג בעמוד; השאר
-    // נפצל לעמוד הבא (pendingFootnotes) ואינו מכפיל את השמורה.
-    if (fnSplitEnabled) total = Math.min(total, fnBarMax);
-    else total = Math.min(total, FN_FULL_CAP_PX); // **S6.0 (F7):** תקרה גם בלי split
-    // **S4.14 (תקרה מגובה הזרימה של הייחוס):** גובה body-flow בפועל לכל עמוד
-    // עם הערות, מתוויות הייחוס: ‏4 שורות→810 (שמורה 105), 2→843 (72),
-    // 6→778 (137), 1→860 (55), 8→741 (174). השיפוע = FN_PITCH (16.7) בדיוק,
-    // והתקרה = 915−810−66.8 = 38.2 (טווח 36.8–40.4 בכל 9 נקודות המדידה).
-    // הערך הקודם 48 חתך את הגוף 9.5px מוקדם מדי בכל עמוד עם הערות — בעמ' 11
-    // זה בדיוק השורה החסרה בבלוק התחתון (117 מול 136 בייחוס).
-    return total + 38.5;
-  }
-
-  /**
-   * **S4.13: פורט נאמן של balanceColumns מהמקור (typesetter.js הצהוב, שורות 1327-1560).**
-   *
-   * האיזון הקודם (S4.9-S4.12) חילק יחידות שלמות בלבד — והוכח כקטסטרופלי כשהבלוק
-   * נפתח בכותרת: [h4 | כל-השאר] (h4 לבד בטור הימני, 26px מול ~600px) — בדיוק ההפך
-   * מהמקור שמפצל פסקאות בגבולות **שורות**. המקור:
-   *
-   *   1. איחוי חלקי אותו טוקן (p-cut + המשך) לפריט אחד עם כל השורות.
-   *   2. מועמדים {i, l}: פריטים 0..i-1 שלמים בימין; אם l>0 גם l שורות ראשונות של
-   *      פריט i בימין והשאר בשמאל. חוקיות: minFirst=minLast=2 (אין שורה בודדת
-   *      בתחילת/סוף חיתוך), וכותרת לא נשארת עם שורה אחת בלבד (prevIsHeading && l<2).
-   *      בנוסף {i+1, 0} אחרי כל פסקה — הימני מסתיים בסוף פסקה שלמה.
-   *   3. ציון (better של המקור): נכנס-בגובה > גלישה מינימלית > |rH−lH| מינימלי >
-   *      בשוויון — טור ימני גבוה יותר. המקור מוצא את נקודת המעבר בחיפוש בינארי
-   *      על מונוטוניות rH−lH וסורק ±3 (ומרחיק עד 80 אם אף מועמד לא נכנס); כאן
-   *      הגבהים אריתמטיים וסריקה מלאה מוצאת את אותו מיטב בדיוק.
-   *   4. החלק הימני של פסקה מפוצלת = p-cut (שורתו האחרונה מיושרת); השמאלי =
-   *      המשך (בלי חלון). אם אין אף מועמד — המילוי המקורי נשמר (כמו המקור).
-   */
-  function balanceBlock(block, availH) {
-    // ---- 1. איחוי חלקי אותו טוקן (כמו mergedItems במקור) ----
-    const units = [...block.cols[0], ...block.cols[1]];
-    if (!units.length) { block.split = null; return; }
-    const items = [];
-    for (const u of units) {
-      const last = items[items.length - 1];
-      if (u.kind === 'para' && last && last.kind === 'para' && last.tokenId === u.tokenId) {
-        last.lines.push(...u.lines);
-        last.isEnd = u.isEnd; // דגל הסוף מהחתיכה המאוחרת (cut נשאר cut)
-      } else if (u.kind === 'para') {
-        items.push({ ...u, lines: [...u.lines] });
-      } else {
-        items.push(u);
-      }
-    }
-    // ---- 2. מועמדים חוקיים (getSplitRules: minFirst=minLast=2) ----
-    const cands = [];
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].kind !== 'para') continue;
-      const n = items[i].lines.length;
-      const prevIsHeading = i > 0 && items[i - 1].kind === 'heading';
-      for (let l = 1; l < n; l++) {
-        if (l < 2 || n - l < 2) continue;      // אין שורה בודדת בתחילת/סוף חלק
-        if (prevIsHeading && l < 2) continue;  // כותרת + שורה אחת בלבד (מכוסה ב-l≥2)
-        cands.push({ i, l });
-      }
-      cands.push({ i: i + 1, l: 0 }); // הימני מסתיים בסוף פסקה שלמה — לא בכותרת
-    }
-    if (!cands.length) { block.split = null; return; } // כותרות בלבד — המילוי נשמר
-    // ---- 3. הערכת מועמד (גבהים אריתמטיים; unitH = הקליברציה שלנו) ----
-    const evalC = (c) => {
-      let rH = 0, lH = 0;
-      for (let k = 0; k < c.i; k++) rH += unitH(items[k]);
-      if (c.l > 0) {
-        const it = items[c.i];
-        // **S4.17:** פס/מרווח מהיחידה (lhPx/gapPx) — עקבי עם unitH גם אחרי מתיחה
-        rH += c.l * (it.lhPx != null ? it.lhPx : it.pitch) + (it.gapPx != null ? it.gapPx : 7); // p-cut — גם הוא <p>
-        lH += (it.lines.length - c.l) * (it.lhPx != null ? it.lhPx : it.pitch) + (it.gapPx != null ? it.gapPx : 7);
-        for (let k = c.i + 1; k < items.length; k++) lH += unitH(items[k]);
-      } else {
-        for (let k = c.i; k < items.length; k++) lH += unitH(items[k]);
-      }
-      return { rH, lH, diff: rH - lH, abs: Math.abs(rH - lH) };
-    };
-    const cap = (availH != null && isFinite(availH)) ? availH : Infinity;
-    let best = null, bestC = null;
-    const better = (a, b) => { // better(a, b) — a עדיף על b (העתק מדויק מהמקור)
-      if (a.fits !== b.fits) return a.fits;
-      if (!a.fits) return a.over < b.over;
-      if (a.abs !== b.abs) return a.abs < b.abs;
-      return a.diff >= 0 && b.diff < 0; // שוויון: עדיפות לטור ימני גבוה יותר
-    };
-    for (const c of cands) {
-      const e = evalC(c);
-      const cand = { fits: Math.max(e.rH, e.lH) <= cap + 0.01, over: Math.max(e.rH, e.lH), abs: e.abs, diff: e.diff };
-      if (!best || better(cand, best)) { best = cand; bestC = c; }
-    }
-    // ---- 4. החלה: פיצול הפריט בגבול השורה שנבחר ----
-    const c = bestC;
-    const r = [], l = [];
-    for (let k = 0; k < c.i; k++) r.push(items[k]);
-    if (c.l > 0) {
-      const it = items[c.i];
-      // החלק הימני: p-cut — isEnd=false; החלון נשאר בשורה הראשונה (כמו createDropWord)
-      r.push({ ...it, lines: it.lines.slice(0, c.l), isEnd: false, hasWindow: it.hasWindow && !it.isCont });
-      // החלק השמאלי: המשך — isCont=true, בלי חלון (הגליף כבר בימין), ובלי
-      // הערת-צד — **S4.13 (תיקון כפילות):** ההערה מוצמדת לפסקה במופעה
-      // הראשון (הטור הימני); ה-spread העתיק אותה גם להמשך והיא הודפסה
-      // פעמיים — בשני טורי השוליים (נצפה בעמ' 11: הערת h7#1 בשני הצדדים).
-      l.push({ ...it, lines: it.lines.slice(c.l), isCont: true, hasWindow: false, sideNote: null, from: it.from + c.l });
-      for (let k = c.i + 1; k < items.length; k++) l.push(items[k]);
-    } else {
-      for (let k = c.i; k < items.length; k++) l.push(items[k]);
-    }
-    block.split = { r, l };
-    // **S4.9:** ה-cursor מתעדכן לתחתיות האמיתיות — אחרי האיזון מיקום הפס/הבלוק
-    // הבא (blockBottom) היה מחושב מהמילוי הקודם וחופף את זנב הטור המאוזן.
-    const e = evalC(c);
-    block.cursor[0] = block.yTop + e.rH;
-    block.cursor[1] = block.yTop + e.lH;
-  }
-
-  function unitH(u) {
-    if (u.kind === 'heading') return u.h;
-    // **S4.13:** כל חתיקת <p> — כולל p-cut — נושאת מרווח 7px בגובה הטור (DOM)
-    // **S4.17:** המרווח והפס נשלפים מהיחידה עצמה — אחרי מתיחה/כיווץ (lhPx/gapPx)
-    // הם עשויים לסטות מהבסיס (pitch/7).
-    return u.lines.length * (u.lhPx != null ? u.lhPx : u.pitch) + (u.gapPx != null ? u.gapPx : 7);
-  }
-
-  /** **S4.17:** הגובה הכולל של טור (סדרת יחידות). */
-  function colHeightUnits(units) {
-    let h = 0;
-    for (const u of units) h += unitH(u);
-    return h;
-  }
-
-  /** **S72 (שיפורים 1+2 — מדידת גובה-דיו):** מרווח-הפסקה שאחרי היחידה
-   * האחרונה של הטור (7px, או 0 לכותרת) הוא חלק מגובה המודל/DOM
-   * (scrollHeight של המקור) אך **אינו נראה לעין** — הדיו מסתיים שורה
-   * אחת קודם. יעדי יישור-התחתיות מוגדרים לכן בגובה-דיו: שני טורים
-   * שאחד מסתיים בפסקה והשני בכותרת/חיתוך מקבלים יעדים שונים במונחי
-   * המודל (הפרש מרווח-הזנב) ותחתית-דיו זהה בפועל — ההגדרה
-   * שנתן המשתמש: "קצה התחתון של הטקסט שבשני הטורים יהיה שווה". */
-  function trailingGapOf(units) {
-    if (!units || !units.length) return 0;
-    const last = units[units.length - 1];
-    if (!last || last.kind !== 'para') return 0;
-    return last.gapPx != null ? last.gapPx : 7;
-  }
-
-  /** **S72:** גובה-דיו של טור — גובה המודל בלי מרווח-הזנב הבלתי-נראה. */
-  function colVisualH(units) {
-    return colHeightUnits(units) - trailingGapOf(units);
-  }
-
-  /** פריסת המחסנית: כותבת שורות עם y מפורש לטורי העמוד. */
-  function layoutStack(pg, stack, top) {
-    const colR = [], colL = [];
-    let y = top;
-    for (const seg of stack) {
-      if (seg.type === 'span') {
-        pg.bands.push({
-          kind: 'h3-title', text: seg.text, sizePt: SZ.h3,
-          y: seg.y + H3_SPAN_TOP_PAD_PX, h: seg.h,
-          lineHeightPx: seg.lineHeightPx || seg.h, tokenId: seg.tokenId
-        });
-        y = seg.y + seg.h;
-        continue;
-      }
-      const block = seg;
-      const rUnits = block.split ? block.split.r : block.cols[0];
-      const lUnits = block.split ? block.split.l : block.cols[1];
-      let ry = block.yTop;
-      for (const u of rUnits) ry = emitUnit(pg, colR, u, ry, 'right');
-      let ly = block.yTop;
-      for (const u of lUnits) ly = emitUnit(pg, colL, u, ly, 'left');
-      y = Math.max(ry, ly);
-      // **S4.14 (דיאג גיאומטריה):** dump של מבנה הבלוקים להשוואה מול תוויות
-      // הייחוס (block-2col W×H | col:right Np Nl Kw) — מופעל רק עם
-      // RED_DEBUG_BLOCKS=1 ואינו משפיע על הפלט.
-      if (typeof process !== 'undefined' && process.env && process.env.RED_DEBUG_BLOCKS) {
-        const cnt = (units) => ({
-          p: units.filter(u => u.kind === 'para').length,
-          l: units.filter(u => u.kind === 'para').reduce((a, u) => a + u.lines.length, 0),
-          h: units.filter(u => u.kind === 'heading').map(u => 'h' + u.level).join(','),
-          w: units.filter(u => u.kind === 'para' && u.hasWindow).length,
-        });
-        pg._blocks = pg._blocks || [];
-        pg._blocks.push({ yTop: Math.round(block.yTop*10)/10, r: cnt(rUnits), l: cnt(lUnits), rH: Math.round((ry-block.yTop)*10)/10, lH: Math.round((ly-block.yTop)*10)/10, split: !!block.split });
-      }
-    }
-    if (typeof process !== 'undefined' && process.env && process.env.RED_DEBUG_BLOCKS && stack.some(s => s.type === 'span')) {
-      pg._blocks = pg._blocks || [];
-      for (const s of stack) if (s.type === 'span') pg._blocks.push({ span: true, y: Math.round(s.y*10)/10, h: s.h });
-    }
-    pg.columns[0] = colR;
-    pg.columns[1] = colL;
-    void y;
-  }
-
-  function emitUnit(pg, col, u, y, sideName) {
-    if (u.kind === 'heading') {
-      col.push({
-        words: [u.text], sizePt: ({ 4: SZ.h4, 5: SZ.h5, 6: SZ.h6 })[u.level] || SZ.body,
-        heightPx: u.h, kind: 'heading', level: u.level, isLast: false,
-        tokenId: u.tokenId, window: false, windowWords: null, y,
-        paraId: null, lineIdx: null, align: 'center'
-      });
-      return y + u.h;
-    }
-    let i = 0;
-    const uLh = u.lhPx != null ? u.lhPx : u.pitch;   // **S4.17:** פס בפועל (אחרי מתיחה/כיווץ)
-    const uGap = u.gapPx != null ? u.gapPx : 7;       // **S4.17:** מרווח בפועל (7 + padding עד 9)
-    for (const ln of u.lines) {
-      const lineIdxGlobal = u.from + i;
-      col.push({
-        words: ln.words.slice(),
-        markerIdx: ln.markerIdx || [],
-        parenFlags: ln.parenFlags || null,
-        parenStarts: ln.parenStarts || null,
-        parenEnds: ln.parenEnds || null,
-        sizePt: u.sizePt, font: u.font || null, heightPx: uLh, kind: 'paragraph',
-        isLast: u.isEnd && i === u.lines.length - 1,
-        tokenId: u.tokenId,
-        window: !!(u.hasWindow && lineIdxGlobal < 2),
-        windowWords: (u.hasWindow && lineIdxGlobal === 0) ? u.windowWords : null,
-        // **S4.26 (חלון קלאסי שקוע):** רוחב החלון נישא גם על שורה 1 — הטקסט
-        // עוטף את מילת-החלון בשתי השורות הראשונות (כמו float:right עם
-        // height:1.25em במקור), לא רק בשורה הראשונה.
-        windowW: (u.hasWindow && lineIdxGlobal < 2) ? (u.windowW || 0) : null,
-        y, paraId: u.tokenId, lineIdx: lineIdxGlobal
-      });
-      y += uLh;
-      i++;
-    }
-    y += uGap; // **S4.13:** מרווח 7px אחרי כל חתיקת <p> (כולל p-cut) — כמו ה-DOM של המקור
-    if (u.sideNote) {
-      // **S4.13 (תיקון עיגון):** ה-anchor חייב להיות **ראשית הפסקה** — הוא
-      // חושב אחרי ה-+=7 של מרווח הפסקה ונספג 7px למטה (נצפה: הערת-הצד
-      // בעמ' 11 עוגנה 331pt במקום ~325.7 — ראשית הפסקה; הייחוס: 323.2).
-      const anchor = y - uGap - u.lines.length * uLh;
-      // **S4.13:** הגלישה בגופן HadassahFriedlaender וברוחב טור השוליים המלא
-      // (50.5px — הוכח מהייחוס: השורה הארוכה ביותר 'חילוקי משמעות' = 50.4px;
-      // היה −2px שחתך אותה).
-      const lines = wrapText(u.sideNote, marginApi, GEO.MARGIN_W, SZ.marginNote);
-      pg.marginNotes.push({
-        side: sideName === 'right' ? 'right' : 'left',
-        anchorY: anchor,
-        lines: lines.map((t, i2) => ({ text: t, y: anchor + i2 * GEO.MN_PITCH }))
-      });
-    }
-    return y;
-  }
-
-  // ---- הרצת המקטעים ----
-  // **S6.2:** ה-ledger נוצר כאן — לפני הזרימה — כדי ש-finalizeBlock יוכל
-  // לדווח אי-איזון בלתי-פתיר (column-imbalance) בזמן ההצבה עצמה.
-  // בעבר נוצר בסוף (אחרי flowSection) — ולכן לא היה זמין לזרימה.
-  const ledger = new Ledger();
-
-  // **S76 (ליקוי 2 — 12.11, "הערות של פרק אחד לא יכולות להמשיך בפרק הבא!"):
-  // שטיפת המשכים לעמודים ייעודיים.** המשכי הערות שנותרו בסוף מקטע מוצבים
-  // בעמודי-המשך של הפרק **עצמו** — לפני פתיחת הפרק הבא (h0/h2) או שער-משנה
-  // (h1) — בדיוק כמו שטיפת-הסיום (S4.24) בסוף המסמך. הגוף אינו נדחק
-  // (החלטת S75 המפורשת של המשתמש); ההערות משלימות את עצמן בעמודים שלהן,
-  // והפרק הבא נפתח עם מרזב נקי — בלי '(המשך)' של הפרק הקודם בתחתית עמוד
-  // הפתיחה שלו (נמדר בספר המשתמש: עמ' 690/692/695/696 קיבלו המשכים מהפרק
-  // הקודם). עמודים אלה הם 'regular' עם הכותרת הרצה של הפרק הממשיך, מספרים
-  // וגיליון כרגיל, והמרזב בהם בקיבולת העמוד המלאה (capByFull) — ההערות
-  // משלימות במינימום עמודים. ב-legacy — ללא שינוי (התנהגות S74 הנעולה).
-  const flushPendingFootnotes = () => {
-    while (pendingFootnotes.length) {
-      const pg = newPage('regular');
-      setHeader(pg, currentH2);
-      placeFootnoteArea(pg, pendingFootnotes.splice(0), { flexSpacer: false, budgetLines: null });
-    }
-  };
-
-  for (let si = 0; si < sections.length; si++) {
-    const sec = sections[si];
-    if (sec.subShaar) {
-      const t = sec.subShaar;
-      // **S76 (ליקוי 2):** לפני שער-משנה — המשכי הפרק הקודם מסיימים אצלו,
-      // לא מדלגים מעל עמוד השער לפרק שאחריו.
-      if (fnBodyFirst) flushPendingFootnotes();
-      if (cfg.resetSimanOnH1) simanCounter = 0;
-      const pg = newPage('shaar-sub');
-      pg._secStartLevel = 1; // **EXT-15:** שער-משנה נפתח כמקטע h1
-      pg._h1Token = t;
-      pg.gateLines = gateLinesFor('shaar-sub', t);
-      currentH1 = t.text.split(/[-–—]/)[0].trim();
-      continue;
-    }
-    flowSection(sec);
-    // **S76 (ליקוי 2):** המקטע הבא פותח פרק חדש (h0/h2) — המשכי הפרק הנוכחי
-    // נשטפים לעמודים ייעודיים לפניו. מקטע inline (h3+) ממשיך את אותו פרק
-    // — שם ההמשכים זורמים במקביל למילוי הגוף (החלטת S75), ואין שטיפה.
-    const next = sections[si + 1];
-    if (fnBodyFirst && pendingFootnotes.length && next && (next.subShaar || next.newPage)) {
-      flushPendingFootnotes();
-    }
-  }
-
-  // **S4.24 (שימור תוכן — שטיפת המשכים אחרונים):** המשכי הערות שנקצצו בתקרת
-  // המרזב ונותרו אחרי הטוקן האחרון מוצגים בעמודי המשך ייעודיים — לעולם לא
-  // מאבדים שורת הערה. כל עמוד כזה מציג לפחות שורה אחת (usedLines=0 בפתיחה)
-  // ולכן הלולאה מתכנסת תמיד.
-  flushPendingFootnotes();
-
-  // ---- תוכן-עניינים כפול + מספור סופי ----
-  // **S77 (בקשה 3 — חיבור הגדרות תוכן-העניינים לנתיב המורשת):** עד כאן
-  // רשימות הרמות היו מה-raw בלבד (gtoc-show/dtoc-show) ו-14 ההגדרות
-  // toc-level-N-show/inline לא עשו דבר בפרופיל המורשת. כעת: show=false
-  // מסיר את הרמה משני התכנים (השליטה החיה); ברירת המחדל/true — רשימות
-  // המקור קובעות (לכל תוכן-עניינים הרשימה שלו: הכללי [1..6], המפורט [2..6]
-  // — הוספת רמה שאינה ברשימת המקור היא הגדרת נתיב-מודרני בלבד, מתועד).
-  // inline=true ממזג רשומות רצופות של אותה רמה לשורת ההורה (טקסט ' | ' —
-  // כמו buildTocModel של הנתיב המודרני; גודל/פוליו של ההורה). הייבוא של
-  // IMUD נותן ערכי פתיחה המשמרים את הפלט המכויל במדויק (רשימות המקור).
-  const tocLevelShowS77 = (n) => settings[`toc-level-${n}-show`] === false ? false : true;
-  const tocLevelInlineS77 = (n) => settings[`toc-level-${n}-inline`] === true;
-  const genShowRaw = Array.isArray(cfg.gtocShow) ? cfg.gtocShow : [1, 2, 3, 4, 5, 6];
-  const detShowRaw = Array.isArray(cfg.dtocShow) ? cfg.dtocShow : [2, 3, 4, 5, 6];
-  const lvlShown = (rawList, n) => tocLevelShowS77(n) && rawList.includes(n);
-  const genEntries = tokens.filter(t => t.type[0] === 'h' && lvlShown(genShowRaw, t.level))
-    .map(t => ({ tokenId: t.id, level: t.level, text: t.text }));
-  const detEntries = tokens.filter(t => t.type[0] === 'h' && lvlShown(detShowRaw, t.level))
-    .map(t => ({ tokenId: t.id, level: t.level, text: t.text }));
-
-  // **S6.3:** גדלים נפרדים לכל תוכן-עניינים — s-gtoc-* מול s-dtoc-*
-  // (עד כאן משותפים ב-SZ.tocLevel). ברירות המחדל = הערכים ההיסטוריים.
-  function tocSizesFor(kind) {
-    return kind === 'toc-detailed' ? cfg.dtocSizes : cfg.gtocSizes;
-  }
-  function tocRowH(level, sizes) {
-    return ((sizes && sizes[level]) || 10.5) * (96 / 72) * 1.3 + 8;
-  }
-  /**
-   * **S4.9 (התנהגות המקור):** הפריסה לעמודים היא ביחידות אטומיות — שורת h1/h2
-   * + קבוצת תתי-הכותרות שלה (break-inside: avoid במקור). קבוצה שלא נכנסת
-   * עוברת שלמה לעמוד הבא. כך נוצר פיצול 17/28/19 של הייחוס.
-   */
-  function makeTocPages(kind, entries, title) {
-    // **S6.0 (F5 — עטיפת שורות TOC):** שורות ה-TOC מעולם לא נמדדו ברוחב —
-    // כותרת ארוכה (180 תווים) הוצגה כשורה אחת של 1,524px וגלשה ~800px מחוץ
-    // לעמוד. כעת כל שורה נעטפת לרוחב הפנוי (x1 − מספרים − 10) בפסים של 26px
-    // (תיבת השורה); גובה השורה גדל והמילוי/המתיחה מתחשבים בו אוטומטית.
-    // המדידה בגוף הטקסט ×0.92 — שולי-ביטחון לגופן הכותרות הרחב (DavidLibre-Bold).
-    const wrapTocRow = (text, sizePt, w) => {
-      const ws = String(text || '').split(/\s+/).filter(Boolean);
-      const out = [];
-      let cur = '';
-      for (const wd of ws) {
-        const cand = cur ? cur + ' ' + wd : wd;
-        if (!cur || api.measureTextWidth(cand, sizePt, 0) <= w - FIT_EPS) cur = cand;
-        else { out.push(cur); cur = wd; }
-      }
-      if (cur) out.push(cur);
-      return out.length ? out : [''];
-    };
-    const sizes = tocSizesFor(kind);
-    // **S77 (בקשה 3):** מיזוג inline — רשומות רצופות של רמה inline=true מתמזגות
-    // לשורת ההורה הקודמת (טקסט משורשר ' | '; גודל/פוליו/מספר של ההורה) —
-    // אותה סמנטיקה כמו buildTocModel של הנתיב המודרני.
-    const mergedEntries = [];
-    for (const e of entries) {
-      const prev = mergedEntries[mergedEntries.length - 1];
-      if (prev && tocLevelInlineS77(e.level)) {
-        prev.text = prev.text + ' | ' + e.text;
-        continue;
-      }
-      mergedEntries.push({ ...e });
-    }
-    const rows = mergedEntries.map(e => {
-      const sizePt = sizes[e.level] || 10.5;
-      const x1 = GEO.TOC_TITLE_X1 - (e.level - 1) * GEO.TOC_STAIR;
-      const availW = Math.max(40, (x1 - GEO.TOC_NUM_X - 10) * 0.92);
-      const lines = wrapTocRow(e.text, sizePt, availW);
-      // **S6.3:** גופן השורה מההגדרות המקוריות (f-gtoc-*/f-dtoc-* ⇒ David
-      // Libre בברירת המחדל) — נקרא ישירות מה-raw (אין מפתח רישום נפרד
-      // לגופן ה-TOC); משפחה ראשונה מהמחסנית. הרינדור ב-dom-renderer לפי
-      // שדה ה-font.
-      const rawFontKey = (kind === 'toc-detailed' ? 'f-dtoc-' : 'f-gtoc-') + e.level;
-      const rawFontStack = String(rawSet[rawFontKey] || '');
-      const rawFirst = rawFontStack ? rawFontStack.replace(/'/g, '').split(',')[0].trim() : '';
-      return {
-        ...e, sizePt, x1, lines,
-        h: tocRowH(e.level, sizes) + Math.max(0, lines.length - 1) * 26,
-        font: rawFirst || settings['heading-' + e.level + '-font'] || null
-      };
-    });
-    // יחידות: h1 בודד; h2 + כל ה-h3..h6 שאחריו עד ה-h2 הבא
-    const units = [];
-    for (const r of rows) {
-      if (r.level <= 2 || !units.length) units.push([r]);
-      else units[units.length - 1].push(r);
-    }
-    const pagesRows = [];
-    let curRows = [], curH = 0, first = true;
-    // **S5.2 (מיפוי מוקשים F1 — עימוד תוכן-העניינים):** הקיבולת חושבה מ-GEO.FLOW_H
-    // (702px עמוד ראשון / 915px המשך) בעוד שהשורות ממוקמות בפועל בין
-    // TOC_FIRST_TOP/TOC_CONT_TOP לבין TOC_STRETCH_BOTTOM — כלומר 635/892px
-    // בלבד. ה-67/23px העודפים אפשרו דחיסה שדרסה שורות את שורות (מרווח 15.9px
-    // מול תיבת שורה 26px), התנגשות עם אזור הפוליו ואף שורות שירדו מתחת לתחתית
-    // העמוד. בנוסף, אצווה אטומית (h2 + כל תתי-הרשומות) שגדולה מהקיבולת הוצבה
-    // בכל זאת כשהעמוד ריק (ללא חלוקה). תוקן: קיבולת מהקבועים המכוילים בפועל,
-    // ואצווה גדולה מעמוד נחלקת בגבולות שורות בין עמודי ה-TOC.
-    const availOf = (f) => TOC_STRETCH_BOTTOM - (f ? TOC_FIRST_TOP : TOC_CONT_TOP);
-    for (const u of units) {
-      const uH = u.reduce((a, r) => a + r.h, 0);
-      let avail = availOf(first);
-      if (curH + uH > avail && curRows.length) { pagesRows.push({ rows: curRows, first }); curRows = []; curH = 0; first = false; avail = availOf(false); }
-      if (uH > avail && !curRows.length) {
-        // אצווה אטומית גדולה מעמוד שלם — פיצול בגבולות שורות (עדיף על דריסה/גלישה)
-        for (const r of u) {
-          if (curH + r.h > avail && curRows.length) { pagesRows.push({ rows: curRows, first }); curRows = []; curH = 0; first = false; avail = availOf(false); }
-          curRows.push(r); curH += r.h;
-        }
-        continue;
-      }
-      curRows.push(...u); curH += uH;
-    }
-    if (curRows.length) pagesRows.push({ rows: curRows, first });
-    return pagesRows.map((pr, pi) => {
-      const pg = blankPageObj(kind);
-      pg.headerSlots = { right: hdrR, center: title, left: hdrL };
-      pg._hdrCtx = { h1: '', h2: title }; // **S77:** עמוד TOC — מרכזו הענייני = הכותרת
-      const isLast = pi === pagesRows.length - 1;
-      // **S4.14:** מיקומי ה-TOC אבסולוטיים ומכוילים בפני עצמם (עמודי ה-TOC של
-      // הייחוס מתחילים ב-113.6px — שונה מזרימת הגוף!) ואינם זזים עם FLOW_TOP.
-      const top = pr.first ? TOC_FIRST_TOP : TOC_CONT_TOP;
-      const rowYs = [];
-      if (!isLast && pr.rows.length > 1) {
-        // **S5.2 (F1):** רצפה למרווח המתיחה — לא קטן מגובה השורה המרבי בעמוד;
-        // ואם הרצפה דוחפת את השורה האחרונה מעבר לתחתית אזור המתיחה — מערך טבעי
-        // (מוכרח להיכנס: סכום הגבהים ≤ הקיבולת). בלי הרצפה ה-gap ירד עד ~6px
-        // והשורות נדרסו זו על זו.
-        // **S6.0 (F6 — המתיחה המתה):** naturalGap לא ניכה את גובה השורה
-        // האחרונה ⇒ lastTop הגיע תמידית ל-BOTTOM בדיוק והתנאי
-        // (lastTop ≤ BOTTOM − hLast + 0.5) לא כלל לא התקיים (hLast≥20) —
-        // עמודי TOC דלילים נערמו מלמעלה בלי מתיחה, בניגוד לכוונת S5.2
-        // ("אזור המתיחה" של הייחוס). תוקם הנוסחה — השורה האחרונה נכנסת
-        // בדיוק לתחתית והמתיחה מופעלת בעמודים דלילים (עם רצפת maxH).
-        const maxH = Math.max.apply(null, pr.rows.map(r => r.h));
-        const hLast = pr.rows[pr.rows.length - 1].h;
-        const naturalGap = (TOC_STRETCH_BOTTOM - top - hLast) / (pr.rows.length - 1);
-        const gap = Math.max(naturalGap, maxH);
-        const lastTop = top + (pr.rows.length - 1) * gap;
-        if (lastTop <= TOC_STRETCH_BOTTOM - hLast + 0.5) {
-          pr.rows.forEach((r, i) => rowYs.push(top + i * gap));
-        } else {
-          let yy = top;
-          for (const r of pr.rows) { rowYs.push(yy); yy += r.h; }
-        }
-      } else {
-        let yy = top;
-        for (const r of pr.rows) { rowYs.push(yy); yy += r.h; }
-      }
-      pg.toc = {
-        title: pr.first ? title : null,
-        rows: pr.rows.map((r, i) => ({
-          tokenId: r.tokenId, level: r.level, text: r.text, lines: r.lines, sizePt: r.sizePt, y: rowYs[i],
-          folio: '',
-          x1: r.x1 != null ? r.x1 : GEO.TOC_TITLE_X1 - (r.level - 1) * GEO.TOC_STAIR
-        }))
-      };
-      return pg;
-    });
-  }
-
-  // סדר סופי: gates → toc-general×G → [blank] → shaar-sub → toc-detailed×D → body
-  // **תיקון S4.9:** "שערים" = shaar-main/back בלבד — shaar-sub שייך לגוף (אחרי
-  // ה-blank), אחרת הוא נגרר לראש המסמך וכל הסדר משתבש.
-  const gates = [];
-  const bodies = [];
-  for (const p of pages) ((p.type === 'shaar-main' || p.type === 'shaar-back') ? gates : bodies).push(p);
-  const genPages = cfg.enableGeneralToc && genEntries.length ? makeTocPages('toc-general', genEntries, 'תוכן עניינים כללי') : [];
-  const detPages = cfg.enableDetailedToc && detEntries.length ? makeTocPages('toc-detailed', detEntries, 'תוכן עניינים מפורט') : [];
-
-  // **S5.2 (מיפוי מוקשים F2 — הערות סיום בנתיב המורשת):** שורות "הערת סיום - …"
-  // (en-line-prefix של המקור; המפתח קיים ב-default_settings של כל 8 קובצי
-  // המקור) נצרכו בטוקניזציה ל-token.endNote — אך אף קוד מעולם לא קרא אותו:
-  // התוכן אבד בשקט. כאן נבנים עמודי הערות-הסיום בסוף הספר: כותרת
-  // (fn-title-text) בעמוד הראשון, שני טורים (COL_W), סמן גימטריה רציף
-  // בגודל הרישום + גוף ההערה ב-FRL 8.5pt — אותם כללי עטיפה כמו רשימת
-  // ההערות (wrapText ברוחב טור−סמן, FIT_EPS בכל נקודות השבירה). המשך
-  // חתוך בין עמודים/טורים מסומן '(המשך)' — כמו זרימת ההערות.
-  const endNoteTokens = tokens.filter(t => t.type === 'p' && t.endNote);
-  const endnotePagesBuilt = [];
-  if (endNoteTokens.length) {
-    const EN_TITLE_H = 44;
-    const mkSpaceW = fnApi.measureTextWidth(' ', SZ.fnBody, 0);
-    let enPg = null, enCol = 0, enY = 0, enFirst = true;
-    const openEndPage = () => {
-      enPg = newPage('endnotes');
-      setHeader(enPg, cfg.fnTitleText);
-      enPg._enFirst = enFirst;
-      // **S6.3:** גופן כותרת ההערות מההגדרות (f-note-title ⇒ David Libre).
-      if (enFirst) enPg.bands.push({ kind: 'endnote-title', text: cfg.fnTitleText, sizePt: SZ.h2, y: GEO.FLOW_TOP, h: EN_TITLE_H, tokenId: null, font: settings['endnote-title-font'] || null });
-      enCol = 0; enY = GEO.FLOW_TOP + (enFirst ? EN_TITLE_H : 0);
-      endnotePagesBuilt.push(enPg);
-    };
-    const nextColOrPage = () => {
-      if (enCol === 0) { enCol = 1; enY = GEO.FLOW_TOP + (enPg._enFirst ? EN_TITLE_H : 0); return true; }
-      enFirst = false; openEndPage(); return true;
-    };
-    openEndPage();
-    endNoteTokens.forEach((tok, ni) => {
-      const marker = LineBreaker.markerWord(ni + 1, cfg.fnNumSeparator);
-      const mkW = fnApi.measureTextWidth(marker, cfg.fnListingNumSize, 0) + mkSpaceW;
-      const contW = fnApi.measureTextWidth('(המשך)', cfg.fnListingNumSize, 0) + mkSpaceW;
-      const noteLines = wrapText(tok.endNote, fnApi, GEO.COL_W - Math.max(mkW, contW), SZ.fnBody);
-      let li = 0, seg = 0;
-      while (li < noteLines.length) {
-        const room = Math.floor((FLOW_BOTTOM - enY) / GEO.FN_PITCH);
-        if (room <= 0) { nextColOrPage(); continue; }
-        // אטומיות: הערה שלמה בעמוד-טור אחד כשהיא נכנסת; אחרת חלוקה בגבולות שורות
-        const need = noteLines.length - li;
-        if (need > room && need <= Math.floor((FLOW_BOTTOM - (GEO.FLOW_TOP + (enPg._enFirst && enCol === 0 ? EN_TITLE_H : 0))) / GEO.FN_PITCH)) {
-          nextColOrPage(); continue; // מעבר לטור/עמוד פנוי — וההערה תיכנס שלמה
-        }
-        const take = Math.min(room, need);
-        for (let k = 0; k < take; k++, li++) {
-          const words = String(noteLines[li]).split(' ').filter(Boolean);
-          let markerIdx = [];
-          if (k === 0) {
-            const head = seg === 0 ? marker : '(המשך)';
-            words.unshift(head);
-            markerIdx = [0];
-          }
-          enPg.columns[enCol].push({
-            words, markerIdx, parenFlags: null, parenStarts: null, parenEnds: null,
-            sizePt: SZ.fnBody, heightPx: GEO.FN_PITCH, kind: 'paragraph',
-            isLast: li === noteLines.length - 1,
-            tokenId: tok.id, window: false, windowWords: null,
-            y: enY, paraId: null, lineIdx: null, align: null
-          });
-          enY += GEO.FN_PITCH;
-        }
-        if (li < noteLines.length) { seg++; nextColOrPage(); }
-      }
-    });
-  }
-  const subIdx = bodies.findIndex(p => p.type === 'shaar-sub');
-  const before = subIdx >= 0 ? bodies.slice(0, subIdx + 1) : [];
-  const after = subIdx >= 0 ? bodies.slice(subIdx + 1) : bodies;
-
-  // **EXT-15 (פתיחה בעמוד אי-זוגי לפי רמת כותרת — ensureOddPageStart של
-  // המקור):** הליכה על הסדר הסופי (ההרכבה מזיזה עמודי TOC — מצב הזרימה
-  // אינו המקום); לפני עמוד פתיחת-מקטע מסומן (h0/h1/h2) שהיה נוחת באינדקס
-  // אי-זוגי (עמוד זוגי פיזי = גב) — מוכנס עמוד ריק. מחליף את המקרה הפרטי
-  // של שער-המשנה (needBlank) בכלל הכללי; ברירות המחדל של המקור:
-  // odd-h0=true, odd-h1=true, odd-h2=false.
-  const seq = [...gates, ...genPages, ...before, ...detPages, ...after, ...endnotePagesBuilt];
-  const final = [];
-  for (const p of seq) {
-    if (p._secStartLevel != null) {
-      const need = p._secStartLevel === 0 ? cfg.oddH0
-        : p._secStartLevel === 1 ? cfg.oddH1
-        : p._secStartLevel === 2 ? cfg.oddH2 : false;
-      if (need && final.length % 2 === 1) final.push(blankPageObj('blank'));
-    }
-    final.push(p);
-  }
-
-  // מספור סופי + folios + אינדקסים
-  let pn = 1;
-  for (const p of final) {
-    const counted = ['toc-general', 'toc-detailed', 'blank', 'shaar-sub', 'regular', 'sign-open', 'preface'].includes(p.type);
-    p.pageNumber = counted ? pn++ : null;
-    const shows = ['toc-general', 'toc-detailed', 'regular', 'sign-open', 'preface'].includes(p.type);
-    // **D-108:** הגיליון המודפס בגימטריה חשופה בלבד — toBareGematria (מקור
-    // הפורמט המשותף לשני המנועים), לא toGematria המפריד אלפים בגרש.
-    p.folioDisplay = shows && p.pageNumber ? toBareGematria(p.pageNumber) : '';
-  }
-  final.forEach((p, i) => { p.index = i; });
-  // **שלב 6 פרוסה 2 (§8 בהוראה — שורש SIDE_NOTE_OVERLAP בעמ' 107):** עד כאן
-  // עגנה כל הערת-צד של נתיב המורשת לפסקתה בלבד — בלי הקצאה אנכית משותפת;
-  // שתי הערות שנפלו לאותו אזור באותו צד חפפו זו את זו (נצפה בעמ' 107:
-  // הערה חד-שורתית "בית" נכנסה בין שורות הערה ארוכה של הפסקה הקודמת). כאן
-  // מופעל על נתיב המורשת אותו עקרון המקצה של ה-DP (side-notes.placeSideNotes):
-  // מפל-דחיפה לכל צד בנפרד, בסדר המסמך, עם מרווח מינימלי, עד גבול מרזב
-  // ההערות — טהור (תזוזת מיקום בלבד, בלי מדידה חוזרת), דטרמיניסטי, ועם
-  // חותמת שינוי מפורשת על כל הערה שהוזזה (cascadeShiftPx — trace במודל).
-  {
-    const MN_GAP_PX = 2;                       // מרווח מינימלי בין הערות צד שונות (מעל סובלנות האודיט)
-    const MN_BOTTOM_LIMIT = GEO.FN_AREA_TOP - 2; // השוליים נגמרים במרזב ההערות
-    for (const p of final) {
-      if (!p.marginNotes || !p.marginNotes.length) continue;
-      for (const side of ['right', 'left']) {
-        let lastBottom = -1;
-        for (const mn of p.marginNotes) {
-          if (mn.side !== side) continue;
-          const h = (mn.lines || []).length * GEO.MN_PITCH;
-          if (lastBottom >= 0 && mn.anchorY < lastBottom + MN_GAP_PX) {
-            let target = lastBottom + MN_GAP_PX;
-            if (target + h > MN_BOTTOM_LIMIT) target = Math.max(mn.anchorY, MN_BOTTOM_LIMIT - h); // בלי לחדור למרזב; לא מעל העוגן המקורי
-            const shift = target - mn.anchorY;
-            if (shift > 0) {
-              mn.anchorY += shift;
-              for (const l of (mn.lines || [])) l.y += shift;
-              mn.cascadeShiftPx = shift; // trace: כמה ובגלל מה (מפל הערות-הצד)
-            }
-          }
-          lastBottom = Math.max(lastBottom, mn.anchorY + h);
-        }
-      }
-    }
-  }
-  // **S6.2:** התאמת מספרי העמודים ברשומות אי-האיזון לסדר הסופי —
-  // עמודי ה-TOC והריקים (EXT-15) מוכנסים אחרי הזרימה, ורשומות שנוצרו
-  // בזמן ההצבה מתייחסות לאינדקס הזמני של מערך הזרימה. ההתאמה לפי זהות
-  // העצם (כל עמוד ייחודי) — כך הניווט מהממצא בלשונית הבדיקה מגיע לעמוד
-  // הנכון בתצוגה.
-  {
-    const flowOrder = [...gates, ...bodies];
-    const finalIdx = new Map(final.map((p, i) => [p, i]));
-    for (const rec of ledger.issues.values()) {
-      if (rec.kind !== 'column-imbalance' || rec.page == null) continue;
-      const pgObj = flowOrder[rec.page];
-      const ni = pgObj ? finalIdx.get(pgObj) : null;
-      if (ni != null) { rec.page = ni; rec.target = `balance@p${ni}`; }
-    }
-  }
-  // **EXT-19 (כותרות מתחלפות — hdr-alternating):** בעמודים זוגיים-פיזיים
-  // (אינדקס אי-זוגי) חצאי שם הספר מתחלפים בין הצדדים — כמו buildHeaderGridHTML
-  // של המקור (isEven ⇒ החלפה). ברירת המחדל כבויה — החצאים קבועים.
-  // **S77 (בקשה 3):** כשהגדרות הכותרת מסופקות (הייבוא ממפה אותן) — הסלוטים
-  // נפענחים מההגדרות לכל עמוד לפי צדו הפיזי הסופי; ההחלפה הוותיקה אינה
-  // רצה (המקורות הצדדיים — book-name-split — מבטאים אותה במפורש). בלי
-  // הגדרות — ההתנהגות הוותיקה כמו שהיא.
-  if (hdrAnySourceS77) {
-    // מילה ראשונה/אחרונה של העמוד (סדר קריאה: טור ימין ואז שמאל)
-    const pageFirstLastS77 = (p) => {
-      const cols = (p.columns || []).map(c => (c || []).filter(ln => ln && (ln.words || []).length));
-      const flat = [];
-      for (const c of cols) for (const ln of c) flat.push(ln);
-      let first = '', last = '';
-      if (flat.length) {
-        const wOf = (ln) => (ln.words || []).map(w => (typeof w === 'string' ? w : (w && w.t) || '')).filter(Boolean);
-        const firstLn = wOf(flat[0]);
-        const lastLn = wOf(flat[flat.length - 1]);
-        first = firstLn.length ? hdrTrimPunct(firstLn[0]) : '';
-        last = lastLn.length ? hdrTrimPunct(lastLn[lastLn.length - 1]) : '';
-      }
-      return { firstWord: first, lastWord: last };
-    };
-    for (const p of final) {
-      if (!p.headerSlots) continue;
-      if (hdrEnabledS77 === false) { p.headerSlots = null; continue; } // header-enabled=false — אין כותרת רצה
-      // צד פיזי לפי האינדקס הסופי: עמוד 1 (אינדקס 0) = recto
-      const side = p.index % 2 === 0 ? 'recto' : 'verso';
-      // פתיחת פרק (sign-open) עם מצב ייעודי — סלוטי opening (D-61: גופן/גודל/יישור תמיד מהצד הפיזי)
-      const dedicated = hdrDedicatedS77 && p.type === 'sign-open';
-      const sourceSide = dedicated ? 'opening' : side;
-      const fl = pageFirstLastS77(p);
-      const ctx = {
-        ...(p._hdrCtx || {}),
-        bookName: bookTitle,
-        side,
-        pageNumber: p.folioDisplay || '',
-        firstWord: fl.firstWord,
-        lastWord: fl.lastWord
-      };
-      const resolved = {};
-      for (const pos of ['right', 'center', 'left']) {
-        let src = hdrSourcesS77[sourceSide][pos];
-        if (src == null) src = hdrSourcesS77[side][pos]; // opening ללא מקור — ירושה מהצד הפיזי
-        // custom תמיד מהצד הפיזי (D-61)
-        resolved[pos] = resolveHdrSlotText(src || 'none', ctx, settings, `header-${side}-${pos}-custom-text`);
-      }
-      p.headerSlots = resolved;
-      // **EXT-19 (נשמר גם בנתיב ההגדרות):** hdr-alternating=true — בעמודי
-      // verso ערכי הסלוטים הימני והשמאלי מתחלפים (כמו buildHeaderGridHTML
-      // של המקור). ברירת המחדל כבויה — הסלוטים הצדדיים שולטים ישירות.
-      if (cfg.hdrAlternating && side === 'verso') {
-        p.headerSlots = { right: resolved.left, center: resolved.center, left: resolved.right };
-      }
-    }
-  } else if (cfg.hdrAlternating) {
-    for (const p of final) {
-      if (p.index % 2 === 1 && p.headerSlots) {
-        const h = p.headerSlots;
-        p.headerSlots = { right: h.left, center: h.center, left: h.right };
-      }
-    }
-  }
-
-  // folio של כל כותרת = העמוד שבו היא הוצבה
-  const folioByToken = new Map();
-  for (let pi = 0; pi < final.length; pi++) {
-    const p = final[pi];
-    // **S4.13 (פוליו ה-TOC של כותרת 1 — כמו getTocPageLabel במקור):** לעמוד
-    // השער של ה-h1 אין פוליו מודפס; המקור נופל שם ל- toGematria(data-page-index)
-    // — ההוכחה מהייחוס: הערך הראשון בתוכן-העניינים הכללי (ה-h1 "הקדמות
-    // וכללים") מסומן "ו" = גימטריה של מיקום עמוד השער (0-מבוסס 6), בעוד
-    // לעמוד עצמו אין פוליו כלל. שאר הכותרות: הפוליו המודפס של עמודן.
-    // **D-108:** תווית TOC חשופה — toBareGematria גם בנפילה הזו.
-    if (p._h1Token) folioByToken.set(p._h1Token.id, p.folioDisplay || toBareGematria(pi));
-    for (const b of (p.bands || [])) if (b.tokenId != null) folioByToken.set(b.tokenId, p.folioDisplay);
-    for (const col of p.columns) for (const ln of col) {
-      if (ln.kind === 'heading' && ln.tokenId != null && !folioByToken.has(ln.tokenId)) folioByToken.set(ln.tokenId, p.folioDisplay);
-    }
-  }
-  for (const p of final) if (p.toc) for (const r of p.toc.rows) r.folio = folioByToken.get(r.tokenId) || '';
-
-  pages.length = 0;
-  pages.push(...final);
-
-  // ---- תוצאה ----
-  const tokensOut = tokens.map(t => ({ id: 'lt' + t.id, type: t.type, level: t.level, text: t.text, num: t.num || null }));
-  const layoutHashValue = 'legacy-' + legacyLayoutHashDigest(pages);
-  // **U-5 (S1-ה; השלמת חוזה ui-result-v1 — נמצא באודיט ה-UI):** נתיב המורשת
-  // לא החזיר contentHashIn — serializeTypesetResult/buildReport וה-tooltip
-  // של צ'יפ מידע-הריצה קיבלו undefined, בניגוד לנתיב ה-DP (hashIn של CP1).
-  // כאן: hash קלט = מטא-דאטה + טוקנים בלבד (בלי מזהים פנימיים ובלי הגדרות)
-  // — דטרמיניסטי, תלוי-קלט בלבד (שינוי הגדרות אינו משנה אותו), ואינו
-  // משתתף ב-legacyLayoutHashDigest (שדה נלווה חוזי — אפס השפעת פריסה;
-  // הוכחה בבדיקת הרגרסיה: layoutHash זהה פנימית ומול נעילת ה-determinism).
-  const contentHashInValue = crypto
-    .createHash('sha256')
-    .update(JSON.stringify({
-      meta,
-      tokens: tokensOut.map(t => [t.type, t.level == null ? null : String(t.level), t.text, t.num])
-    }), 'utf8')
-    .digest('hex');
-  // **תיקון S4.10 (חוזה התוצאה בנתיב החי):** לפני כן הוחזרו ledger: null, events: null
-  // ופגעו ב-serializeTypesetResult/buildReport של ה-worker — כל בקשת עימוד
-  // באפליקציה החיה קרסה ("Cannot read properties of undefined (reading 'length')")
-  // והדף הציג 0 עמודים. כעת מוחזרים EventLog/Ledger אמיתיים (מינימליים,
-  // דטרמיניסטיים) — הסריאליזציה, הדוח ותצוגת הממצאים עובדים בשני המנועים.
-  const events = new EventLog('minimal');
-  events.emit('parse', 'legacy-imud: tokenize + sections', { tokens: tokensOut.length });
-  events.emit('measure', 'legacy-imud: line breaking', { impl: settings['measure-impl'] || 'table' });
-  events.emit('page-plan', 'legacy-imud: flow + columns', { pages: pages.length });
-  events.emit('folio', 'legacy-imud: folios + TOC', {});
-  events.emit('render', 'legacy-imud: result', { layoutHash: layoutHashValue });
-
-  // **S5.2 (מיפוי מוקשים S1 — חשבונאות שימור תוכן אמיתית לנתיב החי):** עד כאן
-  // הוחזר contentPreserved: true קבוע-קשה — כל רגרסיה בזרימת ההערות/המשכים/
-  // הטוקנים עברה בשקט (הבדיקות שהחזיקו בדגל היו טאוטולוגיות — המחלק של
-  // D-30 קיים רק בנתיב ה-DP). כעת: מולטיסט מילות מקור (מטא-דאטה + כל
-  // הטוקנים: גוף, כותרות, הערות-צד, הערות-סיום) מול מולטיסט פלט (שורות
-  // העמודים: גוף+כותרות+חלונות+הערות-שוליים+הערות+הערות-סיום+שערים;
-  // בלי תוכן-עניינים ובלי פוליו — הם תוספות/העתקות של המנוע). יעד: כל מילת
-  // מקור מופיעה בפלט לפחות כמספר הופעותיה במקור; סמנים/(המשך)/גימטריה
-  // שהמנוע מוסיף אינם נספרים כחובה. כשל ⇒ ממצא high ב-ledger + דגל שקרי.
-  const contentStats = (() => {
-    const norm = (s) => String(s == null ? '' : s).split(/[\s\u00A0]+/).filter(Boolean);
-    const bump = (m, words) => { for (const w of words) m.set(w, (m.get(w) || 0) + 1); };
-    const src = new Map();
-    // **S5.2:** שדה השנה/מקום (meta.year) אינו מוצג בשער המכויל-ייחוס — כמו
-    // בתוכנת המקור. לכן אינו נספר כחובת-תוכן.
-    // **S6.0 (F16):** שדות השער האחורי בלבד (copyright/publisher/contact/extra)
-    // נספרים כחובה רק כשהשער האחורי מוצג — בלי זה ביטול show-back-shaar
-    // גרם לדגל אובדן-תוכן שקרי (8 מילים חסרות בקורפוס ללא _imudRaw).
-    const backOnlyFields = ['copyright', 'publisher', 'contact', 'extra'];
-    for (const [mk, mv] of Object.entries(meta)) {
-      if (mk === 'year') continue;
-      if (!cfg.showBackShaar && backOnlyFields.includes(mk)) continue;
-      bump(src, norm(mv));
-    }
-    // **S5.2:** מסיר את תוחמי ההערה ([ ]) מצד המקור — המנוע מחלץ את גוף
-    // ההערה מבלי לכלול את התוחמים בפלט (הם תחביר, לא תוכן).
-    const srcTextOf = (t) => {
-      let s = String(t.text == null ? '' : t.text);
-      if (cfg.fnOpen) s = s.split(cfg.fnOpen).join(' ');
-      if (cfg.fnClose) s = s.split(cfg.fnClose).join(' ');
-      // **S5.2:** כותרת h1 מפוצלת בשער-המשנה לכותרת + משנה (split לפי
-      // המקף; join(' - ') לשאר) — מקף-ההפרדה הראשון הוא תחביר עימוד,
-      // כמו קידומת 'כותרת N -'. משקפים את אותה טרנספורמציה בצד המקור.
-      if (t.type === 'h1') {
-        const parts = s.split(/[-–—]/).map(x => x.trim()).filter(Boolean);
-        if (parts.length >= 2) s = parts[0] + ' ' + parts.slice(1).join(' - ');
-      }
-      // **S6.0 (F12):** כותרת h2 שמתחילה ב'סימן א - ' — המנוע מסיר את הקידומת
-      // ברינדור (:1017) אך צד המקור לא שיקף זאת ⇒ מילת המקף נספרה חסרה
-      // (דגל שקרי). עתה אותה טרנספורמציה בשני הצדדים.
-      if (t.type === 'h2') {
-        s = s.replace(/^סימן\s+[א-ת]+[:\-–—\s]*/i, '').trim();
-      }
-      return s;
-    };
-    for (const t of tokens) {
-      bump(src, norm(srcTextOf(t)));
-      if (t.sideNote) bump(src, norm(t.sideNote));
-      if (t.endNote) bump(src, norm(t.endNote));
-    }
-    const out = new Map();
-    const addText = (s) => bump(out, norm(s));
-    // **S6.0 (F10):** תוחמי הערה לא-מאוזנים ([ בלי ]) — הפלט מציג את המילה
-    // עם התוחם הגולמי ('[הערה') בעוד צד המקור מפשט את שני התוחמים ⇒ מילה
-    // נספרה חסרה (דגל שקרי). עתה הפלט מפושט באותם תוחמים לפני הספירה —
-    // סימטריה מלאה בין הצדדים, בלי תלות באיזון הסוגריים.
-    const stripNoteDelims = (s) => {
-      let t = String(s == null ? '' : s);
-      if (cfg.fnOpen) t = t.split(cfg.fnOpen).join(' ');
-      if (cfg.fnClose) t = t.split(cfg.fnClose).join(' ');
-      return t;
-    };
-    const addWords = (ws) => { if (!ws) return; for (const w of ws) addText(stripNoteDelims(w && w.t != null ? w.t : w)); };
-    for (const p of pages) {
-      for (const col of p.columns || []) for (const ln of col) {
-        addWords(ln.words); addWords(ln.windowWords);
-      }
-      for (const it of p.footnotes || []) {
-        if (it.marker) addText(it.marker);
-        for (const ln of it.lines || []) addWords(ln.words);
-      }
-      for (const mn of p.marginNotes || []) for (const ln of mn.lines || []) addText(ln.text);
-      for (const b of p.bands || []) addText(b.text);
-      for (const g of p.gateLines || []) addText(g.text);
-      // תוכן-העניינים (p.toc) והפוליו לא נספרים — העתקות/מספור של המנוע
-    }
-    const missing = [];
-    let srcTotal = 0, outTotal = 0;
-    for (const [w, c] of src) {
-      srcTotal += c;
-      const oc = out.get(w) || 0;
-      if (oc < c) missing.push(`${w} (${oc}/${c})`);
-    }
-    for (const c of out.values()) outTotal += c;
-    return { sourceWords: srcTotal, outputWords: outTotal, missing };
-  })();
-  const contentPreservedFlag = contentStats.missing.length === 0;
-  if (!contentPreservedFlag) {
-    ledger.create('content-loss', 'legacy-flow', 0,
-      { missing: contentStats.missing.length, sample: contentStats.missing.slice(0, 8).join(', ') },
-      'legacy-flow');
-    events.emit('render', 'legacy-imud: אובדן תוכן — החשבונאות אדומה', {
-      missing: contentStats.missing.length,
-      sample: contentStats.missing.slice(0, 8).join(', ')
-    });
-  }
-
-  // **EXT-4 (שארית — S4.21): חיבור ornament-plan לנתיב ה-legacy.** רץ אחרי
-  // חישוב ה-hash — overlay בלבד (אינווריאנט T1; דפוס D-47). ברירות המחדל
-  // של המקור = 'none' לכל עיטור ⇒ אפס rectים ואפס השפעה; החיבור מוכיח את
-  // עצמו רק כשההגדרות מזמנות עיטורים (בדיקות s8). ההקרנה כבר מוכנה:
-  // legacy-projector מצייר pg.decorations באותו דיו (ornament-ink) כמו
-  // נתיב ה-DP — pdfOps ל-PDF, data-URI ל-DOM.
-  const { planLegacyOrnaments } = require('../decoration/legacy-ornaments');
-  // **S5.2 (אחידות מדידה):** tracking=0 מפורש — כמו כל נקודות המדידה של
-  // המורשת (ברירת המחדל של measure-api היא כעת 0, אך מפורש עדיף).
-  const ornPass = planLegacyOrnaments(pages, settings,
-    (t, s2) => api.measureTextWidth(t, s2, 0), {
-    ledger, eventLog: events,
-    bandX: GEO.COL_L_X, bandW: 2 * GEO.COL_W + 13.48,
-    flowTopOf: (pg, title) => GEO.FLOW_TOP + (pg._h2SpanExempt ? 261.3 : H2_AREA_H)
-  });
-
-  // **D-89 (דיווח משתמש: "אין שערים") — עיצוב השערים וכלל הכותרת.** פורט
-  // ברירות-המחדל של המקור (decorations.js/style.css של IMUD_TORANI), מכויל
-  // מהייחוס — ריצה אחרי חישוב ה-hash, overlay בלבד (אינווריאנט T1, דפוס D-47):
-  //  - שער-משנה: פאנל #F4F4F4 מ-55% עד קצה ימין (.sub-shaar-bg-right:
-  //    right:0;left:55%) — נמדד בייחוס עמ' 7: (328,0)-(595,842)pt — וגל
-  //    העיטור בין הכותרת לכותרת-המשנה (defaultSubShaarOrnament; הדיו נמדד
-  //    (33,33,33)≈#222) ממורכז בתיבת התוכן (15mm..PAGE_W-95mm ⇒ מרכז 245.7px;
-  //    הייחוס: מרכז הדיו 184pt=245.3px ✓, y-דיו 593-603px).
-  //  - שער אחורי: פאנל #F4F4F4 משמאל עד 45% (.back-shaar-bg-left: left:0;
-  //    right:55%) — נמדד (0,0)-(268,842)pt ✓.
-  //  - שער ראשי: שלד המסגרת שנמדד בעמ' 1 — קווים אנכיים #CCCCCC (0.8)
-  //    ב-x=72-73/523-524pt, פסים #FAFAFA (0.98) בפנים, כללים אופקיים #D1D1D1
-  //    (0.82) ב-y=168/674pt. (ערכת הנושא המקורית של הייחוס הוסיפה גרדיאנטים
-  //    ורכיבי כחול — מחוץ להיקף; השלד הגיאומטרי נשמר.)
-  //  - כלל כותרת תחתון בכל עמוד עם כותרת עליונה (חוץ משערים): מלבן שחור
-  //    (43,62)-(553,63)pt — .top-header-grid border-bottom — נמדד בעמ'
-  //    3-5, 8-12 (hdr-divider-style; 'none' מבטל).
-  {
-    const dec = (p, o) => { (p.decorations = Array.isArray(p.decorations) ? p.decorations : []).push(o); };
-    for (const p of pages) {
-      if (p.type === 'shaar-sub') {
-        dec(p, { x: 0.55 * GEO.PAGE_W, y: 0, w: 0.45 * GEO.PAGE_W, h: GEO.PAGE_H, kind: 'shaar-panel', kindStyle: 'rect:#F4F4F4' });
-        // **S74 (בעיה 3):** הגל בין שני חלקי הכותרת — מעוגן לראש כותרת-המשנה
-        // בפועל (subTop−40.8 — היחס המכויל מהייחוס), לא למיקום קבוע. בעבר
-        // נקבע לפי מספר השורות (>1) — כותרת שנעטפה ללא כותרת-משנה קיבלה גל
-        // שרודף לה בחינם, וכותרת-משנה שנדחפה מטה השאירה את הגל בתוך הכותרת.
-        const subLines = (p.gateLines || []).filter(g => g.sub);
-        if (subLines.length) { // כותרת + כותרת-משנה ⇒ הגל ביניהן (כמו renderSubShaar)
-          const style = cfg.shaarSubDivider && cfg.shaarSubDivider !== 'none'
-            ? (cfg.shaarSubDivider.startsWith('ext_') || cfg.shaarSubDivider.endsWith('.svg')
-              ? 'imud:divider:' + cfg.shaarSubDivider : cfg.shaarSubDivider)
-            : 'shaar-wave';
-          dec(p, { x: 175.7, y: subLines[0].y - 40.8, w: 140, h: 25, kind: 'shaar-divider', kindStyle: style });
-        }
-      } else if (p.type === 'shaar-back') {
-        dec(p, { x: 0, y: 0, w: 0.45 * GEO.PAGE_W, h: GEO.PAGE_H, kind: 'shaar-panel', kindStyle: 'rect:#F4F4F4' });
-      } else if (p.type === 'shaar-main') {
-        dec(p, { x: 96, y: 0, w: 1.33, h: GEO.PAGE_H, kind: 'frame-v', kindStyle: 'rect:#CCCCCC' });
-        dec(p, { x: 697.33, y: 0, w: 1.33, h: GEO.PAGE_H, kind: 'frame-v', kindStyle: 'rect:#CCCCCC' });
-        dec(p, { x: 97.33, y: 0, w: 29.33, h: GEO.PAGE_H, kind: 'frame-band', kindStyle: 'rect:#FAFAFA' });
-        dec(p, { x: 668, y: 0, w: 29.33, h: GEO.PAGE_H, kind: 'frame-band', kindStyle: 'rect:#FAFAFA' });
-        // **D-89:** שרשרת העלים — דפוס הנושא של הייחוס בשולי הפאנלים (עלה במרכז
-        // x≈84.5pt ⇒ מרכז הפס 112px; ימין משוקף)
-        dec(p, { x: 97.33, y: 0, w: 29.33, h: GEO.PAGE_H, kind: 'frame-chain', kindStyle: 'shaar-frame-chain' });
-        dec(p, { x: 668, y: 0, w: 29.33, h: GEO.PAGE_H, kind: 'frame-chain', kindStyle: 'shaar-frame-chain' });
-        // **S73 (דיווח משתמש — "קווים על הטקסט של השער הראשי"):** הכללים
-        // האופקיים צוירו ברוחב מלא — וחצו את כותרת השער (46pt ב-y≈170-250px;
-        // הקו ב-224px עבר בתוך האותיות). במקור (הייחוס, עמ' 1) הכללים האופקיים
-        // **נראים בשוליים בלבד** — מלבן לבן מכסה את האזור המרכזי (x=72..523pt)
-        // שמעל הקווים האנכיים: הקו מהקצה עד הקו האנכי ומהקו האנכי עד הקצה
-        // (נמדד ברסטר: 0..72pt ו-523.2..594.7pt). כעת — שני מקטעים לכל קו,
-        // בדיוק כמקור: אף קו לא נכנס לאזור הטקסט המרכזי.
-        dec(p, { x: 0, y: 224, w: 96, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
-        dec(p, { x: 697.33, y: 224, w: GEO.PAGE_W - 697.33, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
-        dec(p, { x: 0, y: 898.67, w: 96, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
-        dec(p, { x: 697.33, y: 898.67, w: GEO.PAGE_W - 697.33, h: 1.33, kind: 'frame-h', kindStyle: 'rect:#D1D1D1' });
-        // **D-89:** עיטור השער הראשי המובנה (עיגול+כנפיים) מתחת לנושא —
-        // נמדד בייחוס עמ' 1: דיו x 231.5-363.3pt, y 265-272pt (מרכז 297.4pt).
-        dec(p, { x: 306.6, y: 346, w: 180, h: 24, kind: 'shaar-ornament', kindStyle: 'shaar-main-orn' });
-        // שני כללים אפורים קטנים סביב שורת המהדורה — נמדדו (231.5,550.5)-(363.5,551.2)
-        // ו-(231.5,577.5)-(363.5,578.2) — כמו עיטור .book-sections-summary במקור.
-        dec(p, { x: 308.7, y: 734, w: 176, h: 0.93, kind: 'edition-rule', kindStyle: 'rect:#CCCCCC' });
-        dec(p, { x: 308.7, y: 770, w: 176, h: 0.93, kind: 'edition-rule', kindStyle: 'rect:#CCCCCC' });
-      }
-      if (p.headerSlots && (p.headerSlots.right || p.headerSlots.center || p.headerSlots.left)
-        && !String(p.type || '').startsWith('shaar') && cfg.hdrDivider !== 'none') {
-        // **S6.3 (בקשת משתמש — "קו מפריד של כותרת עליונה"):** הצבע לפי
-        // ההגדרה, כמו hdrDividerColorMap של המקור (typesetter.js):
-        // gray ⇒ rgba(0,0,0,0.06) (=#F0F0F0 על דף לבן), black ⇒ #000.
-        // ברירת המחדל של default_settings.json היא 'gray' — עד כאן היה
-        // שחור קשיח לכל ערך שאינו 'none'.
-        const hdrRuleStyle = cfg.hdrDivider === 'gray' ? 'rect:#F0F0F0' : 'rect:#000000';
-        dec(p, { x: 57.33, y: 82.67, w: 680, h: 1.33, kind: 'hdr-rule', kindStyle: hdrRuleStyle });
-      }
-    }
-    events.emit('decorations', 'legacy-imud: gate design + header rule', { pages: pages.length });
-  }
-
-  return {
-    metadata: meta, tokens: tokensOut, pages, ledger, events,
-    toc: { general: genEntries.length, detailed: detEntries.length },
-    tocPages: [], numberingAudit: null, settings,
-    contentPreserved: contentPreservedFlag,
-    contentStats: { sourceWords: contentStats.sourceWords, outputWords: contentStats.outputWords, missingCount: contentStats.missing.length, missingSample: contentStats.missing.slice(0, 8) },
-    contentHashIn: contentHashInValue,
-    layoutHash: layoutHashValue,
-    plannedLayoutHash: null, geometryNeutralVerified: true,
-    ornaments: ornPass.planted ? { planted: ornPass.planted, rejected: ornPass.rejected.length } : null,
-    retreat: null, sideNotes: null, endnotePages: null,
-    endnotePagesInfo: { count: endNoteTokens.length, pages: endnotePagesBuilt.map(p => p.index) },
-    scope: null, customStyles: null, recommendations: null,
-    legacyProfile: true
-  };
-}
-
-/**
- * **S4.10:** hash קנוני של תוצאת המורשת — מיוצא גם ל-buildReport כדי שדטרמיניזם
- * יימדד מחדש באותה שיטה בדיוק (hash של DP על עמודי מורשת אינו מוגדר).
- */
-function legacyLayoutHashDigest(pages) {
-  const hash = crypto.createHash('sha256');
-  for (const pg of pages) {
-    hash.update(pg.type + '|' + (pg.folioDisplay || '') + '|');
-    for (const col of pg.columns) for (const ln of col) hash.update((ln.words || []).join(' ') + '|');
-  }
-  return hash.digest('hex').slice(0, 16);
-}
-
-module.exports = {
-  GEO, SZ, HEADING_MODES, toGematria, stripEditorialNotes, parseMetadata,
-  tokenizeDoc, LineBreaker, findNotes, readConfig, legacyTypeset,
-  FLOW_BOTTOM, SINGLE_W, wrapText, headingItemH, legacyLayoutHashDigest,
-  parenCenterRaisePx, LEGACY_HEADING_RE
-};
-
-};
-__modules["src/engine/core/events.js"] = function (require, module, exports) {
-// src/engine/core/events.js — Event log / Trace collector (REQ-GOV-01)
-'use strict';
-
-/**
- * EventLog — רישום אירועי מנוע: שלבים, תוויות, payload, דף.
- * המכשור אסור לשנות פריסה — no-op proof נאכף ב‑CI (REQ-GOV-01/U-A7).
- */
-class EventLog {
-  /**
-   * @param {string} verbosity - 'off'|'minimal'|'standard'|'full' (key: trace-verbosity, REQ-GOV-01)
-   * תיקון P1-6: ts לוגי מונוטוני (לא Date.now) — יומנים זהים בין ריצות ⇒
-   * אפשר להשוות טרייסים בין קומיטים (baseline regression).
-   */
-  constructor(verbosity = 'full') {
-    this.verbosity = verbosity; // settings['trace-verbosity'] — נצרך בפועל (הpipeline מזרים)
-    this.events = [];
-    this.droppedEvents = 0; // חייב להישאר 0 (REQ-GOV-01)
-    this.clock = 0; // שעון לוגי דטרמיניסטי (P1-6)
-    this.stageOrder = [
-      'parse', 'scope-map', 'style-prepass', 'fonts-ready', 'measure', 'line-plan',
-      'page-plan', 'protections', 'balance', 'justify', 'notes-budget', 'refit',
-      'decorations', 'headers', 'folio', 'toc', 'page-model', 'ledger-finalize', 'render'
-    ];
-  }
-
-  emit(stage, label, payload = {}, pageIndex = null) {
-    if (!this.stageOrder.includes(stage)) {
-      this.droppedEvents++;
-      return;
-    }
-    if (this.verbosity === 'off') return;              // trace-verbosity → off: no logging at all
-    if (this.verbosity === 'minimal') payload = {};    // stage+label only
-    if (this.verbosity !== 'full') pageIndex = null;   // standard: no per-page detail
-    this.events.push({
-      seq: this.events.length + 1,
-      stage, label, pageIndex,
-      ts: ++this.clock, // לוגי — דטרמיניסטי בין ריצות (P1-6)
-      payload
-    });
-  }
-
-  toTraceV2() {
-    return { schema: 'trace-v2', droppedEvents: this.droppedEvents, events: this.events.slice() };
-  }
-}
-
-module.exports = { EventLog };
-
-};
-__modules["src/engine/core/ledger.js"] = function (require, module, exports) {
-// src/engine/core/ledger.js — Decision ledger + issue lifecycle (REQ-GOV-01, D-15)
-'use strict';
-
-/**
- * 10 מצבי מחזור חיים (V23 Session_handoff):
- */
-const LIFECYCLE_STATES = [
-  'created',
-  'correction-blocked',
-  'correction-reverted',
-  'became-observable-later',
-  'competing-repair-side-effect',
-  'persists',
-  'resolved',
-  'reintroduced',
-  'not-comparable',
-  'unresolved'
-];
-
-class Ledger {
-  constructor() {
-    this.issues = new Map(); // issue_id -> record
-    this.candidates = [];    // רשומות דחיית מועמד (REQ-BAL-01/S5.1.10)
-    this.clock = 0;          // שעון לוגי דטרמיניסטי (תיקון P1-6) — לא Date.now
-  }
-
-  _id(kind, target) {
-    let n = 1;
-    while (this.issues.has(`${kind}@${target}#${n}`)) n++;
-    return `${kind}@${target}#${n}`;
-  }
-
-  /** יצירת ממצא חדש עם predicate לפני; זהה ל‑"created". */
-  create(kind, target, page, predicateBefore, stage) {
-    const id = this._id(kind, target);
-    const rec = {
-      issue_id: id, kind, target, page,
-      first_seen_stage: stage,
-      transitions: [{ state: 'created', stage, ts: ++this.clock, note: 'predicate_before captured' }],
-      predicate_before: predicateBefore,
-      predicate_after: null,
-      candidates: [], capacity_before: null, capacity_after: null,
-      route: null, selected: null, rollback_reason: null,
-      status: 'created'
-    };
-    this.issues.set(id, rec);
-    return rec;
-  }
-
-  transition(issueId, state, stage, note = '') {
-    if (!LIFECYCLE_STATES.includes(state)) throw new Error(`bad lifecycle state: ${state}`);
-    const rec = this.issues.get(issueId);
-    if (!rec) throw new Error(`unknown issue ${issueId}`);
-    rec.transitions.push({ state, stage, ts: ++this.clock, note });
-    rec.status = state;
-    return rec;
-  }
-
-  recordCandidate(issueId, cand, accepted, reason) {
-    const rec = this.issues.get(issueId);
-    if (!rec) return;
-    rec.candidates.push({ ...cand, accepted, reason });
-    if (accepted) rec.selected = cand;
-  }
-
-  recordCapacity(issueId, before, after) {
-    const rec = this.issues.get(issueId);
-    if (rec) { rec.capacity_before = before; rec.capacity_after = after; }
-  }
-
-  finalizePredicateAfter(issueId, predAfter) {
-    const rec = this.issues.get(issueId);
-    if (rec) rec.predicate_after = predAfter;
-  }
-
-  toSchemaV2() {
-    return { schema: 'ledger-v2', states: LIFECYCLE_STATES, issues: [...this.issues.values()] };
-  }
-
-  summary() {
-    const s = {};
-    for (const rec of this.issues.values()) s[rec.status] = (s[rec.status] || 0) + 1;
-    return s;
-  }
-}
-
-module.exports = { Ledger, LIFECYCLE_STATES };
-
-};
-__modules["src/engine/decoration/headers-builder.js"] = function (require, module, exports) {
-// src/engine/decoration/headers-builder.js — Running heads recto/verso 3×2 (REQ-HDR-01/02, S9)
-'use strict';
-
-/**
- * **S9 (D-61) — עצמאות מלאה של כל סלוט:** לכל אחד מששת הסלוטים (recto/verso × ימין/מרכז/שמאל):
- * מקור, יישור, גופן, גודל, רוחב% וטקסט־מותאם — כולל סלוט המרכז בו־ורסו
- * (**תיקון IMUD bc7892f נעול לנצח:** בכל הגרסאות הקודמות הפקדים של סלוט‑המרכז‑בו־ורסו
- * היו קיימים ב‑UI אך לא נקראו מעולם — גודל הגופן והטקסט המותאם הוזנקו).
- *
- * מקורות (REQ-HDR-02): none / book-name (חלק ראשי לפי פיצול במקף) / book-name-rest
- * (החלק שאחרי המקף) / h1 (מצב main|full לפי hdr-h1-title-mode) / h2 / page-num /
- * first-word / last-word / first-last-words (פורט IMUD fillHeaderFirstLastWords:
- * "ראשונה – אחרונה") / custom (טקסט מותאם **לסלוט זה**).
- */
-
-/** חלוקת שם במקף ראשון: main = לפני המקף, rest = אחריו (Orange extractH1TitleMain ✓). */
-function extractH1TitleMain(text, mode = 'main') {
-  if (mode === 'full') return text;
-  const parts = String(text).split(/\s+[-–—]\s+/);
-  return parts[0] || text;
-}
-function extractTitleRest(text) {
-  const parts = String(text).split(/\s+[-–—]\s+/);
-  return parts.length > 1 ? parts.slice(1).join(' – ') : '';
-}
-
-/** **S65 (SRS §12.2):** פיצול שם הספר לשני חצאים לפי אמצע מילים —
- *  זהה לנוסחת המורשת (legacy-imud-flow: tw.slice(0, Math.ceil(len/2))):
- *  first = החצי הראשון (Recto), second = השני (Verso).
- *  שם ריק/מילה אחת ⇒ שני החצאים זהים לשם המקורי (השני ריק כשאין מה לפצל). */
-function splitBookTitleHalves(text) {
-  const t = String(text == null ? '' : text).trim();
-  const words = t ? t.split(/\s+/) : [];
-  if (words.length <= 1) return { first: t, second: '' };
-  const mid = Math.ceil(words.length / 2);
-  return { first: words.slice(0, mid).join(' '), second: words.slice(mid).join(' ') };
-}
-
-/** גידוע מעגליות same_as (Orange c49b79e): מפת ירושה חד‑כיוונית + seen-set.
- *  ב‑Red הירושה היחידה היא verso→recto (header-verso-same-as-recto), כך שמבנית
- *  אין מעגל — אך הגידוע מפורש ונבדק כך שהוספת ירושה עתידית לא תוכל ליצור לולאה. */
-function resolveSameAs(side, settings) {
-  const seen = new Set([side]);
-  let cur = side;
-  while (cur === 'verso' && settings['header-verso-same-as-recto']) {
-    cur = 'recto';
-    if (seen.has(cur)) return side; // מעגליות — נשברת: חזרה לצד המקורי
-    seen.add(cur);
-  }
-  return cur;
-}
-
-/** ניקוי פיסוק קצה (פורט TRIM מ־IMUD fillHeaderFirstLastWords):
- *  מילת פתיחה/סיום של עמוד לא נפתחת או מסתיימת בסימני פיסוק/מרכאות/סוגריים. */
-const EDGE_PUNCT = /^[\s"'“”‘’(){}\[\]<>.,;:!?\-–—…]+|[\s"'“”‘’(){}\[\]<>.,;:!?\-–—…]+$/g;
-function trimEdgePunctuation(word) {
-  return String(word == null ? '' : word).replace(EDGE_PUNCT, '');
-}
-
-/** פורט fillHeaderFirstLastWords (IMUD, הועבר מ‑V20.4): "מילה ראשונה – מילה אחרונה".
- *  עמוד ללא טקסט ⇒ ריק. מילה יחידה ⇒ היא בלבד. */
-function firstLastWordsText(firstWord, lastWord) {
-  const f = trimEdgePunctuation(firstWord);
-  const l = trimEdgePunctuation(lastWord);
-  if (f && l && f !== l) return `${f} \u2013 ${l}`;
-  return f || l;
-}
-
-function resolveSlot(source, ctx, settings, slotKey) {
-  switch (source) {
-    case 'none': return '';
-    case 'book-name': return extractH1TitleMain(ctx.bookName || '', 'main');
-    case 'book-name-rest': return extractTitleRest(ctx.bookName || '');
-    // **S65 (SRS §12.2):** חצי שם הספר לפי הצד הפיזי של העמוד — ראשון ב‑Recto, שני ב‑Verso.
-    case 'book-name-split': {
-      const halves = splitBookTitleHalves(ctx.bookName || '');
-      return ctx.side === 'verso' ? halves.second : halves.first;
-    }
-    // **S77 (בקשה 3 — חיבור ההגדרות לנתיב המורשת):** החצאים הקבועים של המקור —
-    // book_title_split_r/l של IMUD הם חצאים לפי מילים בלי תלות בצד (ההחלפה
-    // בין העמודים היא hdr-alternating נפרד). כך משוחזרת ההתנהגות המדויקת
-    // של המנוע המורשת גם דרך ההגדרות החיות.
-    case 'book-name-first-half':
-      return splitBookTitleHalves(ctx.bookName || '').first;
-    case 'book-name-second-half':
-      return splitBookTitleHalves(ctx.bookName || '').second;
-    case 'h1': return extractH1TitleMain(ctx.h1 || '', settings['hdr-h1-title-mode']);
-    case 'h2': return ctx.h2 || '';
-    case 'page-num': return ctx.pageNumber || '';
-    case 'first-word': return ctx.firstWord || '';
-    case 'last-word': return ctx.lastWord || '';
-    case 'first-last-words': return firstLastWordsText(ctx.firstWord, ctx.lastWord);
-    case 'custom': return slotKey ? String(settings[slotKey] || '') : (ctx.customText || '');
-    default: return '';
-  }
-}
-
-/** האם העמוד נפתח בכותרת H2/H3 (שורת התוכן הראשונה בסדר קריאה) — לכותרת הייעודית. */
-function pageOpensWithH2H3(page) {
-  const lv = page && page.opensWithHeadingLevel;
-  return lv === 2 || lv === 3;
-}
-
-/**
- * בניית כותרת עליונה לעמוד.
- * @param {object} page - {index,isRecto,type,firstWord,lastWord,h1,h2,pageNumberDisplay,
- *                          opensWithHeadingLevel,template:{hasRunningHead}}
- * @param {object} settings
- * @param {object} ctx - {bookName}
- * @returns {{side,slots:{right,center,left},separator}|null}
- *          slot = {source,text,align,widthPct,font,sizePt,customText}
- */
-function buildHeader(page, settings, ctx) {
-  if (!settings['header-enabled'] || !page.template.hasRunningHead) return null;
-  // **Iteration-003 (legacy parity):** עמוד ריק (מרווח אי-זוגיות לפני פתיחת
-  // חלק) — ללא ריהוט כלל, כמו blankPageObj של המורשת (נמדד בייחוס: עמוד
-  // הרווח לפני שער-המשנה ריק לחלוטין; עד כאן ירש תבנית רגילה וקיבל כותרת).
-  if (page.type === 'blank') return null;
-  const physical = page.isRecto ? 'recto' : 'verso';
-  // REQ-HDR-02: עמוד הנפתח ב‑H2/H3 + header-opening-dedicated ⇒ סלוטי מקור ייעודיים
-  const dedicated = settings['header-opening-dedicated'] === true && pageOpensWithH2H3(page);
-  // **03.11(ד) — תיקון D-36 חלקי, נאמן למקור:** במקור (top-header-grid) הכותרת
-  // העליונה מוצגת בכל עמודי התוכן, כולל עמודי פתיחה של פרק/סימן. D-36 העלים
-  // אותה מכל עמודי הפתיחה — ובספרים עשירי כותרות (כל עמוד פתיחה) זה הסתיר
-  // את הכותרות לגמרי ("אין כותרות עליונות" — דיווח משתמש 3). עתה: כל עמוד
-  // תבניתו hasRunningHead מציג כותרת; שערים/תוכן־עניינים/הערות נשארים בלי
-  // (template.hasRunningHead=false שלהם). header-opening-dedicated נשמר כמצב
-  // סלוטים ייעודי לפותחות H2/H3.
-  const sourceSide = dedicated ? 'opening' : resolveSameAs(physical, settings);
-  // טקסט מותאם תמיד מהצד הפיזי של העמוד (סלוטי הפתיחה יורשים — D-61)
-  const customSide = dedicated ? physical : sourceSide;
-  // **S65 (SRS §12.2):** מתג פיצול שם הספר — כשפעיל, כל סלוט שמקורו שם־הספר
-  // (book-name / book-name-rest) מציג את החצי לפי הצד הפיזי בלבד, וזאת דורסת
-  // אפשרויות דינמיות סותרות: ירושת verso-same-as-recto אינה חלה על סלוטים אלה
-  // (החצי השני מופיע ב‑verso גם אם הצד יורש מקורות מה‑recto), ו‑book-name-rest
-  // אינו מפצל במקף אלא לפי החצי הפיזי. מקורות דינמיים אחרים (h2/מילים) אינם סותרים
-  // ואינם מוספים.
-  const splitTitle = settings['split-book-title'] === true;
-  const out = { side: physical, dedicated, splitTitle, slots: {} };
-  for (const pos of ['right', 'center', 'left']) {
-    // מקור: מהצד החל על העמוד (opening/recto/verso אחרי ירושה); גופן/גודל/יישור/רוחב — תמיד מהצד הפיזי (D-61)
-    let source = settings[`header-${sourceSide}-${pos}-source`];
-    if (splitTitle && (source === 'book-name' || source === 'book-name-rest')) {
-      source = 'book-name-split'; // דריסה לפי הצד הפיזי (להלן) — SRS §12.2 סעיף 2
-    }
-    const customText = settings[`header-${customSide}-${pos}-custom-text`];
-    out.slots[pos] = {
-      source,
-      // בפיצול: הצד לצורך resolveSlot הוא הפיזי תמיד (דריסת ירושה); אחרת — ללא תלות בצד למקורות אלה
-      text: resolveSlot(source, {
-        ...ctx,
-        side: physical,
-        pageNumber: page.pageNumberDisplay,
-        firstWord: page.firstWord,
-        lastWord: page.lastWord,
-        customText,
-      }, settings, `header-${customSide}-${pos}-custom-text`),
-      align: settings[`header-${physical}-${pos}-align`],
-      widthPct: settings[`header-${physical}-${pos}-width-pct`],
-      font: settings[`header-${physical}-${pos}-font`],
-      sizePt: settings[`header-${physical}-${pos}-size-pt`],
-      // **S73 (צבע פר-סלוט):** header-{recto,verso}-{right,center,left}-color —
-      // ברירת מחדל שחורה לכולם (בקשת משתמש). ה-DOM והמקרן קוראים את אותו שדה.
-      color: settings[`header-${physical}-${pos}-color`] || null,
-      customText,
-    };
-  }
-  out.separator = settings['header-separator-line'];
-  return out;
-}
-
-module.exports = {
-  buildHeader, extractH1TitleMain, extractTitleRest, resolveSlot,
-  resolveSameAs, firstLastWordsText, pageOpensWithH2H3, trimEdgePunctuation,
-  splitBookTitleHalves,
-};
-
-};
-__modules["src/engine/core/h3-contract.js"] = function (require, module, exports) {
-'use strict';
-
-/**
- * **חוזה גאומטריית כותרת 3 — מקור יחיד (D-S2H3/CSS parity, 17.11):**
- * ה-CSS המקורי של המוצר (ערכות Orange/Yellow/Green) קובע:
- *
- *   .h3-title-text { line-height: 1.22 }
- *   .block-h3-span { padding: 8px 0 4px; margin-bottom: 4px }
- *
- * כלומר, לכותרת 3 המוצגת כפס (span):
- *  - pitch בין שורות הכותרת = line-height הטקסט בלבד (גודל×96/72×1.22).
- *  - ריפוד עליון 8px — פעם אחת, לפני השורה הראשונה.
- *  - ריפוד תחתון 4px + שוליים תחתונים 4px — פעם אחת, אחרי השורה האחרונה.
- *  - כותרת חד-שורתית: גובה כולל 8+21.96+4+4 ≈ 38px (כיוול S4.14 נשמר).
- *
- * הערכים חיים כאן — מקור אחד לשני המנועים: המורשת
- * (layout/legacy-imud-flow.js) והמאוחד (core/pipeline.js במדידה +
- * layout/dp-planner.js בבניית הפס). אסור להגדיר אותם מחדש במודולים אחרים;
- * שינוי חוזה — רק כאן, עם עדכון בדיקות הקבלה (s2-heading3-spacing).
- */
-
-const H3_LINE_HEIGHT = 1.22;      // line-height יחסי של שורת כותרת 3
-const H3_TOP_PAD_PX = 8;          // padding-top — פעם אחת לפני השורה הראשונה
-const H3_BOTTOM_PAD_PX = 4;       // padding-bottom — פעם אחת אחרי השורה האחרונה
-const H3_MARGIN_BOTTOM_PX = 4;    // margin-bottom — פעם אחת אחרי ריפוד התחתית
-
-/** **Legacy parity (iteration-001):** מקום מינימלי לתוכן עוקב מתחת לפס H3
- *  בדיקת "האם הפס נשאר באותו עמוד" (span_1col של המקור, S4.13/S4.24;
- *  S74 בעיה 6: 60−38 הישן — מנע אלמנות כותרת). הסף הכולל:
- *  max(60, bandHeight + H3_FOLLOW_MIN_PX). מקור אחד לשני המנועים. */
-const H3_FOLLOW_MIN_PX = 22;
-
-/** סף הכניסה של פס H3 באמצע עמוד — נאמן ל-span_1col של המקור. */
-function h3BandRoomThresholdPx(bandHeightPx) {
-  return Math.max(60, bandHeightPx + H3_FOLLOW_MIN_PX);
-}
-
-/** גובה שורת כותרת 3 בפיקסלים (pitch בין-שורתי) לפי גודל הכותרת בנקודות. */
-function h3LineHeightPx(sizePt) {
-  return sizePt * (96 / 72) * H3_LINE_HEIGHT;
-}
-
-/** גובה תיבת הפס כולה: ריפוד עליון + שורות + ריפוד תחתון + שוליים תחתונים. */
-function h3BandHeightPx(linesHeightPx) {
-  return H3_TOP_PAD_PX + linesHeightPx + H3_BOTTOM_PAD_PX + H3_MARGIN_BOTTOM_PX;
-}
-
-module.exports = {
-  H3_LINE_HEIGHT,
-  H3_TOP_PAD_PX,
-  H3_BOTTOM_PAD_PX,
-  H3_MARGIN_BOTTOM_PX,
-  H3_FOLLOW_MIN_PX,
-  h3LineHeightPx,
-  h3BandHeightPx,
-  h3BandRoomThresholdPx
-};
-
-};
-__modules["src/engine/decoration/legacy-ornaments.js"] = function (require, module, exports) {
-// src/engine/decoration/legacy-ornaments.js — **EXT-4 (שארית): חיבור ornament-plan לנתיב ה-legacy**
-'use strict';
-
-/**
- * הפאס שמשלים את החוליה החסרה בשרשרת העיטורים של פרופיל ה-IMUD:
- * הדיו קיים (ornament-ink — כולל פענוח imud: מספריות העיצובים המוטמעות),
- * ההקרנה קיימת (legacy-projector: pdfOps + data-URI מ-pg.decorations) —
- * ומה שחסר הוא ה**תכנון**: הפקת rectים של עיטורים על עמודי פתיחת-הסימן
- * של מנוע המורשת, לפי אותם מפתחות h2-orn-* שמיפוי ההגדרות מתרגם מהמקור
- * (h2-ornament-top-style וכו').
- *
- * **ברירות המחדל של המקור = 'none' לכל העיטורים** — בפרופיל ברירת-המחדל
- * הפאס הזה לא מייצר דבר (אפס שינוי; ה-parity וה-hash מוכחים כזהים).
- * החיבור מופעל רק כשההגדרות מזמנות עיטורים בפועל — ואז הוא מוכח בבדיקות.
- *
- * **אינווריאנט T1 (ניטרליות גיאומטרית):** הפאס רץ אחרי חישוב ה-layoutHash
- * של המורשת ואינו נוגע בטורים/בפסים — overlay-rects בלבד (דפוס D-47).
- * גובה העיטור אינו "מתגלה" בדיעבד (שיעור F-08): עיטור שאין לו מקום
- * חוקי בתוך אזור ה-h2 נדחה ונרשם — לא נדחק לתוך זרימת הגוף.
- */
-
-const {
-  h2OrnamentScope, h2OrnamentReservedHeight
-} = require('./ornament-fit');
-
-/** רוחב הפס (שני טורים + מרזב) — מקור: legacy-imud-flow GEO. */
-const BAND_W = 552;
-const BAND_X = 48.7; // GEO.COL_L_X — מרכז העמוד (A5 16x16... ליתר דיוק מוזרק מהקריאה)
-
-/**
- * @param {Array} pages - עמודי המורשת (אחרי ההרכבה; pg.bands/pg.columns מוכנים)
- * @param {object} settings - הגדרות RED (כולל h2-orn-* הממופות מהמקור)
- * @param {Function} measureFn - (text, sizePx?) => widthPx
- * @param {object} io - { ledger, eventLog, bandX, bandW }
- * @returns {{planted:number, rejected:Array}}
- */
-function planLegacyOrnaments(pages, settings, measureFn, io = {}) {
-  const ledger = io.ledger, eventLog = io.eventLog;
-  const bandX = io.bandX != null ? io.bandX : BAND_X;
-  const bandW = io.bandW != null ? io.bandW : BAND_W;
-  // ראש זרימת הגוף של עמוד h2 — מחושב בצד הזרימה (FLOW_TOP + גובה אזור-h2
-  // לפי פטור-span); ברירת מחדל שמרנית: מתחת לפס הכותרת.
-  const flowTopOf = io.flowTopOf || ((pg, title) => title.y + title.h);
-  const out = { planted: 0, rejected: [] };
-  const scope = h2OrnamentScope(settings);
-  if (!scope.any) return out; // ברירות המחדל של המקור — אין עיטורים (אפס התערבות)
-
-  for (const pg of pages) {
-    const title = (pg.bands || []).find(b => b.kind === 'h2-title');
-    if (!title) continue; // עיטורי h2 בלבד בחיבור זה (עמודי פתיחת סימן)
-    const siman = (pg.bands || []).find(b => b.kind === 'h2-siman');
-    const topBand = siman || title;
-
-    const h2FontPx = title.sizePt * (96 / 72);
-    let titleW = 0;
-    try { titleW = measureFn(title.text, title.sizePt); } catch { titleW = 0; }
-    const titleWpx = Math.max(40, titleW || 0);
-    const { scale, ornW, ornH, margins } = h2OrnamentReservedHeight(titleWpx, settings, h2FontPx);
-    if (ornW <= 0 || ornH <= 0) continue;
-
-    pg.decorations = pg.decorations || [];
-    const centerX = bandX + bandW / 2;
-    const kindTop = settings['h2-orn-top'];
-    const kindBottom = settings['h2-orn-bottom'];
-    const kindSide = settings['h2-orn-side'];
-
-    // גבולות אזור-h2 חוקיים: מעל הפס העליון, ועד ראש זרימת הגוף של העמוד
-    const flowTop = flowTopOf(pg, title);
-
-    // ---------- עיטור עליון (מעל הסימן/הכותרת; REQ-ORN-01/02) ----------
-    if (scope.signTop && kindTop && kindTop !== 'none') {
-      const y = topBand.y - margins.top - ornH;
-      if (y >= 60) { // לא מטפס מעל אזור הכותרת העליונה של העמוד
-        const x = centerX - ornW / 2;
-        pg.decorations.push({ x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, w: ornW, h: ornH, kind: 'h2-orn-top', slot: 'sign-top', kindStyle: kindTop });
-        out.planted++;
-      } else {
-        out.rejected.push({ page: pg.folioDisplay || pg.index, slot: 'sign-top', reason: 'no-room-above', ornH });
-        if (ledger) ledger.create('ornament-rejected', `legacy-h2-top@${pg.index}`, pg.index, { reason: 'no-room-above', ornH }, 'ornaments');
-      }
-    }
-
-    // ---------- עיטור תחתון (מתחת לכותרת; בתוך אזור ה-h2 בלבד — שיעור F-08) ----------
-    if (scope.signBottom && kindBottom && kindBottom !== 'none') {
-      const y = title.y + title.h + margins.bottom;
-      if (y + ornH <= flowTop - 1) { // חייב להיכנס לאזור — לא לחדור לזרימת הגוף
-        const x = centerX - ornW / 2;
-        pg.decorations.push({ x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, w: ornW, h: ornH, kind: 'h2-orn-bottom', slot: 'sign-bottom', kindStyle: kindBottom });
-        out.planted++;
-      } else {
-        out.rejected.push({ page: pg.folioDisplay || pg.index, slot: 'sign-bottom', reason: 'no-room-below', ornH, flowTop });
-        if (ledger) ledger.create('ornament-rejected', `legacy-h2-bottom@${pg.index}`, pg.index, { reason: 'no-room-below', ornH }, 'ornaments');
-      }
-    }
-
-    // ---------- עיטורי צד (משני צדי הכותרת; ממורכזים אנכית לפס) ----------
-    if (scope.titleSide && kindSide && kindSide !== 'none') {
-      const gap = Math.max(4, Math.round(h2FontPx * 0.15));
-      const y = title.y + (title.h - ornH) / 2;
-      const halfTitle = (titleWpx * (scale > 0 ? 1 : 1)) / 2;
-      const rightX = centerX + halfTitle + gap;
-      const leftX = centerX - halfTitle - gap - ornW;
-      if (rightX + ornW <= bandX + bandW && leftX >= bandX) {
-        pg.decorations.push({ x: Math.round(rightX * 100) / 100, y: Math.round(y * 100) / 100, w: ornW, h: ornH, kind: 'h2-orn-side', slot: 'side-r', kindStyle: kindSide });
-        pg.decorations.push({ x: Math.round(leftX * 100) / 100, y: Math.round(y * 100) / 100, w: ornW, h: ornH, kind: 'h2-orn-side', slot: 'side-l', kindStyle: kindSide });
-        out.planted += 2;
-      } else {
-        out.rejected.push({ page: pg.folioDisplay || pg.index, slot: 'side', reason: 'title-too-wide', titleW: titleWpx });
-        if (ledger) ledger.create('ornament-rejected', `legacy-h2-side@${pg.index}`, pg.index, { reason: 'title-too-wide', titleW: titleWpx }, 'ornaments');
-      }
-    }
-  }
-  if (eventLog && out.planted) {
-    eventLog.emit('ornaments', 'legacy-h2-ornaments', { planted: out.planted, rejected: out.rejected.length });
-  }
-  return out;
-}
-
-module.exports = { planLegacyOrnaments };
 
 };
 __modules["src/engine/output/pagemodel-dom-renderer.js"] = function (require, module, exports) {
@@ -20755,20 +15480,11 @@ const { PT_CLASS, bgRgba, fontStack } = require('./dom-renderer');
 const PT_TO_PX = 96 / 72;
 const px2 = (v) => Math.round(v * 100) / 100;
 
-/** צבע שאינו שחור — null אחרת. PageModel נושא RGB מנורמל (0..1),
- * כמו כותב ה-PDF; ה-DOM ממיר את אותו ערך לצבע CSS בלי לדרוס אותו לשחור. */
+/** צבע שאינו שחור — null אחרת (כמו הרנדרר הקיים; שחור ⇒ ירושת ברירת מחדל). */
 function nonBlack(c) {
-  if (Array.isArray(c) && c.length === 3) {
-    const rgb = c.map(value => Number(value));
-    if (!rgb.every(value => Number.isFinite(value) && value >= 0 && value <= 1)) return null;
-    const channels = rgb.map(value => Math.round(value * 255));
-    // An explicit RGB triplet is a deliberate model color, including black;
-    // null/undefined (not an array) is the only "inherit" state.
-    return `rgb(${channels.join(', ')})`;
-  }
-  if (typeof c !== 'string' || !c.trim()) return null;
-  // String colors in PageModel are explicit too, including black. Only null
-  // means inherit from the page root.
+  if (!c || typeof c !== 'string') return null;
+  const s = c.trim().toLowerCase();
+  if (s === '#000' || s === '#000000' || s === 'black' || s === 'rgb(0, 0, 0)') return null;
   return c;
 }
 
@@ -20799,181 +15515,7 @@ function appendLineSep(container, doc, isFirstLogicalLine) {
   }
 }
 
-function visualRunOrder(entries) {
-  const out = entries.slice();
-  const levels = out.map(entry => entry.run && entry.run.shaping
-    ? entry.run.shaping.bidiLevel : 0);
-  const odd = levels.filter(level => level % 2 === 1);
-  if (!odd.length) return out;
-  const maxLevel = Math.max(...levels);
-  const minOdd = Math.min(...odd);
-  for (let level = maxLevel; level >= minOdd; level--) {
-    let start = 0;
-    while (start < out.length) {
-      while (start < out.length && levels[start] < level) start++;
-      if (start >= out.length) break;
-      let end = start + 1;
-      while (end < out.length && levels[end] >= level) end++;
-      for (let left = start, right = end - 1; left < right; left++, right--) {
-        [out[left], out[right]] = [out[right], out[left]];
-        [levels[left], levels[right]] = [levels[right], levels[left]];
-      }
-      start = end;
-    }
-  }
-  return out;
-}
-
-function glyphOutlineSvgOf(wd, ml, doc) {
-  const typography = wd && wd.typography;
-  if (!typography || typography.contractVersion !== 'page-word-typography-v1' ||
-      !Array.isArray(typography.segments) || !typography.segments.length) {
-    return { svg: null, reason: 'word-typography-missing' };
-  }
-  if (typeof doc.createElementNS !== 'function') {
-    return { svg: null, reason: 'svg-namespace-api-unavailable' };
-  }
-  const sizePt = Number(wd.sizePt != null ? wd.sizePt : ml.sizePt);
-  if (!Number.isFinite(sizePt) || sizePt <= 0 || !Number.isFinite(wd.w) || wd.w < 0) {
-    return { svg: null, reason: 'word-font-size-or-width-invalid' };
-  }
-  const sizePx = sizePt * PT_TO_PX;
-  const entries = [];
-  const naturalAdvanceBySegment = new Map();
-  let totalGlyphs = 0;
-  for (const segment of typography.segments) {
-    if (!segment || !Array.isArray(segment.shapedRuns) || !segment.shapedRuns.length ||
-        !Number.isFinite(segment.advancePx) || segment.advancePx < 0) {
-      return { svg: null, reason: 'word-shaping-segment-invalid' };
-    }
-    let naturalAdvancePx = 0;
-    for (const run of segment.shapedRuns) {
-      if (!run || run.kind !== 'ShapedRun' || run.contractVersion !== 'shaped-run-v1' ||
-          !run.font || !Number.isSafeInteger(run.font.unitsPerEm) || run.font.unitsPerEm <= 0 ||
-          !Array.isArray(run.glyphs) || !run.glyphs.length) {
-        return { svg: null, reason: 'shaped-run-invalid' };
-      }
-      let glyphAdvance = 0;
-      for (const glyph of run.glyphs) {
-        if (!glyph || typeof glyph.outlinePath !== 'string' ||
-            !Number.isFinite(glyph.xAdvance) || !Number.isFinite(glyph.xOffset) ||
-            !Number.isFinite(glyph.yOffset)) {
-          return { svg: null, reason: 'native-glyph-outline-or-position-missing' };
-        }
-        glyphAdvance += glyph.xAdvance;
-      }
-      if (!Number.isFinite(glyphAdvance) || glyphAdvance < 0 ||
-          !run.advance || !Number.isFinite(run.advance.x) ||
-          Math.abs(glyphAdvance - run.advance.x) > 1e-7) {
-        return { svg: null, reason: 'shaped-glyph-advance-invalid' };
-      }
-      naturalAdvancePx += glyphAdvance / run.font.unitsPerEm * sizePx;
-      entries.push({ run, segment });
-      totalGlyphs += run.glyphs.length;
-    }
-    naturalAdvanceBySegment.set(segment, naturalAdvancePx);
-  }
-  if (!totalGlyphs || totalGlyphs !== typography.glyphCount) {
-    return { svg: null, reason: 'word-glyph-count-mismatch' };
-  }
-
-  const segmentScale = new Map();
-  for (const segment of typography.segments) {
-    const natural = naturalAdvanceBySegment.get(segment);
-    if (natural <= 0) {
-      if (segment.advancePx > 0) return { svg: null, reason: 'zero-natural-advance' };
-      segmentScale.set(segment, 1);
-    } else {
-      segmentScale.set(segment, segment.advancePx / natural);
-    }
-  }
-  const visual = visualRunOrder(entries);
-  const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  const width = Math.max(0.01, Number(wd.w) || 0.01);
-  const height = Math.max(0.01, Number(ml.h) || 0.01);
-  const baselineAbs = Number.isFinite(ml.baselineY)
-    ? ml.baselineY
-    : ml.y + (Number.isFinite(ml.ascentPx) ? ml.ascentPx : height * 0.8);
-  const baseline = baselineAbs - ml.y;
-  svg.setAttribute('viewBox', `0 0 ${px2(width)} ${px2(height)}`);
-  svg.setAttribute('width', String(px2(width)));
-  svg.setAttribute('height', String(px2(height)));
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  svg.style.position = 'absolute';
-  svg.style.left = '0';
-  svg.style.top = '0';
-  svg.style.width = `${px2(width)}px`;
-  svg.style.height = `${px2(height)}px`;
-  svg.style.overflow = 'visible';
-
-  let penX = 0;
-  for (const entry of visual) {
-    const run = entry.run;
-    const scaleY = sizePx / run.font.unitsPerEm;
-    const scaleX = scaleY * segmentScale.get(entry.segment);
-    const direction = run.shaping && run.shaping.direction;
-    if (direction !== 'rtl' && direction !== 'ltr') {
-      return { svg: null, reason: 'shaped-run-direction-invalid' };
-    }
-    const runAdvancePx = run.glyphs.reduce((sum, glyph) => sum + glyph.xAdvance * scaleX, 0);
-    if (!Number.isFinite(runAdvancePx) || runAdvancePx < 0) {
-      return { svg: null, reason: 'shaped-run-advance-invalid' };
-    }
-    // HarfBuzz returns glyphs in visual order within a run. RTL output starts
-    // at the right edge and advances left; LTR output starts at the left edge.
-    let glyphPenX = direction === 'rtl' ? penX + runAdvancePx : penX;
-    for (const glyph of run.glyphs) {
-      const glyphAdvancePx = glyph.xAdvance * scaleX;
-      if (direction === 'rtl') glyphPenX -= glyphAdvancePx;
-      if (glyph.outlinePath.length) {
-        const path = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', glyph.outlinePath);
-        path.setAttribute('transform',
-          `translate(${px2(glyphPenX + glyph.xOffset * scaleX)} ${px2(baseline - glyph.yOffset * scaleY)}) scale(${scaleX} ${-scaleY})`);
-        path.setAttribute('fill', 'currentColor');
-        svg.appendChild(path);
-      }
-      if (direction === 'ltr') glyphPenX += glyphAdvancePx;
-    }
-    penX += runAdvancePx;
-  }
-  if (Math.abs(penX - width) > Math.max(1.25, width * 0.015)) {
-    return { svg: null, reason: 'positioned-glyph-advance-does-not-match-word-width' };
-  }
-  return { svg, glyphCount: totalGlyphs };
-}
-
-function appendGlyphOutlineWord(ml, wd, span, doc) {
-  const rendered = glyphOutlineSvgOf(wd, ml, doc);
-  if (!rendered.svg) {
-    span.dataset.glyphOutlineFallback = rendered.reason || 'native-outline-unavailable';
-    return false;
-  }
-  span.className += ' w--glyph-outline';
-  span.style.width = `${px2(wd.w)}px`;
-  span.style.height = `${px2(ml.h)}px`;
-  span.style.display = 'block';
-  span.setAttribute('role', 'text');
-  span.setAttribute('aria-label', scrubPUAText(wd.text));
-  span.dataset.glyphOutline = 'harfbuzz';
-  span.dataset.glyphCount = String(rendered.glyphCount);
-  span.appendChild(rendered.svg);
-  // Preserve searchable/copyable Unicode text without letting the browser shape it visibly.
-  const accessibleText = doc.createElement('span');
-  accessibleText.style.position = 'absolute';
-  accessibleText.style.width = '1px';
-  accessibleText.style.height = '1px';
-  accessibleText.style.overflow = 'hidden';
-  accessibleText.style.clipPath = 'inset(50%)';
-  accessibleText.style.whiteSpace = 'nowrap';
-  accessibleText.setAttribute('aria-hidden', 'true');
-  accessibleText.textContent = scrubPUAText(wd.text);
-  span.appendChild(accessibleText);
-  return true;
-}
-
-function renderModelLine(ml, doc, relX, relY, diagnostics) {
+function renderModelLine(ml, doc, relX, relY) {
   const el = doc.createElement('div');
   el.className = 'line'
     + (ml.isLast ? ' line--last' : '')
@@ -21029,18 +15571,6 @@ function renderModelLine(ml, doc, relX, relY, diagnostics) {
     if (fam) span.style.fontFamily = fam;
     const col = nonBlack(wd.color);
     if (col) span.style.color = col;
-    if (wd.typography) {
-      if (appendGlyphOutlineWord(ml, wd, span, doc)) {
-        el.appendChild(span);
-        continue;
-      }
-      if (Array.isArray(diagnostics)) diagnostics.push({
-        kind: 'pmr-glyph-outline-fallback',
-        lineId: ml.id || null,
-        text: wd.text,
-        reason: span.dataset.glyphOutlineFallback || 'native-outline-unavailable'
-      });
-    }
     span.textContent = scrubPUAText(wd.text);
     el.appendChild(span);
   }
@@ -21077,13 +15607,7 @@ function renderModelDecoration(d, doc, diags) {
     el.style.backgroundPosition = 'center center';
     el.style.backgroundRepeat = 'no-repeat';
   } else if (ink && ink.type === 'rule') {
-    const style = ink.style === 'dotted' ? 'dotted' : 'solid';
-    const channels = Array.isArray(ink.color) && ink.color.length === 3
-      ? ink.color.map(value => Math.round(Math.max(0, Math.min(1, Number(value))) * 255))
-      : [0, 0, 0];
-    const color = `rgb(${channels.join(', ')})`;
-    const width = Number.isFinite(ink.width) && ink.width > 0 ? ink.width : 0.75;
-    el.style.borderTop = `${width}px ${style} ${color}`;
+    el.style.borderTop = '0.75px solid #000';
     el.style.height = '0px';
   } else if (ink && ink.type === 'rect' && ink.color) {
     el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;
@@ -21144,13 +15668,13 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     wrap.style.width = `${px2(mp.shaar.box.w)}px`;
     wrap.style.height = `${px2(mp.shaar.box.h)}px`;
     for (const ln of mp.lines.filter(l => l.area === 'structural')) {
-      wrap.appendChild(renderModelLine(ln, doc, mp.shaar.box.x, mp.shaar.box.y, diags));
+      wrap.appendChild(renderModelLine(ln, doc, mp.shaar.box.x, mp.shaar.box.y));
     }
     root.appendChild(wrap);
   } else if ((mp.lines || []).some(l => l.area === 'structural')) {
     // שורות מובנות בלי תיבה (TOC/כותרת הערות) — מוקרנות ישירות בקואורדינטות העמוד
     for (const ln of mp.lines.filter(l => l.area === 'structural')) {
-      root.appendChild(renderModelLine(ln, doc, 0, 0, diags));
+      root.appendChild(renderModelLine(ln, doc, 0, 0));
     }
   }
 
@@ -21192,7 +15716,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     for (const ln of mp.lines.filter(l => l.area === 'spanning')) {
       appendLineSep(band, doc, firstSpanningLine); // **RC-A1:** רווח בין שורות הפס
       firstSpanningLine = false;
-      band.appendChild(renderModelLine(ln, doc, mp.spanning.x, mp.spanning.y, diags));
+      band.appendChild(renderModelLine(ln, doc, mp.spanning.x, mp.spanning.y));
     }
     root.appendChild(band);
   }
@@ -21216,7 +15740,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
       // **RC-A1:** רווח בין שורות של אותו פס (אותו token) — לא בין פסים שונים
       appendLineSep(mbWrap, doc, prevMidBandToken == null || ln.sourceTokenId !== prevMidBandToken);
       prevMidBandToken = ln.sourceTokenId != null ? ln.sourceTokenId : null;
-      mbWrap.appendChild(renderModelLine(ln, doc, 0, 0, diags));
+      mbWrap.appendChild(renderModelLine(ln, doc, 0, 0));
     }
     root.appendChild(mbWrap);
   }
@@ -21260,7 +15784,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
       note.style.left = `${px2(ln.x)}px`;
       note.style.top = `${px2(ln.y)}px`;
       note.style.width = `${px2(ln.w)}px`;
-      note.appendChild(renderModelLine(ln, doc, ln.x, ln.y, diags));
+      note.appendChild(renderModelLine(ln, doc, ln.x, ln.y));
       enWrap.appendChild(note);
     }
     root.appendChild(enWrap);
@@ -21285,7 +15809,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     colEl.dataset.modelHeight = String(colHeight);
     colEl.dataset.modelBottom = String(colTops[ci] + colHeight);
     for (const ln of mp.lines.filter(l => l.area === 'column' && l.col === ci && l.projected !== false && l.midBand !== true)) {
-      colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci], diags));
+      colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci]));
     }
     colsWrap.appendChild(colEl);
   });
@@ -21348,7 +15872,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
     for (const ln of own) {
       appendLineSep(el, doc, firstOwnLine);
       firstOwnLine = false;
-      el.appendChild(renderModelLine(ln, doc, sn.x, sn.yTop, diags));
+      el.appendChild(renderModelLine(ln, doc, sn.x, sn.yTop));
     }
     if (!own.length && sn.text) {
       // רשומה בלי שורות מוקרנות — דיאגנוסטיק גלוי; הטקסט אינו נעלם (§2.4)
@@ -21372,7 +15896,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
   for (const ln of marginLines) {
     if (claimed.has(ln.id)) continue;
     diags.push({ kind: 'pmr-margin-line-orphan', lineId: ln.id || null });
-    const el = renderModelLine(ln, doc, 0, 0, diags);
+    const el = renderModelLine(ln, doc, 0, 0);
     el.classList.add('pmr-orphan-margin');
     root.appendChild(el);
   }
@@ -21440,25 +15964,6 @@ function renderModelPage(mp, settings, doc, opts = {}) {
           if (wd.sizePt != null) span.style.fontSize = `${px2(wd.sizePt * PT_TO_PX)}px`;
           const fam = familyOf(wd.fontKey);
           if (fam) span.style.fontFamily = fam;
-          const outlineLine = {
-            y: Number.isFinite(wd.lineY) ? wd.lineY : (wd.baselineY || 0) - lineH * 0.8,
-            h: lineH,
-            sizePt: wd.sizePt,
-            baselineY: wd.baselineY
-          };
-          if (wd.typography && appendGlyphOutlineWord(outlineLine, wd, span, doc)) {
-            row.appendChild(span);
-            continue;
-          }
-          if (wd.typography) {
-            diags.push({
-              kind: 'footnote-glyph-outline-fallback',
-              page: mp.index,
-              noteId: n.noteId || null,
-              word: wd.text,
-              reason: span.dataset.glyphOutlineFallback || 'outline-render-failed'
-            });
-          }
           span.textContent = scrubPUAText(wd.text);
           row.appendChild(span);
         }
@@ -22053,12 +16558,9 @@ function buildReport(result, opts = {}) {
   // **S4.10:** תוצאת מנוע-מורשת מקבלת hash מחדש בשיטת המורשת עצמה — hash של DP
   // על עמודי מורשת אינו מוגדר (שדות שונים) והיה מסמן אקראיות שקרית.
   const { layoutHash } = require('../engine/layout/dp-planner');
-  const { legacyLayoutHashDigest } = require('../engine/layout/legacy-imud-flow');
   let recomputed = null;
   if (result.pages) {
-    recomputed = result.legacyProfile
-      ? 'legacy-' + legacyLayoutHashDigest(result.pages)
-      : layoutHash(result.pages);
+    recomputed = layoutHash(result.pages);
   }
   const deterministic = recomputed === result.layoutHash;
   const findings = [];
@@ -22120,11 +16622,10 @@ __modules["src/engine/layout/dp-planner.js"] = function (require, module, export
 
 const crypto = require('crypto');
 // **חוזה H3 (D-S2H3/CSS parity):** ריפודי פס כותרת 3 ממקור יחיד —
-// אותו חוזה כמו המנוע המורשת (legacy-imud-flow) ומדידת ה-pipeline.
+// אותו חוזה כמו מדידת ה-pipeline.
 const { H3_TOP_PAD_PX, H3_BOTTOM_PAD_PX, H3_MARGIN_BOTTOM_PX, H3_FOLLOW_MIN_PX, h3BandHeightPx, h3BandRoomThresholdPx } = require('../core/h3-contract');
-const { PAGE_TYPES, buildPageTemplate } = require('./page-templates');
-const { H0_TITLE_Y, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN, H2_TITLE_LINE_PITCH_PX } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** עוגני פתיחת-הסימן — מקור יחיד (S4.19)
-const { isImudProfile: isImud } = require('./page-templates');
+const { PAGE_TYPES, buildPageTemplate, isImudProfile } = require('./page-templates');
+const { H0_TITLE_Y, H2_SIMAN_Y, H2_SIMAN_Y_SPAN, H2_TITLE_Y, H2_TITLE_Y_SPAN, H2_TITLE_LINE_PITCH_PX, GEO, FLOW_BOTTOM, SINGLE_W, SZ_CORE } = require('../core/imud-geometry'); // **G3/RC-3 (i004):** עוגני פתיחת-הסימן — מקור יחיד (S4.19)
 const { Ledger } = require('../core/ledger');
 const { runProtections } = require('./protections-matrix');
 const { runRetreatLoop } = require('./retreat-loop');
@@ -22138,6 +16639,504 @@ const { getFootnotesReservedHeight, noteHeight, noteMetrics, stampNoteMetrics } 
 const { stampNote, makeNoteRecord, NOTE_KINDS } = require('./notes-model'); // **שלב 6 פרוסה 2:** מודל ההערות המאוחד — זהות/עוגן + חותמת הערות-צד ביצירה
 const CM = require('./constraint-matrix'); // **שלב 5:** מטריצת האילוצים המאוחדת (חילוץ שורש מ-#16/#17)
 const { createTraceRecorder } = require('./decision-trace'); // **פרוסה 2 (§2.7):** תיעוד החלטות דטרמיניסטי קומפקטי
+const { getDefaultSettings, findKey } = require('../core/settings-registry');
+const { breakLines, FIT_EPS, STRETCH_RATIO, SHRINK_RATIO } = require('../typography/kp-linebreak');
+
+/**
+ * LineBreaker class — wraps breakLines for backward compatibility with tests.
+ * Tests expect: new LineBreaker(api, cfg, windowApi, headingApi)
+ */
+class LineBreaker {
+  constructor(api, cfg, windowApi, headingApi) {
+    this.api = api;
+    this.cfg = cfg;
+    this.win = windowApi;
+    this.winCache = new Map();
+    this.hApi = headingApi;
+    this.hCache = new Map();
+    this.cache = new Map();
+  }
+
+  w(text, sizePt) {
+    const key = sizePt + '|' + text;
+    let v = this.cache.get(key);
+    if (v === undefined) { v = this.api.measureTextWidth(text, sizePt, 0); this.cache.set(key, v); }
+    return v;
+  }
+  hw(text, sizePt, apiOverride) {
+    const useApi = apiOverride || this.hApi;
+    if (!useApi) return this.w(text, sizePt);
+    if (!useApi._hwCache) useApi._hwCache = new Map();
+    const key = sizePt + '|' + text;
+    let v = useApi._hwCache.get(key);
+    if (v === undefined) { v = useApi.measureTextWidth(text, sizePt, 0); useApi._hwCache.set(key, v); }
+    return v;
+  }
+  wWin(text, sizePt) {
+    if (!this.win) return this.w(text, sizePt);
+    const key = sizePt + '|' + text;
+    let v = this.winCache.get(key);
+    if (v === undefined) { v = this.win.measureTextWidth(text, sizePt, 0); this.winCache.set(key, v); }
+    return v;
+  }
+
+  splitWords(text, opts) {
+    const { fnOpen, fnClose } = this.cfg;
+    const safe = String(text).trim();
+    // Simple findNotes implementation
+    const notes = [];
+    let idx = 0;
+    while (true) {
+      const openIdx = safe.indexOf(fnOpen, idx);
+      if (openIdx === -1) break;
+      const closeIdx = safe.indexOf(fnClose, openIdx + fnOpen.length);
+      if (closeIdx === -1) break;
+      notes.push({ start: openIdx, end: closeIdx + fnClose.length });
+      idx = closeIdx + fnClose.length;
+    }
+    let atomic = safe;
+    for (const n of notes) {
+      const inner = safe.slice(n.start + fnOpen.length, n.end - fnClose.length).replace(/\s+/g, '');
+      atomic = atomic.slice(0, n.start + fnOpen.length) + inner + atomic.slice(n.end - fnClose.length);
+    }
+    const words = atomic.split(/\s+/).filter(Boolean);
+    const escO = fnOpen.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const escC = fnClose.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const inWord = new RegExp(escO + '[\\s\\S]*?' + escC, 'g');
+    const markerOf = (opts && typeof opts.markerOf === 'function') ? opts.markerOf : null;
+    const markerSzPt = (opts && Number.isFinite(opts.markerSizePt)) ? opts.markerSizePt : null;
+    const markerMw = (opts && typeof opts.markerMeasure === 'function') ? opts.markerMeasure : null;
+    const bodySzPt = (opts && Number.isFinite(opts.bodySizePt)) ? opts.bodySizePt : null;
+    const bodyMw = (opts && typeof opts.bodyMeasure === 'function') ? opts.bodyMeasure : markerMw;
+    const canMeasureMarker = !!(markerOf && markerMw && markerSzPt != null && bodySzPt != null);
+    const dispW = new Array(words.length).fill(null);
+    let noteOrdinal = 0;
+    const markerTextOf = () => {
+      if (!markerOf) return 'א';
+      return LineBreaker.markerWord(markerOf(noteOrdinal), this.cfg.fnNumSeparator);
+    };
+    const disp = words.map((word, wi) => {
+      if (word.startsWith(fnOpen) && word.endsWith(fnClose)) {
+        const mText = markerOf ? markerTextOf() : 'א';
+        noteOrdinal++;
+        if (markerOf && markerMw && markerSzPt != null) dispW[wi] = markerMw(mText, markerSzPt);
+        return markerOf ? mText : 'א';
+      }
+      if (canMeasureMarker) {
+        const m = word.match(inWord);
+        if (m) {
+          const full = word.replace(inWord, '\u0001');
+          const parts = full.split('\u0001');
+          if (parts.length === 2) {
+            const mText = markerTextOf();
+            noteOrdinal++;
+            dispW[wi] = (parts[0] ? bodyMw(parts[0], bodySzPt) + bodyMw(' ', bodySzPt) : 0)
+              + markerMw(mText, markerSzPt)
+              + (parts[1] ? bodyMw(' ', bodySzPt) + bodyMw(parts[1], bodySzPt) : 0);
+            return parts[0] + ' ' + mText + ' ' + parts[1];
+          }
+        }
+      }
+      return word.replace(inWord, ' א ');
+    });
+    const out = words.map(word => word.replace(//g, ' '));
+    return { words, disp, out, notes, dispW };
+  }
+
+  static markerWord(n, sep) { return toGematria(n) + (sep != null ? sep : '.'); }
+
+  breakPara(text, colWidthPx, sizePt, allowWindow, measureApi = null, opts = null) {
+    const cfg = this.cfg;
+    const mw = measureApi
+      ? (t, sz) => measureApi.measureTextWidth(t, sz, 0)
+      : (t, sz) => this.w(t, sz);
+    const { disp, out, notes, dispW } = this.splitWords(text, opts);
+    const spaceW = mw(' ', sizePt);
+    const parenSize = sizePt - 2; // 12-2 = 10pt
+    const wordWs = new Array(out.length);
+    const wordParen = new Array(out.length);
+    const endsInParen = new Array(out.length);
+    const startsInParen = new Array(out.length);
+    {
+      let depth = 0;
+      for (let i = 0; i < out.length; i++) {
+        const wd = disp[i];
+        if (dispW && dispW[i] != null) {
+          wordWs[i] = dispW[i];
+          if (out[i].startsWith(cfg.fnOpen) && out[i].endsWith(cfg.fnClose)) {
+            wordParen[i] = false;
+            startsInParen[i] = false;
+            endsInParen[i] = false;
+            continue;
+          }
+          let anyParen = false;
+          for (let c = 0; c < wd.length; c++) {
+            const ch = wd[c];
+            if (ch === '(') depth++;
+            const inParen = depth > 0;
+            if (inParen) anyParen = true;
+            if (c === 0) startsInParen[i] = inParen;
+            endsInParen[i] = inParen;
+            if (ch === ')' && depth > 0) depth--;
+          }
+          wordParen[i] = anyParen;
+          continue;
+        }
+        let w = 0, seg = '', segParen = false;
+        let anyParen = false;
+        for (let c = 0; c < wd.length; c++) {
+          const ch = wd[c];
+          if (ch === '(') { depth++; segParen = true; }
+          const inParen = depth > 0;
+          if (inParen) anyParen = true;
+          if (c === 0) startsInParen[i] = inParen;
+          endsInParen[i] = inParen;
+          if (ch === ')' && depth > 0) { depth--; if (depth === 0) segParen = false; }
+        }
+        wordParen[i] = anyParen;
+        const sz = wordParen[i] ? parenSize : sizePt;
+        wordWs[i] = mw(wd, sz);
+      }
+    }
+    const lines = [];
+    let i = 0;
+    let hasWindow = false;
+    let windowWords = null;
+    const dropWordMode = cfg.dropWordMode || 'window';
+    const dropWordCount = cfg.dropWordCount || 1;
+    const dropWordMinLines = cfg.dropWordMinLines || 2;
+    while (i < out.length) {
+      let w = 0;
+      let lineWords = [];
+      let lineDisp = [];
+      let lineDispW = [];
+      let j = i;
+      // Check for window word
+      if (allowWindow && dropWordMode === 'window' && j < out.length && lines.length < dropWordMinLines) {
+        const winW = this.wWin(out[j], sizePt * 1.5);
+        if (winW > colWidthPx - FIT_EPS) {
+          // Single word wider than column -> window mode
+          hasWindow = true;
+          windowWords = [out[j]];
+          const line = { words: [disp[j]], heightPx: sizePt * 96 / 72 * 1.5, window: true, windowW: winW };
+          lines.push(line);
+          i = j + 1;
+          continue;
+        }
+      }
+      // Regular greedy fill
+      while (j < out.length) {
+        const addW = (lineWords.length ? spaceW : 0) + wordWs[j];
+        if (w + addW > colWidthPx - FIT_EPS) break;
+        w += addW;
+        lineWords.push(out[j]);
+        lineDisp.push(disp[j]);
+        lineDispW.push(dispW[j] != null ? dispW[j] : wordWs[j]);
+        j++;
+      }
+      if (!lineWords.length) {
+        // Force at least one word
+        lineWords.push(out[i]);
+        lineDisp.push(disp[i]);
+        lineDispW.push(dispW[i] != null ? dispW[i] : wordWs[i]);
+        i++;
+      } else {
+        i = j;
+      }
+      lines.push({ words: lineDisp, widthPx: w, heightPx: sizePt * 96 / 72, isLast: i >= out.length, window: false });
+    }
+    return { lines, hasWindow, windowW: hasWindow ? this.wWin(windowWords[0], sizePt * 1.5) : 0 };
+  }
+}
+
+// Hebrew gematria helper
+function toGematria(n) {
+  const letters = [
+    '', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י',
+    'יא', 'יב', 'יג', 'יד', 'טו', 'טז', 'יז', 'יח', 'יט', 'כ',
+    'כא', 'כב', 'כג', 'כד', 'כה', 'כו', 'כז', 'כח', 'כט', 'ל',
+    'לא', 'לב', 'לג', 'לד', 'לה', 'לו', 'לז', 'לח', 'לט', 'מ',
+    'מא', 'מב', 'מג', 'מד', 'מה', 'מו', 'מז', 'מח', 'מט', 'נ',
+    'נא', 'נב', 'נג', 'נד', 'נה', 'נו', 'נז', 'נח', 'נט', 'ס',
+    'סא', 'סב', 'סג', 'סד', 'סה', 'סו', 'סז', 'סח', 'סט', 'ע',
+    'עא', 'עב', 'עג', 'עד', 'עה', 'עו', 'עז', 'עח', 'עט', 'פ',
+    'פא', 'פב', 'פג', 'פד', 'פה', 'פו', 'פז', 'פח', 'פט', 'צ',
+    'צא', 'צב', 'צג', 'צד', 'צה', 'צו', 'צז', 'צח', 'צט', 'ק',
+    'קא', 'קב', 'קג', 'קד', 'קה', 'קו', 'קז', 'קח', 'קט', 'קי',
+    'קיא', 'קיב', 'קיג', 'קיד', 'קטו', 'קטז', 'קיז', 'קיח', 'קיט', 'ככ',
+    'ככא', 'ככב', 'ככג', 'ככד', 'ככה', 'ככו', 'ככז', 'ככח', 'ככט', 'ככל',
+    'ככלא', 'ככלב', 'ככלג', 'ככלד', 'ככלה', 'ככלו', 'ככלז', 'ככלח', 'ככלט', 'ככלמ',
+    'ככלמא', 'ככלמב', 'ככלמג', 'ככלמד', 'ככלמה', 'ככלמו', 'ככלמז', 'ככלמח', 'ככלמט', 'כככנ',
+    'כככנא', 'כככנב', 'כככנג', 'כככנד', 'כככנה', 'כככנו', 'כככנז', 'כככנח', 'כככנט', 'כככס',
+    'כככסא', 'כככסב', 'כככסג', 'כככסד', 'כככסה', 'כככסו', 'כככסז', 'כככסח', 'כככסט', 'כככע',
+    'כככעא', 'כככעב', 'כככעג', 'כככעד', 'כככעה', 'כככעו', 'כככעז', 'כככעח', 'כככעט', 'כככפ'
+  ];
+  let result = '';
+  if (n >= 1000) {
+    const thousands = Math.floor(n / 1000);
+    const remainder = n % 1000;
+    result = (letters[thousands] || 'א') + '׳';
+    if (remainder > 0) {
+      result += letters[remainder] || '';
+    }
+  } else {
+    result = letters[n] || 'א';
+  }
+  return result;
+}
+
+/** גובה פריט כותרת inline (h4/h5/h6) בטור — גודל×1.45.
+ * **S4.14 (מדידה שיטתית מעוגני הייחוס):** מרחק תווית-hN → עוגן הפסקה הבא
+ * באותו טור, על פני כל המסמך: h4=24-25px (32 מדידות; 12.5pt), h5=22px
+ * (7 מדידות; 11.5pt), h6=20px (5 מדידות; 10.5pt) — כלומר גודל×1.45 בדיוק
+ * (24.2/22.2/20.3). הנוסחה הקודמת ×1.22+6 נתנה 26.3/24.7 — גבוהה ב-2 עד 2.5px
+ * לכל כותרת, והפער הצטבר לשורה שלמה בעמודים עם כותרות מרובות. */
+function headingItemH(level) {
+  const sz = ({ 4: SZ_CORE.h4, 5: SZ_CORE.h5, 6: SZ_CORE.h6 })[level] || SZ_CORE.body;
+  return sz * (96 / 72) * 1.45;
+}
+
+/** גלישת שורות גרידה גנרית (להערות). */
+function wrapText(text, api, widthPx, sizePt) {
+  const words = String(text).split(/\s+/).filter(Boolean);
+  const lines = [];
+  let cur = [], curW = 0;
+  const spaceW = api.measureTextWidth(' ', sizePt, 0);
+  for (const w of words) {
+    const ww = api.measureTextWidth(w, sizePt, 0);
+    const add = ww + (cur.length ? spaceW : 0);
+    // **D-92:** רווח-ביטחון התאמת-דפדפן (הערות השוליים מרונדרות מחדש ב-DOM).
+    if (cur.length && curW + add > widthPx - FIT_EPS) { lines.push(cur.join(' ')); cur = [w]; curW = ww; }
+    else { cur.push(w); curW += add; }
+  }
+  if (cur.length) lines.push(cur.join(' '));
+  return lines;
+}
+
+/**
+ * **גשר הגדרות (S77):** ממיר את ה-raw של IMUD (default_settings.json) + הרשמה
+ * לאובייקט הגדרות שהמנוע המאוחד משתמש בו — יחידת כניסה יחידה למודול ה-DP.
+ * ערכי ההגדרה החיים (settings registry) גוברים על ה-raw; ברירות המחדל של המקור
+ * נשמרות כ-fallback מדויק (אותן הערכים המכוילים).
+ */
+function readConfig(imudRaw, settings) {
+  // IMUD raw key -> RED registry ID key mapping (from legacy-settings-map.js DISPOSITIONS)
+  // The settings object uses the registry ID (e.g., 'heading-4-size-pt') not the control name (e.g., 'rng-h4-size')
+  const IMUD_TO_REGISTRY = {
+    // Typography
+    'font-body': 'body-font',
+    'size-body': 'body-font-size-pt',
+    'line-height-body': 'body-line-height',
+    's-paren': 'paren-style-scale', // handled specially with transform
+    's-paren-mode': null, // ui-state
+    'body-last-line-align': 'body-last-line-align',
+    // Drop word
+    'drop-word-mode': 'first-word-mode',
+    'drop-word-count': 'first-word-length',
+    'drop-word-min-lines': 'first-word-threshold-lines',
+    'font-first-word': 'first-word-font',
+    'size-first-word': 'first-word-size-em',
+    // DH
+    'auto-dh': 'dh-auto-detect',
+    'font-dh': 'dh-font',
+    // Heading modes
+    'mode-h0': 'heading-0-mode',
+    'mode-h1': 'heading-1-mode',
+    'mode-h2': 'heading-2-mode',
+    'mode-h3': 'heading-3-mode',
+    'mode-h4': 'heading-4-mode',
+    'mode-h5': 'heading-5-mode',
+    'mode-h6': 'heading-6-mode',
+    'mode-h7': 'heading-7-mode',
+    // Odd page starts (ui-state)
+    'odd-h0': null, 'odd-h1': null, 'odd-h2': null,
+    'h2-auto-siman': null, 'h2-reset-siman': null,
+    'h2-top-distance': 'h2-top-offset',
+    // Notes
+    'en-line-prefix': 'en-line-prefix',
+    'fn-delim-open': 'fn-delim-open',
+    'fn-delim-close': 'fn-delim-close',
+    // Font families (heading fonts)
+    'f-h0': 'heading-0-font', 'f-h1': 'heading-1-font', 'f-h2': 'heading-2-font',
+    'f-h3': 'heading-3-font', 'f-h4': 'heading-4-font', 'f-h5': 'heading-5-font',
+    'f-h6': 'heading-6-font', 'f-h7': 'heading-7-font',
+    // Heading sizes - use registry ID (e.g., heading-4-size-pt), not control name (rng-h4-size)
+    's-h0': 'heading-0-size-pt', 's-h1': 'heading-1-size-pt', 's-h2': 'heading-2-size-pt',
+    's-h3': 'heading-3-size-pt', 's-h4': 'heading-4-size-pt', 's-h5': 'heading-5-size-pt',
+    's-h6': 'heading-6-size-pt', 's-h7': 'heading-7-size-pt',
+    // Note body font
+    'f-note-body': 'f-note-body-font',
+    // Header fonts and sizes
+    'f-hdr-r': 'header-recto-right-font', 'f-hdr-c': 'header-recto-center-font', 'f-hdr-l': 'header-recto-left-font',
+    's-hdr-r': 'header-recto-right-size-pt', 's-hdr-c': 'header-recto-center-size-pt', 's-hdr-l': 'header-recto-left-size-pt',
+    'f-hdr-verso-r': 'header-verso-right-font', 'f-hdr-verso-c': 'header-verso-center-font', 'f-hdr-verso-l': 'header-verso-left-font',
+    // Header slot types
+    'hdr-r-type': 'header-recto-right-source', 'hdr-c-type': 'header-recto-center-source', 'hdr-l-type': 'header-recto-left-source',
+    'hdr-verso-r-type': 'header-verso-right-source', 'hdr-verso-c-type': 'header-verso-center-source', 'hdr-verso-l-type': 'header-verso-left-source',
+    'hdr-verso-same-as-recto': 'header-verso-same-as-recto',
+    'hdr-divider-style': 'header-separator-line',
+    // Page numbering
+    'page-num-position': 'page-num-position',
+    'page-num-format': 'page-num-format',
+    'page-num-frame': 'page-num-frame',
+    'page-num-start-idx': 'page-num-start-idx',
+    'page-num-initial-value': 'page-num-initial-value',
+    // Column/proportion settings
+    'prop-col': 'grid-col-width-pct', 'prop-margin': 'grid-margin-side-pct', 'prop-gutter': 'grid-gutter-pct', 'prop-gap': 'grid-gap-pct',
+    'prop-mt': 'margin-top-px', 'prop-mb': 'margin-bottom-px', 'prop-mt-h2': 'h2-top-offset',
+    // Other
+    'fn-columns': 'footnote-columns',
+    'fn-layout-mode': 'fn-layout-mode',
+    'fn-reset-mode': 'footnote-reset-policy',
+    'fn-title-text': 'fn-title-text',
+    'f-note-title': 'f-note-title',
+    's-note-title': 's-note-title',
+    'f-note-body': 'f-note-body-font',
+    's-note-body': 'f-note-body-size-pt',
+    'note-numbering-style': 'footnote-marker-style',
+    'note-marker-type': null, // ui-state
+    'note-marker-size': 'note-marker-size',
+    'note-listing-num-size': 'note-listing-num-size',
+    'note-num-separator': 'note-num-separator',
+    'note-rule-style': 'footnote-separator-rule',
+    'avoid-orphans': 'avoid-orphans', 'avoid-widows': 'avoid-widows', 'avoid-runt-word': 'avoid-runt-word',
+    'hdr-distinct-even-odd': 'hdr-distinct-even-odd',
+    'hdr-alternating': 'hdr-alternating',
+    'hdr-title-split': 'split-book-title',
+    // TOC
+    'enable-general-toc': 'enable-general-toc', 'enable-detailed-toc': 'enable-detailed-toc',
+    'f-gtoc-1': 'f-gtoc-1', 's-gtoc-1': 's-gtoc-1', 'f-gtoc-2': 'f-gtoc-2', 's-gtoc-2': 's-gtoc-2',
+    'f-gtoc-3': 'f-gtoc-3', 's-gtoc-3': 's-gtoc-3', 'f-gtoc-4': 'f-gtoc-4', 's-gtoc-4': 's-gtoc-4',
+    'f-gtoc-5': 'f-gtoc-5', 's-gtoc-5': 's-gtoc-5', 'f-gtoc-6': 'f-gtoc-6', 's-gtoc-6': 's-gtoc-6',
+    'f-gtoc-7': 'f-gtoc-7', 's-gtoc-7': 's-gtoc-7',
+    'f-dtoc-1': 'f-dtoc-1', 's-dtoc-1': 's-dtoc-1', 'f-dtoc-2': 'f-dtoc-2', 's-dtoc-2': 's-dtoc-2',
+    'f-dtoc-3': 'f-dtoc-3', 's-dtoc-3': 's-dtoc-3', 'f-dtoc-4': 'f-dtoc-4', 's-dtoc-4': 's-dtoc-4',
+    'f-dtoc-5': 'f-dtoc-5', 's-dtoc-5': 's-dtoc-5', 'f-dtoc-6': 'f-dtoc-6', 's-dtoc-6': 's-dtoc-6',
+    'f-dtoc-7': 'f-dtoc-7', 's-dtoc-7': 's-dtoc-7',
+    // Shaar
+    'show-main-shaar': 'show-main-shaar', 'show-back-shaar': 'show-back-shaar', 'show-sub-shaar': 'show-sub-shaar',
+    'count-shaar-pages': 'count-shaar-pages', 'count-toc-pages': 'count-toc-pages',
+    'main-shaar-count-numbering': 'main-shaar-count-numbering', 'main-shaar-show-number': 'main-shaar-show-number',
+    'back-shaar-count-numbering': 'back-shaar-count-numbering', 'back-shaar-show-number': 'back-shaar-show-number',
+    'sub-shaar-count-numbering': 'sub-shaar-count-numbering', 'sub-shaar-show-number': 'sub-shaar-show-number',
+    'general-toc-count-numbering': 'general-toc-count-numbering', 'general-toc-show-numbering': 'general-toc-show-numbering',
+    'detailed-toc-count-numbering': 'detailed-toc-count-numbering', 'detailed-toc-show-numbering': 'detailed-toc-show-numbering',
+    // Footer
+    'page-num-format': 'page-num-format',
+    // fn-bar-max-height-px (legacy)
+    'fn-bar-max-height-px': null, // removed
+    // Background
+    'cbg-regular-mode': 'cbg-regular-mode', 'cbg-regular-color': 'cbg-regular-color',
+    'cbg-regular-opacity': 'cbg-regular-opacity', 'data-cbg-regular-img': 'data-cbg-regular-img',
+    'cbg-h0Open-mode': 'cbg-h0Open-mode', 'cbg-h0Open-color': 'cbg-h0Open-color',
+    'cbg-h0Open-opacity': 'cbg-h0Open-opacity', 'data-cbg-h0Open-img': 'data-cbg-h0Open-img',
+    'cbg-h2Open-mode': 'cbg-h2Open-mode', 'cbg-h2Open-color': 'cbg-h2Open-color',
+    'cbg-h2Open-opacity': 'cbg-h2Open-opacity', 'data-cbg-h2Open-img': 'data-cbg-h2Open-img',
+  };
+
+  const g = (k, d) => {
+    // S77: הגדרה חיה של הרישום גוברת על ה-raw (הייבוא מסנכרן את ברירות
+    // המחדל — התנהגות ברירת המחדל נשמרת במדויק)
+    // תרגום אוצר-מילים: 'drop' של הרישום = 'window' של המקור (אותו
+    // מנגנון מילת-חלון — כך מיפוי הייבוא); המנוע המורשת בודק 'window'.
+    if (k === 'drop-word-mode' && settings) {
+      const fm = settings['first-word-mode'];
+      if (fm != null && fm !== '') return fm === 'drop' ? 'window' : String(fm);
+    }
+    // Map IMUD key to registry ID (not control name)
+    const registryKey = IMUD_TO_REGISTRY[k];
+    if (registryKey) {
+      if (settings && settings[registryKey] !== undefined && settings[registryKey] !== null && settings[registryKey] !== '') {
+        return settings[registryKey];
+      }
+    }
+    const def = findKey(k);
+    const rk = def ? def.id : null;  // Use registry ID, not control name
+    if (rk && settings && settings[rk] !== undefined && settings[rk] !== null && settings[rk] !== '') return settings[rk];
+    return (imudRaw && imudRaw[k] !== undefined && imudRaw[k] !== '' ? imudRaw[k] : d);
+  };
+  const b = (k, d) => {
+    const v = g(k, d);
+    return v === true || v === 'true' || v === '1' || v === 1;
+  };
+  const n = (k, d) => {
+    const v = parseFloat(g(k, d));
+    return isNaN(v) ? d : v;
+  };
+  return {
+    fnOpen: String(g('fn-delim-open', '[')),
+    fnClose: String(g('fn-delim-close', ']')),
+    endPrefix: String(g('en-line-prefix', 'הערת סיום -')),
+    dropWordMode: String(g('drop-word-mode', 'window')),
+    dropWordCount: n('drop-word-count', 1),
+    dropWordMinLines: n('drop-word-min-lines', 2),
+    avoidRunt: b('avoid-runt-word', true),
+    autoSimanH2: b('h2-auto-siman', true),
+    resetSimanOnH1: b('h2-reset-siman', true),
+    showMainShaar: b('show-main-shaar', true),
+    showBackShaar: b('show-back-shaar', false),
+    showSubShaar: b('show-sub-shaar', true),
+    countSubShaar: b('sub-shaar-count-numbering', true),
+    countGeneralToc: b('general-toc-count-numbering', true),
+    countDetailedToc: b('detailed-toc-count-numbering', true),
+    enableGeneralToc: b('enable-general-toc', true),
+    enableDetailedToc: b('enable-detailed-toc', true),
+    oddH0: b('odd-h0', true),
+    oddH1: b('odd-h1', true),
+    oddH2: b('odd-h2', false),
+    // EXT-17 (גדלים נפרדים לסמן הערה/מספור ברשימה/מפריד): במקור שלוש
+    // הגדרות עצמאיות — אצלנו היו נגזרות מגודל הגוף. ברירות המחדל של המקור:
+    // ‏8/‏8/'.' (מילה-סמן בגוף, סמן ברשימת ההערות, המפריד אחרי המספר).
+    fnMarkerSize: n('note-marker-size', 8),
+    fnListingNumSize: n('note-listing-num-size', 8),
+    fnNumSeparator: String(g('note-num-separator', '.')),
+    // D-89 (כלל הכותרת התחתון): hdr-divider-style של המקור (black/gray/none).
+    // פרופיל המורשת מכויל לייחוס — שם הכלל נמדד שחור מלא (43,62)-(553,63)pt
+    // בכל עמודי הגוף/התוכן; 'none' מבטל.
+    hdrDivider: String(g('hdr-divider-style', 'black')),
+    // D-89 (עיצוב שערים): עיטור שער-המשנה מ-section_dividers.json
+    // (shaar-sub-divider; 'none' = גל המובנה של המקור — כמו renderSubShaar).
+    shaarSubDivider: String(g('shaar-sub-divider', 'none')),
+    // EXT-19 (כותרות מתחלפות): החלפת החצאים בעמודים זוגיים (ברירת
+    // המחדל במקור: כבוי — שני החצאים קבועים; hdr-title-split כבר ממומש
+    // בפיצול שם הספר לחצאים ב-setHeader).
+    hdrAlternating: b('hdr-alternating', false),
+    hdrRType: String(g('hdr-r-type', 'book_title_split_r')),
+    hdrCType: String(g('hdr-c-type', 'h2_without_siman')),
+    hdrLType: String(g('hdr-l-type', 'book_title_split_l')),
+    gtocShow: imudRaw && 'gtoc-show' in imudRaw ? imudRaw['gtoc-show'] : [1, 2, 3, 4, 5, 6],
+    dtocShow: imudRaw && 'dtoc-show' in imudRaw ? imudRaw['dtoc-show'] : [2, 3, 4, 5, 6],
+    // S5.2 (F2 — הערות סיום): כותרת עמודי הערות-הסיום מהמקור
+    // (fn-title-text; ממופה ב-legacy-settings-map ל-endnote-title-text).
+    fnTitleText: String(g('fn-title-text', 'הערות')),
+    // S6.3 (חיבור הגדרות — "וכמויות של הגדרות שלא מחוברות"): טקסטי
+    // השער האחורי משדות הפאנל של המקור (inp-book-back-*) — במקור הם
+    // מקור התוכן של renderBackShaar; המטא-דאטה של המסמך רק מילאה את
+    // השדות. ערך ריק בהגדרה ⇒ נפילה למטא (התנהגות קודמת).
+    backCopyright: String(g('inp-book-back-copyright', '')),
+    backPublishing: String(g('inp-book-back-publishing', '')),
+    backContact: String(g('inp-book-back-contact', '')),
+    backExtra: String(g('inp-book-back-extra', '')),
+    // S6.3: גדלים מההגדרות — עד כאן היו קשיחים ב-SZ/בקוד (מכוילי
+    // ייחוס); ערכי המקור גוברים (ברירות המחדל של default_settings.json).
+    h0Size: n('s-h0', 17),
+    h1Size: n('s-h1', 50),
+    h1SubSize: n('s-sh-sub', 21),
+    shTitle: n('s-sh-title', 46),
+    shSub: n('s-sh-sub', 21),
+    shDesc: n('s-sh-desc', 12),
+    shSec: n('s-sh-sec', 11.5),
+    shAuthor: n('s-sh-author', 15),
+    shYear: n('s-sh-year', 12),
+    fnBodySize: n('s-note-body', 8.5),
+    gtocSizes: { 1: n('s-gtoc-1', 12), 2: n('s-gtoc-2', 11), 3: n('s-gtoc-3', 10.5), 4: n('s-gtoc-4', 10), 5: n('s-gtoc-5', 9.5), 6: n('s-gtoc-6', 9), 7: n('s-gtoc-7', 8.8) },
+    dtocSizes: { 1: n('s-dtoc-1', 12), 2: n('s-dtoc-2', 11), 3: n('s-dtoc-3', 10.5), 4: n('s-dtoc-4', 10), 5: n('s-dtoc-5', 9.5), 6: n('s-dtoc-6', 9), 7: n('s-dtoc-7', 8.8) },
+    // S6.3 (בקשת משתמש — "אי איזון = שני טורים מאותו בלוק שאינם
+    // מסתיימים בגובה זהה סימטרי"): סף אי-האיזון מההגדרות (במקום
+    // 60px קשיח) — imbalance-max-delta-px של המרשם (ברירת מחדל 5).
+    imbalanceMaxDeltaPx: n('imbalance-max-delta-px', 5)
+  };
+}
 
 /** חתימת פריסה דטרמיניסטית — ללא Date/random (REQ-GOV determinism).
  * תיקון S7-E2E: tokenId נמצא ב‑meta של pushLines (לא על השורה עצמה) — יש לחלץ משם,
@@ -22501,7 +17500,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       cur.balanceInfo = { before: [a0, b0], after: [a, b] };
       eventLog.emit('balance', 'column-balance', { page: cur.index, delta: Math.abs(a - b) }, cur.index);
     }
-    // Invariant BRZ-14: scrollHeight ≤ clientHeight (בכפוף לפס החוצה־טורים — FWD-1)
+    // Invariant BRZ-14: element height ≤ container height (בכפוף לפס החוצה־טורים — FWD-1)
     for (const col of cur.columns) {
       if (usedHeight(col, cur) > colCapacity(cur.template, cur) + 0.5) {
         const rec = ledger.create('containment', `page#${cur.index}`, cur.index, { used: usedHeight(col, cur), cap: colCapacity(cur.template, cur) }, 'page-plan');
@@ -22658,9 +17657,6 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
           cur.footnotes.push({
             ...n, text: firstText, heightPx: cutRow * fnLH, lineH: fnLH, linesCount: cutRow,
             noteRows: rows.slice(0, cutRow), noteWords: wordsArr.slice(0, cutIdx),
-            ...(Array.isArray(n.noteWordTypography)
-              ? { noteWordTypography: n.noteWordTypography.slice(0, cutIdx) }
-              : {}),
             mode: 'split-first', linesShown: cutRow,
             wordRange: { from: n.wordRange ? n.wordRange.from : 0, to: (n.wordRange ? n.wordRange.from : 0) + cutIdx }
           });
@@ -22789,12 +17785,6 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   function pushAnchoredMarginItem(rec) {
     const isBox = rec.itemKind === 'info-box';
     const kind = isBox ? NOTE_KINDS.INFO_BOX : NOTE_KINDS.SIDE_NOTE;
-    const noteFontName = isBox
-      ? (settings['s-note-body-font'] || settings['body-font'] || null)
-      : (settings['heading-7-font'] || settings['s-note-body-font'] || settings['body-font'] || null);
-    const noteMeasure = isBox
-      ? (typeof env.infoBoxMeasure === 'function' ? env.infoBoxMeasure : measureFn)
-      : (typeof env.heading7Measure === 'function' ? env.heading7Measure : measureFn);
     const chrome = isBox && rec.boxSpec
       ? { pad: rec.boxSpec.padPx || 0, border: rec.boxSpec.borderPx || 0 }
       : { pad: 0, border: 0 };
@@ -22806,12 +17796,9 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       continuationPolicy: 'anchor-cascade',
       ...(isBox ? { splitPolicy: 'atomic' } : {})
     });
-    // The one and only stamp is created here with the same role-specific font
-    // and measurement service later consumed by placeSideNotes and both renderers.
-    stampNote(record, settings, noteMeasure, kind, {
+    stampNote(record, settings, measureFn, kind, {
       ...(outerW != null ? { widthPx: Math.max(12, outerW - 2 * (chrome.pad + chrome.border)) } : {}),
-      ...(isBox && rec.boxSpec && Number(rec.boxSpec.sizePt) > 0 ? { sizePt: Number(rec.boxSpec.sizePt) } : {}),
-      fontName: noteFontName || undefined
+      ...(isBox && rec.boxSpec && Number(rec.boxSpec.sizePt) > 0 ? { sizePt: Number(rec.boxSpec.sizePt) } : {})
     });
     if (isBox) {
       record.boxChrome = chrome;
@@ -22858,7 +17845,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       // ממורכז בעוגן המכויל (H0_TITLE_Y=309) בתוך השטח השמור של התבנית
       // (H0_AREA_H) — כמו bands.push(kind:'h0-title') במורשת §1326. הזרימה
       // מתחילה מתחת לאזור; עד כאן הכותרת זרמה כשורה ראשונה בראש העמוד.
-      if (blk.level === 0 && isImud(settings) && cur.template.columns.length >= 1) {
+      if (blk.level === 0 && isImudProfile(settings) && cur.template.columns.length >= 1) {
         const startY = H0_TITLE_Y;
         let yy = startY;
         cur.spanning = {
@@ -23042,7 +18029,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       // §1351) בתוך אזור ה-h2 השמור של התבנית — לא שורה בטור. הפס חופשי
       // (freeBand): הוא חי בשטח השמור ואינו מקצץ קיבולת. הסימן נחתם
       // בהטבעה (structural-stamps — h2-siman).
-      if (isImud(settings) && cur.template.columns.length >= 2) {
+      if (isImudProfile(settings) && cur.template.columns.length >= 2) {
         // **G3/RC-3 (i004) — הכיל הכפול של המורשת (S4.19, flowSection §1335):**
         // פתיחת-סימן שהמקטע שלה נפתח בכותרת רוחבית (h3-span —
         // HEADING_MODES[3]=span_1col היחידי) משתמשת באזור ובעוגנים מורמים: נמדד מהיחוס
@@ -23619,7 +18606,156 @@ function findSplit(blk, cur, colCapacity, usedHeight, lineH, ledger, eventLog, s
   return maxFit;
 }
 
-module.exports = { planPages, layoutHash, bodyGeometryHash, lineTokenId, moveLineForward, balancePageSafe };
+module.exports = { planPages, layoutHash, bodyGeometryHash, lineTokenId, moveLineForward, balancePageSafe, readConfig, LineBreaker, GEO, FLOW_BOTTOM, SINGLE_W, SZ: SZ_CORE, headingItemH, wrapText };
+
+};
+__modules["src/engine/core/h3-contract.js"] = function (require, module, exports) {
+'use strict';
+
+/**
+ * **חוזה גאומטריית כותרת 3 — מקור יחיד (D-S2H3/CSS parity, 17.11):**
+ * ה-CSS המקורי של המוצר (ערכות Orange/Yellow/Green) קובע:
+ *
+ *   .h3-title-text { line-height: 1.22 }
+ *   .block-h3-span { padding: 8px 0 4px; margin-bottom: 4px }
+ *
+ * כלומר, לכותרת 3 המוצגת כפס (span):
+ *  - pitch בין שורות הכותרת = line-height הטקסט בלבד (גודל×96/72×1.22).
+ *  - ריפוד עליון 8px — פעם אחת, לפני השורה הראשונה.
+ *  - ריפוד תחתון 4px + שוליים תחתונים 4px — פעם אחת, אחרי השורה האחרונה.
+ *  - כותרת חד-שורתית: גובה כולל 8+21.96+4+4 ≈ 38px (כיוול S4.14 נשמר).
+ *
+ * הערכים חיים כאן — מקור אחד למנוע המאוחד (core/pipeline.js במדידה +
+ * layout/dp-planner.js בבניית הפס). אסור להגדיר אותם מחדש במודולים אחרים;
+ * שינוי חוזה — רק כאן, עם עדכון בדיקות הקבלה (s2-heading3-spacing).
+ */
+
+const H3_LINE_HEIGHT = 1.22;      // line-height יחסי של שורת כותרת 3
+const H3_TOP_PAD_PX = 8;          // padding-top — פעם אחת לפני השורה הראשונה
+const H3_BOTTOM_PAD_PX = 4;       // padding-bottom — פעם אחת אחרי השורה האחרונה
+const H3_MARGIN_BOTTOM_PX = 4;    // margin-bottom — פעם אחת אחרי ריפוד התחתית
+
+/** **Legacy parity (iteration-001):** מקום מינימלי לתוכן עוקב מתחת לפס H3
+ *  בדיקת "האם הפס נשאר באותו עמוד" (span_1col של המקור, S4.13/S4.24;
+ *  S74 בעיה 6: 60−38 הישן — מנע אלמנות כותרת). הסף הכולל:
+ *  max(60, bandHeight + H3_FOLLOW_MIN_PX). מקור אחד לשני המנועים. */
+const H3_FOLLOW_MIN_PX = 22;
+
+/** סף הכניסה של פס H3 באמצע עמוד — נאמן ל-span_1col של המקור. */
+function h3BandRoomThresholdPx(bandHeightPx) {
+  return Math.max(60, bandHeightPx + H3_FOLLOW_MIN_PX);
+}
+
+/** גובה שורת כותרת 3 בפיקסלים (pitch בין-שורתי) לפי גודל הכותרת בנקודות. */
+function h3LineHeightPx(sizePt) {
+  return sizePt * (96 / 72) * H3_LINE_HEIGHT;
+}
+
+/** גובה תיבת הפס כולה: ריפוד עליון + שורות + ריפוד תחתון + שוליים תחתונים. */
+function h3BandHeightPx(linesHeightPx) {
+  return H3_TOP_PAD_PX + linesHeightPx + H3_BOTTOM_PAD_PX + H3_MARGIN_BOTTOM_PX;
+}
+
+module.exports = {
+  H3_LINE_HEIGHT,
+  H3_TOP_PAD_PX,
+  H3_BOTTOM_PAD_PX,
+  H3_MARGIN_BOTTOM_PX,
+  H3_FOLLOW_MIN_PX,
+  h3LineHeightPx,
+  h3BandHeightPx,
+  h3BandRoomThresholdPx
+};
+
+};
+__modules["src/engine/core/ledger.js"] = function (require, module, exports) {
+// src/engine/core/ledger.js — Decision ledger + issue lifecycle (REQ-GOV-01, D-15)
+'use strict';
+
+/**
+ * 10 מצבי מחזור חיים (V23 Session_handoff):
+ */
+const LIFECYCLE_STATES = [
+  'created',
+  'correction-blocked',
+  'correction-reverted',
+  'became-observable-later',
+  'competing-repair-side-effect',
+  'persists',
+  'resolved',
+  'reintroduced',
+  'not-comparable',
+  'unresolved'
+];
+
+class Ledger {
+  constructor() {
+    this.issues = new Map(); // issue_id -> record
+    this.candidates = [];    // רשומות דחיית מועמד (REQ-BAL-01/S5.1.10)
+    this.clock = 0;          // שעון לוגי דטרמיניסטי (תיקון P1-6) — לא Date.now
+  }
+
+  _id(kind, target) {
+    let n = 1;
+    while (this.issues.has(`${kind}@${target}#${n}`)) n++;
+    return `${kind}@${target}#${n}`;
+  }
+
+  /** יצירת ממצא חדש עם predicate לפני; זהה ל‑"created". */
+  create(kind, target, page, predicateBefore, stage) {
+    const id = this._id(kind, target);
+    const rec = {
+      issue_id: id, kind, target, page,
+      first_seen_stage: stage,
+      transitions: [{ state: 'created', stage, ts: ++this.clock, note: 'predicate_before captured' }],
+      predicate_before: predicateBefore,
+      predicate_after: null,
+      candidates: [], capacity_before: null, capacity_after: null,
+      route: null, selected: null, rollback_reason: null,
+      status: 'created'
+    };
+    this.issues.set(id, rec);
+    return rec;
+  }
+
+  transition(issueId, state, stage, note = '') {
+    if (!LIFECYCLE_STATES.includes(state)) throw new Error(`bad lifecycle state: ${state}`);
+    const rec = this.issues.get(issueId);
+    if (!rec) throw new Error(`unknown issue ${issueId}`);
+    rec.transitions.push({ state, stage, ts: ++this.clock, note });
+    rec.status = state;
+    return rec;
+  }
+
+  recordCandidate(issueId, cand, accepted, reason) {
+    const rec = this.issues.get(issueId);
+    if (!rec) return;
+    rec.candidates.push({ ...cand, accepted, reason });
+    if (accepted) rec.selected = cand;
+  }
+
+  recordCapacity(issueId, before, after) {
+    const rec = this.issues.get(issueId);
+    if (rec) { rec.capacity_before = before; rec.capacity_after = after; }
+  }
+
+  finalizePredicateAfter(issueId, predAfter) {
+    const rec = this.issues.get(issueId);
+    if (rec) rec.predicate_after = predAfter;
+  }
+
+  toSchemaV2() {
+    return { schema: 'ledger-v2', states: LIFECYCLE_STATES, issues: [...this.issues.values()] };
+  }
+
+  summary() {
+    const s = {};
+    for (const rec of this.issues.values()) s[rec.status] = (s[rec.status] || 0) + 1;
+    return s;
+  }
+}
+
+module.exports = { Ledger, LIFECYCLE_STATES };
 
 };
 __modules["src/engine/layout/protections-matrix.js"] = function (require, module, exports) {
@@ -25405,7 +20541,6 @@ __modules["src/engine/layout/notes-model.js"] = function (require, module, expor
  * המטריקות מדויקות והכפלה מנפחת (S70/R7-M4) — measureContextFor מכבה אותו שם.
  */
 const { SZ_CORE } = require('../core/imud-geometry');
-const { projectShapedTextItemRanges } = require('../typography/paragraph-shaping');
 const NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
 const SIDE_NOTE_FONT_FACTORS = { 'David HB': 1.06, 'David': 1.04, 'Narkisim': 1.10, 'Nachlieli': 0.96, 'Alef': 1.02, 'Rubin': 1.05 };
 
@@ -25502,18 +20637,14 @@ function measureContextFor(kind, settings, opts = {}, measure = null) {
  * @param {number} spaceW — רוחב הרווח בהקשר (כבר מחושב — מודדים פעם אחת)
  * @returns {{rows:Array}} שורות {wFrom,wTo,widthPx,wordW[]}
  */
-function wrapNoteWords(words, ctx, measure, prefixW, spaceW, wordWidths = null) {
+function wrapNoteWords(words, ctx, measure, prefixW, spaceW) {
   const r3 = (v) => Math.round(v * 1000) / 1000;
-  if (wordWidths != null && (!Array.isArray(wordWidths) || wordWidths.length !== words.length ||
-      wordWidths.some(width => !Number.isFinite(width) || width < 0))) {
-    throw new TypeError('notes-model: wordWidths must contain one finite non-negative advance per note word');
-  }
   const rows = [];
   let rowW = Math.min(prefixW, ctx.widthPx); // קידומת בפינת השורה הראשונה
   let wFrom = 0;
   let rowWordW = [];
   for (let i = 0; i < words.length; i++) {
-    const ww = wordWidths ? wordWidths[i] : measure(words[i], ctx.sizePt) * ctx.factor;
+    const ww = measure(words[i], ctx.sizePt) * ctx.factor;
     const addW = (rowW > 0 ? spaceW : 0) + ww;
     if (rowW + addW > ctx.widthPx && rowW > 0) {
       rows.push({ wFrom, wTo: i, widthPx: r3(rowW), wordW: rowWordW });
@@ -25525,111 +20656,6 @@ function wrapNoteWords(words, ctx, measure, prefixW, spaceW, wordWidths = null) 
   }
   rows.push({ wFrom, wTo: words.length, widthPx: r3(rowW), wordW: rowWordW });
   return { rows };
-}
-
-// ─── Glyph shaping להערות: אותה חותמת ושבירת שורות, ללא מקרין/מודד שני ───
-function shapeNoteText(text, note, ctx, measure, role) {
-  const service = measure && measure.paragraphShaper;
-  if (!service || typeof service.shapeTextItem !== 'function' || !text) return null;
-  const value = String(text);
-  const itemId = 'note-' + String(note.noteId || note.tokenId || 'anonymous')
-    .replace(/[^A-Za-z0-9._:-]/g, '_') + '-' + role;
-  const item = {
-    id: itemId,
-    kind: 'text',
-    sourceRange: { start: 0, end: value.length },
-    payload: {
-      runs: [{
-        text: value,
-        sourceStart: 0,
-        sourceEnd: value.length,
-        ...(service.useItemFontRole === true && ctx.fontName ? { fontFamily: ctx.fontName } : {})
-      }]
-    }
-  };
-  const request = { direction: measure.paragraphDirection || 'rtl', language: 'he' };
-  if (service.useItemFontRole === true && ctx.fontName) request.defaultFamily = ctx.fontName;
-  return service.shapeTextItem(item, request);
-}
-
-function typographyForShapedRuns(runs, sizePt) {
-  if (!Array.isArray(runs) || !runs.length) return { advancePx: 0, typography: null, glyphCount: 0 };
-  const sizePx = Number(sizePt) * (96 / 72);
-  let advancePx = 0;
-  let glyphCount = 0;
-  const segments = [];
-  for (const run of runs) {
-    if (!run || !run.font || !Number.isSafeInteger(run.font.unitsPerEm) ||
-        run.font.unitsPerEm <= 0 || !Array.isArray(run.glyphs) || !run.glyphs.length) {
-      throw new TypeError('notes-model: a shaped note run is missing valid font units or glyphs');
-    }
-    let runAdvance = 0;
-    for (const glyph of run.glyphs) {
-      if (!glyph || !Number.isFinite(glyph.xAdvance)) {
-        throw new TypeError('notes-model: a shaped note glyph has no finite xAdvance');
-      }
-      runAdvance += glyph.xAdvance;
-    }
-    if (!Number.isFinite(runAdvance) || runAdvance < 0) {
-      throw new TypeError('notes-model: a shaped note run has an invalid advance');
-    }
-    const runAdvancePx = runAdvance / run.font.unitsPerEm * sizePx;
-    advancePx += runAdvancePx;
-    glyphCount += run.glyphs.length;
-    segments.push({
-      itemId: run.itemId || null,
-      sourceRange: run.sourceRange ? { ...run.sourceRange } : null,
-      advancePx: runAdvancePx,
-      shapedRuns: [run],
-      glyphCount: run.glyphs.length
-    });
-  }
-  if (!glyphCount) return { advancePx, typography: null, glyphCount: 0 };
-  return {
-    advancePx,
-    glyphCount,
-    typography: { contractVersion: 'page-word-typography-v1', glyphCount, segments }
-  };
-}
-
-function shapedNoteWords(text, note, ctx, measure) {
-  const shaped = shapeNoteText(text, note, ctx, measure, 'body');
-  if (!shaped) return null;
-  const matches = Array.from(text.matchAll(/\S+/gu), match => ({
-    text: match[0], start: match.index, end: match.index + match[0].length
-  }));
-  const ranges = matches.map(match => ({ start: match.start, end: match.end }));
-  const projected = ranges.length
-    ? projectShapedTextItemRanges(shaped, ranges).slices
-    : [];
-  const widths = [];
-  const typographies = [];
-  for (const slice of projected) {
-    const measured = typographyForShapedRuns(slice.shapedRuns, ctx.sizePt);
-    if (!measured.glyphCount && slice.nonShapingRuns.some(run =>
-      String(run.text || '').replace(/[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '').trim())) {
-      throw new Error('notes-model: visible note word has no HarfBuzz glyph coverage');
-    }
-    widths.push(measured.advancePx);
-    typographies.push(measured.typography);
-  }
-  const spaceRun = shapeNoteText(' ', note, ctx, measure, 'space');
-  const spaceMeasured = spaceRun ? typographyForShapedRuns(spaceRun.shapedRuns, ctx.sizePt) : null;
-  if (spaceRun && !spaceMeasured.glyphCount) {
-    throw new Error('notes-model: note-space did not receive a HarfBuzz glyph');
-  }
-  return { matches, widths, typographies, spaceW: spaceMeasured ? spaceMeasured.advancePx : 0 };
-}
-
-function shapedPrefix(note, value, ctx, measure, role) {
-  if (!value) return { advancePx: 0, typography: null };
-  const shaped = shapeNoteText(value, note, ctx, measure, role);
-  if (!shaped) return null;
-  const result = typographyForShapedRuns(shaped.shapedRuns, ctx.sizePt);
-  if (!result.glyphCount && String(value).trim()) {
-    throw new Error('notes-model: visible note prefix has no HarfBuzz glyph coverage (' + role + ')');
-  }
-  return { advancePx: result.advancePx, typography: result.typography };
 }
 
 // ─── חשבונאות מדידה (דפוס api.cacheStats / _rowsStats): הוכחת "פעם אחת" ───
@@ -25654,48 +20680,28 @@ function __stampStats() {
  */
 function stampNote(note, settings, measure, kind, opts = {}) {
   const ctx = measureContextFor(kind, settings, opts, measure);
-  const paragraphShaper = measure && measure.paragraphShaper;
-  const shapingActive = !!(paragraphShaper && typeof paragraphShaper.shapeTextItem === 'function');
   if (note.stampCtx && note.stampCtx.kind === ctx.kind
-    && note.stampCtx.widthPx === ctx.widthPx && note.stampCtx.sizePt === ctx.sizePt
-    && note.stampCtx.fontName === (ctx.fontName || null)
-    && note.stampCtx.shaping === shapingActive) {
+    && note.stampCtx.widthPx === ctx.widthPx && note.stampCtx.sizePt === ctx.sizePt) {
     return note; // כבר נמדדה בדיוק בהקשר הזה — לא מודדים שוב
   }
   _stampStats.calls.push(`${ctx.kind}:${note.noteId || note.tokenId || ''}#${note.noteIndex != null ? note.noteIndex : ''}`);
   const text = scrubNoteText(note.text);
   const words = text.split(/\s+/).filter(Boolean);
-  delete note.noteWordTypography;
-  delete note.markerTypography;
-  delete note.contMarkTypography;
-  delete note.counterMarkTypography;
-  const shapedBody = shapingActive ? shapedNoteWords(text, note, ctx, measure) : null;
-  const wordWidths = shapedBody ? shapedBody.widths : null;
-  if (shapedBody && shapedBody.matches.length !== words.length) {
-    throw new Error('notes-model: shaped note word ranges differ from the canonical note word list');
-  }
-  if (shapedBody) note.noteWordTypography = shapedBody.typographies;
-  const spaceW = shapedBody ? shapedBody.spaceW : measure(' ', ctx.sizePt) * ctx.factor;
+  const spaceW = measure(' ', ctx.sizePt) * ctx.factor;
   const mkTxt = note.marker != null && String(note.marker) !== '' ? String(note.marker) : '';
-  const shapedMarker = shapingActive && mkTxt ? shapedPrefix(note, mkTxt, ctx, measure, 'marker') : null;
-  const mkGlyphW = shapedMarker ? shapedMarker.advancePx : (mkTxt ? measure(mkTxt, ctx.sizePt) * ctx.factor : 0);
-  if (shapedMarker && shapedMarker.typography) note.markerTypography = shapedMarker.typography;
+  const mkGlyphW = mkTxt ? measure(mkTxt, ctx.sizePt) * ctx.factor : 0;
   const markerW = mkTxt ? mkGlyphW + spaceW : 0;
   const isCont = note.isContinuation === true || note.mode === 'split-rest';
-  const shapedContMark = shapingActive && isCont ? shapedPrefix(note, CONTINUATION_MARK, ctx, measure, 'continuation') : null;
-  const contMarkW = isCont ? (shapedContMark ? shapedContMark.advancePx : measure(CONTINUATION_MARK, ctx.sizePt) * ctx.factor) + spaceW : 0;
-  if (shapedContMark && shapedContMark.typography) note.contMarkTypography = shapedContMark.typography;
+  const contMarkW = isCont ? measure(CONTINUATION_MARK, ctx.sizePt) * ctx.factor + spaceW : 0;
   // **תיקון פרוסה 2 (§9):** הקידומות של שורה 0 — הסמן **וגם סימון ההמשך** —
   // נכנסות לתקציב השורה. בעבר ההמשכים נמדדו בלי '(המשך)' בזמן ששני הרנדרים
   // ציירו אותו ⇒ השורה הראשונה של כל המשך הייתה צרה בכ~30px מהמצויר.
   // הערות-צד עם counterMark — אותו תיקון (הסמן מוצג ולא תוקצב).
   const cmTxt = (!isCont && note.counterMark != null && String(note.counterMark) !== '') ? String(note.counterMark) : '';
-  const shapedCounterMark = shapingActive && cmTxt ? shapedPrefix(note, cmTxt, ctx, measure, 'counter') : null;
-  const cmGlyphW = shapedCounterMark ? shapedCounterMark.advancePx : (cmTxt ? measure(cmTxt, ctx.sizePt) * ctx.factor : 0);
-  if (shapedCounterMark && shapedCounterMark.typography) note.counterMarkTypography = shapedCounterMark.typography;
+  const cmGlyphW = cmTxt ? measure(cmTxt, ctx.sizePt) * ctx.factor : 0;
   const counterMarkW = cmTxt ? cmGlyphW + spaceW : 0;
   const prefixW = contMarkW + markerW + counterMarkW;
-  const { rows } = wrapNoteWords(words, ctx, measure, prefixW, spaceW, wordWidths);
+  const { rows } = wrapNoteWords(words, ctx, measure, prefixW, spaceW);
   note.noteRows = rows;
   note.noteWords = words;
   note.heightPx = Math.round(rows.length * ctx.lineH * 1000) / 1000;
@@ -25706,12 +20712,7 @@ function stampNote(note, settings, measure, kind, opts = {}) {
   note.contMarkW = contMarkW ? Math.round(contMarkW * 1000) / 1000 : 0;
   note.counterMarkW = counterMarkW ? Math.round(counterMarkW * 1000) / 1000 : 0;
   note.spaceW = Math.round(spaceW * 1000) / 1000;
-  note.stampCtx = {
-    kind: ctx.kind, sizePt: ctx.sizePt, widthPx: ctx.widthPx, lineH: ctx.lineH,
-    factor: shapingActive ? 1 : ctx.factor,
-    fontName: ctx.fontName || null,
-    shaping: shapingActive
-  };
+  note.stampCtx = { kind: ctx.kind, sizePt: ctx.sizePt, widthPx: ctx.widthPx, lineH: ctx.lineH, factor: ctx.factor };
   return note;
 }
 
@@ -25724,11 +20725,6 @@ function stampIsValid(note) {
   for (const row of note.noteRows) {
     if (!(row.wTo >= row.wFrom) || !Array.isArray(row.wordW)) return false;
     if (row.wordW.length !== row.wTo - row.wFrom) return false;
-  }
-  if (note.stampCtx && note.stampCtx.shaping === true) {
-    if (!Array.isArray(note.noteWordTypography) ||
-        note.noteWordTypography.length !== note.noteWords.length ||
-        note.noteWordTypography.some((item, index) => String(note.noteWords[index] || '').trim() && !item)) return false;
   }
   return true;
 }
@@ -25813,1358 +20809,6 @@ module.exports = {
   anchorLinksOf,
   __resetStampStats,
   __stampStats
-};
-
-};
-__modules["src/engine/typography/paragraph-shaping.js"] = function (require, module, exports) {
-'use strict';
-
-const { createTextItemShapingPlan } = require('./text-item-shaping-plan');
-const { sliceShapedRun, isShapedRun } = require('./shaped-run');
-
-function fail(code, message) {
-  const error = new TypeError(message);
-  error.code = code;
-  throw error;
-}
-
-function isRecord(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-}
-
-function requireRecord(value, label) {
-  if (!isRecord(value)) fail('invalid-paragraph-shaping-config', label + ' must be a plain object');
-  return value;
-}
-
-/**
- * Create the canonical paragraph shaping service.
- * Runtime and script policy are fixed at construction; the product's block font
- * is supplied per TextItem so headings and body retain their own font roles.
- */
-function createParagraphShaper(options = {}) {
-  requireRecord(options, 'options');
-  const runtime = options.runtime;
-  const fontResolver = options.fontResolver;
-  if (!runtime || !runtime.unicode ||
-      typeof runtime.unicode.resolve !== 'function' ||
-      typeof runtime.unicode.itemizeScripts !== 'function' ||
-      typeof runtime.createShaper !== 'function') {
-    fail('paragraph-shaping-runtime-unavailable', 'A verified Unicode/HarfBuzz runtime is required');
-  }
-  if (!fontResolver || typeof fontResolver.resolveFontForGrapheme !== 'function' ||
-      typeof fontResolver.resolveFontById !== 'function') {
-    fail('paragraph-shaping-font-resolver-unavailable', 'The canonical FontResolver is required');
-  }
-
-  const languageByScript = requireRecord(options.languageByScript, 'languageByScript');
-  const featuresByScript = requireRecord(options.featuresByScript, 'featuresByScript');
-  const variationAxesByFontId = requireRecord(options.variationAxesByFontId, 'variationAxesByFontId');
-  const faceIndexByFontId = options.faceIndexByFontId == null
-    ? Object.create(null)
-    : requireRecord(options.faceIndexByFontId, 'faceIndexByFontId');
-  const fallbacksByFamily = options.fallbacksByFamily == null
-    ? Object.create(null)
-    : requireRecord(options.fallbacksByFamily, 'fallbacksByFamily');
-  const useNativeDefaults = options.useNativeDefaults === true;
-  const defaultFamily = options.defaultFamily == null ? null : String(options.defaultFamily);
-  if (defaultFamily != null && !defaultFamily.trim()) {
-    fail('invalid-paragraph-shaping-config', 'defaultFamily must be non-empty when supplied');
-  }
-
-  const shaper = runtime.createShaper(fontResolver, options.shaperOptions || {});
-  if (!shaper || typeof shaper.shapeTextItemPlan !== 'function') {
-    fail('paragraph-shaping-adapter-unavailable', 'Runtime did not create a valid HarfBuzz shaper');
-  }
-
-  return Object.freeze({
-    // Only product-derived policies opt into per-block font-role selection.
-    // Explicit diagnostic policies retain their own global defaultFamily.
-    useItemFontRole: options.useItemFontRole === true,
-    shapeTextItem(item, request = {}) {
-      if (!isRecord(request) || (request.direction !== 'ltr' && request.direction !== 'rtl')) {
-        fail('paragraph-shaping-direction-required', 'Each TextItem requires an explicit paragraph direction');
-      }
-      const plan = createTextItemShapingPlan(item, {
-        bidiRuntime: runtime.unicode,
-        fontResolver,
-        direction: request.direction,
-        defaultFamily: request.defaultFamily == null ? defaultFamily : String(request.defaultFamily),
-        languageByScript,
-        featuresByScript,
-        variationAxesByFontId,
-        useNativeDefaults,
-        faceIndexByFontId,
-        fallbacksByFamily
-      });
-      const shaped = shaper.shapeTextItemPlan(plan);
-      if (!shaped || shaped.kind !== 'ShapedTextItem' ||
-          shaped.itemId !== item.id || shaped.text !== plan.text ||
-          !Array.isArray(shaped.shapedRuns) || !Array.isArray(shaped.nonShapingRuns)) {
-        fail('invalid-shaped-text-item', 'HarfBuzz adapter returned an incomplete ShapedTextItem');
-      }
-      return shaped;
-    }
-  });
-}
-
-function projectShapedTextItemRange(shapedTextItem, range) {
-  if (!isRecord(shapedTextItem) || shapedTextItem.kind !== 'ShapedTextItem' ||
-      typeof shapedTextItem.text !== 'string' || !isRecord(shapedTextItem.sourceRange) ||
-      !Array.isArray(shapedTextItem.shapedRuns) || !Array.isArray(shapedTextItem.nonShapingRuns)) {
-    fail('invalid-shaped-text-item', 'Range projection requires a canonical ShapedTextItem');
-  }
-  if (!isRecord(range) || !Number.isSafeInteger(range.start) ||
-      !Number.isSafeInteger(range.end) || range.end <= range.start) {
-    fail('invalid-shaped-source-range', 'Requested source range must be a non-empty UTF-16 interval');
-  }
-  const itemStart = shapedTextItem.sourceRange.start;
-  const itemEnd = shapedTextItem.sourceRange.end;
-  if (!Number.isSafeInteger(itemStart) || !Number.isSafeInteger(itemEnd) ||
-      itemEnd <= itemStart || range.start < itemStart || range.end > itemEnd) {
-    fail('shaped-source-range-outside-item', 'Requested source range falls outside the ShapedTextItem envelope');
-  }
-
-  const pieces = [];
-  for (const run of shapedTextItem.shapedRuns) {
-    if (!isShapedRun(run)) fail('invalid-shaped-run', 'ShapedTextItem contains a non-canonical ShapedRun');
-    const start = Math.max(range.start, run.sourceRange.start);
-    const end = Math.min(range.end, run.sourceRange.end);
-    if (end <= start) continue;
-    const slice = start === run.sourceRange.start && end === run.sourceRange.end
-      ? run
-      : sliceShapedRun(run, start, end);
-    pieces.push({
-      kind: 'shape',
-      sourceRange: { start, end },
-      shapedRun: slice
-    });
-  }
-
-  for (const run of shapedTextItem.nonShapingRuns) {
-    if (!isRecord(run) || !Array.isArray(run.sourceRanges) || typeof run.text !== 'string' ||
-        !Number.isSafeInteger(run.start) || !Number.isSafeInteger(run.end) ||
-        run.end <= run.start || run.end - run.start !== run.text.length) {
-      fail('invalid-non-shaping-run', 'Non-shaping source runs must retain exact UTF-16 coordinates and text');
-    }
-    for (const segment of run.sourceRanges) {
-      if (!isRecord(segment) || !isRecord(segment.localRange) || !isRecord(segment.sourceRange)) {
-        fail('invalid-non-shaping-source-map', 'Non-shaping source segment has an invalid range map');
-      }
-      const localStart = segment.localRange.start;
-      const localEnd = segment.localRange.end;
-      const sourceStart = segment.sourceRange.start;
-      const sourceEnd = segment.sourceRange.end;
-      if (![localStart, localEnd, sourceStart, sourceEnd].every(Number.isSafeInteger) ||
-          localStart < run.start || localEnd > run.end || localEnd <= localStart ||
-          sourceEnd <= sourceStart || localEnd - localStart !== sourceEnd - sourceStart) {
-        fail('invalid-non-shaping-source-map', 'Non-shaping source segment is not a length-preserving UTF-16 map');
-      }
-      const start = Math.max(range.start, sourceStart);
-      const end = Math.min(range.end, sourceEnd);
-      if (end <= start) continue;
-      const localSliceStart = localStart + (start - sourceStart);
-      const localSliceEnd = localSliceStart + (end - start);
-      pieces.push({
-        kind: run.kind,
-        text: run.text.slice(localSliceStart - run.start, localSliceEnd - run.start),
-        sourceRange: { start, end },
-        localRange: { start: localSliceStart, end: localSliceEnd }
-      });
-    }
-  }
-
-  pieces.sort((a, b) => a.sourceRange.start - b.sourceRange.start || a.sourceRange.end - b.sourceRange.end);
-  let cursor = range.start;
-  for (const piece of pieces) {
-    if (piece.sourceRange.start !== cursor || piece.sourceRange.end <= cursor) {
-      fail('shaped-slice-source-coverage', 'Shaped slices contain a source gap or overlap at UTF-16 offset ' + cursor);
-    }
-    cursor = piece.sourceRange.end;
-  }
-  if (cursor !== range.end) {
-    fail('shaped-slice-source-coverage', 'Shaped slices do not cover requested source end ' + range.end);
-  }
-
-  const shapedRuns = pieces.filter(piece => piece.kind === 'shape').map(piece => piece.shapedRun);
-  const nonShapingRuns = pieces.filter(piece => piece.kind !== 'shape');
-  const glyphCount = shapedRuns.reduce((sum, run) => sum + run.glyphs.length, 0);
-  return Object.freeze({
-    contractVersion: 'paragraph-shaped-slices-v1',
-    sourceRange: Object.freeze({ start: range.start, end: range.end }),
-    pieces: Object.freeze(pieces.map(piece => Object.freeze(piece))),
-    shapedRuns: Object.freeze(shapedRuns),
-    nonShapingRuns: Object.freeze(nonShapingRuns),
-    glyphCount
-  });
-}
-
-function projectShapedTextItemRanges(shapedTextItem, ranges) {
-  if (!Array.isArray(ranges) || ranges.length === 0) {
-    fail('invalid-shaped-range-list', 'At least one source range must be supplied');
-  }
-  const normalized = [];
-  for (const range of ranges) {
-    if (!isRecord(range) || !Number.isSafeInteger(range.start) ||
-        !Number.isSafeInteger(range.end) || range.end <= range.start) {
-      fail('invalid-shaped-source-range', 'Every projected source segment must be a non-empty UTF-16 interval');
-    }
-    const previous = normalized[normalized.length - 1];
-    if (previous && range.start < previous.end) {
-      fail('overlapping-shaped-source-ranges', 'Projected source segments must be ordered and non-overlapping');
-    }
-    if (previous && range.start === previous.end) {
-      previous.end = range.end;
-    } else {
-      normalized.push({ start: range.start, end: range.end });
-    }
-  }
-  const slices = normalized.map(range => projectShapedTextItemRange(shapedTextItem, range));
-  const shapedRuns = slices.flatMap(slice => slice.shapedRuns);
-  const nonShapingRuns = slices.flatMap(slice => slice.nonShapingRuns);
-  return Object.freeze({
-    contractVersion: 'paragraph-shaped-slices-set-v1',
-    sourceRanges: Object.freeze(normalized.map(range => Object.freeze({ ...range }))),
-    slices: Object.freeze(slices),
-    shapedRuns: Object.freeze(shapedRuns),
-    nonShapingRuns: Object.freeze(nonShapingRuns),
-    glyphCount: shapedRuns.reduce((sum, run) => sum + run.glyphs.length, 0)
-  });
-}
-
-module.exports = {
-  createParagraphShaper,
-  projectShapedTextItemRange,
-  projectShapedTextItemRanges
-};
-
-};
-__modules["src/engine/typography/text-item-shaping-plan.js"] = function (require, module, exports) {
-// red-build/src/engine/typography/text-item-shaping-plan.js
-// Paragraph-level itemization + font/style run projection, before word splitting.
-'use strict';
-
-const PLAN_VERSION = 'text-item-shaping-plan-v3-source-map';
-
-function fail(code, message) {
-  const error = new TypeError(message);
-  error.code = code;
-  throw error;
-}
-
-function isRecord(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const proto = Object.getPrototypeOf(value);
-  return proto === Object.prototype || proto === null;
-}
-
-function requireRecord(value, code, label) {
-  if (!isRecord(value)) fail(code, label + ' must be a plain object');
-  return value;
-}
-
-function requireString(value, code, label) {
-  if (typeof value !== 'string' || !value.length) fail(code, label + ' must be a non-empty string');
-  return value;
-}
-
-function requireRange(value, label, minimum = 0) {
-  if (!Number.isSafeInteger(value) || value < minimum) fail('invalid-source-range', label + ' is invalid');
-  return value;
-}
-
-function normalizeFeatures(value, script) {
-  if (!Array.isArray(value)) {
-    fail('missing-script-features', 'An explicit feature array (possibly []) is required for Script ' + script);
-  }
-  const seen = new Set();
-  return value.map((feature, index) => {
-    requireRecord(feature, 'invalid-open-type-feature', 'featuresByScript.' + script + '[' + index + ']');
-    const tag = requireString(feature.tag, 'invalid-open-type-feature', 'feature.tag');
-    if (!/^[A-Za-z0-9]{4}$/.test(tag) || seen.has(tag)) {
-      fail('invalid-open-type-feature', 'OpenType feature tag must be unique and exactly four ASCII characters');
-    }
-    seen.add(tag);
-    if (!Number.isFinite(feature.value)) {
-      fail('invalid-open-type-feature', 'OpenType feature value must be finite');
-    }
-    return { tag, value: feature.value };
-  });
-}
-
-function normalizeAxes(value, fontId) {
-  if (!Array.isArray(value)) {
-    fail('missing-variation-axes', 'An explicit variation-axis array (possibly []) is required for font ' + fontId);
-  }
-  const seen = new Set();
-  return value.map((axis, index) => {
-    requireRecord(axis, 'invalid-variation-axis', 'variationAxesByFontId.' + fontId + '[' + index + ']');
-    const tag = requireString(axis.tag, 'invalid-variation-axis', 'variation axis tag');
-    if (!/^[A-Za-z0-9]{4}$/.test(tag) || seen.has(tag) || !Number.isFinite(axis.value)) {
-      fail('invalid-variation-axis', 'Variation axes require unique four-character tags and finite values');
-    }
-    seen.add(tag);
-    return { tag, value: axis.value };
-  });
-}
-
-function normalizeStyleRuns(item, text, sourceRange) {
-  const input = item.payload && item.payload.runs;
-  if (!Array.isArray(input) || !input.length) {
-    fail('text-item-no-style-runs', 'TextItem must contain one or more inline style/font runs');
-  }
-  if (!isRecord(input[0])) fail('invalid-inline-style-run', 'payload.runs[0] must be a plain object');
-  const firstSourceStart = input[0].sourceStart == null
-    ? 0 : requireRange(input[0].sourceStart, 'run.sourceStart');
-  const documentBase = sourceRange.start - firstSourceStart;
-  let localCursor = 0;
-  let previousSourceEnd = firstSourceStart;
-  const normalized = input.map((entry, index) => {
-    const run = requireRecord(entry, 'invalid-inline-style-run', 'payload.runs[' + index + ']');
-    if (typeof run.text !== 'string') fail('invalid-inline-style-run-text', 'Inline style run text must be a string');
-    const runText = run.text;
-    if (!runText.length) fail('empty-inline-style-run', 'Empty inline style runs are not valid in a TextItem');
-    const sourceStart = run.sourceStart == null
-      ? previousSourceEnd : requireRange(run.sourceStart, 'run.sourceStart');
-    const sourceEnd = run.sourceEnd == null
-      ? sourceStart + runText.length : requireRange(run.sourceEnd, 'run.sourceEnd', 1);
-    if (sourceStart < previousSourceEnd || sourceEnd - sourceStart !== runText.length ||
-        text.slice(localCursor, localCursor + runText.length) !== runText) {
-      fail('inline-style-source-partition',
-        'Inline style runs must form an ordered local-text partition with monotone, length-preserving source ranges');
-    }
-    const localStart = localCursor;
-    const localEnd = localStart + runText.length;
-    const absoluteStart = documentBase + sourceStart;
-    const absoluteEnd = documentBase + sourceEnd;
-    if (absoluteStart < sourceRange.start || absoluteEnd > sourceRange.end) {
-      fail('inline-style-source-outside-item',
-        'Inline style source range falls outside the TextItem source envelope at run ' + index);
-    }
-    localCursor = localEnd;
-    previousSourceEnd = sourceEnd;
-    return {
-      index, localStart, localEnd,
-      sourceRange: { start: absoluteStart, end: absoluteEnd },
-      text: runText,
-      fontFamily: run.fontFamily == null ? null : requireString(run.fontFamily, 'invalid-font-family', 'fontFamily')
-    };
-  });
-  if (localCursor !== text.length) {
-    fail('inline-style-incomplete-coverage', 'Inline style runs do not cover TextItem.text');
-  }
-  return normalized;
-}
-
-function mapLocalRangeToSourceSegments(styleRuns, localStart, localEnd) {
-  if (!Number.isSafeInteger(localStart) || !Number.isSafeInteger(localEnd) ||
-      localStart < 0 || localEnd <= localStart) {
-    fail('invalid-local-source-map-range', 'Local source-map range must be a non-empty UTF-16 range');
-  }
-  const mapped = [];
-  let expectedLocal = localStart;
-  for (const run of styleRuns) {
-    const start = Math.max(localStart, run.localStart);
-    const end = Math.min(localEnd, run.localEnd);
-    if (end <= start) continue;
-    if (start !== expectedLocal) {
-      fail('incomplete-local-source-map', 'Inline style runs leave a local source-map gap at ' + expectedLocal);
-    }
-    const sourceStart = run.sourceRange.start + (start - run.localStart);
-    const sourceEnd = run.sourceRange.start + (end - run.localStart);
-    const previous = mapped[mapped.length - 1];
-    if (previous && previous.localRange.end === start && previous.sourceRange.end === sourceStart) {
-      previous.localRange.end = end;
-      previous.sourceRange.end = sourceEnd;
-      previous.styleRunIndexes.push(run.index);
-    } else {
-      mapped.push({
-        localRange: { start, end },
-        sourceRange: { start: sourceStart, end: sourceEnd },
-        styleRunIndexes: [run.index]
-      });
-    }
-    expectedLocal = end;
-  }
-  if (expectedLocal !== localEnd) {
-    fail('incomplete-local-source-map', 'Inline style runs do not map the complete local range');
-  }
-  return mapped;
-}
-
-function codePointForScalarRange(text, start, end, label) {
-  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) ||
-      start < 0 || end <= start || end > text.length) {
-    fail('invalid-grapheme-scalar-partition', label + ' has an invalid UTF-16 scalar range');
-  }
-  const codePoint = text.codePointAt(start);
-  const expectedWidth = codePoint > 0xFFFF ? 2 : 1;
-  if (end - start !== expectedWidth) {
-    fail('invalid-grapheme-scalar-partition', label + ' does not describe exactly one Unicode scalar');
-  }
-  const scalarText = text.slice(start, end);
-  if (scalarText.length !== expectedWidth ||
-      (expectedWidth === 2 && !(scalarText.charCodeAt(0) >= 0xD800 && scalarText.charCodeAt(0) <= 0xDBFF &&
-        scalarText.charCodeAt(1) >= 0xDC00 && scalarText.charCodeAt(1) <= 0xDFFF)) ||
-      (expectedWidth === 1 && scalarText.charCodeAt(0) >= 0xD800 && scalarText.charCodeAt(0) <= 0xDFFF)) {
-    fail('invalid-grapheme-scalar-partition', label + ' contains an invalid or split UTF-16 scalar');
-  }
-  return codePoint;
-}
-
-function requiredCodePointsForGrapheme(text, grapheme, graphemeIndex) {
-  if (!Array.isArray(grapheme.scalars) || !grapheme.scalars.length) {
-    fail('missing-grapheme-scalars',
-      'Unicode itemizer must provide scalar-level Default_Ignorable_Code_Point data for EGC ' + graphemeIndex);
-  }
-  const required = [];
-  let expected = grapheme.start;
-  for (let scalarIndex = 0; scalarIndex < grapheme.scalars.length; scalarIndex++) {
-    const scalar = grapheme.scalars[scalarIndex];
-    if (!scalar || scalar.start !== expected || !Number.isSafeInteger(scalar.end) ||
-        scalar.end <= scalar.start || scalar.end > grapheme.end ||
-        typeof scalar.isDefaultIgnorable !== 'boolean') {
-      fail('invalid-grapheme-scalar-partition',
-        'Unicode scalar records are not an exact contiguous partition of EGC ' + graphemeIndex +
-        ' at scalar ' + scalarIndex);
-    }
-    const codePoint = codePointForScalarRange(
-      text, scalar.start, scalar.end, 'EGC ' + graphemeIndex + ' scalar ' + scalarIndex
-    );
-    if (scalar.isDefaultIgnorable !== true) required.push(codePoint);
-    expected = scalar.end;
-  }
-  if (expected !== grapheme.end) {
-    fail('invalid-grapheme-scalar-partition',
-      'Unicode scalar records do not cover the complete EGC ' + graphemeIndex);
-  }
-  return required;
-}
-
-function validateItemization(text, result) {
-  if (!result || result.text !== text || result.utf16Length !== text.length ||
-      !Array.isArray(result.graphemes) || !Array.isArray(result.scriptRuns) ||
-      !Array.isArray(result.sourceRuns) || !Array.isArray(result.nonShapingRuns)) {
-    fail('invalid-itemizer-result', 'Canonical Unicode itemizer returned an incomplete or mismatched result');
-  }
-  let expected = 0;
-  for (let index = 0; index < result.graphemes.length; index++) {
-    const g = result.graphemes[index];
-    if (!g || g.start !== expected || !Number.isSafeInteger(g.end) || g.end <= g.start ||
-        g.end > text.length || g.text !== text.slice(g.start,g.end) || typeof g.shapeable !== 'boolean') {
-      fail('invalid-grapheme-partition', 'Itemizer graphemes are not an exact contiguous UTF-16 partition at index ' + index);
-    }
-    requiredCodePointsForGrapheme(text, g, index);
-    if (g.shapeable && (g.containsBidiControl || g.isBidiControl)) {
-      fail('invalid-shapeable-bidi-control', 'Bidi_Control grapheme cannot be shapeable');
-    }
-    expected = g.end;
-  }
-  if (!result.graphemes.length || expected !== text.length) {
-    fail('incomplete-grapheme-coverage', 'Itemizer graphemes do not cover the complete TextItem');
-  }
-  expected = 0;
-  const projectedShape = [], projectedNonShaping = [];
-  for (let index=0; index<result.sourceRuns.length; index++) {
-    const run=result.sourceRuns[index];
-    if (!run || run.start!==expected || !Number.isSafeInteger(run.end) ||
-        run.end<=run.start || run.end>text.length || run.text!==text.slice(run.start,run.end)) {
-      fail('invalid-source-partition', 'Itemizer sourceRuns are not a lossless contiguous partition at index '+index);
-    }
-    if (run.kind==='shape') projectedShape.push(run);
-    else if (['bidi-control','non-shaping-bidi-mixed','unresolved'].includes(run.kind)) projectedNonShaping.push(run);
-    else fail('invalid-source-run-kind','Itemizer returned an unknown source run kind: '+run.kind);
-    expected=run.end;
-  }
-  if (expected!==text.length) fail('incomplete-source-coverage','Itemizer sourceRuns do not cover the complete TextItem');
-  if (projectedNonShaping.length!==result.nonShapingRuns.length) {
-    fail('non-shaping-run-projection-mismatch','nonShapingRuns must be the non-shape projection of sourceRuns');
-  }
-  for(let i=0;i<projectedNonShaping.length;i++){
-    const a=projectedNonShaping[i],b=result.nonShapingRuns[i];
-    if(!b||a.start!==b.start||a.end!==b.end||a.kind!==b.kind||a.text!==b.text)
-      fail('non-shaping-run-projection-mismatch','nonShapingRuns differ from sourceRuns at index '+i);
-  }
-  const covered=new Set();
-  let previousEnd=0;
-  for(let index=0;index<result.scriptRuns.length;index++){
-    const r=result.scriptRuns[index];
-    if(!r||!Number.isSafeInteger(r.start)||!Number.isSafeInteger(r.end)||
-       r.start<previousEnd||r.end<=r.start||r.end>text.length||
-       !/^[A-Za-z]{4}$/.test(r.script||'')||
-       !['ltr','rtl'].includes(r.direction)||
-       !Number.isSafeInteger(r.bidiLevel)||r.bidiLevel<0||
-       ((r.bidiLevel%2===1)!==(r.direction==='rtl'))||
-       !Number.isSafeInteger(r.graphemeStart)||!Number.isSafeInteger(r.graphemeEnd)||
-       r.graphemeStart<0||r.graphemeEnd<=r.graphemeStart||r.graphemeEnd>result.graphemes.length||
-       r.text!==text.slice(r.start,r.end)||
-       result.graphemes[r.graphemeStart].start!==r.start||
-       result.graphemes[r.graphemeEnd-1].end!==r.end){
-      fail('invalid-script-run','Itemizer ScriptRun has an invalid source, Script, direction or Bidi range at index '+index);
-    }
-    for(let gi=r.graphemeStart;gi<r.graphemeEnd;gi++){
-      const g=result.graphemes[gi];
-      if(!g.shapeable||g.containsBidiControl||g.isBidiControl||covered.has(gi))
-        fail('non-shapeable-in-script-run','Non-shapeable or duplicate grapheme entered ScriptRun '+index);
-      covered.add(gi);
-    }
-    previousEnd=r.end;
-  }
-  for(let i=0;i<result.graphemes.length;i++){
-    if(result.graphemes[i].shapeable!==covered.has(i))
-      fail('script-run-coverage-mismatch','ScriptRuns do not cover exactly the shapeable EGCs; grapheme '+i);
-  }
-  if(projectedShape.length!==result.scriptRuns.length)
-    fail('script-run-projection-mismatch','scriptRuns must be the shape projection of sourceRuns');
-  for(let i=0;i<projectedShape.length;i++){
-    const a=projectedShape[i],b=result.scriptRuns[i];
-    if(a.start!==b.start||a.end!==b.end||a.text!==b.text||
-       a.script!==b.script||a.direction!==b.direction||a.bidiLevel!==b.bidiLevel||
-       a.graphemeStart!==b.graphemeStart||a.graphemeEnd!==b.graphemeEnd)
-      fail('script-run-projection-mismatch','scriptRuns differ from sourceRuns at index '+i);
-  }
-}
-
-function deepFreeze(value, seen = new Set()) {
-  if (!value || typeof value !== 'object' || seen.has(value)) return value;
-  seen.add(value);
-  for (const key of Object.keys(value)) deepFreeze(value[key], seen);
-  return Object.freeze(value);
-}
-
-/**
- * Build the paragraph-level shaping plan before splitTextItem.
- * No glyph metrics are generated here. The output is the deterministic,
- * source-mapped plan consumed by the initialized HarfBuzz runtime.
- */
-function createTextItemShapingPlan(item, options = {}) {
-  requireRecord(item, 'invalid-text-item', 'TextItem');
-  if (item.kind !== 'text') fail('invalid-text-item-kind', 'Shaping plan accepts only TextItem');
-  const bidiRuntime = options.bidiRuntime;
-  if (!bidiRuntime || typeof bidiRuntime.resolve !== 'function' ||
-      typeof bidiRuntime.itemizeScripts !== 'function') {
-    fail('missing-unicode-runtime', 'Pinned Bidi/Grapheme runtime is required');
-  }
-  const fontResolver = options.fontResolver;
-  if (!fontResolver || typeof fontResolver.resolveFontForGrapheme !== 'function') {
-    fail('missing-font-resolver', 'Canonical fontResolver with whole-grapheme coverage resolution is required');
-  }
-
-  const runs = item.payload && item.payload.runs;
-  const text = Array.isArray(runs) ? runs.map((run) => String(run.text == null ? '' : run.text)).join('') : '';
-  if (!text.length) fail('empty-text-item', 'TextItem has no shaping text');
-  const source = requireRecord(item.sourceRange, 'invalid-text-item-source-range', 'TextItem.sourceRange');
-  const sourceStart = requireRange(source.start, 'TextItem.sourceRange.start');
-  const sourceEnd = requireRange(source.end, 'TextItem.sourceRange.end', 1);
-  if (sourceEnd <= sourceStart) {
-    fail('text-item-source-length-mismatch', 'TextItem sourceRange must be a non-empty document UTF-16 envelope');
-  }
-
-  const styleRuns = normalizeStyleRuns(item, text, source);
-  const sourceSegments = styleRuns.map((run) => ({
-    localRange: { start: run.localStart, end: run.localEnd },
-    sourceRange: { ...run.sourceRange },
-    styleRunIndexes: [run.index]
-  }));
-  const mapLocalRange = (start, end) => mapLocalRangeToSourceSegments(styleRuns, start, end);
-  const direction = options.direction;
-  if (direction !== 'ltr' && direction !== 'rtl') {
-    fail('missing-base-direction', 'Base paragraph direction must be explicit (ltr or rtl)');
-  }
-  const languageByScript = requireRecord(options.languageByScript, 'missing-script-languages', 'languageByScript');
-  const featuresByScript = requireRecord(options.featuresByScript, 'missing-script-features', 'featuresByScript');
-  const variationAxesByFontId = requireRecord(options.variationAxesByFontId, 'missing-variation-axes', 'variationAxesByFontId');
-  const faceIndexByFontId = options.faceIndexByFontId == null
-    ? Object.create(null)
-    : requireRecord(options.faceIndexByFontId, 'invalid-face-index-map', 'faceIndexByFontId');
-  const fallbacksByFamily = options.fallbacksByFamily == null
-    ? Object.create(null)
-    : requireRecord(options.fallbacksByFamily, 'invalid-font-fallback-map', 'fallbacksByFamily');
-  const resolved = bidiRuntime.resolve(text, direction);
-  const itemization = bidiRuntime.itemizeScripts(text, resolved);
-  validateItemization(text, itemization);
-
-  // Validate all shaping policies before resolving or opening font faces.
-  // A malformed/missing language/feature policy must fail independently of
-  // whether the requested font is installed in this runtime.
-  const useNativeDefaults = options.useNativeDefaults === true;
-  const shapingConfigByScript = new Map();
-  for (const scriptRun of itemization.scriptRuns) {
-    if (!shapingConfigByScript.has(scriptRun.script)) {
-      const configuredLanguage = languageByScript[scriptRun.script];
-      const language = (typeof configuredLanguage === 'string' && configuredLanguage.trim())
-        ? configuredLanguage
-        : (useNativeDefaults
-          ? (scriptRun.script === 'Hebr' ? 'he' : scriptRun.script === 'Latn' ? 'en' : 'und')
-          : null);
-      if (!language) {
-        fail('missing-script-language', 'No explicit language provided for Script ' + scriptRun.script);
-      }
-      const configuredFeatures = featuresByScript[scriptRun.script];
-      const features = configuredFeatures == null && useNativeDefaults
-        ? []
-        : normalizeFeatures(configuredFeatures, scriptRun.script);
-      shapingConfigByScript.set(scriptRun.script, { language, features });
-    }
-  }
-
-  const graphemeStyleIndexes = itemization.graphemes.map((grapheme, graphemeIndex) => {
-    const matches = styleRuns.filter((run) => run.localStart <= grapheme.start && grapheme.end <= run.localEnd);
-    if (matches.length !== 1) {
-      const overlaps = styleRuns.filter((run) => run.localStart < grapheme.end && grapheme.start < run.localEnd);
-      if (overlaps.length > 1) {
-        fail('style-boundary-splits-grapheme',
-          'Inline font/style boundary falls inside extended grapheme ' + graphemeIndex +
-          ' [' + grapheme.start + ',' + grapheme.end + ')');
-      }
-      fail('grapheme-without-font-run','Extended grapheme ' + graphemeIndex + ' is not covered by exactly one inline style run');
-    }
-    return matches[0].index;
-  });
-  const graphemeSourceRanges = itemization.graphemes.map((grapheme, graphemeIndex) => {
-    const mapped = mapLocalRange(grapheme.start, grapheme.end);
-    if (mapped.length !== 1) {
-      fail('grapheme-source-range-discontiguous',
-        'A single EGC must map to one contiguous document source range; grapheme ' + graphemeIndex);
-    }
-    return {
-      localRange: { start: grapheme.start, end: grapheme.end },
-      sourceRange: { ...mapped[0].sourceRange },
-      styleRunIndexes: mapped[0].styleRunIndexes.slice()
-    };
-  });
-
-  // Resolve each shapeable EGC independently. A font transition may occur only
-  // between EGCs; no base/mark/ZWJ sequence is ever split to satisfy cmap.
-  const resolvedGraphemeFonts = new Array(itemization.graphemes.length).fill(null);
-  for (let graphemeIndex = 0; graphemeIndex < itemization.graphemes.length; graphemeIndex++) {
-    const grapheme = itemization.graphemes[graphemeIndex];
-    if (!grapheme.shapeable) continue;
-    const styleRunIndex = graphemeStyleIndexes[graphemeIndex];
-    const styleRun = styleRuns[styleRunIndex];
-    const requestedFamily = styleRun.fontFamily || options.defaultFamily || null;
-    const configuredFallbacks = requestedFamily == null ? null : fallbacksByFamily[requestedFamily];
-    if (configuredFallbacks != null && !Array.isArray(configuredFallbacks)) {
-      fail('invalid-font-fallback-map', 'Fallbacks for family ' + requestedFamily + ' must be an ordered array');
-    }
-    const fallbacks = configuredFallbacks || [];
-    const coverageCodePoints = requiredCodePointsForGrapheme(text, grapheme, graphemeIndex);
-    const resolution = fontResolver.resolveFontForGrapheme(requestedFamily, coverageCodePoints, {
-      defaultFamily: options.defaultFamily || null,
-      fallbacks
-    });
-    if (!resolution.ok || !resolution.record || !resolution.record.font ||
-        !resolution.record.font.bytes || !resolution.record.font.bytes.length) {
-      fail('font-unavailable-for-grapheme',
-        'No registered font covers every required scalar in EGC ' + graphemeIndex +
-        ' [' + graphemeSourceRanges[graphemeIndex].sourceRange.start + ',' + graphemeSourceRanges[graphemeIndex].sourceRange.end + '): ' +
-        (resolution.message || 'font bytes are unavailable'));
-    }
-    const fontId = requireString(resolution.fontId, 'invalid-resolved-font', 'resolved fontId');
-    const sourceHash = requireString(resolution.record.sourceHash, 'missing-font-source-hash', 'resolved font SHA-256');
-    if (!/^[0-9a-f]{64}$/i.test(sourceHash)) {
-      fail('invalid-font-source-hash', 'Resolved font sourceHash must be a 64-character SHA-256');
-    }
-    const unitsPerEm = requireRange(resolution.record.unitsPerEm, 'resolved font unitsPerEm', 1);
-    if (resolution.record.font.unitsPerEm !== unitsPerEm) {
-      fail('font-units-per-em-mismatch', 'FontResolver record and parsed font UPEM disagree for ' + fontId);
-    }
-    const configuredAxes = variationAxesByFontId[fontId];
-    const axisPolicy = configuredAxes == null && useNativeDefaults &&
-      typeof fontResolver.defaultVariationAxesOf === 'function'
-      ? fontResolver.defaultVariationAxesOf(fontId)
-      : configuredAxes;
-    const variationAxes = normalizeAxes(axisPolicy, fontId);
-    const faceIndex = faceIndexByFontId[fontId] == null
-      ? 0 : requireRange(faceIndexByFontId[fontId], 'faceIndexByFontId.' + fontId);
-    resolvedGraphemeFonts[graphemeIndex] = {
-      localRange: graphemeSourceRanges[graphemeIndex].localRange,
-      sourceRange: graphemeSourceRanges[graphemeIndex].sourceRange,
-      styleRunIndex,
-      requestedFamily,
-      fontId,
-      sourceHash: sourceHash.toLowerCase(),
-      faceIndex,
-      unitsPerEm,
-      variationAxes,
-      coverageCodePoints,
-      fallbackUsed: resolution.fallbackUsed === true,
-      fallbackChain: resolution.fallbackChain || [],
-      diagnostics: resolution.diagnostics || []
-    };
-  }
-
-  const plannedRuns = [];
-  for (let scriptRunIndex = 0; scriptRunIndex < itemization.scriptRuns.length; scriptRunIndex++) {
-    const scriptRun = itemization.scriptRuns[scriptRunIndex];
-    const shapingConfig = shapingConfigByScript.get(scriptRun.script);
-    const language = shapingConfig.language;
-    const features = shapingConfig.features;
-    let group = null;
-    const flush = () => {
-      if (!group) return;
-      const first = resolvedGraphemeFonts[group.graphemeStart];
-      const last = resolvedGraphemeFonts[group.graphemeEnd - 1];
-      const localStart = first.localRange.start;
-      const localEnd = last.localRange.end;
-      const absoluteStart = first.sourceRange.start;
-      const absoluteEnd = last.sourceRange.end;
-      plannedRuns.push({
-        id: item.id + '#shape:' + absoluteStart + '-' + absoluteEnd + ':' + group.fontId,
-        sourceRange: {
-          coordinateSpace: 'document-utf16',
-          start: absoluteStart,
-          end: absoluteEnd,
-          ...(source.docId != null ? { docId: source.docId } : {}),
-          ...(source.blockId != null ? { blockId: source.blockId } : {}),
-          itemId: item.id
-        },
-        styleRunIndexes: group.styleRunIndexes.slice(),
-        localRange: { start: localStart, end: localEnd },
-        text: text.slice(localStart, localEnd),
-        script: scriptRun.script,
-        language,
-        direction: scriptRun.direction,
-        bidiLevel: scriptRun.bidiLevel,
-        bot: localStart === 0,
-        eot: localEnd === text.length,
-        graphemeStart: group.graphemeStart,
-        graphemeEnd: group.graphemeEnd,
-        graphemes: Array.from({ length: group.graphemeEnd - group.graphemeStart }, (_, index) => {
-          const graphemeIndex = group.graphemeStart + index;
-          const grapheme = itemization.graphemes[graphemeIndex];
-          const resolved = resolvedGraphemeFonts[graphemeIndex];
-          return {
-            start: resolved.sourceRange.start,
-            end: resolved.sourceRange.end,
-            localRange: { ...resolved.localRange },
-            text: grapheme.text,
-            coverageCodePoints: resolved.coverageCodePoints.slice()
-          };
-        }),
-        font: {
-          fontId: group.fontId,
-          sourceHash: group.sourceHash,
-          faceIndex: group.faceIndex,
-          unitsPerEm: group.unitsPerEm,
-          variationAxes: group.variationAxes
-        },
-        features,
-        fallbackUsed: group.fallbackUsed,
-        fallbackChains: group.fallbackChains
-      });
-      group = null;
-    };
-    for (let graphemeIndex = scriptRun.graphemeStart; graphemeIndex < scriptRun.graphemeEnd; graphemeIndex++) {
-      const resolvedFont = resolvedGraphemeFonts[graphemeIndex];
-      if (!resolvedFont) fail('missing-font-for-shapeable-grapheme',
-        'A shapeable grapheme has no resolved font identity at index ' + graphemeIndex);
-      const canMerge = group &&
-        group.graphemeEnd === graphemeIndex &&
-        group.lastSourceEnd === resolvedFont.sourceRange.start &&
-        group.fontId === resolvedFont.fontId &&
-        group.sourceHash === resolvedFont.sourceHash &&
-        group.faceIndex === resolvedFont.faceIndex &&
-        JSON.stringify(group.variationAxes) === JSON.stringify(resolvedFont.variationAxes);
-      if (!canMerge) {
-        flush();
-        group = {
-          styleRunIndexes: [resolvedFont.styleRunIndex],
-          fontId: resolvedFont.fontId,
-          sourceHash: resolvedFont.sourceHash,
-          faceIndex: resolvedFont.faceIndex,
-          unitsPerEm: resolvedFont.unitsPerEm,
-          variationAxes: resolvedFont.variationAxes,
-          fallbackUsed: resolvedFont.fallbackUsed,
-          fallbackChains: resolvedFont.fallbackUsed ? [resolvedFont.fallbackChain] : [],
-          graphemeStart: graphemeIndex,
-          graphemeEnd: graphemeIndex + 1,
-          lastSourceEnd: resolvedFont.sourceRange.end
-        };
-      } else {
-        group.graphemeEnd = graphemeIndex + 1;
-        group.lastSourceEnd = resolvedFont.sourceRange.end;
-        if (!group.styleRunIndexes.includes(resolvedFont.styleRunIndex)) {
-          group.styleRunIndexes.push(resolvedFont.styleRunIndex);
-        }
-        if (resolvedFont.fallbackUsed) group.fallbackUsed = true;
-        if (resolvedFont.fallbackUsed &&
-            !group.fallbackChains.some((chain) => JSON.stringify(chain) === JSON.stringify(resolvedFont.fallbackChain))) {
-          group.fallbackChains.push(resolvedFont.fallbackChain);
-        }
-      }
-    }
-    flush();
-  }
-
-  const diagnostics = [];
-  for (let graphemeIndex = 0; graphemeIndex < resolvedGraphemeFonts.length; graphemeIndex++) {
-    const resolvedFont = resolvedGraphemeFonts[graphemeIndex];
-    if (resolvedFont && resolvedFont.fallbackUsed) {
-      const grapheme = itemization.graphemes[graphemeIndex];
-      diagnostics.push({
-        code: 'font-fallback',
-        itemId: item.id,
-        styleRunIndex: resolvedFont.styleRunIndex,
-        graphemeRange: { ...resolvedFont.sourceRange },
-        graphemeText: grapheme.text,
-        requiredCodePoints: resolvedFont.coverageCodePoints,
-        requestedFamily: resolvedFont.requestedFamily,
-        fontId: resolvedFont.fontId,
-        fallbackChain: resolvedFont.fallbackChain
-      });
-    }
-  }
-  const projectSourceRun = (run) => ({
-    ...run,
-    sourceRanges: mapLocalRange(run.start, run.end).map((segment) => ({
-      localRange: { ...segment.localRange },
-      sourceRange: { ...segment.sourceRange }
-    }))
-  });
-  const nonShapingRuns = itemization.nonShapingRuns.map(projectSourceRun);
-  const sourceRuns = itemization.sourceRuns.map(projectSourceRun);
-
-  return deepFreeze({
-    kind: 'TextItemShapingPlan',
-    version: PLAN_VERSION,
-    itemId: item.id,
-    text,
-    sourceRange: { ...source, coordinateSpace: 'document-utf16' },
-    sourceSegments,
-    unicodeVersion: itemization.unicodeVersion,
-    direction,
-    graphemes: itemization.graphemes.map((grapheme, index) => ({
-      start: graphemeSourceRanges[index].sourceRange.start,
-      end: graphemeSourceRanges[index].sourceRange.end,
-      localRange: { ...graphemeSourceRanges[index].localRange },
-      text: grapheme.text,
-      script: grapheme.script || null,
-      status: grapheme.status,
-      direction: grapheme.direction || null,
-      bidiLevel: grapheme.bidiLevel,
-      shapeable: grapheme.shapeable === true,
-      containsBidiControl: !!grapheme.containsBidiControl,
-      isBidiControl: !!grapheme.isBidiControl,
-      coverageCodePoints: requiredCodePointsForGrapheme(text, grapheme, index),
-      font: resolvedGraphemeFonts[index]
-        ? {
-            fontId: resolvedGraphemeFonts[index].fontId,
-            sourceHash: resolvedGraphemeFonts[index].sourceHash,
-            faceIndex: resolvedGraphemeFonts[index].faceIndex,
-            variationAxes: resolvedGraphemeFonts[index].variationAxes
-          }
-        : null
-    })),
-    scriptRuns: plannedRuns,
-    nonShapingRuns,
-    sourceRuns,
-    diagnostics
-  });
-}
-
-module.exports = { PLAN_VERSION, createTextItemShapingPlan };
-
-};
-__modules["src/engine/typography/shaped-run.js"] = function (require, module, exports) {
-// red-build/src/engine/typography/shaped-run.js
-// Canonical immutable ShapedRun/ShapedGlyph contract — production model layer.
-'use strict';
-
-const SHAPED_RUN_CONTRACT_VERSION = 'shaped-run-v1';
-const CLUSTER_LEVEL = 'monotone-characters';
-// Canonical runs are deeply frozen once at construction. Internal projection paths
-// can validate them in O(1) instead of recursively re-walking every glyph per word.
-const canonicalShapedRuns = new WeakSet();
-
-function fail(code, message) {
-  const error = new TypeError(message);
-  error.code = code;
-  throw error;
-}
-
-function isRecord(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const proto = Object.getPrototypeOf(value);
-  return proto === Object.prototype || proto === null;
-}
-
-function requireRecord(value, code, label) {
-  if (!isRecord(value)) fail(code, label + ' must be a plain object');
-  return value;
-}
-
-function requireString(value, code, label) {
-  if (typeof value !== 'string' || value.length === 0) {
-    fail(code, label + ' must be a non-empty string');
-  }
-  return value;
-}
-
-function requireInteger(value, min, code, label) {
-  if (!Number.isSafeInteger(value) || value < min) {
-    fail(code, label + ' must be an integer >= ' + min);
-  }
-  return value;
-}
-
-function requireFinite(value, code, label) {
-  if (!Number.isFinite(value)) fail(code, label + ' must be finite');
-  return value;
-}
-
-function assertWellFormedUtf16(text, label) {
-  for (let i = 0; i < text.length; i++) {
-    const unit = text.charCodeAt(i);
-    if (unit >= 0xD800 && unit <= 0xDBFF) {
-      if (i + 1 >= text.length) fail('invalid-utf16', label + ' ends with an unpaired high surrogate');
-      const next = text.charCodeAt(i + 1);
-      if (next < 0xDC00 || next > 0xDFFF) {
-        fail('invalid-utf16', label + ' contains an unpaired high surrogate at UTF-16 offset ' + i);
-      }
-      i++;
-    } else if (unit >= 0xDC00 && unit <= 0xDFFF) {
-      fail('invalid-utf16', label + ' contains an unpaired low surrogate at UTF-16 offset ' + i);
-    }
-  }
-}
-
-function normalizeSourceRange(input, text) {
-  const range = requireRecord(input, 'invalid-source-range', 'sourceRange');
-  const start = requireInteger(range.start, 0, 'invalid-source-range', 'sourceRange.start');
-  const end = requireInteger(range.end, 1, 'invalid-source-range', 'sourceRange.end');
-  if (end <= start || end - start !== text.length) {
-    fail('source-range-length-mismatch', 'sourceRange must cover the text exactly in UTF-16 code units');
-  }
-  const out = { coordinateSpace: 'document-utf16', start, end };
-  for (const key of ['docId', 'blockId', 'itemId']) {
-    if (range[key] != null) out[key] = requireString(range[key], 'invalid-source-range', 'sourceRange.' + key);
-  }
-  if (range.runIndex != null) {
-    out.runIndex = requireInteger(range.runIndex, 0, 'invalid-source-range', 'sourceRange.runIndex');
-  }
-  return out;
-}
-
-function normalizeFont(input) {
-  const font = requireRecord(input, 'invalid-font-identity', 'font');
-  const fontId = requireString(font.fontId, 'invalid-font-identity', 'font.fontId');
-  const faceIndex = font.faceIndex == null
-    ? 0
-    : requireInteger(font.faceIndex, 0, 'invalid-font-identity', 'font.faceIndex');
-  const unitsPerEm = requireInteger(font.unitsPerEm, 1, 'invalid-font-identity', 'font.unitsPerEm');
-
-  if (typeof font.sourceHash !== 'string' || !/^[0-9a-f]{64}$/i.test(font.sourceHash)) {
-    fail('invalid-font-hash', 'font.sourceHash must be a 64-character hexadecimal SHA-256');
-  }
-  const out = { fontId, faceIndex, unitsPerEm, sourceHash: font.sourceHash.toLowerCase() };
-  if (font.normalizedHash != null) {
-    if (typeof font.normalizedHash !== 'string' || !/^[0-9a-f]{64}$/i.test(font.normalizedHash)) {
-      fail('invalid-font-hash', 'font.normalizedHash must be a 64-character hexadecimal SHA-256');
-    }
-    out.normalizedHash = font.normalizedHash.toLowerCase();
-  }
-  return out;
-}
-
-function normalizeTagValueList(input, code, label) {
-  if (!Array.isArray(input)) fail(code, label + ' must be an array (use [] when empty)');
-  const seen = new Set();
-  return input.map((item, index) => {
-    const rec = requireRecord(item, code, label + '[' + index + ']');
-    const tag = requireString(rec.tag, code, label + '[' + index + '].tag');
-    if (!/^[A-Za-z0-9]{4}$/.test(tag)) {
-      fail(code, label + '[' + index + '].tag must be a four-character OpenType tag');
-    }
-    if (seen.has(tag)) fail(code, label + ' contains duplicate tag ' + tag);
-    seen.add(tag);
-    return { tag, value: requireFinite(rec.value, code, label + '[' + index + '].value') };
-  });
-}
-
-function normalizeShaping(input) {
-  const shaping = requireRecord(input, 'invalid-shaping-context', 'shaping');
-  const script = requireString(shaping.script, 'invalid-shaping-context', 'shaping.script');
-  if (!/^[A-Za-z]{4}$/.test(script)) {
-    fail('invalid-shaping-context', 'shaping.script must be a four-letter ISO 15924 tag');
-  }
-  const language = requireString(shaping.language, 'invalid-shaping-context', 'shaping.language');
-  const direction = shaping.direction;
-  if (direction !== 'ltr' && direction !== 'rtl') {
-    fail('invalid-shaping-context', 'shaping.direction must be ltr or rtl');
-  }
-  const bidiLevel = requireInteger(shaping.bidiLevel, 0, 'invalid-shaping-context', 'shaping.bidiLevel');
-  if ((bidiLevel % 2 === 1) !== (direction === 'rtl')) {
-    fail('bidi-level-direction-mismatch', 'Bidi level parity does not match shaping direction');
-  }
-  const engine = requireString(shaping.engine, 'invalid-shaping-context', 'shaping.engine');
-  const engineVersion = requireString(shaping.engineVersion, 'invalid-shaping-context', 'shaping.engineVersion');
-  const unicodeVersion = requireString(shaping.unicodeVersion, 'invalid-shaping-context', 'shaping.unicodeVersion');
-  if (shaping.bot !== true && shaping.bot !== false) {
-    fail('invalid-shaping-context', 'shaping.bot must be explicit boolean');
-  }
-  if (shaping.eot !== true && shaping.eot !== false) {
-    fail('invalid-shaping-context', 'shaping.eot must be explicit boolean');
-  }
-  if (shaping.clusterLevel !== CLUSTER_LEVEL) {
-    fail('invalid-cluster-level', 'ShapedRun requires MONOTONE_CHARACTERS cluster semantics');
-  }
-
-  const variationAxes = normalizeTagValueList(
-    shaping.variationAxes,
-    'invalid-variation-axes',
-    'shaping.variationAxes'
-  );
-  const features = normalizeTagValueList(
-    shaping.features,
-    'invalid-open-type-features',
-    'shaping.features'
-  );
-
-  return {
-    engine,
-    engineVersion,
-    unicodeVersion,
-    script,
-    language,
-    direction,
-    bidiLevel,
-    bot: shaping.bot,
-    eot: shaping.eot,
-    clusterLevel: CLUSTER_LEVEL,
-    variationAxes,
-    features
-  };
-}
-
-function normalizeGraphemes(input, sourceRange, text) {
-  if (!Array.isArray(input) || input.length === 0) {
-    fail('invalid-graphemes', 'graphemes must be a non-empty array from the canonical itemizer');
-  }
-  let expectedStart = sourceRange.start;
-  return input.map((item, index) => {
-    const grapheme = requireRecord(item, 'invalid-graphemes', 'graphemes[' + index + ']');
-    const start = requireInteger(grapheme.start, sourceRange.start, 'invalid-graphemes', 'graphemes[' + index + '].start');
-    const end = requireInteger(grapheme.end, sourceRange.start + 1, 'invalid-graphemes', 'graphemes[' + index + '].end');
-    const value = requireString(grapheme.text, 'invalid-graphemes', 'graphemes[' + index + '].text');
-    if (start !== expectedStart || end <= start || end > sourceRange.end ||
-        end - start !== value.length ||
-        value !== text.slice(start - sourceRange.start, end - sourceRange.start)) {
-      fail('invalid-grapheme-partition', 'graphemes must be an exact contiguous UTF-16 partition of the ShapedRun source');
-    }
-    assertWellFormedUtf16(value, 'graphemes[' + index + '].text');
-    expectedStart = end;
-    return { start, end, text: value };
-  }).map((grapheme, index, all) => {
-    if (index === all.length - 1 && grapheme.end !== sourceRange.end) {
-      fail('incomplete-grapheme-coverage', 'graphemes do not cover the complete ShapedRun source range');
-    }
-    return grapheme;
-  });
-}
-
-function normalizeBounds(input, code, label) {
-  if (input == null) return null;
-  const bounds = requireRecord(input, code, label);
-  const out = {
-    xMin: requireFinite(bounds.xMin, code, label + '.xMin'),
-    yMin: requireFinite(bounds.yMin, code, label + '.yMin'),
-    xMax: requireFinite(bounds.xMax, code, label + '.xMax'),
-    yMax: requireFinite(bounds.yMax, code, label + '.yMax')
-  };
-  if (out.xMax < out.xMin || out.yMax < out.yMin) {
-    fail(code, label + ' has inverted bounds');
-  }
-  return out;
-}
-
-function normalizeGlyphs(input, sourceRange, graphemes, direction) {
-  if (!Array.isArray(input) || input.length === 0) {
-    fail('empty-glyph-output', 'A non-shaping or empty run cannot be represented as ShapedRun');
-  }
-  const graphemeStarts = new Set(graphemes.map((item) => item.start));
-  const glyphs = input.map((item, index) => {
-    const glyph = requireRecord(item, 'invalid-glyph', 'glyphs[' + index + ']');
-    const gid = requireInteger(glyph.gid, 1, 'missing-glyph-coverage', 'glyphs[' + index + '].gid');
-    const cluster = requireInteger(glyph.cluster, sourceRange.start, 'invalid-glyph-cluster', 'glyphs[' + index + '].cluster');
-    if (cluster >= sourceRange.end || !graphemeStarts.has(cluster)) {
-      fail('invalid-glyph-cluster', 'glyph cluster must be an absolute UTF-16 start of an input grapheme');
-    }
-    const xAdvance = requireFinite(glyph.xAdvance, 'invalid-glyph-position', 'glyphs[' + index + '].xAdvance');
-    const yAdvance = requireFinite(glyph.yAdvance, 'invalid-glyph-position', 'glyphs[' + index + '].yAdvance');
-    const xOffset = requireFinite(glyph.xOffset, 'invalid-glyph-position', 'glyphs[' + index + '].xOffset');
-    const yOffset = requireFinite(glyph.yOffset, 'invalid-glyph-position', 'glyphs[' + index + '].yOffset');
-    const flags = glyph.flags == null ? 0 : requireInteger(glyph.flags, 0, 'invalid-glyph', 'glyphs[' + index + '].flags');
-    let outlinePath;
-    if (glyph.outlinePath != null) {
-      if (typeof glyph.outlinePath !== 'string' || glyph.outlinePath.length > 2 * 1024 * 1024 ||
-          /[^MLCQZ0-9eE+.,\-\s]/.test(glyph.outlinePath)) {
-        fail('invalid-glyph-outline', 'glyphs[' + index + '].outlinePath must be a bounded SVG path with deterministic commands');
-      }
-      outlinePath = glyph.outlinePath;
-    }
-    return {
-      gid, cluster, xAdvance, yAdvance, xOffset, yOffset, flags,
-      controlBounds: normalizeBounds(glyph.controlBounds, 'invalid-glyph-bounds', 'glyphs[' + index + '].controlBounds'),
-      inkBounds: normalizeBounds(glyph.inkBounds, 'invalid-glyph-bounds', 'glyphs[' + index + '].inkBounds'),
-      ...(outlinePath !== undefined ? { outlinePath } : {})
-    };
-  });
-
-  for (let index = 1; index < glyphs.length; index++) {
-    const previous = glyphs[index - 1].cluster;
-    const current = glyphs[index].cluster;
-    const monotone = direction === 'rtl' ? current <= previous : current >= previous;
-    if (!monotone) {
-      fail('non-monotone-glyph-clusters',
-        'HarfBuzz MONOTONE_CHARACTERS output clusters must follow the visual run direction');
-    }
-  }
-
-  // HarfBuzz MONOTONE_CHARACTERS guarantees cluster order follows the selected
-  // visual direction. Collect glyph indexes once, then reverse only the RTL
-  // cluster-key list to recover logical source order. The old implementation
-  // rescanned every glyph for every cluster (O(clusterCount × glyphCount)),
-  // which made long paragraphs effectively unusable.
-  const glyphIndicesByCluster = new Map();
-  for (let glyphIndex = 0; glyphIndex < glyphs.length; glyphIndex++) {
-    const cluster = glyphs[glyphIndex].cluster;
-    let indexes = glyphIndicesByCluster.get(cluster);
-    if (!indexes) {
-      indexes = [];
-      glyphIndicesByCluster.set(cluster, indexes);
-    }
-    indexes.push(glyphIndex);
-  }
-  const starts = Array.from(glyphIndicesByCluster.keys());
-  if (direction === 'rtl') starts.reverse();
-  if (starts[0] !== sourceRange.start) {
-    fail('incomplete-shaped-source-prefix', 'first shaped cluster must begin at the ShapedRun source start');
-  }
-  const graphemeIndexByStart = new Map(graphemes.map((item, index) => [item.start, index]));
-  const clusters = starts.map((start, index) => {
-    const end = index + 1 < starts.length ? starts[index + 1] : sourceRange.end;
-    const graphemeStart = graphemeIndexByStart.get(start);
-    const graphemeEnd = end === sourceRange.end
-      ? graphemes.length
-      : graphemeIndexByStart.get(end);
-    if (graphemeStart == null || graphemeEnd == null || graphemeEnd <= graphemeStart) {
-      fail('invalid-shaped-cluster-range', 'shaped cluster boundaries must align to canonical grapheme boundaries');
-    }
-    const glyphIndices = glyphIndicesByCluster.get(start);
-    if (!glyphIndices || !glyphIndices.length) {
-      fail('empty-shaped-cluster', 'every shaped cluster must reference at least one glyph');
-    }
-    return {
-      start, end,
-      text: graphemes.slice(graphemeStart, graphemeEnd).map((item) => item.text).join(''),
-      graphemeStart, graphemeEnd,
-      glyphIndices
-    };
-  });
-
-  const clusterByStart = new Map(clusters.map((cluster, index) => [cluster.start, { cluster, index }]));
-  const shapedGlyphs = glyphs.map((glyph) => {
-    const entry = clusterByStart.get(glyph.cluster);
-    if (!entry) fail('orphan-shaped-glyph', 'glyph references a missing shaped cluster');
-    return {
-      ...glyph,
-      sourceRange: { start: entry.cluster.start, end: entry.cluster.end },
-      clusterIndex: entry.index
-    };
-  });
-
-  return { clusters, glyphs: shapedGlyphs };
-}
-
-function deepFreeze(value, seen) {
-  if (!value || typeof value !== 'object') return value;
-  const visited = seen || new Set();
-  if (visited.has(value)) return value;
-  visited.add(value);
-  for (const key of Object.keys(value)) deepFreeze(value[key], visited);
-  return Object.freeze(value);
-}
-
-/**
- * Create an immutable ShapedRun from actual HarfBuzz output plus canonical
- * itemizer graphemes. Offsets and clusters use absolute document UTF-16 units;
- * advances and bounds remain in font units.
- */
-function createShapedRun(input) {
-  const data = requireRecord(input, 'invalid-shaped-run', 'ShapedRun input');
-  const id = requireString(data.id, 'invalid-shaped-run', 'ShapedRun.id');
-  const text = requireString(data.text, 'invalid-shaped-run', 'ShapedRun.text');
-  assertWellFormedUtf16(text, 'ShapedRun.text');
-  const sourceRange = normalizeSourceRange(data.sourceRange, text);
-  const font = normalizeFont(data.font);
-  const shaping = normalizeShaping(data.shaping);
-  const graphemes = normalizeGraphemes(data.graphemes, sourceRange, text);
-  const normalizedGlyphs = normalizeGlyphs(data.glyphs, sourceRange, graphemes, shaping.direction);
-  const advance = normalizedGlyphs.glyphs.reduce((sum, glyph) => ({
-    x: sum.x + glyph.xAdvance,
-    y: sum.y + glyph.yAdvance
-  }), { x: 0, y: 0 });
-  if (!Number.isFinite(advance.x) || !Number.isFinite(advance.y)) {
-    fail('invalid-run-advance', 'sum of shaped glyph advances must remain finite');
-  }
-
-  if (data.diagnostics != null && !Array.isArray(data.diagnostics)) {
-    fail('invalid-shaped-run-diagnostic', 'diagnostics must be an array when supplied');
-  }
-  const diagnostics = (data.diagnostics || []).map((item, index) => {
-    const diagnostic = requireRecord(item, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + ']');
-    return {
-      code: requireString(diagnostic.code, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + '].code'),
-      message: requireString(diagnostic.message, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + '].message'),
-      ...(diagnostic.severity != null ? { severity: requireString(diagnostic.severity, 'invalid-shaped-run-diagnostic', 'diagnostics[' + index + '].severity') } : {})
-    };
-  });
-
-  const shapedRun = deepFreeze({
-    kind: 'ShapedRun',
-    contractVersion: SHAPED_RUN_CONTRACT_VERSION,
-    id,
-    sourceRange,
-    text,
-    font,
-    shaping,
-    graphemes,
-    clusters: normalizedGlyphs.clusters,
-    glyphs: normalizedGlyphs.glyphs,
-    advance,
-    diagnostics
-  });
-  canonicalShapedRuns.add(shapedRun);
-  return shapedRun;
-}
-
-/**
- * First cluster whose logical source start is >= offset.
- * ShapedRun.clusters is always stored in ascending source order.
- */
-function lowerBoundClusterStart(clusters, offset) {
-  let low = 0;
-  let high = clusters.length;
-  while (low < high) {
-    const middle = low + ((high - low) >> 1);
-    if (clusters[middle].start < offset) low = middle + 1;
-    else high = middle;
-  }
-  return low;
-}
-
-/**
- * First visual glyph index outside the logical interval boundary.
- * HarfBuzz glyph clusters are monotone: ascending for LTR, descending for RTL.
- */
-function lowerBoundGlyphCluster(glyphs, offset, direction) {
-  let low = 0;
-  let high = glyphs.length;
-  while (low < high) {
-    const middle = low + ((high - low) >> 1);
-    const cluster = glyphs[middle].cluster;
-    const beforeBoundary = direction === 'rtl' ? cluster >= offset : cluster < offset;
-    if (beforeBoundary) low = middle + 1;
-    else high = middle;
-  }
-  return low;
-}
-
-/**
- * Slice an already-shaped run without reshaping. Both edges must be output
- * cluster boundaries, not merely EGC boundaries: a ligature may own several
- * adjacent EGCs and may not be divided between line/word items.
- *
- * BOT/EOT remain those of the original shaping context. A later line-break
- * decision must call the shaper again with line-specific BOT/EOT.
- */
-function sliceShapedRun(shapedRun, start, end, sliceId) {
-  if (!isShapedRun(shapedRun)) {
-    fail('not-shaped-run', 'sliceShapedRun requires an immutable ShapedRun');
-  }
-  requireInteger(start, shapedRun.sourceRange.start, 'invalid-shaped-slice', 'slice.start');
-  requireInteger(end, shapedRun.sourceRange.start + 1, 'invalid-shaped-slice', 'slice.end');
-  if (end <= start || start < shapedRun.sourceRange.start || end > shapedRun.sourceRange.end) {
-    fail('invalid-shaped-slice', 'slice range must be a non-empty subrange of the source ShapedRun');
-  }
-  if (!isShapedClusterBoundary(shapedRun, start) || !isShapedClusterBoundary(shapedRun, end)) {
-    fail('slice-splits-shaped-cluster',
-      'ShapedRun slices are legal only at output cluster boundaries; an EGC boundary inside a ligature is insufficient');
-  }
-
-  const firstCluster = lowerBoundClusterStart(shapedRun.clusters, start);
-  const afterCluster = lowerBoundClusterStart(shapedRun.clusters, end);
-  const clusters = shapedRun.clusters.slice(firstCluster, afterCluster);
-  if (!clusters.length || clusters[0].start !== start || clusters[clusters.length - 1].end !== end) {
-    fail('incomplete-shaped-slice', 'selected clusters do not cover the complete requested slice');
-  }
-  const graphemeStart = clusters[0].graphemeStart;
-  const graphemeEnd = clusters[clusters.length - 1].graphemeEnd;
-  const graphemes = shapedRun.graphemes.slice(graphemeStart, graphemeEnd);
-  const direction = shapedRun.shaping.direction;
-  const glyphStart = direction === 'rtl'
-    ? lowerBoundGlyphCluster(shapedRun.glyphs, end, direction)
-    : lowerBoundGlyphCluster(shapedRun.glyphs, start, direction);
-  const glyphEnd = direction === 'rtl'
-    ? lowerBoundGlyphCluster(shapedRun.glyphs, start, direction)
-    : lowerBoundGlyphCluster(shapedRun.glyphs, end, direction);
-  const glyphs = shapedRun.glyphs.slice(glyphStart, glyphEnd);
-  if (!glyphs.length) fail('empty-shaped-slice', 'selected shaped clusters contain no glyphs');
-
-  const sourceOffset = start - shapedRun.sourceRange.start;
-  const text = shapedRun.text.slice(sourceOffset, end - shapedRun.sourceRange.start);
-  return createShapedRun({
-    id: sliceId == null
-      ? shapedRun.id + '#slice:' + start + '-' + end
-      : requireString(sliceId, 'invalid-shaped-slice', 'sliceId'),
-    text,
-    sourceRange: { ...shapedRun.sourceRange, start, end },
-    font: shapedRun.font,
-    shaping: shapedRun.shaping,
-    graphemes,
-    glyphs,
-    diagnostics: shapedRun.diagnostics
-  });
-}
-
-function isDeepFrozen(value, seen = new Set()) {
-  if (!value || typeof value !== 'object') return true;
-  if (seen.has(value)) return true;
-  seen.add(value);
-  if (!Object.isFrozen(value)) return false;
-  return Object.keys(value).every((key) => isDeepFrozen(value[key], seen));
-}
-
-function isShapedRun(value) {
-  if (!(value && value.kind === 'ShapedRun' &&
-      value.contractVersion === SHAPED_RUN_CONTRACT_VERSION &&
-      Array.isArray(value.glyphs) &&
-      Array.isArray(value.clusters))) return false;
-  // Runs created here were fully frozen and verified at construction. External
-  // objects retain the original recursive immutability validation on first use.
-  return canonicalShapedRuns.has(value) || isDeepFrozen(value);
-}
-
-/** Only output-cluster boundaries are legal shaping/line-break slice points. */
-function isShapedClusterBoundary(shapedRun, absoluteOffset) {
-  if (!isShapedRun(shapedRun) || !Number.isSafeInteger(absoluteOffset)) return false;
-  if (absoluteOffset === shapedRun.sourceRange.start || absoluteOffset === shapedRun.sourceRange.end) return true;
-  const index = lowerBoundClusterStart(shapedRun.clusters, absoluteOffset);
-  return (index < shapedRun.clusters.length &&
-      shapedRun.clusters[index].start === absoluteOffset) ||
-    (index > 0 && shapedRun.clusters[index - 1].end === absoluteOffset);
-}
-
-module.exports = {
-  SHAPED_RUN_CONTRACT_VERSION,
-  CLUSTER_LEVEL,
-  createShapedRun,
-  sliceShapedRun,
-  isShapedRun,
-  isShapedClusterBoundary
 };
 
 };
@@ -27590,26 +21234,24 @@ __modules["src/ui/page-model-transport.js"] = function (require, module, exports
 // src/ui/page-model-transport.js — קבלת PageModel מעבר לגבול ה-Worker (שלב 8 פרוסה 2, §4.3)
 'use strict';
 
-const { geometryHashOf, contentHashOf } = require('../engine/core/page-model-hashes');
-
 /**
  * **חוזה ההעברה (pagemodel-transport-v1):** ה-Worker בונה את המודל וסריאליזציית
  * הפרוטוקול (ui-result-v1) עוטפת אותו עם גרסת transport + ההאשים שחושבו
  * בצד הבונה. structured clone מפשיר הקפאות — לכן הצד המקבל:
- *   1. מאמת סכמה, גרסאות ומבנה בסיסי.
- *   2. מאמת שההאשים שבמעטפת תואמים לאלה שעל המודל.
- *   3. מחשב מחדש geometryHash ו-contentHash מהתוכן שהתקבל, כדי לזהות שינוי
- *      בשדות הגאומטריים ובתוכן/נתוני הגליפים לאחר יצירת המודל.
- *   4. מקפיא מחדש עמוק ומדווח מדדי העברה.
+ *   1. מאמת סכמה וגרסאות (transport/schema/pages).
+ *   2. מאמת שההאשים שבמעטפת תואמים לאלה שעל המודל (שלמות ההעברה).
+ *   3. מקפיא מחדש עמוק (אותה סמנטיקה כמו הבונה).
+ *   4. מדווח מדדי העברה (גודל מוערך, עמודים, שורות).
  *
- * האימות מחשב fingerprints בלבד: הוא אינו מפעיל עימוד, מדידה, shaping או
- * החלטת layout שנייה. שני הצדדים צורכים את אותו חוזה hashes משותף.
+ * אין כאן ולידציה גאומטרית מחדש ואין חישוב מחדש — ההאשים הם הוכחת
+ * השלמות שחושבה פעם אחת בצד המנוע; ה-UI אינו מפעיל מנוע שני.
  */
 
 const TRANSPORT_VERSION = 'pagemodel-transport-v1';
 const MODEL_SCHEMA = 'pagemodel-v1';
 
-/** הקפאה עמוקה — ראי ההתנהגות של deepFreeze בבונה (core/page-model.js). */
+/** הקפאה עמוקה — ראי ההתנהגות של deepFreeze בבונה (core/page-model.js);
+ * מוקדת כאן כי חבילת ה-UI אינה כוללת את מנוע הפייפליין. */
 function deepFreeze(value) {
   if (value === null || typeof value !== 'object') return value;
   if (Object.isFrozen(value)) return value;
@@ -27631,9 +21273,6 @@ function receivePageModel(envelope) {
   if (envelope.transport !== TRANSPORT_VERSION) {
     return { ok: false, error: `transport-version-mismatch:${envelope.transport}` };
   }
-  if (envelope.schema !== MODEL_SCHEMA) {
-    return { ok: false, error: `envelope-schema-mismatch:${envelope.schema}` };
-  }
   const model = envelope.model;
   if (!model || typeof model !== 'object') return { ok: false, error: 'no-model' };
   if (model.schema !== MODEL_SCHEMA) {
@@ -27642,30 +21281,15 @@ function receivePageModel(envelope) {
   if (!Array.isArray(model.pages) || !model.pages.length) {
     return { ok: false, error: 'no-pages' };
   }
-  if (typeof model.geometryHash !== 'string' || model.geometryHash.length !== 64 ||
-      typeof model.contentHash !== 'string' || model.contentHash.length !== 64) {
-    return { ok: false, error: 'missing-or-invalid-hashes' };
-  }
-  // First compare the envelope claims with the hashes carried by the model.
+  // שלמות: ההאשים שחושבו בצד הבונה חייבים להתאים לאלה שעל המודל שהגיע
   if (envelope.geometryHash !== model.geometryHash || envelope.contentHash !== model.contentHash) {
-    return { ok: false, error: 'envelope-hash-mismatch' };
+    return { ok: false, error: 'hash-mismatch' };
   }
-  // Then recompute both canonical fingerprints over the received payload.
-  let actualGeometryHash;
-  let actualContentHash;
-  try {
-    actualGeometryHash = geometryHashOf(model);
-    actualContentHash = contentHashOf(model);
-  } catch (error) {
-    return {
-      ok: false,
-      error: 'hash-verification-failed:' + (error && error.message ? error.message : String(error))
-    };
+  if (typeof model.geometryHash !== 'string' || model.geometryHash.length < 16 ||
+      typeof model.contentHash !== 'string' || model.contentHash.length < 16) {
+    return { ok: false, error: 'missing-hashes' };
   }
-  if (actualGeometryHash !== model.geometryHash || actualContentHash !== model.contentHash) {
-    return { ok: false, error: 'model-hash-mismatch' };
-  }
-  // structured clone מפשיר; המודל שוב immutable בצד הצרכן.
+  // הקפאה מחדש — structured clone מפשיר; המודל שוב immutable בצד הצרכן
   deepFreeze(model);
   const lines = model.pages.reduce((a, p) => a + (p.lines ? p.lines.length : 0), 0);
   return {
@@ -27681,51 +21305,6 @@ function receivePageModel(envelope) {
 }
 
 module.exports = { TRANSPORT_VERSION, receivePageModel, deepFreeze };
-
-};
-__modules["src/engine/core/page-model-hashes.js"] = function (require, module, exports) {
-// src/engine/core/page-model-hashes.js — canonical PageModel hash contract (engine + UI receiver)
-'use strict';
-
-const { sha256Hex } = require('../assets/hash256');
-
-/** geometryHash — deterministic fingerprint of final geometry only (no text). */
-function geometryHashOf(model) {
-  const canon = model.pages.map(p => ({
-    i: p.index, t: p.type,
-    l: p.lines.map(l => l.projected === false ? '∅' : `${l.id}:${l.x},${l.y},${l.w},${l.h},${l.baselineY}:${(l.words || []).map(w => `${Math.round(w.x * 10) / 10}+${Math.round(w.w * 10) / 10}`).join(',')}`),
-    fn: p.footnotes.map(n => `${n.noteId}:${n.x},${n.y},${n.w},${n.h}`),
-    sn: p.sideNotes.map(s => `${s.noteId}:${s.x},${s.yTop},${s.heightPx}`),
-    d: (p.decorations || []).map(d => `${d.kind}:${d.x},${d.y},${d.w},${d.h}`)
-  }));
-  return sha256Hex(JSON.stringify(canon));
-}
-
-/** contentHash — final model text in reading order plus glyph-level typography data. */
-function contentHashOf(model) {
-  const canon = model.pages.map(p => ({
-    i: p.index,
-    l: p.lines.map(l => {
-      const text = (l.words || []).map(w => w.text).join('\u00A7');
-      // Keep the legacy canonical value exactly when neither line nor word
-      // glyph sidecars are present; shaped word placement is integrity-protected.
-      const wordTypography = (l.words || [])
-        .filter(word => word && word.typography)
-        .map(word => ({ text: word.text, typography: word.typography }));
-      if (!l.typography && !wordTypography.length) return text;
-      return {
-        text,
-        ...(l.typography ? { typography: l.typography } : {}),
-        ...(wordTypography.length ? { wordTypography } : {})
-      };
-    }),
-    fn: p.footnotes.map(n => `${n.marker || ''}§${n.text}`),
-    sn: p.sideNotes.map(s => s.text)
-  }));
-  return sha256Hex(JSON.stringify(canon));
-}
-
-module.exports = { geometryHashOf, contentHashOf };
 
 };
 __modules["src/ui/caret-map.js"] = function (require, module, exports) {
@@ -27977,513 +21556,6 @@ module.exports = {
 };
 
 };
-__modules["src/engine/assets/asset-resolver.js"] = function (require, module, exports) {
-// src/engine/assets/asset-resolver.js — Asset Resolver יחיד (שלב 3, §3.1-1/2/11)
-'use strict';
-
-/**
- * **חוזה:** spec/00_CURRENT_ENGINE_COMPLETION_PLAN.md §3.1 — "להגדיר Asset Resolver
- * יחיד לנכסי מסמך: קובץ מקומי, ZIP, תיקייה, מזהה פנימי או data source נתמך.
- * פתרון שם/נתיב חייב להיות דטרמיניסטי ובטוח."
- *
- * **עקרונות:**
- * - **זהות content-addressed:** assetId = `ast-<kind>-<sha256(bytes)[:14]>` — אותם
- *   בתים ⇒ אותו מזהה, בכל סביבה ובכל ריצה (זהות בין ריצות מוכחת בבדיקות).
- * - **פתרון נתיב בטוח:** נורמליזציה אחידה, מניעת `..`/absolute/חוץ-שורש, הרשמת
- *   סיומות נתמכות בלבד. דחייה = אבחון מפורש {code, message, ref} — לא נעלם.
- * - **סביבת-אגנוסטיות:** אין fs/DOM כאן. מקורות חיצוניים (תיקייה/קובץ מקומי)
- *   מסופקים כ-provider — פונקציה שמחזירה בתים לפי נתיב מנורמל; ב-Node זו fs,
- *   בדפדפן File API — האחריות על הסביבה בקצה, ה-resolver טהור.
- * - **ZIP:** דרך zip-reader הקיים (אותו מנגנון כמו חבילת הפרויקט).
- * - **Worker transport:** סריאליזציה מפורשת לבתים + מזהים — אין העברת נתיב
- *   מקומי ואין גישה סמויה של ה-Worker למערכת הקבצים (§3.1-2).
- *
- * **מדידה:** measureImageMeta הקנוני (bytes אמיתיים — PNG/JPEG/GIF/BMP/WebP/SVG)
- * ממלא naturalWidth/Height/aspectRatio/orientation; fit/scale נפתרים מהאילוצים
- * של הפריט (widthPct/align) ב-measureItem של MeasureAPI.
- */
-
-const { sha256Hex } = require('./hash256');
-const { measureImageMeta } = require('./image-meta');
-
-/** סיות נתמכות — הרשימה שהמוצר תומך בה בפועל (inline-content + מרשם העיטורים). */
-const SUPPORTED_EXTENSIONS = Object.freeze(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg']);
-
-/** נורמליזציית נתיב: מאחדת / ו-\, מפרקת .. ו-., דוחה absolute וריק. מחזירה חלקים. */
-function normalizeRefPath(ref) {
-  if (typeof ref !== 'string' || !ref.trim()) return { ok: false, code: 'empty-ref', message: 'הפניית נכס ריקה' };
-  const raw = ref.trim().replace(/\\/g, '/');
-  if (raw.startsWith('/')) return { ok: false, code: 'absolute-path', message: `נתיב אבסולוטי אסור: ${ref}` };
-  if (/^[a-zA-Z]:/.test(raw)) return { ok: false, code: 'absolute-path', message: `כונן אבסולוטי אסור: ${ref}` };
-  if (raw.includes('\0')) return { ok: false, code: 'nul-in-path', message: 'תו NUL בנתיב' };
-  const parts = [];
-  for (const seg of raw.split('/')) {
-    if (seg === '' || seg === '.') continue;
-    if (seg === '..') return { ok: false, code: 'path-traversal', message: `נתיב חורג כלפי מעלה (path traversal): ${ref}` };
-    parts.push(seg);
-  }
-  if (!parts.length) return { ok: false, code: 'empty-ref', message: `הפניית נכס ריקה: ${ref}` };
-  const last = parts[parts.length - 1];
-  const dot = last.lastIndexOf('.');
-  const ext = dot > 0 ? last.slice(dot + 1).toLowerCase() : null;
-  return { ok: true, parts, normalized: parts.join('/'), ext };
-}
-
-function kindOfExt(ext) {
-  if (ext === 'svg') return 'svg';
-  return 'image';
-}
-
-class AssetResolver {
-  constructor(opts = {}) {
-    this._byId = new Map();       // assetId → asset record
-    this._byRef = new Map();      // ref (מנורמל) → assetId
-    this._providers = [];         // ספקי סביבה: (normalizedPath) → bytes|null
-    this.diagnostics = [];        // כל דחייה/שגיאה — מתועדת, לא שקטה
-    this._strict = opts.strict === true; // strict: דחייה ראשונה זורקת (בדיקות)
-  }
-
-  _diag(code, message, ref) {
-    const d = { code, message, ref: ref != null ? String(ref) : null };
-    this.diagnostics.push(d);
-    if (this._strict) { const e = new Error(`asset-resolver: ${code}: ${message}`); e.code = code; throw e; }
-    return { ok: false, ...d };
-  }
-
-  /** רישום בתים ישירות (מזהה פנימי / data source נתמך). מקור הסמכות לזהות. */
-  addBytes(ref, bytes, meta = {}) {
-    const norm = normalizeRefPath(ref);
-    if (!norm.ok) return this._diag(norm.code, norm.message, ref);
-    if (!bytes || !bytes.length) return this._diag('empty-bytes', 'נכס ללא בתים', ref);
-    if (norm.ext && !SUPPORTED_EXTENSIONS.includes(norm.ext)) {
-      return this._diag('unsupported-extension', `סיומת .${norm.ext} אינה נתמכת (נתמכות: ${SUPPORTED_EXTENSIONS.join('/')})`, ref);
-    }
-    const kind = kindOfExt(norm.ext || meta.format || 'image');
-    const assetId = `ast-${kind}-${sha256Hex(bytes).slice(0, 14)}`;
-    // רישום כפול של אותו תוכן תחת אותו ref — idempotent; תוכן שונה תחת אותו ref — דחייה מפורשת
-    const existingRef = this._byRef.get(norm.normalized);
-    if (existingRef != null) {
-      const existing = this._byId.get(existingRef);
-      if (existing && existing.assetId === assetId) return { ok: true, assetId, asset: existing, duplicate: true };
-      return this._diag('ref-conflict', `הפניה '${norm.normalized}' כבר ממופה לנכס אחר (${existingRef})`, ref);
-    }
-    let record = this._byId.get(assetId);
-    if (!record) {
-      const measured = kind === 'image' || kind === 'svg' ? measureImageMeta(bytes) : null;
-      if (measured && !measured.ok) {
-        this.diagnostics.push({ code: measured.code, message: measured.message, ref: norm.normalized, assetId });
-        // הנכס נרשם בכל זאת (לחשבונאות) עם מדידה שנכשלה — המדידה הכושלת היא האבחון; הפריט לא נעלם.
-        record = { assetId, kind, refs: [], bytes, meta: { ...meta }, measured: { ok: false, code: measured.code, message: measured.message } };
-      } else {
-        record = { assetId, kind, refs: [], bytes, meta: { ...meta }, measured: measured || null };
-      }
-      this._byId.set(assetId, record);
-    }
-    record.refs.push(norm.normalized);
-    this._byRef.set(norm.normalized, assetId);
-    return { ok: true, assetId, asset: record, duplicate: false };
-  }
-
-  /** מקור ZIP: כל הרשומות עם סיומת נתמכת נרשמות (שמות מנורמלים+מאובטחים). */
-  addZip(bytes) {
-    const { readZip } = require('../import/zip-reader');
-    const z = readZip(bytes);
-    if (!z.ok) return this._diag('zip-error', `קריאת ZIP נכשלה: ${z.error}`, null);
-    const results = { ok: true, registered: 0, rejected: [] };
-    for (const e of z.entries) {
-      const norm = normalizeRefPath(e.name);
-      if (!norm.ok) { results.rejected.push({ ref: e.name, code: norm.code }); this.diagnostics.push({ code: norm.code, message: norm.message, ref: e.name }); continue; }
-      const r = this.addBytes(norm.normalized, e.data, { source: 'zip' });
-      if (r.ok) results.registered++;
-      else results.rejected.push({ ref: e.name, code: r.code });
-    }
-    results.ok = results.rejected.length === 0;
-    return results;
-  }
-
-  /** מקור תיקייה/מערכת קבצים: ספק סביבתי מחזיר בתים לפי נתיב מנורמל. */
-  addProvider(fn) {
-    if (typeof fn !== 'function') return this._diag('bad-provider', 'ספק חייב להיות פונקציה', null);
-    this._providers.push(fn);
-    return { ok: true, providers: this._providers.length };
-  }
-
-  /** רישום מראש של רשימת נתיבים דרך הספקים (folder scan בצד הסביבה). */
-  addRefList(refs) {
-    if (!Array.isArray(refs)) return this._diag('bad-ref-list', 'רשימת הפניות אינה מערך', null);
-    const results = { ok: true, registered: 0, rejected: [] };
-    for (const ref of refs) {
-      const r = this.resolve(ref);
-      if (r.ok) results.registered++;
-      else results.rejected.push({ ref, code: r.code });
-    }
-    results.ok = results.rejected.length === 0;
-    return results;
-  }
-
-  /** פתרון הפנייה → נכס (רשום או דרך ספק). דטרמיניסטי: אותה הפנייה ⇒ אותו נכס. */
-  resolve(ref) {
-    const norm = normalizeRefPath(ref);
-    if (!norm.ok) return this._diag(norm.code, norm.message, ref);
-    const hit = this._byRef.get(norm.normalized);
-    if (hit != null) {
-      const asset = this._byId.get(hit);
-      return { ok: true, assetId: hit, asset, source: 'registered' };
-    }
-    // ספקים — לפי סדר רישום; הראשון שמחזיר בתים קובע (דטרמיניסטי)
-    for (const p of this._providers) {
-      let bytes = null;
-      try { bytes = p(norm.normalized); } catch (e) {
-        this.diagnostics.push({ code: 'provider-error', message: e && e.message, ref: norm.normalized });
-        continue;
-      }
-      if (bytes && bytes.length) {
-        const r = this.addBytes(norm.normalized, bytes, { source: 'provider' });
-        if (r.ok) return { ok: true, assetId: r.assetId, asset: r.asset, source: 'provider' };
-        return r;
-      }
-    }
-    return this._diag('not-found', `נכס לא נמצא: ${norm.normalized}`, ref);
-  }
-
-  /** לפי מזהה פנימי (הזהות הקנונית שנשמרת במודל). */
-  resolveById(assetId) {
-    const a = this._byId.get(String(assetId));
-    if (!a) return this._diag('unknown-asset-id', `מזהה נכס לא רשום: ${assetId}`, assetId);
-    return { ok: true, assetId: String(assetId), asset: a, source: 'id' };
-  }
-
-  /** מדידת נכס — החוזה של §3.1-3 (מחזיר את מה שנמדד, כולל כישלון מתועד). */
-  measure(assetIdOrRef) {
-    const r = String(assetIdOrRef).startsWith('ast-') ? this.resolveById(assetIdOrRef) : this.resolve(assetIdOrRef);
-    if (!r.ok) return r;
-    const a = r.asset;
-    if (!a.measured) return this._diag('not-measurable', `נכס מסוג ${a.kind} אינו תמונה למדידה`, assetIdOrRef);
-    return { ok: a.measured.ok, assetId: r.assetId, ...a.measured };
-  }
-
-  /** משלוח ל-Worker: בתים + מזהים בלבד — אין נתיבים מקומיים (§3.1-2). */
-  serializeForTransport(maxBytes = 64 * 1024 * 1024) {
-    const assets = [];
-    let total = 0;
-    // **שלב 4 מקטע ב׳ (הוראה §6 — אותן זהויות בשני הצדדים):**
-    // השיוול כולל גם את שמות הניווט היחסיים של המסמך (resourcePath כגון
-    // img/x.png) — אלו מזהי מסמך, לא נתיבי מערכת; בלי המפה הזו המודל בצד העובד לא יכל לפתור את התמונות לפי מקום המועד.
-    const refsOf = new Map();
-    for (const [ref, assetId] of this._byRef) {
-      if (String(ref).startsWith('transport/')) continue; // שמות פנימיים של ההעברה חוזרות — לא משודרים
-      if (!refsOf.has(assetId)) refsOf.set(assetId, []);
-      refsOf.get(assetId).push(ref);
-    }
-    for (const [assetId, a] of this._byId) {
-      total += a.bytes.length;
-      if (total > maxBytes) return this._diag('transport-limit', `חריגת תקרת העברה (${maxBytes} בתים)`, assetId);
-      const refs = refsOf.get(assetId);
-      assets.push({ assetId, kind: a.kind, bytes: a.bytes.slice(), ...(refs && refs.length ? { refs } : {}) });
-    }
-    return { ok: true, schema: 'asset-transport-v1', assets };
-  }
-
-  /** שחזור בצד ה-Worker — אותם מזיחים (content-addressed) ואותן מדיות.
-   * **תיקון ביקורת PR #22 (אימות שלמות transport):** המזהה המוצהר
-   * חייב להתאים לזהות המחושבת מחדש מהבתים (`ast-<kind>-<sha256[:14]>`).
-   * אין קבלת assetId מוצהר שאינו תואם לתוכן ואין התעלמות שקטה מהפער: כל דחייה
-   * נרשמת בדיאגנוסטיקה ובדו"ח transportReport; השאר הנכסים נרשמים כרגיל
-   * (הפריטים שנדחו יקבלו דחיית מדידה מפורשת במורדה—לא נעלמים).
-   * @param {object} msg — פלט serializeForTransport
-   * @param {{maxBytes?:number, strict?:boolean}} opts — תקרת העברה כוללת (ברירת מחדל 64MB, כמו בשילוח) */
-  static fromTransport(msg, opts = {}) {
-    const maxBytes = Number.isFinite(opts.maxBytes) ? opts.maxBytes : 64 * 1024 * 1024;
-    const r = new AssetResolver(opts);
-    if (!msg || msg.schema !== 'asset-transport-v1' || !Array.isArray(msg.assets)) {
-      r._diag('bad-transport', 'הודעת העברה שגויה (schema לא asset-transport-v1)', null);
-      r.transportReport = Object.freeze({ ok: false, registered: 0, rejected: Object.freeze([{ code: 'bad-transport' }]) });
-      return r;
-    }
-    let registered = 0;
-    let total = 0;
-    const rejected = [];
-    const seen = new Map(); // assetId → אורך בתים (לכידת כפילויות לאחר אימות)
-    for (const a of msg.assets) {
-      if (!a || typeof a.assetId !== 'string' || !a.assetId.startsWith('ast-')) {
-        rejected.push({ assetId: a && a.assetId, code: 'bad-asset-id' });
-        r.diagnostics.push({ code: 'bad-asset-id', message: 'מזהה נכס שגוי בהעברה', ref: a && a.assetId });
-        continue;
-      }
-      let bytes = a.bytes;
-      if (bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes); // ArrayBuffer גולמי → תצוגה
-      // תצוגות (Uint8Array/Buffer) נשמרות כמו שהן — האימות להלן קורא רק אורך ותוכן
-      if (!bytes || !bytes.length) {
-        rejected.push({ assetId: a.assetId, code: 'empty-bytes' });
-        r.diagnostics.push({ code: 'empty-bytes', message: `נכס ללא בתים בהעברה: ${a.assetId}`, ref: a.assetId });
-        continue;
-      }
-      // אימות שלמות: המזהה המוצהר מול הזהות המחושבת מהבתים
-      const m = /^ast-(image|svg)-([0-9a-f]{14})$/.exec(a.assetId);
-      const computed = m ? `ast-${m[1]}-${sha256Hex(bytes).slice(0, 14)}` : null;
-      if (!computed || computed !== a.assetId) {
-        rejected.push({ assetId: a.assetId, code: 'asset-id-mismatch', computed: computed || 'unparseable' });
-        r.diagnostics.push({ code: 'asset-id-mismatch', message: `מזהה מוצהר ${a.assetId} אינו תואם לתוכן (חושב ${computed})`, ref: a.assetId });
-        continue;
-      }
-      // כפילות: אותו מזהה שעבר אימות ואותו אורך בתים — idempotent; כפילות סותרת נמצאה ברומה על ידי אימות התוכן
-      const prevLen = seen.get(a.assetId);
-      if (prevLen != null) {
-        if (prevLen === bytes.length) { registered++; continue; }
-        rejected.push({ assetId: a.assetId, code: 'duplicate-id' });
-        r.diagnostics.push({ code: 'duplicate-id', message: `מזהה נכס כפול בהעברה: ${a.assetId}`, ref: a.assetId });
-        continue;
-      }
-      total += bytes.length;
-      if (total > maxBytes) {
-        rejected.push({ assetId: a.assetId, code: 'transport-limit', totalBytes: total, maxBytes });
-        r.diagnostics.push({ code: 'transport-limit', message: `חריעת תקרת העברה (${maxBytes} בתים) בנכס ${a.assetId}`, ref: a.assetId });
-        continue;
-      }
-      seen.set(a.assetId, bytes.length);
-      // format מהמזהה עצמו (מושגג כבר באימות) — הסוג שומר על זהות הנכס משני הצדדים.
-      // **מקטע ב׳:** רישום מחדש גם תחת שמות הנייוט המקוריים של המסמך
-      // (refs מהשיוול) — צד העובד מודד את התמונות לפי אותן נקודות עיגון בדיוק
-      // (אותו מדדר זיהות: מזהה-תוכן מהביתים).
-      const regRefs = (Array.isArray(a.refs) ? a.refs : []).filter(x => typeof x === 'string' && x && !String(x).startsWith('transport/'));
-      const addFirst = regRefs.length
-        ? r.addBytes(regRefs[0], bytes, { source: 'worker-transport', format: m[1] })
-        : r.addBytes(`transport/${a.assetId}`, bytes, { source: 'worker-transport', format: m[1] });
-      if (addFirst.ok) {
-        registered++;
-        for (const extra of regRefs.slice(1)) {
-          const alias = r.addBytes(extra, bytes, { source: 'worker-transport', format: m[1] });
-          if (!alias.ok) rejected.push({ assetId: a.assetId, ref: extra, code: alias.code });
-        }
-      } else {
-        rejected.push({ assetId: a.assetId, code: addFirst.code });
-      }
-    }
-    r.transportReport = Object.freeze({ ok: rejected.length === 0, registered, rejected: Object.freeze(rejected) });
-    return r;
-  }
-
-  /** איפוס אוסף נכסי המסמך כאשר פותחים/מנקים מסמך חדש. */
-  clear() {
-    this._byId.clear();
-    this._byRef.clear();
-    this._providers.length = 0;
-    this.diagnostics.length = 0;
-    this.transportReport = null;
-    return this;
-  }
-
-  /** סטטיסטיקה + אבחונים (לדוחות). */
-  stats() {
-    return { assets: this._byId.size, refs: this._byRef.size, providers: this._providers.length, diagnostics: this.diagnostics.length };
-  }
-
-  /** **שלב 7 (§21-10 — אינטגריטי נכסים):** מזהי הנכסים שנפתרו בפועל — קריאה
-   * בלבד, ממויגת (דטרמיניזם); ה-PageModel מאמת מולה שכל הפניה ב-LineModel נפתרה. */
-  resolvedAssetIds() {
-    return [...this._byId.keys()].sort();
-  }
-}
-
-module.exports = { AssetResolver, normalizeRefPath, SUPPORTED_EXTENSIONS };
-
-};
-__modules["src/engine/assets/image-meta.js"] = function (require, module, exports) {
-// src/engine/assets/image-meta.js — מדידת תמונות מבתים אמיתיים (שלב 3, §3.1-3)
-'use strict';
-
-/**
- * **חוזה:** spec/00_CURRENT_ENGINE_COMPLETION_PLAN.md §3.1-3 — "למדוד תמונות
- * לפי bytes/metadata אמיתיים, כולל width/height, orientation, aspect ratio,
- * fit/scale, גבולות ויחידות."
- *
- * פרסר כותרים בינארי טהור — **בלי DOM, בלי Image(), בלי decode מלא**: אותן
- * המידות ב-Node ובדפדפן בדיוק ביט-לביט (parity מבני מקור-אחד).
- *
- * **הפורמטים שהמוצר תומך בהם בפועל** (מקור: inline-content.js IMAGE_EXTENSIONS
- * לתמונות inline + מרשם העיטורים ל-SVG): PNG · JPEG · GIF · BMP · WebP.
- * רשימה זו אינה מורחבת על סמך הצהרה תיעודית — פורמט לא נתמך = אבחון מפורש.
- *
- * החזרה תמיד {ok, code?, ...}: פריט שלא ניתן למדוד אינו נעלם (§3.1-11).
- */
-
-const PNG_SIG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-const JPEG_SOI = [0xff, 0xd8, 0xff];
-
-function u16be(b, o) { return (b[o] << 8) | b[o + 1]; }
-function u16le(b, o) { return b[o] | (b[o + 1] << 8); }
-function u32be(b, o) { return ((b[o] << 24) | (b[o + 1] << 16) | (b[o + 2] << 8) | b[o + 3]) >>> 0; }
-function u32le(b, o) { return (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0; }
-function sigMatches(b, sig) { for (let i = 0; i < sig.length; i++) if (b[i] !== sig[i]) return false; return true; }
-function ascii(b, o, n) { let s = ''; for (let i = 0; i < n && o + i < b.length; i++) s += String.fromCharCode(b[o + i]); return s; }
-
-/** PNG: IHDR (חובה ראשון אחרי החתימה) — width/height/bitDepth/colorType/interlace. */
-function parsePng(b) {
-  if (b.length < 33) return { ok: false, code: 'png-truncated', message: 'PNG קצר מ-IHDR' };
-  if (ascii(b, 12, 4) !== 'IHDR') return { ok: false, code: 'png-no-ihdr', message: 'חסר IHDR ב-PNG' };
-  const width = u32be(b, 16);
-  const height = u32be(b, 20);
-  if (!width || !height) return { ok: false, code: 'png-zero-dims', message: 'מידות אפס ב-PNG' };
-  return { ok: true, format: 'png', width, height, bitDepth: b[24], colorType: b[25], interlace: b[28], orientation: 1, animated: hasPngActl(b) };
-}
-
-function hasPngActl(b) {
-  let off = 8;
-  while (off + 8 <= b.length) {
-    const len = u32be(b, off);
-    const type = ascii(b, off + 4, 4);
-    if (type === 'acTL') return true;
-    if (type === 'IDAT' || type === 'IEND') return false;
-    if (len > 0x7fffffff) return false;
-    off += 12 + len;
-  }
-  return false;
-}
-
-/** JPEG: סריקת סמנים עד SOS — SOF (מידות) + App1/Exif (orientation). */
-function parseJpeg(b) {
-  if (b.length < 4) return { ok: false, code: 'jpeg-truncated', message: 'JPEG קצר' };
-  let off = 2;
-  let dims = null, orientation = null;
-  while (off + 4 <= b.length) {
-    if (b[off] !== 0xff) { off++; continue; }
-    const marker = b[off + 1];
-    if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) { off += 2; continue; }
-    if (marker === 0xda) break; // SOS — המידות חייבות להופיע לפניו
-    if (marker === 0xff) { off++; continue; }
-    const segLen = u16be(b, off + 2);
-    if (segLen < 2 || off + 2 + segLen > b.length) return { ok: false, code: 'jpeg-bad-segment', message: 'מקטע JPEG שגוי ב-offset ' + off };
-    if ((marker >= 0xc0 && marker <= 0xc3) || (marker >= 0xc9 && marker <= 0xcb)) {
-      dims = { width: u16be(b, off + 7), height: u16be(b, off + 5), progressive: marker === 0xc2 || marker === 0xca };
-    }
-    if (marker === 0xe1 && orientation == null && ascii(b, off + 4, 4) === 'Exif') {
-      orientation = jpegExifOrientation(b, off + 10, off + 2 + segLen);
-    }
-    off += 2 + segLen;
-  }
-  if (!dims || !dims.width || !dims.height) return { ok: false, code: 'jpeg-no-sof', message: 'לא נמצא SOF עם מידות ב-JPEG' };
-  return { ok: true, format: 'jpeg', width: dims.width, height: dims.height, progressive: !!dims.progressive, orientation: orientation || 1 };
-}
-
-/** EXIF מינימלי: TIFF header (II/MM) → IFD0 → תג 0x0112. ערך לא-חוקי = null. */
-function jpegExifOrientation(b, tiffStart, end) {
-  if (tiffStart + 8 > end) return null;
-  const le = ascii(b, tiffStart, 2) === 'II';
-  const rd16 = (o) => (le ? u16le(b, o) : u16be(b, o));
-  const rd32 = (o) => (le ? u32le(b, o) : u32be(b, o));
-  if (rd16(tiffStart + 2) !== 42) return null;
-  const ifd = tiffStart + rd32(tiffStart + 4);
-  if (ifd + 2 > end) return null;
-  const count = rd16(ifd);
-  for (let i = 0; i < count; i++) {
-    const e = ifd + 2 + i * 12;
-    if (e + 12 > end) break;
-    if (rd16(e) === 0x0112) {
-      const v = rd16(e + 8);
-      return (v >= 1 && v <= 8) ? v : null;
-    }
-  }
-  return null;
-}
-
-function parseGif(b) {
-  if (b.length < 10) return { ok: false, code: 'gif-truncated', message: 'GIF קצר' };
-  const ver = ascii(b, 0, 6);
-  if (!/^GIF8[79]a$/.test(ver)) return { ok: false, code: 'gif-bad-version', message: 'חתימת GIF שגויה' };
-  const width = u16le(b, 6), height = u16le(b, 8);
-  if (!width || !height) return { ok: false, code: 'gif-zero-dims', message: 'מידות אפס ב-GIF' };
-  return { ok: true, format: 'gif', width, height, orientation: 1 };
-}
-
-function parseBmp(b) {
-  if (b.length < 26) return { ok: false, code: 'bmp-truncated', message: 'BMP קצר' };
-  const dibSize = u32le(b, 14);
-  let width, height;
-  if (dibSize >= 40) { width = u32le(b, 18) | 0; height = Math.abs(u32le(b, 22) | 0); }
-  else if (dibSize === 12) { width = u16le(b, 18); height = u16le(b, 20); }
-  else return { ok: false, code: 'bmp-bad-dib', message: 'DIB לא נתמך: ' + dibSize + ' בתים' };
-  if (!width || !height) return { ok: false, code: 'bmp-zero-dims', message: 'מידות אפס ב-BMP' };
-  return { ok: true, format: 'bmp', width, height, orientation: 1 };
-}
-
-function parseWebp(b) {
-  if (b.length < 30) return { ok: false, code: 'webp-truncated', message: 'WebP קצר' };
-  const chunk = ascii(b, 12, 4);
-  if (chunk === 'VP8 ') {
-    const f = 20;
-    if (b[f] !== 0x9d || b[f + 1] !== 0x01 || b[f + 2] !== 0x2a) return { ok: false, code: 'webp-bad-vp8', message: 'מסגרת VP8 שגויה' };
-    const w = (b[f + 6] | ((b[f + 7] & 0x3f) << 8)) & 0x3fff;
-    const h = (b[f + 8] | ((b[f + 9] & 0x3f) << 8)) & 0x3fff;
-    if (!w || !h) return { ok: false, code: 'webp-zero-dims', message: 'מידות אפס ב-WebP' };
-    return { ok: true, format: 'webp', width: w, height: h, orientation: 1 };
-  }
-  if (chunk === 'VP8L') {
-    if (b[20] !== 0x2f) return { ok: false, code: 'webp-bad-vp8l', message: 'חתימת VP8L שגויה' };
-    const bits = u32le(b, 21);
-    const w = (bits & 0x3fff) + 1;
-    const h = ((bits >> 14) & 0x3fff) + 1;
-    return { ok: true, format: 'webp', width: w, height: h, orientation: 1 };
-  }
-  if (chunk === 'VP8X') {
-    const canvasW = 1 + (b[24] | (b[25] << 8) | (b[26] << 16));
-    const canvasH = 1 + (b[27] | (b[28] << 8) | (b[29] << 16));
-    if (!canvasW || !canvasH) return { ok: false, code: 'webp-zero-dims', message: 'מידות קנבס אפס' };
-    return { ok: true, format: 'webp', width: canvasW, height: canvasH, orientation: 1 };
-  }
-  return { ok: false, code: 'webp-bad-chunk', message: 'מקטע WebP לא נתמך: ' + chunk };
-}
-
-/** SVG: מידות מ-width/height/viewBox בשורש (בלי DOM — ביטויים קבועים בלבד). */
-function parseSvg(b) {
-  let text;
-  if (typeof TextDecoder !== 'undefined') text = new TextDecoder('utf-8').decode(b);
-  else text = Buffer.from(b).toString('utf8');
-  const vb = text.match(/viewBox\s*=\s*["']\s*([-\d.eE]+)[\s,]+([-\d.eE]+)[\s,]+([-\d.eE]+)[\s,]+([-\d.eE]+)/);
-  const wAttr = text.match(/\bwidth\s*=\s*["']\s*([\d.]+)\s*(?:px)?["']/);
-  const hAttr = text.match(/\bheight\s*=\s*["']\s*([\d.]+)\s*(?:px)?["']/);
-  const width = wAttr ? Number(wAttr[1]) : (vb ? Number(vb[3]) : null);
-  const height = hAttr ? Number(hAttr[1]) : (vb ? Number(vb[4]) : null);
-  if (width == null || height == null || !isFinite(width) || !isFinite(height) || width <= 0 || height <= 0) {
-    return { ok: false, code: 'svg-no-dims', message: 'ל-SVG אין width/height/viewBox קבועים וחיוביים' };
-  }
-  return { ok: true, format: 'svg', width, height, orientation: 1 };
-}
-
-/**
- * measureImageMeta — המדידה הקנונית של מטא-נתוני תמונה מבתים.
- * @param {Uint8Array|Buffer} bytes
- * @returns {{ok:boolean, code?:string, message?:string, format?:string, width?:number, height?:number,
- *            orientation?:number, displayWidth?:number, displayHeight?:number, aspectRatio?:number,
- *            swapOrientation?:boolean, animated?:boolean}}
- */
-function measureImageMeta(bytes) {
-  if (!bytes || !bytes.length) return { ok: false, code: 'empty-bytes', message: 'נכס תמונה ריק (0 בתים)' };
-  const b = bytes;
-  let r;
-  if (sigMatches(b, PNG_SIG)) r = parsePng(b);
-  else if (sigMatches(b, JPEG_SOI)) r = parseJpeg(b);
-  else if (ascii(b, 0, 4) === 'GIF8') r = parseGif(b);
-  else if (ascii(b, 0, 2) === 'BM') r = parseBmp(b);
-  else if (ascii(b, 0, 4) === 'RIFF' && ascii(b, 8, 4) === 'WEBP') r = parseWebp(b);
-  else if (/^\s*(?:<\?xml[\s\S]{0,200}?\?>\s*)?<svg[\s>]/i.test(ascii(b, 0, 512))) r = parseSvg(b);
-  else return { ok: false, code: 'unsupported-format', message: 'פורמט תמונה לא נתמך (הנתמכים: PNG/JPEG/GIF/BMP/WebP/SVG עם מידות קבועות)' };
-  if (!r.ok) return r;
-  const swap = r.orientation >= 5;
-  const effW = swap ? r.height : r.width;
-  const effH = swap ? r.width : r.height;
-  return {
-    ok: true, format: r.format, width: r.width, height: r.height,
-    orientation: r.orientation,
-    displayWidth: effW, displayHeight: effH,
-    aspectRatio: effW / effH,
-    swapOrientation: swap,
-    animated: !!r.animated
-  };
-}
-
-module.exports = { measureImageMeta };
-
-};
 __modules["src/ui/inline-transport.js"] = function (require, module, exports) {
 throw new Error('bundle: module src/ui/inline-transport.js excluded from this bundle (by design — see tools/build-worker-bundle.js)');
 };
@@ -28516,14 +21588,9 @@ const { buildStandaloneHtml } = require('./html-export');
 const { renderModelPage } = require('./pagemodel-dom-renderer');
 const { PAGE_SIZES, MM_TO_PX } = require('../layout/page-templates');
 const { utf8Decode } = require('../import/zip-reader'); // פענוח UTF-8 סביבת-אגנוסטי (רשומות zip = Uint8Array)
-// **S74 (תיקון שורש גרסה 3, 26.11 — הקרנת מדיניות הניקוד לכותב ה-PDF):** מקור
-// יחיד לצד הייצוא — משקף את מדידת המנוע המאוחד (RC-M4: סימן משולב ב-advance 0
-// כש-_marks-advance=combined). ההקרנה ב-/W בלבד — הגליפים וה-hmtx המוטמע אינם
-// משתנים. הוחזר לפעולה לאחר שסביבת שער s74 תוקנה (דין וחשבון 26.11): בגרסה 2
-// השער מדד קונפליקט גופנים של סביבת הבדיקה (מודל במימוש-טבלה מול FrankReal
-// אמיתי בייצוא) — החיווט עצמו הוכח בטוח על 107 הסוויטות בריצת dac8df1.
-// **המורשת מוגנת:** legacy מודד ומצייר ב-hmtx מופרד (חוזה הייחוס) ואינו עובר
-// דרך המדיניות — נעילות המורשת לא נגעות.
+// **S74 (תיקון שורש — הקרנת מדיניות הניקוד לכותב ה-PDF):** מקור יחיד לצד
+// הייצוא — משקף את מדידת המנוע המאוחד (RC-M4: סימן משולב ב-advance 0).
+// ראה pdf-mark-policy.js; שער הרגרסיה s74 נועל את ההקרנה מול רוחב המודל.
 const { applyCombinedMarkPolicy } = require('./pdf-mark-policy');
 
 /** טעינה עצלה של נתיבי Node (מוגנת) — מחזירה null בסביבה בלי Buffer. */
@@ -28651,7 +21718,7 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
   try {
     const font = reg.profile;
     // **סדר הפעולות (תיקון שורש):** עימוד → הקרנה → מלאי מ**כל הטקסט שמצויר
-    // בפועל** (גוף+פסים+TOC+מרזב+גיליון+כותרות) → מצווץ → כתיבה.
+    // בפועל** (גוף+פסים+TOC+מרזב+גיליון+כותרות) → מצמום → כתיבה.
     // בעבר נבנה המלאי מטקסט המקור בלבד — וגרשיים נגזרים (גיליון כ״ב, תוויות
     // TOC) הושמטו בשקט מהגופן ⇒ אובדן תוכן בייצוא.
     const settings = {
@@ -28660,21 +21727,8 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
       'measure-impl': 'font-metrics'
     };
     const result = typeset(text, settings, { noRecommendations: true, ...(env || {}) });
-    // **S4.9:** פרופיל IMUD — הקרנה ממקרין ה-legacy (גיאומטריה מפורשת מהייחוס)
-    // **S71.1 (double-check — projection measurement consistency):** the
-    // projection must measure with the SAME impl that built the model
-    // (impl B — registered-font metrics). Until now projectDocument built
-    // itself a MeasureAPI(settings,'table') when no api was passed, so word
-    // x-positions followed the table while line breaks followed real font
-    // metrics: with Frank Ruhl Libre (the default font) 168 lines overflowed
-    // the column box in the exported PDF (up to 32.5px into the neighbouring
-    // column) and 97.8% of words diverged from the display (avg 111.8px) —
-    // display≠export, exactly the class EXT-13 closed for live↔export on the
-    // typeset side. resolveMeasureImpl = the same single source as pipeline;
-    // with no registered font it falls back to 'table' (previous behaviour).
-    const projected = result.legacyProfile
-      ? require('./legacy-projector').projectLegacyDocument(result, settings)
-      : projectDocument(result, settings, new MeasureAPI(settings, resolveMeasureImpl(settings)));
+    // המנוע המאוחד הוא היחיד — הקרנה דרך projectDocument (אין נתיב legacy-projector).
+    const projected = projectDocument(result, settings, new MeasureAPI(settings, resolveMeasureImpl(settings)));
     const drawnParts = [];
     for (const pg of projected.pages) {
       for (const ln of [...(pg.spanning ? pg.spanning.lines : []), ...pg.lines]) for (const w of ln.words) drawnParts.push(w.text);
@@ -28729,7 +21783,8 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
     }
 
     const pageSizeMm = pageMmOf(settings);
-    const fontForWriter = {
+    // **S74:** let — המדיניות מוחלת להלן בנתיב המאוחד (רוחבי הניקוד ב-/W מאופסים).
+    let fontForWriter = {
       subsetBytes: subset.bytes,
       widthsUnits: subset.widthsUnits,
       unitsPerEm: subset.unitsPerEm,
@@ -28967,21 +22022,30 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
           ? Math.abs(profile.descender) / profile.unitsPerEm : 0.2
       });
     }
-    // **S74 (גרסה 3):** בפרופיל המאוחד המדידה מאפסת ניקוד משולב (combined —
-    // pipeline קובע על ההגדרות הפנימיות) — הכותב מקרין את אותה החלטה ב-/W.
-    // המורשת (legacyProfile) מודדת ומציירת ב-hmtx מופרד כמו מנוע המקור
-    // (הוכח מהייחוס) — המדיניות אינה חלה עליה; נעילות המורשת שמורות.
-    const mp = result.legacyProfile ? (f) => f : applyCombinedMarkPolicy;
+    // **S74 (תיקון שורש — סמכות אחת למדידת ניקוד, 25.11):** המנוע המאוחד מודד
+    // סימנים משולבים ב-advance 0 ('_marks-advance=combined' — נקבע בתוך typeset
+    // על ההגדרות הפנימיות; RC-M4 ב-measure-api). ה-PDF מקרין את אותה החלטה:
+    // גליפי ניקוד ברוחב 0 במערך /W של כל גופן-כותב ⇒ רוחב המילה ב-PDF =
+    // רוחב המילה שהמודל תכנן.
+    fontForWriter = applyCombinedMarkPolicy(fontForWriter);
+    fontForWriter2 = applyCombinedMarkPolicy(fontForWriter2);
+    fontForWriter3 = applyCombinedMarkPolicy(fontForWriter3);
+    fontForWriter4 = applyCombinedMarkPolicy(fontForWriter4);
+    fontForWriter5 = applyCombinedMarkPolicy(fontForWriter5);
+    fontForWriter6 = applyCombinedMarkPolicy(fontForWriter6);
+    for (let i = 0; i < extraFonts.length; i++) {
+      extraFonts[i] = { ...extraFonts[i], font: applyCombinedMarkPolicy(extraFonts[i].font) };
+    }
     const bytes = writePdf({
       pages: projected.pages,
       pageSizeMm,
-      font: mp(fontForWriter),
-      font2: mp(fontForWriter2),
-      font3: mp(fontForWriter3),
-      font4: mp(fontForWriter4),
-      font5: mp(fontForWriter5),
-      font6: mp(fontForWriter6),
-      extraFonts: extraFonts.map(e => ({ ...e, font: mp(e.font) })),
+      font: fontForWriter,
+      font2: fontForWriter2,
+      font3: fontForWriter3,
+      font4: fontForWriter4,
+      font5: fontForWriter5,
+      font6: fontForWriter6,
+      extraFonts,
       settings,
       outline,
       tocLinks
@@ -29008,84 +22072,8 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
   }
 }
 
-function firstShapedPdfWordIssue(pages) {
-  let shapedWords = 0;
-  let shapedGlyphs = 0;
-  let outlinedGlyphs = 0;
-  const inspectWord = (word, pageIndex, lineId) => {
-    if (!word || !word.typography) return null;
-    shapedWords++;
-    const typography = word.typography;
-    if (typography.contractVersion !== 'page-word-typography-v1' ||
-        !Array.isArray(typography.segments) || !typography.segments.length ||
-        !Number.isSafeInteger(typography.glyphCount) || typography.glyphCount <= 0) {
-      return `invalid-word-typography:p${pageIndex}:${lineId}:${String(word.text || '')}`;
-    }
-    let count = 0;
-    let hasInk = false;
-    for (const segment of typography.segments) {
-      if (!segment || !Number.isFinite(segment.advancePx) || segment.advancePx < 0 ||
-          !Array.isArray(segment.shapedRuns) || !segment.shapedRuns.length) {
-        return `invalid-word-shaping-segment:p${pageIndex}:${lineId}`;
-      }
-      for (const run of segment.shapedRuns) {
-        if (!run || run.kind !== 'ShapedRun' || run.contractVersion !== 'shaped-run-v1' ||
-            !run.font || !Number.isSafeInteger(run.font.unitsPerEm) || run.font.unitsPerEm <= 0 ||
-            !Array.isArray(run.glyphs) || !run.glyphs.length) {
-          return `invalid-shaped-run:p${pageIndex}:${lineId}`;
-        }
-        for (const glyph of run.glyphs) {
-          if (!glyph || !Number.isSafeInteger(glyph.gid) || glyph.gid <= 0 ||
-              typeof glyph.outlinePath !== 'string' || glyph.outlinePath.length > 2 * 1024 * 1024 ||
-              !Number.isFinite(glyph.xAdvance) || !Number.isFinite(glyph.xOffset) ||
-              !Number.isFinite(glyph.yOffset) || !Number.isFinite(glyph.yAdvance)) {
-            return `shaped-glyph-outline-missing:p${pageIndex}:${lineId}:${String(word.text || '')}`;
-          }
-          count++;
-          shapedGlyphs++;
-          if (glyph.outlinePath.length) { hasInk = true; outlinedGlyphs++; }
-        }
-      }
-    }
-    if (count !== typography.glyphCount) {
-      return `word-glyph-count-mismatch:p${pageIndex}:${lineId}:${String(word.text || '')}`;
-    }
-    if (!hasInk) {
-      return `word-has-no-native-outline:p${pageIndex}:${lineId}:${String(word.text || '')}`;
-    }
-    return null;
-  };
-
-  for (const page of pages) {
-    const lines = [
-      ...(page.spanning ? page.spanning.lines : []),
-      ...(page.lines || [])
-    ];
-    for (const line of lines) {
-      for (const word of (line.words || [])) {
-        const issue = inspectWord(word, page.index, line.id);
-        if (issue) return { issue, shapedWords, shapedGlyphs, outlinedGlyphs };
-      }
-    }
-    for (const note of (page.footnotes || [])) {
-      for (const word of (note.words || [])) {
-        const issue = inspectWord(word, page.index, 'footnote');
-        if (issue) return { issue, shapedWords, shapedGlyphs, outlinedGlyphs };
-      }
-    }
-    for (const slot of (page.header && page.header.slots) || []) {
-      for (const word of (slot.words || [])) {
-        const issue = inspectWord(word, page.index, 'header');
-        if (issue) return { issue, shapedWords, shapedGlyphs, outlinedGlyphs };
-      }
-    }
-  }
-  return { issue: null, shapedWords, shapedGlyphs, outlinedGlyphs };
-}
-
 /**
  * **פרוסה 5 (§4 — PDF מה-PageModel בלבד):** הסרת העימוד השני מנתיב ה-PDF.
-
  * הכותב צורך את **אותו PageModel** שה-DOM וה-HTML צורכים — אין typeset,
  * אין Parser/Planner, אין מדידה, אין חלוקת הערות, אין החלטות מיקום: כל
  * x/y/baseline/גודל/מפתח-גופן/צבע/פעולות-דיו מגיעים מהמודל. הפונקציה עוסקת
@@ -29096,7 +22084,7 @@ function firstShapedPdfWordIssue(pages) {
  * @param {Uint8Array} fontBytes — גופן הייצוא (TTF) ל-/F1
  * @param {string} [fontName] — שם פרופיל הרישום
  */
-function exportPdfFromModel(model, settingsIn, fontBytes, fontName, assetResolver = null) {
+function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
   if (typeof Buffer === 'undefined') return { ok: false, error: 'no-buffer' }; // דפדפן — נתיב Node בלבד (מתועד)
   if (!model || model.schema !== 'pagemodel-v1' || !Array.isArray(model.pages) || !model.pages.length) {
     return { ok: false, error: 'model-required: נדרש PageModel תקין — אין נתיב עימוד חלופי בייצוא מהמודל' };
@@ -29124,40 +22112,8 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName, assetResolve
       footnotes: mp.footnotes || [],
       folio: mp.folio || null,
       header: mp.header || null,
-      decorations: (mp.decorations || []).filter(d => Array.isArray(d.pdfOps) && d.pdfOps.length),
-      images: mp.images || []
+      decorations: (mp.decorations || []).filter(d => Array.isArray(d.pdfOps) && d.pdfOps.length)
     }));
-    // PageModel images refer only to content-addressed assets. Resolve their
-    // original verified bytes from the same Worker AssetResolver used at layout;
-    // do not fetch paths or reconstruct image geometry during export.
-    const imageAssetsById = new Map();
-    for (const pg of pages) {
-      for (const image of (pg.images || [])) {
-        if (!image || image.assetId == null) {
-          return { ok: false, error: 'pdf-image-identity-required: תמונה ללא assetId במודל' };
-        }
-        const key = String(image.assetId);
-        if (imageAssetsById.has(key)) continue;
-        if (!assetResolver || typeof assetResolver.resolveById !== 'function') {
-          return { ok: false, error: 'pdf-image-assets-required: חסר AssetResolver לייצוא תמונות מהמודל' };
-        }
-        const resolved = assetResolver.resolveById(key);
-        if (!resolved || !resolved.ok || !resolved.asset || !resolved.asset.bytes) {
-          return { ok: false, error: 'pdf-image-asset-unresolved:' + key };
-        }
-        imageAssetsById.set(key, {
-          assetId: key,
-          bytes: resolved.asset.bytes,
-          measured: resolved.asset.measured || null
-        });
-      }
-    }
-    // A shaped PageModel must carry a native outline for every positioned glyph.
-    // The PDF writer must not silently switch back to Unicode re-shaping.
-    const shapedIntegrity = firstShapedPdfWordIssue(pages);
-    if (shapedIntegrity.issue) {
-      return { ok: false, error: 'glyph-outline-required:' + shapedIntegrity.issue };
-    }
     // ---- מלאי תווים מהטקסט שמצויר בפועל (מהמודל) ----
     const drawnParts = [];
     for (const pg of pages) {
@@ -29171,19 +22127,19 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName, assetResolve
     const f1Inventory = inventory.filter(ch => glyphIdOf(font, ch) !== 0);
     const subset = buildSubset(font, f1Inventory);
     if (!subset.ok) return { ok: false, error: `subset:${subset.error}` };
-    // **S74 (גרסה 3):** נתיב המודל הוא פרופיל מאוחד תמיד (PageModel ממוקם-
-    // מוחלט; המדידה combined מאפסת ניקוד) — המדיניות חלה על כל גופני הכותב
-    // שנבנים כאן (F1..F6 + משפחות): ה-/W משקף את החלטת המדידה, הגליפים
-    // וה-hmtx המוטמע אינם משתנים.
-    const mkFontRaw = (sub) => {
+    // **S74 (תיקון שורש — הקרנת מדיניות הניקוד):** נתיב המודל הוא נתיב המנוע
+    // המאוחד בלבד (pagemodel-v1), והמנוע המאוחד מודד סימנים משולבים ב-advance 0
+    // (RC-M4). כל גופן-כותב שנבנה כאן מקרין את אותה החלטה — גליפי ניקוד ברוחב 0
+    // ב-/W ⇒ רוחב המילה ב-PDF = רוחב המילה שהמודל תכנן. (שער s74 נועל זאת מול
+    // רוחב המילה ב-PageModel.)
+    const mkFont = (sub) => {
       const c2g = subsetNewCmap(sub);
-      return {
+      return applyCombinedMarkPolicy({
         subsetBytes: sub.bytes, widthsUnits: sub.widthsUnits, unitsPerEm: sub.unitsPerEm,
         cidOf: (ch) => { const g = c2g.get(ch); return g != null ? g : glyphIdOf(parseSubsetCache(sub), ch); },
         charToGidEntries: () => [...c2g.entries()]
-      };
+      });
     };
-    const mkFont = (sub) => applyCombinedMarkPolicy(mkFontRaw(sub));
     const fontForWriter = mkFont(subset);
     // ---- גופני-תפקידים מהמודל (window/heading/fnbody/margin) + משפחות רשודות ----
     // **Iteration-003 (תיקון שורש — תצוגה=ייצוא):** מילות המודל נושאות את
@@ -29292,18 +22248,12 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName, assetResolve
     const outline = (model.document && model.document.outline) || [];
     const tocLinks = (model.document && model.document.tocLinks) || [];
     const pageSizeMm = pageMmOf(settings);
-    let bytes;
-    try {
-      bytes = writePdf({
-        pages, pageSizeMm,
-        font: fontForWriter, font2: fontForWriter2, font3: fontForWriter3,
-        font4: fontForWriter4, font5: fontForWriter5, font6: fontForWriter6,
-        extraFonts, imageAssets: [...imageAssetsById.values()],
-        settings, outline, tocLinks
-      });
-    } catch (error) {
-      return { ok: false, error: 'pdf:' + (error && error.message ? error.message : String(error)) };
-    }
+    const bytes = writePdf({
+      pages, pageSizeMm,
+      font: fontForWriter, font2: fontForWriter2, font3: fontForWriter3,
+      font4: fontForWriter4, font5: fontForWriter5, font6: fontForWriter6,
+      extraFonts, settings, outline, tocLinks
+    });
     return {
       ok: true, bytes,
       info: {
@@ -29313,9 +22263,6 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName, assetResolve
         outlineItems: outline,
         tocLinkTargets: tocLinks.map(l => l.targetPage),
         tocLinkPages: tocLinks.map(l => l.page),
-        shapedWords: shapedIntegrity.shapedWords,
-        shapedGlyphs: shapedIntegrity.shapedGlyphs,
-        outlinedGlyphs: shapedIntegrity.outlinedGlyphs,
         fromPageModel: true
       }
     };
@@ -29701,827 +22648,455 @@ function applyCombinedMarkPolicy(fontForWriter) {
 module.exports = { COMBINING_MARK_RE, isCombiningMark, applyCombinedMarkPolicy };
 
 };
-__modules["src/engine/output/legacy-projector.js"] = function (require, module, exports) {
-// src/engine/output/legacy-projector.js — הקרנת עמודי פרופיל IMUD לגיאומטריה מפורשת.
+__modules["src/ui/imud-library.js"] = function (require, module, exports) {
+// src/ui/imud-library.js — ספריית נכסי IMUD בדפדפן (03.11, EXT-14)
 'use strict';
 
 /**
- * **S4.9:** מקרן ייעודי לעמודי legacy-imud-flow. כל שורה מקבלת מיקום מפורש
- * (x/y/baseline/מילים עם רוחב וגודל פר-מילה) — מותאם לחוזה של writePdf
- * (pages/lines/footnotes/folio/header) ול-pdf_rows של compare.py.
+ * טעינה עצלה של נכסי הפרויקט המקורי המוטמעים (ui/assets/imud/):
+ *  - imud-fonts.json — קטלוג 439 פונטי העדיפות (הומרו ל-TTF)
+ *  - shaar_main/sub/back, ornaments_up_down/left_right, section_dividers,
+ *    header_ornaments — עיצובי SVG (חיטוי ברישום)
+ *  - default_settings.json — לחצן «ברירות המחדל המקוריות»
  *
- * הגיאומטריה מקורה אחד: legacy-imud-flow (GEO/SZ) — מכויל מהייחוס.
+ * רישום דו-צדדי: asset-registry חי גם בחבילת ה-UI (רינדור תצוגה) וגם ב-Worker
+ * (עימוד/ייצוא) — כל פריט נרשם בשניהם. פונטים: FontFace לתצוגה + registerFont
+ * ב-Worker (מדידת font-metrics) + הבתים נשמרים לייצוא PDF.
  */
 
-const { GEO, SZ, parenCenterRaisePx } = require('../layout/legacy-imud-flow');
-// **S5.1:** מקור יחיד לגופן שורה לפי סוגה — כמו ה-DOM (renderLine). (השורה
-// בשדה hFam של הכותרות ה-inline משתמשת בזה — נדרש כאן.)
-// **S73:** hexColorToRgb — צבע פר-גופן מההגדרות (ברירת מחדל שחורה) לכל
-// הטקסט המוקרן: גוף/כותרות/שער/כותרות-עליונות/גיליון/הערות — כמו ה-DOM.
-const { lineFontFamily, hexColorToRgb } = require('./line-font');
-const { MeasureAPI, registeredFonts, resolveMeasureImpl } = require('../typography/measure-api');
-const { ornamentInk, parseSvgPaint, svgToPdfOps } = require('../decoration/ornament-ink'); // **EXT-4:** הדיו — מקור יחיד
+const { registerAssets } = require('../engine/decoration/asset-registry');
+const { importImudSettings } = require('../engine/core/legacy-settings-map');
+const { getSettingDefs } = require('../engine/core/settings-registry');
 
-const COL_R = { x: GEO.COL_R_X, w: GEO.COL_W };
-const COL_L = { x: GEO.COL_L_X, w: GEO.COL_W };
+const BASE = 'assets/imud';
+const DESIGN_FILES = {
+  'shaar-main': 'shaar_main.json',
+  'shaar-sub': 'shaar_sub.json',
+  'shaar-back': 'shaar_back.json',
+  'orn-ud': 'ornaments_up_down.json',
+  'orn-lr': 'ornaments_left_right.json',
+  'divider': 'section_dividers.json',
+  'hdr-orn': 'header_ornaments.json'
+};
 
-/**
- * בסיס שורה לפי מודל תיבת השורה של CSS (half-leading + ascent).
- * **S5.1 (תצוגה=ייצוא, תיקון C2):** ה-descent כבר לא מוקשה 0.2 — המטריקה
- * האמיתית של הגופן (api.descentEm(); במימוש table הערך 0.20 כבריית המחדל,
- * זהה להתנהגות הקודמת). בגופן הגוף (גוטמן-רש"י, D=0.388) ההקשחה הסיטה את
- * כל שורות הגוף ב-PDF ב-~1.5px מהמודל של הדפדפן (ומהמקור).
- */
-function baselineOf(yTop, h, sizePt, ascentEm, descentEm = 0.2) {
-  const sizePx = sizePt * (96 / 72);
-  const contentH = (ascentEm + descentEm) * sizePx;
-  const half = Math.max(0, (h - contentH) / 2);
-  return yTop + half + ascentEm * sizePx;
-}
+function createImudLibrary(engine) {
+  const fontCatalog = { loaded: false, loading: null, families: [], byFamily: new Map(), bytesB64: new Map(), faces: new Set(), extended: [], extendedByFamily: new Map() };
+  const designs = new Map(); // collection → {loaded, items:[{id,name,box}], raw:Map|null, registered:Set}
+  const designLoads = new Map(); // **P-1:** collection → Promise (משיכת הקובץ המלא — single-flight)
+  const appliedFontsReady = new Map(); // family → Promise<ArrayBuffer|null>
 
-/** מיקום מילים RTL מיושרות ברוחב נתון. מחזיר words:[{text,x,w,sizePt,baselineY,fontKey?}] */
-function placeWords(words, api, xLeft, width, sizePt, align, baseY, opts = {}) {
-  // **S4.24 (מילים של תווי-כיוון בלבד — הדבקה לשכן):** כמו ברינדור ה-DOM —
-  // מילת RLM/LRM בלבד היא ברוחב אפס; הרווח שמפריד אותה משכנתה נכלל
-  // ברוחב השורה ומזיז את המרכוז (זהה לבאג שנמדד ב-DOM החי, עמ' 572).
-  // האינדקסים של markers/parenIdx/קצוות ממופים למילה המארחת.
-  const FORMAT_WORD_RE = /^[\u200e\u200f\u2066-\u2069\u202a-\u202e\u00ad]+$/;
-  let src = words, srcMap = null;
-  if (words.some((w) => typeof w === 'string' && FORMAT_WORD_RE.test(w))) {
-    const items = [];
-    for (let i = 0; i < words.length; i++) {
-      const w = words[i];
-      if (typeof w === 'string' && FORMAT_WORD_RE.test(w)) {
-        if (items.length) { items[items.length - 1].text += w; continue; }
-        items.push({ text: w, srcIdx: -1 });
-        continue;
+  async function fetchJson(path) {
+    const r = await fetch(path);
+    if (!r.ok) throw new Error(`imud-library: ${path} → ${r.status}`);
+    return r.json();
+  }
+
+  /** קטלוג הפונטים (443 משפחות מוטמעות + 1,315 משפחות הקטלוג המורחב).
+   * **S6.3 (בקשת משתמש מפורשת: "האם כל הגופנים יובאו מהגרסאות הקודמות?"):**
+   * קובצי ה-WOFF2 של הקטלוג המורחב (1,315 משפחות, 98MB) יובאו בפועל
+   * מהמקור (Green/V23) ל-fonts/ — כל משפחה נטענת ובת בחירה. TTF-ים
+   * נרשמים גם ב-Worker (מדידת אמת + ייצוא PDF); WOFF2-ים ב-FontFace
+   * לתצוגה בלבד (המדידה נופלת בשקיפות לטבלה — מנגנון _bindProfile).
+   * @returns {Promise<Array<{value:string,label:string,embedded:boolean}>>} */
+  async function loadFontCatalog() {
+    if (fontCatalog.loaded) return catalogEntries();
+    // **S5.2:** מטמון הבטחה בטיסה — שתי קריאות מקבילות (עלייה: פיקרים + ברירות
+    // מחדל) תפיקו טעינה אחת בלבד; בעבר נבדק רק loaded אחרי הפתרון ⇒ כל קריאה
+    // בזמן טעינה שיכפלה את ה-fetch (~400KB חינם). כישלון מנקה את המטמון —
+    // קריאה חוזרת תנסה שוב (לא תיתקע על הבטחה שנכשלה).
+    if (fontCatalog.loading) return fontCatalog.loading;
+    const p = (async () => {
+      const list = await fetchJson(`${BASE}/imud-fonts.json`);
+      fontCatalog.families = list.map(e => e.family);
+      for (const e of list) fontCatalog.byFamily.set(e.family, e.file);
+      fontCatalog.loaded = true;
+      // **S6.3:** הקטלוג המורחב — קובצי ה-WOFF2 יובאו ומוטמעים כעת בפועל;
+      // נטענים ל-byFamily כמו ה-TTF-ים (הכשלון אינו חוסם: הפיקרים יציגו
+      // את המוטמעות הבסיסיות בלבד, כמו קודם)
+      try {
+        const ext = await fetchJson(`${BASE}/fonts-extended.json`);
+        fontCatalog.extended = ext.map(e => e.family);
+        fontCatalog.extendedByFamily = new Map(ext.map(e => [e.family, e]));
+        for (const e of ext) {
+          if (!fontCatalog.byFamily.has(e.family)) fontCatalog.byFamily.set(e.family, e.file);
+        }
+      } catch (e) { fontCatalog.extended = []; fontCatalog.extendedByFamily = new Map(); }
+      return catalogEntries();
+    })();
+    fontCatalog.loading = p;
+    try {
+      return await p;
+    } finally {
+      fontCatalog.loading = null;
+    }
+  }
+
+  /** רשימת הפיקרים: מוטמעות ראשונות, אחר-כך הקטלוג המורחב — **S6.3:** קובצי
+   * ה-WOFF2 יובאו, ולכן כל המשפחות מוטמעות ונטענות; embedded=true לכולן. */
+  function catalogEntries() {
+    const entries = fontCatalog.families.map(f => ({ value: f, label: f, embedded: true }));
+    for (const f of fontCatalog.extended) {
+      entries.push({ value: f, label: f, embedded: true });
+    }
+    return entries;
+  }
+
+  /** **EXT-14 + S6.3: סיווג אמת למשפחה** — 'embedded' | 'unknown'. הקטלוג
+   * המורחב אינו "קטלוג-בלבד" עוד — קובציו יובאו והוא נטען כמו ה-TTF-ים;
+   * ההבחנה TTF(מדידה+ייצוא)/WOFF2(תצוגה) פנימית ל-loadFont לפי הסיומת. */
+  function fontStatus(family) {
+    const f = String(family || '').trim();
+    if (fontCatalog.byFamily.has(f)) return 'embedded';
+    return 'unknown';
+  }
+
+  /** טעינת פונט TTF: בתים ל-Worker (מדידה+ייצוא) + FontFace לתצוגה. @returns {Promise<ArrayBuffer|null>} */
+  async function loadFont(family) {
+    if (!fontCatalog.loaded) await loadFontCatalog();
+    const file = fontCatalog.byFamily.get(family);
+    if (!file) return null; // פונן מחוץ לספרייה — המערכת תיפול לגופן מערכת (מתועד)
+    if (appliedFontsReady.has(family)) return appliedFontsReady.get(family);
+    const p = (async () => {
+      const r = await fetch(`${BASE}/fonts/${file}`);
+      if (!r.ok) return null;
+      const buf = await r.arrayBuffer();
+      // בסיס 64 לייצוא HTML העצמאי (@font-face data-URI) — מחושב פעם אחת בטעינה
+      try {
+        const u8 = new Uint8Array(buf);
+        let bin = '';
+        const CH = 0x8000;
+        for (let i = 0; i < u8.length; i += CH) bin += String.fromCharCode.apply(null, u8.subarray(i, i + CH));
+        fontCatalog.bytesB64.set(family, btoa(bin));
+      } catch (e) { /* אין btoa (סביבה חריגה) — הייצוא ידלג על ההטמעה */ }
+      // 1) Worker: מדידת גופן אמיתי (measure-impl=font-metrics) + ייצוא PDF.
+      // **S6.3:** קובצי WOFF2 אינם ניתנים לפרסור ב-Worker (parseFont תומך
+      // sfnt בלבד) — דילוג מפורש על הרישום: תצוגה ב-FontFace (הדפדפן תומך
+      // WOFF2 מלידה), המדידה נופלת בשקיפות לטבלה (_bindProfile), והייצוא
+      // מדווח. TTF-ים נרשמים כרגיל.
+      // **S5.2:** רישום שמת עם ה-Worker (terminate/ביטול single-flight) — עדכון
+      // במפורש: הגופן לא נרשם במנוע. בלי זה ההבטחה היתה נפתרת ב"הכל בסדר"
+      // והמטמון (appliedFontsReady) היה מחזיר אותה לנצח ⇒ ייצוא תלוי/מדידה שגויה.
+      const isWoff2 = /\.woff2$/i.test(String(file || ''));
+      if (!isWoff2) {
+        try {
+          await engine.registerFont({ name: family, bytes: buf.slice(0) });
+        } catch (e) {
+          if (e && /worker-restarted|worker-error/.test(String(e.message))) throw e;
+          /* רישום נכשל (סיבה אחרת) — נמשיך ל-FontFace; הייצוא ידווח בבירור */
+        }
       }
-      const it = { text: w, srcIdx: i };
-      if (items.length === 1 && items[0].srcIdx === -1) { it.text = items[0].text + w; items[0] = it; }
-      else items.push(it);
+      // 2) תצוגה: @font-face חי
+      if (!fontCatalog.faces.has(family) && typeof FontFace !== 'undefined') {
+        try {
+          const face = new FontFace(family, buf);
+          await face.load();
+          document.fonts.add(face);
+          fontCatalog.faces.add(family);
+        } catch (e) { /* פונט תצוגה נכשל — הייצוא עדיין תקין */ }
+      }
+      return buf;
+    })();
+    appliedFontsReady.set(family, p);
+    // **S5.2:** הבטחה שנדחתה (restart/קריסה) מנקה את המטמון — קריאה חוזרת
+    // תרשום מחדש על ה-Worker שהוזרם (respawn) ולא תחזיר הבטחה מתה לנצח.
+    p.catch(() => { appliedFontsReady.delete(family); });
+    return p;
+  }
+
+  /** **03.11(ג):** גופן יציב לייצוא PDF כשהגופן המבוקש אינו בספרייה —
+   * עדיפות לגרסאות "פרנק רוהל דף" (המקבילה התורנית של Frank Ruhl Libre),
+   * ואז "פרנק רה רגיל", ולבסוף המשפחה הראשונה בקטלוג. */
+  async function loadDefaultExportFont() {
+    if (!fontCatalog.loaded) await loadFontCatalog();
+    const prefs = ['פרנק רוהל דפ רגיל', 'פרנק רה רגיל'];
+    for (const f of prefs) {
+      if (fontCatalog.byFamily.has(f)) {
+        const bytes = await loadFont(f);
+        if (bytes) return { family: f, bytes };
+      }
     }
-    src = items.map((it) => it.text);
-    srcMap = items.map((it) => it.srcIdx);
-    const remapArr = (a) => (Array.isArray(a) ? srcMap.map((oi) => (oi >= 0 ? !!a[oi] : false)) : a);
-    const remapSet = (s) => {
-      if (!s) return s;
-      const ns = new Set();
-      srcMap.forEach((oi, ni) => { if (oi >= 0 && s.has(oi)) ns.add(ni); });
-      return ns;
-    };
-    opts = {
-      ...opts,
-      markers: opts.markers ? remapArr(opts.markers) : opts.markers,
-      parenIdx: remapSet(opts.parenIdx),
-      parenStarts: remapArr(opts.parenStarts),
-      parenEnds: remapArr(opts.parenEnds)
-    };
-  }
-  const spaceW = api.measureTextWidth(' ', sizePt, 0);
-  // **S4.24 (רווח בגודל הסוגריים):** כמו spaceBetween בשבירה — הרווח בין
-  // שתי מילים ששני צדדיהן בתוך (...) נמדד/מוצג ב-10pt (סוגריים = span
-  // בגודל מוקטן גם לרווחים הפנימיים — הוכחת S4.15 מהייחוס). בלי זאת
-  // שורת-סוגריים רחבה מהטור בדיו וגולשת (נמדד: 4px, עמ' 403). justify
-  // מחלק את העודף בחלקים שווים **מעל** הרווחים הטבעיים — בדיוק כמו
-  // justify של CSS (התצוגה = הייצוא, כמו S4.23).
-  const parenSpaceW = api.measureTextWidth(' ', SZ.body + SZ.parenDelta, 0);
-  const placed = src.map((w, i) => {
-    if (typeof w === 'object') return w; // כבר ממוקם (חלון/סמן)
-    const isMarker = opts.markers && opts.markers[i];
-    const isParen = opts.parenIdx && opts.parenIdx.has(i);
-    // **EXT-17:** גודל מילת-הסמן בגוף — הגדרת המקור (note-marker-size, ברירת
-    // מחדל 8) ולא נגזרת מגודל הגוף.
-    const markerSz = opts.markerSize != null ? opts.markerSize : SZ.fnMarker;
-    const sz = isMarker ? markerSz : (isParen ? SZ.body + SZ.parenDelta : sizePt);
-    return { text: w, w: api.measureTextWidth(w, sz, 0), sizePt: sz, smallKind: isMarker ? 'marker' : (isParen ? 'paren' : null) };
-  });
-  const sumW = placed.reduce((a, w) => a + w.w, 0);
-  const gaps = Math.max(0, placed.length - 1);
-  let gapWs = null;
-  let naturalSum = 0;
-  if (gaps > 0) {
-    gapWs = new Array(gaps);
-    for (let g = 0; g < gaps; g++) {
-      const inParen = !!(opts.parenEnds && opts.parenStarts && opts.parenEnds[g] && opts.parenStarts[g + 1]);
-      gapWs[g] = inParen ? parenSpaceW : spaceW;
-      naturalSum += gapWs[g];
+    const first = fontCatalog.families[0];
+    if (first) {
+      const bytes = await loadFont(first);
+      if (bytes) return { family: first, bytes };
     }
-  }
-  if (align === 'justify' && gaps > 0 && sumW + naturalSum < width) {
-    const extra = (width - sumW - naturalSum) / gaps;
-    for (let g = 0; g < gaps; g++) gapWs[g] += extra;
-  }
-  const lineW = sumW + naturalSum;
-  let xRight;
-  // **S5.1 (תיקון C1 — align:'left'):** עד כאן לא היה ענף left — כל align
-  // שאינו center נצמד לקצה הימני של התיבה. הסלוט השמאלי של הכותרת העליונה
-  // צויר בצד הלא-נכון של תיבתו (+40px) ולא אצל השפה השמאלית כמו בייחוס.
-  if (align === 'center') xRight = xLeft + (width + lineW) / 2;
-  else if (align === 'left') xRight = xLeft + lineW;
-  else xRight = xLeft + width;
-  // **S4.26 (דיווח משתמש: "טקסט מוסגר ממוקם גבוה"):** סוגריים — מרכוז אנכי
-  // מול הטקסט הרגיל (parenCenterRaisePx, אותו מודל תיבת-שורה כמו ה-DOM);
-  // סמן-הערה נשאר מוגבה כמו super של המקור (0.33×גודל-השורה). בעבר שניהם
-  // קיבלו את הגבהת הסמן — הסוגריים ישבו ~5.3px גבוה מדי.
-  const parenRaise = parenCenterRaisePx(api.ascentEm(), sizePt, SZ.body + SZ.parenDelta);
-  const out = [];
-  let cursor = xRight;
-  for (let k = 0; k < placed.length; k++) {
-    const w = placed[k];
-    cursor -= w.w;
-    out.push({
-      text: w.text, x: cursor, w: w.w,
-      sizePt: w.sizePt,
-      baselineY: w.smallKind === 'paren' ? baseY - parenRaise
-        : (w.smallKind === 'marker' ? baseY - sizePt * (96 / 72) * 0.33 : baseY)
-    });
-    if (k < gaps) cursor -= gapWs[k];
-  }
-  return out;
-}
-
-/** רמות הפסים (ראי של HEADING_LEVEL_OF_BAND ב-dom-renderer — מקור יחיד סמנטי). */
-const HEADING_LEVEL_OF_BAND_LEGACY = { 'h0-title': 0, 'h2-siman': 2, 'h2-title': 2, 'h3-title': 3 };
-
-/** מפתח גופן לכותב ה-PDF לפי משפחה רשומה (S5.1 — תצוגה=ייצוא בגופנים).
- * **S73 (תצוגה=ייצוא בגופנים — תיקון שורש):** עד כאן כל משפחה שאינה
- * FRL/Hadassah/FrankReal קורסה ל-'heading' (DavidLibre-Bold) — וה-PDF צייר
- * את כל הכותרות בגופן אחד קבוע בלי קשר ל-heading-N-font שבהגדרות
- * (AlphaBlack/Lia Sgula/Alpha…) ואת כל שורות השער בגוף הטקסט — בזמן
- * שה-DOM מציג את המשפחות מההגדרות (דיווח משתמש: "הפונטים של הכותרות
- * שונה מבתצוגה"). כעת: המשפחה עצמה היא המפתח — וה-export-api בונה לה
- * תת-גופן ייעודי (/F7…). המשפחות הפונקציונליות נשארות על תפקידן:
- *  - FRL ⇒ 'fnbody' (/F5), Hadassah ⇒ 'margin' (/F6), FrankReal ⇒ 'window' (/F2)
- *    (אותו קובץ גופן כמו המדידה — בלי כפילויות תתי-גופן);
- *  - 'David Libre'/'DavidLibre-Bold' בהקשר **מודגש** (פסים/כותרות inline/
- *    שורות TOC — fontWeight 700 ב-DOM) ⇒ 'heading' (/F3 DavidLibre-Bold —
- *    כמו הייחוס וכמו ה-FontFace במשקל 700 של ה-UI).
- * קריאות בהקשר לא-מודגש (שורות שער ב-'David Libre' רגיל) משתמשות במשפחה
- * הגולמית — ראו gateLines להלן. */
-function fontKeyOf(fam) {
-  if (fam === 'Frank Ruhl Libre') return 'fnbody';
-  if (fam === 'Hadassah Friedlaender') return 'margin';
-  if (fam === 'FrankReal-Bold' || fam === 'FrankReal') return 'window';
-  if (fam === 'David Libre' || fam === 'DavidLibre-Bold') return 'heading';
-  return fam; // משפחה ייעודית מההגדרות — גופן משלה ב-PDF (S73)
-}
-
-/** הקרנת עמוד legacy בודד. */
-function projectLegacyPage(pg, settings, api, winApi, headingApi = null, fnApi = null, mnApi = null, fnOpts = null) {
-  // **S4.26:** headingApi — מדידת/ציור כותרות ב-DavidLibre-Bold (כמו הייחוס
-  // וכמו ה-DOM); בלי גופן רשום — גופן הגוף (התנהגות קודמת).
-  const hApi = headingApi || api;
-  // **S5.1:** גופן גוף-ההערה (FRL) והערות-הצד (Hadassah) — כמו המדידה
-  // במנוע וכמו ה-DOM. נפילה שקופה לגוף הטקסט כשהגופן אינו רשום.
-  if (!fnApi) fnApi = api;
-  if (!mnApi) mnApi = api;
-  // **S5.1:** מטמון API לפי משפחה רשומה — לכותרות פר-רמה ושורות TOC.
-  const famApiCache = new Map();
-  const apiFor = (fam) => {
-    if (!fam || !registeredFonts.has(fam)) return null;
-    if (!famApiCache.has(fam)) {
-      famApiCache.set(fam, new MeasureAPI({ 'body-font': fam, 'body-font-size-pt': SZ.body }, 'font-metrics'));
-    }
-    return famApiCache.get(fam);
-  };
-  // **EXT-17:** גדלי סמני ההערות מהגדרות המקור (ברירות המחדל: 8/8). ההגדרות
-  // של פרופיל IMUD מגיעות ב-_imudRaw (כמו readConfig של העימוד עצמו).
-  const imudSet = (settings && settings._imudRaw) || settings || {};
-  const projCfg = {
-    markerSize: Number(imudSet['note-marker-size']) || 8,
-    listingSize: Number(imudSet['note-listing-num-size']) || 8
-  };
-  const ascent = api.ascentEm();
-  const descent = api.descentEm(); // **S5.1:** המטריקה האמיתית — לא 0.2 מוקשה
-  const out = {
-    width: GEO.PAGE_W, height: GEO.PAGE_H,
-    contentBox: { top: GEO.FLOW_TOP, bottom: GEO.FLOW_BOTTOM },
-    columns: [COL_R, COL_L],
-    lines: [], footnotes: [], folio: null, header: null, spanning: null
-  };
-
-  const isSingle = pg.type === 'preface' || pg.type === 'toc-general' || pg.type === 'toc-detailed'
-    || pg.type.startsWith('shaar');
-  const col0 = isSingle ? { x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48 } : COL_R;
-
-  // **S73 (צבע פר-גופן מההגדרות):** צבעי הטקסט המוקרן — כמו ה-DOM.
-  // ברירת המחדל של כולם שחורה (הגדרות הרישום) — hexColorToRgb מחזיר null
-  // לשחור/חסר ⇒ אפס אופרטורי rg ב-PDF ואפס style.color ב-DOM (תצוגה=ייצוא).
-  // הגישה מילולית (settings['…']) — דרישת סורק ה-phantom-key (REQ-GOV-05).
-  const colorOf = (hex) => (hex ? hexColorToRgb(hex) : null);
-  const bodyColor = colorOf(settings['body-color']);
-  const headingColorOf = (lvl) => colorOf(settings[`heading-${lvl}-color`]);
-  const hdrColorOfS77 = (pos, side) => (pos === 'right' ? colorOf(settings[`header-${side}-right-color`])
-    : pos === 'center' ? colorOf(settings[`header-${side}-center-color`])
-      : colorOf(settings[`header-${side}-left-color`])); // **S77:** לפי הצד הפיזי — כמו ה-DOM
-  const folioColor = colorOf(settings['page-num-color']);
-  const bandColorOf = (b) => {
-    if (b.kind === 'endnote-title') return colorOf(settings['endnote-title-color']);
-    const lvl = HEADING_LEVEL_OF_BAND_LEGACY[b.kind];
-    if (lvl != null) return headingColorOf(lvl);
     return null;
-  };
-
-  // ---- פסים: סימן/כותרת h2/h0/h3 ממורכזים ברוחב הפס (552px) ----
-  // **S4.9:** פיצול למילים (פעולת טקסט נפרדת לכל מילה) — החילוץ מחזיר סדר לוגי,
-  // כמו שורות הכותרת בייחוס (לא הפוך כמו שורות ה-TOC החד-פעולתיות).
-  const bandLeft = GEO.COL_L_X;
-  const bandW = 2 * GEO.COL_W + 13.48;
-  for (const b of (pg.bands || [])) {
-    const lineHeightPx = b.lineHeightPx || b.h;
-    const baseY = baselineOf(b.y, lineHeightPx, b.sizePt, ascent, descent);
-    // **S5.1 (תצוגה=ייצוא — גופן פר-רמה כמו ה-DOM):** הפסים מרונדרים ב-DOM
-    // בגופן heading-N-font של הרמה; המקרן צייר הכול ב-DavidLibre קבוע.
-    // נפילה ל-hApi (התנהגות קודמת) כשהמשפחה אינה רשומה.
-    const bLvl = HEADING_LEVEL_OF_BAND_LEGACY[b.kind];
-    const bFam = bLvl != null ? (settings[`heading-${bLvl}-font`] || 'DavidLibre-Bold') : null;
-    const bApi = (bLvl != null && apiFor(bFam)) || hApi;
-    const words = placeWords(b.text.split(' '), bApi, bandLeft, bandW, b.sizePt, 'center', baseY);
-    const bKey = (bLvl != null && apiFor(bFam)) ? fontKeyOf(bFam) : 'heading';
-    // **S73:** צבע הפס מההגדרות (כותרת הערות ⇒ endnote-title-color; רמה ⇒ heading-N-color)
-    const bColor = bandColorOf(b);
-    for (const w of words) { w.fontKey = bKey; if (bColor) w.color = bColor; }
-    out.lines.push({
-      x: bandLeft, y: b.y, w: bandW, h: lineHeightPx, words, align: 'center',
-      kind: b.kind, level: null, isLast: false, sizePt: b.sizePt,
-      baselineY: baseY, tokenId: b.tokenId != null ? b.tokenId : null
-    });
   }
 
-  // ---- תוכן השערים (ממורכז; מילים נפרדות — חילוץ לוגי, כמו בייחוס) ----
-  // **D-89 (עיצוב שערים):** תיבת התוכן של כל שער לפי תיבות השער של המקור
-  // (resolveShaarBoxStyle/renderSubShaar/renderBackShaar) — שער-המשנה והשער
-  // האחורי ממורכזים בתיבה שמחוץ לפאנל האפור, לא ברוחב הפס המלא:
-  //  - sub:  left:15mm / right:95mm ⇒ מרכז 245.7px=184.2pt (נמדד בייחוס עמ' 7: 184 ✓)
-  //  - back: מרכז 548px=411pt (נמדד בייחוס עמ' 2: 411 ✓)
-  //  - main: left:15mm / right:15mm ⇒ מרכז 396.85px=297.6pt (נמדד עמ' 1: 298 ✓)
-  const MMpx = 96 / 25.4;
-  const GATE_BOX = {
-    'shaar-main': { x: 15 * MMpx, w: GEO.PAGE_W - 30 * MMpx },
-    'shaar-back': { x: 95 * MMpx, w: 377.98 },
-    'shaar-sub': { x: 15 * MMpx, w: GEO.PAGE_W - 110 * MMpx }
-  };
-  const gbox = GATE_BOX[pg.type] || { x: bandLeft, w: bandW };
-  for (const g of (pg.gateLines || [])) {
-    const h = g.sizePt * (96 / 72) * 1.3;
-    const baseY = baselineOf(g.y, h, g.sizePt, ascent, descent);
-    // **S4.9:** שורות המהדורה והמחבר בשער הראשי נכתבות אצל המקור כרצף אחד —
-    // החילוץ מחזיר אותן בסדר מילים הפוך. שאר שורות השער מפוצלות למילים (לוגי).
-    const singleOp = g.singleOp === true;
-    // **S73 (תצוגה=ייצוא בגופני השער — תיקון שורש):** עד כאן כל שורות השער
-    // נמדדו וצוירו בגוף הטקסט (/F1) בזמן שה-DOM מציג אותן במשפחות מההגדרות
-    // (shaar-title-font ⇒ Lia Sgula, f-sh-sub ⇒ Livorna…) — ה-PDF היה שונה
-    // מהתצוגה בכל עמודי השער. כעת: המדידה והציור בגופן השורה (g.font) —
-    // משפחה רשומה ⇒ תת-גופן ייעודי; בלתי-רשומה ⇒ גוף הטקסט (התנהגות
-    // קודמת, נפילה מתועדת). הערטיפה עצמה כבר נמדדה בגופן זה (wrapGate — S6.3).
-    const gApi = apiFor(g.font) || api;
-    const words = placeWords(singleOp ? [g.text] : g.text.split(' '), gApi, gbox.x, gbox.w, g.sizePt, 'center', baseY);
-    // **S73 (צבע):** צבע שורת השער מההגדרות (shaar-*-color; המודל מצרף
-    // אותו מ-gateLinesFor) — ברירת מחדל שחורה, כמו ה-DOM.
-    if (Array.isArray(g.color)) for (const w of words) w.color = g.color;
-    if (g.font) {
-      const gKey = apiFor(g.font) ? g.font : null;
-      for (const w of words) if (gKey && w.fontKey == null) w.fontKey = gKey;
+  /** רשימת עיצובי אוסף (מזהה+שם+תיבה) — **P-1 (S1-ו): טעינת אינדקס קל בלבד.**
+   * הבוררים בפאנל ההגדרות קוראים לכאן בעליית האפליקציה לכל האוספים; עד כאן
+   * נמשך הקובץ המלא (SVG-ב-JSON — 7.4MB סה״כ, 92% מהעברת העלייה — דוח
+   * PERFORMANCE_BASELINE P-1). כעת נמשך `<קובץ>.index.json` ({id,name,box}
+   * בלבד, ~68K סה״כ); ה-SVG עצמו נמשך על-ידי ensureDesign רק כשנבחר
+   * עיצוב בפועל (או על-ידי ערכת נושא באתחול — shaar בלבד).
+   * נפילה שקופה לאחור: אין אינדקס (404/שגיאה) ⇒ הקובץ המלא כמקודם —
+   * התנהגות זהה לספריות ישנות/חסרות אינדקס. */
+  async function listDesigns(collection) {
+    const meta = designs.get(collection);
+    if (meta && meta.loaded) return meta.items;
+    const file = DESIGN_FILES[collection];
+    if (!file) return [];
+    let items = null;
+    try {
+      const idx = await fetchJson(`${BASE}/${file.replace(/\.json$/, '.index.json')}`);
+      if (Array.isArray(idx)) items = idx.map(d => ({ id: d.id, name: d.name || d.id, box: d.box || null }));
+    } catch (e) { /* אין אינדקס — נפילה לקובץ המלא */ }
+    if (!items) {
+      const raw = await fetchJson(`${BASE}/${file}`);
+      items = (raw || []).map(d => ({ id: d.id, name: d.name || d.id, box: d.box || null }));
+      designs.set(collection, { loaded: true, items, raw: new Map((raw || []).map(d => [d.id, d])), registered: new Set() });
+      return items;
     }
-    out.lines.push({
-      x: gbox.x, y: g.y, w: gbox.w, h, words, align: 'center',
-      kind: 'gate', level: null, isLast: false, sizePt: g.sizePt, baselineY: baseY, tokenId: null
-    });
+    // מצב אינדקס: ה-raw (ה-SVG) טרם נטען — ensureDesign ימשוך את הקובץ המלא לפי דרישה.
+    designs.set(collection, { loaded: true, items, raw: null, registered: new Set() });
+    return items;
   }
 
-  // ---- טורי גוף ----
-  pg.columns.forEach((colLines, ci) => {
-    const col = ci === 0 ? col0 : COL_L;
-    for (const ln of colLines) {
-      // **S4.14 (יישור-עליון לכותרות inline — כמקור):** בייחוס גליפי הכותרת יושבים
-      // בראש השורה (עמ' 11: h5 גליפים ב-781.1 = ראש השורה 780.5 + 0.6px), והמרווח
-      // נשאר מתחת. מרכוז אנכי (baselineOf) הוריד את הגליפים 3.4px ותיבת 11.5pt
-      // חדרה למילת-החלון התלויה שמעליה (חפיפה 2.1px × 11 זוגות — H2 נכשל).
-      const baseY = ln.kind === 'heading'
-        ? ln.y + 0.6 + ascent * ln.sizePt * (96 / 72)
-        : baselineOf(ln.y, ln.heightPx, ln.sizePt, ascent, descent);
-      let words;
-      if (ln.kind === 'heading') {
-        // כותרת inline — מילים נפרדות (חילוץ לוגי, כמו בייחוס); **S5.1:**
-        // גופן הרמה מההגדרות (כמו ה-DOM) — לא DavidLibre קבוע לכל הרמות.
-        const joined = ln.words.join(' ');
-        const hFam = lineFontFamily(ln, settings) || 'DavidLibre-Bold';
-        const hApiLvl = apiFor(hFam) || hApi;
-        words = placeWords(joined.split(' '), hApiLvl, col.x, col.w, ln.sizePt, 'center', baseY);
-        const hKey = apiFor(hFam) ? fontKeyOf(hFam) : 'heading';
-        // **S73:** צבע הכותרת ה-inline מההגדרות (heading-N-color) — כמו ה-DOM
-        const hColor = ln.level != null ? headingColorOf(ln.level) : null;
-        for (const w of words) { w.fontKey = hKey; if (hColor) w.color = hColor; }
-      } else if (ln.window && ln.windowWords) {
-        // שורת חלון: מילת החלון (1.5×) בשפה הימנית; הטקסט ברוחב מוקטן
-        const winSz = ln.sizePt * 1.5;
-        // **S4.15:** רוחב החלון מהמודל — המדידה שם ב-FrankReal-Bold 1.5×
-        // (גופן החלון של המקור), לא בגופן הגוף. מקור יחיד: בלי הערך על
-        // השורה (מודל ישן) — נפילה למדידה מקומית כמו קודם.
-        const winW = ln.windowW || (api.measureTextWidth(ln.windowWords.join(' '), winSz, 0) + 6);
-        // **S4.9→S4.15 (בסיס מילת-החלון כמו הייחוס):** בייחוס בסיס החלון יושב
-        // כ-1.5pt מתחת לבסיס שורת הטקסט (עמ' 14: חלון 155.25 מול שורה 153.75)
-        // — ולא מעליה. עם עליית הבסיס, תיבת 18pt (asc 751/desc 135 של
-        // FrankReal) חורגת מחלון המיזוג של C2 (Δtop>7pt ⇒ שתי שורות נפרדות
-        // ⇒ חפיפה מדומה 10.2pt). בסיס +2px מיישר את הגליפים כמקור ומנקה את C2.
-        const winBase = baseY + 2;
-        // **S4.15:** מילת-החלון נמדדת ומסומנת בגופן החלון (FrankReal-Bold —
-        // כמו המקור) — הציור ב-PDF ב-/F2. המדידה במטריקות האמיתיות מונעת
-        // חריגה מהשקע (גופן הגוף רחב ממנה בחלק מהמילים ⇒ חפיפות C2).
-        const winMeasure = winApi || api;
-        // **S73:** צבע מילת-החלון מההגדרות (first-word-color) — כמו ה-DOM
-        const winColor = colorOf(settings['first-word-color']);
-        const winWords = ln.windowWords.map(w => ({
-          text: w,
-          w: winMeasure.measureTextWidth(w, winSz, 0),
-          sizePt: winSz, fontKey: 'window', ...(winColor ? { color: winColor } : {})
-        }));
-        // מיקום מימין לשמאל בתוך השקע (ישור לשפה הימנית — כמקור)
-        {
-          let cx = col.x + col.w;
-          for (const ww of winWords) {
-            cx -= ww.w;
-            ww.x = cx;
-            ww.baselineY = winBase;
-          }
-        }
-        const textW = col.w - winW;
-        // **S4.19:** דגלי סוגריים מהמודל — גם בשורות החלון (הסוגריים נפתחים
-        // לא פעם בשורות 0-1 של פסקת-חלון; הזיהוי הפר-שורתי הקודם פספס טווחים
-        // שנפתחו בשורה קודמת).
-        const winParenIdx = new Set();
-        if (ln.parenFlags && ln.parenFlags.length === ln.words.length) {
-          ln.parenFlags.forEach((p, i) => { if (p) winParenIdx.add(i); });
-        }
-        const textWords = placeWords(ln.words, api, col.x, textW, ln.sizePt,
-          ln.isLast ? 'center' : 'justify', baseY, { parenIdx: winParenIdx,
-            parenStarts: Array.isArray(ln.parenStarts) && ln.parenStarts.length === ln.words.length ? ln.parenStarts : null,
-            parenEnds: Array.isArray(ln.parenEnds) && ln.parenEnds.length === ln.words.length ? ln.parenEnds : null });
-        words = [...winWords, ...textWords];
-      } else {
-        const align = ln.isLast ? 'center' : 'justify';
-        // **S4.26 (חלון שקוע — שורה 1):** שורה 1 של פסקת-חלון (window בלי
-        // windowWords) נמדדה במודל ברוחב מוקטן (limitOf של breakPara) —
-        // וגם כאן הטקסט מקבל את הרוחב המוקטן ועוטף את מילת-החלון (כמו
-        // float:right במקור); עד כאן נמתחה לרוחב מלא.
-        const lineW = (ln.window && !ln.windowWords && ln.windowW)
-          ? Math.max(40, col.w - ln.windowW) : col.w;
-        // **S4.9:** מילים בתוך (...) מרונדרות בגודל הסוגריים המוקטן — בדיוק
-        // כפי שנמדדו בשבירה (אחרת השורה רחבה מהטור וגולשת מהעמוד).
-        // **S4.19 (סוגריים רב-שורתיים):** הזיהוי הקודם היה פר-שורה (מילה
-        // שנפתחת ב'(' עד מילה שנסגרת ב-')' **באותה שורה**) — טווח שנפתח בשורה
-        // אחת ונסגר באחרת רונדר בגודל הגוף (11.5pt בהקדמה מול 10pt בייחוס —
-        // עמ' 10: 'כהרבה מדיני התורה…'). כעת הדגלים מגיעים מהמודל (חישוב
-        // עומק-תווים על כל הפסקה ב-breakPara) — מקור יחיד למדידה ולרינדור.
-        const parenIdx = new Set();
-        if (ln.parenFlags && ln.parenFlags.length === ln.words.length) {
-          ln.parenFlags.forEach((p, i) => { if (p) parenIdx.add(i); });
-        } else {
-          const stack = [];
-          ln.words.forEach((w, i) => {
-            if (w.startsWith('(')) stack.push(i);
-            if (w.endsWith(')') && stack.length) {
-              const from = stack.pop();
-              for (let k = from; k <= i; k++) parenIdx.add(k);
-            }
-          });
-        }
-        // **D-89 (דיווח משתמש: "כל מילה שצמודה לנקודה מופיעה בגופן קטן"):**
-        // זיהוי סמני-ההערה מהמודל בלבד (markerIdx — אינדקסים מדויקים של
-        // הסמנים שהוזרקו ב-legacy-imud-flow), עם ולידציית צורה נגד סטיית
-        // אינדקס. הביטוי הקודם /^[א-ת]+\.$/ תפס **כל מילה עברית המסתיימת
-        // בנקודה** (סוף משפט!) והקטין אותה ל-8pt — 744 מילים בקורפוס
-        // ההשוואה. בלי דגל מהמודל — שום מילה לא מוקטנת: מספור האיות
-        // ("א. ב. ג." בגוף המשפט) נשאר בגודל הגוף — כפי שנמדד בייחוס
-        // (עמ' 12: 91 סמני איות ב-12.0pt = גודל הגוף; רק סמני ההערות
-        // האמיתיים — מהסוגריים — ב-6–8pt).
-        const markerIdxSet = Array.isArray(ln.markerIdx) ? new Set(ln.markerIdx) : null;
-        const MARKER_WORD_RE = /^[א-ת]{1,3}[.:]?$/; // א. / בק. — גימטריה קצרה (±מפריד)
-        const isMarkerWord = (w, i) => !!(markerIdxSet && markerIdxSet.has(i) && MARKER_WORD_RE.test(w));
-        words = placeWords(ln.words, api, col.x, lineW, ln.sizePt, align, baseY,
-          { markers: ln.words.map((w, i) => isMarkerWord(w, i)), parenIdx,
-            parenStarts: Array.isArray(ln.parenStarts) && ln.parenStarts.length === ln.words.length ? ln.parenStarts : null,
-            parenEnds: Array.isArray(ln.parenEnds) && ln.parenEnds.length === ln.words.length ? ln.parenEnds : null,
-            markerSize: projCfg.markerSize });
-        // **S73:** צבע גוף הטקסט מההגדרות (body-color; שחור ⇒ אפס אופרטורים)
-        if (bodyColor) for (const w of words) if (w.color == null) w.color = bodyColor;
+  /** **P-1:** משיכת הקובץ המלא של אוסף (ה-SVG) — לפי דרישה בלבד, פעם אחת
+   * לאוסף (single-flight: קריאות מקבילות ממתינות לאותה הבטחה). שומר על
+   * רשימת הפריטים שכבר נטענה מהאינדקס — הבוררים אינם מתרוקנים. */
+  async function loadFullCollection(collection) {
+    const cur = designs.get(collection);
+    if (cur && cur.raw) return; // כבר נטען (נתיב היסטורי/נפילה לאחור)
+    if (designLoads.has(collection)) return designLoads.get(collection);
+    const p = (async () => {
+      const file = DESIGN_FILES[collection];
+      if (!file) throw new Error(`imud-library: unknown collection ${collection}`);
+      const raw = await fetchJson(`${BASE}/${file}`);
+      const m = designs.get(collection) || { loaded: false, items: [], registered: new Set() };
+      if (!m.items || !m.items.length) {
+        m.items = (raw || []).map(d => ({ id: d.id, name: d.name || d.id, box: d.box || null }));
+        m.loaded = true;
       }
-      out.lines.push({
-        x: col.x, y: ln.y, w: col.w, h: ln.heightPx, words,
-        align: ln.kind === 'heading' ? 'center' : (ln.isLast ? 'center' : 'justify'),
-        kind: ln.kind, level: ln.level || null, isLast: !!ln.isLast, sizePt: ln.sizePt,
-        baselineY: baseY, tokenId: ln.tokenId != null ? ln.tokenId : null
-      });
-    }
-  });
-
-  // ---- הערות צד בטורי השוליים ----
-  // **S73 (צבע מההגדרות):** צבע הערות-הצד — heading-7-color (הגופן בפועל
-  // שלהן ב-DOM הוא heading-7-font — Hadassah; האפור הקבוע #404040 של D-89
-  // הוחלף בהגדרה עם ברירת מחדל שחורה — בקשת משתמש מפורשת). בלי ערך —
-  // שחור (אפס אופרטורי rg).
-  const mnColor = headingColorOf(7);
-  const mnFamily = settings['heading-7-font'] || 'Hadassah Friedlaender';
-  const mnFontKey = fontKeyOf(mnFamily);
-  for (const mn of (pg.marginNotes || [])) {
-    const x = mn.side === 'right' ? GEO.MARGIN_R_X : GEO.MARGIN_L_X;
-    for (const l of mn.lines) {
-      const baseY = baselineOf(l.y, GEO.MN_PITCH, SZ.marginNote, ascent, descent);
-      // PDF measurement and font identity follow the same H7 family as DOM.
-      const words = placeWords(l.text.split(' '), mnApi, x, GEO.MARGIN_W, SZ.marginNote, 'center', baseY);
-      for (const w of words) { if (mnFontKey) w.fontKey = mnFontKey; if (mnColor) w.color = mnColor; }
-      out.lines.push({
-        x, y: l.y, w: GEO.MARGIN_W, h: GEO.MN_PITCH, words, align: 'center',
-        kind: 'margin-note', level: null, isLast: false, sizePt: SZ.marginNote,
-        baselineY: baseY, tokenId: null
-      });
-    }
+      m.raw = new Map((raw || []).map(d => [d.id, d]));
+      designs.set(collection, m);
+    })();
+    designLoads.set(collection, p);
+    try { await p; } finally { designLoads.delete(collection); }
   }
 
-  // ---- מפריד הערות ----
-  // **S4.9:** המקור השתמש ב-✧✧✧ מגופן דפדפן חלופי; הגופן המוטמע שלנו חד-לשוני
-  // (אין גליפי כוכבים) — ההפרדה נשארת דרך ריווח התחתית בלבד.
-
-  // ---- הערות שוליים (תחתית) ----
-  // **S74 (בעיה 5):** גוף ההערה נמדד ומסומן בגופן ההגדרה f-note-body-font
-  // (ברירת המחדל המתוקנת — Assistant ExtraLight, כפי שנמדד בייחוס עמ' 31/37)
-  // באמצעות תת-גופן ייעודי (מנגנון המשפחות של S73); סמני הרישום נשארים
-  // ב־/F5 (FRL) — כמו בייחוס. בסיס השורה לפי מטריקות גופן ההערה בפועל.
-  const fnBodyKey = (fnOpts && fnOpts.bodyKey) || 'fnbody';
-  const fnMarkApi = (fnOpts && fnOpts.markApi) || fnApi;
-  const fnAsc = fnApi ? fnApi.ascentEm() : ascent;
-  const fnDesc = fnApi ? fnApi.descentEm() : descent;
-  // **D-89 (דיווח משתמש: "בהערות השוליים יש מילים אחת על השניה"):**
-  // בעבר כל שורות ההערה שורטטו על בסיס אחד (baselineOf של השורה הראשונה)
-  // וכל שורה התחילה מאותו x — הערה רבת-שורות נערמה כולה על עצמה.
-  // כעת: בסיס פר-שורה (l.y), השורה הראשונה נגרעת מרוחב הסמן ומיושרת
-  // לשני הצדדים עד הסמן, שורות הביניים מיושרות לרוחב מלא, והשורה
-  // האחרונה מיושרת לשפה הימנית — כפי שנמדד בייחוס (עמ' 31: שורה-1
-  // x:91–494 מיושרת; שורה-2 x:383–505 מיושרת-ימין; סמן '.א' ב-x:496–505).
-  for (const fn of (pg.footnotes || [])) {
-    // **S73:** צבע גוף ההערה — f-note-body-color מההגדרות (ברירת מחדל שחורה)
-    const fnColor = colorOf(settings['f-note-body-color']);
-    // **S4.26 (זרימה רציפה):** כל ההערות בזרם אחד — סמנים בגודל הרישום,
-    // יישוב לשני הצדדים בכל שורה חוץ מהאחרונה (לימין), המשך ב-'(המשך)'
-    // בלי אות סימון. שורות הזרימה מהמודל (fnFlowFor) — מקור יחיד.
-    if (fn.continuous) {
-      const rightEdge = GEO.COL_L_X + 2 * GEO.COL_W + 13.48;
-      const spaceW = fnApi.measureTextWidth(' ', SZ.fnBody, 0);
-      const usableW = rightEdge - GEO.COL_L_X;
-      const words = [];
-      fn.lines.forEach((l, li) => {
-        const baseY = baselineOf(l.y, GEO.FN_PITCH, SZ.fnBody, fnAsc, fnDesc);
-        const isLast = li === fn.lines.length - 1;
-        const toks = (l.words || []).filter(t => !t.gap);
-        // **S5.1 + S74:** גוף ההערה בגופן ההגדרה; סמני הרישום ב-FRL (כמו
-        // הייחוס עמ' 31/37) — המדידה והציור באותו גופן לכל אחד.
-        const ws = toks.map(t => ({
-          text: t.t,
-          sizePt: t.mk ? projCfg.listingSize : SZ.fnBody,
-          w: (t.mk ? fnMarkApi : fnApi).measureTextWidth(t.t, t.mk ? projCfg.listingSize : SZ.fnBody, 0),
-          mk: !!t.mk
-        }));
-        const sumW = ws.reduce((a, w) => a + w.w, 0);
-        const gaps = Math.max(0, ws.length - 1);
-        let gapW = spaceW;
-        // **S77 (בקשה 1):** שורת חיתוך תוך-הערה (cutLast) — שורת-ביניים לכל
-        // דבר: מיושבת לשני הצדדים (מלאה) כמו שאר שורות הביניים — כמו ה-DOM
-        // (textAlignLast:justify). עד כאן סוף-המרזב המרופט הותיר "שורה
-        // אחרונה לא מלאה" בהערה שממשיכה לעמוד הבא.
-        if ((!isLast || fn.cutLast) && gaps > 0 && sumW + gaps * spaceW < usableW) {
-          gapW = (usableW - sumW) / gaps; // יישוב לשני הצדדים — כמו הגוף
-        }
-        let cursor = rightEdge;
-        // **S74 (בעיה 7 — בקשת משתמש 12.11):** השורה האחרונה של מרזב ההערות
-        // (של כל ההערות יחד) ממורכזת; חריג: הערה שממשיכה לעמוד הבא
-        // (centerLast=false מהמנוע) — נשארת מיושבת לימין.
-        if (isLast && fn.centerLast) {
-          cursor = rightEdge - Math.max(0, (usableW - (sumW + gaps * spaceW)) / 2);
-        }
-        // **S6.0 (R5-C1 — סדר מילים הפוך בהערות):** הלולאה רצה מהסוף להתחלה
-        // והציבה את המילה ה**אחרונה** בלוגי בקצה הימני — כלומר ההערה נקראה
-        // בסדר הפוך בייצוא ה-PDF (המודל וה-DOM מציגים את המילה הראשונה מימין,
-        // כנדרש ב-RTL). תוקם: מעבר קדימה — המילה הראשונה זוכה לסלוט הימני;
-        // מיקומי הסלוטים/הרווחים/היישוב לא השתנו כלל (רק מיפוי מילה→סלוט).
-        for (let i = 0; i < ws.length; i++) {
-          cursor -= ws[i].w;
-          words.push({ text: ws[i].text, x: cursor, w: ws[i].w, sizePt: ws[i].sizePt, baselineY: baseY, fontKey: ws[i].mk ? 'fnbody' : fnBodyKey, ...(fnColor ? { color: fnColor } : {}) });
-          cursor -= gapW;
-        }
-      });
-      if (words.length) {
-        out.footnotes.push({
-          centerLast: !!fn.centerLast, // **S74 (בעיה 7):** מרכוז השורה האחרונה (חריג: המשך לעמוד הבא)
-          cutLast: !!fn.cutLast, // **S77 (בקשה 1):** שורת חיתוך תוך-הערה — מיושבת לשני הצדדים
-          y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: '',
-          text: fn.lines.flatMap(l => (l.words || []).filter(t => !t.gap).map(t => t.t)).join(' '),
-          words, baselineY: null, h: fn.lines.length * GEO.FN_PITCH,
-          ...(fnColor ? { color: fnColor } : {})
-        });
-      }
-      continue;
+  /** רישום פריט עיצוב בשני הצדדים (UI + Worker) והחזרת ההפניה המלאה.
+   * **P-1:** במצב אינדקס (ה-raw לא נטען) — משיכת הקובץ המלא של האוסף רק
+   * כעת, פעם אחת; שאר המנגנון לא השתנה (רישום דו-צדדי זהה). */
+  async function ensureDesign(collection, id) {
+    const meta0 = designs.get(collection);
+    if (meta0 && meta0.raw && meta0.raw.has(id) && meta0.registered && meta0.registered.has(id)) {
+      return `imud:${collection}:${id}`;
     }
-    const rightEdge = GEO.COL_L_X + 2 * GEO.COL_W + 13.48;
-    const spaceW = fnApi.measureTextWidth(' ', SZ.fnBody, 0);
-    const words = [];
-    let firstBase = null;
-    let firstRight = rightEdge;
-    // **S4.24:** המשך הערה מקוצצת — '(המשך)' לפני הסמן (כמו ה-DOM והנתיב המודרני)
-    if (fn.cont) {
-      const pTxt = '(המשך)';
-      const pw = fnApi.measureTextWidth(pTxt, SZ.fnBody, 0);
-      firstRight -= pw;
-      words.push({ text: pTxt, x: firstRight, w: pw, sizePt: SZ.fnBody, baselineY: null, fontKey: 'fnbody', ...(fnColor ? { color: fnColor } : {}) });
-      firstRight -= spaceW;
-    }
-    if (fn.marker) {
-      // **EXT-17:** סמן הרישום בגודל עצמאי (note-listing-num-size, ברירת מחדל 8).
-      // **S74 (בעיה 5):** הסמן נמדד ב-FRL (כמו הייחוס) — לא בגופן גוף ההערה.
-      const msz = projCfg.listingSize;
-      const mw = fnMarkApi.measureTextWidth(fn.marker, msz, 0);
-      firstRight -= mw;
-      words.push({ text: fn.marker, x: firstRight, w: mw, sizePt: msz, baselineY: null, fontKey: 'fnbody', ...(fnColor ? { color: fnColor } : {}) });
-      firstRight -= spaceW;
-    }
-    fn.lines.forEach((l, li) => {
-      const baseY = baselineOf(l.y, GEO.FN_PITCH, SZ.fnBody, fnAsc, fnDesc);
-      if (firstBase === null) {
-        firstBase = baseY;
-        if (words.length) words[0].baselineY = firstBase; // הסמן על בסיס השורה הראשונה
-      }
-      const isLast = li === fn.lines.length - 1;
-      const lineRight = li === 0 ? firstRight : rightEdge;
-      const usableW = Math.max(0, lineRight - GEO.COL_L_X);
-      const ws = l.words.map(w => ({ text: w, w: fnApi.measureTextWidth(w, SZ.fnBody, 0) }));
-      const sumW = ws.reduce((a, w) => a + w.w, 0);
-      const gaps = Math.max(0, ws.length - 1);
-      let gapW = spaceW;
-      // **S77 (בקשה 1):** חיתוך תוך-הערה (cutLast) — שורת-ביניים מיושבת
-      // לשני הצדדים (כמו ה-DOM), לא מרופטת.
-      if ((!isLast || fn.cutLast) && gaps > 0 && sumW + gaps * spaceW < usableW) {
-        gapW = (usableW - sumW) / gaps; // יישוב לשני הצדדים (כמו הייחוס)
-      }
-      let cursor = lineRight;
-      // **S74 (בעיה 7):** מרכוז השורה האחרונה של ההערה האחרונה בעמוד
-      // (centerLast מהמנוע; חריג: הערה שנחתכה לעמוד הבא).
-      if (isLast && fn.centerLast) {
-        cursor = lineRight - Math.max(0, (usableW - (sumW + gaps * spaceW)) / 2);
-      }
-      // **S6.0 (R5-C1):** מעבר קדימה — המילה הראשונה בלוגי בקצה הימני (RTL);
-      // בעבר האחרונה הוצבה מימין וההערה נקראה הפוך ב-PDF.
-      for (let i = 0; i < ws.length; i++) {
-        cursor -= ws[i].w;
-        words.push({ text: ws[i].text, x: cursor, w: ws[i].w, sizePt: SZ.fnBody, baselineY: baseY, fontKey: fnBodyKey, ...(fnColor ? { color: fnColor } : {}) });
-        cursor -= gapW;
-      }
-    });
-    if (words.length) {
-      out.footnotes.push({ centerLast: !!fn.centerLast, cutLast: !!fn.cutLast, y: fn.lines[0].y, x: GEO.COL_L_X, w: 2 * GEO.COL_W + 13.48, marker: fn.marker, text: fn.lines.map(l => l.words.join(' ')).join(' '), words, baselineY: firstBase, h: fn.lines.length * GEO.FN_PITCH, ...(fnColor ? { color: fnColor } : {}) });
-    }
+    if (!meta0 || !meta0.loaded) { await listDesigns(collection); }
+    const meta1 = designs.get(collection);
+    if (!meta1 || !meta1.raw) { await loadFullCollection(collection); }
+    const m = designs.get(collection);
+    const item = m.raw && m.raw.get(id);
+    if (!item) return null;
+    // UI-side: רישום מקומי (התצוגה מרנדרת דרך dom-renderer)
+    const resUi = registerAssets(collection, [{ id: item.id, name: item.name, svg: item.svg, box: item.box }]);
+    if (!resUi.ok && resUi.registered === 0) throw new Error(`imud-library: design rejected (${resUi.rejected[0] && resUi.rejected[0].reason})`);
+    // Worker-side: העברת ה-SVG דרך הפרוטוקול (register-assets)
+    try {
+      await engine.registerAssets({ collection, items: [{ id: item.id, name: item.name, svg: item.svg, box: item.box }] });
+    } catch (e) { /* ה-Worker ידווח; התצוגה עדיין תקינה */ }
+    if (!m.registered) m.registered = new Set();
+    m.registered.add(id);
+    return `imud:${collection}:${id}`;
   }
 
-  // ---- שורות תוכן-עניינים ----
-  if (pg.toc) {
-    if (pg.toc.title) {
-      const y = GEO.FLOW_TOP + TOC_TITLE_Y_OFFSET;
-      const baseY = baselineOf(y, 30, SZ.tocTitle, ascent, descent);
-      const words = placeWords([pg.toc.title], api, bandLeft, bandW, SZ.tocTitle, 'center', baseY);
-      out.lines.push({
-        x: bandLeft, y, w: bandW, h: 30, words, align: 'center', kind: 'toc-title',
-        level: null, isLast: false, sizePt: SZ.tocTitle, baselineY: baseY, tokenId: null
-      });
+  /** **03.11(ד):** פתרון ערך גופן (משפחה בודדת או מחסנית "'A', 'B', serif")
+   * למשפחה הראשונה הקיימת בקטלוג — בדיוק כפי שהדפדפן היה נופל במחסנית.
+   * @returns {string|null} שם משפחה מהקטלוג, או null אם אף אחת אינה זמינה. */
+  function resolveFamily(value) {
+    if (!fontCatalog.loaded || !value) return null;
+    const raw = String(value).replace(/'/g, '');
+    const parts = raw.split(',').map(s => s.trim()).filter(Boolean)
+      .filter(p => !/^(serif|sans-serif|monospace|cursive|fantasy|system-ui)$/i.test(p));
+    for (const p of parts) if (fontCatalog.byFamily.has(p)) return p;
+    return null;
+  }
+
+  /** **03.11(ד) + S5.2:** טעינת גופן לפי ערך הגדרה — תומך גם במחסנית (נפתרת מול
+   * הקטלוג) וגם במשפחה בודדת. מחזיר Promise<ArrayBuffer|null>.
+   * **S5.2:** ממתין קודם לטעינת הקטלוג — בעבר, קריאה לפני שהקטלוג נטען החזירה
+   * null בשקט (byFamily ריק) גם כשהמשפחה קיימת בספרייה (נתיב getExportFont). */
+  async function loadFontStack(value) {
+    if (value == null) return null;
+    if (!fontCatalog.loaded) {
+      try { await loadFontCatalog(); } catch (e) { /* ספרייה לא זמינה — ההגדרה תיפול לגופן מערכת */ }
     }
-    for (const r of (pg.toc.rows || [])) {
-      // **S6.0 (F5):** שורת TOC עטופה — כל שורה-בת בפס 26px משלה (כמו ה-DOM);
-      // שורות חד-שורתיות (המקרה הנפוץ) זהות בתכלית לפלט הקודם.
-      const rowLines = (r.lines && r.lines.length ? r.lines : [r.text]).filter(t => String(t || '').trim());
-      rowLines.forEach((rowText, rli) => {
-        const lineY = r.y + rli * 26;
-        const baseY = baselineOf(lineY, 26, r.sizePt, ascent, descent);
-      // כותרת מימין (במדרגות לפי רמה), מספר משמאל; **S5.1:** גופן הרמה
-      // מההגדרות (כמו ה-DOM — heading-N-font), נפילה ל-hApi כשאינה רשומה.
-      const rLvl = r.level != null ? r.level : 2;
-      const rFam = settings[`heading-${rLvl}-font`] || 'DavidLibre-Bold';
-      const rFamApi = apiFor(rFam);
-      const rApi = rFamApi || hApi;
-      // **S73:** צבע שורת ה-TOC — heading-N-color של הרמה (כמו ה-DOM)
-      const rColor = headingColorOf(rLvl);
-      const tW = rApi.measureTextWidth(rowText, r.sizePt, 0);
-      const textWords = placeWords([rowText], rApi, r.x1 - tW, tW, r.sizePt, 'right', baseY);
-      for (const w of textWords) { w.fontKey = rFamApi ? fontKeyOf(rFam) : 'heading'; if (rColor) w.color = rColor; }
-      const hasPageLabel = !!r.folio && rli === 0;
-      const numW = hasPageLabel ? rApi.measureTextWidth(r.folio, SZ.tocNum, 0) : 0;
-      const numWords = hasPageLabel
-        ? placeWords([r.folio], rApi, GEO.TOC_NUM_X, numW, SZ.tocNum, 'left', baseY)
-        : [];
-      const tocLabelColor = hexColorToRgb('#444444');
-      for (const w of numWords) {
-        w.fontKey = rFamApi ? fontKeyOf(rFam) : 'heading';
-        if (tocLabelColor) w.color = tocLabelColor;
+    const direct = fontCatalog.byFamily.get(String(value).trim());
+    if (direct) return loadFont(String(value).trim());
+    const resolved = resolveFamily(value);
+    return resolved ? loadFont(resolved) : null;
+  }
+
+  /** **EXT-14 (05.11): ערכות סגנון-ספר מהמקור (setting_sets/):** תלמוד/פרשנות/קונטרס —
+   * תצורות מלאות (249 מפתחות) שהמקור טען דרך הדרופדאון style-set-select
+   * (settings-manager.js: loadSettingsFromFile('setting_sets/<name>')). כאן אותה
+   * חוזה: כל ערכה עוברת את אותה טבלת disposition כמו ברירות המחדל — אין מסלול
+   * מיוחד; ההבדלים חייבים לשרוד את הייבוא (בדיקה מחייבת ב-setting-sets.test.js). */
+  const SETTING_SETS = ['תלמוד', 'פרשנות', 'קונטרס'];
+
+  /** רשימת הערכות המוטמעות (שמות קבצים בלבד — לא נטענות עד בחירה). */
+  function listSettingSets() { return SETTING_SETS.slice(); }
+
+  /** טעינת ערכה וייבוא מלא דרך importImudSettings (עם קטלוג הגופנים —
+   * כמו loadLegacyDefaults: מחסניות הגופן נפתרות למשפחות מוטמעות). */
+  async function loadSettingSet(name) {
+    if (!SETTING_SETS.includes(name)) throw new Error(`ערכה לא מוכרת: ${name}`);
+    if (!fontCatalog.loaded) await loadFontCatalog().catch(() => {});
+    const legacy = await fetchJson(`${BASE}/setting_sets/${encodeURIComponent(name)}.json`);
+    const { settings, unmapped, report } = importImudSettings(
+      legacy,
+      new Set(getSettingDefs().map(r => r.id)),
+      { availableFonts: fontCatalog.byFamily ? new Set(fontCatalog.byFamily.keys()) : undefined }
+    );
+    return { name, settings, unmapped, report };
+  }
+
+  /** ברירות המחדל המקוריות — ייבוא מלא דרך טבלת ה-disposition.
+   * **03.11(ד):** מועבר גם קטלוג הגופנים הזמין — כך שמחסניות הגופן של המקור
+   * ("'AlphaBlack', 'David Libre', serif") נפתרות מיד למשפחה הזמינה בפועל
+   * (David Libre) וההגדרות שמתקבלות ניתנות לטעינה ולמדידה אמיתית.
+   * **S4.15 (גופן מילת-החלון):** בטעינת הברירות נרשם גם FrankReal-Bold תחת
+   * השם 'FrankReal' — גופן מילת-החלון של המקור (המשתמש המקורי הריץ עם
+   * הגופן מותקן במערכת; הוכח מסימון הייחוס: 116 מילות-חלון ברוחב
+   * FrankReal-Bold בדיוק 0.03px). בלי זה — המדידה והתצוגה נופלות לגופן
+   * הגוף ושורות 0–1 של כל פסקת-חלון נשברות אחרת. */
+  async function loadLegacyDefaults() {
+    if (!fontCatalog.loaded) await loadFontCatalog().catch(() => {});
+    const legacy = await fetchJson(`${BASE}/default_settings.json`);
+    const { settings, unmapped, report } = importImudSettings(
+      legacy,
+      new Set(getSettingDefs().map(r => r.id)),
+      { availableFonts: fontCatalog.byFamily ? new Set(fontCatalog.byFamily.keys()) : undefined }
+    );
+    // **S4.15:** רישום גופן החלון (מדידה ב-Worker + FontFace לתצוגה + base64
+    // לייצוא HTML) — בלי להיכשל אם הקובץ חסר (fallback מתועד).
+    try { await loadWindowFont(); } catch (e) { /* אין FrankReal-Bold — fallback */ }
+    // **S4.26:** רישום גופן הכותרות (DavidLibre-Bold) — מדידה+תצוגה מודגשת.
+    try { await loadHeadingFont(); } catch (e) { /* אין DavidLibre-Bold — fallback */ }
+    return { settings, unmapped, report };
+  }
+
+  /** **S4.15:** טעינת FrankReal-Bold.ttf תחת המשפחה 'FrankReal' (מדידה+
+   * תצוגה+ייצוא) — לגופן מילת-החלון, כמו 'FrankReal' במערכת של המקור. */
+  async function loadWindowFont() {
+    if (appliedFontsReady.has('FrankReal')) return appliedFontsReady.get('FrankReal');
+    const p = (async () => {
+      const r = await fetch(`${BASE}/fonts/FrankReal-Bold.ttf`);
+      if (!r.ok) return null;
+      const buf = await r.arrayBuffer();
+      const u8 = new Uint8Array(buf);
+      try {
+        let bin = '';
+        const CH = 0x8000;
+        for (let i = 0; i < u8.length; i += CH) bin += String.fromCharCode.apply(null, u8.subarray(i, i + CH));
+        fontCatalog.bytesB64.set('FrankReal', btoa(bin));
+      } catch (e) { /* אין btoa — הייצוא ידלג */ }
+      try {
+        await engine.registerFont({ name: 'FrankReal', bytes: buf.slice(0) });
+      } catch (e) {
+        // **S5.2:** מוות ה-Worker (restart) — דחייה מפורשת + ניקוי המטמון (רישום
+        // חוזר בקריאה הבאה על המופע שהוזרם); כשל אחר — תצוגה בלבד כמו קודם.
+        if (e && /worker-restarted|worker-error/.test(String(e.message))) throw e;
+        /* רישום נכשל — תצוגה בלבד */
       }
-      // The live TOC draws a dotted flex leader between the measured title
-      // edge and the page label. Emit the same measured segment into the PDF.
-      if (hasPageLabel) {
-        // The DOM .toc-num has min-width:20px; reserve the same label box
-        // even when a short gematria glyph is narrower than that minimum.
-        const labelBoxW = Math.max(20, numW);
-        const leaderX = GEO.TOC_NUM_X + labelBoxW + 12;
-        const leaderRight = r.x1 - tW - 12;
-        const leaderW = leaderRight - leaderX;
-        if (leaderW >= 24) {
-          const leaderY = baseY - 4;
-          const pxToPt = 72 / 96;
-          const xPt = leaderX * pxToPt;
-          const yPt = out.height * pxToPt - leaderY * pxToPt;
-          const wPt = leaderW * pxToPt;
-          const r2 = value => Math.round(value * 100) / 100;
-          if (!out.decorations) out.decorations = [];
-          out.decorations.push({
-            x: leaderX, y: leaderY, w: leaderW, h: 0,
-            kind: 'toc-leader', slot: 'toc', kindStyle: 'dotted',
-            inkType: 'rule', ink: { type: 'rule', style: 'dotted', color: [0, 0, 0], width: 0.75 },
-            pdfOps: [
-              `0 0 0 RG 0.75 w [1 1.5] 0 d ${r2(xPt)} ${r2(yPt)} m ${r2(xPt + wPt)} ${r2(yPt)} l S [] 0 d`
-            ]
-          });
-        }
+      if (!fontCatalog.faces.has('FrankReal') && typeof FontFace !== 'undefined') {
+        try {
+          const face = new FontFace('FrankReal', buf);
+          await face.load();
+          document.fonts.add(face);
+          fontCatalog.faces.add('FrankReal');
+        } catch (e) { /* פונט תצוגה נכשל */ }
       }
-      out.lines.push({
-        x: GEO.TOC_NUM_X, y: lineY, w: r.x1 - GEO.TOC_NUM_X, h: 26,
-        words: [...textWords, ...numWords], align: 'right', kind: 'toc-row',
-        level: r.level, isLast: false, sizePt: r.sizePt, baselineY: baseY, tokenId: null
-      });
-      });
+      return buf;
+    })();
+    appliedFontsReady.set('FrankReal', p);
+    p.catch(() => { appliedFontsReady.delete('FrankReal'); }); // **S5.2:**
+    return p;
+  }
+
+  /** **S4.26 (דיווח משתמש: "האתר לא משתמש בגופני ברירת המחדל"):** גופן
+   * הכותרות של המקור בפועל — DavidLibre-Bold. נרשם ב-Worker תחת
+   * 'DavidLibre-Bold' (מדידת כותרות — headingApi) וכ-FontFace של המשפחה
+   * 'David Libre' במשקל 700 (תצוגת כותרות מודגשות — כמו הייחוס, שבו כל
+   * הכותרות ושורות ה-TOC ב-DavidLibre-Bold). */
+  async function loadHeadingFont() {
+    if (appliedFontsReady.has('DavidLibre-Bold')) return appliedFontsReady.get('DavidLibre-Bold');
+    const p = (async () => {
+      const r = await fetch(`${BASE}/fonts/DavidLibre-Bold.ttf`);
+      if (!r.ok) return null;
+      const buf = await r.arrayBuffer();
+      try {
+        await engine.registerFont({ name: 'DavidLibre-Bold', bytes: buf.slice(0) });
+      } catch (e) {
+        // **S5.2:** מוות ה-Worker (restart) — דחייה מפורשת + ניקוי המטמון.
+        if (e && /worker-restarted|worker-error/.test(String(e.message))) throw e;
+        /* רישום נכשל — תצוגה בלבד */
+      }
+      if (typeof FontFace !== 'undefined') {
+        try {
+          const face = new FontFace('David Libre', buf, { weight: '700' });
+          await face.load();
+          document.fonts.add(face);
+          if (!fontCatalog.faces.has('David Libre')) fontCatalog.faces.add('David Libre');
+        } catch (e) { /* פונט תצוגה נכשל */ }
+      }
+      return buf;
+    })();
+    appliedFontsReady.set('DavidLibre-Bold', p);
+    p.catch(() => { appliedFontsReady.delete('DavidLibre-Bold'); }); // **S5.2:**
+    return p;
+  }
+
+  /** CSS של הפונטים שנטענו — להטמעה בייצוא HTML העצמאי (@font-face data-URI). */
+  function exportFontCss() {
+    let css = '';
+    for (const [family, b64] of fontCatalog.bytesB64) {
+      const fmt = /\.woff2$/i.test(String(fontCatalog.byFamily.get(family) || '')) ? 'woff2' : 'ttf';
+      css += `@font-face{font-family:'${family}';src:url(data:font/${fmt};base64,${b64}) format('${fmt === 'woff2' ? 'woff2' : 'truetype'}');font-display:swap}\n`;
     }
+    return css;
   }
 
-  // ---- גיליון ----
-  // **S73 (גופן/גודל/צבע גיליון מההגדרות):** page-num-font ('' = גוף הטקסט —
-  // התנהגות קודמת), page-num-size-pt (ברירת מחדל 10 = SZ.folio) ו-page-num-color
-  // (ברירת מחדל שחורה) — כמו ה-DOM. המדידה בגופן הגיליון כשרשום.
-  if (pg.folioDisplay) {
-    const folioSz = Number(settings['page-num-size-pt']) > 0 ? Number(settings['page-num-size-pt']) : SZ.folio;
-    const folioFam = settings['page-num-font'] || '';
-    const folioApi = apiFor(folioFam) || api;
-    const folioKey = (folioFam && apiFor(folioFam)) ? folioFam : null;
-    const fw = folioApi.measureTextWidth(pg.folioDisplay, folioSz, 0);
-    out.folio = {
-      y: GEO.FOLIO_BASELINE - 14, x: Math.round((GEO.PAGE_W - fw) / 2), w: fw,
-      sizePt: folioSz, text: pg.folioDisplay, baselineY: GEO.FOLIO_BASELINE,
-      ...(folioKey ? { fontKey: folioKey } : {}),
-      ...(folioColor ? { color: folioColor } : {})
-    };
-  }
-
-  // ---- כותרת עליונה תלת-סלוטית ----
-  // **S73 (תצוגה=ייצוא בגופני הכותרת העליונה):** ה-DOM מציג כל סלוט
-  // בגופן שלו מההגדרות (header-recto-{right,center,left}-font — Livorna
-  // בברירות המחדל של המקור) ובצבעו (header-*-color; ברירת מחדל שחורה —
-  // הכחול הקבוע #0F1749 של D-89 הוחלף בהגדרה, בקשת משתמש מפורשת).
-  // עד כאן כל הסלוטים נמדדו וצוירו ב-DavidLibre-Bold (/F3) — ה-PDF היה
-  // שונה מהתצוגה בכל עמוד גוף. כעת: מדידה+ציור בגופן הסלוט (משפחה רשומה
-  // ⇒ תת-גופן ייעודי; בלתי-רשומה ⇒ DavidLibre-Bold — התנהגות קודמת).
-  if (pg.headerSlots && (pg.headerSlots.right || pg.headerSlots.center || pg.headerSlots.left)) {
-    const slots = [];
-    // **S73 + S77 (בקשה 3):** גופן/צבע/גודל/יישור/רוחב הסלוט — מההגדרות
-    // לפי הצד הפיזי של העמוד (עד כאן: מפתחי recto קבועים לכל העמודים —
-    // אותם מפתחות שה-DOM של legacy מציג). ברירות המחדל (33% + right/center/
-    // left + הגדלים המכוילים) משחזרות את המיקומים הקודמים במדויק.
-    const hdrSide = (pg.index % 2 === 0) ? 'recto' : 'verso'; // עמוד 1 (אינדקס 0) = recto
-    const mk = (pos, text, sizePt) => {
-      if (!text) return;
-      // **S73:** גופן הסלוט מההגדרות — כמו ה-DOM (fontWeight 700 שם;
-      // Livorna הוא חד-משקלי — המשפחה עצמה). נפילה ל-hApi (DavidLibre-Bold)
-      // כשהמשפחה אינה רשומה — התנהגות קודמת.
-      const fam = settings[`header-${hdrSide}-${pos}-font`] || 'DavidLibre-Bold';
-      // **S77:** גודל הסלוט מההגדרה (ברירת המחדל המיובאת = הקבועים המכוילים)
-      const szKey = `header-${hdrSide}-${pos}-size-pt`;
-      const effSz = Number(settings[szKey]) > 0 ? Number(settings[szKey]) : sizePt;
-      const sApi = apiFor(fam) || hApi;
-      const w = sApi.measureTextWidth(text, effSz, 0);
-      // **S77:** תיבת הסלוט — רוחב% מהפס; היישור בתוכה מההגדרה (כמו ה-DOM).
-      const bandL = GEO.COL_L_X + 33, bandR = GEO.COL_R_X + GEO.COL_W - 33;
-      const bandW = bandR - bandL;
-      const wPct = Number(settings[`header-${hdrSide}-${pos}-width-pct`]);
-      const boxW = Math.max(0, (Number.isFinite(wPct) && wPct > 0 && wPct <= 100 ? wPct : 33) / 100) * bandW;
-      const align = settings[`header-${hdrSide}-${pos}-align`] || pos;
-      let x, alignEff;
-      if (pos === 'right') { x = bandR - boxW; alignEff = align; }
-      else if (pos === 'left') { x = bandL; alignEff = align; }
-      else { x = bandL + (bandW - boxW) / 2; alignEff = align; }
-      slots.push({ pos, text, x, w, boxW, align: alignEff, sizePt: effSz, fam: apiFor(fam) ? fam : null, color: hdrColorOfS77(pos, hdrSide) });
-    };
-    mk('right', pg.headerSlots.right, SZ.hdrR);
-    mk('center', pg.headerSlots.center, SZ.hdrC);
-    mk('left', pg.headerSlots.left, SZ.hdrL);
-    if (slots.length) {
-      // **S4.9:** כל סלוט מתפצל למילים — חילוץ לוגי כמו בייחוס
-      for (const s of slots) {
-        const baseY = GEO.HEADER_BASELINE;
-        // **S5.1 (תיקון C1/L2):** רוחב התיבה = רוחב הטקסט עצמו (s.w) — לא
-        // s.w+40. ה+40 הסיט כל סלוט 40px מהמקום שמכויל מהייחוס ב-mk() לעיל.
-        // **S77:** התיבה ברוחב הסלוט מההגדרה (boxW) והמילים מיושבות בה לפי
-        // היישור מההגדרה — כמו ה-DOM.
-        const sFam = s.fam || 'DavidLibre-Bold';
-        const sApi = apiFor(sFam) || hApi;
-        const sKey = s.fam ? fontKeyOf(s.fam) : 'heading';
-        const a = s.align === 'center' ? 'center' : (s.align === 'left' ? 'left' : (s.align === 'right' ? 'right' : (s.pos === 'center' ? 'center' : (s.pos === 'right' ? 'right' : 'left'))));
-        s.words = placeWords(s.text.split(' '), sApi, s.x, s.boxW || s.w, s.sizePt, a, baseY);
-        s.color = s.color || pg.headerSlots.color || null;
-        for (const w of s.words) { if (s.color) w.color = s.color; w.fontKey = sKey; }
-      }
-      out.header = { y: GEO.HEADER_BASELINE - 14, baselineY: GEO.HEADER_BASELINE, slots };
+  /** **S6.2 (בקשת משתמש — "האם כל העיטורים, שערים... יובאו?"): הפעלת
+   * ערכת שערים מאוחדת לפי מספר ערכה** — כמו active-theme-select של המקור
+   * ("json_theme_40" ⇒ ערכה 40: שער ראשי + משנה + אחורי מעוצבים יחד,
+   * REQ-ORN-06). מאתר בכל אוסף את הפריט ששמו מתחיל ב-"<מספר> " (כגון
+   * "40   שער ראשי"), רושם אותו בשני הצדדים ומחזיר את ההפניות במבנה
+   * מפתחות-הגדרות מוכן להחלה: { 'imud-shaar-main': 'imud:shaar-main:<id>', … }.
+   * @returns {Promise<object>} רק הערכים שנמצאו (ערכה חלקית בספרייה ⇒ חלקית)
+   */
+  async function ensureThemeSet(setNo) {
+    const ROLES = [
+      { collection: 'shaar-main', setting: 'imud-shaar-main' },
+      { collection: 'shaar-sub', setting: 'imud-shaar-sub' },
+      { collection: 'shaar-back', setting: 'imud-shaar-back' }
+    ];
+    const prefix = new RegExp(`^\\s*${Number(setNo)}\\s+`);
+    const out = {};
+    for (const { collection, setting } of ROLES) {
+      try {
+        const items = await listDesigns(collection);
+        const hit = items.find((it) => prefix.test(String(it.name || '')));
+        if (!hit) continue;
+        const ref = await ensureDesign(collection, hit.id);
+        if (ref) out[setting] = ref;
+      } catch (e) { /* אוסף חסר — התפקיד נשאר בלי רקע, מתועד */ }
     }
+    return out;
   }
 
-  // **EXT-4 (הדיו — נתיב legacy):** אם למודל ה-legacy יש rectים של עיטורים
-  // (טרם מיוצרים כברירת מחדל — הגדרות המקור ללא עיטורים; התשתית מוכנה
-  // לחיבור ornament-plan בעתיד) — הם מוקרנים עם אותו דיו (ornament-ink)
-  // כמו בנתיב ה-DP: pdfOps לכותב ה-PDF ו-data-URI ל-DOM.
-  if (pg.decorations && pg.decorations.length) {
-    const hPt = out.height * (72 / 96);
-    const PX_TO_PT = 72 / 96;
-    const r2 = (v) => Math.round(v * 100) / 100;
-    const cssColor = (c) => `rgb(${Math.round(c[0] * 255)},${Math.round(c[1] * 255)},${Math.round(c[2] * 255)})`;
-    out.decorations = [...(out.decorations || []), ...pg.decorations.map((d) => {
-      const ink = d.image ? { type: 'image', uri: d.image } : ornamentInk(d.kindStyle);
-      let paint = null, pdfOps = null;
-      if (ink && ink.type === 'svg') {
-        paint = parseSvgPaint(ink.svg);
-        if (paint) pdfOps = svgToPdfOps(paint, d, hPt, PX_TO_PT);
-      } else if (ink && ink.type === 'rect') {
-        // **D-89:** מלבן בצבע אחיד — פאנלי השערים, מסגרות וכלל הכותרת.
-        const yTop = hPt - (d.y + d.h) * PX_TO_PT;
-        pdfOps = [`${r2(ink.color[0])} ${r2(ink.color[1])} ${r2(ink.color[2])} rg ${r2(d.x * PX_TO_PT)} ${r2(yTop)} ${r2(d.w * PX_TO_PT)} ${r2(d.h * PX_TO_PT)} re f`];
-      } else if (ink && ink.type === 'rule') {
-        const yTop = hPt - (d.y + d.h) * PX_TO_PT;
-        pdfOps = [`0 0 0 rg ${r2(d.x * PX_TO_PT)} ${r2(yTop)} ${r2(d.w * PX_TO_PT)} ${Math.max(0.5, r2(d.h * PX_TO_PT))} re f`];
-      }
-      return {
-        x: d.x, y: d.y, w: d.w, h: d.h, kind: d.kind || null, slot: d.slot || null,
-        kindStyle: d.kindStyle || null, inkType: ink ? ink.type : null,
-        inkUri: ink && ink.uri ? ink.uri : null,
-        inkColor: ink && ink.type === 'rect' ? cssColor(ink.color) : null,
-        paint, pdfOps
-      };
-    })];
+  /** **EXT-9:** משפחות הקטלוג שנטענו (סינכרוני) — לפתרון מחסניות גופן בייבוא
+   * הגדרות/תבניות (importImudSettings ctx.availableFonts). null אם הקטלוג
+   * עוד לא נטען — הייבוא ייפול למשפחה הראשונה (התנהגות היסטורית, מתועדת). */
+  function catalogFamilies() {
+    return fontCatalog.loaded ? new Set(fontCatalog.byFamily.keys()) : null;
   }
 
-  return out;
+  return { loadFontCatalog, loadFont, loadDefaultExportFont, listDesigns, ensureDesign, ensureThemeSet, loadLegacyDefaults, loadHeadingFont, exportFontCss, resolveFamily, loadFontStack, catalogFamilies, listSettingSets, loadSettingSet, fontStatus, catalogEntries };
 }
 
-const FLOW_BOTTOM_DEFAULT = GEO.FLOW_TOP + GEO.FLOW_H;
-const TOC_TITLE_Y_OFFSET = 136; // כותרת ה-TOC ב-309px = FLOW_TOP+212.4 — מכויל
-
-/** הקרנת מסמך legacy שלם. */
-function projectLegacyDocument(result, settings) {
-  // **EXT-13:** אותו מקור מדידה כמו העימוד (legacyTypeset) — הקרנה ומילוי
-  // לא יכולים להתפצל: רוחב שורה שונה ביניהם = חפיפות/גלישות מדומות.
-  const impl = resolveMeasureImpl(settings);
-  const api = new MeasureAPI(settings, impl);
-  // **S4.15 (גופן מילת-החלון בהקרנה):** מילות-החלון נמדדות ומסומנות בגופן
-  // המקור (FrankReal-Bold) — הציור ב-PDF ב-/F2 והרוחב האמיתי (בלי זה הגליפים
-  // של גוף הטקסט רחבים מהשקע שנשמר וחודרים לשורה — 1886 חפיפות בקורפוס).
-  // הגופן נרשם ע"י legacyTypeset מ-env.windowFontBytes באותו תהליך.
-  let winApi = null;
-  const winName = registeredFonts.has('FrankReal-Bold') ? 'FrankReal-Bold'
-    : (registeredFonts.has('FrankReal') ? 'FrankReal' : null);
-  if (impl === 'font-metrics' && winName) {
-    winApi = new MeasureAPI({ 'body-font': winName, 'body-font-size-pt': SZ.body }, 'font-metrics');
-  }
-  // **S4.26 (גופן כותרות בהקרנה):** DavidLibre-Bold — אותו גופן כמו המדידה
-  // ב-legacyTypeset (env.headingFontBytes) וכמו ה-DOM; הציור ב-/F3.
-  let headingApi = null;
-  if (impl === 'font-metrics' && registeredFonts.has('DavidLibre-Bold')) {
-    headingApi = new MeasureAPI({ 'body-font': 'DavidLibre-Bold', 'body-font-size-pt': SZ.body }, 'font-metrics');
-  }
-  // **S5.1 (גופני גוף-הערה והערות-הצד בהקרנה):** FRL לגוף ההערה,
-  // Hadassah להערות-הצד — כמו המדידה במנוע (fnApi/marginApi ב-legacyTypeset)
-  // וכמו ה-DOM. נפילה שקופה לגוף הטקסט כשהגופן אינו רשום.
-  let fnApi = null;
-  let fnBodyKey = 'fnbody'; // **S74 (בעיה 5):** גוף ההערה — משפחה ייעודית (תת-גופן S73) או /F5
-  let fnMarkApi = null; // **S74:** סמני הרישום — FRL (כמו הייחוס עמ' 31/37)
-  const fnFam = settings['f-note-body-font'];
-  if (impl === 'font-metrics' && fnFam && fnFam !== 'Frank Ruhl Libre' && registeredFonts.has(fnFam)) {
-    fnApi = new MeasureAPI({ 'body-font': fnFam, 'body-font-size-pt': SZ.fnBody, 'body-line-height': 1.5 }, 'font-metrics');
-    fnBodyKey = fnFam;
-  } else if (impl === 'font-metrics' && registeredFonts.has('Frank Ruhl Libre')) {
-    fnApi = new MeasureAPI({ 'body-font': 'Frank Ruhl Libre', 'body-font-size-pt': SZ.fnBody, 'body-line-height': 1.5 }, 'font-metrics');
-  }
-  if (impl === 'font-metrics' && registeredFonts.has('Frank Ruhl Libre')) {
-    fnMarkApi = new MeasureAPI({ 'body-font': 'Frank Ruhl Libre', 'body-font-size-pt': SZ.fnBody, 'body-line-height': 1.5 }, 'font-metrics');
-  }
-  const mnFamily = settings['heading-7-font'] || 'Hadassah Friedlaender';
-  let mnApi = null;
-  if (impl === 'font-metrics' && registeredFonts.has(mnFamily)) {
-    mnApi = new MeasureAPI({ 'body-font': mnFamily, 'body-font-size-pt': SZ.marginNote, 'body-line-height': 1.2 }, 'font-metrics');
-  }
-  const fnOpts = { bodyKey: fnBodyKey, markApi: fnMarkApi };
-  const pages = result.pages.map(p => projectLegacyPage(p, settings, api, winApi, headingApi, fnApi, mnApi, fnOpts));
-  return { pages, inkBounds: pages.map(() => null), layoutHash: result.layoutHash };
-}
-
-module.exports = { projectLegacyPage, projectLegacyDocument };
+module.exports = { createImudLibrary, DESIGN_FILES };
 
 };
 __modules["src/engine/core/legacy-settings-map.js"] = function (require, module, exports) {
@@ -31040,457 +23615,6 @@ function importImudSettings(legacy, registryKeys, opts = {}) {
 }
 
 module.exports = { DISPOSITIONS, dispositionOf, importImudSettings, firstFamily, resolveStack, pctToPx };
-
-};
-__modules["src/ui/imud-library.js"] = function (require, module, exports) {
-// src/ui/imud-library.js — ספריית נכסי IMUD בדפדפן (03.11, EXT-14)
-'use strict';
-
-/**
- * טעינה עצלה של נכסי הפרויקט המקורי המוטמעים (ui/assets/imud/):
- *  - imud-fonts.json — קטלוג 439 פונטי העדיפות (הומרו ל-TTF)
- *  - shaar_main/sub/back, ornaments_up_down/left_right, section_dividers,
- *    header_ornaments — עיצובי SVG (חיטוי ברישום)
- *  - default_settings.json — לחצן «ברירות המחדל המקוריות»
- *
- * רישום דו-צדדי: asset-registry חי גם בחבילת ה-UI (רינדור תצוגה) וגם ב-Worker
- * (עימוד/ייצוא) — כל פריט נרשם בשניהם. פונטים: FontFace לתצוגה + registerFont
- * ב-Worker (מדידת font-metrics) + הבתים נשמרים לייצוא PDF.
- */
-
-const { registerAssets } = require('../engine/decoration/asset-registry');
-const { importImudSettings } = require('../engine/core/legacy-settings-map');
-const { getSettingDefs } = require('../engine/core/settings-registry');
-
-const BASE = 'assets/imud';
-const DESIGN_FILES = {
-  'shaar-main': 'shaar_main.json',
-  'shaar-sub': 'shaar_sub.json',
-  'shaar-back': 'shaar_back.json',
-  'orn-ud': 'ornaments_up_down.json',
-  'orn-lr': 'ornaments_left_right.json',
-  'divider': 'section_dividers.json',
-  'hdr-orn': 'header_ornaments.json'
-};
-
-function createImudLibrary(engine) {
-  const fontCatalog = { loaded: false, loading: null, families: [], byFamily: new Map(), bytesB64: new Map(), faces: new Set(), extended: [], extendedByFamily: new Map() };
-  const designs = new Map(); // collection → {loaded, items:[{id,name,box}], raw:Map|null, registered:Set}
-  const designLoads = new Map(); // **P-1:** collection → Promise (משיכת הקובץ המלא — single-flight)
-  const appliedFontsReady = new Map(); // family → Promise<ArrayBuffer|null>
-
-  async function fetchJson(path) {
-    const r = await fetch(path);
-    if (!r.ok) throw new Error(`imud-library: ${path} → ${r.status}`);
-    return r.json();
-  }
-
-  /** קטלוג הפונטים (443 משפחות מוטמעות + 1,315 משפחות הקטלוג המורחב).
-   * **S6.3 (בקשת משתמש מפורשת: "האם כל הגופנים יובאו מהגרסאות הקודמות?"):**
-   * קובצי ה-WOFF2 של הקטלוג המורחב (1,315 משפחות, 98MB) יובאו בפועל
-   * מהמקור (Green/V23) ל-fonts/ — כל משפחה נטענת ובת בחירה. TTF-ים
-   * נרשמים גם ב-Worker (מדידת אמת + ייצוא PDF); WOFF2-ים ב-FontFace
-   * לתצוגה בלבד (המדידה נופלת בשקיפות לטבלה — מנגנון _bindProfile).
-   * @returns {Promise<Array<{value:string,label:string,embedded:boolean}>>} */
-  async function loadFontCatalog() {
-    if (fontCatalog.loaded) return catalogEntries();
-    // **S5.2:** מטמון הבטחה בטיסה — שתי קריאות מקבילות (עלייה: פיקרים + ברירות
-    // מחדל) תפיקו טעינה אחת בלבד; בעבר נבדק רק loaded אחרי הפתרון ⇒ כל קריאה
-    // בזמן טעינה שיכפלה את ה-fetch (~400KB חינם). כישלון מנקה את המטמון —
-    // קריאה חוזרת תנסה שוב (לא תיתקע על הבטחה שנכשלה).
-    if (fontCatalog.loading) return fontCatalog.loading;
-    const p = (async () => {
-      const list = await fetchJson(`${BASE}/imud-fonts.json`);
-      fontCatalog.families = list.map(e => e.family);
-      for (const e of list) fontCatalog.byFamily.set(e.family, e.file);
-      fontCatalog.loaded = true;
-      // **S6.3:** הקטלוג המורחב — קובצי ה-WOFF2 יובאו ומוטמעים כעת בפועל;
-      // נטענים ל-byFamily כמו ה-TTF-ים (הכשלון אינו חוסם: הפיקרים יציגו
-      // את המוטמעות הבסיסיות בלבד, כמו קודם)
-      try {
-        const ext = await fetchJson(`${BASE}/fonts-extended.json`);
-        fontCatalog.extended = ext.map(e => e.family);
-        fontCatalog.extendedByFamily = new Map(ext.map(e => [e.family, e]));
-        for (const e of ext) {
-          if (!fontCatalog.byFamily.has(e.family)) fontCatalog.byFamily.set(e.family, e.file);
-        }
-      } catch (e) { fontCatalog.extended = []; fontCatalog.extendedByFamily = new Map(); }
-      return catalogEntries();
-    })();
-    fontCatalog.loading = p;
-    try {
-      return await p;
-    } finally {
-      fontCatalog.loading = null;
-    }
-  }
-
-  /** רשימת הפיקרים: מוטמעות ראשונות, אחר-כך הקטלוג המורחב — **S6.3:** קובצי
-   * ה-WOFF2 יובאו, ולכן כל המשפחות מוטמעות ונטענות; embedded=true לכולן. */
-  function catalogEntries() {
-    const entries = fontCatalog.families.map(f => ({ value: f, label: f, embedded: true }));
-    for (const f of fontCatalog.extended) {
-      entries.push({ value: f, label: f, embedded: true });
-    }
-    return entries;
-  }
-
-  /** **EXT-14 + S6.3: סיווג אמת למשפחה** — 'embedded' | 'unknown'. הקטלוג
-   * המורחב אינו "קטלוג-בלבד" עוד — קובציו יובאו והוא נטען כמו ה-TTF-ים;
-   * ההבחנה TTF(מדידה+ייצוא)/WOFF2(תצוגה) פנימית ל-loadFont לפי הסיומת. */
-  function fontStatus(family) {
-    const f = String(family || '').trim();
-    if (fontCatalog.byFamily.has(f)) return 'embedded';
-    return 'unknown';
-  }
-
-  /** טעינת פונט TTF: בתים ל-Worker (מדידה+ייצוא) + FontFace לתצוגה. @returns {Promise<ArrayBuffer|null>} */
-  async function loadFont(family) {
-    if (!fontCatalog.loaded) await loadFontCatalog();
-    const file = fontCatalog.byFamily.get(family);
-    if (!file) return null; // פונן מחוץ לספרייה — המערכת תיפול לגופן מערכת (מתועד)
-    if (appliedFontsReady.has(family)) return appliedFontsReady.get(family);
-    const p = (async () => {
-      const r = await fetch(`${BASE}/fonts/${file}`);
-      if (!r.ok) return null;
-      const buf = await r.arrayBuffer();
-      // בסיס 64 לייצוא HTML העצמאי (@font-face data-URI) — מחושב פעם אחת בטעינה
-      try {
-        const u8 = new Uint8Array(buf);
-        let bin = '';
-        const CH = 0x8000;
-        for (let i = 0; i < u8.length; i += CH) bin += String.fromCharCode.apply(null, u8.subarray(i, i + CH));
-        fontCatalog.bytesB64.set(family, btoa(bin));
-      } catch (e) { /* אין btoa (סביבה חריגה) — הייצוא ידלג על ההטמעה */ }
-      // 1) Worker: מדידת גופן אמיתי (measure-impl=font-metrics) + ייצוא PDF.
-      // **S6.3:** קובצי WOFF2 אינם ניתנים לפרסור ב-Worker (parseFont תומך
-      // sfnt בלבד) — דילוג מפורש על הרישום: תצוגה ב-FontFace (הדפדפן תומך
-      // WOFF2 מלידה), המדידה נופלת בשקיפות לטבלה (_bindProfile), והייצוא
-      // מדווח. TTF-ים נרשמים כרגיל.
-      // **S5.2:** רישום שמת עם ה-Worker (terminate/ביטול single-flight) — עדכון
-      // במפורש: הגופן לא נרשם במנוע. בלי זה ההבטחה היתה נפתרת ב"הכל בסדר"
-      // והמטמון (appliedFontsReady) היה מחזיר אותה לנצח ⇒ ייצוא תלוי/מדידה שגויה.
-      const isWoff2 = /\.woff2$/i.test(String(file || ''));
-      if (!isWoff2) {
-        try {
-          await engine.registerFont({ name: family, bytes: buf.slice(0) });
-        } catch (e) {
-          if (e && /worker-restarted|worker-error/.test(String(e.message))) throw e;
-          /* רישום נכשל (סיבה אחרת) — נמשיך ל-FontFace; הייצוא ידווח בבירור */
-        }
-      }
-      // 2) תצוגה: @font-face חי
-      if (!fontCatalog.faces.has(family) && typeof FontFace !== 'undefined') {
-        try {
-          const face = new FontFace(family, buf);
-          await face.load();
-          document.fonts.add(face);
-          fontCatalog.faces.add(family);
-        } catch (e) { /* פונט תצוגה נכשל — הייצוא עדיין תקין */ }
-      }
-      return buf;
-    })();
-    appliedFontsReady.set(family, p);
-    // **S5.2:** הבטחה שנדחתה (restart/קריסה) מנקה את המטמון — קריאה חוזרת
-    // תרשום מחדש על ה-Worker שהוזרם (respawn) ולא תחזיר הבטחה מתה לנצח.
-    p.catch(() => { appliedFontsReady.delete(family); });
-    return p;
-  }
-
-  /** **03.11(ג):** גופן יציב לייצוא PDF כשהגופן המבוקש אינו בספרייה —
-   * עדיפות לגרסאות "פרנק רוהל דף" (המקבילה התורנית של Frank Ruhl Libre),
-   * ואז "פרנק רה רגיל", ולבסוף המשפחה הראשונה בקטלוג. */
-  async function loadDefaultExportFont() {
-    if (!fontCatalog.loaded) await loadFontCatalog();
-    const prefs = ['פרנק רוהל דפ רגיל', 'פרנק רה רגיל'];
-    for (const f of prefs) {
-      if (fontCatalog.byFamily.has(f)) {
-        const bytes = await loadFont(f);
-        if (bytes) return { family: f, bytes };
-      }
-    }
-    const first = fontCatalog.families[0];
-    if (first) {
-      const bytes = await loadFont(first);
-      if (bytes) return { family: first, bytes };
-    }
-    return null;
-  }
-
-  /** רשימת עיצובי אוסף (מזהה+שם+תיבה) — **P-1 (S1-ו): טעינת אינדקס קל בלבד.**
-   * הבוררים בפאנל ההגדרות קוראים לכאן בעליית האפליקציה לכל האוספים; עד כאן
-   * נמשך הקובץ המלא (SVG-ב-JSON — 7.4MB סה״כ, 92% מהעברת העלייה — דוח
-   * PERFORMANCE_BASELINE P-1). כעת נמשך `<קובץ>.index.json` ({id,name,box}
-   * בלבד, ~68K סה״כ); ה-SVG עצמו נמשך על-ידי ensureDesign רק כשנבחר
-   * עיצוב בפועל (או על-ידי ערכת נושא באתחול — shaar בלבד).
-   * נפילה שקופה לאחור: אין אינדקס (404/שגיאה) ⇒ הקובץ המלא כמקודם —
-   * התנהגות זהה לספריות ישנות/חסרות אינדקס. */
-  async function listDesigns(collection) {
-    const meta = designs.get(collection);
-    if (meta && meta.loaded) return meta.items;
-    const file = DESIGN_FILES[collection];
-    if (!file) return [];
-    let items = null;
-    try {
-      const idx = await fetchJson(`${BASE}/${file.replace(/\.json$/, '.index.json')}`);
-      if (Array.isArray(idx)) items = idx.map(d => ({ id: d.id, name: d.name || d.id, box: d.box || null }));
-    } catch (e) { /* אין אינדקס — נפילה לקובץ המלא */ }
-    if (!items) {
-      const raw = await fetchJson(`${BASE}/${file}`);
-      items = (raw || []).map(d => ({ id: d.id, name: d.name || d.id, box: d.box || null }));
-      designs.set(collection, { loaded: true, items, raw: new Map((raw || []).map(d => [d.id, d])), registered: new Set() });
-      return items;
-    }
-    // מצב אינדקס: ה-raw (ה-SVG) טרם נטען — ensureDesign ימשוך את הקובץ המלא לפי דרישה.
-    designs.set(collection, { loaded: true, items, raw: null, registered: new Set() });
-    return items;
-  }
-
-  /** **P-1:** משיכת הקובץ המלא של אוסף (ה-SVG) — לפי דרישה בלבד, פעם אחת
-   * לאוסף (single-flight: קריאות מקבילות ממתינות לאותה הבטחה). שומר על
-   * רשימת הפריטים שכבר נטענה מהאינדקס — הבוררים אינם מתרוקנים. */
-  async function loadFullCollection(collection) {
-    const cur = designs.get(collection);
-    if (cur && cur.raw) return; // כבר נטען (נתיב היסטורי/נפילה לאחור)
-    if (designLoads.has(collection)) return designLoads.get(collection);
-    const p = (async () => {
-      const file = DESIGN_FILES[collection];
-      if (!file) throw new Error(`imud-library: unknown collection ${collection}`);
-      const raw = await fetchJson(`${BASE}/${file}`);
-      const m = designs.get(collection) || { loaded: false, items: [], registered: new Set() };
-      if (!m.items || !m.items.length) {
-        m.items = (raw || []).map(d => ({ id: d.id, name: d.name || d.id, box: d.box || null }));
-        m.loaded = true;
-      }
-      m.raw = new Map((raw || []).map(d => [d.id, d]));
-      designs.set(collection, m);
-    })();
-    designLoads.set(collection, p);
-    try { await p; } finally { designLoads.delete(collection); }
-  }
-
-  /** רישום פריט עיצוב בשני הצדדים (UI + Worker) והחזרת ההפניה המלאה.
-   * **P-1:** במצב אינדקס (ה-raw לא נטען) — משיכת הקובץ המלא של האוסף רק
-   * כעת, פעם אחת; שאר המנגנון לא השתנה (רישום דו-צדדי זהה). */
-  async function ensureDesign(collection, id) {
-    const meta0 = designs.get(collection);
-    if (meta0 && meta0.raw && meta0.raw.has(id) && meta0.registered && meta0.registered.has(id)) {
-      return `imud:${collection}:${id}`;
-    }
-    if (!meta0 || !meta0.loaded) { await listDesigns(collection); }
-    const meta1 = designs.get(collection);
-    if (!meta1 || !meta1.raw) { await loadFullCollection(collection); }
-    const m = designs.get(collection);
-    const item = m.raw && m.raw.get(id);
-    if (!item) return null;
-    // UI-side: רישום מקומי (התצוגה מרנדרת דרך dom-renderer)
-    const resUi = registerAssets(collection, [{ id: item.id, name: item.name, svg: item.svg, box: item.box }]);
-    if (!resUi.ok && resUi.registered === 0) throw new Error(`imud-library: design rejected (${resUi.rejected[0] && resUi.rejected[0].reason})`);
-    // Worker-side: העברת ה-SVG דרך הפרוטוקול (register-assets)
-    try {
-      await engine.registerAssets({ collection, items: [{ id: item.id, name: item.name, svg: item.svg, box: item.box }] });
-    } catch (e) { /* ה-Worker ידווח; התצוגה עדיין תקינה */ }
-    if (!m.registered) m.registered = new Set();
-    m.registered.add(id);
-    return `imud:${collection}:${id}`;
-  }
-
-  /** **03.11(ד):** פתרון ערך גופן (משפחה בודדת או מחסנית "'A', 'B', serif")
-   * למשפחה הראשונה הקיימת בקטלוג — בדיוק כפי שהדפדפן היה נופל במחסנית.
-   * @returns {string|null} שם משפחה מהקטלוג, או null אם אף אחת אינה זמינה. */
-  function resolveFamily(value) {
-    if (!fontCatalog.loaded || !value) return null;
-    const raw = String(value).replace(/'/g, '');
-    const parts = raw.split(',').map(s => s.trim()).filter(Boolean)
-      .filter(p => !/^(serif|sans-serif|monospace|cursive|fantasy|system-ui)$/i.test(p));
-    for (const p of parts) if (fontCatalog.byFamily.has(p)) return p;
-    return null;
-  }
-
-  /** **03.11(ד) + S5.2:** טעינת גופן לפי ערך הגדרה — תומך גם במחסנית (נפתרת מול
-   * הקטלוג) וגם במשפחה בודדת. מחזיר Promise<ArrayBuffer|null>.
-   * **S5.2:** ממתין קודם לטעינת הקטלוג — בעבר, קריאה לפני שהקטלוג נטען החזירה
-   * null בשקט (byFamily ריק) גם כשהמשפחה קיימת בספרייה (נתיב getExportFont). */
-  async function loadFontStack(value) {
-    if (value == null) return null;
-    if (!fontCatalog.loaded) {
-      try { await loadFontCatalog(); } catch (e) { /* ספרייה לא זמינה — ההגדרה תיפול לגופן מערכת */ }
-    }
-    const direct = fontCatalog.byFamily.get(String(value).trim());
-    if (direct) return loadFont(String(value).trim());
-    const resolved = resolveFamily(value);
-    return resolved ? loadFont(resolved) : null;
-  }
-
-  /** **EXT-14 (05.11): ערכות סגנון-ספר מהמקור (setting_sets/):** תלמוד/פרשנות/קונטרס —
-   * תצורות מלאות (249 מפתחות) שהמקור טען דרך הדרופדאון style-set-select
-   * (settings-manager.js: loadSettingsFromFile('setting_sets/<name>')). כאן אותה
-   * חוזה: כל ערכה עוברת את אותה טבלת disposition כמו ברירות המחדל — אין מסלול
-   * מיוחד; ההבדלים חייבים לשרוד את הייבוא (בדיקה מחייבת ב-setting-sets.test.js). */
-  const SETTING_SETS = ['תלמוד', 'פרשנות', 'קונטרס'];
-
-  /** רשימת הערכות המוטמעות (שמות קבצים בלבד — לא נטענות עד בחירה). */
-  function listSettingSets() { return SETTING_SETS.slice(); }
-
-  /** טעינת ערכה וייבוא מלא דרך importImudSettings (עם קטלוג הגופנים —
-   * כמו loadLegacyDefaults: מחסניות הגופן נפתרות למשפחות מוטמעות). */
-  async function loadSettingSet(name) {
-    if (!SETTING_SETS.includes(name)) throw new Error(`ערכה לא מוכרת: ${name}`);
-    if (!fontCatalog.loaded) await loadFontCatalog().catch(() => {});
-    const legacy = await fetchJson(`${BASE}/setting_sets/${encodeURIComponent(name)}.json`);
-    const { settings, unmapped, report } = importImudSettings(
-      legacy,
-      new Set(getSettingDefs().map(r => r.id)),
-      { availableFonts: fontCatalog.byFamily ? new Set(fontCatalog.byFamily.keys()) : undefined }
-    );
-    return { name, settings, unmapped, report };
-  }
-
-  /** ברירות המחדל המקוריות — ייבוא מלא דרך טבלת ה-disposition.
-   * **03.11(ד):** מועבר גם קטלוג הגופנים הזמין — כך שמחסניות הגופן של המקור
-   * ("'AlphaBlack', 'David Libre', serif") נפתרות מיד למשפחה הזמינה בפועל
-   * (David Libre) וההגדרות שמתקבלות ניתנות לטעינה ולמדידה אמיתית.
-   * **S4.15 (גופן מילת-החלון):** בטעינת הברירות נרשם גם FrankReal-Bold תחת
-   * השם 'FrankReal' — גופן מילת-החלון של המקור (המשתמש המקורי הריץ עם
-   * הגופן מותקן במערכת; הוכח מסימון הייחוס: 116 מילות-חלון ברוחב
-   * FrankReal-Bold בדיוק 0.03px). בלי זה — המדידה והתצוגה נופלות לגופן
-   * הגוף ושורות 0–1 של כל פסקת-חלון נשברות אחרת. */
-  async function loadLegacyDefaults() {
-    if (!fontCatalog.loaded) await loadFontCatalog().catch(() => {});
-    const legacy = await fetchJson(`${BASE}/default_settings.json`);
-    const { settings, unmapped, report } = importImudSettings(
-      legacy,
-      new Set(getSettingDefs().map(r => r.id)),
-      { availableFonts: fontCatalog.byFamily ? new Set(fontCatalog.byFamily.keys()) : undefined }
-    );
-    // **S4.15:** רישום גופן החלון (מדידה ב-Worker + FontFace לתצוגה + base64
-    // לייצוא HTML) — בלי להיכשל אם הקובץ חסר (fallback מתועד).
-    try { await loadWindowFont(); } catch (e) { /* אין FrankReal-Bold — fallback */ }
-    // **S4.26:** רישום גופן הכותרות (DavidLibre-Bold) — מדידה+תצוגה מודגשת.
-    try { await loadHeadingFont(); } catch (e) { /* אין DavidLibre-Bold — fallback */ }
-    return { settings, unmapped, report };
-  }
-
-  /** **S4.15:** טעינת FrankReal-Bold.ttf תחת המשפחה 'FrankReal' (מדידה+
-   * תצוגה+ייצוא) — לגופן מילת-החלון, כמו 'FrankReal' במערכת של המקור. */
-  async function loadWindowFont() {
-    if (appliedFontsReady.has('FrankReal')) return appliedFontsReady.get('FrankReal');
-    const p = (async () => {
-      const r = await fetch(`${BASE}/fonts/FrankReal-Bold.ttf`);
-      if (!r.ok) return null;
-      const buf = await r.arrayBuffer();
-      const u8 = new Uint8Array(buf);
-      try {
-        let bin = '';
-        const CH = 0x8000;
-        for (let i = 0; i < u8.length; i += CH) bin += String.fromCharCode.apply(null, u8.subarray(i, i + CH));
-        fontCatalog.bytesB64.set('FrankReal', btoa(bin));
-      } catch (e) { /* אין btoa — הייצוא ידלג */ }
-      try {
-        await engine.registerFont({ name: 'FrankReal', bytes: buf.slice(0) });
-      } catch (e) {
-        // **S5.2:** מוות ה-Worker (restart) — דחייה מפורשת + ניקוי המטמון (רישום
-        // חוזר בקריאה הבאה על המופע שהוזרם); כשל אחר — תצוגה בלבד כמו קודם.
-        if (e && /worker-restarted|worker-error/.test(String(e.message))) throw e;
-        /* רישום נכשל — תצוגה בלבד */
-      }
-      if (!fontCatalog.faces.has('FrankReal') && typeof FontFace !== 'undefined') {
-        try {
-          const face = new FontFace('FrankReal', buf);
-          await face.load();
-          document.fonts.add(face);
-          fontCatalog.faces.add('FrankReal');
-        } catch (e) { /* פונט תצוגה נכשל */ }
-      }
-      return buf;
-    })();
-    appliedFontsReady.set('FrankReal', p);
-    p.catch(() => { appliedFontsReady.delete('FrankReal'); }); // **S5.2:**
-    return p;
-  }
-
-  /** **S4.26 (דיווח משתמש: "האתר לא משתמש בגופני ברירת המחדל"):** גופן
-   * הכותרות של המקור בפועל — DavidLibre-Bold. נרשם ב-Worker תחת
-   * 'DavidLibre-Bold' (מדידת כותרות — headingApi) וכ-FontFace של המשפחה
-   * 'David Libre' במשקל 700 (תצוגת כותרות מודגשות — כמו הייחוס, שבו כל
-   * הכותרות ושורות ה-TOC ב-DavidLibre-Bold). */
-  async function loadHeadingFont() {
-    if (appliedFontsReady.has('DavidLibre-Bold')) return appliedFontsReady.get('DavidLibre-Bold');
-    const p = (async () => {
-      const r = await fetch(`${BASE}/fonts/DavidLibre-Bold.ttf`);
-      if (!r.ok) return null;
-      const buf = await r.arrayBuffer();
-      try {
-        await engine.registerFont({ name: 'DavidLibre-Bold', bytes: buf.slice(0) });
-      } catch (e) {
-        // **S5.2:** מוות ה-Worker (restart) — דחייה מפורשת + ניקוי המטמון.
-        if (e && /worker-restarted|worker-error/.test(String(e.message))) throw e;
-        /* רישום נכשל — תצוגה בלבד */
-      }
-      if (typeof FontFace !== 'undefined') {
-        try {
-          const face = new FontFace('David Libre', buf, { weight: '700' });
-          await face.load();
-          document.fonts.add(face);
-          if (!fontCatalog.faces.has('David Libre')) fontCatalog.faces.add('David Libre');
-        } catch (e) { /* פונט תצוגה נכשל */ }
-      }
-      return buf;
-    })();
-    appliedFontsReady.set('DavidLibre-Bold', p);
-    p.catch(() => { appliedFontsReady.delete('DavidLibre-Bold'); }); // **S5.2:**
-    return p;
-  }
-
-  /** CSS של הפונטים שנטענו — להטמעה בייצוא HTML העצמאי (@font-face data-URI). */
-  function exportFontCss() {
-    let css = '';
-    for (const [family, b64] of fontCatalog.bytesB64) {
-      const fmt = /\.woff2$/i.test(String(fontCatalog.byFamily.get(family) || '')) ? 'woff2' : 'ttf';
-      css += `@font-face{font-family:'${family}';src:url(data:font/${fmt};base64,${b64}) format('${fmt === 'woff2' ? 'woff2' : 'truetype'}');font-display:swap}\n`;
-    }
-    return css;
-  }
-
-  /** **S6.2 (בקשת משתמש — "האם כל העיטורים, שערים... יובאו?"): הפעלת
-   * ערכת שערים מאוחדת לפי מספר ערכה** — כמו active-theme-select של המקור
-   * ("json_theme_40" ⇒ ערכה 40: שער ראשי + משנה + אחורי מעוצבים יחד,
-   * REQ-ORN-06). מאתר בכל אוסף את הפריט ששמו מתחיל ב-"<מספר> " (כגון
-   * "40   שער ראשי"), רושם אותו בשני הצדדים ומחזיר את ההפניות במבנה
-   * מפתחות-הגדרות מוכן להחלה: { 'imud-shaar-main': 'imud:shaar-main:<id>', … }.
-   * @returns {Promise<object>} רק הערכים שנמצאו (ערכה חלקית בספרייה ⇒ חלקית)
-   */
-  async function ensureThemeSet(setNo) {
-    const ROLES = [
-      { collection: 'shaar-main', setting: 'imud-shaar-main' },
-      { collection: 'shaar-sub', setting: 'imud-shaar-sub' },
-      { collection: 'shaar-back', setting: 'imud-shaar-back' }
-    ];
-    const prefix = new RegExp(`^\\s*${Number(setNo)}\\s+`);
-    const out = {};
-    for (const { collection, setting } of ROLES) {
-      try {
-        const items = await listDesigns(collection);
-        const hit = items.find((it) => prefix.test(String(it.name || '')));
-        if (!hit) continue;
-        const ref = await ensureDesign(collection, hit.id);
-        if (ref) out[setting] = ref;
-      } catch (e) { /* אוסף חסר — התפקיד נשאר בלי רקע, מתועד */ }
-    }
-    return out;
-  }
-
-  /** **EXT-9:** משפחות הקטלוג שנטענו (סינכרוני) — לפתרון מחסניות גופן בייבוא
-   * הגדרות/תבניות (importImudSettings ctx.availableFonts). null אם הקטלוג
-   * עוד לא נטען — הייבוא ייפול למשפחה הראשונה (התנהגות היסטורית, מתועדת). */
-  function catalogFamilies() {
-    return fontCatalog.loaded ? new Set(fontCatalog.byFamily.keys()) : null;
-  }
-
-  return { loadFontCatalog, loadFont, loadDefaultExportFont, listDesigns, ensureDesign, ensureThemeSet, loadLegacyDefaults, loadHeadingFont, exportFontCss, resolveFamily, loadFontStack, catalogFamilies, listSettingSets, loadSettingSet, fontStatus, catalogEntries };
-}
-
-module.exports = { createImudLibrary, DESIGN_FILES };
 
 };
 
