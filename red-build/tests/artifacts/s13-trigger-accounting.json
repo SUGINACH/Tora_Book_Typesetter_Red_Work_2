@@ -6,6 +6,7 @@
     "justify",
     "ledger-finalize",
     "measure",
+    "notes-budget",
     "page-model",
     "page-plan",
     "parse",
@@ -14,6 +15,6 @@
     "scope-map",
     "toc"
   ],
-  "eventsTotal": 13,
+  "eventsTotal": 14,
   "notExercised": []
 }
