@@ -151,15 +151,18 @@ function typeset(rawText, settingsIn, env = {}) {
   const ledger = new Ledger();
   const notesMode = settings['note-placement-mode'];
   const parenScale = Number(settings['paren-style-scale']) || 1;
-  // **S75 (בקשה 1) — מנוע יחיד (2ae45b9+):** מצב הצבת ההערות מתועד בכל ריצה.
-  // המנוע המאוחד מפעיל כרגע את שער תקציב-ההערות בלבד (האופציה 'legacy'
-  // של fn-placement-mode); מצב 'body-first' (הגוף ממלא, ההערות מתחת — תקרה
-  // 50%) טרם הובל מהמנוע הישן וההגדרה חסומה ב-UI (unifiedSupport:false).
+  // **S75 (בקשה 1) — מנוע יחיד (2ae45b9+) + W-4 (F-2.2, 27.11):** מצב הצבת
+  // ההערות מתועד בכל ריצה. המנוע המאוחד מפעיל את שער תקציב-ההערות בלבד
+  // (האופציה 'legacy' של fn-placement-mode) — ומאז W-4 ברירת המחדל ברישום
+  // משקפת זאת (אמת-חוזה; לפני כן עמדה על body-first שהמנוע מתעלם ממנו).
+  // מצב 'body-first' (הגוף ממלא, ההערות מתחת — תקרה 50%) טרם הובל מהמנוע
+  // הישן; ההגדרה חסומה ב-UI (unifiedSupport:false) והפורט המלא — משימת
+  // השלמה פתוחה (שלב Notes) שבסיומה תחזור ברירת המחדל ל-body-first (S75).
   // האירוע המפורש הזה מונע שקר-שקט: המשתמש רואה בטרייס/בדוח איזה מנגנון
-  // פעל בפועל. הפורט המלא — משימת השלמה פתוחה (שלב Notes).
+  // פעל בפועל.
   const fnPlacement = settings['fn-placement-mode'];
   eventLog.emit('notes-budget', 'fn-placement-mode', {
-    requested: fnPlacement != null ? String(fnPlacement) : 'body-first',
+    requested: fnPlacement != null ? String(fnPlacement) : 'legacy',
     active: 'legacy (תקציב-הערות)',
     ported: false
   });

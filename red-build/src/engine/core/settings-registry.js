@@ -148,12 +148,14 @@ const registry = [
   K('footnote-columns', 'number', 1, P.NOTES, 'sel-fn-cols', ['layout/footnote-budget'], 'fx:fn-cols', { enum: [1, 2] }),
   K('footnote-separator-rule', 'enum', 'regular', P.NOTES, 'sel-fn-rule', ['core/materialize', 'core/page-model', 'output/pagemodel-dom-renderer', 'output/export-api'], 'fx:fn-rule', { enum: ['none', 'regular', 'circles', 'sparkle', 'star', 'diamond'], note: 'Unified: יוצר fn-rule decoration ו-pdfOps בתוך PageModel; שינוי מחייב עימוד מחדש' }),
   K('fn-layout-mode', 'enum', 'continuous', P.NOTES, 'sel-fn-layout', ['layout/dp-planner', 'output/dom-renderer'], 'fx:fn-layout', { enum: ['block', 'continuous'], note: 'S4.26 (דיווח משתמש 05.11): ברירת המחדל זרימה רציפה — הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה; block=כל הערה בלוק משלה' }),
-  // **S75 (בקשה 1 — 12.11, בחירת מנגנון הצבת ההערות):** ברירת המחדל = המנגנון
-  // החדש (body-first): הגוף ממלא את אזור הטקסט העיקרי תמיד; המרזב נכנס
-  // בחלל שמתחת לגוף עד תקרה יחסית (50% מגובה הזרימה בברירת המחדל); הערה
-  // שאינה נכנסת מוצבת חלקית כפי יכולת ההכלה והמשכה זורם לעמוד הבא;
-  // המשך אינו מקבל מספר. legacy = מנגנון S74 (שער תקציב + קיבולת מלאה).
-  K('fn-placement-mode', 'enum', 'body-first', P.NOTES, 'sel-fn-placement', ['core/pipeline'], 'fx:fn-placement', { enum: ['body-first', 'legacy'], unifiedSupport: false, note: 'S75 (בקשה 1): body-first — הגוף ממלא את העמוד וההערות בחלל שמתחת (תקרה 50%). מנוע יחיד (2ae45b9+): מנגנון body-first טרם הובל למנוע המאוחד — המנוע מפעיל את שער תקציב-ההערות (האופציה legacy) תמיד; הפרופיל חוסם שינוי ההגדרה עד השלמת הפורט (משימת השלמה פתוחה — שלב Notes). pipeline מתעד את המצב באירוע מפורש בכל ריצה.' }),
+  // **S75 (בקשה 1 — 12.11) + W-4 (F-2.2, 27.11):** המשתמש בחר body-first כמנגנון
+  // היעד (הגוף ממלא את אזור הטקסט העיקרי תמיד; המרזב נכנס בחלל שמתחת לגוף
+  // עד תקרה יחסית 50%; המשכים זורמים לעמוד הבא בלי מספר). עד להשלמת הפורט
+  // (משימת "שלב Notes" הפתוחה) המנוע המאוחד מפעיל את שער תקציב-ההערות בלבד
+  // (האופציה legacy) — ולכן **ברירת המחדל משקפת את ההתנהגות בפועל** (אמת-
+  // חוזה לפי F-2.2/W-4; הפרופיל חוסם שינוי). בהשלמת הפורט תחזור ברירת המחדל
+  // ל-body-first כהכרעת S75.
+  K('fn-placement-mode', 'enum', 'legacy', P.NOTES, 'sel-fn-placement', ['core/pipeline'], 'fx:fn-placement', { enum: ['body-first', 'legacy'], unifiedSupport: false, note: 'W-4 (F-2.2, 27.11): ברירת המחדל = legacy — שער תקציב-ההערות של S74, שהוא המנגנון היחיד שהמנוע המאוחד מפעיל בפועל (2ae45b9+). body-first (בקשת S75 — הגוף ממלא, ההערות בחלל שמתחת, תקרה 50%) טרם הובל; בהשלמת הפורט (שלב Notes) תחזור ברירת המחדל ל-body-first. הפרופיל חוסם שינוי ההגדרה; pipeline מתעד את המצב באירוע מפורש בכל ריצה.' }),
   K('endnotes-enabled', 'bool', false, P.NOTES, 'chk-endnotes', ['layout/endnote-pages'], 'fx:endnotes-on', { note: 'נגזר מ‑note-placement-mode=endnotes (D-39); קלט ישן true ממופה ל‑mode=endnotes בהגירה (project-io)' }),
   K('endnote-title-text', 'string', 'הערות', P.NOTES, 'inp-endnote-title', ['layout/endnote-pages'], 'fx:endnote-title'),
   K('endnote-columns', 'number', 1, P.NOTES, 'sel-en-cols', ['layout/endnote-pages'], 'fx:en-cols', { enum: [1, 2], note: 'S7.1.1: טור אחד או שניים בעמודי הערות' }),
