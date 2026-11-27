@@ -12494,6 +12494,11 @@ function parseSvgPaint(svg) {
 function parseColor(c) {
   const s = String(c || '').trim();
   if (!s || s === 'none' || s === 'transparent') return null;
+  // **תיקון url(#…):** מילוי דפוס (pattern) אינו צבע אחיד — עד כאן נפל
+  // לברירת המחדל והצורה נצבעה שחור בנתיב הווקטורי של ה-PDF (רקעים שלמים
+  // נמרחו שחור). אין ריצוף דפוס בנתיב זה — הצורה מדולגת (הר�סטר מכסה אותה
+  // בעיצובים העשירים).
+  if (/^url\(/i.test(s)) return null;
   if (s === 'currentColor') return [0, 0, 0];
   let m = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(s);
   if (m) return [parseInt(m[1] + m[1], 16) / 255, parseInt(m[2] + m[2], 16) / 255, parseInt(m[3] + m[3], 16) / 255];
@@ -22139,8 +22144,13 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
  * @param {Uint8Array} fontBytes — גופן הייצוא (TTF) ל-/F1
  * @param {string} [fontName] — שם פרופיל הרישום
  */
-function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
+function exportPdfFromModel(model, settingsIn, fontBytes, fontName, opts = {}) {
   if (typeof Buffer === 'undefined') return { ok: false, error: 'no-buffer' }; // דפדפן — נתיב Node בלבד (מתועד)
+  // **עיצובי שערים עשירים (תיקון DOM≠PDF):** מפת רסטרים מה-Worker
+  // (svg-raster) — `p<page>#<decorationIndex>` → {jpeg,w,h}. העיטור מוקרן
+  // לכותב עם הרסטר במקום הפענוח הווקטורי החלקי (strokes/use/defs נשמטים
+  // בו — שורש "שחור ב-DOM, אפור ב-PDF"). ריק/חסר ⇒ הנתיב הווקטורי כמו קודם.
+  const rasters = (opts && opts.rasters instanceof Map) ? opts.rasters : null;
   if (!model || model.schema !== 'pagemodel-v1' || !Array.isArray(model.pages) || !model.pages.length) {
     return { ok: false, error: 'model-required: נדרש PageModel תקין — אין נתיב עימוד חלופי בייצוא מהמודל' };
   }
@@ -22167,7 +22177,12 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName) {
       footnotes: mp.footnotes || [],
       folio: mp.folio || null,
       header: mp.header || null,
-      decorations: (mp.decorations || []).filter(d => Array.isArray(d.pdfOps) && d.pdfOps.length)
+      decorations: (mp.decorations || [])
+        .map((d, di) => {
+          const r = rasters ? rasters.get(`p${mp.index}#${di}`) : null;
+          return (r && r.jpeg) ? { ...d, raster: r } : d; // המודל קפוא — העתק עם הרסטר, בלי לשנותו
+        })
+        .filter(d => d.raster || (Array.isArray(d.pdfOps) && d.pdfOps.length))
     }));
     // ---- מלאי תווים מהטקסט שמצויר בפועל (מהמודל) ----
     const drawnParts = [];
