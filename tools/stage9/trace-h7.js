@@ -29,7 +29,7 @@ const h7Tokens = detailed.tokens.filter(t => t.type === 'heading' && t.level ===
 console.log(`מקור (טוקנייזר מאוחד): טוקנים=${detailed.tokens.length}, H7=${h7Tokens.length}`);
 
 // מקור לפי טוקנייזר המורשת (sideNote מוצמד לפסקה הבאה)
-const { tokenizeDoc } = require(path.join(RB, 'src/engine/layout/legacy-imud-flow'));
+const { tokenizeDoc } = require(path.join(__dirname, '..', 'layout-audit', 'legacy-text-utilities')); // **2ae45b9:** פונקציית הטקסט עברה לכלי האודיט (המנוע הוסר)
 const cfg = { fnOpen: String(defaults['fn-delim-open'] || '['), fnClose: String(defaults['fn-delim-close'] || ']') };
 const legTok = tokenizeDoc(text, cfg);
 const legSideParas = legTok.tokens.filter(t => t.sideNote);

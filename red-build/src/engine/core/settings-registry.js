@@ -52,9 +52,9 @@ const registry = [
   // **S73 (בקשת משתמש — "הוסף בחירת גופן וגודל למספר העמוד"):** גופן/גודל/צבע
   // לגיליון. ברירת המחדל משמרת את ההתנהגות הקודמת: גופן ריק = ירושת גוף
   // הטקסט, גודל 10pt, שחור. התצוגה (dom-renderer) והמקרנים קוראים אותם כאחד.
-  K('page-num-font', 'font', 'ליבורנה מודגש', P.GRID, 'sel-page-num-font', ['output/legacy-projector', 'output/geometry-projector', 'output/dom-renderer'], 'fx:page-num-font', { note: "S75 (בקשה 2, 12.11): ברירת המחדל גופן הייחוס — Livorna-Bold 11pt (נמדד בייחוס עמ' ט-יא: הגיליון ב'ליבורנה מודגש'); ריק = גוף הטקסט. עד S74 היתה ברירת המחדל ריקה (גוף הטקסט) 10pt" }),
-  K('page-num-size-pt', 'number', 11, P.GRID, 'rng-page-num-size', ['output/legacy-projector', 'output/geometry-projector', 'output/dom-renderer'], 'fx:page-num-size', { min: 6, max: 20, note: "S75 (בקשה 2, 12.11): 11pt כמדידת הייחוס (עמ' ט-יא); עד S74 היה 10" }),
-  K('page-num-color', 'color', '#000000', P.GRID, 'inp-page-num-color', ['output/legacy-projector', 'output/geometry-projector', 'output/dom-renderer'], 'fx:page-num-color', { note: 'S73: צבע הגיליון — ברירת מחדל שחורה (כמו כל הגופנים)' }),
+  K('page-num-font', 'font', 'ליבורנה מודגש', P.GRID, 'sel-page-num-font', ['layout/structural-stamps', 'core/materialize', 'output/dom-renderer'], 'fx:page-num-font', { note: "S75 (בקשה 2, 12.11): ברירת המחדל גופן הייחוס — Livorna-Bold 11pt (נמדד בייחוס עמ' ט-יא: הגיליון ב'ליבורנה מודגש'); ריק = גוף הטקסט. עד S74 היתה ברירת המחדל ריקה (גוף הטקסט) 10pt" }),
+  K('page-num-size-pt', 'number', 11, P.GRID, 'rng-page-num-size', ['layout/furniture-geometry', 'output/dom-renderer'], 'fx:page-num-size', { min: 6, max: 20, note: "S75 (בקשה 2, 12.11): 11pt כמדידת הייחוס (עמ' ט-יא); עד S74 היה 10" }),
+  K('page-num-color', 'color', '#000000', P.GRID, 'inp-page-num-color', ['layout/structural-stamps', 'core/materialize', 'output/dom-renderer'], 'fx:page-num-color', { note: 'S73: צבע הגיליון — ברירת מחדל שחורה (כמו כל הגופנים)' }),
   // **S9 (D-61):** page-num-start-idx — שחזור V1 מלא (REQ-HDR-03): מספור מוצג רק מסוד ה‑counted
   // הזה ואילך; הערך האפקטיבי = סוד − start‑idx + initial‑value (נוסחת V1 formatPageNumberDisplay).
   K('page-num-start-idx', 'number', 1, P.GRID, 'inp-page-num-start-idx', ['decoration/folio'], 'fx:folio-start-idx', { min: 1, max: 999, note: 'שוחזר מ‑V1 (REQ-HDR-03): סוד העמוד הנספר שממנו מתחיל התצוגה' }),
@@ -68,7 +68,7 @@ const registry = [
   // **S73 (בקשת משתמש — "לכל גופן הניתן לבחירה יש להוסיף גם בחירת צבע"):**
   // צבע פר-גופן; ברירת המחדל של כולם — ללא יוצא מן הכלל — שחורה (#000000).
   // נצרכים במקרנים (מילים מצוירות ב-PDF) וב-dom-renderer (תצוגה חיה).
-  K('body-color', 'color', '#000000', P.TYPO, 'inp-body-color', ['output/dom-renderer', 'output/legacy-projector', 'output/geometry-projector'], 'fx:body-color', { note: 'S73: צבע גוף הטקסט — שחור כברירת מחדל' }),
+  K('body-color', 'color', '#000000', P.TYPO, 'inp-body-color', ['core/materialize', 'output/pagemodel-dom-renderer', 'output/dom-renderer'], 'fx:body-color', { note: 'S73: צבע גוף הטקסט — שחור כברירת מחדל' }),
   K('body-font-size-pt', 'number', 14, P.TYPO, 'rng-body-size', ['typography/measure-api'], 'fx:body-size', { min: 9, max: 24 }),
   K('body-line-height', 'number', 1.4, P.TYPO, 'rng-body-lh', ['typography/kp-linebreak'], 'fx:body-lh', { min: 1.2, max: 1.6, note: 'פלפול 1.25 / קריאה 1.45' }),
   // D-42 (P1-2): קדם־פאס סוגריים לפני מדידה — REQ-PAR-ST-02. סקאלה 1.0 = כבוי (ברירת מחדל, לא משנה hash).
@@ -79,15 +79,15 @@ const registry = [
   K('first-word-align-cap-top', 'bool', true, P.TYPO, 'chk-fw-cap-align', ['typography/dropword'], 'fx:fw-cap', { note: 'REQ-LB-05: קצה עליון לקו בסיס גוף — לא baseline' }),
   K('first-word-size-em', 'number', 2, P.TYPO, 'rng-fw-size-em', ['typography/dropword'], 'fx:fw-size-em', { min: 1, max: 4, step: 0.1, note: 'S4.5: גודל המילה הראשונה ב-em (המקור: size-first-word=1.5; בעבר היה כפול 2 מוקשה)' }),
   K('first-word-font', 'font', '', P.TYPO, 'sel-fw-font', ['typography/dropword'], 'fx:fw-font', { note: 'S4.5: גופן נפרד למילה הראשונה (המקור: font-first-word=FrankReal); ריק = גופן הגוף' }),
-  K('first-word-color', 'color', '#000000', P.TYPO, 'inp-fw-color', ['output/legacy-projector', 'output/dom-renderer'], 'fx:fw-color', { note: 'S73: צבע המילה הראשונה/מילת-החלון — שחור כברירת מחדל' }),
+  K('first-word-color', 'color', '#000000', P.TYPO, 'inp-fw-color', ['core/materialize'], 'fx:fw-color', { note: 'S73: צבע המילה הראשונה/מילת-החלון — שחור כברירת מחדל' }),
   K('dh-auto-detect', 'bool', true, P.TYPO, 'chk-dh-detect', ['parser/block-tokenizer'], 'fx:dh-detect', { note: 'דיבור המתחיל עד נקודה/מקף' }),
   K('dh-font', 'font', 'David HB', P.TYPO, 'sel-dh-font', ['typography/measure-api'], 'fx:dh-font'),
   K('dh-color', 'color', '#000000', P.TYPO, 'inp-dh-color', ['core/pipeline'], 'fx:dh-color', { note: 'S73: צבע דיבור-המתחיל — שחור כברירת מחדל (מוצמד למודל כמו dh-font)' }),
   // **S6.3 (חיבור הגדרות):** גוף ההקדמה (f-h0-body במקור — Frank Ruhl
   // Libre 11.5pt) וכותרת עמודי ההערות (f-note-title — David Libre).
-  K('heading-0-body-font', 'font', 'Frank Ruhl Libre', P.TYPO, 'sel-h0-body-font', ['layout/legacy-imud-flow'], 'fx:h0-body-font', { note: 'S6.3: גוף ההקדמה — מדידה (prefaceApi) ורינדור באותו גופן' }),
-  K('heading-0-body-size-pt', 'number', 11.5, P.TYPO, 'rng-h0-body-size', ['core/pipeline', 'layout/legacy-imud-flow'], 'fx:h0-body-size', { min: 6, max: 40, step: 0.5, note: 'RC-2a (i004): גודל גוף ההקדמה — המקור s-h0-body=11.5; הפיץ׳ 11.5×1.34×4/3 = H0_LINE_H. עד כאן לא מופוה ייבוא ⇒ ההקדמה זרמה ב-12pt' }),
-  K('endnote-title-font', 'font', 'David Libre', P.NOTES, 'sel-endnote-title-font', ['layout/legacy-imud-flow'], 'fx:endnote-title-font', { note: 'S6.3: גופן כותרת עמודי הערות' }),
+  K('heading-0-body-font', 'font', 'Frank Ruhl Libre', P.TYPO, 'sel-h0-body-font', ['core/legacy-settings-map'], 'fx:h0-body-font', { note: 'S6.3: גוף ההקדמה — מדידה (prefaceApi) ורינדור באותו גופן' }),
+  K('heading-0-body-size-pt', 'number', 11.5, P.TYPO, 'rng-h0-body-size', ['core/pipeline', 'core/legacy-settings-map'], 'fx:h0-body-size', { min: 6, max: 40, step: 0.5, note: 'RC-2a (i004): גודל גוף ההקדמה — המקור s-h0-body=11.5; הפיץ׳ 11.5×1.34×4/3 = H0_LINE_H. עד כאן לא מופוה ייבוא ⇒ ההקדמה זרמה ב-12pt' }),
+  K('endnote-title-font', 'font', 'David Libre', P.NOTES, 'sel-endnote-title-font', ['layout/structural-stamps', 'core/legacy-settings-map'], 'fx:endnote-title-font', { note: 'S6.3: גופן כותרת עמודי הערות' }),
   K('body-last-line-align', 'enum', 'center', P.TYPO, 'sel-last-line-align', ['core/materialize', 'core/page-model', 'output/pagemodel-dom-renderer', 'output/export-api'], 'fx:last-line-align', { enum: ['center', 'right', 'stretch'], note: 'Unified: נקבע ב-LineModel.align ומוקרן מה-PageModel; שינוי מחייב עימוד מחדש' }),
 
   // ---- כותרות 0–7 (HEADINGS) ----
@@ -100,7 +100,7 @@ const registry = [
     K(`heading-${h}-font`, 'font', 'David HB', P.HEADINGS, `sel-h${h}-font`, ['typography/measure-api'], `fx:h${h}-font`),
     // **S73 (צבע פר-גופן):** צבע כל רמת כותרת — ברירת מחדל שחורה ללא יוצא
     // מן הכלל (בקשת משתמש). נצרך בשני המקרנים וב-dom-renderer (תצוגה=ייצוא).
-    K(`heading-${h}-color`, 'color', '#000000', P.HEADINGS, `inp-h${h}-color`, ['output/legacy-projector', 'output/geometry-projector', 'output/dom-renderer'], `fx:h${h}-color`),
+    K(`heading-${h}-color`, 'color', '#000000', P.HEADINGS, `inp-h${h}-color`, ['core/materialize', 'output/dom-renderer'], `fx:h${h}-color`),
     K(`heading-${h}-size-pt`, 'number', [20, 18, 16, 15, 14, 14, 13, 12][h], P.HEADINGS, `rng-h${h}-size`, ['typography/measure-api'], `fx:h${h}-size`, { min: 8, max: 48 }),
   ]),
   // D-45→D-54: h2-orn-scope חזר בסעיף העיטורים להלן עם מנגנום חי (S8).
@@ -153,16 +153,16 @@ const registry = [
   // בחלל שמתחת לגוף עד תקרה יחסית (50% מגובה הזרימה בברירת המחדל); הערה
   // שאינה נכנסת מוצבת חלקית כפי יכולת ההכלה והמשכה זורם לעמוד הבא;
   // המשך אינו מקבל מספר. legacy = מנגנון S74 (שער תקציב + קיבולת מלאה).
-  K('fn-placement-mode', 'enum', 'body-first', P.NOTES, 'sel-fn-placement', ['layout/legacy-imud-flow'], 'fx:fn-placement', { enum: ['body-first', 'legacy'], note: 'S75 (בקשה 1): body-first (ברירת המחדל) — הגוף ממלא את העמוד; ההערות נכנסות בחלל שמתחת לגוף (תקרה 50% מגובה הזרימה); הערה שאינה נכנסת מוצבת חלקית והמשכה בעמוד הבא; legacy = מנגנון S74 הקודם (שער תקציב-ההערות + קיבולת עמוד מלאה)' }),
+  K('fn-placement-mode', 'enum', 'body-first', P.NOTES, 'sel-fn-placement', ['core/pipeline'], 'fx:fn-placement', { enum: ['body-first', 'legacy'], unifiedSupport: false, note: 'S75 (בקשה 1): body-first — הגוף ממלא את העמוד וההערות בחלל שמתחת (תקרה 50%). מנוע יחיד (2ae45b9+): מנגנון body-first טרם הובל למנוע המאוחד — המנוע מפעיל את שער תקציב-ההערות (האופציה legacy) תמיד; הפרופיל חוסם שינוי ההגדרה עד השלמת הפורט (משימת השלמה פתוחה — שלב Notes). pipeline מתעד את המצב באירוע מפורש בכל ריצה.' }),
   K('endnotes-enabled', 'bool', false, P.NOTES, 'chk-endnotes', ['layout/endnote-pages'], 'fx:endnotes-on', { note: 'נגזר מ‑note-placement-mode=endnotes (D-39); קלט ישן true ממופה ל‑mode=endnotes בהגירה (project-io)' }),
   K('endnote-title-text', 'string', 'הערות', P.NOTES, 'inp-endnote-title', ['layout/endnote-pages'], 'fx:endnote-title'),
   K('endnote-columns', 'number', 1, P.NOTES, 'sel-en-cols', ['layout/endnote-pages'], 'fx:en-cols', { enum: [1, 2], note: 'S7.1.1: טור אחד או שניים בעמודי הערות' }),
-  K('f-note-body-font', 'font', 'אסיסטנט קל מאוד', P.NOTES, 'sel-fnote-body-font', ['layout/footnote-budget', 'layout/legacy-imud-flow'], 'fx:fnote-body-font', { note: 'S74 (בעיה 5): ברירת המחדל של הרינדור בפועל של הגרסה הישנה — Assistant ExtraLight 8.5pt (נמדד בייחוס עמ׳ 31/37: כל שורות גוף ההערה; הסמן בלבד FRL 8pt). הגדרת f-note-body הישנה (FRL) לא חוברה לרינדור בפועל במקור' }),
+  K('f-note-body-font', 'font', 'אסיסטנט קל מאוד', P.NOTES, 'sel-fnote-body-font', ['layout/footnote-budget', 'layout/dp-planner', 'layout/notes-model', 'line/line-items', 'output/export-api'], 'fx:fnote-body-font', { note: 'S74 (בעיה 5): ברירת המחדל של הרינדור בפועל של הגרסה הישנה — Assistant ExtraLight 8.5pt (נמדד בייחוס עמ׳ 31/37: כל שורות גוף ההערה; הסמן בלבד FRL 8pt). הגדרת f-note-body הישנה (FRL) לא חוברה לרינדור בפועל במקור' }),
   K('s-note-body-font', 'font', 'Frank Ruhl Libre', P.NOTES, 'sel-snote-body-font', ['layout/side-notes'], 'fx:snote-body-font'),
   // **S73 (צבע פר-גופן — הערות):** ברירת מחדל שחורה (בקשת משתמש מפורשת:
   // "ברירת המחדל של כל הגופנים ללא יוצא מן הכלל = שחור"). האפור הקבוע
   // (#404040) של הערות-הצד הוחלף בהגדרה.
-  K('f-note-body-color', 'color', '#000000', P.NOTES, 'inp-fnote-body-color', ['output/legacy-projector', 'output/geometry-projector', 'output/dom-renderer'], 'fx:fnote-body-color'),
+  K('f-note-body-color', 'color', '#000000', P.NOTES, 'inp-fnote-body-color', ['core/materialize'], 'fx:fnote-body-color'),
   K('s-note-body-color', 'color', '#000000', P.NOTES, 'inp-snote-body-color', ['output/geometry-projector', 'output/dom-renderer'], 'fx:snote-body-color'),
   K('fn-bar-max-height-px', 'number', 0, P.NOTES, 'rng-fn-bar-max', ['layout/dp-planner'], 'fx:fn-bar-max', { min: 0, max: 1000, note: 'S4.26 (דיווח משתמש 05.11): 0=קיבולת העמוד המלאה (ברירת המחדל — הערה ארוכה ממלאת את העמוד לפני חיתוך); ערך חיובי נחתם לקיבולת' }),
   K('long-footnote-policy', 'enum', 'split', P.NOTES, 'sel-long-fn', ['layout/dp-planner'], 'fx:long-fn', { enum: ['split', 'move-whole', 'reject-to-body'], note: 'REQ-FN-02; split=המשך במרזב העמוד הבא עם סימון המשך; reject-to-body=השבה מלאה לגוף (BRZ-15)' }),
@@ -268,25 +268,25 @@ const registry = [
   // שאינן זמינות (Lia Sgula/Livorna/Alpha* אינן בספרייה — המקור עצמו נפל ל-Bellefair/
   // David Libre/Frank Ruhl Libre דרך ה-fallbacks, ואלה מוטמעים כעת בנכסים).
   K('shaar-title-font', 'font', 'Bellefair', P.THEMES, 'sel-shaar-title-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-title-font', { note: "מקור: f-sh-title=\"'Lia Sgula', 'Bellefair', serif\" — Lia Sgula אינה זמינה; Bellefair המוטמע" }),
-  K('shaar-title-color', 'color', '#000000', P.THEMES, 'inp-shaar-title-color', ['layout/legacy-imud-flow', 'output/geometry-projector', 'output/dom-renderer'], 'fx:shaar-title-color', { note: 'S73: צבע כותרת הספר בשער — שחור כברירת מחדל' }),
+  K('shaar-title-color', 'color', '#000000', P.THEMES, 'inp-shaar-title-color', ['layout/structural-stamps', 'core/materialize', 'output/dom-renderer'], 'fx:shaar-title-color', { note: 'S73: צבע כותרת הספר בשער — שחור כברירת מחדל' }),
   K('shaar-title-size-pt', 'number', 46, P.THEMES, 'rng-shaar-title-size', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-title-size', { min: 20, max: 90, note: 'מקור: s-sh-title=46' }),
   K('shaar-subtitle-font', 'font', 'David Libre', P.THEMES, 'sel-shaar-subtitle-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-subtitle-font', { note: "מקור: f-sh-sub=\"'Livorna', 'David Libre', serif\"" }),
-  K('shaar-subtitle-color', 'color', '#000000', P.THEMES, 'inp-shaar-subtitle-color', ['layout/legacy-imud-flow', 'output/geometry-projector', 'output/dom-renderer'], 'fx:shaar-subtitle-color', { note: 'S73: צבע כותרת-המשנה בשער — שחור כברירת מחדל' }),
+  K('shaar-subtitle-color', 'color', '#000000', P.THEMES, 'inp-shaar-subtitle-color', ['layout/structural-stamps', 'core/materialize', 'output/dom-renderer'], 'fx:shaar-subtitle-color', { note: 'S73: צבע כותרת-המשנה בשער — שחור כברירת מחדל' }),
   K('shaar-subtitle-size-pt', 'number', 21, P.THEMES, 'rng-shaar-subtitle-size', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-subtitle-size', { min: 10, max: 40, note: 'מקור: s-sh-sub=21' }),
   K('shaar-desc-font', 'font', 'Frank Ruhl Libre', P.THEMES, 'sel-shaar-desc-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-desc-font', { note: "מקור: f-sh-desc=\"'Livorna', 'Frank Ruhl Libre', serif\"" }),
-  K('shaar-desc-color', 'color', '#000000', P.THEMES, 'inp-shaar-desc-color', ['layout/legacy-imud-flow', 'output/geometry-projector', 'output/dom-renderer'], 'fx:shaar-desc-color', { note: 'S73: צבע התיאור בשער — שחור כברירת מחדל' }),
+  K('shaar-desc-color', 'color', '#000000', P.THEMES, 'inp-shaar-desc-color', ['layout/structural-stamps', 'core/materialize', 'output/dom-renderer'], 'fx:shaar-desc-color', { note: 'S73: צבע התיאור בשער — שחור כברירת מחדל' }),
   K('shaar-desc-size-pt', 'number', 12, P.THEMES, 'rng-shaar-desc-size', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-desc-size', { min: 8, max: 20, note: 'מקור: s-sh-desc=12' }),
   K('shaar-sections-font', 'font', 'David Libre', P.THEMES, 'sel-shaar-sections-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-sections-font', { note: "מקור: f-sh-sec=\"'David Libre', serif\"" }),
-  K('shaar-sections-color', 'color', '#000000', P.THEMES, 'inp-shaar-sections-color', ['layout/legacy-imud-flow', 'output/geometry-projector', 'output/dom-renderer'], 'fx:shaar-sections-color', { note: 'S73: צבע פרטי המהדורה בשער — שחור כברירת מחדל' }),
+  K('shaar-sections-color', 'color', '#000000', P.THEMES, 'inp-shaar-sections-color', ['layout/structural-stamps', 'core/materialize', 'output/dom-renderer'], 'fx:shaar-sections-color', { note: 'S73: צבע פרטי המהדורה בשער — שחור כברירת מחדל' }),
   K('shaar-sections-size-pt', 'number', 11.5, P.THEMES, 'rng-shaar-sections-size', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-sections-size', { min: 8, max: 20, note: 'מקור: s-sh-sec=11.5' }),
   K('shaar-author-font', 'font', 'David Libre', P.THEMES, 'sel-shaar-author-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-author-font', { note: "מקור: f-sh-author=\"'David Libre', serif\"" }),
-  K('shaar-author-color', 'color', '#000000', P.THEMES, 'inp-shaar-author-color', ['layout/legacy-imud-flow', 'output/geometry-projector', 'output/dom-renderer'], 'fx:shaar-author-color', { note: 'S73: צבע שם המחבר בשער — שחור כברירת מחדל' }),
+  K('shaar-author-color', 'color', '#000000', P.THEMES, 'inp-shaar-author-color', ['layout/structural-stamps', 'core/materialize', 'output/dom-renderer'], 'fx:shaar-author-color', { note: 'S73: צבע שם המחבר בשער — שחור כברירת מחדל' }),
   K('shaar-author-size-pt', 'number', 15, P.THEMES, 'rng-shaar-author-size', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-author-size', { min: 8, max: 24, note: 'מקור: s-sh-author=15' }),
   K('shaar-year-font', 'font', 'David Libre', P.THEMES, 'sel-shaar-year-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-year-font', { note: "מקור: f-sh-year=\"'David Libre', serif\"" }),
-  K('shaar-year-color', 'color', '#000000', P.THEMES, 'inp-shaar-year-color', ['layout/legacy-imud-flow', 'output/geometry-projector', 'output/dom-renderer'], 'fx:shaar-year-color', { note: 'S73: צבע בס״ד/מקום-ושנה בשער — שחור כברירת מחדל' }),
+  K('shaar-year-color', 'color', '#000000', P.THEMES, 'inp-shaar-year-color', ['layout/structural-stamps', 'core/materialize', 'output/dom-renderer'], 'fx:shaar-year-color', { note: 'S73: צבע בס״ד/מקום-ושנה בשער — שחור כברירת מחדל' }),
   K('shaar-year-size-pt', 'number', 12, P.THEMES, 'rng-shaar-year-size', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-year-size', { min: 8, max: 20, note: 'מקור: s-sh-year=12' }),
-  K('shaar-back-text-font', 'font', 'אסיסטנט קל מאוד', P.THEMES, 'sel-shaar-back-text-font', ['output/shaar-content', 'output/dom-renderer', 'layout/legacy-imud-flow'], 'fx:shaar-back-text-font', { note: 'S74 (בעיה 5): כל שורות השער האחורי ב-Assistant ExtraLight — ברירת המחדל של הגרסה הישנה בפועל (נמדד בייחוס עמ׳ 2: חמש השורות Assistant-ExtraLight 13.5/10/11/10/9.5pt). עד S74 ירשו את גוף המסמך' }),
-  K('shaar-back-text-color', 'color', '#000000', P.THEMES, 'inp-shaar-back-text-color', ['layout/legacy-imud-flow', 'output/geometry-projector', 'output/dom-renderer'], 'fx:shaar-back-text-color', { note: 'S73: צבע טקסט השער האחורי — שחור כברירת מחדל' }),
+  K('shaar-back-text-font', 'font', 'אסיסטנט קל מאוד', P.THEMES, 'sel-shaar-back-text-font', ['output/shaar-content'], 'fx:shaar-back-text-font', { note: 'S74 (בעיה 5): כל שורות השער האחורי ב-Assistant ExtraLight — ברירת המחדל של הגרסה הישנה בפועל (נמדד בייחוס עמ׳ 2: חמש השורות Assistant-ExtraLight 13.5/10/11/10/9.5pt). עד S74 ירשו את גוף המסמך' }),
+  K('shaar-back-text-color', 'color', '#000000', P.THEMES, 'inp-shaar-back-text-color', ['layout/structural-stamps', 'core/materialize', 'output/dom-renderer'], 'fx:shaar-back-text-color', { note: 'S73: צבע טקסט השער האחורי — שחור כברירת מחדל' }),
   // נתוני הספר לשערים — ממופים מ-inp-book-* של המקור; בלי ערך — נופלים למטא-נתוני המסמך
   K('imud-book-desc', 'string', '', P.THEMES, 'inp-imud-book-desc', ['output/dom-renderer'], 'fx:imud-book-desc', { note: 'תיאור בשער הראשי (מקור: inp-book-desc ← «נושא מפורט»)' }),
   K('imud-book-sections', 'string', '', P.THEMES, 'inp-imud-book-sections', ['output/dom-renderer'], 'fx:imud-book-sections', { note: 'פרטי מהדורא בשער הראשי (מקור: inp-book-sections ← «פרטי מהדורא»)' }),

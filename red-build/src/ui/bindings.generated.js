@@ -619,7 +619,7 @@ const BINDINGS = [
     "min": null,
     "max": null,
     "step": null,
-    "note": "wiring מ‑Orange ✓"
+    "note": "Unified: נקבע ב-LineModel.align ומוקרן מה-PageModel; שינוי מחייב עימוד מחדש"
   },
   {
     "id": "heading-0-mode",
@@ -2019,7 +2019,7 @@ const BINDINGS = [
     "panelKey": "NOTES",
     "labelHe": "סגנון סמן הערה",
     "type": "enum",
-    "def": "hebrew-geresh",
+    "def": "hebrew",
     "enum": [
       "hebrew",
       "hebrew-geresh",
@@ -2087,7 +2087,7 @@ const BINDINGS = [
     "min": null,
     "max": null,
     "step": null,
-    "note": null
+    "note": "Unified: יוצר fn-rule decoration ו-pdfOps בתוך PageModel; שינוי מחייב עימוד מחדש"
   },
   {
     "id": "fn-layout-mode",
@@ -2121,7 +2121,7 @@ const BINDINGS = [
     "min": null,
     "max": null,
     "step": null,
-    "note": "S75 (בקשה 1): body-first (ברירת המחדל) — הגוף ממלא את העמוד; ההערות נכנסות בחלל שמתחת לגוף (תקרה 50% מגובה הזרימה); הערה שאינה נכנסת מוצבת חלקית והמשכה בעמוד הבא; legacy = מנגנון S74 הקודם (שער תקציב-ההערות + קיבולת עמוד מלאה)"
+    "note": "S75 (בקשה 1): body-first — הגוף ממלא את העמוד וההערות בחלל שמתחת (תקרה 50%). מנוע יחיד (2ae45b9+): מנגנון body-first טרם הובל למנוע המאוחד — המנוע מפעיל את שער תקציב-ההערות (האופציה legacy) תמיד; הפרופיל חוסם שינוי ההגדרה עד השלמת הפורט (משימת השלמה פתוחה — שלב Notes). pipeline מתעד את המצב באירוע מפורש בכל ריצה."
   },
   {
     "id": "endnotes-enabled",
@@ -3183,7 +3183,7 @@ const BINDINGS = [
     "min": null,
     "max": null,
     "step": null,
-    "note": "REQ-ORN-08: מחלקת העמוד שאליה הרקע מיועד (מיזוג פאנל רקע→נושאים)"
+    "note": "REQ-ORN-08: נתמך במקרין Legacy בלבד; חיבור לרקעי PageModel/HTML/PDF עדיין פתוח — חסום בפרופיל Unified כדי למנוע שינוי ללא השפעה"
   },
   {
     "id": "background-image",
@@ -3197,7 +3197,7 @@ const BINDINGS = [
     "min": null,
     "max": null,
     "step": null,
-    "note": null
+    "note": "Legacy-only כרגע; אין עדיין PageModel background decoration תואם DOM/HTML/PDF — חסום בפרופיל Unified"
   },
   {
     "id": "background-texture",
@@ -3211,7 +3211,7 @@ const BINDINGS = [
     "min": null,
     "max": null,
     "step": null,
-    "note": "טקסטורה חוזרת (שכבת תשתית — פטורה מחפיפות באודיט)"
+    "note": "Legacy-only כרגע; אין עדיין PageModel texture decoration תואם DOM/HTML/PDF — חסום בפרופיל Unified"
   },
   {
     "id": "background-inset-mm",
@@ -3225,7 +3225,7 @@ const BINDINGS = [
     "min": 0,
     "max": 30,
     "step": null,
-    "note": "שקיעת הרקע משולי העמוד במ״מ"
+    "note": "Legacy-only כרגע; inset ייכנס ל-PageModel יחד עם תמונת/טקסטורת הרקע — חסום בפרופיל Unified"
   },
   {
     "id": "imud-shaar-main",

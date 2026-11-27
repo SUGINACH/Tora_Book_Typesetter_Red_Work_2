@@ -67,6 +67,14 @@ function fmt(ok) { return ok ? '✓' : '✗'; }
     const text = fs.readFileSync(file, 'utf8');
     const t0 = Date.now();
     if (c.legacy) {
+      // **2ae45b9 — המנוע המורשת הוסר:** זרוע ה-legacy של ההצלבה פורשת בהסבר
+      // (הגיבוי המלא ב-Red_Old; הנעילות המקבילות נאכפות ב-corpus-invariants
+      // על המנוע המאוחד). אין כישלון מזויף ואין דילוג שקט — דיווח מפורש.
+      if (!fs.existsSync(path.join(RB, 'src/engine/layout/legacy-imud-flow.js'))) {
+        report.corpora.push({ name: c.name, file: c.file, legacy: true, skipped: 'legacy-engine-removed (backup: Red_Old; unified locks: corpus-invariants)' });
+        console.log(`– [corpus] ${c.name}: legacy arm retired — engine removed (unified locks enforced in corpus-invariants)`);
+        continue;
+      }
       try {
         const tmp = fs.mkdtempSync(path.join(require('os').tmpdir(), 'crosscheck-'));
         // שורת ה-hash נכתב ל-stderr ב-run-ours — spawnSync מחזיר את שניהם

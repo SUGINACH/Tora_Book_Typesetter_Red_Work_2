@@ -41,7 +41,16 @@ const { getSettingDefs, getDefaultSettings } = require(path.join(RB, 'src/engine
 const { importImudSettings } = require(path.join(RB, 'src/engine/core/legacy-settings-map'));
 const { registerFont, unregisterFont } = require(path.join(RB, 'src/engine/typography/measure-api'));
 const { exportPdf, exportHtml } = require(path.join(RB, 'src/engine/output/export-api'));
-const { GEO, FLOW_BOTTOM } = require(path.join(RB, 'src/engine/layout/legacy-imud-flow'));
+// **2ae45b9 — המנוע המורשת הוסר מהריפו (הגיבוי המלא: SUGINACH/Tora_Book_Typesetter_Red_Old).**
+// כלי ה-parity הזה הריץ את legacy-imud-flow מול הייחוס — תקופת ההגירה הסתיימה
+// והמנוע המאוחד הוא היחיד. הכלי פורש בהודעה מפורשת (יציאה 0 — בלי כישלון
+// מזויף ובלי תוצאות מדומות); נעילות הקורפוסים עברו ל-corpus-invariants.
+const LEGACY_ENGINE = path.join(RB, 'src/engine/layout/legacy-imud-flow.js');
+if (!require('fs').existsSync(LEGACY_ENGINE)) {
+  console.error('RETIRED: legacy-imud-flow was removed from this repo (single unified engine; full backup: SUGINACH/Tora_Book_Typesetter_Red_Old). Corpus locks live in corpus-invariants (unified).');
+  process.exit(0);
+}
+const { GEO, FLOW_BOTTOM } = require(LEGACY_ENGINE);
 
 // **S4.11 (--html):** מימוש DOM מינימלי ל-serialize של ייצוא ה-HTML ב-Node (אותו
 // חוזה כמו ה-shim של הבדיקות: createElement + outerHTML כפונקציה). העמודים

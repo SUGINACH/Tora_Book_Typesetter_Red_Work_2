@@ -18,7 +18,7 @@ const RB = path.join(ROOT, 'red-build');
 // הדקדוק המאוחד — מיובא מהפרסר (זהות אובייקט, לא עותק)
 const { HEADING_RE } = require(path.join(RB, 'src/engine/parser/dfa-lexer'));
 // הדקדוק המורשת — מיוצא מ-legacy-imud-flow ממקום השימוש בפועל (tokenizeDoc)
-const { LEGACY_HEADING_RE } = require(path.join(RB, 'src/engine/layout/legacy-imud-flow'));
+const { LEGACY_HEADING_RE } = require(path.join(__dirname, '..', 'layout-audit', 'legacy-text-utilities')); // **2ae45b9:** הדקדוק ההיסטורי עבר לכלי האודיט (המנוע הוסר)
 
 /** הרצת ההשוואה על טקסט נתון — מיוצאת לבדיקות (בלי צריכת מערכת קבצים). */
 function diffH7Grammar(text) {

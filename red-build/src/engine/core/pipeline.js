@@ -124,6 +124,18 @@ function typeset(rawText, settingsIn, env = {}) {
   const ledger = new Ledger();
   const notesMode = settings['note-placement-mode'];
   const parenScale = Number(settings['paren-style-scale']) || 1;
+  // **S75 (בקשה 1) — מנוע יחיד (2ae45b9+):** מצב הצבת ההערות מתועד בכל ריצה.
+  // המנוע המאוחד מפעיל כרגע את שער תקציב-ההערות בלבד (האופציה 'legacy'
+  // של fn-placement-mode); מצב 'body-first' (הגוף ממלא, ההערות מתחת — תקרה
+  // 50%) טרם הובל מהמנוע הישן וההגדרה חסומה ב-UI (unifiedSupport:false).
+  // האירוע המפורש הזה מונע שקר-שקט: המשתמש רואה בטרייס/בדוח איזה מנגנון
+  // פעל בפועל. הפורט המלא — משימת השלמה פתוחה (שלב Notes).
+  const fnPlacement = settings['fn-placement-mode'];
+  eventLog.emit('notes-budget', 'fn-placement-mode', {
+    requested: fnPlacement != null ? String(fnPlacement) : 'body-first',
+    active: 'legacy (תקציב-הערות)',
+    ported: false
+  });
 
   // **S11 (REQ-PAR-06):** סגנונות מותאמים — פענוח + רישום שגיאות אימות (כמו _customPages).
   // הפקד הזה אינו ברישום ההגדרות (נכס מסמך, לא הגדרת מנוע) — דפוס _customPages של S8.

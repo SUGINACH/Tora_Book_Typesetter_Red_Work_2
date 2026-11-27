@@ -28,11 +28,13 @@ name: corpus-invariants
 # זה הקורפוס שחשף את שלושת באגי ההערות שתוקנו ב-S4.10 — קובעי הרף שלו
 # הם שומרי הרגרסיה לכל תיקון עתידי.
 
+# **מנוע יחיד (2ae45b9+):** תקופת ה-parity הסתיימה — המנוע המאוחד הוא היחיד
+# והמנוע הישן הוסר מהריפו (הגיבוי המלא: SUGINACH/Tora_Book_Typesetter_Red_Old).
+# ה-workflow הזה הריץ את legacy-imud-flow דרך run-ours.js — אינו רלוונטי עוד
+# כאן; נעילות הקורפוסים של המנוע המאוחד נאכפות ב-CI (npm test + test:determinism
+# + cross-check). נשאר זמין להפעלה ידנית מריפו הגיבוי (Red_Old) בלבד.
 on:
-  push:
-    branches: [ main, UNIFIED, engine/legacy-parity-preview-20261119 ]
-  pull_request:
-    branches: [ main, UNIFIED ]
+  workflow_dispatch:
   workflow_dispatch:
 
 jobs:

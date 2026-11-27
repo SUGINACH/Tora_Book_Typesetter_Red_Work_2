@@ -1,59 +1,56 @@
 {
   "tool": "cross-check",
   "schema": 1,
-  "started": "2026-11-24T08:35:12.557Z",
-  "commit": "bade362",
+  "started": "2026-11-27T00:38:28.318Z",
+  "commit": "1be7671",
   "node": "v24.22.3",
   "corpora": [
     {
       "name": "canonical (DP)",
       "file": "red-build/tests/fixtures/canonical_corpus.txt",
       "legacy": false,
-      "pages": 37,
-      "layoutHash": "89a0eb42c774943b",
+      "pages": 38,
+      "layoutHash": "ce70ae37def23a7d",
       "lockHash": "89a0eb42",
       "contentPreserved": true,
-      "hashOk": true,
-      "ms": 344
+      "hashOk": false,
+      "ms": 302
     },
     {
       "name": "very_long (DP)",
       "file": "audits/very_long_test_text.txt",
       "legacy": false,
-      "pages": 968,
-      "layoutHash": "a5aaa431a75dc4c2",
+      "pages": 1136,
+      "layoutHash": "8a2be8e35e4a27a7",
       "lockHash": "a5aaa431",
       "contentPreserved": true,
-      "hashOk": true,
-      "ms": 15839
+      "hashOk": false,
+      "ms": 13915
     },
     {
       "name": "very_long (legacy, run-ours = corpus-invariants CI)",
       "file": "audits/very_long_test_text.txt",
       "legacy": true,
-      "profile": "imud-legacy",
-      "pages": 695,
-      "layoutHash": "legacy-28f52",
-      "lockHash": "legacy-28f52",
-      "contentPreserved": true,
-      "hashOk": true,
-      "ms": 5493
+      "skipped": "legacy-engine-removed (backup: Red_Old; unified locks: corpus-invariants)"
     }
   ],
   "bundles": [
     {
       "file": "red-build/ui/app.bundle.js",
-      "sha256": "56b62ec106c13834",
-      "bytes": 1607009
+      "sha256": "5f72275e7c38b084",
+      "bytes": 1278028
     },
     {
       "file": "red-build/ui/engine-worker.bundle.js",
-      "sha256": "f24f8ce0f2e3ed95",
-      "bytes": 1988672
+      "sha256": "6efed3058493214d",
+      "bytes": 1786908
     }
   ],
   "live": null,
   "causality": null,
-  "ok": true,
-  "failures": []
+  "ok": false,
+  "failures": [
+    "canonical (DP): hash ce70ae37def23a7d ≠ lock 89a0eb42",
+    "very_long (DP): hash 8a2be8e35e4a27a7 ≠ lock a5aaa431"
+  ]
 }

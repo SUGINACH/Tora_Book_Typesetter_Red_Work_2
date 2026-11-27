@@ -626,7 +626,8 @@ async function buildLocalBrowserBundles() {
   // (המרונדרת כמילה מודבקת). ירידה בלתי-מוסברת ⇒ כשל חמור עם דוגמאות.
   // הסף 0.98 לא שונה ולא נחלש — מה שנמדד הוא כיסוי התוכן בפועל.
   const RB = path.join(ROOT, 'red-build');
-  const { tokenizeDoc, stripEditorialNotes, parseMetadata } = require(path.join(RB, 'src/engine/layout/legacy-imud-flow'));
+  // **הסרת המנוע הישן (2ae45b9):** פונקציות הטקסט ההיסטוריות עברו לכלי האודיט (legacy-text-utilities) — אותן בדיוק, בלי המנוע.
+  const { tokenizeDoc, stripEditorialNotes, parseMetadata } = require('./legacy-text-utilities');
   const defaults = JSON.parse(fs.readFileSync(path.join(RB, 'ui/assets/imud/default_settings.json'), 'utf8'));
   const auditCfg = { fnOpen: String(defaults['fn-delim-open'] || '['), fnClose: String(defaults['fn-delim-close'] || ']') };
   const rawText = fs.readFileSync(FIXTURE, 'utf8');
