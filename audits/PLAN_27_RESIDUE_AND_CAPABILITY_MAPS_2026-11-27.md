@@ -69,12 +69,12 @@
 
 ---
 
-## 3. משימה 5 — S75 body-first: הצגת הפער (W-4 אינו סגירה)
+## 3. משימה 5 — S75 body-first: **הושלם** (29.11 — פורט 7f580ac בענף התיקונים)
 
 - **דרישת המשתמש (S75, מאושרת):** הגוף זורם תחילה; הערות השוליים תופסות את החלל שמתחת עד תקרה 50%; המשכים/סמנים זהים.
-- **מצב הקוד:** `settings-registry.js:158` — `fn-placement-mode` enum `['body-first','legacy']`, ברירת מחדל `legacy` (הוחזרה ב-W-4/F-2.2), `unifiedSupport:false`, הפקד חסום ב-UI, וה-pipeline מתעד את המצב באירוע מפורש בכל ריצה (`pipeline.js:163-164`). המנגנון היחיד שרץ בפועל הוא שער תקציב-ההערות של S74 (מאז 2ae45b9).
-- **הפער:** `body-first` **טרם הובל למנוע** — דרוש פיתוח שלב Notes (חלוקת נפח גוף-תחילה עם תקרת 50% במקום תקציב-קודם). W-4 הוא החזרה מלאה למנגנום הפעיל + תיעוד כוונה ("בהשלמת הפורט תחזור ברירת המחדל ל-body-first") — **ואינו סגירה של S75**.
-- **הכרעת משתמש חדשה: לא נדרשת** — אישור S75 עומד; החסם הוא הנדסי בלבד. `SOURCE_PRESENT` + `SOURCE_CONNECTED`; אין טענת LIVE.
+- **המצב לאחר הפורט (7f580ac):** `fn-placement-mode` ברירת מחדל **body-first**, הפקד פעיל (unifiedSupport הוסר); SSOT ב-footnote-budget (bodyFirstCaps/bodyFirstStartsFloorPx/bodyFirstBudgetPx — clamp קפוא בשעת ההתחייבות); dp-planner: תקציב-מילוי דינמי (הגוף לעולם אינו נדחק), finalizeBodyFirstNotes בסגירת עמוד (הצבה לפי תחתית-הגוף בפועל; פיצול בגבול שורה; המשכים בראש העמוד הבא), splitNoteAtRow מאוחד.
+- **הוכחות ידניות (E2+E3+E4):** legacy==pre-port ביט-לביט (sha256 c5ccb874…); body-first דטרמיניסטי (fa85f716…); מסמך עתיר-הערות: אפס חפיפות, מרזבים 13.8–27.8% מתחת לתקרה, מלאי 100/100; very_long: 677 עמ' (מול 691), מלאי מלא, אחרון שלם; התאוששות גדול→קטן תקינה. פירוט מלא ברשומת ה-Worklog של 29.11 בענף התיקונים.
+- **הכרעת משתמש חדשה: לא נדרשה** — אישור S75 המקורי קוים. `SOURCE_CONNECTED` + `LIVE_VERIFIED` (מקומית, באנדלים אמיתיים) + `ARTIFACT_VERIFIED` (PDF).
 
 ---
 
@@ -162,7 +162,7 @@ DOM ✓, HTML ✓, **PDF ✓** דרך רסטר: svgNeedsRaster → JPEG (DCTDeco
 | pdf-mark-policy = מדיניות מדידה בלבד (2) | SOURCE_CONNECTED + בדיקות |
 | S74 הצמדה ב-x | LIVE_VERIFIED (W-11) |
 | S74 הצמדה ב-y | **ARTIFACT_VERIFIED (28.11 — קורלציות 0.86–0.98, ToraWin מוטמע)** |
-| S75 body-first | SOURCE_PRESENT/SOURCE_CONNECTED — פער מוצג, לא סגור |
+| S75 body-first | הושלם (29.11, 7f580ac) — LIVE_VERIFIED+ARTIFACT_VERIFIED; legacy קפוא ביט-לביט |
 | תמונות inline: DOM/HTML ✓ PDF ✗ | SOURCE_CONNECTED |
 | נכסי תמונה: אין כניסת מוצר | SOURCE_CONNECTED |
 | DOCX תמונות: לא נתמך בקלט | SOURCE_CONNECTED |
