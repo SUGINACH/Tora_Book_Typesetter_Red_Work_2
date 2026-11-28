@@ -1,1 +1,8 @@
-{"profile":"unified","branch":"engine/legacy-parity-preview-20261119","commit":"3def45ef0203142a01c2b96e8a08afee72b12332","builtAt":"2026-11-28T18:00:40Z","mode":"direct-gh-pages-deploy-no-main-merge","note":"סביבת ניסוי — קוד main ומנוע legacy נשארו ללא שינוי"}
+{
+ "profile": "unified",
+ "branch": "fix/pdf-header-baseline-20261127",
+ "commit": "7f580ac",
+ "builtAt": "2026-11-29T00:00:00Z",
+ "mode": "manual-gh-pages-deploy-no-workflows",
+ "note": "S75 body-first הובל למנוע המאוחד (משימה 5/§27.1.5): הגוף ממלא תמיד, המרזב בחלל שמתחת עד תקרה יחסית 50%, רצפת התחלות, המשכים במקביל. נתיב legacy קפוא וזהה-ביטים לקודם. legacy==pre-port (sha256 c5ccb874), body-first דטרמיניסטי (fa85f716), very_long 677 עמ'."
+}
