@@ -155,16 +155,22 @@ function typeset(rawText, settingsIn, env = {}) {
   // ההערות מתועד בכל ריצה. המנוע המאוחד מפעיל את שער תקציב-ההערות בלבד
   // (האופציה 'legacy' של fn-placement-mode) — ומאז W-4 ברירת המחדל ברישום
   // משקפת זאת (אמת-חוזה; לפני כן עמדה על body-first שהמנוע מתעלם ממנו).
-  // מצב 'body-first' (הגוף ממלא, ההערות מתחת — תקרה 50%) טרם הובל מהמנוע
-  // הישן; ההגדרה חסומה ב-UI (unifiedSupport:false) והפורט המלא — משימת
-  // השלמה פתוחה (שלב Notes) שבסיומה תחזור ברירת המחדל ל-body-first (S75).
+  // מצב 'body-first' (הגוף ממלא, ההערות מתחת — תקרה 50%) הובל למנוע המאוחד בפורט של 29.11
+  // הישן; ההגדרה נותקה ב-UI עם הפורט (unifiedSupport הוסר) — ההמשך היסטורי של
+  // השלמה הושלמה בפורט של 29.11 — וברירת המחדל חזרה ל-body-first (S75).
   // האירוע המפורש הזה מונע שקר-שקט: המשתמש רואה בטרייס/בדוח איזה מנגנון
   // פעל בפועל.
   const fnPlacement = settings['fn-placement-mode'];
+  // **S75-port (29.11): the port is complete** — the unified engine now runs both
+  // mechanisms: 'body-first' (default — the user's S75 decision: body fills, gutter
+  // below up to the relative 50% cap, starts floor, continuations in parallel) and
+  // 'legacy' (the S74 budget gate — frozen path). This explicit event keeps
+  // preventing silent lies: the user sees in the trace which mechanism actually ran.
   eventLog.emit('notes-budget', 'fn-placement-mode', {
-    requested: fnPlacement != null ? String(fnPlacement) : 'legacy',
-    active: 'legacy (תקציב-הערות)',
-    ported: false
+    requested: fnPlacement != null ? String(fnPlacement) : 'body-first',
+    active: (settings['footnotes-enabled'] && String(fnPlacement) === 'body-first')
+      ? 'body-first (גוף-תחילה)' : 'legacy (תקציב-הערות)',
+    ported: true
   });
 
   // **S11 (REQ-PAR-06):** סגנונות מותאמים — פענוח + רישום שגיאות אימות (כמו _customPages).

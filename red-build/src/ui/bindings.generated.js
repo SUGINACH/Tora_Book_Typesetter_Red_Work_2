@@ -2113,7 +2113,7 @@ const BINDINGS = [
     "panelKey": "NOTES",
     "labelHe": "מנגנון הצבת הערות (גוף תחילה / ישן)",
     "type": "enum",
-    "def": "legacy",
+    "def": "body-first",
     "enum": [
       "body-first",
       "legacy"
@@ -2121,7 +2121,7 @@ const BINDINGS = [
     "min": null,
     "max": null,
     "step": null,
-    "note": "W-4 (F-2.2, 27.11): ברירת המחדל = legacy — שער תקציב-ההערות של S74, שהוא המנגנון היחיד שהמנוע המאוחד מפעיל בפועל (2ae45b9+). body-first (בקשת S75 — הגוף ממלא, ההערות בחלל שמתחת, תקרה 50%) טרם הובל; בהשלמת הפורט (שלב Notes) תחזור ברירת המחדל ל-body-first. הפרופיל חוסם שינוי ההגדרה; pipeline מתעד את המצב באירוע מפורש בכל ריצה."
+    "note": "S75 (בקשה 1 — 12.11, הכרעת משתמש) · פורט המנוע המאוחד 29.11: body-first (ברירת המחדל) — הגוף ממלא את אזור הטקסט תמיד, המרזב בחלל שמתחת עד תקרה יחסית 50% (fn-bar-max-height-px חיובי גובר), רצפת התחלות בעמוד הסמן, המשכים זורמים במקביל למילוי הגוף. legacy — שער תקציב-הערות של S74 (נתיב קפוא). pipeline מתעד את המנגנון הפעיל באירוע מפורש בכל ריצה."
   },
   {
     "id": "endnotes-enabled",
@@ -3463,7 +3463,7 @@ const BINDINGS = [
     "min": null,
     "max": null,
     "step": null,
-    "note": "מקור: f-sh-title=\"'Lia Sgula', 'Bellefair', serif\" — Lia Sgula אינה זמינה; Bellefair המוטמע"
+    "note": "מקור: f-sh-title=\"'Lia Sgula', 'Bellefair', serif\" — **F-J4 (W-5, 27.11): Lia Sgula מוטמעת כעת בספרייה (Sgula-Regular.ttf; imud-fonts.json)** — resolveStack בוחר אותה כשהקטלוג נטען; ברירת המחדל נשארת Bellefair מטעמי מדידה-עקבית"
   },
   {
     "id": "shaar-title-color",

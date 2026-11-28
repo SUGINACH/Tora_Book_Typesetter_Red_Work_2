@@ -98,6 +98,77 @@ function laneWidth(settings) {
 }
 
 /**
+ * **S75 (בקשה 1 — 12.11) · פורט המנוע המאוחד (29.11): מדדי תקרת body-first —
+ * מקור יחיד.** מקביל ל-FN_BODY_FIRST_CAP_PX/FN_FULL_CAP_PX של המנוע הישן
+ * (legacy-imud-flow, 2ae45b9^), מותאם לחוזה הקיבולת המאוחד (usableH = תיבת
+ * התוכן בהפחתת פס חוצה-טורים; אין קבוע מפריד 38.5 — המרזב המאוחד אינו
+ * שומר גובה למפריד, החוט מצויר בראש המרזב עצמו).
+ * - fullCapPx: קיבולת פיזית מלאה של המרזב — תמיד נותרת שורת-גוף אחת לפחות
+ *   (legacy: FN_FULL_CAP_PX = ⌊(FLOW_H − 38.5 − שורת-גוף)/PITCH⌋·PITCH).
+ * - relCapPx: התקרה היחסית בזמן המילוי — ערך מפורש של fn-bar-max-height-px
+ *   (אם חיובי, חתוך ל-fullCap), ואחרת **50% מגובה הזרימה** בכפולות שורת-הערה
+ *   (החלטת S75: "המרזב נכנס בחלל שמתחת לגוף עד תקרה יחסית — 50%").
+ */
+function bodyFirstCaps(settings, usableHeightPx, bodyLinePx) {
+  const lineH = noteMetrics(settings).lineHeightPx;
+  const fullCapPx = Math.max(lineH, Math.floor((usableHeightPx - bodyLinePx) / lineH) * lineH);
+  const explicit = Number(settings['fn-bar-max-height-px']);
+  const relCapPx = (Number.isFinite(explicit) && explicit > 0)
+    ? Math.min(explicit, fullCapPx)
+    : Math.min(fullCapPx, Math.max(lineH, Math.floor((usableHeightPx * 0.5) / lineH) * lineH));
+  return { lineH, fullCapPx, relCapPx };
+}
+
+/**
+ * **S75 — רצפת ההתחלות:** גובה המרזב עד שורת הפתיחה של ההערה הטרייה האחרונה
+ * בתור (סכום הגבהים שלפניה + שורת-הערה אחת). עדיפות 2 של המשתמש: "כל הערה
+ * טרייה מתחילה בעמוד שבו הסמן שלה הוצב". הרצפה חתוכה בהמשך לקיבולת ולצורך
+ * (legacy: fnBodyFirstLines → starts, במודל הבלוקים המאוחד — סכום מונוטוני
+ * על סדר התור; שמרני גם במרזב דו-טורי: שמורה במודל חד-טורי).
+ */
+function bodyFirstStartsFloorPx(pageNotes, settings, measure) {
+  if (!pageNotes || !pageNotes.length) return 0;
+  const lineH = noteMetrics(settings).lineHeightPx;
+  let lastFresh = -1;
+  for (let i = 0; i < pageNotes.length; i++) {
+    const n = pageNotes[i];
+    const isCont = n && (n.isContinuation === true || n.mode === 'split-rest' || n.continuationOf != null);
+    if (!isCont) lastFresh = i;
+  }
+  if (lastFresh < 0) return 0;
+  let before = 0;
+  for (let i = 0; i < lastFresh; i++) {
+    before += pageNotes[i] && pageNotes[i].heightPx != null ? pageNotes[i].heightPx : noteHeight(pageNotes[i], settings, measure);
+  }
+  return before + lineH;
+}
+
+/**
+ * **S75 — תקציב המילוי של body-first (מקור יחיד; מקביל ל-fnReserveFor+applyFnReserve
+ * של המנוע הישן):** מה שהמרזב תובע בזמן מילוי הגוף —
+ *   soft = max(min(need, relCap), min(startsFloor, fullCap, need))
+ *   budget = min(soft, clamp), clamp = max(lineH, usableH − maxUsed − bodyLine)
+ * ה-clamp מבטיח שהגוף **לעולם אינו נדחק** לעמוד הבא בגלל גודל ההערות: התקציב
+ * אינו חורג מהחלל שמתחת לגוף שכבר הונח, פחות שורת-גוף אחת. התקציב דינמי —
+ * הוא מחושב מחדש מול ה-used הנוכחי בכל שאילתת קיבולת (dp-planner).
+ */
+function bodyFirstBudgetPx(pageNotes, settings, measure, usableHeightPx, bodyLinePx, maxUsedPx, clampPxOverride) {
+  if (!pageNotes || !pageNotes.length) return 0;
+  const caps = bodyFirstCaps(settings, usableHeightPx, bodyLinePx);
+  const needPx = getFootnotesReservedHeight(pageNotes, settings, measure);
+  const startsPx = Math.min(bodyFirstStartsFloorPx(pageNotes, settings, measure), caps.fullCapPx, needPx);
+  const soft = Math.max(Math.min(needPx, caps.relCapPx), startsPx);
+  // **clamp — קפוא בזמן ההתחייבות (כמו applyFnReserve של המנוע הישן):** התקציב
+  // תובע את החלל שמתחת לגוף ברגע שסמני ההערות הוצבו — ואינו מצטמק ככל שהגוף
+  // ממשיך למלא; כך רצפת ההתחלות שרדה את המילוי. clampPxOverride — הערך הקפוא
+  // מהעמוד (dp-planner); בלעדיו — clamp חי (בזמן ההתחייבות עצמה).
+  const clampPx = clampPxOverride != null && Number.isFinite(clampPxOverride)
+    ? clampPxOverride
+    : Math.max(caps.lineH, usableHeightPx - Math.max(0, maxUsedPx) - bodyLinePx);
+  return Math.max(0, Math.min(soft, clampPx));
+}
+
+/**
  * getFootnotesReservedHeight — הזהה ל‑probe (BRZ: no divergence):
  * @param {Array} pageNotes - [{text, marker}]
  */
@@ -115,4 +186,4 @@ function getFootnotesReservedHeight(pageNotes, settings, measure) {
   return Math.max(totals[0], totals[1]);
 }
 
-module.exports = { getFootnotesReservedHeight, noteHeight, noteRowsOf, stampNoteMetrics, noteMetrics, laneWidth, NOTE_FONT_FACTORS, __resetRowsStats, __rowsStats };
+module.exports = { getFootnotesReservedHeight, noteHeight, noteRowsOf, stampNoteMetrics, noteMetrics, laneWidth, NOTE_FONT_FACTORS, bodyFirstCaps, bodyFirstStartsFloorPx, bodyFirstBudgetPx, __resetRowsStats, __rowsStats };

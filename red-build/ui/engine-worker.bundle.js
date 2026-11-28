@@ -1084,16 +1084,22 @@ function typeset(rawText, settingsIn, env = {}) {
   // ההערות מתועד בכל ריצה. המנוע המאוחד מפעיל את שער תקציב-ההערות בלבד
   // (האופציה 'legacy' של fn-placement-mode) — ומאז W-4 ברירת המחדל ברישום
   // משקפת זאת (אמת-חוזה; לפני כן עמדה על body-first שהמנוע מתעלם ממנו).
-  // מצב 'body-first' (הגוף ממלא, ההערות מתחת — תקרה 50%) טרם הובל מהמנוע
-  // הישן; ההגדרה חסומה ב-UI (unifiedSupport:false) והפורט המלא — משימת
-  // השלמה פתוחה (שלב Notes) שבסיומה תחזור ברירת המחדל ל-body-first (S75).
+  // מצב 'body-first' (הגוף ממלא, ההערות מתחת — תקרה 50%) הובל למנוע המאוחד בפורט של 29.11
+  // הישן; ההגדרה נותקה ב-UI עם הפורט (unifiedSupport הוסר) — ההמשך היסטורי של
+  // השלמה הושלמה בפורט של 29.11 — וברירת המחדל חזרה ל-body-first (S75).
   // האירוע המפורש הזה מונע שקר-שקט: המשתמש רואה בטרייס/בדוח איזה מנגנון
   // פעל בפועל.
   const fnPlacement = settings['fn-placement-mode'];
+  // **S75-port (29.11): the port is complete** — the unified engine now runs both
+  // mechanisms: 'body-first' (default — the user's S75 decision: body fills, gutter
+  // below up to the relative 50% cap, starts floor, continuations in parallel) and
+  // 'legacy' (the S74 budget gate — frozen path). This explicit event keeps
+  // preventing silent lies: the user sees in the trace which mechanism actually ran.
   eventLog.emit('notes-budget', 'fn-placement-mode', {
-    requested: fnPlacement != null ? String(fnPlacement) : 'legacy',
-    active: 'legacy (תקציב-הערות)',
-    ported: false
+    requested: fnPlacement != null ? String(fnPlacement) : 'body-first',
+    active: (settings['footnotes-enabled'] && String(fnPlacement) === 'body-first')
+      ? 'body-first (גוף-תחילה)' : 'legacy (תקציב-הערות)',
+    ported: true
   });
 
   // **S11 (REQ-PAR-06):** סגנונות מותאמים — פענוח + רישום שגיאות אימות (כמו _customPages).
@@ -2670,14 +2676,14 @@ const registry = [
   K('footnote-columns', 'number', 1, P.NOTES, 'sel-fn-cols', ['layout/footnote-budget'], 'fx:fn-cols', { enum: [1, 2] }),
   K('footnote-separator-rule', 'enum', 'regular', P.NOTES, 'sel-fn-rule', ['core/materialize', 'core/page-model', 'output/pagemodel-dom-renderer', 'output/export-api'], 'fx:fn-rule', { enum: ['none', 'regular', 'circles', 'sparkle', 'star', 'diamond'], note: 'Unified: יוצר fn-rule decoration ו-pdfOps בתוך PageModel; שינוי מחייב עימוד מחדש' }),
   K('fn-layout-mode', 'enum', 'continuous', P.NOTES, 'sel-fn-layout', ['layout/dp-planner', 'output/dom-renderer'], 'fx:fn-layout', { enum: ['block', 'continuous'], note: 'S4.26 (דיווח משתמש 05.11): ברירת המחדל זרימה רציפה — הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה; block=כל הערה בלוק משלה' }),
-  // **S75 (בקשה 1 — 12.11) + W-4 (F-2.2, 27.11):** המשתמש בחר body-first כמנגנון
-  // היעד (הגוף ממלא את אזור הטקסט העיקרי תמיד; המרזב נכנס בחלל שמתחת לגוף
-  // עד תקרה יחסית 50%; המשכים זורמים לעמוד הבא בלי מספר). עד להשלמת הפורט
-  // (משימת "שלב Notes" הפתוחה) המנוע המאוחד מפעיל את שער תקציב-ההערות בלבד
-  // (האופציה legacy) — ולכן **ברירת המחדל משקפת את ההתנהגות בפועל** (אמת-
-  // חוזה לפי F-2.2/W-4; הפרופיל חוסם שינוי). בהשלמת הפורט תחזור ברירת המחדל
-  // ל-body-first כהכרעת S75.
-  K('fn-placement-mode', 'enum', 'legacy', P.NOTES, 'sel-fn-placement', ['core/pipeline'], 'fx:fn-placement', { enum: ['body-first', 'legacy'], unifiedSupport: false, note: 'W-4 (F-2.2, 27.11): ברירת המחדל = legacy — שער תקציב-ההערות של S74, שהוא המנגנון היחיד שהמנוע המאוחד מפעיל בפועל (2ae45b9+). body-first (בקשת S75 — הגוף ממלא, ההערות בחלל שמתחת, תקרה 50%) טרם הובל; בהשלמת הפורט (שלב Notes) תחזור ברירת המחדל ל-body-first. הפרופיל חוסם שינוי ההגדרה; pipeline מתעד את המצב באירוע מפורש בכל ריצה.' }),
+  // **S75 (בקשה 1 — 12.11, הכרעת משתמש) · פורט המנוע המאוחד הושלם (29.11):**
+  // body-first (ברירת המחדל, כהכרעת S75) — הגוף ממלא את אזור
+  // הטקסט תמיד (פסקה נושאת-הערות אינה נדחקת לעמוד הבא
+  // בגלל גודל ההערות); המרזב נכנס בחלל שמתחת לגוף
+  // עד תקרה יחסית 50% (או fn-bar-max-height-px חיובי); רצפת התחלות
+  // בעמוד הסמן; המשכים זורמים במקביל למילוי הגוף.
+  // legacy — שער תקציב-הערות של S74 (נתיב קפוא, ללא שינוי).
+  K('fn-placement-mode', 'enum', 'body-first', P.NOTES, 'sel-fn-placement', ['core/pipeline', 'layout/dp-planner'], 'fx:fn-placement', { enum: ['body-first', 'legacy'], note: 'S75 (בקשה 1 — 12.11, הכרעת משתמש) · פורט המנוע המאוחד 29.11: body-first (ברירת המחדל) — הגוף ממלא את אזור הטקסט תמיד, המרזב בחלל שמתחת עד תקרה יחסית 50% (fn-bar-max-height-px חיובי גובר), רצפת התחלות בעמוד הסמן, המשכים זורמים במקביל למילוי הגוף. legacy — שער תקציב-הערות של S74 (נתיב קפוא). pipeline מתעד את המנגנון הפעיל באירוע מפורש בכל ריצה.' }),
   K('endnotes-enabled', 'bool', false, P.NOTES, 'chk-endnotes', ['layout/endnote-pages'], 'fx:endnotes-on', { note: 'נגזר מ‑note-placement-mode=endnotes (D-39); קלט ישן true ממופה ל‑mode=endnotes בהגירה (project-io)' }),
   K('endnote-title-text', 'string', 'הערות', P.NOTES, 'inp-endnote-title', ['layout/endnote-pages'], 'fx:endnote-title'),
   K('endnote-columns', 'number', 1, P.NOTES, 'sel-en-cols', ['layout/endnote-pages'], 'fx:en-cols', { enum: [1, 2], note: 'S7.1.1: טור אחד או שניים בעמודי הערות' }),
@@ -10037,7 +10043,7 @@ const { fixDropWordInColumns } = require('../typography/protectors');
 const { MARK_TAG } = require('../notes/markers'); // markerFragmentOf אינו נדרש כאן — הזיהוי לפי MARK_TAG ישירות (תבנית D-53)
 const { moveLineForward } = require('./ordering');
 const { optimalSplit } = require('./balancing'); // **EXT-8:** חלוקה גלובלית אופטימלית
-const { getFootnotesReservedHeight, noteHeight, noteMetrics, stampNoteMetrics } = require('./footnote-budget'); // **שלב 5:** noteMetrics — מקור יחיד למדדי ההערה (חילוץ מ-#16); **פרוסה 2:** stampNoteMetrics — מדידה אחת ביצירה
+const { getFootnotesReservedHeight, noteHeight, noteMetrics, stampNoteMetrics, bodyFirstCaps, bodyFirstBudgetPx } = require('./footnote-budget'); // **שלב 5:** noteMetrics — מקור יחיד למדדי ההערה (חילוץ מ-#16); **פרוסה 2:** stampNoteMetrics — מדידה אחת ביצירה; **S75-פורט (29.11):** bodyFirstCaps/bodyFirstBudgetPx — SSOT תקרת/תקציב body-first
 const { stampNote, makeNoteRecord, NOTE_KINDS } = require('./notes-model'); // **שלב 6 פרוסה 2:** מודל ההערות המאוחד — זהות/עוגן + חותמת הערות-צד ביצירה
 const CM = require('./constraint-matrix'); // **שלב 5:** מטריצת האילוצים המאוחדת (חילוץ שורש מ-#16/#17)
 const { createTraceRecorder } = require('./decision-trace'); // **פרוסה 2 (§2.7):** תיעוד החלטות דטרמיניסטי קומפקטי
@@ -10649,6 +10655,22 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   const lineH = Math.round(settings['body-font-size-pt'] * (96 / 72) * settings['body-line-height']);
   const imbMax = settings['imbalance-max-delta-px'];
 
+  // **S75 (בקשה 1 — 12.11) · פורט המנוע המאוחד (29.11): מנגנון הצבת ההערות body-first.**
+  // החלטת המשתמש שאושרה ב-S75 ונשארה פתוחה מאז 2ae45b9 (W-4/F-2.2 תיעד את הפער):
+  // (1) הגוף ממלא את אזור הטקסט תמיד — פסקה נושאת-הערות אינה נדחקת לעמוד הבא
+  //     בגלל גודל ההערות (ביטול שער התקציב הקשיח כחוסם הצבה);
+  // (2) המרזב נכנס בחלל שמתחת לגוף עד תקרה יחסית — 50% מגובה הזרימה בברירת
+  //     המחדל (fn-bar-max-height-px חיובי גובר, חתוך לקיבולת);
+  // (3) רצפת התחלות — הערה טרייה מתחילה בעמוד שבו סמנה הוצב, עד קיבולת פיזית;
+  // (4) המשכים/נדחות זורמים בראש מרזב העמוד הבא **במקביל** למילוי הגוף.
+  // 'legacy' = שער תקציב-ההערות של S74 — ללא שינוי כלשהו (נתיב קפוא ביט-לביט).
+  const fnBodyFirst = !!settings['footnotes-enabled'] && String(settings['fn-placement-mode']) === 'body-first';
+
+  // **S75-פורט:** תור ההמשכים/הנדחות — מועבר לראש המרזב של כל עמוד חדש ב-body-first
+  // (ב-legacy נשאר כשהיה: ממתין ל-block הבא שנושא הערות). ההכרזה לפני newPage —
+  // הניקוז ב-newPage קורא לה ממש בפתיחת העמוד.
+  const pendingBarNotes = [];
+
   // **FX-1 (דוח 06, שלב 5 — חילוץ שורש מ-#17):** נעילת ליווי — הטור שאומת
   // למחסנית כותרת+ליווי הוא startCol של ההצבה עד השלמת שורות הליווי;
   // נאפס בכל עמוד חדש.
@@ -10672,7 +10694,12 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     // **פרוסה 2 (§2.5):** dpPlanned — סימון עמוד הזרימה לחוזה ה-PagePlan
     // (finalizePagePlans ב-pipeline); openedBy — מעברי עמוד/סוג; reservations —
     // שמורות אחידות של שלב 6 (מנגנון ההרחבה של מודל הקיבולת).
-    return { index: pageIdx++, type, template: tpl, columns: Array.from({ length: tpl.columns.length }, () => []), footnotes: [], sideNotes: [], headingsOnPage: [], balanceInfo: null, fnReservedHeightPx: 0, chapterOpening: false, dpPlanned: true, openedBy: null, reservations: [] };
+    const pg = { index: pageIdx++, type, template: tpl, columns: Array.from({ length: tpl.columns.length }, () => []), footnotes: [], sideNotes: [], headingsOnPage: [], balanceInfo: null, fnReservedHeightPx: 0, chapterOpening: false, dpPlanned: true, openedBy: null, reservations: [] };
+    // **S75-port (29.11, body-first):** pending continuations/deferred from the previous page enter the new page's gutter head immediately ("the body keeps filling the next pages normally, in parallel with the notes continuing to flow in the gutters" — S75; legacy: pendingFootnotes pushed at every page head before column fill).
+    if (fnBodyFirst && pendingBarNotes.length) {
+      pg.footnotes.push(...pendingBarNotes.splice(0));
+    }
+    return pg;
   }
 
   let cur = newPage(PAGE_TYPES.REGULAR);
@@ -10684,8 +10711,42 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   // colCapacityOf(page) בלבד. תבנית תקינה יכולה להניב קיבולת 0 לאחר הפחתת
   // spanning/notes/reservations; אסור ל-fallback להחזיר שטח גולמי במקרה הזה.
   // ה-fallback נשמר רק לעמודים ישנים ללא template קנוני (אם יגיעו מנתיב תאימות).
+  // **S75-port (29.11) — usableHeightOf:** content box minus spanning band — the
+  // shared vertical space the body and the gutter divide (single source; the same
+  // subtraction colCapacityOf performs before reservations/budget).
+  function usableHeightOf(page) {
+    if (!page || !page.template || !page.template.contentBox) return 0;
+    return page.template.contentBox.height - ((page.spanning && page.spanning.heightPx) || 0);
+  }
+
+  // **S75-port (29.11) — dynamic fill budget (body-first).** The legacy S74 gate
+  // froze page.fnReservedHeightPx at commit time and shrank every column's capacity
+  // by it (U-8) — so a notes-carrying paragraph could be pushed off the page purely
+  // by note size. body-first instead derives the gutter claim at every capacity
+  // query: soft = max(min(need, relCap), starts-floor) clamped to the space below
+  // the body already laid (minus one body line) — the body is NEVER pushed by the
+  // notes; the gutter takes what is left below it. Pure function of (footnotes,
+  // settings, used heights) — deterministic. SSOT: footnote-budget.bodyFirstBudgetPx.
+  function dynamicFnBudget(page) {
+    if (page.fnPlacementFinalized) return page.fnReservedHeightPx > 0 ? page.fnReservedHeightPx : 0;
+    if (!settings['footnotes-enabled'] || !page.footnotes || !page.footnotes.length) return 0;
+    let maxUsed = 0;
+    for (const c of page.columns) maxUsed = Math.max(maxUsed, usedHeight(c, page));
+    // **S75 (רצפת ההתחלות):** ה-clamp קפוא מרגע ההתחייבות (reserveNotes) — כמו
+    // applyFnReserve במנוע הישן: התקציב תובע את החלל שמתחת לגוף בשעת הצבת
+    // הסמנים ואינו מצטמק כשהגוף ממשיך למלא — אחרת הגוף היה “אוכל” את שורת
+    // הפתיחה של ההערה הטרייה האחרונה (מדוד: עמוד מלא עד 1004px עם מרזב
+    // של שורה בודדת). החלק הרך (צורך/תקרה/רצפה) מחושב מחדש מול הסט הנוכחי.
+    return bodyFirstBudgetPx(page.footnotes, settings, measureFn, usableHeightOf(page), lineH, maxUsed, page.fnBodyFirstClampPx != null ? page.fnBodyFirstClampPx : Number.POSITIVE_INFINITY);
+  }
+
   const colCapacity = (tpl, page) => {
-    if (page && page.template && page.template.contentBox) return colCapacityOf(page);
+    if (page && page.template && page.template.contentBox) {
+      // **S75-port:** in body-first the note budget is dynamic (see dynamicFnBudget);
+      // colCapacityOf's static subtraction stays authoritative for the legacy gate.
+      if (fnBodyFirst) return colCapacityOf(page, { fnBudget: false }) - dynamicFnBudget(page);
+      return colCapacityOf(page);
+    }
     return tpl && tpl.contentBox ? tpl.contentBox.height - ((page && page.spanning && page.spanning.heightPx) || 0) : 0;
   };
 
@@ -10706,6 +10767,21 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
    */
   function recomputeFnBudget(page) {
     if (!settings['footnotes-enabled'] || !page.footnotes.length) { page.fnReservedHeightPx = 0; return 0; }
+    // **S75-port (29.11):** body-first — a closed page keeps its FINAL placed height
+    // (the fill budget must never clobber it); during fill the dynamic budget is
+    // recorded for trace/invariants — every placement decision goes through
+    // colCapacity→dynamicFnBudget, which recomputes against current used heights.
+    if (fnBodyFirst) {
+      if (page.fnPlacementFinalized) {
+        // closed page: the placed height derives from the placed set — a
+        // reconcile/tail mutation of the set refreshes through this same gate
+        // (single semantics for every closed-page consumer).
+        page.fnReservedHeightPx = getFootnotesReservedHeight(page.footnotes, settings, measureFn);
+        return page.fnReservedHeightPx;
+      }
+      page.fnReservedHeightPx = dynamicFnBudget(page); // frozen clamp + live soft (S75)
+      return page.fnReservedHeightPx;
+    }
     const reserved = getFootnotesReservedHeight(page.footnotes, settings, measureFn) // **S70:** העברת הפונקציה עצמה שומרת על סימון ה-impl (להתאמת פקטורים);
     page.fnReservedHeightPx = reserved;
     return reserved;
@@ -10863,6 +10939,62 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     trace.emit(cur.index, 'h3-band-midpage', { token: blk.tokenId, heightPx: Math.round(bandTotal), lines: n, anchor: Math.round(base), leadPx });
   }
 
+  /** **S75-port (29.11) — finalizeBodyFirstNotes:** the body-first placement at
+   * page close. Semantics (S75 as approved):
+   *  - avail = min(fullCap, usableH − actual body bottom); an explicit
+   *    fn-bar-max-height-px > 0 caps the placed gutter as well.
+   *  - Notes are placed in queue order while they fit whole; the first note
+   *    that does not fit is placed PARTIALLY at a row boundary (splitNoteAtRow)
+   *    and its remainder flows to the next page's queue head; a note with no
+   *    room for even one row defers whole (a fresh note stays fresh — it opens
+   *    on the next page with its own marker; a continuation stays split-rest).
+   *  - fnReservedHeightPx becomes the FINAL placed height (probe==reserved for
+   *    the projection: materialize anchors the gutter at contentBox.bottom −
+   *    placed) and fnPlacementFinalized freezes it for every later consumer.
+   *  - Runs AFTER balancing (the body bottom is final) and BEFORE the BRZ-14
+   *    containment invariant — which then holds by construction
+   *    (placed ≤ usableH − maxUsed ⇒ used ≤ cap for every column). */
+  function finalizeBodyFirstNotes(page) {
+    page.fnPlacementFinalized = true;
+    if (!settings['footnotes-enabled'] || !page.footnotes.length) { page.fnReservedHeightPx = 0; return; }
+    const usableH = usableHeightOf(page);
+    let maxUsed = 0;
+    for (const c of page.columns) maxUsed = Math.max(maxUsed, usedHeight(c, page));
+    const caps = bodyFirstCaps(settings, usableH, lineH);
+    const explicit = Number(settings['fn-bar-max-height-px']);
+    let avail = Math.max(0, Math.min(caps.fullCapPx, usableH - maxUsed));
+    if (Number.isFinite(explicit) && explicit > 0) avail = Math.min(avail, explicit);
+    const placed = [];
+    let usedPx = 0;
+    let splitCount = 0, deferredCount = 0;
+    for (const n of page.footnotes) {
+      const h = n.heightPx != null ? n.heightPx : noteHeight(n, settings, measureFn);
+      if (usedPx + h <= avail + 0.01) { placed.push(n); usedPx += h; continue; }
+      const rowsFit = Math.floor((avail - usedPx + 0.01) / caps.lineH);
+      const split = rowsFit >= 1 ? splitNoteAtRow(n, Math.min(rowsFit, (n.noteRows || []).length)) : null;
+      if (split) {
+        placed.push(split.first);
+        usedPx += split.first.heightPx;
+        pendingBarNotes.push(stampNoteMetrics(split.rest, settings, measureFn));
+        splitCount++;
+        eventLog.emit('notes-budget', 'fn-split', { token: n.tokenId, marker: n.marker, at: 'body-first-finalize', firstWords: split.first.noteWords.length, firstRows: split.first.linesCount }, page.index);
+        continue;
+      }
+      // אין חדר אפילו לשורה אחת / אין חיתוך חוקי — ההערה עוברת בשלמותה לראש העמוד הבא
+      const isCont = n.isContinuation === true || n.mode === 'split-rest';
+      pendingBarNotes.push({ ...n, deferredToNextPage: true, mode: isCont ? n.mode : 'deferred' });
+      deferredCount++;
+    }
+    page.footnotes = placed;
+    page.fnReservedHeightPx = placed.length ? getFootnotesReservedHeight(placed, settings, measureFn) : 0;
+    if (placed.length || splitCount || deferredCount) {
+      eventLog.emit('notes-budget', 'fn-body-first-finalize', {
+        page: page.index, placed: placed.length, placedPx: Math.round(page.fnReservedHeightPx),
+        availPx: Math.round(avail), bodyBottomPx: Math.round(maxUsed), split: splitCount, deferred: deferredCount
+      }, page.index);
+    }
+  }
+
   function flushPage() {
     // איזון טורים: Δ≤5px (BRZ-3) — **EXT-8: החלוקה הגלובלית האופטימלית**
     // (פיצול רציף ממזער |lH−rH| בכפוף לקיבולת; סדר קריאה נשמר מבנית — תיקון P0-3
@@ -10913,6 +11045,13 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       cur.balanceInfo = { before: [a0, b0], after: [a, b] };
       eventLog.emit('balance', 'column-balance', { page: cur.index, delta: Math.abs(a - b) }, cur.index);
     }
+    // **S75-port (29.11):** body-first — finalize the gutter at page close: place
+    // what truly fits below the ACTUAL body bottom (the gutter grows into free
+    // space when the body ends early — S75 priority 1), split at row boundaries,
+    // defer the rest to the next page's queue head. AFTER balancing (the body
+    // bottom is final) and BEFORE the containment invariant (which then holds by
+    // construction).
+    if (fnBodyFirst) finalizeBodyFirstNotes(cur);
     // Invariant BRZ-14: element height ≤ container height (בכפוף לפס החוצה־טורים — FWD-1)
     for (const col of cur.columns) {
       if (usedHeight(col, cur) > colCapacity(cur.template, cur) + 0.5) {
@@ -11006,7 +11145,47 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
    * fn-layout-mode (D-34): block ⇒ תקרת fn-bar-max-height-px נאכפת; continuous ⇒
    * אין תקרה (ההערות זורמות) — מנגנון אמיתי, לא מחלקת CSS בלבד.
    */
-  const pendingBarNotes = [];
+  /** **S75-port (29.11) — splitNoteAtRow:** split a note at an absolute row
+   * boundary taken from its measured stamp (noteRows) — the one split mechanics
+   * shared by the barMax gate (reserveNotes) and the body-first page-close
+   * placement. Field-for-field identical to the historical inline construction
+   * (Stage 6 slice 2: continuationOf + wordRange + fragmentIndex identity; the
+   * fragment is measured exactly once via stampNoteMetrics at its birth site).
+   * @returns {{first:object, rest:object}|null} null = no legal cut (whole note). */
+  function splitNoteAtRow(n, cutRow) {
+    const fnLH = n.lineH || noteMetrics(settings).lineHeightPx;
+    const rows = n.noteRows || [];
+    const wordsArr = n.noteWords || String(n.text).replace(/\uE000/g, ' ').split(/\s+/).filter(Boolean);
+    if (!rows.length || !Number.isFinite(cutRow) || cutRow < 1 || cutRow >= rows.length) return null;
+    const cutIdx = rows[cutRow - 1].wTo;
+    if (cutIdx == null || cutIdx <= 0 || cutIdx >= wordsArr.length) return null;
+    const firstText = wordsArr.slice(0, cutIdx).join(' ');
+    const restText = wordsArr.slice(cutIdx).join(' ');
+    const srcNoteId = n.noteId || makeNoteRecord(n, { kind: NOTE_KINDS.FOOTNOTE, numberingScope: settings['footnote-reset-policy'], splitPolicy: 'split' }).noteId;
+    const baseFrom = n.wordRange ? n.wordRange.from : 0;
+    const first = {
+      ...n, text: firstText, heightPx: cutRow * fnLH, lineH: fnLH, linesCount: cutRow,
+      noteRows: rows.slice(0, cutRow), noteWords: wordsArr.slice(0, cutIdx),
+      mode: 'split-first', linesShown: cutRow,
+      wordRange: { from: baseFrom, to: baseFrom + cutIdx }
+    };
+    const rest = makeNoteRecord(
+      { text: restText, marker: n.marker, tokenId: n.tokenId, noteIndex: n.noteIndex, part: n.part },
+      {
+        kind: NOTE_KINDS.FOOTNOTE,
+        numberingScope: settings['footnote-reset-policy'],
+        splitPolicy: 'split', continuationPolicy: 'split',
+        continuationOf: srcNoteId,
+        fragmentIndex: (n.fragmentSeq != null ? n.fragmentSeq : 0) + 1,
+        wordRange: { from: baseFrom + cutIdx, to: baseFrom + wordsArr.length }
+      }
+    );
+    rest.isContinuation = true;
+    rest.mode = 'split-rest';
+    rest.fragmentSeq = (n.fragmentSeq != null ? n.fragmentSeq : 0) + 1;
+    return { first, rest };
+  }
+
   function reserveNotes(blk) {
     const notes = (blk.notes || []);
     if (!notes.length) return null;
@@ -11014,7 +11193,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     // חייבת להיות הפיכה כל עוד הפסקה עודנה בהכרעת מיקום. snap.clean=false
     // אחרי פעולות בעלות תופעות לוואי (פיצול/העברה/החזרה לגוף) — אין שחזור
     // אחריהן (המשכים שנוצרו, מצב הבלוק וה-ledger אינם הפיכים בבטחה).
-    const snap = { clean: true, footLenBefore: cur.footnotes.length, fnBefore: cur.fnReservedHeightPx || 0, pendingBefore: pendingBarNotes.slice() };
+    const snap = { clean: true, footLenBefore: cur.footnotes.length, fnBefore: cur.fnReservedHeightPx || 0, pendingBefore: pendingBarNotes.slice(), clampBefore: cur.fnBodyFirstClampPx != null ? cur.fnBodyFirstClampPx : null };
     // המשכים מהעמוד הקודם קודם כל (שמירת סדר ההערות)
     const queue = [...pendingBarNotes.splice(0), ...notes];
     const barMax = settings['fn-layout-mode'] === 'continuous'
@@ -11057,42 +11236,20 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
             cur.footnotes.push({ ...n, heightPx: h, mode: isCont ? 'split-rest' : 'normal', isContinuation: isCont });
             continue;
           }
-          const cutRow = Math.min(linesFit, rows.length);
-          const cutIdx = rows[cutRow - 1].wTo;
-          const wordsArr = n.noteWords || String(n.text).replace(/\uE000/g, ' ').split(/\s+/).filter(Boolean);
-          if (cutIdx >= wordsArr.length) {
+          // **S75-port (29.11):** the split construction itself now lives in
+          // splitNoteAtRow (single mechanics, shared with the body-first
+          // page-close placement); identical fields and identity contract.
+          const split = splitNoteAtRow(n, Math.min(linesFit, rows.length));
+          if (!split) {
+            // אין חיתוך חוקי (גבול שורה חופף את סוף ההערה/חותמה חלקית) — בשלמותה
             cur.footnotes.push({ ...n, heightPx: h, mode: isCont ? 'split-rest' : 'normal', isContinuation: isCont });
             continue;
           }
-          const firstText = wordsArr.slice(0, cutIdx).join(' ');
-          const restText = wordsArr.slice(cutIdx).join(' ');
-          const srcNoteId = n.noteId || makeNoteRecord(n, { kind: NOTE_KINDS.FOOTNOTE, numberingScope: settings['footnote-reset-policy'], splitPolicy: 'split' }).noteId;
-          cur.footnotes.push({
-            ...n, text: firstText, heightPx: cutRow * fnLH, lineH: fnLH, linesCount: cutRow,
-            noteRows: rows.slice(0, cutRow), noteWords: wordsArr.slice(0, cutIdx),
-            mode: 'split-first', linesShown: cutRow,
-            wordRange: { from: n.wordRange ? n.wordRange.from : 0, to: (n.wordRange ? n.wordRange.from : 0) + cutIdx }
-          });
-          // ההמשך נולד כרשומת חוזה מלאה (makeNoteRecord — זהות+עוגן+מדיניות,
-          // עם fragmentIndex ל-noteId) — לא כשק חלקי של המקור.
-          const frag = makeNoteRecord(
-            { text: restText, marker: n.marker, tokenId: n.tokenId, noteIndex: n.noteIndex, part: n.part },
-            {
-              kind: NOTE_KINDS.FOOTNOTE,
-              numberingScope: settings['footnote-reset-policy'],
-              splitPolicy: 'split', continuationPolicy: 'split',
-              continuationOf: srcNoteId,
-              fragmentIndex: (n.fragmentSeq != null ? n.fragmentSeq : 0) + 1,
-              wordRange: { from: (n.wordRange ? n.wordRange.from : 0) + cutIdx, to: (n.wordRange ? n.wordRange.from : 0) + wordsArr.length }
-            }
-          );
-          frag.isContinuation = true;
-          frag.mode = 'split-rest';
-          frag.fragmentSeq = (n.fragmentSeq != null ? n.fragmentSeq : 0) + 1;
-          pendingBarNotes.push(stampNoteMetrics(frag, settings, measureFn));
+          cur.footnotes.push(split.first);
+          pendingBarNotes.push(stampNoteMetrics(split.rest, settings, measureFn));
           snap.clean = false; // נוצר המשך חדש — אין שחזור בטוח
-          eventLog.emit('notes-budget', 'fn-split', { token: n.tokenId, marker: n.marker, barMax, firstWords: cutIdx, firstRows: cutRow }, cur.index);
-          trace.emit(cur.index, 'note-split', { token: n.tokenId, marker: n.marker, firstRows: cutRow, restRows: n.linesCount - cutRow });
+          eventLog.emit('notes-budget', 'fn-split', { token: n.tokenId, marker: n.marker, barMax, firstWords: split.first.noteWords.length, firstRows: split.first.linesCount }, cur.index);
+          trace.emit(cur.index, 'note-split', { token: n.tokenId, marker: n.marker, firstRows: split.first.linesCount, restRows: n.linesCount - split.first.linesCount });
           continue;
         }
         if (settings['long-footnote-policy'] === 'move-whole') {
@@ -11110,6 +11267,18 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
       }
       cur.footnotes.push({ ...n, heightPx: h, lineH: n.lineH || noteMetrics(settings).lineHeightPx, isContinuation: isCont, mode: isCont ? 'split-rest' : 'normal' });
     }
+    // **S75-port (רצפת ההתחלות):** הקפאת ה-clamp ברגע ההתחייבות — החלל שמתחת
+    // לגוף שהונח עד עכשיו, פחות שורת-גוף אחת (מינימום שורת-הערה). ערך זה
+    // משמש את dynamicFnBudget עד סגירת העמוד; התחייבויות מאוחרות מהדקות
+    // אותו בלבד (מונוטוניות המילוי). שחזור — ב-uncommitNotes (snap.clampBefore).
+    if (fnBodyFirst) {
+      const uh = usableHeightOf(cur);
+      let mu = 0;
+      for (const c of cur.columns) mu = Math.max(mu, usedHeight(c, cur));
+      const caps = bodyFirstCaps(settings, uh, lineH);
+      const clampNow = Math.max(caps.lineH, uh - mu - lineH);
+      cur.fnBodyFirstClampPx = cur.fnBodyFirstClampPx != null ? Math.min(cur.fnBodyFirstClampPx, clampNow) : clampNow;
+    }
     recomputeFnBudget(cur); // probe==reserved — פונקציה אחת (unified) לשני הצרכים
     return snap;
   }
@@ -11121,6 +11290,10 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
   function uncommitNotes(page, snap) {
     page.footnotes.length = snap.footLenBefore;
     page.fnReservedHeightPx = snap.fnBefore;
+    if (fnBodyFirst) {
+      if (snap.clampBefore != null) page.fnBodyFirstClampPx = snap.clampBefore;
+      else delete page.fnBodyFirstClampPx;
+    }
     pendingBarNotes.length = 0;
     for (const p of snap.pendingBefore) pendingBarNotes.push(p);
   }
@@ -11144,11 +11317,13 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     const stack = CM.stackHeightPx([markerLine || blk.lines[0]], isFirst ? blockGapPx(settings, lineH) : 0);
     // **U-8:** גם התאמת שורת הסמן וגם הכלת כל טורי העמוד מעל המרזב —
     // אחרת העמוד נסגר בלי ההערה והיא עוברת עם הסמן לעמוד הבא (F-17).
-    if (snap.clean && (ensureRoomFor(stack) === -1 || !pageFitsNoteBudget())) {
+    // **S75-port:** in body-first the note budget NEVER flushes the page (that is
+    // the budget-first push S75 removed) — only a natural marker-line misfit does.
+    if (snap.clean && (ensureRoomFor(stack) === -1 || (!fnBodyFirst && !pageFitsNoteBudget()))) {
       uncommitNotes(cur, snap);
       flushPage(); cur = newPage(PAGE_TYPES.REGULAR);
       reserveNotes(blk);
-      if (ensureRoomFor(stack) === -1 || !pageFitsNoteBudget()) {
+      if (ensureRoomFor(stack) === -1 || (!fnBodyFirst && !pageFitsNoteBudget())) {
         // מצב פתולוגי (הערה בגודל עמוד): מתועד, לא שקט
         ledger.create('fn-degenerate', blk.tokenId, cur.index, { reservedPx: cur.fnReservedHeightPx }, 'notes-budget');
       }
@@ -11586,7 +11761,7 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
           // "אין פיצול" (שטיפה + התחייבות מבוקרת בעמוד החדש דרך reserveAtMarker).
           if (blk.kind === 'paragraph' && splitMIdx >= 0 && splitMIdx < splitAt) {
             const snap = reserveNotes(blk);
-            if (snap && snap.clean && !pageFitsNoteBudget()) {
+            if (snap && snap.clean && !fnBodyFirst && !pageFitsNoteBudget()) {
               uncommitNotes(cur, snap);
               splitAt = splitMIdx > 0 ? splitMIdx : 0;
             }
@@ -11668,6 +11843,8 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         ...(n.lineH != null ? {} : { lineH: tailLineH })
       });
     }
+    // **S75-port (29.11):** body-first — recomputeFnBudget refreshes the placed
+    // height from the placed set on the finalized last page; legacy keeps its gate.
     recomputeFnBudget(last);
     // **שלב 5 (אין fallback שקט):** ההמשכים חייבים להישמר (BRZ-15 — אין אובדן
     // תוכן), אך אם תקציבם חורג מקיבולת העמוד האחרון — נרשם אבחון מפורש
@@ -11676,9 +11853,23 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
     // — שלב B של התוכנית (דוח 06).
     const tailCap = colCapacityOf(last); // **U-8:** מודע-תקציב, כמו ההצבה
     const tailUsed = planningUsedHeight(last.columns[last.columns.length - 1], last);
-    if (tailUsed > tailCap + CM.CAPACITY_EPS) {
+    // **S75-port (29.11):** body-first — overflow = placed gutter beyond the space
+    // actually left below the body bottom (same no-silent-loss rule: the notes
+    // stay, the condition is reported). Legacy gate stays byte-identical.
+    let tailOverflow, tailDetail;
+    if (fnBodyFirst) {
+      let tailMaxUsed = 0;
+      for (const c of last.columns) tailMaxUsed = Math.max(tailMaxUsed, planningUsedHeight(c, last));
+      const tailAvailPx = usableHeightOf(last) - tailMaxUsed;
+      tailOverflow = last.fnReservedHeightPx > tailAvailPx + 0.5;
+      tailDetail = { placedPx: Math.round(last.fnReservedHeightPx), availPx: Math.round(tailAvailPx), notes: pendingBarNotes.length };
+    } else {
+      tailOverflow = tailUsed > tailCap + CM.CAPACITY_EPS;
+      tailDetail = { usedPx: Math.round(tailUsed), capPx: Math.round(tailCap), notes: pendingBarNotes.length };
+    }
+    if (tailOverflow) {
       const rec = ledger.create('fn-tail-overflow', `tail@p${last.index}`, last.index,
-        { usedPx: Math.round(tailUsed), capPx: Math.round(tailCap), notes: pendingBarNotes.length }, 'notes-budget');
+        tailDetail, 'notes-budget');
       ledger.transition(rec.issue_id, 'persists', 'notes-budget', 'tail continuations exceed last-page capacity (structural; documented — stage B)');
     }
     eventLog.emit('notes-budget', 'fn-tail-continuation', { count: pendingBarNotes.length, page: last.index }, last.index);
@@ -11781,8 +11972,19 @@ function planPages(blocks, settings, eventLog, ledger = new Ledger(), env = {}) 
         // p646, טור 0 ב-629.8 מול cap 566.8 אחרי העברת הערה בתקציב 64) קיבל
         // את ההערה בכוח ⇒ חריגת טור של 34–63px. כעת נבדקים כל הטורים —
         // בדיוק כמו pageFitsNoteBudget — שער אחד, אמנה אחת.
-        const capWithFn = colCapacityOf(target);
-        const allColsFit = target.columns.every(c => planningUsedHeight(c, target) <= capWithFn + CM.CAPACITY_EPS);
+        // **S75-port (29.11):** body-first — the moved note grows the target's
+        // PLACED gutter; legal only if the placed set still fits below the
+        // target's actual body bottom. Legacy keeps the U-8 columns-above-budget
+        // check (same one gate, one covenant).
+        let allColsFit;
+        if (fnBodyFirst) {
+          let tMaxUsed = 0;
+          for (const c of target.columns) tMaxUsed = Math.max(tMaxUsed, planningUsedHeight(c, target));
+          allColsFit = target.fnReservedHeightPx <= usableHeightOf(target) - tMaxUsed + 0.5;
+        } else {
+          const capWithFn = colCapacityOf(target);
+          allColsFit = target.columns.every(c => planningUsedHeight(c, target) <= capWithFn + CM.CAPACITY_EPS);
+        }
         if (allColsFit) {
           changed = true;
           movedCount++;
@@ -14205,6 +14407,77 @@ function laneWidth(settings) {
 }
 
 /**
+ * **S75 (בקשה 1 — 12.11) · פורט המנוע המאוחד (29.11): מדדי תקרת body-first —
+ * מקור יחיד.** מקביל ל-FN_BODY_FIRST_CAP_PX/FN_FULL_CAP_PX של המנוע הישן
+ * (legacy-imud-flow, 2ae45b9^), מותאם לחוזה הקיבולת המאוחד (usableH = תיבת
+ * התוכן בהפחתת פס חוצה-טורים; אין קבוע מפריד 38.5 — המרזב המאוחד אינו
+ * שומר גובה למפריד, החוט מצויר בראש המרזב עצמו).
+ * - fullCapPx: קיבולת פיזית מלאה של המרזב — תמיד נותרת שורת-גוף אחת לפחות
+ *   (legacy: FN_FULL_CAP_PX = ⌊(FLOW_H − 38.5 − שורת-גוף)/PITCH⌋·PITCH).
+ * - relCapPx: התקרה היחסית בזמן המילוי — ערך מפורש של fn-bar-max-height-px
+ *   (אם חיובי, חתוך ל-fullCap), ואחרת **50% מגובה הזרימה** בכפולות שורת-הערה
+ *   (החלטת S75: "המרזב נכנס בחלל שמתחת לגוף עד תקרה יחסית — 50%").
+ */
+function bodyFirstCaps(settings, usableHeightPx, bodyLinePx) {
+  const lineH = noteMetrics(settings).lineHeightPx;
+  const fullCapPx = Math.max(lineH, Math.floor((usableHeightPx - bodyLinePx) / lineH) * lineH);
+  const explicit = Number(settings['fn-bar-max-height-px']);
+  const relCapPx = (Number.isFinite(explicit) && explicit > 0)
+    ? Math.min(explicit, fullCapPx)
+    : Math.min(fullCapPx, Math.max(lineH, Math.floor((usableHeightPx * 0.5) / lineH) * lineH));
+  return { lineH, fullCapPx, relCapPx };
+}
+
+/**
+ * **S75 — רצפת ההתחלות:** גובה המרזב עד שורת הפתיחה של ההערה הטרייה האחרונה
+ * בתור (סכום הגבהים שלפניה + שורת-הערה אחת). עדיפות 2 של המשתמש: "כל הערה
+ * טרייה מתחילה בעמוד שבו הסמן שלה הוצב". הרצפה חתוכה בהמשך לקיבולת ולצורך
+ * (legacy: fnBodyFirstLines → starts, במודל הבלוקים המאוחד — סכום מונוטוני
+ * על סדר התור; שמרני גם במרזב דו-טורי: שמורה במודל חד-טורי).
+ */
+function bodyFirstStartsFloorPx(pageNotes, settings, measure) {
+  if (!pageNotes || !pageNotes.length) return 0;
+  const lineH = noteMetrics(settings).lineHeightPx;
+  let lastFresh = -1;
+  for (let i = 0; i < pageNotes.length; i++) {
+    const n = pageNotes[i];
+    const isCont = n && (n.isContinuation === true || n.mode === 'split-rest' || n.continuationOf != null);
+    if (!isCont) lastFresh = i;
+  }
+  if (lastFresh < 0) return 0;
+  let before = 0;
+  for (let i = 0; i < lastFresh; i++) {
+    before += pageNotes[i] && pageNotes[i].heightPx != null ? pageNotes[i].heightPx : noteHeight(pageNotes[i], settings, measure);
+  }
+  return before + lineH;
+}
+
+/**
+ * **S75 — תקציב המילוי של body-first (מקור יחיד; מקביל ל-fnReserveFor+applyFnReserve
+ * של המנוע הישן):** מה שהמרזב תובע בזמן מילוי הגוף —
+ *   soft = max(min(need, relCap), min(startsFloor, fullCap, need))
+ *   budget = min(soft, clamp), clamp = max(lineH, usableH − maxUsed − bodyLine)
+ * ה-clamp מבטיח שהגוף **לעולם אינו נדחק** לעמוד הבא בגלל גודל ההערות: התקציב
+ * אינו חורג מהחלל שמתחת לגוף שכבר הונח, פחות שורת-גוף אחת. התקציב דינמי —
+ * הוא מחושב מחדש מול ה-used הנוכחי בכל שאילתת קיבולת (dp-planner).
+ */
+function bodyFirstBudgetPx(pageNotes, settings, measure, usableHeightPx, bodyLinePx, maxUsedPx, clampPxOverride) {
+  if (!pageNotes || !pageNotes.length) return 0;
+  const caps = bodyFirstCaps(settings, usableHeightPx, bodyLinePx);
+  const needPx = getFootnotesReservedHeight(pageNotes, settings, measure);
+  const startsPx = Math.min(bodyFirstStartsFloorPx(pageNotes, settings, measure), caps.fullCapPx, needPx);
+  const soft = Math.max(Math.min(needPx, caps.relCapPx), startsPx);
+  // **clamp — קפוא בזמן ההתחייבות (כמו applyFnReserve של המנוע הישן):** התקציב
+  // תובע את החלל שמתחת לגוף ברגע שסמני ההערות הוצבו — ואינו מצטמק ככל שהגוף
+  // ממשיך למלא; כך רצפת ההתחלות שרדה את המילוי. clampPxOverride — הערך הקפוא
+  // מהעמוד (dp-planner); בלעדיו — clamp חי (בזמן ההתחייבות עצמה).
+  const clampPx = clampPxOverride != null && Number.isFinite(clampPxOverride)
+    ? clampPxOverride
+    : Math.max(caps.lineH, usableHeightPx - Math.max(0, maxUsedPx) - bodyLinePx);
+  return Math.max(0, Math.min(soft, clampPx));
+}
+
+/**
  * getFootnotesReservedHeight — הזהה ל‑probe (BRZ: no divergence):
  * @param {Array} pageNotes - [{text, marker}]
  */
@@ -14222,7 +14495,7 @@ function getFootnotesReservedHeight(pageNotes, settings, measure) {
   return Math.max(totals[0], totals[1]);
 }
 
-module.exports = { getFootnotesReservedHeight, noteHeight, noteRowsOf, stampNoteMetrics, noteMetrics, laneWidth, NOTE_FONT_FACTORS, __resetRowsStats, __rowsStats };
+module.exports = { getFootnotesReservedHeight, noteHeight, noteRowsOf, stampNoteMetrics, noteMetrics, laneWidth, NOTE_FONT_FACTORS, bodyFirstCaps, bodyFirstStartsFloorPx, bodyFirstBudgetPx, __resetRowsStats, __rowsStats };
 
 };
 __modules["src/engine/layout/footnote-lanes.js"] = function (require, module, exports) {
