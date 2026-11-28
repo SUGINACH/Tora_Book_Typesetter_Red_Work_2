@@ -1,6 +1,6 @@
 // ui/engine-worker.bundle.js — **נוצר אוטומטית** ע"י tools/build-worker-bundle.js (אין לערוך ידנית)
 // חבילת ה־Worker (המנוע המלא — אין לטעון בחוט ה־UI)
-// מודולים: 101 · בלי חותמות זמן (דטרמיניזם)
+// מודולים: 100 · בלי חותמות זמן (דטרמיניזם)
 'use strict';
 
 var __crypto = (function () {
@@ -539,7 +539,6 @@ var __paths = {
   "src/engine/output/geometry-projector.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/output/zip-writer.js|../import/zip-reader": "src/engine/import/zip-reader.js",
   "src/engine/output/project-io.js|../core/settings-registry": "src/engine/core/settings-registry.js",
-  "src/engine/output/project-io.js|../core/legacy-settings-map": "src/engine/core/legacy-settings-map.js",
   "src/engine/extensions/extensions-io.js|./style-schema": "src/engine/extensions/style-schema.js",
   "src/engine/extensions/extensions-io.js|../decoration/custom-pages": "src/engine/decoration/custom-pages.js"
 };
@@ -784,21 +783,11 @@ function bootWorkerContext(ctx, options = {}) {
   const post = (message) => ctx.postMessage(message);
   // A real browser Worker always exposes location.href. Unit tests that invoke
   // this bootstrap with a minimal fakeSelf are not production Worker contexts.
+  // Runtime verification is mandatory in real Workers and never falls back there.
   const isRealWorkerContext = !!(ctx && ctx.location && typeof ctx.location.href === 'string' && ctx.location.href);
-  // **תכנית העל 27.11 §27.1.3 (TYP-SHAPING-01) — הכרעה:** ה-runtime ה-staged
-  // (Unicode 18 + HarfBuzz; `production-typography-runtime.js` מצהיר
-  // "staged-runtime-assets-not-production-enabled") אינו נצרך עדיין על ידי
-  // `core/pipeline.js` — ה-pipeline מקבל את `env.typographyRuntime` ואינו
-  // משתמש בו, והמדידה/השבירה/ההקרנות אינן צורות GIDs. לפיכך, עד השלמת
-  // אינטגרציית ShapedRun end-to-end, ה-runtime אינו שער חובה בנתיב
-  // ה-worker הפעיל: כישלון טעינת WASM/נכסים לא יחסום עימוד. ה-runtime עדיין
-  // נטען ומאומת דרך הודעת `typography-runtime-init` המפורשת, ומועבר ל-typeset
-  // רק אם אותחל. **בהשלמת האינטגרציה (itemization לפני פיצול, ShapedRun ב-
-  // LineModel/PageModel, הקרנות GID) — להחזיר את הדגל ל-true.**
-  const REQUIRES_SHAPING_RUNTIME_IN_ACTIVE_PATH = false;
   const handler = createEngineWorkerMain(post, {
     getTypographyRuntime: () => typographyRuntime,
-    requireTypographyRuntime: isRealWorkerContext && REQUIRES_SHAPING_RUNTIME_IN_ACTIVE_PATH,
+    requireTypographyRuntime: isRealWorkerContext,
     ...(typeof options.typeset === 'function' ? { typeset: options.typeset } : {}),
     ...(typeof options.serializeResult === 'function' ? { serializeResult: options.serializeResult } : {})
   });
@@ -877,12 +866,10 @@ function bootWorkerContext(ctx, options = {}) {
       handler(message);
       return;
     }
-    // The actual browser Worker has location.href. Minimal fakeSelf contexts used
-    // by the bundle's synchronous harness have no Worker location and exercise only
-    // the protocol/bootstrap behavior. When the staged shaping runtime is not an
-    // active-path requirement (§27.1.3), typeset proceeds without it: the pipeline
-    // does not consume it yet, and a WASM/asset failure must not block typesetting.
-    if (!isRealWorkerContext || !REQUIRES_SHAPING_RUNTIME_IN_ACTIVE_PATH) {
+    // The actual browser Worker has location.href and must load the verified runtime.
+    // Minimal fakeSelf contexts used by the bundle's synchronous harness have no
+    // Worker location and exercise only the protocol/bootstrap behavior.
+    if (!isRealWorkerContext) {
       handler(message);
       return;
     }
@@ -1033,36 +1020,9 @@ function offsetInSpans(at, spans) {
  */
 function typeset(rawText, settingsIn, env = {}) {
   // **S4.9 (פרופיל העימוד המקורי — הוסר):** המנוע היחיד כעת הוא המנוע המאוחד.
-  // נתיב המורשת (legacy-imud-flow / legacy-projector / legacy-ornaments) ודגלי
-  // הכניסה הכפולה RED_UNIFIED_IMUD ו-_engine-force-unified — הוסרו מהקוד.
-  // **אין למחוק את `_layout-profile='imud'` / `_imudRaw` (F-2.1, audits/SPLIT/2.md):**
-  // אלה אינם דגלי בחירת-מנוע אלא נתוני מקור IMUD גולמיים ש-legacy-settings-map
-  // (::importImudSettings, שורות 496-497) מציב בקצה הקלט; הם נצרכים כתנאי תרגום
-  // בלבד ב-structural-stamps (עוגן RC-HDR2), folio, toc-builder, shaar-content/
-  // shaar-pages, gate-design, balancing, side-notes, notes-model, export-api —
-  // התרגום מסתיים במודל המאוחד. ה-unified engine הוא מקור האמת הבלעדי
-  // לגיאומטריה, טיפוגרפיה ופגינציה.
-  // **W-3 (27.11) — שחזור שומר-האמת (הוסר בטעות ב-2ae45b9 עם המנוע הישן):**
-  // הגדרה המסומנת unifiedSupport=false ברישום ושונה מברירת המחדל חייבת כשל
-  // מפורש ולא אי-הפעלה שקטה (עקרון אין-פילבק-שקט; החוזה נבדק ב-s10-ui/D-64).
-  // מופעל תחת דגל הכפייה בלבד — כפי שהיה קודם 2ae45b9 — כדי שלא לשנות את
-  // התנהגות צרכני המנוע שאינם מבקשים להוכיח את החוזה.
-  const forceUnifiedContract = (!!(typeof process !== 'undefined' && process.env
-    && String(process.env.RED_UNIFIED_IMUD) === '1'))
-    || !!(settingsIn && settingsIn['_engine-force-unified'] === true);
-  if (forceUnifiedContract && settingsIn) {
-    const unsupported = getSettingDefs()
-      .filter((definition) => definition.unifiedSupport === false
-        && Object.prototype.hasOwnProperty.call(settingsIn, definition.id)
-        && JSON.stringify(settingsIn[definition.id]) !== JSON.stringify(definition.default))
-      .map((definition) => definition.id);
-    if (unsupported.length) {
-      const error = new Error('unified-unsupported-settings: הגדרות אלו עדיין אינן מחוברות ל-PageModel המאוחד: ' + unsupported.join(', '));
-      error.code = 'unified-unsupported-settings';
-      error.settingKeys = unsupported;
-      throw error;
-    }
-  }
+  // נתיב המורשת (legacy-imud-flow) וכל דגלי הכניסה הכפולה (RED_UNIFIED_IMUD,
+  // _engine-force-unified, _layout-profile='imud' + _imudRaw) הוסרו.
+  // ה-unified engine הוא מקור האמת הבלעדי לגיאומטריה, טיפוגרפיה ופגינציה.
   const settings = derivePlacementFlags({ ...getDefaultSettings(), ...(settingsIn || {}) });
   // **S10 (REQ-UI-03):** מזליף התקדמות — null כשלא סופק (אפס תקורה במסלול הרגיל).
   const onProgress = typeof env.onProgress === 'function' ? env.onProgress : null;
@@ -1080,18 +1040,15 @@ function typeset(rawText, settingsIn, env = {}) {
   const ledger = new Ledger();
   const notesMode = settings['note-placement-mode'];
   const parenScale = Number(settings['paren-style-scale']) || 1;
-  // **S75 (בקשה 1) — מנוע יחיד (2ae45b9+) + W-4 (F-2.2, 27.11):** מצב הצבת
-  // ההערות מתועד בכל ריצה. המנוע המאוחד מפעיל את שער תקציב-ההערות בלבד
-  // (האופציה 'legacy' של fn-placement-mode) — ומאז W-4 ברירת המחדל ברישום
-  // משקפת זאת (אמת-חוזה; לפני כן עמדה על body-first שהמנוע מתעלם ממנו).
-  // מצב 'body-first' (הגוף ממלא, ההערות מתחת — תקרה 50%) טרם הובל מהמנוע
-  // הישן; ההגדרה חסומה ב-UI (unifiedSupport:false) והפורט המלא — משימת
-  // השלמה פתוחה (שלב Notes) שבסיומה תחזור ברירת המחדל ל-body-first (S75).
+  // **S75 (בקשה 1) — מנוע יחיד (2ae45b9+):** מצב הצבת ההערות מתועד בכל ריצה.
+  // המנוע המאוחד מפעיל כרגע את שער תקציב-ההערות בלבד (האופציה 'legacy'
+  // של fn-placement-mode); מצב 'body-first' (הגוף ממלא, ההערות מתחת — תקרה
+  // 50%) טרם הובל מהמנוע הישן וההגדרה חסומה ב-UI (unifiedSupport:false).
   // האירוע המפורש הזה מונע שקר-שקט: המשתמש רואה בטרייס/בדוח איזה מנגנון
-  // פעל בפועל.
+  // פעל בפועל. הפורט המלא — משימת השלמה פתוחה (שלב Notes).
   const fnPlacement = settings['fn-placement-mode'];
   eventLog.emit('notes-budget', 'fn-placement-mode', {
-    requested: fnPlacement != null ? String(fnPlacement) : 'legacy',
+    requested: fnPlacement != null ? String(fnPlacement) : 'body-first',
     active: 'legacy (תקציב-הערות)',
     ported: false
   });
@@ -2670,14 +2627,12 @@ const registry = [
   K('footnote-columns', 'number', 1, P.NOTES, 'sel-fn-cols', ['layout/footnote-budget'], 'fx:fn-cols', { enum: [1, 2] }),
   K('footnote-separator-rule', 'enum', 'regular', P.NOTES, 'sel-fn-rule', ['core/materialize', 'core/page-model', 'output/pagemodel-dom-renderer', 'output/export-api'], 'fx:fn-rule', { enum: ['none', 'regular', 'circles', 'sparkle', 'star', 'diamond'], note: 'Unified: יוצר fn-rule decoration ו-pdfOps בתוך PageModel; שינוי מחייב עימוד מחדש' }),
   K('fn-layout-mode', 'enum', 'continuous', P.NOTES, 'sel-fn-layout', ['layout/dp-planner', 'output/dom-renderer'], 'fx:fn-layout', { enum: ['block', 'continuous'], note: 'S4.26 (דיווח משתמש 05.11): ברירת המחדל זרימה רציפה — הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה; block=כל הערה בלוק משלה' }),
-  // **S75 (בקשה 1 — 12.11) + W-4 (F-2.2, 27.11):** המשתמש בחר body-first כמנגנון
-  // היעד (הגוף ממלא את אזור הטקסט העיקרי תמיד; המרזב נכנס בחלל שמתחת לגוף
-  // עד תקרה יחסית 50%; המשכים זורמים לעמוד הבא בלי מספר). עד להשלמת הפורט
-  // (משימת "שלב Notes" הפתוחה) המנוע המאוחד מפעיל את שער תקציב-ההערות בלבד
-  // (האופציה legacy) — ולכן **ברירת המחדל משקפת את ההתנהגות בפועל** (אמת-
-  // חוזה לפי F-2.2/W-4; הפרופיל חוסם שינוי). בהשלמת הפורט תחזור ברירת המחדל
-  // ל-body-first כהכרעת S75.
-  K('fn-placement-mode', 'enum', 'legacy', P.NOTES, 'sel-fn-placement', ['core/pipeline'], 'fx:fn-placement', { enum: ['body-first', 'legacy'], unifiedSupport: false, note: 'W-4 (F-2.2, 27.11): ברירת המחדל = legacy — שער תקציב-ההערות של S74, שהוא המנגנון היחיד שהמנוע המאוחד מפעיל בפועל (2ae45b9+). body-first (בקשת S75 — הגוף ממלא, ההערות בחלל שמתחת, תקרה 50%) טרם הובל; בהשלמת הפורט (שלב Notes) תחזור ברירת המחדל ל-body-first. הפרופיל חוסם שינוי ההגדרה; pipeline מתעד את המצב באירוע מפורש בכל ריצה.' }),
+  // **S75 (בקשה 1 — 12.11, בחירת מנגנון הצבת ההערות):** ברירת המחדל = המנגנון
+  // החדש (body-first): הגוף ממלא את אזור הטקסט העיקרי תמיד; המרזב נכנס
+  // בחלל שמתחת לגוף עד תקרה יחסית (50% מגובה הזרימה בברירת המחדל); הערה
+  // שאינה נכנסת מוצבת חלקית כפי יכולת ההכלה והמשכה זורם לעמוד הבא;
+  // המשך אינו מקבל מספר. legacy = מנגנון S74 (שער תקציב + קיבולת מלאה).
+  K('fn-placement-mode', 'enum', 'body-first', P.NOTES, 'sel-fn-placement', ['core/pipeline'], 'fx:fn-placement', { enum: ['body-first', 'legacy'], unifiedSupport: false, note: 'S75 (בקשה 1): body-first — הגוף ממלא את העמוד וההערות בחלל שמתחת (תקרה 50%). מנוע יחיד (2ae45b9+): מנגנון body-first טרם הובל למנוע המאוחד — המנוע מפעיל את שער תקציב-ההערות (האופציה legacy) תמיד; הפרופיל חוסם שינוי ההגדרה עד השלמת הפורט (משימת השלמה פתוחה — שלב Notes). pipeline מתעד את המצב באירוע מפורש בכל ריצה.' }),
   K('endnotes-enabled', 'bool', false, P.NOTES, 'chk-endnotes', ['layout/endnote-pages'], 'fx:endnotes-on', { note: 'נגזר מ‑note-placement-mode=endnotes (D-39); קלט ישן true ממופה ל‑mode=endnotes בהגירה (project-io)' }),
   K('endnote-title-text', 'string', 'הערות', P.NOTES, 'inp-endnote-title', ['layout/endnote-pages'], 'fx:endnote-title'),
   K('endnote-columns', 'number', 1, P.NOTES, 'sel-en-cols', ['layout/endnote-pages'], 'fx:en-cols', { enum: [1, 2], note: 'S7.1.1: טור אחד או שניים בעמודי הערות' }),
@@ -2789,9 +2744,9 @@ const registry = [
   K('shaar-sub-enabled', 'bool', true, P.THEMES, 'chk-shaar-sub', ['decoration/shaar-pages'], 'fx:shaar-sub', { note: '03.11(ד): שער־משנה לכל פתיחת חלק — כמקור (show-sub-shaar=true); show-shaar-sub הישן נשמר כמתג נוסף (או)' }),
   // **03.11(ד): תוכן מובנה של עמודי השער (פורט renderMainShaar/renderSubShaar/renderBackShaar
   // של המקור): גופנים/גדלים לכל רכיב. ברירות המחדל = ערכי המקור אחרי הסרת המשפחות
-  // (F-J4: Lia Sgula כבר כן בספרייה; Livorna/Alpha* אינן — המקור נפל ל-Bellefair/
+  // שאינן זמינות (Lia Sgula/Livorna/Alpha* אינן בספרייה — המקור עצמו נפל ל-Bellefair/
   // David Libre/Frank Ruhl Libre דרך ה-fallbacks, ואלה מוטמעים כעת בנכסים).
-  K('shaar-title-font', 'font', 'Bellefair', P.THEMES, 'sel-shaar-title-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-title-font', { note: "מקור: f-sh-title=\"'Lia Sgula', 'Bellefair', serif\" — **F-J4 (W-5, 27.11): Lia Sgula מוטמעת כעת בספרייה (Sgula-Regular.ttf; imud-fonts.json)** — resolveStack בוחר אותה כשהקטלוג נטען; ברירת המחדל נשארת Bellefair מטעמי מדידה-עקבית" }),
+  K('shaar-title-font', 'font', 'Bellefair', P.THEMES, 'sel-shaar-title-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-title-font', { note: "מקור: f-sh-title=\"'Lia Sgula', 'Bellefair', serif\" — Lia Sgula אינה זמינה; Bellefair המוטמע" }),
   K('shaar-title-color', 'color', '#000000', P.THEMES, 'inp-shaar-title-color', ['layout/structural-stamps', 'core/materialize', 'output/dom-renderer'], 'fx:shaar-title-color', { note: 'S73: צבע כותרת הספר בשער — שחור כברירת מחדל' }),
   K('shaar-title-size-pt', 'number', 46, P.THEMES, 'rng-shaar-title-size', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-title-size', { min: 20, max: 90, note: 'מקור: s-sh-title=46' }),
   K('shaar-subtitle-font', 'font', 'David Libre', P.THEMES, 'sel-shaar-subtitle-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-subtitle-font', { note: "מקור: f-sh-sub=\"'Livorna', 'David Libre', serif\"" }),
@@ -20286,14 +20241,6 @@ function stampHeaderSlots(page, settings, measure) {
     .filter(s => s && s.text);
   if (!slots.length) return false;
   const geo = headerGeometry(page);
-  // **RC-HDR2-20261127:** עוגן הבסיס בפרופיל IMUD — GEO.HEADER_BASELINE (71.9px),
-  // מעל קו המפריד (82.67px) כמו בייחוס. משוחזר לאחר ש-RC-HDR הקודם הסירו בטעות.
-  const imudHdr = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
-  let hdrAnchor = null;
-  if (imudHdr) {
-    const { GEO } = require('../core/imud-geometry');
-    hdrAnchor = GEO.HEADER_BASELINE;
-  }
   const stamped = slots.map(s => {
     const t = scrubPUAText(String(s.text || ''));
     const sKey = familyFontKeyOf(s.font);
@@ -20304,30 +20251,14 @@ function stampHeaderSlots(page, settings, measure) {
     // גם לרינדור, והכותרת הודפסה זעירה.
     const slotSize = Number(s.sizePt) > 0 ? Number(s.sizePt) : 9;
     const w = Math.max(1, Math.round(sMeasure.measureTextWidth(t, slotSize)));
-    // **RC-HDR2-20261127 (היפוך RC-HDR):** הכותרת העליונה חייבת להיות **מעל**
-    // קו המפריד (hdr-rule ב-y=82.67 — decoration/gate-design) כמו בייחוס
-    // (old-engine: פס גליפים 42.56–57.56pt ⇒ בסיס 71.9px = GEO.HEADER_BASELINE).
-    // RC-HDR הקודם טעה והוריד את הכותרת מתחת לקו "כדי להתאים ל-DOM" — ה-DOM
-    // הוא שהיה שגוי (ספאנים בטופ 89.2px), והתיקון חל עליו (pagemodel-dom-renderer).
-    // ascentEm נשמר פר-סלוט — ה-DOM זקוק לו לחישוב top=baseline−ascent×size.
-    const sizePx = slotSize * (96 / 72);
-    let ascentEm = 0.75;
-    try {
-      if (sMeasure && typeof sMeasure.ascentEm === 'function') {
-        const v = Number(sMeasure.ascentEm());
-        if (Number.isFinite(v) && v > 0) ascentEm = v;
-      }
-    } catch (e) { /* נפילה מכוילת 0.75em */ }
-    return { pos: s.pos, align: s.align, text: t, w, sizePt: slotSize, ascentEm,
-      ...(hdrAnchor != null ? { baselineY: hdrAnchor } : {}),
-      ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
+    return { pos: s.pos, align: s.align, text: t, w, sizePt: slotSize, ...(sKey ? { fontKey: sKey } : {}), ...(s.color ? { color: s.color } : {}) };
   });
-  // **RC-HDR2-20261127:** בסיס הכותרת בפרופיל IMUD = GEO.HEADER_BASELINE (71.9px —
-  // מעל קו המפריד ב-82.67px, כמו הייחוס) — גם פר-סלוט (מקור יחיד ל-DOM ול-PDF)
-  // וגם ברמת ה-header (לנפילת materialize/pdf-writer — כמו שהיה טרום RC-HDR).
-  // בפרופיל DP אין עוגן — הנוסחאות הגנריות נשארות נפילה בלבד (התנהגות טרום-RC-HDR).
-  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y,
-    ...(hdrAnchor != null ? { baselineY: hdrAnchor } : {}), slots: stamped };
+  // **Iteration-003 (legacy parity):** בסיס הכותרת המכויל (GEO.HEADER_BASELINE
+  // — כמו legacy-projector) בפרופיל IMUD; בלי זה הנוסחה הגנרית הדפיסה
+  // את הכותרת ~20pt נמוך מדי.
+  const imudHdr = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  const { GEO } = require('../core/imud-geometry');
+  page.headerSlotGeo = { schema: 'header-slots-v1', y: geo.y, ...(imudHdr ? { baselineY: GEO.HEADER_BASELINE } : {}), slots: stamped };
   return true;
 }
 
@@ -20783,14 +20714,8 @@ function planGateDesign(page, settings) {
   const out = [];
   const dec = (o) => out.push(o);
   const raw = (settings && settings._imudRaw) || {};
-  // **W-7 (F-4.1, 27.11) — תיקון מפתח-רפאים + מקור סמכות יחיד:** 'hdr-divider-style'
-  // מעולם לא נרשם ואינו מוצב ב-settings (התרגום ב-dp-planner ממפה אותו למפתח
-  // הרשום) — הקריאה הישנה נפלה תמיד ל-raw וההגדרה החיה 'header-separator-line'
-  // (registry:125) לא השפיעה על הקו האמיתי שמצויר כאן. כעת המפתח הרשום גובר
-  // (ברירת מחדל gray — זהה ל-raw של המקור ⇒ אפס שינוי בברירת המחדל); ה-raw
-  // נשאר נפילה לייבוא ישן בלבד.
-  const hdrDivider = settings && settings['header-separator-line'] != null
-    ? settings['header-separator-line'] : (raw['hdr-divider-style'] != null ? raw['hdr-divider-style'] : 'gray');
+  const hdrDivider = settings && settings['hdr-divider-style'] != null
+    ? settings['hdr-divider-style'] : (raw['hdr-divider-style'] != null ? raw['hdr-divider-style'] : 'gray');
 
   if (page.type === 'shaar-sub') {
     dec({ x: 0.55 * GEO.PAGE_W, y: 0, w: 0.45 * GEO.PAGE_W, h: GEO.PAGE_H, kind: 'shaar-panel', kindStyle: 'rect:#F4F4F4' });
@@ -21094,11 +21019,6 @@ function buildPageModel(result, opts = {}) {
           slots: (pp.header.slots || []).map(s2 => ({
             pos: s2.pos, align: s2.align || null, text: s2.text,
             x: r2(s2.x), w: r2(s2.w), sizePt: s2.sizePt != null ? s2.sizePt : null,
-            // **RC-HDR2-20261127:** בסיס פר-סלוט מהחותמת (GEO.HEADER_BASELINE —
-            // מעל קו המפריד) + ascentEm פר-סלוט חייבים לשרוד את הסריאליזציה:
-            // ה-PDF קורא את baselineY, ה-DOM מחשב top=baseline−ascent×size.
-            ...(s2.baselineY != null ? { baselineY: r2(s2.baselineY) } : {}),
-            ...(s2.ascentEm != null ? { ascentEm: s2.ascentEm } : {}),
             ...(s2.fontKey ? { fontKey: s2.fontKey } : {}),
             ...(s2.color ? { color: s2.color } : {})
           }))
@@ -26889,13 +26809,7 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
       const profile = registeredFontsRef.get(fam);
       if (!profile) continue; // נבדק ב-collectFam — הגנה כפולה
       const words = [...famWords.get(fam)].join(' ');
-      // **W-11 (תצוגה=ייצוא, גילוי 27.11 — דפוס S5.2-O1 של F1):** תו שחסר במשפחה
-      // (למשל טעם U+05A8 שאינו ב-FrankReal של מילת-החלון) הכשיל את כל
-      // ה-subset (tofu) ⇒ הגופן כולו נפל ל-/F1 והמילה נצבעה בגוף בעוד ה-DOM
-      // מציג אותה בגופן התפקיד. כעת: המלאי = תווים שקיימים בפועל במשפחה;
-      // החסרים נופלים בכותב לרשת הפר-תו (תפקיד→F1→F4) — כמו המחסנית בדפדפן.
-      const famInventory = charInventory(words).filter(ch => glyphIdOf(profile, ch) !== 0);
-      const sub = buildSubset(profile, famInventory);
+      const sub = buildSubset(profile, charInventory(words));
       if (!sub.ok) continue; // נפילה שקטה ל-/F1 — מתועם בכותב (משפחה בלי תווי המילה)
       const c2g = subsetNewCmap(sub);
       extraFonts.push({
@@ -27099,13 +27013,7 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName, opts = {}) {
       if (!prof) return null;
       const parts = wordsByRole.get(roleKey) || [];
       if (!parts.length) return null;
-      // **W-11 (תצוגה=ייצוא, 27.11):** מלאי התפקיד = תווים שקיימים בפועל בגופן
-      // התפקיד (דפוס S5.2-O1 של F1). בעבר תו חסר אחד (טעם במילת-חלון מנוקדת)
-      // הכשיל את כל ה-subset ב-tofu ⇒ כל מילות התפקיד נצבעו בגוף הטקסט
-      // ב-PDF בעוד ה-DOM הציגן בגופן התפקיד. החסרים נופלים בכותב לרשת
-      // הפר-תו (תפקיד→F1→F4) — כמו נפילת המחסנית בדפדפן.
-      const roleInventory = charInventory(parts.join(' ')).filter(ch => glyphIdOf(prof, ch) !== 0);
-      const sub = buildSubset(prof, roleInventory);
+      const sub = buildSubset(prof, charInventory(parts.join(' ')));
       return sub.ok ? mkFont(sub) : null;
     };
     // **Iteration-003 (מילת-חלון):** משפחת החלון — FrankReal-Bold כשרשומה
@@ -27304,15 +27212,6 @@ __modules["src/engine/output/dom-renderer.js"] = function (require, module, expo
 'use strict';
 
 /**
- * **W-2 (השלמת כריתת 9c.4, 27.11) — תפקיל אמת:** מרנדר את עמודי ה-LineModel
- * הפנימיים של התוצאה (result.pages — ייצוג הביניים שממנו נבנה ה-PageModel).
- * צרכניו כיום: בדיקות (אורקל רינדור — s9-headers, s14, s8d ועוד) ופונקציות
- * הייצוא המורשתיות exportPdf/exportHtml של export-api. **אינו נצרך עוד בנתיב
- * המוצר** — התצוגה החיה (preview-tab), ייצוא ה-HTML וייצוא ה-PDF מהמנוע
- * קוראים כולם למקרין הטהור מה-PageModel (pagemodel-dom-renderer) מאז
- * השלמת 9c.4. מחיקת הקובץ כרוכה בהסרת exportPdf/exportHtml ובהסבת
- * אורקלי הבדיקות — שלב 13 (cutover), לא W-2.
- *
  * רנדור עמודים ל‑DOM. כללי יסוד:
  * - U+E000/U+E101 חייבים להיעלם מה‑DOM הסופי (scrub לפני render; נשמרים רק לשלב המדידה).
  * - כיווניות RTL מלאה; no !important על inline של עיטורים (F-09 — מקור שליטה יחיד).
@@ -27881,9 +27780,7 @@ function renderDecorations(page, doc) {
       el.style.borderTop = '0.75px solid #000';
       el.style.height = '0px';
     } else if (ink && ink.type === 'rect' && ink.color) {
-      // **W-7 (27.11):** אותו תיקון סקלה (0..1 ⇒ 0..255) כמו ב-pagemodel-dom-renderer — האורקל והמוצר זהים.
-      const c255 = (v) => Math.max(0, Math.min(255, Math.round(Number(v) * 255)));
-      el.style.backgroundColor = `rgb(${c255(ink.color[0])}, ${c255(ink.color[1])}, ${c255(ink.color[2])})`;
+      el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;
     } else if (d.kindStyle && d.kindStyle !== 'none') {
       el.dataset.inkMissing = '1'; // הצהרה בלי דיו פתיר — גלוי, לא ריק בשקט
     }
@@ -28650,14 +28547,9 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
    "הקדמה" נדבקת לקצה הימני — אסימטריה 494px). :not(.band) מחזיר את
    המרכוז; רינדור ה-DOM גם קובע text-align-last:auto ישירות ב-mkLine. */
 .band{text-align-last:auto}
-/* **W-2 (השלמת כריתת 9c.4, 27.11 — F-3.1/F-3.4):** כללי ההקרנה של ראנדרר
-   המורשת הוסרו מכאן (.running-head{display:flex} + .head--sep-gray/black).
-   מקור הקו המפריד האמיתי בנתיב המאוחד הוא עיטור hdr-rule מ-gate-design
-   (נצבע ב-PageModel — ב-DOM החי וב-PDF כאחד); מיכל הכותרת של המקרין
-   (pagemodel-dom-renderer) נושא position/left/width/height inline וסלוטיו
-   אבסולוטיים — ה-flex לא פעל מעולם בנתיב זה. class ה-head--sep-* נשאר
-   על האלמנט כסמנטיקה חיה בלבד (F-3.2) — בלי כלל CSS, כדי שתיקון שם
-   המפתח לא יצייר קו-שני פנטום בתחתית המיכל. */
+.running-head{display:flex;width:100%}
+.head--sep-gray{border-bottom:1px solid #999}
+.head--sep-black{border-bottom:1.5px solid #000}
 .footnotes{position:absolute;bottom:8px;left:12px;right:12px;border-top:1px solid transparent;font-size:.8em}
 .footnotes--continuous{border-top:none}
 .fn-rule--regular{border-top:1px solid #000;height:0}
@@ -28762,9 +28654,7 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
 
 /** בניית מסמך HTML עצמאי מעמודי ה‑DOM שכבר רוכמו (string-level; עובד גם Node-side). */
 function buildStandaloneHtml(pagesHtml, settings, meta = {}) {
-  // **W-7 (F-4.1, 27.11):** 'book-name' הוא מפתח-רפאים (מעולם לא נרשם/הוצב) —
-  // המקור הרשום לשם הספר הוא imud-book-title.
-  const title = meta.title || settings['imud-book-title'] || 'ספר';
+  const title = meta.title || settings['book-name'] || 'ספר';
   // **S12 (REQ-EXP-02):** כללי @page מרישום גדלי העמוד — הדפסה מדויקת מהקובץ העצמאי (אין רשת)
   const pageRules = meta.pageRules || '';
   // **03.11:** @font-face מוטמעים (data-URI) — מסופקים מה-UI; עוברים את offline-guard (אין http)
@@ -28950,12 +28840,7 @@ function renderModelDecoration(d, doc, diags) {
     el.style.borderTop = '0.75px solid #000';
     el.style.height = '0px';
   } else if (ink && ink.type === 'rect' && ink.color) {
-    // **W-7 (27.11, נמצא באימות החי):** ink.color הוא צף 0..1 (מוסכמת PDF —
-    // materialize כותב אותו כמו שהוא ל-pdfOps). CSS rgb() מפרש מספרים בסקלת
-    // 0..255 ⇒ ‏#F0F0F0 (0.941) עוגל ל-rgb(1,1,1) — כמעט-שחור. המרה לסקלת
-    // ה-CSS מיישרת את ה-DOM ל-PDF (תיקון סטיית צבע דומה לזו שתוקנה בשערים).
-    const c255 = (v) => Math.max(0, Math.min(255, Math.round(Number(v) * 255)));
-    el.style.backgroundColor = `rgb(${c255(ink.color[0])}, ${c255(ink.color[1])}, ${c255(ink.color[2])})`;
+    el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;
   } else if (d.kindStyle && d.kindStyle !== 'none') {
     el.dataset.inkMissing = '1';
     diags.push({ kind: 'pmr-decoration-ink-missing', ornId: d.ornId || null, slot: d.slot || null });
@@ -29323,12 +29208,7 @@ function renderModelPage(mp, settings, doc, opts = {}) {
   // (9) כותרת עליונה — סלוטים במיקומים סופיים מהמודל
   if (mp.header && (mp.header.slots || []).length) {
     const el = doc.createElement('div');
-    // **W-2 (F-3.1/F-3.2, 27.11):** המפתח האמיתי ברישום הוא header-separator-line
-    // (settings-registry:125; headers-builder:168) — לא header-separator-style
-    // (מפתח-רפאים שהחזיר תמיד 'none'). ה-class הוא סמנטיקה חיה לקוראי DOM בלבד:
-    // אין לו כלל CSS (הוסר מ-BASE_CSS באותו שינוי) — הקו עצמו מצויר מעיטור
-    // hdr-rule של gate-design, בדיוק כמו ב-PDF.
-    el.className = `running-head head--sep-${settings['header-separator-line'] || 'none'}`;
+    el.className = `running-head head--sep-${settings['header-separator-style'] || 'none'}`;
     el.style.position = 'absolute';
     el.style.top = `${px2(mp.header.y)}px`;
     el.style.left = '0';
@@ -29339,16 +29219,6 @@ function renderModelPage(mp, settings, doc, opts = {}) {
       const span = doc.createElement('span');
       span.className = `rh rh--${s.pos}`;
       span.style.position = 'absolute';
-      // **RC-HDR2-20261127 (התיקון ב-DOM — כהוראת המשתמש):** עד כאן הספאן
-      // ישב בטופ המיכל (mp.header.y=89.2px) — **מתחת** לקו המפריד (hdr-rule
-      // ב-y=82.67px), בסתירה לייחוס (פס גליפים 42.56–57.56pt ⇒ בסיס 71.9px,
-      // **מעל** הקו). כעת: top פר-סלוט = baselineY − ascent×sizePx (ביחס למיכל),
-      // בדיוק הנוסחה של ה-PDF — הכותרת עולה מעל הקו ומתיישרת עם הייצוא.
-      // נפילה להתנהגות הישנה רק בלי בסיס/עלייה מהחותמת (פרופיל DP).
-      if (s.baselineY != null && s.ascentEm != null && s.sizePt != null) {
-        const spanTop = s.baselineY - s.ascentEm * (s.sizePt * PT_TO_PX) - mp.header.y;
-        span.style.top = `${px2(spanTop)}px`;
-      }
       // **Iteration-006 (G6/RC-F1):** סלוט כותרת = שורה אחת תמיד (חוזה הייחוס —
       // כותרת-מרכז ארוכה נשארת שורה אחת וחופפת את מילות-הצד, p647-653). בלי
       // nowrap הדפדפן שובר לשתי שורות בתיבת 14px ⇒ שורות מודבקות זו על זו.
@@ -30361,19 +30231,15 @@ function writePdf(opts) {
         const sw = s.w != null ? s.w : s.text.length * 5.5;
         const x = s.x != null ? s.x : (s.pos === 'right' ? pg.width - 60 - sw : s.pos === 'center' ? (pg.width - sw) / 2 : 60);
         const y = pg.header.baselineY != null ? pg.header.baselineY : pg.header.y + 10;
-        // **RC-HDR2-20261127:** בסיס פר-סלוט מהחותמת (GEO.HEADER_BASELINE=71.9px
-        // — מעל קו המפריד ב-82.67px, כמו הייחוס) גובר על בסיס ה-header הכללי;
-        // הנוסחאות הישנות נפילה בלבד.
-        const sy = s.baselineY != null ? s.baselineY : y;
         // **D-89:** סלוט legacy עם מילים ממוקמות מהמקרן — בסיס/צבע פר-מילה;
         // נפילה לנוסחה הישנה רק כשאין מילים (נתיב DP).
         if (s.words && s.words.length) {
-          for (const w of s.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : sy, w.sizePt || s.sizePt || 9, w.fontKey, w.color);
+          for (const w of s.words) emitWord(w.text, w.x, w.baselineY != null ? w.baselineY : y, w.sizePt || s.sizePt || 9, w.fontKey, w.color);
           continue;
         }
         // **Iteration-003 (תצוגה=ייצוא):** הסלוט המוטבע נושא fontKey (גופן
         // הסלוט מההגדרות — Livorna בייחוס) — עד כאן null קבוע ⇒ /F1 (גוף).
-        emitWord(s.text, x, sy, s.sizePt || 9, s.fontKey || null, s.color);
+        emitWord(s.text, x, y, s.sizePt || 9, s.fontKey || null, s.color);
       }
     }
     // **EXT-4 (ציור עיטורים):** פעולות הציור מגיעות מוכנות מהפרויקטור
@@ -30838,13 +30704,8 @@ function migrate(raw) {
   return s;
 }
 
-/** איחוד עם defaults; אי‑התאמות מדווחות ולא מושמטות (audit deltas attributable).
- * **F-J1 (W-5, 27.11) — מצב sanitize לנתיבי הייבוא:** ערך בלתי-חוקי (enum/טווח)
- * מתורגם קודם דרך translateLegacyValue (ערך מעידן המקור); אם אין תרגום ישים —
- * נופל לברירת המחדל של הרישום. הפעולה מתועדת ב-issue (action) — הערך הבלתי-חוקי
- * לעולם אינו מגיע למנוע בשקט ("נתיב אחד לכל קלט"). ברירת המחדל (בלי opts)
- * משמרת את ההתנהגות ההיסטורית (kept) לצרכנים קיימים. */
-function mergeWithDefaults(migrated, opts = {}) {
+/** איחוד עם defaults; אי‑התאמות מדווחות ולא משמיטות (audit deltas attributable). */
+function mergeWithDefaults(migrated) {
   const defs = getDefaultSettings();
   // derivePlacementFlags **אחרי** האיחוד — mode הוא מקור־האמת; דגלים שהומרו מקובץ
   // v1 ישן (ללא mode) נגזרים שוב כך שלעולם לא ייווצר מצב סותר מאובדן הערות (BRZ-15).
@@ -30853,30 +30714,10 @@ function mergeWithDefaults(migrated, opts = {}) {
   // אינם "מפתחות לא מוכרים" — הם מבנה נתונים מתועד; ערכיהם עוברים במיזוג.
   const unknownKeys = Object.keys(migrated).filter(k => !(k in defs) && !k.startsWith('_'));
   const issues = [];
-  const sanitize = !!(opts && opts.sanitizeIllegal);
-  const translateValue = (opts && typeof opts.translateValue === 'function') ? opts.translateValue : null;
   for (const r of registry) {
-    let v = merged[r.id];
-    let illegal = false;
-    if (r.type === 'enum' && r.enum && !r.enum.includes(v)) illegal = true;
-    if (r.type === 'number' && ((r.min != null && v < r.min) || (r.max != null && v > r.max))) illegal = true;
-    if (!illegal) continue;
-    if (sanitize) {
-      let action = 'reverted-to-default';
-      let out = r.default;
-      if (translateValue) {
-        const t = translateValue(r.id, v, (opts && opts.translateCtx) || {});
-        if (t !== undefined) {
-          const okEnum = !(r.type === 'enum' && r.enum && !r.enum.includes(t));
-          const okRange = !(r.type === 'number' && ((r.min != null && t < r.min) || (r.max != null && t > r.max)));
-          if (okEnum && okRange) { out = t; action = 'translated-legacy-value'; }
-        }
-      }
-      merged[r.id] = out;
-      issues.push({ key: r.id, value: v, reason: r.type === 'enum' ? 'not-in-enum' : 'out-of-range', kept: false, action, applied: out });
-    } else {
-      issues.push({ key: r.id, value: v, reason: r.type === 'enum' ? 'not-in-enum' : 'out-of-range', kept: true });
-    }
+    const v = merged[r.id];
+    if (r.type === 'enum' && r.enum && !r.enum.includes(v)) issues.push({ key: r.id, value: v, reason: 'not-in-enum', kept: true });
+    if (r.type === 'number' && ((r.min != null && v < r.min) || (r.max != null && v > r.max))) issues.push({ key: r.id, value: v, reason: 'out-of-range', kept: true });
   }
   return { merged, unknownKeys, issues };
 }
@@ -30897,544 +30738,11 @@ function importProject(json) {
   const raw = typeof json === 'string' ? JSON.parse(json) : json;
   if (raw.format !== 'tora-typesetter-project') throw new Error('unknown project format');
   const migrated = migrate(raw.settings || {});
-  // **F-J1 (W-5):** ערך בלתי-חוקי בפרויקט מיובא — תרגום/החזרה לברירת מחדל, לא מעבר שקט למנוע.
-  const { translateLegacyValue } = require('../core/legacy-settings-map');
-  const { merged, unknownKeys, issues } = mergeWithDefaults(migrated, { sanitizeIllegal: true, translateValue: translateLegacyValue });
+  const { merged, unknownKeys, issues } = mergeWithDefaults(migrated);
   return { settings: merged, pages: raw.pages || [], meta: raw.meta || {}, unknownKeys, issues };
 }
 
 module.exports = { migrate, mergeWithDefaults, exportProject, importProject, MIGRATIONS };
-
-};
-__modules["src/engine/core/legacy-settings-map.js"] = function (require, module, exports) {
-// src/engine/core/legacy-settings-map.js — S4.5-ד: מיפוי מלא של הגדרות IMUD_TORANI (03.11)
-'use strict';
-
-/**
- * **רקע (ביקורת 03.11, סקירה 2):** תוכנית העבודה (S4) דרשה רישום־על של כל
- * ההגדרות מכל הגרסאות והגירה ללא אובדן. בפועל נבנה רישום RED עקבי אך 264
- * מפתחות default_settings.json של המקור לא קיבלו disposition מפורש. המודול
- * הזה הוא טבלת האמת: **לכל מפתח מקור** — מיפוי למפתח RED (מלא/בטרנספורם),
- * איחוד, מצב-UI (ללא אפקט מנועתי), או הסרה מנומקת (עם הפניית מעקב).
- *
- * עקרונות:
- * - אין מפתח "לא מוכר" — הכל מקבל שורה; שער הקבלה: 100% disposition.
- * - ערכי המקור מוחלים בעת ייבוא (importImudSettings); ברירות המחדל של RED
- *   עצמן נשארות כהחלטות RED המתועדות — ההחלפה מפורשת והפיכה.
- * - טרנספורמים מתועדים (יחידות/סמנטיקה), לא רק שמות.
- */
-
-/** חילוץ משפחת הגופן הראשונה מערך CSS: "'Guttman Rashi', 'Frank Ruhl Libre', serif" ⇒ "Guttman Rashi". */
-function firstFamily(css) {
-  const m = String(css || '').match(/'([^']+)'/);
-  return m ? m[1] : String(css || '').split(',')[0].trim();
-}
-
-/** **03.11(ד):** פתרון מחסנית גופנים של המקור מול הספרייה הזמינה.
- * ערכי המקור הם מחסניות CSS ("'AlphaBlack', 'David Libre', serif") — המשפחה
- * הראשונה בדרך כלל אינה מותקנת והדפדפן נופל להמשך הרשימה. כאן מחליטים מראש:
- * המשפחה הראשונה שקיימת ב-availableFonts (קטלוג הספרייה שהועבר ב-ctx) היא
- * הערך; בלי קטלוג — מחזירים את הראשונה (התנהגות firstFamily הישנה). */
-function resolveStack(css, ctx) {
-  const raw = String(css || '').replace(/'/g, '');
-  const parts = raw.split(',').map(s => s.trim()).filter(Boolean)
-    .filter(p => !/^(serif|sans-serif|monospace|cursive|fantasy|system-ui)$/i.test(p));
-  if (!parts.length) return String(css || '');
-  const avail = ctx && ctx.availableFonts;
-  if (avail instanceof Set) {
-    for (const p of parts) if (avail.has(p)) return p;
-  }
-  return parts[0];
-}
-
-/** **S4.6 (ביקורת 3):** אחוזים ⇒ פיקסלים לפי גובה תיבת התוכן **בפועל** שנמסר
- * בהקשר הייבוא (ctx.contentHeightPx). ברירת המחדל 1040px (A4 של RED) נשמרת
- * לתאימות — אך מסלול הטעינה ב-UI מעביר את הגיאומטריה האמיתית של המסמך. */
-function pctToPx(v, ctxOrHeight) {
-  const h = (typeof ctxOrHeight === 'number' && ctxOrHeight > 0)
-    ? ctxOrHeight
-    : (ctxOrHeight && Number(ctxOrHeight.contentHeightPx) > 0)
-      ? Number(ctxOrHeight.contentHeightPx)
-      : 1040;
-  return Math.round(h * (parseFloat(v) / 100));
-}
-
-/** סגנונות פתיחה של המקור ⇒ מצבי RED (headings-escort). */
-const OPEN_MODE_MAP = {
-  'new_page_1col': 'new-page',
-  'span_1col': 'full-width',
-  'inline_2col': 'regular',
-  'side_note': 'side-note',
-  'sub_shaar': 'new-page' // שער-משנה מובנה: show-shaar-sub נלווה ב-merge
-};
-
-/** **S77 (בקשה 3):** סוגי סלוטי כותרת-עליונה של המקור ⇒ מקורות header-*.
- * ערך לא מוכר (למשל 'spear' — עיטור חנית של v19) ⇒ undefined — אינו דורס
- * את ברירת המחדל של RED (הייבוא מדלג עליו; הערך הגולמי נשמר ב-_imudRaw). */
-function hdrSlotTypeMap(v) {
-  const t = String(v == null ? '' : v).trim();
-  switch (t) {
-    case 'book_title_split_r': return 'book-name-first-half';
-    case 'book_title_split_l': return 'book-name-second-half';
-    case 'h2_without_siman': return 'h2';
-    case 'h2': return 'h2';
-    case 'h1': return 'h1';
-    case 'book_title': return 'book-name';
-    case 'custom': return 'custom';
-    case 'none':
-    case '': return 'none';
-    default: return undefined;
-  }
-}
-
-/** עמדות עיצוב-מפריד של המקור ⇒ סגנונות RED. */
-const DIVIDER_MAP = { 'none': 'none', 'thin': 'thin', 'dashed': 'dashed', 'double': 'double', 'spear': 'thin' };
-
-/** מיקומי מספור של המקור ⇒ RED. */
-const NUMPOS_MAP = {
-  // **S5.1:** ערכי האינום של RED בלבד — בעבר יוצרו 'bottom-outer'/'bottom-left'/
-  // 'bottom-right'/'top-center'/'top-outer' שאינם ברישום והוגדרים בשקט לברירת
-  // המחדל. 'outer' חדש: מיקום חיצוני מודע-זוגיות — כמו pos-outer של המקור
-  // (typesetter.js:506 + style.css:1367-1369: odd=flex-end=שמאל, even=ימין).
-  'bottom_center': 'bottom-center', 'bottom_outer': 'outer', 'bottom_left': 'outer-left', 'bottom_right': 'outer-right',
-  'top_center': 'top', 'top_outer': 'top', 'in_header': 'in-header'
-};
-
-/**
- * טבלת ה-disposition. kind:
- *  - 'mapped'   → to (מפתח RED) + transform אופציונלי — ערך מוחל בייבוא
- *  - 'merged'   → מוזג למפתח אחר/כמה מפתחות — מתועד ב-reason
- *  - 'ui-state' → מצב פאנל של האפליקציה הישנה; נשמר כנתון, אין אפקט מנועתי
- *  - 'removed'  → לא ב-RED; סיבה מנומקת + מזהה מעקב (ISSUE_REGISTRY)
- */
-const DISPOSITIONS = {
-  // ============ טיפוגרפיה של הגוף ============
-  'font-body': { kind: 'mapped', to: 'body-font', transform: resolveStack, reason: 'מחסנית CSS של המקור — נפתרת מול הקטלוג המוטמע כשהוא זמין (EXT-9: גוף המקור "\'Guttman Rashi\', \'Frank Ruhl Libre\'" ⇒ Frank Ruhl Libre המוטמע); בלי קטלוג — המשפחה הראשונה (התנהגות היסטורית). בלי זה המדידה נפלה לטבלה בעוד התצוגה בגופן אמיתי — סחף live↔ייצוא מסוג EXT-13' },
-  'size-body': { kind: 'mapped', to: 'body-font-size-pt', transform: parseFloat, reason: 'pt (המקור 12; RED 14 — ההפרש מתועד כהחלטת RED)' },
-  'line-height-body': { kind: 'mapped', to: 'body-line-height', transform: parseFloat },
-  // **F09 (parity iteration-002):** גודל הסוגריים של המקור — הגדרת ספר אמיתית
-  // (s-paren-mode='relative', s-paren='-2' ⇒ size-body−2 = 10pt בגוף 12). עד כאן
-  // נפלה תחת כלל המשפחה /^s-/ (ui-state) בטענה "מומש במפתחות RED המקבילים" —
-  // אך שום מיפוי לא הציב ערך, והמנוע המאוחד מדד והדפיס סוגריים בגודל הגוף
-  // המלא (12pt מול 10pt במקור; נמדד: ‎−11 עמודים בספר ההשוואה). ההמרה למנגנון
-  // האחיד הקיים — paren-style-scale (advanceFactor במדידה + סקאלת גודל ברינדור,
-  // מקור אחד) — משחזרת את החוזה: גופן הגוף (f-paren ריק), גודל body+delta.
-  's-paren': {
-    kind: 'mapped', to: 'paren-style-scale',
-    transform: (v, ctx) => {
-      if (!ctx || ctx.parenMode !== 'relative') return undefined; // S77: מצב לא מוכר — אין דריסה
-      const bodyPt = Number(ctx.bodyPt) > 0 ? Number(ctx.bodyPt) : 12;
-      const delta = parseFloat(v);
-      if (!Number.isFinite(delta)) return undefined;
-      const scale = (bodyPt + delta) / bodyPt;
-      return Math.max(0.8, Math.min(1, scale)); // טווח הרישום 0.8–1
-    },
-    reason: 'F09 (parity iter-002): סוגריים יחסיות במקור (‎-2pt על גוף 12 ⇒ 10pt) — מומר ל-scale של מנגנון RED האחיד (מדידה+רינדור יחד); בלי זה הסוגריים בגודל הגוף המלא'
-  },
-  's-paren-mode': { kind: 'ui-state', reason: 'נצרך על ידי מיפוי s-paren (relative=דלתא-pt מגוף הטקסט); נשמר כנתון' },
-  'body-last-line-align': { kind: 'mapped', to: 'body-last-line-align' },
-
-  // ============ מילה ראשונה ============
-  'drop-word-mode': { kind: 'mapped', to: 'first-word-mode', transform: (v) => ({ 'window': 'drop', 'drop': 'drop', 'inline': 'inline', 'bold': 'bold', 'none': 'none' }[v] || 'drop'), reason: 'window ⇒ drop (אותו מנגנון חלון)' },
-  'drop-word-count': { kind: 'mapped', to: 'first-word-length', transform: parseInt },
-  'drop-word-min-lines': { kind: 'mapped', to: 'first-word-threshold-lines', transform: parseInt, reason: 'המקור 2; RED 3 — הייבוא משחזר את המקור' },
-  'font-first-word': { kind: 'mapped', to: 'first-word-font', transform: firstFamily, reason: 'S4.5: מפתח חדש ב-RED (היה חסר)' },
-  'size-first-word': { kind: 'mapped', to: 'first-word-size-em', transform: parseFloat, reason: 'S4.5: מפתח חדש ב-RED (היה כפול 2 מוקשה)' },
-
-  // ============ דיבור המתחיל ============
-  'auto-dh': { kind: 'mapped', to: 'dh-auto-detect', transform: (v) => v === true || v === 'true' },
-  'font-dh': { kind: 'mapped', to: 'dh-font', transform: firstFamily },
-
-  // ============ מצבי כותרות H0–H7 ============
-  'mode-h0': { kind: 'mapped', to: 'heading-0-mode', transform: (v) => OPEN_MODE_MAP[v] || 'full-width' },
-  'mode-h1': { kind: 'merged', to: 'heading-1-mode', transform: (v) => OPEN_MODE_MAP[v] || 'new-page', reason: 'sub_shaar ⇒ new-page + show-shaar-sub=true (השער המשנה מובנה ב-S8)' },
-  'mode-h2': { kind: 'mapped', to: 'heading-2-mode', transform: (v) => OPEN_MODE_MAP[v] || 'full-width' },
-  'mode-h3': { kind: 'mapped', to: 'heading-3-mode', transform: (v) => OPEN_MODE_MAP[v] || 'full-width' },
-  'mode-h4': { kind: 'mapped', to: 'heading-4-mode', transform: (v) => OPEN_MODE_MAP[v] || 'regular' },
-  'mode-h5': { kind: 'mapped', to: 'heading-5-mode', transform: (v) => OPEN_MODE_MAP[v] || 'regular' },
-  'mode-h6': { kind: 'mapped', to: 'heading-6-mode', transform: (v) => OPEN_MODE_MAP[v] || 'regular' },
-  'mode-h7': { kind: 'mapped', to: 'heading-7-mode', transform: (v) => OPEN_MODE_MAP[v] || 'side-note' },
-  // **S4.20 (סגירת EXT-15/16):** שלושת המפתחות ממומשים עתה בפרופיל ה-legacy
-  // (legacy-imud-flow): ‏ensureOddPageStart כללי (הליכה על הסדר הסופי לפני
-  // עמוד פתיחת-מקטע מסומן שנוחת בגב) + המונה האוטומטי והאיפוס (autoSimanH2/
-  // resetSimanOnH1) — היו קיימים ב-flow אך סומנו בטעות כ-removed.
-  'odd-h0': { kind: 'ui-state', reason: 'פתיחת H0 בעמוד אי-זוגי — ensureOddPageStart של המקור, מיושם בהרכבת ה-legacy (עמוד ריק לפני פתיחת מקטע בגב) — S4.20', issue: 'EXT-15' },
-  'odd-h1': { kind: 'ui-state', reason: 'פתיחת H1 בעמוד אי-זוגי — כמו odd-h0 (החליף את המקרה הפרטי של שער-המשנה) — S4.20', issue: 'EXT-15' },
-  'odd-h2': { kind: 'ui-state', reason: 'פתיחת H2 בעמוד אי-זוגי — ברירת המחדל של המקור כבויה — S4.20', issue: 'EXT-15' },
-  'h2-auto-siman': { kind: 'ui-state', reason: 'מספור סימן אוטומטי (א-ב-ג) — מיושם ב-legacy-imud-flow (autoSimanH2) — S4.20/EXT-16' },
-  'h2-reset-siman': { kind: 'ui-state', reason: 'איפוס מונה סימנים לכל פרק — מיושם ב-legacy-imud-flow (resetSimanOnH1) — S4.20/EXT-16' },
-  'h2-top-distance': { kind: 'mapped', to: 'h2-top-offset', transform: pctToPx, reason: '22% מגובה תיבת התוכן (1040px ב-A4 של RED) ⇒ פיקסלים' },
-
-  // ============ מזהי הערות (S4.5-ג — הוטמעו זה עתה) ============
-  'en-line-prefix': { kind: 'mapped', to: 'en-line-prefix' },
-  'fn-delim-open': { kind: 'mapped', to: 'fn-delim-open' },
-  'fn-delim-close': { kind: 'mapped', to: 'fn-delim-close' },
-
-  // ============ **S4.6 (ביקורת 3):** הגדרות עיצוב אמיתיות שסווגו בטעות כ-ui-state ============
-  // לא לסווג משפחה שלמה לפי קידומת בלבד — לכל מפתח עם יעד RED קיים יש מיפוי מפורש.
-  // ההגדרות האלה מגיעות עכשיו למנוע בפועל (heading-N-font/size, header-slot, שער).
-  'f-h0': { kind: 'mapped', to: 'heading-0-font', transform: resolveStack, reason: 'S4.6: גופן כותרת H0 — קיים ברישום RED (heading-0-font)' },
-  'f-h1': { kind: 'mapped', to: 'heading-1-font', transform: resolveStack, reason: 'S4.6: גופן H1' },
-  'f-h2': { kind: 'mapped', to: 'heading-2-font', transform: resolveStack, reason: 'S4.6: גופן H2' },
-  'f-h3': { kind: 'mapped', to: 'heading-3-font', transform: resolveStack, reason: 'S4.6: גופן H3' },
-  'f-h4': { kind: 'mapped', to: 'heading-4-font', transform: resolveStack, reason: 'S4.6: גופן H4' },
-  'f-h5': { kind: 'mapped', to: 'heading-5-font', transform: resolveStack, reason: 'S4.6: גופן H5' },
-  'f-h6': { kind: 'mapped', to: 'heading-6-font', transform: resolveStack, reason: 'S4.6: גופן H6' },
-  'f-h7': { kind: 'mapped', to: 'heading-7-font', transform: resolveStack, reason: 'S4.6: גופן H7' },
-  's-h0': { kind: 'mapped', to: 'heading-0-size-pt', transform: parseFloat, reason: 'S4.6: גודל H0 (26 ⇒ 26pt; חריגת טווח מדווחת במיזוג ולא מושמטת)' },
-  's-h1': { kind: 'mapped', to: 'heading-1-size-pt', transform: parseFloat, reason: 'S4.6: גודל H1 (50 במקור — נשמר נאמן למקור; חריגת טווח מדווחת)' },
-  's-h2': { kind: 'mapped', to: 'heading-2-size-pt', transform: parseFloat, reason: 'S4.6: גודל H2' },
-  's-h3': { kind: 'mapped', to: 'heading-3-size-pt', transform: parseFloat, reason: 'S4.6: גודל H3' },
-  's-h4': { kind: 'mapped', to: 'heading-4-size-pt', transform: parseFloat, reason: 'S4.6: גודל H4' },
-  's-h5': { kind: 'mapped', to: 'heading-5-size-pt', transform: parseFloat, reason: 'S4.6: גודל H5' },
-  's-h6': { kind: 'mapped', to: 'heading-6-size-pt', transform: parseFloat, reason: 'S4.6: גודל H6' },
-  's-h7': { kind: 'mapped', to: 'heading-7-size-pt', transform: parseFloat, reason: 'S4.6: גודל H7 (6 במקור; חריגת טווח מדווחת)' },
-  'f-note-body': { kind: 'mapped', to: 'f-note-body-font', transform: (v, ctx) => {
-    // **S74 (בעיה 5 — בקשת משתמש 12.11):** ברירת המחדל של המקור בהגדרות
-    // ('Frank Ruhl Libre') לא חוברה לרינדור בפועל בגרסה הישנה — גוף ההערה
-    // רונדר ב-Assistant ExtraLight (נמדד בייחוס עמ' 31/37: כל שורות גוף
-    // ההערה Assistant-ExtraLight 8.5pt; הסמן בלבד FRL 8pt). הרינדור הוא
-    // המפרט: ערך ברירת המחדל מתורגם לגופן הרינדור האמיתי; ערך שהמשתמש
-    // בחר במפורש (כל ערך אחר) נשמר כמו שהוא דרך resolveStack.
-    return /Frank Ruhl Libre/i.test(String(v || '')) ? 'אסיסטנט קל מאוד' : resolveStack(v, ctx);
-  }, reason: 'S74: גוף ההערה — ברירת המחדל = הרינדור בפועל של המקור (Assistant ExtraLight, נמדד בייחוס)' },
-  'f-hdr-r': { kind: 'mapped', to: ['header-recto-right-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט ימין בכותרת עליונה (recto)' },
-  'f-hdr-c': { kind: 'mapped', to: ['header-recto-center-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט מרכז (recto)' },
-  'f-hdr-l': { kind: 'mapped', to: ['header-recto-left-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט שמאל (recto)' },
-  's-hdr-r': { kind: 'mapped', to: ['header-recto-right-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט ימין (recto)' },
-  's-hdr-c': { kind: 'mapped', to: ['header-recto-center-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט מרכז (recto)' },
-  's-hdr-l': { kind: 'mapped', to: ['header-recto-left-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט שמאל (recto)' },
-  'f-hdr-verso-r': { kind: 'mapped', to: ['header-verso-right-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט ימין (verso)' },
-  'f-hdr-verso-c': { kind: 'mapped', to: ['header-verso-center-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט מרכז (verso)' },
-  'f-hdr-verso-l': { kind: 'mapped', to: ['header-verso-left-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט שמאל (verso)' },
-  's-hdr-verso-r': { kind: 'mapped', to: ['header-verso-right-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט ימין (verso)' },
-  's-hdr-verso-c': { kind: 'mapped', to: ['header-verso-center-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט מרכז (verso)' },
-  's-hdr-verso-l': { kind: 'mapped', to: ['header-verso-left-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט שמאל (verso)' },
-  // **S77 (בקשה 3 — חיבור הגדרות הכותרת העליונה לנתיב המורשת):** סוגי הסלוטים
-  // של המקור (hdr-{r,c,l,verso-*}-type) ממופים למקורות header-{side}-{pos}-source.
-  // book_title_split_r/l = החצאים הקבועים (לפי מילים, ללא תלות בצד — ההחלפה
-  // היא hdr-alternating נפרד) ⇒ ההתנהגות המכוילת של המנוע המורשת משוחזרת
-  // במדויק דרך ההגדרות החיות. ערך לא מוכר (למשל 'spear' של v19 — עיטור) אינו
-  // דורס את ברירת המחדל של RED (transform מחזיר undefined ⇒ דילוג).
-  'hdr-r-type': { kind: 'mapped', to: ['header-recto-right-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט ימין (recto) ⇒ מקור חי בנתיב המורשת' },
-  'hdr-l-type': { kind: 'mapped', to: ['header-recto-left-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט שמאל (recto) ⇒ מקור חי בנתיב המורשת' },
-  'hdr-c-type': { kind: 'mapped', to: ['header-recto-center-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט מרכז (recto) ⇒ מקור חי בנתיב המורשת' },
-  'hdr-verso-r-type': { kind: 'mapped', to: ['header-verso-right-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט ימין (verso) ⇒ מקור חי בנתיב המורשת' },
-  'hdr-verso-l-type': { kind: 'mapped', to: ['header-verso-left-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט שמאל (verso) ⇒ מקור חי בנתיב המורשת' },
-  // hdr-verso-c-type אינו ממופה בכוונה: הייחוס המכויל מציג את הפרק (h2) במרכז
-  // גם בעמודי verso (הערך 'h1' בקובץ המקור אינו משתקף בפלט המכויל); שליטה
-  // חיה דרך header-verso-center-source (ברירת המחדל שלו h2).
-  'hdr-r-custom': { kind: 'mapped', to: ['header-recto-right-custom-text'], reason: 'S77: טקסט מותאם סלוט ימין (recto)' },
-  'hdr-c-custom': { kind: 'mapped', to: ['header-recto-center-custom-text'], reason: 'S77: טקסט מותאם סלוט מרכז (recto)' },
-  'hdr-l-custom': { kind: 'mapped', to: ['header-recto-left-custom-text'], reason: 'S77: טקסט מותאם סלוט שמאל (recto)' },
-  'hdr-verso-r-custom': { kind: 'mapped', to: ['header-verso-right-custom-text'], reason: 'S77: טקסט מותאם סלוט ימין (verso)' },
-  'hdr-verso-c-custom': { kind: 'mapped', to: ['header-verso-center-custom-text'], reason: 'S77: טקסט מותאם סלוט מרכז (verso)' },
-  'hdr-verso-l-custom': { kind: 'mapped', to: ['header-verso-left-custom-text'], reason: 'S77: טקסט מותאם סלוט שמאל (verso)' },
-  'inp-book-title': { kind: 'mapped', to: 'imud-book-title', reason: 'S4.6: כותרת הספר — נצרכת בשער הראשי (dom-renderer)' },
-  'inp-book-subtitle': { kind: 'mapped', to: 'imud-book-subtitle', reason: 'S4.6: כותרת־משנה — נצרכת בשער הראשי' },
-  // **03.11(ד) — דיווח משתמש 3 / בקשת על מה-01.11: "הטמע את כל ברירות המחדל
-  // של הפרויקט המקורי".** מתגי השערים ונתוני הספר נפלו ל-ui-state לפי כלל
-  // הקידומת הגס (^(show|inp)-) והושמטו מהמנוע — לכן "אין עמודי שער" גם אחרי
-  // ייבוא ברירות המחדל. עתה מיפוי מפורש למפתחות RED האמיתיים.
-  'show-main-shaar': { kind: 'mapped', to: 'shaar-main-enabled', transform: (v) => v !== false && v !== 'false', reason: '03.11(ד): מתג שער ראשי — ברירת המחדל במקור true (השער חלק ממבנה הספר, לא אופציה)' },
-  'show-sub-shaar': { kind: 'mapped', to: 'shaar-sub-enabled', transform: (v) => v !== false && v !== 'false', reason: '03.11(ד): מתג שער־משנה — ברירת מחדל true כמקור' },
-  'show-back-shaar': { kind: 'mapped', to: 'shaar-back-enabled', transform: (v) => v !== false && v !== 'false', reason: '03.11(ד): מתג שער אחורי — ברירת מחדל true כמקור' },
-  'f-sh-title': { kind: 'mapped', to: 'shaar-title-font', transform: resolveStack, reason: '03.11(ד): גופן כותרת השער (מקור: Lia Sgula → Bellefair המוטמע)' },
-  's-sh-title': { kind: 'mapped', to: 'shaar-title-size-pt', transform: parseFloat, reason: '03.11(ד): גודל כותרת השער (מקור: 46)' },
-  'f-sh-sub': { kind: 'mapped', to: 'shaar-subtitle-font', transform: resolveStack, reason: '03.11(ד): גופן כותרת־משנה בשער (מקור: Livorna → David Libre)' },
-  's-sh-sub': { kind: 'mapped', to: 'shaar-subtitle-size-pt', transform: parseFloat, reason: '03.11(ד): גודל כותרת־משנה (מקור: 21)' },
-  'f-sh-desc': { kind: 'mapped', to: 'shaar-desc-font', transform: resolveStack, reason: '03.11(ד): גופן התיאור (מקור: Livorna → Frank Ruhl Libre)' },
-  's-sh-desc': { kind: 'mapped', to: 'shaar-desc-size-pt', transform: parseFloat, reason: '03.11(ד): גודל התיאור (מקור: 12)' },
-  'f-sh-sec': { kind: 'mapped', to: 'shaar-sections-font', transform: resolveStack, reason: '03.11(ד): גופן פרטי המהדורא (מקור: David Libre)' },
-  's-sh-sec': { kind: 'mapped', to: 'shaar-sections-size-pt', transform: parseFloat, reason: '03.11(ד): גודל פרטי המהדורא (מקור: 11.5)' },
-  'f-sh-author': { kind: 'mapped', to: 'shaar-author-font', transform: resolveStack, reason: '03.11(ד): גופן שם המחבר (מקור: David Libre)' },
-  's-sh-author': { kind: 'mapped', to: 'shaar-author-size-pt', transform: parseFloat, reason: '03.11(ד): גודל שם המחבר (מקור: 15)' },
-  'f-sh-year': { kind: 'mapped', to: 'shaar-year-font', transform: resolveStack, reason: '03.11(ד): גופן השנה/בס״ד (מקור: David Libre)' },
-  's-sh-year': { kind: 'mapped', to: 'shaar-year-size-pt', transform: parseFloat, reason: '03.11(ד): גודל השנה (מקור: 12)' },
-  'inp-book-desc': { kind: 'mapped', to: 'imud-book-desc', reason: '03.11(ד): תיאור הספר בשער (מקור: inp-book-desc ← «נושא מפורט»)' },
-  'inp-book-sections': { kind: 'mapped', to: 'imud-book-sections', reason: '03.11(ד): פרטי מהדורא בשער (מקור: inp-book-sections ← «פרטי מהדורא»)' },
-  'inp-book-author': { kind: 'mapped', to: 'imud-book-author', reason: '03.11(ד): שם המחבר בשערים (מקור: inp-book-author ← «שם המחבר»)' },
-  'inp-book-year': { kind: 'mapped', to: 'imud-book-year', reason: '03.11(ד): מקום ושנה בשערים (מקור: inp-book-year ← «מקום ושנת הוצאה»)' },
-  'inp-back-shaar-text': { kind: 'mapped', to: 'shaar-back-text', reason: '03.11(ד): טקסט השער האחורי (שמירת זכויות)' },
-
-  // ============ הערות שוליים ============
-  // **S5.2 (S2):** מפתח RED-מקורי שנכנס בטעות לנכס ברירות-המחדל המוטמע
-  // (הנכס = v21 + שתי דריסות D-91 מתועדות + מפתח זה) — רישום disposition
-  // מפורש במקום 'unmapped' בייבוא החי.
-  'fn-bar-max-height-px': { kind: 'removed', reason: 'מפתח RED-מקורי (תקרת מרזב ההערות) — נקרא מהמרשם עצמו; אינו מפתח מקור', issue: 'S5.2-S2' },
-  'fn-columns': { kind: 'mapped', to: 'footnote-columns', transform: parseInt },
-  'fn-layout-mode': { kind: 'mapped', to: 'fn-layout-mode' },
-  // **S5.2 (S2):** transform חסר — 'siman' של המקור נחת כערך לא-חוקי בצד
-  // RED (הenum: continuous/page/section/part) והפאנל הציג ערך שבור.
-  'fn-reset-mode': { kind: 'mapped', to: 'footnote-reset-policy', transform: (v) => ({ 'siman': 'section', 'chapter': 'section', 'page': 'page', 'continuous': 'continuous', 'part': 'part' }[v] || 'page') },
-  'fn-title-text': { kind: 'mapped', to: 'endnote-title-text' },
-  'note-numbering-style': { kind: 'mapped', to: 'footnote-marker-style', transform: (v) => ({ 'gematria': 'hebrew', 'hebrew': 'hebrew', 'decimal': 'decimal', 'asterisk': 'asterisk', 'parenthesis': 'parenthesis' }[v] || 'hebrew') },
-  // **S5.2 (S2):** note-marker-type ('super') אינו סגנון סמן — הוא העלאת
-  // בסיס (עניין רינדור). בעבר מופה merged ל-footnote-marker-style בלי
-  // transform והערך הגולמי 'super' דרס את הסגנון החוקי (ערך מחוץ ל-enum;
-  // ניצל רק בזכות ה-default-branch של markerFor). כעת ui-state — נשמר
-  // להצגה, לא מזהם את ה-enum.
-  'note-marker-type': { kind: 'ui-state', reason: 'סוג הסמן (super) — עניין העלאת-בסיס ברינדור, לא סגנון מספור; הסגנון מגיע מ-note-numbering-style' },
-  'note-marker-size': { kind: 'ui-state', reason: 'גודל מילת-הסמן בגוף (ברירת מחדל 8) — מיושם בפרויקטור ה-legacy (S4.20/EXT-17)', issue: 'EXT-17' },
-  'note-listing-num-size': { kind: 'ui-state', reason: 'גודל סמן הרישום ברשימת ההערות — מיושם בפרויקטור ה-legacy — S4.20/EXT-17' },
-  'note-num-separator': { kind: 'ui-state', reason: 'המפריד אחרי מספר ההערה (ברירת מחדל .) — מיושם ב-markerWord — S4.20/EXT-17; Iteration-003: נצרך גם ב-markerFor(hebrew) של המאוחד' },
-  // **Iteration-003 (legacy parity — נמדד בייחוס):** המנוע הישן אינו מצייר חוט
-  // מפריד מעל מרזב ההערות (עמודי ההערות ב-PDF הייחוס נפתחים ישירות בסמן,
-  // ללא כל קו/כוכב). ערך המקור נשמר ב-_imudRaw; הייבוא מכבה את הציור.
-  'note-rule-style': { kind: 'mapped', to: 'footnote-separator-rule', transform: () => 'none', reason: 'Iteration-003: הייחוס ללא חוט מפריד — הערך הגולמי נשמר ב-_imudRaw בלבד' },
-  'note-header-orn-r': { kind: 'removed', reason: 'עיטור בצד ימין של כותרת עמודי-ההערות — טרם ממומש ב-RED', issue: 'EXT-4' },
-  'note-header-orn-l': { kind: 'removed', reason: 'עיטור בצד שמאל של כותרת עמודי-ההערות — טרם ממומש ב-RED', issue: 'EXT-4' },
-
-  // ============ הגנות שורות ============
-  'avoid-orphans': { kind: 'merged', to: 'prevent-orphans-top', transform: (v) => v !== false, reason: 'RED מפריד יתומים עליונים/תחתונים בנפרד' },
-  'avoid-widows': { kind: 'merged', to: 'prevent-widows-top', transform: (v) => v !== false, reason: 'כנ"ל' },
-  'avoid-runt-word': { kind: 'mapped', to: 'runt-min-width-pct', transform: (v) => (v === false || v === 'false') ? 0 : 20, reason: 'בוליאני המקור ⇒ סף אחוז ב-RED (כבוי=0; דלוק=20%)' },
-
-  // ============ עיטורים ============
-  'h2-ornament-set': { kind: 'merged', to: 'h2-orn-top', transform: (v) => v !== 'none' ? v : 'none', reason: 'ערכת עיטורים כללית ⇒ העיטור העליון; ערכות IMUD דרך imud-orn-*' },
-  'h2-ornament-top-style': { kind: 'mapped', to: 'h2-orn-top' },
-  'h2-ornament-bottom-style': { kind: 'mapped', to: 'h2-orn-bottom' },
-  'h2-title-orn-mode': { kind: 'mapped', to: 'h2-orn-scope', onlyIfAbsent: true, transform: (v) => ({ 'sign': 'sign', 'title': 'title', 'both': 'both', 'none': 'none' }[v] || 'both'), reason: 'S4.6 (ביקורת 3): none נשמר כ-none — בעבר הומר ל-both (היפוך הגדרת המקור); enum RED כעת כולל none. onlyIfAbsent: כשהקובץ מכיל גם את המפתח הישיר h2-orn-scope — הישיר גובר (קדימות מפורשת, לא סדר איטרציה)' },
-  'h2-title-ornament-top-style': { kind: 'merged', to: 'h2-orn-top', reason: 'עיטור כותרת-הסימן — מוזג לעיטור הסימן (RED מאחד)' },
-  'h2-title-ornament-bottom-style': { kind: 'merged', to: 'h2-orn-bottom', reason: 'עיטור כותרת-הסימן התחתון — מוזג לעיטור הסימן ב-RED' },
-  'h2-title-ornament-r': { kind: 'mapped', to: 'h2-orn-side' },
-  'h2-title-ornament-l': { kind: 'merged', to: 'h2-orn-side', reason: 'RED מציב עיטור צד אחד לשני הצדדים' },
-  'h2-orn-fit-text': { kind: 'mapped', to: 'h2-orn-fit-to-text' },
-  'h3-ornament-set': { kind: 'merged', to: 'h3-side-orn', reason: 'ערכת H3 ⇒ עיטור הצד של H3' },
-  'h3-ornament-r': { kind: 'mapped', to: 'h3-side-orn' },
-  'h3-ornament-l': { kind: 'merged', to: 'h3-side-orn', reason: 'עיטור צד שמאל של H3 — RED מאחד לעיטור צד יחיד' },
-  'section-divider-style': { kind: 'merged', to: 'imud-divider', reason: 'מפרידי סעיפים מעוצבים — דרך ספריית IMUD (image) או heading-dividers-h3-h6; spear ⇒ עיצוב ספרייה' },
-  'heading-divider-h3': { kind: 'mapped', to: 'heading-dividers-h3-h6', transform: (v) => v !== 'none' },
-  'h2-orn-scope': { kind: 'mapped', to: 'h2-orn-scope' },
-  'col-divider-style': { kind: 'mapped', to: 'column-divider-style', transform: (v) => DIVIDER_MAP[v] || 'none' },
-
-  // ============ מספור ============
-  'page-num-position': { kind: 'mapped', to: 'page-num-position', transform: (v) => NUMPOS_MAP[v] || 'bottom-center' },
-  // **F-J2 (W-5, 27.11):** 'gematria' של המקור = העברית-החשופה של RED (D-108) —
-  // תרגום בשער הייבוא במקום ענף default נסתר ב-folio.js; הערך הבלתי-חוקי
-  // כבר אינו מגיע למנוע (נבדק גם ב-sanitize של הייבוא).
-  'page-num-format': { kind: 'mapped', to: 'page-num-format', transform: (v) => (v === 'gematria' ? 'hebrew' : v), reason: 'F-J2: gematria (ערכת המקור) ⇒ hebrew של RED — אותה גימטריה חשופה (D-108)' },
-  'page-num-frame': { kind: 'mapped', to: 'page-num-frame' },
-  'page-num-start-idx': { kind: 'mapped', to: 'page-num-start-idx', transform: parseInt },
-  'page-num-initial-value': { kind: 'mapped', to: 'page-num-initial-value', transform: parseInt },
-  'main-shaar-count-numbering': { kind: 'merged', to: 'count-shaar-pages', reason: 'RED מונה עמודי שער גלובלית (count-shaar-pages); בקרה פר-סוג טרם נפרדה', issue: 'EXT-18' },
-  // **Iteration-003 (legacy parity — מניית הפוליו):** המקור מונה שערי-משנה
-  // (sub=true) אך לא את הראשי/אחורי (main/back=false) — המורשת מונה את
-  // השער-משנה בלבד. עד כאן המיפוי המאוחד לא מיפה כלום ⇒ הפוליו נדחק.
-  // **תיקון המשך (כפילות מפתח):** עד כאן הופיעו כאן גם הערכים הישנים
-  // (merged→count-shaar-pages ל-sub-count, identity ל-toc-count) בשנית —
-  // במפת עצם JS האחרון מנצח, והם דרסו את המיפויים החדשים (בדוק: ייבוא
-  // הניח count-toc-pages=false מול raw=true). הוסרו — מקור אחד לכל מפתח.
-  'sub-shaar-count-numbering': { kind: 'mapped', to: 'count-shaar-sub-pages', transform: (v) => v !== false && v !== 'false', reason: 'מניית שער-משנה בפוליו — כמו המקור' },
-  'general-toc-count-numbering': { kind: 'mapped', to: 'count-toc-pages', transform: (v) => v !== false && v !== 'false', reason: 'Iteration-003: במקור = מניית עמודי התוכן בפוליו (לא מספרי שורות — המורשת לא מציגה אותם מעולם)' },
-  'detailed-toc-count-numbering': { kind: 'mapped', to: 'count-toc-pages', transform: (v) => v !== false && v !== 'false', reason: 'Iteration-003: מניית עמודי התוכן המפורט בפוליו' },
-  // **Iteration-003 (הפרדת סמנטיקה):** מפתחות ה-show כותבים עד כאן אל
-  // count-shaar-pages (דגל מנייה!) — הצגה ומנייה הן שתי סמנטיקות שונות;
-  // במנוע המאוחד השערים אינם מציגים גיליון ממילא (chapterOpening ⇒ דיכוי
-  // תצוגה). הערכים נשמרים כ-ui-state (EXT-18) ואינם משחיתים את דגל המנייה.
-  'main-shaar-show-number': { kind: 'ui-state', reason: 'הצגת מספר בשער ראשי — השערים אינם מציגים גיליון במנוע המאוחד (chapterOpening); Iteration-003: הוסר הכתיב אל count-shaar-pages (הפרדת show מ-count)', issue: 'EXT-18' },
-  'back-shaar-count-numbering': { kind: 'merged', to: 'count-shaar-pages', reason: 'מניית שער אחורי — RED מונה עמודי שער גלובלית', issue: 'EXT-18' },
-  'back-shaar-show-number': { kind: 'ui-state', reason: 'הצגת מספר בשער אחורי — כנ"ל main-shaar-show-number; Iteration-003: הוסר הכתיב אל count-shaar-pages', issue: 'EXT-18' },
-  'sub-shaar-show-number': { kind: 'ui-state', reason: 'הצגת מספר בשער-משנה — השער נספר (count-shaar-sub-pages) אך אינו מציג (chapterOpening); Iteration-003: הוסר הכתיב אל count-shaar-pages', issue: 'EXT-18' },
-  'general-toc-show-numbering': { kind: 'mapped', to: 'general-toc-show-numbering' },
-  'detailed-toc-show-numbering': { kind: 'mapped', to: 'detailed-toc-show-numbering' },
-  // **S77 (בקשה 3 — הגשר החי):** מתגי הפעלת התכנים — עד כאן ui-state (לא
-  // הגיעו למנוע); כעת ממופים למפתחות הרישום שהגשר קורא (ברירת המחדל
-  // של המקור — שניהם true — משומרת; קובץ מקור עם כיבוי יכובד).
-  'enable-general-toc': { kind: 'mapped', to: 'toc-general-enabled', transform: (v) => v !== false && v !== 'false', reason: 'S77: מתג תוכן-עניינים כללי — חי בנתיב המורשת' },
-  'enable-detailed-toc': { kind: 'mapped', to: 'toc-detail-enabled', transform: (v) => v !== false && v !== 'false', reason: 'S77: מתג תוכן-עניינים מפורט — חי בנתיב המורשת' },
-
-  // ============ שערים/ערכות נושא (בוררי האפליקציה הישנה) ============
-  'style-set-select': { kind: 'ui-state', reason: 'בורר סגנון כללי בפאנל הישן; ב-RED: תבניות/ערכות נושא' },
-  'active-theme-select': { kind: 'ui-state', reason: 'ערכת נושא פעילה — ב-RED: theme-set-id / imud-shaar-*' },
-
-  // ============ **S6.3 (חיבור הגדרות — "וכמויות של הגדרות שלא מחוברות")** ============
-  // מפתחות שהיו נופלים לכללי המשפחה (^aq-, ^inp-…) ואינם ממופים למפתח
-  // רישום — עתה ממופים במפורש (aq-*) או מתועדים כנצרכים דרך ה-raw.
-  'aq-enabled': { kind: 'mapped', to: 'aq-enabled', transform: (v) => v === true || v === 'true', reason: 'S6.3: מתג AutoQuality של המקור ⇒ מפתח הרישום (ברירת מחדל במקור true)' },
-  'aq-word-spacing': { kind: 'mapped', to: 'aq-enabled', transform: (v) => v !== false && v !== 'false', reason: 'S6.3: שכבת מרווחי-מילים (דלוקה במקור) — משורטטת למתג הכולל של ה-AQ' },
-  'aq-word-spacing-min': { kind: 'mapped', to: 'aq-word-spacing-min', transform: parseFloat, reason: 'S6.3: גבול תחתון (0.95 במקור וברישום כאחד)' },
-  'aq-word-spacing-max': { kind: 'mapped', to: 'aq-word-spacing-max', transform: parseFloat, reason: 'S6.3: גבול עליון (1.05)' },
-  'aq-word-spacing-threshold': { kind: 'ui-state', reason: 'S6.3: סף הפעלת מרווחי-מילים במקור — מנגנון ה-AQ של RED מופעל מתמטית (מדידת הפרש); נשמר כנתון', issue: 'S6.3-AQ' },
-  'aq-word-spacing-max-diff': { kind: 'ui-state', reason: 'S6.3: הפרש מקסימלי בין שורות במקור — ב-RED ה-clamp המרכזי aq-overshoot-clamp-px; נשמר כנתון', issue: 'S6.3-AQ' },
-  'aq-para-spacing': { kind: 'ui-state', reason: 'S6.3: מתיחת מרווחי-פסקה במקור — נצרכת דרך ה-raw בפרופיל המורשת כשתמומש; נשמרת כנתון', issue: 'S6.3-AQ' },
-  'aq-para-spacing-max': { kind: 'ui-state', reason: 'S6.3: תקרת מרווחי-פסקה — כנ"ל', issue: 'S6.3-AQ' },
-  'aq-line-height': { kind: 'ui-state', reason: 'S6.3: מתיחת גובה-שורה במקור — מנגנון EXT-20 של RED (aqStretch) פועל מההפרש הנמדד; נשמר כנתון', issue: 'S6.3-AQ' },
-  'aq-line-height-max': { kind: 'ui-state', reason: 'S6.3: תקרת מתיחת שורה (3% במקור) — ב-RED נקלטת דרך aq-letter-spacing-max המרכזי; נשמר כנתון', issue: 'S6.3-AQ' },
-  'aq-shared-load': { kind: 'mapped', to: 'aq-shared-load', transform: (v) => v !== false && v !== 'false', reason: 'S6.3: עומס משותף בין השכבות (true במקור וברישום)' },
-  // **9b.5 (D-107 + F-9a-8):** ארבעת מקטעי השער האחורי — חיבור לנתיב המאוחד
-  // (עד כאן סווגו ui-state ולא מופו; buildShaarBlocks לא ראה אותם כלל).
-  // המקור גובר על המטא של המסמך (כמו inp-book-title בשער הראשי).
-  'inp-book-back-copyright': { kind: 'mapped', to: 'imud-book-back-copyright', reason: '9b.5: זכויות יוצרים בשער האחורי — נצרכת ב-buildShaarBlocks (D-107: ארבעת המקטעים)' },
-  'inp-book-back-publishing': { kind: 'mapped', to: 'imud-book-back-publishing', reason: '9b.5: פרטי הוצאה לאור בשער האחורי (D-107)' },
-  'inp-book-back-contact': { kind: 'mapped', to: 'imud-book-back-contact', reason: '9b.5: פרטי קשר בשער האחורי (D-107)' },
-  'inp-book-back-extra': { kind: 'mapped', to: 'imud-book-back-extra', reason: '9b.5: פרטים נוספים בשער האחורי (D-107)' },
-  's-note-body': { kind: 'ui-state', reason: 'S6.3: גודל גוף ההערה — נקרא מה-raw (readConfig ⇒ SZ.fnBody; ברירת המחדל של המקור 9)' },
-  // **F-J3 (W-5, 27.11):** ערכים כפולים הוסרו — הגדרה יחידה סמכותית לכל מפתח (s-h0/s-h1/s-sh-*; העתקות S6.3 היו זהות מילולית במיפוי — דריסה שקטה של אותה רשומה).
-  'f-note-title': { kind: 'mapped', to: 'endnote-title-font', transform: resolveStack, reason: 'S6.3: גופן כותרת ההערות' },
-  'f-h0-body': { kind: 'mapped', to: 'heading-0-body-font', transform: resolveStack, reason: 'S6.3: גופן גוף ההקדמה (Frank Ruhl Libre במקור)' },
-  's-h0-body': { kind: 'mapped', to: 'heading-0-body-size-pt', transform: parseFloat, reason: 'RC-2a (i004): גודל גוף ההקדמה (s-h0-body=11.5 במקור) — עד כאן לא מופה ייבוא ⇒ ההקדמה זרמה ב-12pt במקום 11.5 (הוכח מה-PDF הישן: p43 כולו 11.5pt בפיץ׳ 15.5 בקירוב)' },
-
-  // ============ כותרות עליונות (25 מפתחות hdr-*) ============
-  'hdr-title-split': { kind: 'ui-state', reason: 'פיצול שם הספר לחצאים בכותרת העליונה — מיושם תמידית ב-legacy (hdrR/hdrL) כמו בייחוס — S4.20/EXT-19' },
-  'hdr-alternating': { kind: 'ui-state', reason: 'החלפת החצאים בעמודים זוגיים-פיזיים — מיושם בהרכבת ה-legacy (S4.20/EXT-19)', issue: 'EXT-19' },
-};
-
-/** כללי משפחה — מצבי UI של האפליקציה הישנה (נשמרים כנתונים, אין אפקט מנועתי). */
-const FAMILY_RULES = [
-  { re: /^f-/, kind: 'ui-state', reason: 'גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17' },
-  { re: /^s-/, kind: 'ui-state', reason: 'גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17' },
-  { re: /^data-/, kind: 'ui-state', reason: 'נתוני בורר עיצובים/תמונות באפליקציה הישנה — ב-RED: הפניות imud: בספריית הנכסים' },
-  { re: /^hdr-/, kind: 'ui-state', reason: 'קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source' },
-  { re: /^builder-/, kind: 'ui-state', reason: 'מצבי בורר העיצובים (assets picker) של האפליקציה הישנה' },
-  { re: /^dim-/, kind: 'ui-state', reason: 'ממדי עמוד בפאנל הישן — RED: page-size + grid-*' },
-  { re: /^aq-/, kind: 'ui-state', reason: 'מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*' },
-  { re: /^inp-/, kind: 'ui-state', reason: 'שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך' },
-  { re: /^(cbg|data-cbg)-/, kind: 'ui-state', reason: 'רקעי עמודים לפי מחלקה — RED: background-page-type/image/texture (REQ-ORN-08)' },
-  { re: /^prop-/, kind: 'ui-state', reason: 'מאפייני עיצוב בבורר הישן' },
-  { re: /^page-/, kind: 'ui-state', reason: 'הגדרות עמוד בפאנל הישן' },
-  { re: /^(show|enable|select|main|back|sub|shaar|general|detailed|font|size|mode)-/, kind: 'ui-state', reason: 'מצבי UI של האפליקציה הישנה' },
-  // **EXT-14 (05.11, ערכות הסגנון):** שדות העלאת-קבצים של האפליקציה הישנה — קיימים
-  // ב-setting_sets (תלמוד/פרשנות/קונטרס) אך לא ב-default_settings (הועלו רק בערכות):
-  // קבצי SVG של בונה השערים, תמונות רקע לפי מחלקת עמוד, תמונת מרכז-הכותרת,
-  // תמונת מפריד הסעיפים ותיקיית הנכסים. ב-RED: הפניות imud: מהספרייה המוטמעת
-  // (asset-registry) או נכסי משתמש — ערך הקובץ עצמו אינו מצב מנוע.
-  { re: /^file-/, kind: 'ui-state', reason: 'שדה העלאת קובץ באפליקציה הישנה (builder/cbg/hdr/sec-div) — ב-RED: הפניות imud: מהספרייה' },
-  { re: /^assets-folder-/, kind: 'ui-state', reason: 'תיקיית נכסים חיצונית באפליקציה הישנה — ב-RED: הספרייה המוטמעת' },
-  { re: /^heading-divider-h[3-9]$/, kind: 'mapped', to: 'heading-dividers-h3-h6', transform: (v) => v !== 'none', reason: 'מפרידי כותרות H3–H6 — RED מפעיל/מכבה את המשפחה כולה' }
-];
-
-/** קבלת disposition למפתח — מפורש מהטבלה, או כלל משפחה. @returns {object|null} */
-function dispositionOf(oldKey) {
-  if (DISPOSITIONS[oldKey]) return DISPOSITIONS[oldKey];
-  // **S5.1:** כלל משפחה מחזיר גם to/transform — בעבר הושמטו ו-heading-divider-h4/h5/h6
-  // (למשל) נספרו כ"מטופלים" בלי ששום דבר הוחל (מיפוי-מת).
-  for (const r of FAMILY_RULES) if (r.re.test(oldKey)) return { kind: r.kind, to: r.to, transform: r.transform, reason: r.reason };
-  return null;
-}
-
-/**
- * ייבוא קובץ הגדרות IMUD (או תבנית משתמש ישנה) להגדרות RED.
- * **S4.6 (ביקורת 3) — שימור מלא:** ערכי ui-state כבר לא רק נספרים — הם נשמרים
- * כנתונים במבנה מוגדר: אובייקט uiState בפלט + settings['_legacy-ui-state']
- * (מפתח פנימי עם קידומת קו-תחתון — לא נכנס לייצוא ZIP, שורד בתבניות ה-UI).
- * @param {object} legacy — אובייקט ההגדרות הישן (key→value)
- * @param {object} [registryKeys] — Set/מערך מפתחות RED חוקיים (לסינון); אם לא — ללא סינון
- * @param {{contentHeightPx?:number}} [opts] — גיאומטריה אמיתית להמרות אחוז⇒פיקסל (ברירת מחדל 1040)
- * @returns {{settings:object, uiState:object, dispositions:object, unmapped:string[], report:{mapped:number,merged:number,uiState:number,removed:number}}}
- */
-function importImudSettings(legacy, registryKeys, opts = {}) {
-  const settings = {};
-  const uiState = {};
-  const dispositions = {};
-  const unmapped = [];
-  const report = { mapped: 0, merged: 0, uiState: 0, removed: 0 };
-  const valid = registryKeys instanceof Set ? registryKeys : (Array.isArray(registryKeys) ? new Set(registryKeys) : null);
-  // **F09 (parity iter-002):** הקשר גודל-הגוף ומצב הסוגריים לטרנספורם של s-paren —
-  // מקור אחד (size-body/s-paren-mode של אותו קובץ הגדרות), לא קבוע מקומי.
-  const ctx = {
-    contentHeightPx: Number(opts.contentHeightPx) > 0 ? Number(opts.contentHeightPx) : 1040,
-    bodyPt: parseFloat(legacy && legacy['size-body']) || 12,
-    parenMode: String((legacy && legacy['s-paren-mode']) || 'relative')
-  };
-  // **03.11(ד):** קטלוג הגופנים הזמין (אם הועבר) — לפתרון מחסניות הגופן של המקור
-  // מול מה שבאמת קיים בספרייה המוטמעת (f-h0="'AlphaBlack', 'David Libre', serif"
-  // ⇒ David Libre כש-AlphaBlack אינה בספרייה — בדיוק כמו שהדפדפן היה נופל).
-  if (opts.availableFonts instanceof Set) ctx.availableFonts = opts.availableFonts;
-  else if (Array.isArray(opts.availableFonts)) ctx.availableFonts = new Set(opts.availableFonts);
-  // **S4.6:** שני מעברים — ממירים מותנים (onlyIfAbsent, כגון h2-title-orn-mode)
-  // מוחלים רק אם מפתח ישיר לא קבע כבר את היעד. קדימות מפורשת ולא תלוית-סדר.
-  const deferred = [];
-  const applyDisposition = (k, v, d) => {
-    dispositions[k] = d;
-    if ((d.kind === 'mapped' || d.kind === 'merged') && d.to) {
-      const targets = Array.isArray(d.to) ? d.to : [d.to];
-      const transformed = d.transform ? d.transform(v, ctx) : v;
-      // **S77:** transform שמחזיר undefined מסמן "אין דריסה" (ערך מקור לא
-      // מוכר שאין לו מקביל RED — למשל hdr-c-type='spear'). בלי ההגנה הזו
-      // היעד היה נקבע ל-undefined ודורס את ברירת המחדל של הרישום. המפתח
-      // עדיין נספר בדוח (קיבל disposition מלא; הערך הגולמי נשמר ב-_imudRaw).
-      if (transformed === undefined) {
-        dispositions[k] = { ...d, note: 'ערך לא מוכר — ללא דריסה (S77)' };
-        report[d.kind]++;
-        return;
-      }
-      let anyApplied = false;
-      let anyBlocked = false;
-      for (const t of targets) {
-        if (valid && !valid.has(t)) { unmapped.push(`${k}->${t}(!)`); continue; }
-        if (d.onlyIfAbsent && settings[t] !== undefined) { anyBlocked = true; continue; }
-        settings[t] = transformed;
-        anyApplied = true;
-      }
-      if (anyApplied) report[d.kind]++;
-      else if (anyBlocked) report[d.kind]++; // נספר — קיבל disposition מלא (נחסם בכוונה ע"י מפתח ישיר)
-    } else if (d.kind === 'ui-state') {
-      // **S4.6:** הערך נשמר כנתון — לא רק מונה. החזרה נפרדת + הטמעה בהגדרות
-      // (מפתח פנימי; לא מגיע למנוע, לא נמחק).
-      uiState[k] = v;
-      report.uiState++;
-    } else if (d.kind === 'removed') {
-      report.removed++;
-    } else {
-      report.merged++;
-    }
-  };
-  for (const [k, v] of Object.entries(legacy || {})) {
-    const d = dispositionOf(k);
-    if (!d) { unmapped.push(k); continue; }
-    if (d.onlyIfAbsent) { deferred.push([k, v, d]); continue; }
-    applyDisposition(k, v, d);
-  }
-  for (const [k, v, d] of deferred) applyDisposition(k, v, d);
-  // מיזוג משלים: mode-h1=sub_shaar ⇒ שער משנה דלוק (הסמנטיקה המקורית)
-  if (legacy && legacy['mode-h1'] === 'sub_shaar') settings['show-shaar-sub'] = true;
-  if (Object.keys(uiState).length) settings['_legacy-ui-state'] = uiState;
-  // **S4.9 (פרופיל העימוד המקורי):** קלט שנראה כמו default_settings.json המלא
-  // של המקור ⇒ ה-JSON הגולמי מוצמד תחת _imudRaw והפרופיל מסומן 'imud'.
-  // המנוע המרכזי (typeset) מפנה אז לפורט הנאמן (legacy-imud-flow) — התנהגות
-  // המקור היא המפרט (בקשת המשתמש 03.11: "בדיקה מתמטית ומוחלטת").
-  if (legacy && typeof legacy === 'object'
-    && legacy['fn-delim-open'] !== undefined
-    && legacy['size-body'] !== undefined
-    && legacy['line-height-body'] !== undefined) {
-    settings['_imudRaw'] = legacy;
-    settings['_layout-profile'] = 'imud';
-    // **S77 (בקשה 3 — חיבור הגדרות תוכן-העניינים לנתיב המורשת):** דגלי
-    // toc-level-N-show נגזרים מרשימות המקור (gtoc-show/dtoc-show; ברירות
-    // המחדל [1..6]/[2..6]) — כך ברירת המחדל המיובאת משמרת את הפלט המכויל
-    // במדויק, והדגלים החיים שולטים מעתה (הסרה/הוספה של רמות בשני התכנים).
-    // inline נפתח כבוי בכל הרמות — ה-TOC של המורשת אינו ממזג שורות כברירת
-    // מחדל; הפעלה מפורשת ממזגת רשומות רצופות לשורת ההורה.
-    // הפרש המשתמש השמור מוחל אחרי הייבוא — דגל שהמשתמש שינה גובר על הנגזר.
-    const gtocList = Array.isArray(legacy['gtoc-show']) ? legacy['gtoc-show'] : [1, 2, 3, 4, 5, 6];
-    const dtocList = Array.isArray(legacy['dtoc-show']) ? legacy['dtoc-show'] : [2, 3, 4, 5, 6];
-    for (let n = 1; n <= 7; n++) {
-      settings[`toc-level-${n}-show`] = gtocList.includes(n) || dtocList.includes(n);
-      settings[`toc-level-${n}-inline`] = false;
-    }
-  }
-  return { settings, uiState, dispositions, unmapped, report };
-}
-
-/**
- * **F-J1 (W-5, 27.11) — תרגום ערך-בודד מעידן המקור:** למפתחות הכפולים
- * (גם ברישום RED וגם באוצר-המילים של המקור) שהגיעו מתבנית/פרויקט הישן עם
- * ערך שאינו חוקי ברישום — מנסים את ה-transform של ה-disposition (כשהיעד
- * זהה למקור). מחזיר את הערך המתורגם, או undefined כשאין תרגום ישים.
- * משמש את ה-sanitize של הייבוא (project-io/app-shell) — ערך בלתי-חוקי
- * לעולם אינו מגיע למנוע בשקט.
- */
-function translateLegacyValue(key, value, ctx) {
-  const d = DISPOSITIONS[key];
-  if (!d || d.kind !== 'mapped' || d.to !== key || typeof d.transform !== 'function') return undefined;
-  try {
-    const out = d.transform(value, ctx || {});
-    return out === undefined ? undefined : out;
-  } catch (e) { return undefined; }
-}
-
-module.exports = { DISPOSITIONS, dispositionOf, translateLegacyValue, importImudSettings, firstFamily, resolveStack, pctToPx };
 
 };
 __modules["src/engine/extensions/extensions-io.js"] = function (require, module, exports) {

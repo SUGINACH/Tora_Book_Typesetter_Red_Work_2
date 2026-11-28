@@ -1,8 +1,1 @@
-{
- "profile": "unified",
- "branch": "fix/pdf-header-baseline-20261127",
- "commit": "c567e88",
- "builtAt": "2026-11-28T16:40:00Z",
- "mode": "manual-gh-pages-deploy-no-workflows",
- "note": "תיקון פריסה: קבוע ASSET_VERSION ב-browser-entry עודכן ל-2026-11-28-w11-workerfix (פריסת W-11 עדכנה index בלבד — הפרת כלל 59ca03d; ה-worker היה נטען מהמטמון הישן). §27.1.3: ה-runtime ה-staged אינו שער חובה; W-11: מלאי גופן-תפקיד מסונן (תצוגה=ייצוא)."
-}
+{"profile":"unified","branch":"engine/legacy-parity-preview-20261119","commit":"3def45ef0203142a01c2b96e8a08afee72b12332","builtAt":"2026-11-28T18:00:40Z","mode":"direct-gh-pages-deploy-no-main-merge","note":"סביבת ניסוי — קוד main ומנוע legacy נשארו ללא שינוי"}

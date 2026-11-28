@@ -319,11 +319,8 @@ var __paths = {
   "src/ui/app-shell.js|../engine/output/export-api": "src/engine/output/export-api.js",
   "src/ui/app-shell.js|../engine/output/export-api": "src/engine/output/export-api.js",
   "src/ui/app-shell.js|../engine/core/settings-registry": "src/engine/core/settings-registry.js",
-  "src/ui/app-shell.js|../engine/core/legacy-settings-map": "src/engine/core/legacy-settings-map.js",
-  "src/ui/app-shell.js|../engine/core/legacy-settings-map": "src/engine/core/legacy-settings-map.js",
   "src/ui/app-shell.js|../engine/layout/page-templates": "src/engine/layout/page-templates.js",
   "src/engine/output/project-io.js|../core/settings-registry": "src/engine/core/settings-registry.js",
-  "src/engine/output/project-io.js|../core/legacy-settings-map": "src/engine/core/legacy-settings-map.js",
   "src/ui/editor-tab.js|../engine/decoration/folio": "src/engine/decoration/folio.js",
   "src/ui/settings-panel.js|./bindings.generated": "src/ui/bindings.generated.js",
   "src/ui/extensions-panel.js|../engine/extensions/extensions-io": "src/engine/extensions/extensions-io.js",
@@ -334,25 +331,8 @@ var __paths = {
   "src/engine/layout/page-templates.js|./furniture-geometry": "src/engine/layout/furniture-geometry.js",
   "src/engine/import/docx-import.js|./zip-reader": "src/engine/import/zip-reader.js",
   "src/engine/import/docx-import.js|./xml-lite": "src/engine/import/xml-lite.js",
+  "src/ui/preview-tab.js|../engine/output/dom-renderer": "src/engine/output/dom-renderer.js",
   "src/ui/preview-tab.js|../engine/output/pagemodel-dom-renderer": "src/engine/output/pagemodel-dom-renderer.js",
-  "src/engine/output/pagemodel-dom-renderer.js|../core/pua-text": "src/engine/core/pua-text.js",
-  "src/engine/output/pagemodel-dom-renderer.js|../typography/font-keys": "src/engine/typography/font-keys.js",
-  "src/engine/output/pagemodel-dom-renderer.js|../decoration/asset-registry": "src/engine/decoration/asset-registry.js",
-  "src/engine/output/pagemodel-dom-renderer.js|./dom-renderer": "src/engine/output/dom-renderer.js",
-  "src/engine/typography/font-keys.js|./measure-api": "src/engine/typography/measure-api.js",
-  "src/engine/typography/measure-api.js|./measure-table": "src/engine/typography/measure-table.js",
-  "src/engine/typography/measure-api.js|./font-metrics": "src/engine/typography/font-metrics.js",
-  "src/engine/typography/measure-api.js|../assets/hash256": "src/engine/assets/hash256.js",
-  "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
-  "src/engine/typography/measure-api.js|./units": "src/engine/typography/units.js",
-  "src/engine/typography/measure-api.js|./font-resolver": "src/engine/typography/font-resolver.js",
-  "src/engine/typography/kp-linebreak.js|../line/breaks": "src/engine/line/breaks.js",
-  "src/engine/typography/font-resolver.js|../assets/hash256": "src/engine/assets/hash256.js",
-  "src/engine/typography/font-resolver.js|./font-metrics": "src/engine/typography/font-metrics.js",
-  "src/engine/typography/font-resolver.js|./measure-api": "src/engine/typography/measure-api.js",
-  "src/engine/typography/font-resolver.js|./measure-api": "src/engine/typography/measure-api.js",
-  "src/engine/typography/font-resolver.js|./measure-api": "src/engine/typography/measure-api.js",
-  "src/engine/decoration/asset-registry.js|./svg-sanitize": "src/engine/decoration/svg-sanitize.js",
   "src/engine/output/dom-renderer.js|../core/pua-text": "src/engine/core/pua-text.js",
   "src/engine/output/dom-renderer.js|../notes/markers": "src/engine/notes/markers.js",
   "src/engine/output/dom-renderer.js|../decoration/page-decorations": "src/engine/decoration/page-decorations.js",
@@ -368,7 +348,25 @@ var __paths = {
   "src/engine/output/dom-renderer.js|./shaar-content": "src/engine/output/shaar-content.js",
   "src/engine/output/dom-renderer.js|../typography/measure-api": "src/engine/typography/measure-api.js",
   "src/engine/decoration/page-decorations.js|../layout/page-templates": "src/engine/layout/page-templates.js",
+  "src/engine/decoration/asset-registry.js|./svg-sanitize": "src/engine/decoration/svg-sanitize.js",
   "src/engine/decoration/ornament-ink.js|./asset-registry": "src/engine/decoration/asset-registry.js",
+  "src/engine/typography/measure-api.js|./measure-table": "src/engine/typography/measure-table.js",
+  "src/engine/typography/measure-api.js|./font-metrics": "src/engine/typography/font-metrics.js",
+  "src/engine/typography/measure-api.js|../assets/hash256": "src/engine/assets/hash256.js",
+  "src/engine/typography/measure-api.js|./kp-linebreak": "src/engine/typography/kp-linebreak.js",
+  "src/engine/typography/measure-api.js|./units": "src/engine/typography/units.js",
+  "src/engine/typography/measure-api.js|./font-resolver": "src/engine/typography/font-resolver.js",
+  "src/engine/typography/kp-linebreak.js|../line/breaks": "src/engine/line/breaks.js",
+  "src/engine/typography/font-resolver.js|../assets/hash256": "src/engine/assets/hash256.js",
+  "src/engine/typography/font-resolver.js|./font-metrics": "src/engine/typography/font-metrics.js",
+  "src/engine/typography/font-resolver.js|./measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/typography/font-resolver.js|./measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/typography/font-resolver.js|./measure-api": "src/engine/typography/measure-api.js",
+  "src/engine/output/pagemodel-dom-renderer.js|../core/pua-text": "src/engine/core/pua-text.js",
+  "src/engine/output/pagemodel-dom-renderer.js|../typography/font-keys": "src/engine/typography/font-keys.js",
+  "src/engine/output/pagemodel-dom-renderer.js|../decoration/asset-registry": "src/engine/decoration/asset-registry.js",
+  "src/engine/output/pagemodel-dom-renderer.js|./dom-renderer": "src/engine/output/dom-renderer.js",
+  "src/engine/typography/font-keys.js|./measure-api": "src/engine/typography/measure-api.js",
   "src/ui/testing-tab.js|../audit/report-schema": "src/audit/report-schema.js",
   "src/ui/testing-tab.js|../engine/core/ledger": "src/engine/core/ledger.js",
   "src/audit/report-schema.js|../engine/layout/dp-planner": "src/engine/layout/dp-planner.js",
@@ -516,7 +514,7 @@ function boot() {
   const mount = document.getElementById('app');
   if (!mount) return;
   injectPageBaseCss();
-  const ASSET_VERSION = '2026-11-28-w11-workerfix'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
+  const ASSET_VERSION = '2026-11-25-unified-settings-guard1'; // cache-busting: מנע גרסה מיושנת מהמטמון אחרי פריסה
   // **S5.2:** התעבורה מקבלת מפעל () => new Worker(url) במקום מופע קיים —
   // cancel/קריסה (terminate) נטרלו בעבר את המנוע לצמיתות; עכשיו הפוסט הבא
   // בונה מופע חדש מאותו URL (כולל ?v=). בלי זה כל בקשה אחרי ביטול הוחברה
@@ -1380,9 +1378,7 @@ function createApp(doc, opts = {}) {
       status.setNotice('קיימים שינויים שלא הוחלו — הפעילו עימוד (⚡) לפני ייצוא');
       return { ok: false, kind, reason: 'dirty' };
     }
-    // **W-2 (השלמת 9c.4):** exportHtml של המורשת הוסר מה-destructure — ה-HTML
-    // נוצר מה-PageModel בלבד (exportHtmlFromModel).
-    const { exportHtmlFromModel, exportProjectZip } = require('../engine/output/export-api');
+    const { exportHtml, exportHtmlFromModel, exportProjectZip } = require('../engine/output/export-api');
     try {
       if (kind === 'html') {
         const fontCss = (typeof opts.getExportFontCss === 'function' && opts.getExportFontCss()) || '';
@@ -1452,10 +1448,11 @@ function createApp(doc, opts = {}) {
   }
 
 
-  /** **9c.3 + W-2 (השלמת 9c.4):** מערך העמודים הקנוני של התוצאה הנוכחית —
-   * עמודי ה-PageModel בלבד (מקור האמת לגיאומטריה ולתוכן); אין עוד פרופיל
-   * legacy. כל צרכן ה-UI (מחוונים, מפת שבירות, סמן↔עמוד) נגזר מכאן — אין
-   * תלות סמויה ב-result.pages. */
+  /** **9c.3:** מערך העמודים הקנוני של התוצאה הנוכחית — לפי הפרופיל:
+   * unified ⇒ עמודי ה-PageModel בלבד (מקור האמת לגיאומטריה ולתוכן);
+   * legacy ⇒ result.pages (ענף 9c.4-marker — עד הסרת המנוע). כל צרכן
+   * ה-UI (מחוונים, מפת שבירות, סמן↔עמוד) נגזר מכאן — אין תלות סמויה
+   * ב-result.pages כשהפרופיל המאוחד פעיל. */
   function canonicalPages() {
     if (engineProfile === 'unified' && pageModelObj && Array.isArray(pageModelObj.pages)) return pageModelObj.pages;
     return result ? result.pages : [];
@@ -1529,37 +1526,14 @@ function createApp(doc, opts = {}) {
     // מפתחות שאינם ברישום RED עוברים דרך importImudSettings (טבלת ה-disposition)
     // במקום להישאר "לא מוכרים". ערכי ui-state נשמרים ב-_legacy-ui-state (לא אובדם).
     const { getSettingDefs } = require('../engine/core/settings-registry');
-    // **W-3 (27.11) — שחזור החסר מ-2ae45b9:** הסרת המנוע המאוחד (9c.4) מחקה בטעות
-    // גם את קריאת ה-adapter הזו; legacy-settings-map.js נשאר כמתאם ייבוא הגדרות
-    // בלבד (חוזה התכנית §0.1/§13.4) והסרת הקריאה כאן שברה את טעינת תבניות
-    // המדור הקודם — מפתחות IMUD הושמטו בשקט (s10-ui/S4.6 אדום מאז). הוחזר כמו שהיה.
-    const { importImudSettings } = require('../engine/core/legacy-settings-map');
     const migrated = migrate(raw.settings || {});
     const regKeys = new Set(getSettingDefs().map(r => r.id));
     const known = {};
-    const legacyKeys = {};
     for (const [k, v] of Object.entries(migrated)) {
       if (k === 'settings_version' || k.startsWith('_')) { known[k] = v; continue; }
-      (regKeys.has(k) ? known : legacyKeys)[k] = v;
+      if (regKeys.has(k)) known[k] = v;
     }
-    let legacySettings = {};
-    if (Object.keys(legacyKeys).length) {
-      // **EXT-9:** הקטלוג המוטמע (אם נטען) מועבר לפתרון מחסניות הגופן —
-      // "Guttman Rashi, Frank Ruhl Libre" ⇒ המשפחה המוטמעת בפועל, כך שהמדידה
-      // (font-metrics) והתצוגה משתמשות באותו גופן (מונע סחף live↔ייצוא EXT-13).
-      const availableFonts = (opts.imudLibrary && typeof opts.imudLibrary.catalogFamilies === 'function')
-        ? opts.imudLibrary.catalogFamilies() : undefined;
-      const imp = importImudSettings(legacyKeys, regKeys, {
-        contentHeightPx: currentContentHeightPx(),
-        ...(availableFonts ? { availableFonts } : {})
-      });
-      legacySettings = imp.settings; // כולל _legacy-ui-state (ערכי UI נשמרים)
-    }
-    // **F-J1 (W-5, 27.11):** sanitize בנתיב הייבוא — ערך בלתי-חוקי (enum/טווח)
-    // מתורגם דרך ה-disposition (ערך מעידן המקור) או חוזר לברירת המחדל; הפעולה
-    // מתועדת ב-issues. הערך הבלתי-חוקי אינו מגיע למנוע בשקט (נתיב אחד לכל קלט).
-    const { translateLegacyValue } = require('../engine/core/legacy-settings-map');
-    const { merged, unknownKeys, issues } = mergeWithDefaults({ ...legacySettings, ...known }, { sanitizeIllegal: true, translateValue: translateLegacyValue });
+    const { merged, unknownKeys, issues } = mergeWithDefaults(known);
     const unsupportedUnifiedKeys = [];
     if (branchProfile === 'unified') {
       for (const definition of getSettingDefs()) {
@@ -1599,9 +1573,8 @@ function createApp(doc, opts = {}) {
     const ledgerSlice = (result.ledger.issues || []).filter(rec => rec.page === pageIndex || String(rec.target || '').includes(`p${pageIndex}`));
     const traceSlice = (result.trace.events || []).filter(ev => ev.pageIndex === pageIndex);
     const findingsSlice = (result.report.findings || []).filter(f => Number(f.page) === pageIndex);
-    // **9c.3 + W-2 (השלמת 9c.4):** בפרופיל המאוחד הגיאומטריה והתוכן של העמוד
-    // מה-PageModel — מקור האמת. ענף התוצאה הגולמית שלהלן הוא אבחון הגנתי
-    // בלבד (תוצאה ללא מודל לא אמורה להיווצר במנוע היחיד) — לא רנדרר.
+    // **9c.3:** בפרופיל המאוחד הגיאומטריה והתוכן של העמוד מה-PageModel — מקור
+    // האמת. עמודי התוצאה הגולמיים אינם נצרכים כאן עוד (המורשת ממשיך כמקודם).
     if (engineProfile === 'unified' && pageModelObj && Array.isArray(pageModelObj.pages)) {
       const mp = pageModelObj.pages.find(p => p.index === pageIndex);
       if (!mp) return { error: `עמוד ${pageIndex} לא נמצא ב-PageModel` };
@@ -1842,14 +1815,12 @@ const registry = [
   K('footnote-columns', 'number', 1, P.NOTES, 'sel-fn-cols', ['layout/footnote-budget'], 'fx:fn-cols', { enum: [1, 2] }),
   K('footnote-separator-rule', 'enum', 'regular', P.NOTES, 'sel-fn-rule', ['core/materialize', 'core/page-model', 'output/pagemodel-dom-renderer', 'output/export-api'], 'fx:fn-rule', { enum: ['none', 'regular', 'circles', 'sparkle', 'star', 'diamond'], note: 'Unified: יוצר fn-rule decoration ו-pdfOps בתוך PageModel; שינוי מחייב עימוד מחדש' }),
   K('fn-layout-mode', 'enum', 'continuous', P.NOTES, 'sel-fn-layout', ['layout/dp-planner', 'output/dom-renderer'], 'fx:fn-layout', { enum: ['block', 'continuous'], note: 'S4.26 (דיווח משתמש 05.11): ברירת המחדל זרימה רציפה — הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה; block=כל הערה בלוק משלה' }),
-  // **S75 (בקשה 1 — 12.11) + W-4 (F-2.2, 27.11):** המשתמש בחר body-first כמנגנון
-  // היעד (הגוף ממלא את אזור הטקסט העיקרי תמיד; המרזב נכנס בחלל שמתחת לגוף
-  // עד תקרה יחסית 50%; המשכים זורמים לעמוד הבא בלי מספר). עד להשלמת הפורט
-  // (משימת "שלב Notes" הפתוחה) המנוע המאוחד מפעיל את שער תקציב-ההערות בלבד
-  // (האופציה legacy) — ולכן **ברירת המחדל משקפת את ההתנהגות בפועל** (אמת-
-  // חוזה לפי F-2.2/W-4; הפרופיל חוסם שינוי). בהשלמת הפורט תחזור ברירת המחדל
-  // ל-body-first כהכרעת S75.
-  K('fn-placement-mode', 'enum', 'legacy', P.NOTES, 'sel-fn-placement', ['core/pipeline'], 'fx:fn-placement', { enum: ['body-first', 'legacy'], unifiedSupport: false, note: 'W-4 (F-2.2, 27.11): ברירת המחדל = legacy — שער תקציב-ההערות של S74, שהוא המנגנון היחיד שהמנוע המאוחד מפעיל בפועל (2ae45b9+). body-first (בקשת S75 — הגוף ממלא, ההערות בחלל שמתחת, תקרה 50%) טרם הובל; בהשלמת הפורט (שלב Notes) תחזור ברירת המחדל ל-body-first. הפרופיל חוסם שינוי ההגדרה; pipeline מתעד את המצב באירוע מפורש בכל ריצה.' }),
+  // **S75 (בקשה 1 — 12.11, בחירת מנגנון הצבת ההערות):** ברירת המחדל = המנגנון
+  // החדש (body-first): הגוף ממלא את אזור הטקסט העיקרי תמיד; המרזב נכנס
+  // בחלל שמתחת לגוף עד תקרה יחסית (50% מגובה הזרימה בברירת המחדל); הערה
+  // שאינה נכנסת מוצבת חלקית כפי יכולת ההכלה והמשכה זורם לעמוד הבא;
+  // המשך אינו מקבל מספר. legacy = מנגנון S74 (שער תקציב + קיבולת מלאה).
+  K('fn-placement-mode', 'enum', 'body-first', P.NOTES, 'sel-fn-placement', ['core/pipeline'], 'fx:fn-placement', { enum: ['body-first', 'legacy'], unifiedSupport: false, note: 'S75 (בקשה 1): body-first — הגוף ממלא את העמוד וההערות בחלל שמתחת (תקרה 50%). מנוע יחיד (2ae45b9+): מנגנון body-first טרם הובל למנוע המאוחד — המנוע מפעיל את שער תקציב-ההערות (האופציה legacy) תמיד; הפרופיל חוסם שינוי ההגדרה עד השלמת הפורט (משימת השלמה פתוחה — שלב Notes). pipeline מתעד את המצב באירוע מפורש בכל ריצה.' }),
   K('endnotes-enabled', 'bool', false, P.NOTES, 'chk-endnotes', ['layout/endnote-pages'], 'fx:endnotes-on', { note: 'נגזר מ‑note-placement-mode=endnotes (D-39); קלט ישן true ממופה ל‑mode=endnotes בהגירה (project-io)' }),
   K('endnote-title-text', 'string', 'הערות', P.NOTES, 'inp-endnote-title', ['layout/endnote-pages'], 'fx:endnote-title'),
   K('endnote-columns', 'number', 1, P.NOTES, 'sel-en-cols', ['layout/endnote-pages'], 'fx:en-cols', { enum: [1, 2], note: 'S7.1.1: טור אחד או שניים בעמודי הערות' }),
@@ -1961,9 +1932,9 @@ const registry = [
   K('shaar-sub-enabled', 'bool', true, P.THEMES, 'chk-shaar-sub', ['decoration/shaar-pages'], 'fx:shaar-sub', { note: '03.11(ד): שער־משנה לכל פתיחת חלק — כמקור (show-sub-shaar=true); show-shaar-sub הישן נשמר כמתג נוסף (או)' }),
   // **03.11(ד): תוכן מובנה של עמודי השער (פורט renderMainShaar/renderSubShaar/renderBackShaar
   // של המקור): גופנים/גדלים לכל רכיב. ברירות המחדל = ערכי המקור אחרי הסרת המשפחות
-  // (F-J4: Lia Sgula כבר כן בספרייה; Livorna/Alpha* אינן — המקור נפל ל-Bellefair/
+  // שאינן זמינות (Lia Sgula/Livorna/Alpha* אינן בספרייה — המקור עצמו נפל ל-Bellefair/
   // David Libre/Frank Ruhl Libre דרך ה-fallbacks, ואלה מוטמעים כעת בנכסים).
-  K('shaar-title-font', 'font', 'Bellefair', P.THEMES, 'sel-shaar-title-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-title-font', { note: "מקור: f-sh-title=\"'Lia Sgula', 'Bellefair', serif\" — **F-J4 (W-5, 27.11): Lia Sgula מוטמעת כעת בספרייה (Sgula-Regular.ttf; imud-fonts.json)** — resolveStack בוחר אותה כשהקטלוג נטען; ברירת המחדל נשארת Bellefair מטעמי מדידה-עקבית" }),
+  K('shaar-title-font', 'font', 'Bellefair', P.THEMES, 'sel-shaar-title-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-title-font', { note: "מקור: f-sh-title=\"'Lia Sgula', 'Bellefair', serif\" — Lia Sgula אינה זמינה; Bellefair המוטמע" }),
   K('shaar-title-color', 'color', '#000000', P.THEMES, 'inp-shaar-title-color', ['layout/structural-stamps', 'core/materialize', 'output/dom-renderer'], 'fx:shaar-title-color', { note: 'S73: צבע כותרת הספר בשער — שחור כברירת מחדל' }),
   K('shaar-title-size-pt', 'number', 46, P.THEMES, 'rng-shaar-title-size', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-title-size', { min: 20, max: 90, note: 'מקור: s-sh-title=46' }),
   K('shaar-subtitle-font', 'font', 'David Libre', P.THEMES, 'sel-shaar-subtitle-font', ['output/shaar-content', 'output/dom-renderer'], 'fx:shaar-subtitle-font', { note: "מקור: f-sh-sub=\"'Livorna', 'David Libre', serif\"" }),
@@ -2103,13 +2074,8 @@ function migrate(raw) {
   return s;
 }
 
-/** איחוד עם defaults; אי‑התאמות מדווחות ולא מושמטות (audit deltas attributable).
- * **F-J1 (W-5, 27.11) — מצב sanitize לנתיבי הייבוא:** ערך בלתי-חוקי (enum/טווח)
- * מתורגם קודם דרך translateLegacyValue (ערך מעידן המקור); אם אין תרגום ישים —
- * נופל לברירת המחדל של הרישום. הפעולה מתועדת ב-issue (action) — הערך הבלתי-חוקי
- * לעולם אינו מגיע למנוע בשקט ("נתיב אחד לכל קלט"). ברירת המחדל (בלי opts)
- * משמרת את ההתנהגות ההיסטורית (kept) לצרכנים קיימים. */
-function mergeWithDefaults(migrated, opts = {}) {
+/** איחוד עם defaults; אי‑התאמות מדווחות ולא משמיטות (audit deltas attributable). */
+function mergeWithDefaults(migrated) {
   const defs = getDefaultSettings();
   // derivePlacementFlags **אחרי** האיחוד — mode הוא מקור־האמת; דגלים שהומרו מקובץ
   // v1 ישן (ללא mode) נגזרים שוב כך שלעולם לא ייווצר מצב סותר מאובדן הערות (BRZ-15).
@@ -2118,30 +2084,10 @@ function mergeWithDefaults(migrated, opts = {}) {
   // אינם "מפתחות לא מוכרים" — הם מבנה נתונים מתועד; ערכיהם עוברים במיזוג.
   const unknownKeys = Object.keys(migrated).filter(k => !(k in defs) && !k.startsWith('_'));
   const issues = [];
-  const sanitize = !!(opts && opts.sanitizeIllegal);
-  const translateValue = (opts && typeof opts.translateValue === 'function') ? opts.translateValue : null;
   for (const r of registry) {
-    let v = merged[r.id];
-    let illegal = false;
-    if (r.type === 'enum' && r.enum && !r.enum.includes(v)) illegal = true;
-    if (r.type === 'number' && ((r.min != null && v < r.min) || (r.max != null && v > r.max))) illegal = true;
-    if (!illegal) continue;
-    if (sanitize) {
-      let action = 'reverted-to-default';
-      let out = r.default;
-      if (translateValue) {
-        const t = translateValue(r.id, v, (opts && opts.translateCtx) || {});
-        if (t !== undefined) {
-          const okEnum = !(r.type === 'enum' && r.enum && !r.enum.includes(t));
-          const okRange = !(r.type === 'number' && ((r.min != null && t < r.min) || (r.max != null && t > r.max)));
-          if (okEnum && okRange) { out = t; action = 'translated-legacy-value'; }
-        }
-      }
-      merged[r.id] = out;
-      issues.push({ key: r.id, value: v, reason: r.type === 'enum' ? 'not-in-enum' : 'out-of-range', kept: false, action, applied: out });
-    } else {
-      issues.push({ key: r.id, value: v, reason: r.type === 'enum' ? 'not-in-enum' : 'out-of-range', kept: true });
-    }
+    const v = merged[r.id];
+    if (r.type === 'enum' && r.enum && !r.enum.includes(v)) issues.push({ key: r.id, value: v, reason: 'not-in-enum', kept: true });
+    if (r.type === 'number' && ((r.min != null && v < r.min) || (r.max != null && v > r.max))) issues.push({ key: r.id, value: v, reason: 'out-of-range', kept: true });
   }
   return { merged, unknownKeys, issues };
 }
@@ -2162,544 +2108,11 @@ function importProject(json) {
   const raw = typeof json === 'string' ? JSON.parse(json) : json;
   if (raw.format !== 'tora-typesetter-project') throw new Error('unknown project format');
   const migrated = migrate(raw.settings || {});
-  // **F-J1 (W-5):** ערך בלתי-חוקי בפרויקט מיובא — תרגום/החזרה לברירת מחדל, לא מעבר שקט למנוע.
-  const { translateLegacyValue } = require('../core/legacy-settings-map');
-  const { merged, unknownKeys, issues } = mergeWithDefaults(migrated, { sanitizeIllegal: true, translateValue: translateLegacyValue });
+  const { merged, unknownKeys, issues } = mergeWithDefaults(migrated);
   return { settings: merged, pages: raw.pages || [], meta: raw.meta || {}, unknownKeys, issues };
 }
 
 module.exports = { migrate, mergeWithDefaults, exportProject, importProject, MIGRATIONS };
-
-};
-__modules["src/engine/core/legacy-settings-map.js"] = function (require, module, exports) {
-// src/engine/core/legacy-settings-map.js — S4.5-ד: מיפוי מלא של הגדרות IMUD_TORANI (03.11)
-'use strict';
-
-/**
- * **רקע (ביקורת 03.11, סקירה 2):** תוכנית העבודה (S4) דרשה רישום־על של כל
- * ההגדרות מכל הגרסאות והגירה ללא אובדן. בפועל נבנה רישום RED עקבי אך 264
- * מפתחות default_settings.json של המקור לא קיבלו disposition מפורש. המודול
- * הזה הוא טבלת האמת: **לכל מפתח מקור** — מיפוי למפתח RED (מלא/בטרנספורם),
- * איחוד, מצב-UI (ללא אפקט מנועתי), או הסרה מנומקת (עם הפניית מעקב).
- *
- * עקרונות:
- * - אין מפתח "לא מוכר" — הכל מקבל שורה; שער הקבלה: 100% disposition.
- * - ערכי המקור מוחלים בעת ייבוא (importImudSettings); ברירות המחדל של RED
- *   עצמן נשארות כהחלטות RED המתועדות — ההחלפה מפורשת והפיכה.
- * - טרנספורמים מתועדים (יחידות/סמנטיקה), לא רק שמות.
- */
-
-/** חילוץ משפחת הגופן הראשונה מערך CSS: "'Guttman Rashi', 'Frank Ruhl Libre', serif" ⇒ "Guttman Rashi". */
-function firstFamily(css) {
-  const m = String(css || '').match(/'([^']+)'/);
-  return m ? m[1] : String(css || '').split(',')[0].trim();
-}
-
-/** **03.11(ד):** פתרון מחסנית גופנים של המקור מול הספרייה הזמינה.
- * ערכי המקור הם מחסניות CSS ("'AlphaBlack', 'David Libre', serif") — המשפחה
- * הראשונה בדרך כלל אינה מותקנת והדפדפן נופל להמשך הרשימה. כאן מחליטים מראש:
- * המשפחה הראשונה שקיימת ב-availableFonts (קטלוג הספרייה שהועבר ב-ctx) היא
- * הערך; בלי קטלוג — מחזירים את הראשונה (התנהגות firstFamily הישנה). */
-function resolveStack(css, ctx) {
-  const raw = String(css || '').replace(/'/g, '');
-  const parts = raw.split(',').map(s => s.trim()).filter(Boolean)
-    .filter(p => !/^(serif|sans-serif|monospace|cursive|fantasy|system-ui)$/i.test(p));
-  if (!parts.length) return String(css || '');
-  const avail = ctx && ctx.availableFonts;
-  if (avail instanceof Set) {
-    for (const p of parts) if (avail.has(p)) return p;
-  }
-  return parts[0];
-}
-
-/** **S4.6 (ביקורת 3):** אחוזים ⇒ פיקסלים לפי גובה תיבת התוכן **בפועל** שנמסר
- * בהקשר הייבוא (ctx.contentHeightPx). ברירת המחדל 1040px (A4 של RED) נשמרת
- * לתאימות — אך מסלול הטעינה ב-UI מעביר את הגיאומטריה האמיתית של המסמך. */
-function pctToPx(v, ctxOrHeight) {
-  const h = (typeof ctxOrHeight === 'number' && ctxOrHeight > 0)
-    ? ctxOrHeight
-    : (ctxOrHeight && Number(ctxOrHeight.contentHeightPx) > 0)
-      ? Number(ctxOrHeight.contentHeightPx)
-      : 1040;
-  return Math.round(h * (parseFloat(v) / 100));
-}
-
-/** סגנונות פתיחה של המקור ⇒ מצבי RED (headings-escort). */
-const OPEN_MODE_MAP = {
-  'new_page_1col': 'new-page',
-  'span_1col': 'full-width',
-  'inline_2col': 'regular',
-  'side_note': 'side-note',
-  'sub_shaar': 'new-page' // שער-משנה מובנה: show-shaar-sub נלווה ב-merge
-};
-
-/** **S77 (בקשה 3):** סוגי סלוטי כותרת-עליונה של המקור ⇒ מקורות header-*.
- * ערך לא מוכר (למשל 'spear' — עיטור חנית של v19) ⇒ undefined — אינו דורס
- * את ברירת המחדל של RED (הייבוא מדלג עליו; הערך הגולמי נשמר ב-_imudRaw). */
-function hdrSlotTypeMap(v) {
-  const t = String(v == null ? '' : v).trim();
-  switch (t) {
-    case 'book_title_split_r': return 'book-name-first-half';
-    case 'book_title_split_l': return 'book-name-second-half';
-    case 'h2_without_siman': return 'h2';
-    case 'h2': return 'h2';
-    case 'h1': return 'h1';
-    case 'book_title': return 'book-name';
-    case 'custom': return 'custom';
-    case 'none':
-    case '': return 'none';
-    default: return undefined;
-  }
-}
-
-/** עמדות עיצוב-מפריד של המקור ⇒ סגנונות RED. */
-const DIVIDER_MAP = { 'none': 'none', 'thin': 'thin', 'dashed': 'dashed', 'double': 'double', 'spear': 'thin' };
-
-/** מיקומי מספור של המקור ⇒ RED. */
-const NUMPOS_MAP = {
-  // **S5.1:** ערכי האינום של RED בלבד — בעבר יוצרו 'bottom-outer'/'bottom-left'/
-  // 'bottom-right'/'top-center'/'top-outer' שאינם ברישום והוגדרים בשקט לברירת
-  // המחדל. 'outer' חדש: מיקום חיצוני מודע-זוגיות — כמו pos-outer של המקור
-  // (typesetter.js:506 + style.css:1367-1369: odd=flex-end=שמאל, even=ימין).
-  'bottom_center': 'bottom-center', 'bottom_outer': 'outer', 'bottom_left': 'outer-left', 'bottom_right': 'outer-right',
-  'top_center': 'top', 'top_outer': 'top', 'in_header': 'in-header'
-};
-
-/**
- * טבלת ה-disposition. kind:
- *  - 'mapped'   → to (מפתח RED) + transform אופציונלי — ערך מוחל בייבוא
- *  - 'merged'   → מוזג למפתח אחר/כמה מפתחות — מתועד ב-reason
- *  - 'ui-state' → מצב פאנל של האפליקציה הישנה; נשמר כנתון, אין אפקט מנועתי
- *  - 'removed'  → לא ב-RED; סיבה מנומקת + מזהה מעקב (ISSUE_REGISTRY)
- */
-const DISPOSITIONS = {
-  // ============ טיפוגרפיה של הגוף ============
-  'font-body': { kind: 'mapped', to: 'body-font', transform: resolveStack, reason: 'מחסנית CSS של המקור — נפתרת מול הקטלוג המוטמע כשהוא זמין (EXT-9: גוף המקור "\'Guttman Rashi\', \'Frank Ruhl Libre\'" ⇒ Frank Ruhl Libre המוטמע); בלי קטלוג — המשפחה הראשונה (התנהגות היסטורית). בלי זה המדידה נפלה לטבלה בעוד התצוגה בגופן אמיתי — סחף live↔ייצוא מסוג EXT-13' },
-  'size-body': { kind: 'mapped', to: 'body-font-size-pt', transform: parseFloat, reason: 'pt (המקור 12; RED 14 — ההפרש מתועד כהחלטת RED)' },
-  'line-height-body': { kind: 'mapped', to: 'body-line-height', transform: parseFloat },
-  // **F09 (parity iteration-002):** גודל הסוגריים של המקור — הגדרת ספר אמיתית
-  // (s-paren-mode='relative', s-paren='-2' ⇒ size-body−2 = 10pt בגוף 12). עד כאן
-  // נפלה תחת כלל המשפחה /^s-/ (ui-state) בטענה "מומש במפתחות RED המקבילים" —
-  // אך שום מיפוי לא הציב ערך, והמנוע המאוחד מדד והדפיס סוגריים בגודל הגוף
-  // המלא (12pt מול 10pt במקור; נמדד: ‎−11 עמודים בספר ההשוואה). ההמרה למנגנון
-  // האחיד הקיים — paren-style-scale (advanceFactor במדידה + סקאלת גודל ברינדור,
-  // מקור אחד) — משחזרת את החוזה: גופן הגוף (f-paren ריק), גודל body+delta.
-  's-paren': {
-    kind: 'mapped', to: 'paren-style-scale',
-    transform: (v, ctx) => {
-      if (!ctx || ctx.parenMode !== 'relative') return undefined; // S77: מצב לא מוכר — אין דריסה
-      const bodyPt = Number(ctx.bodyPt) > 0 ? Number(ctx.bodyPt) : 12;
-      const delta = parseFloat(v);
-      if (!Number.isFinite(delta)) return undefined;
-      const scale = (bodyPt + delta) / bodyPt;
-      return Math.max(0.8, Math.min(1, scale)); // טווח הרישום 0.8–1
-    },
-    reason: 'F09 (parity iter-002): סוגריים יחסיות במקור (‎-2pt על גוף 12 ⇒ 10pt) — מומר ל-scale של מנגנון RED האחיד (מדידה+רינדור יחד); בלי זה הסוגריים בגודל הגוף המלא'
-  },
-  's-paren-mode': { kind: 'ui-state', reason: 'נצרך על ידי מיפוי s-paren (relative=דלתא-pt מגוף הטקסט); נשמר כנתון' },
-  'body-last-line-align': { kind: 'mapped', to: 'body-last-line-align' },
-
-  // ============ מילה ראשונה ============
-  'drop-word-mode': { kind: 'mapped', to: 'first-word-mode', transform: (v) => ({ 'window': 'drop', 'drop': 'drop', 'inline': 'inline', 'bold': 'bold', 'none': 'none' }[v] || 'drop'), reason: 'window ⇒ drop (אותו מנגנון חלון)' },
-  'drop-word-count': { kind: 'mapped', to: 'first-word-length', transform: parseInt },
-  'drop-word-min-lines': { kind: 'mapped', to: 'first-word-threshold-lines', transform: parseInt, reason: 'המקור 2; RED 3 — הייבוא משחזר את המקור' },
-  'font-first-word': { kind: 'mapped', to: 'first-word-font', transform: firstFamily, reason: 'S4.5: מפתח חדש ב-RED (היה חסר)' },
-  'size-first-word': { kind: 'mapped', to: 'first-word-size-em', transform: parseFloat, reason: 'S4.5: מפתח חדש ב-RED (היה כפול 2 מוקשה)' },
-
-  // ============ דיבור המתחיל ============
-  'auto-dh': { kind: 'mapped', to: 'dh-auto-detect', transform: (v) => v === true || v === 'true' },
-  'font-dh': { kind: 'mapped', to: 'dh-font', transform: firstFamily },
-
-  // ============ מצבי כותרות H0–H7 ============
-  'mode-h0': { kind: 'mapped', to: 'heading-0-mode', transform: (v) => OPEN_MODE_MAP[v] || 'full-width' },
-  'mode-h1': { kind: 'merged', to: 'heading-1-mode', transform: (v) => OPEN_MODE_MAP[v] || 'new-page', reason: 'sub_shaar ⇒ new-page + show-shaar-sub=true (השער המשנה מובנה ב-S8)' },
-  'mode-h2': { kind: 'mapped', to: 'heading-2-mode', transform: (v) => OPEN_MODE_MAP[v] || 'full-width' },
-  'mode-h3': { kind: 'mapped', to: 'heading-3-mode', transform: (v) => OPEN_MODE_MAP[v] || 'full-width' },
-  'mode-h4': { kind: 'mapped', to: 'heading-4-mode', transform: (v) => OPEN_MODE_MAP[v] || 'regular' },
-  'mode-h5': { kind: 'mapped', to: 'heading-5-mode', transform: (v) => OPEN_MODE_MAP[v] || 'regular' },
-  'mode-h6': { kind: 'mapped', to: 'heading-6-mode', transform: (v) => OPEN_MODE_MAP[v] || 'regular' },
-  'mode-h7': { kind: 'mapped', to: 'heading-7-mode', transform: (v) => OPEN_MODE_MAP[v] || 'side-note' },
-  // **S4.20 (סגירת EXT-15/16):** שלושת המפתחות ממומשים עתה בפרופיל ה-legacy
-  // (legacy-imud-flow): ‏ensureOddPageStart כללי (הליכה על הסדר הסופי לפני
-  // עמוד פתיחת-מקטע מסומן שנוחת בגב) + המונה האוטומטי והאיפוס (autoSimanH2/
-  // resetSimanOnH1) — היו קיימים ב-flow אך סומנו בטעות כ-removed.
-  'odd-h0': { kind: 'ui-state', reason: 'פתיחת H0 בעמוד אי-זוגי — ensureOddPageStart של המקור, מיושם בהרכבת ה-legacy (עמוד ריק לפני פתיחת מקטע בגב) — S4.20', issue: 'EXT-15' },
-  'odd-h1': { kind: 'ui-state', reason: 'פתיחת H1 בעמוד אי-זוגי — כמו odd-h0 (החליף את המקרה הפרטי של שער-המשנה) — S4.20', issue: 'EXT-15' },
-  'odd-h2': { kind: 'ui-state', reason: 'פתיחת H2 בעמוד אי-זוגי — ברירת המחדל של המקור כבויה — S4.20', issue: 'EXT-15' },
-  'h2-auto-siman': { kind: 'ui-state', reason: 'מספור סימן אוטומטי (א-ב-ג) — מיושם ב-legacy-imud-flow (autoSimanH2) — S4.20/EXT-16' },
-  'h2-reset-siman': { kind: 'ui-state', reason: 'איפוס מונה סימנים לכל פרק — מיושם ב-legacy-imud-flow (resetSimanOnH1) — S4.20/EXT-16' },
-  'h2-top-distance': { kind: 'mapped', to: 'h2-top-offset', transform: pctToPx, reason: '22% מגובה תיבת התוכן (1040px ב-A4 של RED) ⇒ פיקסלים' },
-
-  // ============ מזהי הערות (S4.5-ג — הוטמעו זה עתה) ============
-  'en-line-prefix': { kind: 'mapped', to: 'en-line-prefix' },
-  'fn-delim-open': { kind: 'mapped', to: 'fn-delim-open' },
-  'fn-delim-close': { kind: 'mapped', to: 'fn-delim-close' },
-
-  // ============ **S4.6 (ביקורת 3):** הגדרות עיצוב אמיתיות שסווגו בטעות כ-ui-state ============
-  // לא לסווג משפחה שלמה לפי קידומת בלבד — לכל מפתח עם יעד RED קיים יש מיפוי מפורש.
-  // ההגדרות האלה מגיעות עכשיו למנוע בפועל (heading-N-font/size, header-slot, שער).
-  'f-h0': { kind: 'mapped', to: 'heading-0-font', transform: resolveStack, reason: 'S4.6: גופן כותרת H0 — קיים ברישום RED (heading-0-font)' },
-  'f-h1': { kind: 'mapped', to: 'heading-1-font', transform: resolveStack, reason: 'S4.6: גופן H1' },
-  'f-h2': { kind: 'mapped', to: 'heading-2-font', transform: resolveStack, reason: 'S4.6: גופן H2' },
-  'f-h3': { kind: 'mapped', to: 'heading-3-font', transform: resolveStack, reason: 'S4.6: גופן H3' },
-  'f-h4': { kind: 'mapped', to: 'heading-4-font', transform: resolveStack, reason: 'S4.6: גופן H4' },
-  'f-h5': { kind: 'mapped', to: 'heading-5-font', transform: resolveStack, reason: 'S4.6: גופן H5' },
-  'f-h6': { kind: 'mapped', to: 'heading-6-font', transform: resolveStack, reason: 'S4.6: גופן H6' },
-  'f-h7': { kind: 'mapped', to: 'heading-7-font', transform: resolveStack, reason: 'S4.6: גופן H7' },
-  's-h0': { kind: 'mapped', to: 'heading-0-size-pt', transform: parseFloat, reason: 'S4.6: גודל H0 (26 ⇒ 26pt; חריגת טווח מדווחת במיזוג ולא מושמטת)' },
-  's-h1': { kind: 'mapped', to: 'heading-1-size-pt', transform: parseFloat, reason: 'S4.6: גודל H1 (50 במקור — נשמר נאמן למקור; חריגת טווח מדווחת)' },
-  's-h2': { kind: 'mapped', to: 'heading-2-size-pt', transform: parseFloat, reason: 'S4.6: גודל H2' },
-  's-h3': { kind: 'mapped', to: 'heading-3-size-pt', transform: parseFloat, reason: 'S4.6: גודל H3' },
-  's-h4': { kind: 'mapped', to: 'heading-4-size-pt', transform: parseFloat, reason: 'S4.6: גודל H4' },
-  's-h5': { kind: 'mapped', to: 'heading-5-size-pt', transform: parseFloat, reason: 'S4.6: גודל H5' },
-  's-h6': { kind: 'mapped', to: 'heading-6-size-pt', transform: parseFloat, reason: 'S4.6: גודל H6' },
-  's-h7': { kind: 'mapped', to: 'heading-7-size-pt', transform: parseFloat, reason: 'S4.6: גודל H7 (6 במקור; חריגת טווח מדווחת)' },
-  'f-note-body': { kind: 'mapped', to: 'f-note-body-font', transform: (v, ctx) => {
-    // **S74 (בעיה 5 — בקשת משתמש 12.11):** ברירת המחדל של המקור בהגדרות
-    // ('Frank Ruhl Libre') לא חוברה לרינדור בפועל בגרסה הישנה — גוף ההערה
-    // רונדר ב-Assistant ExtraLight (נמדד בייחוס עמ' 31/37: כל שורות גוף
-    // ההערה Assistant-ExtraLight 8.5pt; הסמן בלבד FRL 8pt). הרינדור הוא
-    // המפרט: ערך ברירת המחדל מתורגם לגופן הרינדור האמיתי; ערך שהמשתמש
-    // בחר במפורש (כל ערך אחר) נשמר כמו שהוא דרך resolveStack.
-    return /Frank Ruhl Libre/i.test(String(v || '')) ? 'אסיסטנט קל מאוד' : resolveStack(v, ctx);
-  }, reason: 'S74: גוף ההערה — ברירת המחדל = הרינדור בפועל של המקור (Assistant ExtraLight, נמדד בייחוס)' },
-  'f-hdr-r': { kind: 'mapped', to: ['header-recto-right-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט ימין בכותרת עליונה (recto)' },
-  'f-hdr-c': { kind: 'mapped', to: ['header-recto-center-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט מרכז (recto)' },
-  'f-hdr-l': { kind: 'mapped', to: ['header-recto-left-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט שמאל (recto)' },
-  's-hdr-r': { kind: 'mapped', to: ['header-recto-right-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט ימין (recto)' },
-  's-hdr-c': { kind: 'mapped', to: ['header-recto-center-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט מרכז (recto)' },
-  's-hdr-l': { kind: 'mapped', to: ['header-recto-left-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט שמאל (recto)' },
-  'f-hdr-verso-r': { kind: 'mapped', to: ['header-verso-right-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט ימין (verso)' },
-  'f-hdr-verso-c': { kind: 'mapped', to: ['header-verso-center-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט מרכז (verso)' },
-  'f-hdr-verso-l': { kind: 'mapped', to: ['header-verso-left-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט שמאל (verso)' },
-  's-hdr-verso-r': { kind: 'mapped', to: ['header-verso-right-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט ימין (verso)' },
-  's-hdr-verso-c': { kind: 'mapped', to: ['header-verso-center-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט מרכז (verso)' },
-  's-hdr-verso-l': { kind: 'mapped', to: ['header-verso-left-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט שמאל (verso)' },
-  // **S77 (בקשה 3 — חיבור הגדרות הכותרת העליונה לנתיב המורשת):** סוגי הסלוטים
-  // של המקור (hdr-{r,c,l,verso-*}-type) ממופים למקורות header-{side}-{pos}-source.
-  // book_title_split_r/l = החצאים הקבועים (לפי מילים, ללא תלות בצד — ההחלפה
-  // היא hdr-alternating נפרד) ⇒ ההתנהגות המכוילת של המנוע המורשת משוחזרת
-  // במדויק דרך ההגדרות החיות. ערך לא מוכר (למשל 'spear' של v19 — עיטור) אינו
-  // דורס את ברירת המחדל של RED (transform מחזיר undefined ⇒ דילוג).
-  'hdr-r-type': { kind: 'mapped', to: ['header-recto-right-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט ימין (recto) ⇒ מקור חי בנתיב המורשת' },
-  'hdr-l-type': { kind: 'mapped', to: ['header-recto-left-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט שמאל (recto) ⇒ מקור חי בנתיב המורשת' },
-  'hdr-c-type': { kind: 'mapped', to: ['header-recto-center-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט מרכז (recto) ⇒ מקור חי בנתיב המורשת' },
-  'hdr-verso-r-type': { kind: 'mapped', to: ['header-verso-right-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט ימין (verso) ⇒ מקור חי בנתיב המורשת' },
-  'hdr-verso-l-type': { kind: 'mapped', to: ['header-verso-left-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט שמאל (verso) ⇒ מקור חי בנתיב המורשת' },
-  // hdr-verso-c-type אינו ממופה בכוונה: הייחוס המכויל מציג את הפרק (h2) במרכז
-  // גם בעמודי verso (הערך 'h1' בקובץ המקור אינו משתקף בפלט המכויל); שליטה
-  // חיה דרך header-verso-center-source (ברירת המחדל שלו h2).
-  'hdr-r-custom': { kind: 'mapped', to: ['header-recto-right-custom-text'], reason: 'S77: טקסט מותאם סלוט ימין (recto)' },
-  'hdr-c-custom': { kind: 'mapped', to: ['header-recto-center-custom-text'], reason: 'S77: טקסט מותאם סלוט מרכז (recto)' },
-  'hdr-l-custom': { kind: 'mapped', to: ['header-recto-left-custom-text'], reason: 'S77: טקסט מותאם סלוט שמאל (recto)' },
-  'hdr-verso-r-custom': { kind: 'mapped', to: ['header-verso-right-custom-text'], reason: 'S77: טקסט מותאם סלוט ימין (verso)' },
-  'hdr-verso-c-custom': { kind: 'mapped', to: ['header-verso-center-custom-text'], reason: 'S77: טקסט מותאם סלוט מרכז (verso)' },
-  'hdr-verso-l-custom': { kind: 'mapped', to: ['header-verso-left-custom-text'], reason: 'S77: טקסט מותאם סלוט שמאל (verso)' },
-  'inp-book-title': { kind: 'mapped', to: 'imud-book-title', reason: 'S4.6: כותרת הספר — נצרכת בשער הראשי (dom-renderer)' },
-  'inp-book-subtitle': { kind: 'mapped', to: 'imud-book-subtitle', reason: 'S4.6: כותרת־משנה — נצרכת בשער הראשי' },
-  // **03.11(ד) — דיווח משתמש 3 / בקשת על מה-01.11: "הטמע את כל ברירות המחדל
-  // של הפרויקט המקורי".** מתגי השערים ונתוני הספר נפלו ל-ui-state לפי כלל
-  // הקידומת הגס (^(show|inp)-) והושמטו מהמנוע — לכן "אין עמודי שער" גם אחרי
-  // ייבוא ברירות המחדל. עתה מיפוי מפורש למפתחות RED האמיתיים.
-  'show-main-shaar': { kind: 'mapped', to: 'shaar-main-enabled', transform: (v) => v !== false && v !== 'false', reason: '03.11(ד): מתג שער ראשי — ברירת המחדל במקור true (השער חלק ממבנה הספר, לא אופציה)' },
-  'show-sub-shaar': { kind: 'mapped', to: 'shaar-sub-enabled', transform: (v) => v !== false && v !== 'false', reason: '03.11(ד): מתג שער־משנה — ברירת מחדל true כמקור' },
-  'show-back-shaar': { kind: 'mapped', to: 'shaar-back-enabled', transform: (v) => v !== false && v !== 'false', reason: '03.11(ד): מתג שער אחורי — ברירת מחדל true כמקור' },
-  'f-sh-title': { kind: 'mapped', to: 'shaar-title-font', transform: resolveStack, reason: '03.11(ד): גופן כותרת השער (מקור: Lia Sgula → Bellefair המוטמע)' },
-  's-sh-title': { kind: 'mapped', to: 'shaar-title-size-pt', transform: parseFloat, reason: '03.11(ד): גודל כותרת השער (מקור: 46)' },
-  'f-sh-sub': { kind: 'mapped', to: 'shaar-subtitle-font', transform: resolveStack, reason: '03.11(ד): גופן כותרת־משנה בשער (מקור: Livorna → David Libre)' },
-  's-sh-sub': { kind: 'mapped', to: 'shaar-subtitle-size-pt', transform: parseFloat, reason: '03.11(ד): גודל כותרת־משנה (מקור: 21)' },
-  'f-sh-desc': { kind: 'mapped', to: 'shaar-desc-font', transform: resolveStack, reason: '03.11(ד): גופן התיאור (מקור: Livorna → Frank Ruhl Libre)' },
-  's-sh-desc': { kind: 'mapped', to: 'shaar-desc-size-pt', transform: parseFloat, reason: '03.11(ד): גודל התיאור (מקור: 12)' },
-  'f-sh-sec': { kind: 'mapped', to: 'shaar-sections-font', transform: resolveStack, reason: '03.11(ד): גופן פרטי המהדורא (מקור: David Libre)' },
-  's-sh-sec': { kind: 'mapped', to: 'shaar-sections-size-pt', transform: parseFloat, reason: '03.11(ד): גודל פרטי המהדורא (מקור: 11.5)' },
-  'f-sh-author': { kind: 'mapped', to: 'shaar-author-font', transform: resolveStack, reason: '03.11(ד): גופן שם המחבר (מקור: David Libre)' },
-  's-sh-author': { kind: 'mapped', to: 'shaar-author-size-pt', transform: parseFloat, reason: '03.11(ד): גודל שם המחבר (מקור: 15)' },
-  'f-sh-year': { kind: 'mapped', to: 'shaar-year-font', transform: resolveStack, reason: '03.11(ד): גופן השנה/בס״ד (מקור: David Libre)' },
-  's-sh-year': { kind: 'mapped', to: 'shaar-year-size-pt', transform: parseFloat, reason: '03.11(ד): גודל השנה (מקור: 12)' },
-  'inp-book-desc': { kind: 'mapped', to: 'imud-book-desc', reason: '03.11(ד): תיאור הספר בשער (מקור: inp-book-desc ← «נושא מפורט»)' },
-  'inp-book-sections': { kind: 'mapped', to: 'imud-book-sections', reason: '03.11(ד): פרטי מהדורא בשער (מקור: inp-book-sections ← «פרטי מהדורא»)' },
-  'inp-book-author': { kind: 'mapped', to: 'imud-book-author', reason: '03.11(ד): שם המחבר בשערים (מקור: inp-book-author ← «שם המחבר»)' },
-  'inp-book-year': { kind: 'mapped', to: 'imud-book-year', reason: '03.11(ד): מקום ושנה בשערים (מקור: inp-book-year ← «מקום ושנת הוצאה»)' },
-  'inp-back-shaar-text': { kind: 'mapped', to: 'shaar-back-text', reason: '03.11(ד): טקסט השער האחורי (שמירת זכויות)' },
-
-  // ============ הערות שוליים ============
-  // **S5.2 (S2):** מפתח RED-מקורי שנכנס בטעות לנכס ברירות-המחדל המוטמע
-  // (הנכס = v21 + שתי דריסות D-91 מתועדות + מפתח זה) — רישום disposition
-  // מפורש במקום 'unmapped' בייבוא החי.
-  'fn-bar-max-height-px': { kind: 'removed', reason: 'מפתח RED-מקורי (תקרת מרזב ההערות) — נקרא מהמרשם עצמו; אינו מפתח מקור', issue: 'S5.2-S2' },
-  'fn-columns': { kind: 'mapped', to: 'footnote-columns', transform: parseInt },
-  'fn-layout-mode': { kind: 'mapped', to: 'fn-layout-mode' },
-  // **S5.2 (S2):** transform חסר — 'siman' של המקור נחת כערך לא-חוקי בצד
-  // RED (הenum: continuous/page/section/part) והפאנל הציג ערך שבור.
-  'fn-reset-mode': { kind: 'mapped', to: 'footnote-reset-policy', transform: (v) => ({ 'siman': 'section', 'chapter': 'section', 'page': 'page', 'continuous': 'continuous', 'part': 'part' }[v] || 'page') },
-  'fn-title-text': { kind: 'mapped', to: 'endnote-title-text' },
-  'note-numbering-style': { kind: 'mapped', to: 'footnote-marker-style', transform: (v) => ({ 'gematria': 'hebrew', 'hebrew': 'hebrew', 'decimal': 'decimal', 'asterisk': 'asterisk', 'parenthesis': 'parenthesis' }[v] || 'hebrew') },
-  // **S5.2 (S2):** note-marker-type ('super') אינו סגנון סמן — הוא העלאת
-  // בסיס (עניין רינדור). בעבר מופה merged ל-footnote-marker-style בלי
-  // transform והערך הגולמי 'super' דרס את הסגנון החוקי (ערך מחוץ ל-enum;
-  // ניצל רק בזכות ה-default-branch של markerFor). כעת ui-state — נשמר
-  // להצגה, לא מזהם את ה-enum.
-  'note-marker-type': { kind: 'ui-state', reason: 'סוג הסמן (super) — עניין העלאת-בסיס ברינדור, לא סגנון מספור; הסגנון מגיע מ-note-numbering-style' },
-  'note-marker-size': { kind: 'ui-state', reason: 'גודל מילת-הסמן בגוף (ברירת מחדל 8) — מיושם בפרויקטור ה-legacy (S4.20/EXT-17)', issue: 'EXT-17' },
-  'note-listing-num-size': { kind: 'ui-state', reason: 'גודל סמן הרישום ברשימת ההערות — מיושם בפרויקטור ה-legacy — S4.20/EXT-17' },
-  'note-num-separator': { kind: 'ui-state', reason: 'המפריד אחרי מספר ההערה (ברירת מחדל .) — מיושם ב-markerWord — S4.20/EXT-17; Iteration-003: נצרך גם ב-markerFor(hebrew) של המאוחד' },
-  // **Iteration-003 (legacy parity — נמדד בייחוס):** המנוע הישן אינו מצייר חוט
-  // מפריד מעל מרזב ההערות (עמודי ההערות ב-PDF הייחוס נפתחים ישירות בסמן,
-  // ללא כל קו/כוכב). ערך המקור נשמר ב-_imudRaw; הייבוא מכבה את הציור.
-  'note-rule-style': { kind: 'mapped', to: 'footnote-separator-rule', transform: () => 'none', reason: 'Iteration-003: הייחוס ללא חוט מפריד — הערך הגולמי נשמר ב-_imudRaw בלבד' },
-  'note-header-orn-r': { kind: 'removed', reason: 'עיטור בצד ימין של כותרת עמודי-ההערות — טרם ממומש ב-RED', issue: 'EXT-4' },
-  'note-header-orn-l': { kind: 'removed', reason: 'עיטור בצד שמאל של כותרת עמודי-ההערות — טרם ממומש ב-RED', issue: 'EXT-4' },
-
-  // ============ הגנות שורות ============
-  'avoid-orphans': { kind: 'merged', to: 'prevent-orphans-top', transform: (v) => v !== false, reason: 'RED מפריד יתומים עליונים/תחתונים בנפרד' },
-  'avoid-widows': { kind: 'merged', to: 'prevent-widows-top', transform: (v) => v !== false, reason: 'כנ"ל' },
-  'avoid-runt-word': { kind: 'mapped', to: 'runt-min-width-pct', transform: (v) => (v === false || v === 'false') ? 0 : 20, reason: 'בוליאני המקור ⇒ סף אחוז ב-RED (כבוי=0; דלוק=20%)' },
-
-  // ============ עיטורים ============
-  'h2-ornament-set': { kind: 'merged', to: 'h2-orn-top', transform: (v) => v !== 'none' ? v : 'none', reason: 'ערכת עיטורים כללית ⇒ העיטור העליון; ערכות IMUD דרך imud-orn-*' },
-  'h2-ornament-top-style': { kind: 'mapped', to: 'h2-orn-top' },
-  'h2-ornament-bottom-style': { kind: 'mapped', to: 'h2-orn-bottom' },
-  'h2-title-orn-mode': { kind: 'mapped', to: 'h2-orn-scope', onlyIfAbsent: true, transform: (v) => ({ 'sign': 'sign', 'title': 'title', 'both': 'both', 'none': 'none' }[v] || 'both'), reason: 'S4.6 (ביקורת 3): none נשמר כ-none — בעבר הומר ל-both (היפוך הגדרת המקור); enum RED כעת כולל none. onlyIfAbsent: כשהקובץ מכיל גם את המפתח הישיר h2-orn-scope — הישיר גובר (קדימות מפורשת, לא סדר איטרציה)' },
-  'h2-title-ornament-top-style': { kind: 'merged', to: 'h2-orn-top', reason: 'עיטור כותרת-הסימן — מוזג לעיטור הסימן (RED מאחד)' },
-  'h2-title-ornament-bottom-style': { kind: 'merged', to: 'h2-orn-bottom', reason: 'עיטור כותרת-הסימן התחתון — מוזג לעיטור הסימן ב-RED' },
-  'h2-title-ornament-r': { kind: 'mapped', to: 'h2-orn-side' },
-  'h2-title-ornament-l': { kind: 'merged', to: 'h2-orn-side', reason: 'RED מציב עיטור צד אחד לשני הצדדים' },
-  'h2-orn-fit-text': { kind: 'mapped', to: 'h2-orn-fit-to-text' },
-  'h3-ornament-set': { kind: 'merged', to: 'h3-side-orn', reason: 'ערכת H3 ⇒ עיטור הצד של H3' },
-  'h3-ornament-r': { kind: 'mapped', to: 'h3-side-orn' },
-  'h3-ornament-l': { kind: 'merged', to: 'h3-side-orn', reason: 'עיטור צד שמאל של H3 — RED מאחד לעיטור צד יחיד' },
-  'section-divider-style': { kind: 'merged', to: 'imud-divider', reason: 'מפרידי סעיפים מעוצבים — דרך ספריית IMUD (image) או heading-dividers-h3-h6; spear ⇒ עיצוב ספרייה' },
-  'heading-divider-h3': { kind: 'mapped', to: 'heading-dividers-h3-h6', transform: (v) => v !== 'none' },
-  'h2-orn-scope': { kind: 'mapped', to: 'h2-orn-scope' },
-  'col-divider-style': { kind: 'mapped', to: 'column-divider-style', transform: (v) => DIVIDER_MAP[v] || 'none' },
-
-  // ============ מספור ============
-  'page-num-position': { kind: 'mapped', to: 'page-num-position', transform: (v) => NUMPOS_MAP[v] || 'bottom-center' },
-  // **F-J2 (W-5, 27.11):** 'gematria' של המקור = העברית-החשופה של RED (D-108) —
-  // תרגום בשער הייבוא במקום ענף default נסתר ב-folio.js; הערך הבלתי-חוקי
-  // כבר אינו מגיע למנוע (נבדק גם ב-sanitize של הייבוא).
-  'page-num-format': { kind: 'mapped', to: 'page-num-format', transform: (v) => (v === 'gematria' ? 'hebrew' : v), reason: 'F-J2: gematria (ערכת המקור) ⇒ hebrew של RED — אותה גימטריה חשופה (D-108)' },
-  'page-num-frame': { kind: 'mapped', to: 'page-num-frame' },
-  'page-num-start-idx': { kind: 'mapped', to: 'page-num-start-idx', transform: parseInt },
-  'page-num-initial-value': { kind: 'mapped', to: 'page-num-initial-value', transform: parseInt },
-  'main-shaar-count-numbering': { kind: 'merged', to: 'count-shaar-pages', reason: 'RED מונה עמודי שער גלובלית (count-shaar-pages); בקרה פר-סוג טרם נפרדה', issue: 'EXT-18' },
-  // **Iteration-003 (legacy parity — מניית הפוליו):** המקור מונה שערי-משנה
-  // (sub=true) אך לא את הראשי/אחורי (main/back=false) — המורשת מונה את
-  // השער-משנה בלבד. עד כאן המיפוי המאוחד לא מיפה כלום ⇒ הפוליו נדחק.
-  // **תיקון המשך (כפילות מפתח):** עד כאן הופיעו כאן גם הערכים הישנים
-  // (merged→count-shaar-pages ל-sub-count, identity ל-toc-count) בשנית —
-  // במפת עצם JS האחרון מנצח, והם דרסו את המיפויים החדשים (בדוק: ייבוא
-  // הניח count-toc-pages=false מול raw=true). הוסרו — מקור אחד לכל מפתח.
-  'sub-shaar-count-numbering': { kind: 'mapped', to: 'count-shaar-sub-pages', transform: (v) => v !== false && v !== 'false', reason: 'מניית שער-משנה בפוליו — כמו המקור' },
-  'general-toc-count-numbering': { kind: 'mapped', to: 'count-toc-pages', transform: (v) => v !== false && v !== 'false', reason: 'Iteration-003: במקור = מניית עמודי התוכן בפוליו (לא מספרי שורות — המורשת לא מציגה אותם מעולם)' },
-  'detailed-toc-count-numbering': { kind: 'mapped', to: 'count-toc-pages', transform: (v) => v !== false && v !== 'false', reason: 'Iteration-003: מניית עמודי התוכן המפורט בפוליו' },
-  // **Iteration-003 (הפרדת סמנטיקה):** מפתחות ה-show כותבים עד כאן אל
-  // count-shaar-pages (דגל מנייה!) — הצגה ומנייה הן שתי סמנטיקות שונות;
-  // במנוע המאוחד השערים אינם מציגים גיליון ממילא (chapterOpening ⇒ דיכוי
-  // תצוגה). הערכים נשמרים כ-ui-state (EXT-18) ואינם משחיתים את דגל המנייה.
-  'main-shaar-show-number': { kind: 'ui-state', reason: 'הצגת מספר בשער ראשי — השערים אינם מציגים גיליון במנוע המאוחד (chapterOpening); Iteration-003: הוסר הכתיב אל count-shaar-pages (הפרדת show מ-count)', issue: 'EXT-18' },
-  'back-shaar-count-numbering': { kind: 'merged', to: 'count-shaar-pages', reason: 'מניית שער אחורי — RED מונה עמודי שער גלובלית', issue: 'EXT-18' },
-  'back-shaar-show-number': { kind: 'ui-state', reason: 'הצגת מספר בשער אחורי — כנ"ל main-shaar-show-number; Iteration-003: הוסר הכתיב אל count-shaar-pages', issue: 'EXT-18' },
-  'sub-shaar-show-number': { kind: 'ui-state', reason: 'הצגת מספר בשער-משנה — השער נספר (count-shaar-sub-pages) אך אינו מציג (chapterOpening); Iteration-003: הוסר הכתיב אל count-shaar-pages', issue: 'EXT-18' },
-  'general-toc-show-numbering': { kind: 'mapped', to: 'general-toc-show-numbering' },
-  'detailed-toc-show-numbering': { kind: 'mapped', to: 'detailed-toc-show-numbering' },
-  // **S77 (בקשה 3 — הגשר החי):** מתגי הפעלת התכנים — עד כאן ui-state (לא
-  // הגיעו למנוע); כעת ממופים למפתחות הרישום שהגשר קורא (ברירת המחדל
-  // של המקור — שניהם true — משומרת; קובץ מקור עם כיבוי יכובד).
-  'enable-general-toc': { kind: 'mapped', to: 'toc-general-enabled', transform: (v) => v !== false && v !== 'false', reason: 'S77: מתג תוכן-עניינים כללי — חי בנתיב המורשת' },
-  'enable-detailed-toc': { kind: 'mapped', to: 'toc-detail-enabled', transform: (v) => v !== false && v !== 'false', reason: 'S77: מתג תוכן-עניינים מפורט — חי בנתיב המורשת' },
-
-  // ============ שערים/ערכות נושא (בוררי האפליקציה הישנה) ============
-  'style-set-select': { kind: 'ui-state', reason: 'בורר סגנון כללי בפאנל הישן; ב-RED: תבניות/ערכות נושא' },
-  'active-theme-select': { kind: 'ui-state', reason: 'ערכת נושא פעילה — ב-RED: theme-set-id / imud-shaar-*' },
-
-  // ============ **S6.3 (חיבור הגדרות — "וכמויות של הגדרות שלא מחוברות")** ============
-  // מפתחות שהיו נופלים לכללי המשפחה (^aq-, ^inp-…) ואינם ממופים למפתח
-  // רישום — עתה ממופים במפורש (aq-*) או מתועדים כנצרכים דרך ה-raw.
-  'aq-enabled': { kind: 'mapped', to: 'aq-enabled', transform: (v) => v === true || v === 'true', reason: 'S6.3: מתג AutoQuality של המקור ⇒ מפתח הרישום (ברירת מחדל במקור true)' },
-  'aq-word-spacing': { kind: 'mapped', to: 'aq-enabled', transform: (v) => v !== false && v !== 'false', reason: 'S6.3: שכבת מרווחי-מילים (דלוקה במקור) — משורטטת למתג הכולל של ה-AQ' },
-  'aq-word-spacing-min': { kind: 'mapped', to: 'aq-word-spacing-min', transform: parseFloat, reason: 'S6.3: גבול תחתון (0.95 במקור וברישום כאחד)' },
-  'aq-word-spacing-max': { kind: 'mapped', to: 'aq-word-spacing-max', transform: parseFloat, reason: 'S6.3: גבול עליון (1.05)' },
-  'aq-word-spacing-threshold': { kind: 'ui-state', reason: 'S6.3: סף הפעלת מרווחי-מילים במקור — מנגנון ה-AQ של RED מופעל מתמטית (מדידת הפרש); נשמר כנתון', issue: 'S6.3-AQ' },
-  'aq-word-spacing-max-diff': { kind: 'ui-state', reason: 'S6.3: הפרש מקסימלי בין שורות במקור — ב-RED ה-clamp המרכזי aq-overshoot-clamp-px; נשמר כנתון', issue: 'S6.3-AQ' },
-  'aq-para-spacing': { kind: 'ui-state', reason: 'S6.3: מתיחת מרווחי-פסקה במקור — נצרכת דרך ה-raw בפרופיל המורשת כשתמומש; נשמרת כנתון', issue: 'S6.3-AQ' },
-  'aq-para-spacing-max': { kind: 'ui-state', reason: 'S6.3: תקרת מרווחי-פסקה — כנ"ל', issue: 'S6.3-AQ' },
-  'aq-line-height': { kind: 'ui-state', reason: 'S6.3: מתיחת גובה-שורה במקור — מנגנון EXT-20 של RED (aqStretch) פועל מההפרש הנמדד; נשמר כנתון', issue: 'S6.3-AQ' },
-  'aq-line-height-max': { kind: 'ui-state', reason: 'S6.3: תקרת מתיחת שורה (3% במקור) — ב-RED נקלטת דרך aq-letter-spacing-max המרכזי; נשמר כנתון', issue: 'S6.3-AQ' },
-  'aq-shared-load': { kind: 'mapped', to: 'aq-shared-load', transform: (v) => v !== false && v !== 'false', reason: 'S6.3: עומס משותף בין השכבות (true במקור וברישום)' },
-  // **9b.5 (D-107 + F-9a-8):** ארבעת מקטעי השער האחורי — חיבור לנתיב המאוחד
-  // (עד כאן סווגו ui-state ולא מופו; buildShaarBlocks לא ראה אותם כלל).
-  // המקור גובר על המטא של המסמך (כמו inp-book-title בשער הראשי).
-  'inp-book-back-copyright': { kind: 'mapped', to: 'imud-book-back-copyright', reason: '9b.5: זכויות יוצרים בשער האחורי — נצרכת ב-buildShaarBlocks (D-107: ארבעת המקטעים)' },
-  'inp-book-back-publishing': { kind: 'mapped', to: 'imud-book-back-publishing', reason: '9b.5: פרטי הוצאה לאור בשער האחורי (D-107)' },
-  'inp-book-back-contact': { kind: 'mapped', to: 'imud-book-back-contact', reason: '9b.5: פרטי קשר בשער האחורי (D-107)' },
-  'inp-book-back-extra': { kind: 'mapped', to: 'imud-book-back-extra', reason: '9b.5: פרטים נוספים בשער האחורי (D-107)' },
-  's-note-body': { kind: 'ui-state', reason: 'S6.3: גודל גוף ההערה — נקרא מה-raw (readConfig ⇒ SZ.fnBody; ברירת המחדל של המקור 9)' },
-  // **F-J3 (W-5, 27.11):** ערכים כפולים הוסרו — הגדרה יחידה סמכותית לכל מפתח (s-h0/s-h1/s-sh-*; העתקות S6.3 היו זהות מילולית במיפוי — דריסה שקטה של אותה רשומה).
-  'f-note-title': { kind: 'mapped', to: 'endnote-title-font', transform: resolveStack, reason: 'S6.3: גופן כותרת ההערות' },
-  'f-h0-body': { kind: 'mapped', to: 'heading-0-body-font', transform: resolveStack, reason: 'S6.3: גופן גוף ההקדמה (Frank Ruhl Libre במקור)' },
-  's-h0-body': { kind: 'mapped', to: 'heading-0-body-size-pt', transform: parseFloat, reason: 'RC-2a (i004): גודל גוף ההקדמה (s-h0-body=11.5 במקור) — עד כאן לא מופה ייבוא ⇒ ההקדמה זרמה ב-12pt במקום 11.5 (הוכח מה-PDF הישן: p43 כולו 11.5pt בפיץ׳ 15.5 בקירוב)' },
-
-  // ============ כותרות עליונות (25 מפתחות hdr-*) ============
-  'hdr-title-split': { kind: 'ui-state', reason: 'פיצול שם הספר לחצאים בכותרת העליונה — מיושם תמידית ב-legacy (hdrR/hdrL) כמו בייחוס — S4.20/EXT-19' },
-  'hdr-alternating': { kind: 'ui-state', reason: 'החלפת החצאים בעמודים זוגיים-פיזיים — מיושם בהרכבת ה-legacy (S4.20/EXT-19)', issue: 'EXT-19' },
-};
-
-/** כללי משפחה — מצבי UI של האפליקציה הישנה (נשמרים כנתונים, אין אפקט מנועתי). */
-const FAMILY_RULES = [
-  { re: /^f-/, kind: 'ui-state', reason: 'גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17' },
-  { re: /^s-/, kind: 'ui-state', reason: 'גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17' },
-  { re: /^data-/, kind: 'ui-state', reason: 'נתוני בורר עיצובים/תמונות באפליקציה הישנה — ב-RED: הפניות imud: בספריית הנכסים' },
-  { re: /^hdr-/, kind: 'ui-state', reason: 'קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source' },
-  { re: /^builder-/, kind: 'ui-state', reason: 'מצבי בורר העיצובים (assets picker) של האפליקציה הישנה' },
-  { re: /^dim-/, kind: 'ui-state', reason: 'ממדי עמוד בפאנל הישן — RED: page-size + grid-*' },
-  { re: /^aq-/, kind: 'ui-state', reason: 'מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*' },
-  { re: /^inp-/, kind: 'ui-state', reason: 'שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך' },
-  { re: /^(cbg|data-cbg)-/, kind: 'ui-state', reason: 'רקעי עמודים לפי מחלקה — RED: background-page-type/image/texture (REQ-ORN-08)' },
-  { re: /^prop-/, kind: 'ui-state', reason: 'מאפייני עיצוב בבורר הישן' },
-  { re: /^page-/, kind: 'ui-state', reason: 'הגדרות עמוד בפאנל הישן' },
-  { re: /^(show|enable|select|main|back|sub|shaar|general|detailed|font|size|mode)-/, kind: 'ui-state', reason: 'מצבי UI של האפליקציה הישנה' },
-  // **EXT-14 (05.11, ערכות הסגנון):** שדות העלאת-קבצים של האפליקציה הישנה — קיימים
-  // ב-setting_sets (תלמוד/פרשנות/קונטרס) אך לא ב-default_settings (הועלו רק בערכות):
-  // קבצי SVG של בונה השערים, תמונות רקע לפי מחלקת עמוד, תמונת מרכז-הכותרת,
-  // תמונת מפריד הסעיפים ותיקיית הנכסים. ב-RED: הפניות imud: מהספרייה המוטמעת
-  // (asset-registry) או נכסי משתמש — ערך הקובץ עצמו אינו מצב מנוע.
-  { re: /^file-/, kind: 'ui-state', reason: 'שדה העלאת קובץ באפליקציה הישנה (builder/cbg/hdr/sec-div) — ב-RED: הפניות imud: מהספרייה' },
-  { re: /^assets-folder-/, kind: 'ui-state', reason: 'תיקיית נכסים חיצונית באפליקציה הישנה — ב-RED: הספרייה המוטמעת' },
-  { re: /^heading-divider-h[3-9]$/, kind: 'mapped', to: 'heading-dividers-h3-h6', transform: (v) => v !== 'none', reason: 'מפרידי כותרות H3–H6 — RED מפעיל/מכבה את המשפחה כולה' }
-];
-
-/** קבלת disposition למפתח — מפורש מהטבלה, או כלל משפחה. @returns {object|null} */
-function dispositionOf(oldKey) {
-  if (DISPOSITIONS[oldKey]) return DISPOSITIONS[oldKey];
-  // **S5.1:** כלל משפחה מחזיר גם to/transform — בעבר הושמטו ו-heading-divider-h4/h5/h6
-  // (למשל) נספרו כ"מטופלים" בלי ששום דבר הוחל (מיפוי-מת).
-  for (const r of FAMILY_RULES) if (r.re.test(oldKey)) return { kind: r.kind, to: r.to, transform: r.transform, reason: r.reason };
-  return null;
-}
-
-/**
- * ייבוא קובץ הגדרות IMUD (או תבנית משתמש ישנה) להגדרות RED.
- * **S4.6 (ביקורת 3) — שימור מלא:** ערכי ui-state כבר לא רק נספרים — הם נשמרים
- * כנתונים במבנה מוגדר: אובייקט uiState בפלט + settings['_legacy-ui-state']
- * (מפתח פנימי עם קידומת קו-תחתון — לא נכנס לייצוא ZIP, שורד בתבניות ה-UI).
- * @param {object} legacy — אובייקט ההגדרות הישן (key→value)
- * @param {object} [registryKeys] — Set/מערך מפתחות RED חוקיים (לסינון); אם לא — ללא סינון
- * @param {{contentHeightPx?:number}} [opts] — גיאומטריה אמיתית להמרות אחוז⇒פיקסל (ברירת מחדל 1040)
- * @returns {{settings:object, uiState:object, dispositions:object, unmapped:string[], report:{mapped:number,merged:number,uiState:number,removed:number}}}
- */
-function importImudSettings(legacy, registryKeys, opts = {}) {
-  const settings = {};
-  const uiState = {};
-  const dispositions = {};
-  const unmapped = [];
-  const report = { mapped: 0, merged: 0, uiState: 0, removed: 0 };
-  const valid = registryKeys instanceof Set ? registryKeys : (Array.isArray(registryKeys) ? new Set(registryKeys) : null);
-  // **F09 (parity iter-002):** הקשר גודל-הגוף ומצב הסוגריים לטרנספורם של s-paren —
-  // מקור אחד (size-body/s-paren-mode של אותו קובץ הגדרות), לא קבוע מקומי.
-  const ctx = {
-    contentHeightPx: Number(opts.contentHeightPx) > 0 ? Number(opts.contentHeightPx) : 1040,
-    bodyPt: parseFloat(legacy && legacy['size-body']) || 12,
-    parenMode: String((legacy && legacy['s-paren-mode']) || 'relative')
-  };
-  // **03.11(ד):** קטלוג הגופנים הזמין (אם הועבר) — לפתרון מחסניות הגופן של המקור
-  // מול מה שבאמת קיים בספרייה המוטמעת (f-h0="'AlphaBlack', 'David Libre', serif"
-  // ⇒ David Libre כש-AlphaBlack אינה בספרייה — בדיוק כמו שהדפדפן היה נופל).
-  if (opts.availableFonts instanceof Set) ctx.availableFonts = opts.availableFonts;
-  else if (Array.isArray(opts.availableFonts)) ctx.availableFonts = new Set(opts.availableFonts);
-  // **S4.6:** שני מעברים — ממירים מותנים (onlyIfAbsent, כגון h2-title-orn-mode)
-  // מוחלים רק אם מפתח ישיר לא קבע כבר את היעד. קדימות מפורשת ולא תלוית-סדר.
-  const deferred = [];
-  const applyDisposition = (k, v, d) => {
-    dispositions[k] = d;
-    if ((d.kind === 'mapped' || d.kind === 'merged') && d.to) {
-      const targets = Array.isArray(d.to) ? d.to : [d.to];
-      const transformed = d.transform ? d.transform(v, ctx) : v;
-      // **S77:** transform שמחזיר undefined מסמן "אין דריסה" (ערך מקור לא
-      // מוכר שאין לו מקביל RED — למשל hdr-c-type='spear'). בלי ההגנה הזו
-      // היעד היה נקבע ל-undefined ודורס את ברירת המחדל של הרישום. המפתח
-      // עדיין נספר בדוח (קיבל disposition מלא; הערך הגולמי נשמר ב-_imudRaw).
-      if (transformed === undefined) {
-        dispositions[k] = { ...d, note: 'ערך לא מוכר — ללא דריסה (S77)' };
-        report[d.kind]++;
-        return;
-      }
-      let anyApplied = false;
-      let anyBlocked = false;
-      for (const t of targets) {
-        if (valid && !valid.has(t)) { unmapped.push(`${k}->${t}(!)`); continue; }
-        if (d.onlyIfAbsent && settings[t] !== undefined) { anyBlocked = true; continue; }
-        settings[t] = transformed;
-        anyApplied = true;
-      }
-      if (anyApplied) report[d.kind]++;
-      else if (anyBlocked) report[d.kind]++; // נספר — קיבל disposition מלא (נחסם בכוונה ע"י מפתח ישיר)
-    } else if (d.kind === 'ui-state') {
-      // **S4.6:** הערך נשמר כנתון — לא רק מונה. החזרה נפרדת + הטמעה בהגדרות
-      // (מפתח פנימי; לא מגיע למנוע, לא נמחק).
-      uiState[k] = v;
-      report.uiState++;
-    } else if (d.kind === 'removed') {
-      report.removed++;
-    } else {
-      report.merged++;
-    }
-  };
-  for (const [k, v] of Object.entries(legacy || {})) {
-    const d = dispositionOf(k);
-    if (!d) { unmapped.push(k); continue; }
-    if (d.onlyIfAbsent) { deferred.push([k, v, d]); continue; }
-    applyDisposition(k, v, d);
-  }
-  for (const [k, v, d] of deferred) applyDisposition(k, v, d);
-  // מיזוג משלים: mode-h1=sub_shaar ⇒ שער משנה דלוק (הסמנטיקה המקורית)
-  if (legacy && legacy['mode-h1'] === 'sub_shaar') settings['show-shaar-sub'] = true;
-  if (Object.keys(uiState).length) settings['_legacy-ui-state'] = uiState;
-  // **S4.9 (פרופיל העימוד המקורי):** קלט שנראה כמו default_settings.json המלא
-  // של המקור ⇒ ה-JSON הגולמי מוצמד תחת _imudRaw והפרופיל מסומן 'imud'.
-  // המנוע המרכזי (typeset) מפנה אז לפורט הנאמן (legacy-imud-flow) — התנהגות
-  // המקור היא המפרט (בקשת המשתמש 03.11: "בדיקה מתמטית ומוחלטת").
-  if (legacy && typeof legacy === 'object'
-    && legacy['fn-delim-open'] !== undefined
-    && legacy['size-body'] !== undefined
-    && legacy['line-height-body'] !== undefined) {
-    settings['_imudRaw'] = legacy;
-    settings['_layout-profile'] = 'imud';
-    // **S77 (בקשה 3 — חיבור הגדרות תוכן-העניינים לנתיב המורשת):** דגלי
-    // toc-level-N-show נגזרים מרשימות המקור (gtoc-show/dtoc-show; ברירות
-    // המחדל [1..6]/[2..6]) — כך ברירת המחדל המיובאת משמרת את הפלט המכויל
-    // במדויק, והדגלים החיים שולטים מעתה (הסרה/הוספה של רמות בשני התכנים).
-    // inline נפתח כבוי בכל הרמות — ה-TOC של המורשת אינו ממזג שורות כברירת
-    // מחדל; הפעלה מפורשת ממזגת רשומות רצופות לשורת ההורה.
-    // הפרש המשתמש השמור מוחל אחרי הייבוא — דגל שהמשתמש שינה גובר על הנגזר.
-    const gtocList = Array.isArray(legacy['gtoc-show']) ? legacy['gtoc-show'] : [1, 2, 3, 4, 5, 6];
-    const dtocList = Array.isArray(legacy['dtoc-show']) ? legacy['dtoc-show'] : [2, 3, 4, 5, 6];
-    for (let n = 1; n <= 7; n++) {
-      settings[`toc-level-${n}-show`] = gtocList.includes(n) || dtocList.includes(n);
-      settings[`toc-level-${n}-inline`] = false;
-    }
-  }
-  return { settings, uiState, dispositions, unmapped, report };
-}
-
-/**
- * **F-J1 (W-5, 27.11) — תרגום ערך-בודד מעידן המקור:** למפתחות הכפולים
- * (גם ברישום RED וגם באוצר-המילים של המקור) שהגיעו מתבנית/פרויקט הישן עם
- * ערך שאינו חוקי ברישום — מנסים את ה-transform של ה-disposition (כשהיעד
- * זהה למקור). מחזיר את הערך המתורגם, או undefined כשאין תרגום ישים.
- * משמש את ה-sanitize של הייבוא (project-io/app-shell) — ערך בלתי-חוקי
- * לעולם אינו מגיע למנוע בשקט.
- */
-function translateLegacyValue(key, value, ctx) {
-  const d = DISPOSITIONS[key];
-  if (!d || d.kind !== 'mapped' || d.to !== key || typeof d.transform !== 'function') return undefined;
-  try {
-    const out = d.transform(value, ctx || {});
-    return out === undefined ? undefined : out;
-  } catch (e) { return undefined; }
-}
-
-module.exports = { DISPOSITIONS, dispositionOf, translateLegacyValue, importImudSettings, firstFamily, resolveStack, pctToPx };
 
 };
 __modules["src/ui/status-strip.js"] = function (require, module, exports) {
@@ -6359,7 +5772,7 @@ const BINDINGS = [
     "panelKey": "NOTES",
     "labelHe": "מנגנון הצבת הערות (גוף תחילה / ישן)",
     "type": "enum",
-    "def": "legacy",
+    "def": "body-first",
     "enum": [
       "body-first",
       "legacy"
@@ -6367,7 +5780,7 @@ const BINDINGS = [
     "min": null,
     "max": null,
     "step": null,
-    "note": "W-4 (F-2.2, 27.11): ברירת המחדל = legacy — שער תקציב-ההערות של S74, שהוא המנגנון היחיד שהמנוע המאוחד מפעיל בפועל (2ae45b9+). body-first (בקשת S75 — הגוף ממלא, ההערות בחלל שמתחת, תקרה 50%) טרם הובל; בהשלמת הפורט (שלב Notes) תחזור ברירת המחדל ל-body-first. הפרופיל חוסם שינוי ההגדרה; pipeline מתעד את המצב באירוע מפורש בכל ריצה."
+    "note": "S75 (בקשה 1): body-first — הגוף ממלא את העמוד וההערות בחלל שמתחת (תקרה 50%). מנוע יחיד (2ae45b9+): מנגנון body-first טרם הובל למנוע המאוחד — המנוע מפעיל את שער תקציב-ההערות (האופציה legacy) תמיד; הפרופיל חוסם שינוי ההגדרה עד השלמת הפורט (משימת השלמה פתוחה — שלב Notes). pipeline מתעד את המצב באירוע מפורש בכל ריצה."
   },
   {
     "id": "endnotes-enabled",
@@ -10093,13 +9506,13 @@ __modules["src/ui/preview-tab.js"] = function (require, module, exports) {
 
 /**
  * קנבס כהה מאחורי העמודים (S10.1-8 — ריהוט מקצועי). העמודים עצמם נבנים
- * ע"י המקרין הטהור מה-PageModel — מקור יחיד; ה־UI רק עוטף (כפתור ⏬ לכל
- * עמוד — בקשת V21; highlightIssue — כלל 2 Working_rules).
- * **W-2 (השלמת כריתת 9c.4, 27.11):** ענף renderPage של המורשת הוסר —
- * המנוע המאוחד הוא היחיד מאז 2ae45b9/6cc5f76; אין פרופיל legacy ואין רנדרר
- * שני. חסר-מודל = שגיאת פרופיל מפורשת (ב-setResult) — לא נפילה שקטה.
+ * ע"י dom-renderer.renderPage — מקור יחיד; ה־UI רק עוטף (כפתור ⏬ לכל עמוד —
+ * בקשת V21; highlightIssue — כלל 2 Working_rules).
  */
 
+const { renderPage } = require('../engine/output/dom-renderer');
+// **שלב 8 פרוסה 3 (§2):** המקרין הטהור מה-PageModel — פרופיל unified בלבד.
+// פרופיל legacy ממשיך להשתמש ב-renderPage הישן (מצב תאימות מפורש עד שלב 9).
 const { renderModelPage } = require('../engine/output/pagemodel-dom-renderer');
 
 /** פענוח מספר עברי (גימטריה) — עבור "קפיצה לפי מספר עברי". */
@@ -10219,9 +9632,9 @@ function buildPreviewTab(doc, opts) {
 
   let zoom = 100;
   let pageEls = new Map(); // pageIndex → element (במצב וירטואלי: רק החלון החי)
-  // **9c.3 + W-2:** אין עוד lastResult — מקור העמודים הקנוני הוא virtual.pages
-  // (עמודי ה-PageModel בלבד — אין עוד פרופילים). כל הניווט/המחוונים/מפת
-  // הגיליונות נגזרים ממנו — אין תלות סמויה ב-result.pages.
+  // **9c.3:** אין עוד lastResult — מקור העמודים הקנוני לשני הפרופילים הוא
+  // virtual.pages (unified = עמודי PageModel; legacy = result.pages). כל
+  // הניווט/המחוונים/מפת הגיליונות נגזרים ממנו — אין תלות סמויה ב-result.pages.
   let lastScrollTarget = null;
 
   // ---- D-84: רינדור מחלונות (virtualization) לספרים ארוכים ----
@@ -10232,21 +9645,27 @@ function buildPreviewTab(doc, opts) {
   const VIRTUAL_THRESHOLD = 60;
   const VIRTUAL_WINDOW = 4; // ריפוד משני צידי הטווח הנראה
   const virtual = { on: false, pages: [], settings: null, rendered: new Set(), phW: 794, phH: 1123, tocLinks: [] };
-  // **פרוסה 3 (§2.3) + W-2 (השלמת 9c.4):** המקרין הטהור מה-PageModel הוא
-  // הנתיב היחיד — היעדר מודל הוא **שגיאה מפורשת** — לא נפילה שקטה (§2.3).
+  // **פרוסה 3 (§2.3 — הפרדת פרופילים מפורשת):** legacy = הרנדרר הישן (עד
+  // שלב 9); unified = המקרין הטהור מה-PageModel בלבד. בפרופיל unified היעדר
+  // מודל הוא **שגיאה מפורשת** — לא נפילה שקטה לרנדרר הישן (§2.3).
+  let profile = 'legacy';
   let profileError = null;
   let scrollRaf = null;
 
   /** בניית אלמנט עמוד אחד (מקור יחיד לרינדור מלא ולווירטואלי) — כולל ⏬ ולחיצה.
-   * העמוד הוא עמוד PageModel והרינדור טהור מהמודל (§2.2).
-   * **9c.3:** מלבני קישורי ה-TOC מועברים למקרין (§4.3 — TOC click).
-   * **W-2 (השלמת 9c.4):** ענף ה-renderPage של המורשת הוסר — המקרין מה-
-   * PageModel הוא הנתיב היחיד; result.pages אינו נצרך עוד בתצוגה. */
+   * פרופיל unified: העמוד הוא עמוד PageModel והרינדור טהור מהמודל (§2.2).
+   * **9c.3:** מלבני קישורי ה-TOC מועברים למקרין (§4.3 — TOC click). */
   function buildPageEl(page) {
-    const el = renderModelPage(page, virtual.settings, doc, {
-      tocLinks: virtual.tocLinks,
-      onDiagnostic: (d) => { if (opts.onModelDiagnostic) opts.onModelDiagnostic(page.index, d); }
-    });
+    // **9c.3:** הנתיב המאוחד — המקרין הטהור מה-PageModel בלבד (חסר-מודל =
+    // שגיאת פרופיל מפורשת ב-setResult, לעיל). נתיב ה-renderPage הישן הוא
+    // **9c.4-marker** — צריכת result.pages הגולמיים של פרופיל המורשת בלבד;
+    // יוסר עם הסרת המנוע ב-9c.4 (אחרי הוכחת DOM parity — s8d).
+    const el = profile === 'unified'
+      ? renderModelPage(page, virtual.settings, doc, {
+          tocLinks: virtual.tocLinks,
+          onDiagnostic: (d) => { if (opts.onModelDiagnostic) opts.onModelDiagnostic(page.index, d); }
+        })
+      : renderPage(page, virtual.settings, doc);
     el.classList.add('preview-page');
     // כפתור דיבאג פר־עמוד (V21): גיאומטריה + פרוסת ledger — בלי לגעת ברינדור
     const dbg = doc.createElement('button');
@@ -10274,11 +9693,10 @@ function buildPreviewTab(doc, opts) {
     ph.setAttribute('data-page-index', String(i));
     ph.setAttribute('aria-hidden', 'true');
     const page = virtual.pages[i];
-    // **פרוסה 3 (§2.5) + W-2:** מידות ה-placeholder מה-PageModel — כל עמודי
-    // המודל נושאים geometry; נפילה לגודל ברירת-המחדל רק אם הוא חסר.
+    // **פרוסה 3 (§2.5):** מידות ה-placeholder מה-PageModel בפרופיל המאוחד.
     const g = page && page.geometry;
-    const w = (g && g.width) || virtual.phW;
-    const h = (g && g.height) || virtual.phH;
+    const w = (g && g.width) || (page && page.template && page.template.width) || virtual.phW;
+    const h = (g && g.height) || (page && page.template && page.template.height) || virtual.phH;
     if (ph.style) { ph.style.width = `${w}px`; ph.style.height = `${h}px`; }
     return ph;
   }
@@ -10376,8 +9794,7 @@ function buildPreviewTab(doc, opts) {
     let x = 0;
     for (let i = 0; i < virtual.pages.length; i++) {
       const pg = virtual.pages[i];
-      // **W-2 (השלמת 9c.4):** עמודי המודל בלבד — geometry (אין עוד template).
-      const w = (pg && pg.geometry && Number(pg.geometry.width) > 0) ? Number(pg.geometry.width) : virtual.phW;
+      const w = (pg && pg.template && Number(pg.template.width) > 0) ? Number(pg.template.width) : virtual.phW;
       out.push([x, x + w]);
       x += w + H_GAP;
     }
@@ -10551,13 +9968,13 @@ function buildPreviewTab(doc, opts) {
     const anchor = keepView ? currentScrollAnchor() : null;
     canvas.textContent = '';
     pageEls = new Map();
-    // **פרוסה 3 (§2.3) + W-2 (השלמת 9c.4):** אין עוד פרופילים — המקרין מה-
-    // PageModel הוא הנתיב היחיד. חסר-מודל = שגיאה מפורשת וגלויה — שום
-    // נפילה שקטה לרנדרר הישן (§2.3). options.profile נשמר לתאימות קריאה
-    // בלבד (app-shell מעביר 'unified') ואינו משנה התנהגות.
+    // **פרוסה 3 (§2.3):** קביעת הפרופיל — מפורשת מהקריאה; ברירת המחדל
+    // לתוצאות ללא סימון היא legacy (מצב המעבר). בפרופיל unified חסר-מודל
+    // = שגיאה מפורשת וגלויה — שום נפילה שקטה לרנדרר הישן (§2.3).
+    profile = (options && options.profile) || (options && options.pageModel ? 'unified' : 'unified');
     const modelPages = (options && options.pageModel && Array.isArray(options.pageModel.pages)) ? options.pageModel.pages : null;
     profileError = null;
-    if (!modelPages) {
+    if (profile === 'unified' && !modelPages) {
       profileError = 'פרופיל מאוחד ללא PageModel — שגיאה מפורשת (אין נפילה שקטה לרנדרר הישן)';
       if (opts.onProfileError) opts.onProfileError(profileError);
       const errEl = doc.createElement('div');
@@ -10570,12 +9987,11 @@ function buildPreviewTab(doc, opts) {
       pageIndicator.textContent = 'שגיאת פרופיל — אין מודל עמוד';
       return;
     }
-    // **9c.3 + W-2:** מקור העמודים הקנוני — עמודי ה-PageModel בלבד (ענף
-    // result.pages של המורשת הוסר בהשלמת 9c.4 — הפרמטר serializedResult
-    // נשמר לתאימות חתימה ואינו נקרא). מכאן ואילך הכל נגזר מ-virtual.pages.
-    const pageSource = modelPages;
+    // **9c.3:** מקור העמודים הקנוני — unified: עמודי ה-PageModel בלבד;
+    // legacy: result.pages (ענף 9c.4-marker). מכאן ואילך הכל נגזר מ-virtual.pages.
+    const pageSource = profile === 'unified' ? modelPages : (serializedResult.pages || []);
     // **9c.3 (§4.3):** מלבני קישורי ה-TOC מהמודל — מועברים למקרין (קליק מסונכרן).
-    virtual.tocLinks = (options && options.pageModel && options.pageModel.document && Array.isArray(options.pageModel.document.tocLinks))
+    virtual.tocLinks = (profile === 'unified' && options.pageModel && options.pageModel.document && Array.isArray(options.pageModel.document.tocLinks))
       ? options.pageModel.document.tocLinks : [];
     virtual.on = Array.isArray(pageSource) && pageSource.length > VIRTUAL_THRESHOLD;
     virtual.settings = settings;
@@ -10591,10 +10007,10 @@ function buildPreviewTab(doc, opts) {
       }
     } else {
       // ספר ארוך — placeholders לכולם + חלון חי ראשוני (D-84)
-      // **פרוסה 3 (§2.5) + W-2:** המידות מ-geometry של המודל (אין עוד תבניות מורשת).
+      // **פרוסה 3 (§2.5):** בפרופיל המאוחד המידות מ-geometry של המודל.
       const p0 = virtual.pages[0] || {};
-      virtual.phW = (p0.geometry && p0.geometry.width) || 794;
-      virtual.phH = (p0.geometry && p0.geometry.height) || 1123;
+      virtual.phW = (p0.geometry && p0.geometry.width) || (p0.template && p0.template.width) || 794;
+      virtual.phH = (p0.geometry && p0.geometry.height) || (p0.template && p0.template.height) || 1123;
       for (let i = 0; i < virtual.pages.length; i++) {
         const ph = makePlaceholder(i);
         canvas.appendChild(ph);
@@ -10706,651 +10122,1007 @@ function buildPreviewTab(doc, opts) {
 module.exports = { buildPreviewTab, parseHebrewNumber };
 
 };
-__modules["src/engine/output/pagemodel-dom-renderer.js"] = function (require, module, exports) {
-// src/engine/output/pagemodel-dom-renderer.js — **שלב 8 פרוסה 3 (§2): מקרין DOM טהור מ-PageModel בלבד.**
+__modules["src/engine/output/dom-renderer.js"] = function (require, module, exports) {
+// src/engine/output/dom-renderer.js — DOM render (browser) + PUA scrub invariant (REQ-PAR-05, BRZ-13)
 'use strict';
 
 /**
- * חוזה (הוראת שלב 8 §2.2): המקרין הזה מקבל **עמוד מתוך PageModel** ומצייר
- * אותו בלבד. אסור לו למדוד גופנים/מילים, לחשב רוחבים, לשבור שורות, לבצע
- * wrapping/reflow, להחליט מיקום/סדר, לחשב מחדש חלוקת הערות, גיאומטריית
- * עיטורים, מידות תמונות או fit — ולא להשלים מידע חסר ב-fallback שקט.
+ * רנדור עמודים ל‑DOM. כללי יסוד:
+ * - U+E000/U+E101 חייבים להיעלם מה‑DOM הסופי (scrub לפני render; נשמרים רק לשלב המדידה).
+ * - כיווניות RTL מלאה; no !important על inline של עיטורים (F-09 — מקור שליטה יחיד).
+ * - מיפוי סוג עמוד → מחלקת CSS: regular/shaar/preface/sign-open/endnotes/toc/filler.
  *
- * כל x/y/w/h, baseline, מידות, סדר שכבות, מפתח גופן, צבע, asset identity
- * ועוגן מגיעים מהמודל. מה שמותר: טעינת/פענוח משאבים לצורך ציור (תמונות,
- * data-URI של SVG) ואריזת-תצוגה בלבד (מחלקות CSS, כרום). אם חסר מידע
- * חיוני — המקרין מדווח diagnostic גלוי (dataset + onDiagnostic) ולא משלים
- * בעצמו (התיקון שייך לבונה המודל).
- *
- * מבנה ה-DOM שומר במכוון על אותם עוגנים שהאודיט החי בודק (.page/.column/
- * .line/.footnotes/.fn-rule/.side-note/.orn) — כך שכל כלי הבדיקה הקיימים
- * עובדים על הפרופיל המאוחד בלי שכפול מנגנונים.
+ * **עדכוני סגירת S7:**
+ *  - סמני הערות מ‑notes/markers (מקור אחיד — P1-3); מקטעי פיצול הערה ארוכה
+ *    מסומנים class fn--continuation עם תוספת "(המשך)".
+ *  - background-opacity ⇒ rgba() אמיתי (בעבר נכתב לתכונת CSS בלתי קיימת — P0-5).
+ *  - paren-style-scale ⇒ מילים בתוך סוגריים ב‑span.w--paren (D-42).
+ *  - column-divider-style ⇒ חוט מפריד בין הטורים, גובה Math.min−8px (overlay — geometry-neutral).
+ *  - עמודי הערות: כותרת + רשימת הערות (S7.1.1).
+ *  - הערות צד: מיקום מוחלט לפי yTop/x מה‑placement (S7.1.2).
  */
 
+const PT_CLASS = {
+  'regular': 'page page--regular',
+  'shaar-main': 'page page--shaar page--shaar-main',
+  'shaar-sub': 'page page--shaar page--shaar-sub',
+  'shaar-back': 'page page--shaar page--shaar-back',
+  'preface': 'page page--preface',
+  'sign-open': 'page page--sign-open',
+  'h3-spread': 'page page--h3-spread',
+  'endnotes': 'page page--endnotes',
+  'toc-general': 'page page--toc page--toc-general',
+  'toc-detail': 'page page--toc page--toc-detail',
+  'custom': 'page page--custom',
+  'filler': 'page page--filler',
+  // **Iteration-006 (RC-B1 — עמודי מילוי ריקים בפרופיל המאוחד):** המודל
+  // המאוחד מייצר עמודי blank (מילוי לפני שער-משנה שחייב recto — נמדד:
+  // 8 עמודים כאלה ב-very_long, תמיד צמודים ל-shaar-sub). בלי המיפוי הם
+  // קיבלו className='page' בלי page--* ⇒ TYPE_UNKNOWN באודיט החי (סיווג
+  // העמוד לא זיהה אף מחלקה). מחלקת CSS ייעודית לכל סוג עמוד.
+  'blank': 'page page--blank'
+};
+
+// **שלב 8 פרוסה 1-ביקורת (§3.1):** scrubPUAText עבר למודול הניטרלי core/pua-text —
+// הליבה (materialize) כבר אינה מייבאת מהרנדרר. כאן נצרך מהמקור היחיד ומיוצא
+// הלאה לצרכנים קיימים (חוזה המודול נשמר: scrubPUAText ב-export).
 const { scrubPUAText } = require('../core/pua-text');
-const { familyOfFontKey } = require('../typography/font-keys');
+
+/** rgba() אמיתי מ‑background-color + background-opacity (תיקון P0-5). */
+function bgRgba(color, opacity) {
+  const hex = String(color || '#ffffff');
+  const m = hex.match(/^#([0-9a-f]{6})$/i);
+  const op = Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : 1;
+  if (!m) return hex; // שם־צבע/תבנית אחרת — כמו שהוא
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return `rgba(${r}, ${g}, ${b}, ${op})`;
+}
+
+/**
+ * S7 — צריכת footnote-marker-style (enum) דרך מקור אחיד: notes/markers.
+ * (בעבר היה כאן ממיר מקומי שני — אי־עקביות מספור, P1-3.)
+ */
+const { markerForSettings } = require('../notes/markers');
+const { planDecorations } = require('../decoration/page-decorations');
+const { resolveShaarBox } = require('../decoration/shaar-boxes');
+const { columnDividerHeightPx } = require('../decoration/ornament-fit');const { folioGeometry } = require('../layout/furniture-geometry'); // **שלב 6:** גיאומטריית הגיליון — מקור יחיד עם הפרויקטור ל-PDF
+
 const { resolveAssetRef } = require('../decoration/asset-registry');
-const { PT_CLASS, bgRgba, fontStack } = require('./dom-renderer');
+const { ornamentInk } = require('../decoration/ornament-ink'); // **03.11:** imud: → data-URI
+const { MM_TO_PX } = require('../layout/page-templates');
+const { isCssFrame } = require('../decoration/folio'); // **S9:** מסגרות גיליון CSS (circle/square)
+const { assignFootnoteLanes } = require('../layout/footnote-lanes'); // **שלב 5:** מקור-אמת יחיד לחלוקת נתיבי המרזב
+const { lineFontSizePt, lineFontFamily, ptToPx } = require('./line-font');
+const { buildShaarBlocks, shaarFontOf } = require('./shaar-content'); // **03.11(ד)** // **03.11(ג):** מקור יחיד לגופן/גודל שורה
 
-const PT_TO_PX = 96 / 72;
-const px2 = (v) => Math.round(v * 100) / 100;
-
-/** צבע שאינו שחור — null אחרת (כמו הרנדרר הקיים; שחור ⇒ ירושת ברירת מחדל). */
-function nonBlack(c) {
-  if (!c || typeof c !== 'string') return null;
-  const s = c.trim().toLowerCase();
-  if (s === '#000' || s === '#000000' || s === 'black' || s === 'rgb(0, 0, 0)') return null;
-  return c;
+/** S9 — body-last-line-align (center|right|stretch): יישור שורה אחרונה של פסקה. */
+function lastLineClass(ln, settings) {
+  if (!ln.isLast) return '';
+  const mode = settings['body-last-line-align'] || 'center';
+  if (mode === 'right') return ' line--last-right';
+  if (mode === 'stretch') return ' line--last-stretch';
+  return ' line--last-center';
 }
 
-/** משפחת תצוגה למפתח גופן מהמודל (§2.2 — זהות מהמודל; 'body'/null ⇒ ירושת שורש). */
-function familyOf(key) {
-  const fam = familyOfFontKey(key);
-  return fam ? fontStack(fam) : null;
-}
-
-// ─── שורת טקסט: תיבה ממוקמת מהמודל + מילים ממוקמות מהמודל ───
-/**
- * כל שורה = div.line ממוקם ב-(x,y,w,h) מהמודל; כל מילה = span.w ממוקם
- * ב-x הסופי שלה (כולל הקצאת דבק/יישור שנקבעה בתכנון). הדפדפר אינו זז
- * דבר — גם לא מילים בתוך השורה. הקו-בסיס נופל באותה נוסחת half-leading
- * שבה הסמכות (attachBaselines) חישבה את baselineY במודל.
- */
-/** **RC-A1 (i006 — רווח בין שורות של אותו טקסט לוגי):** השורות ממוקמות-מוחלט
- *  ואין ביניהן רווחי-זרימה; בתוך שורה מוכנסת צומת רווח (renderModelLine),
- *  אך בין שורות באותו מיכל לוגי — ביאור-צד, שורות הערה, פס — לא נוסף
- *  דבר, ו-textContent מתמזג בכל צומת-שורה (נמדד: 8,848 מילים מודבקות
- *  בביאורי-הצד + 626 בהערות-הגוף ב-very_long ⇒ רצפת הנפח של האודיט החי
- *  נכשלה 341,160 < 345,999; גם העתקה ונגישות נפגעות). מקור אחד לכל
- *  המיכלים: צומת רווח לפני כל שורה שאינה הראשונה באותו טקסט. הרווח
- *  אינו נראה (whitespace בתחילת מיכל ממוקט-מוחלט מתמוטם). */
-function appendLineSep(container, doc, isFirstLogicalLine) {
-  if (!isFirstLogicalLine && typeof doc.createTextNode === 'function') {
-    container.appendChild(doc.createTextNode(' '));
+/** **03.11(ד):** מחסנית גופן — תומכת גם בערך מרובה־משפחות ("'A', 'B', serif"
+ * מהמקור). גרשיים מנוטרלים (הזרקה בטוחה ל-CSS), משפחות גנריות (serif/sans-serif)
+ * עוברות כמו שהן, ופולבאקים עבריים נוספים רק אם אינם כבר ברשימה. */
+function fontStack(family) {
+  // ניקוי לפי משפחה: גרשיים מוסרים, ותווים מסוכנים להזרקת CSS (; : { } / וכו')
+  // נפסלים — נשארים אותיות (לטיניות ועבריות), ספרות, רווחים ומקפים בלבד.
+  const safe = (x) => String(x || '').replace(/'/g, '').replace(/[^\w\u0590-\u05FF\uFB1D-\uFB4F\s-]/g, '').trim();
+  const parts = String(family || '').split(',').map(safe).filter(Boolean);
+  if (!parts.length) return '';
+  const out = [];
+  const GENERIC = /^(serif|sans-serif|monospace|cursive|fantasy|system-ui)$/i;
+  for (const p of parts) {
+    out.push(GENERIC.test(p) ? p : `'${p}'`);
   }
+  for (const fb of ['Frank Ruhl Libre', 'David', 'serif']) {
+    const plain = `'${fb}'`;
+    if (!out.includes(plain) && !out.includes(fb)) out.push(GENERIC.test(fb) ? fb : plain);
+  }
+  return out.join(', ');
 }
 
-function renderModelLine(ml, doc, relX, relY) {
+function renderLine(ln, doc, settings = {}) {
   const el = doc.createElement('div');
-  el.className = 'line'
-    + (ml.isLast ? ' line--last' : '')
-    + (ml.kind === 'heading' ? ' line--heading' : '')
-    + (ml.kind === 'toc-title' ? ' toc-title' : '')
-    // **Iteration-006 (RC-W1 — חלון קלאסי שקוע):** שורת ההמשך של פסקת-חלון
-    // (window בלי windowWords) נמדדה ברוחב מוקטן — השפה הימנית תפוסה
-    // בכוונה ע"י החלון המרחף (חוזה המקור: float height:1.25em על שתי
-    // השורות; מדידת ייחוס p44: שורה 2 מסתיימת ב-472 מול קצה טור 513).
-    // המחלקה מסמנת לאודיט החי לדלג על בדיקת היישור — אותה החלטה כמו
-    // line--window-wrap במקרין המורשת (dom-renderer S4.26); הגיאומטריה
-    // עצמה כבר מצומצמת במודל (w=colW−windowW, עוגן שמאלי בשפת הטור).
-    + (ml.window && !ml.windowWords && ml.windowW ? ' line--window-wrap' : '');
+  el.className = 'line' + (ln.isLast ? ' line--last' + lastLineClass(ln, settings) : '');
   el.setAttribute('dir', 'rtl');
-  el.style.position = 'absolute';
-  el.style.left = `${px2(ml.x - relX)}px`;
-  el.style.top = `${px2(ml.y - relY)}px`;
-  el.style.width = `${px2(ml.w)}px`;
-  el.style.height = `${px2(ml.h)}px`;
-  el.style.lineHeight = `${px2(ml.h)}px`;
-  if (ml.align) el.style.textAlign = ml.align === 'stretch' ? 'justify' : ml.align;
-  if (ml.sizePt != null) el.style.fontSize = `${px2(ml.sizePt * PT_TO_PX)}px`;
-  if (ml.bold) el.style.fontWeight = '700';
-  if (ml.letterSpacingPx) el.style.letterSpacing = `${px2(ml.letterSpacingPx)}px`;
-  // Diagnostic provenance from the immutable PageModel; no layout behavior changes.
-  el.dataset.modelY = String(ml.y);
-  el.dataset.modelH = String(ml.h);
-  el.dataset.modelAQ = String(ml.aqStretch != null ? ml.aqStretch : 1);
-  el.dataset.modelGap = String(ml.gapBeforePx != null ? ml.gapBeforePx : 0);
-  if (ml.sourceTokenId != null) el.dataset.sourceTokenId = String(ml.sourceTokenId);
-  if (ml.styleClass) el.dataset.styleClass = ml.styleClass;
-  if (ml.id) el.dataset.id = ml.id;
-  const tok = ml.sourceTokenId != null ? ml.sourceTokenId : null;
-  if (tok != null) el.dataset.token = tok;
-  // **תוויות רווח בין המילים:** המילים ממוקמות-מוחלט ולכן אין רווחי-זרימה
-  // ביניהן; בלי צומת רווח מפורשת textContent מתמזג למילה אחת — שובר
-  // ספירת נפח (רצפת האודיט), העתקה ונגישות. הרווח אינו נראה.
-  let firstWord = true;
-  for (const wd of (ml.words || [])) {
-    if (!firstWord && typeof doc.createTextNode === 'function') el.appendChild(doc.createTextNode(' '));
-    firstWord = false;
-    const span = doc.createElement('span');
-    // **Iteration-006 (RC-W1):** מילת-החלון (fontKey 'window') מסומנת
-    // w--window — כמו במקרין המורשת; האודיט החי בודק את מיקומה (צמודה
-    // לקצה הימני, הדיו הראשון בשורה) דרך המחלקה הזו בדיוק.
-    span.className = 'w' + (wd.mk ? ' w--fnmarker' : '') + (wd.fontKey === 'window' ? ' w--window' : '');
-    span.style.position = 'absolute';
-    span.style.left = `${px2(wd.x - ml.x)}px`;
-    span.style.top = '0';
-    span.style.whiteSpace = 'pre';
-    if (wd.sizePt != null) span.style.fontSize = `${px2(wd.sizePt * PT_TO_PX)}px`;
-    const fam = familyOf(wd.fontKey);
-    if (fam) span.style.fontFamily = fam;
-    const col = nonBlack(wd.color);
-    if (col) span.style.color = col;
-    span.textContent = scrubPUAText(wd.text);
-    el.appendChild(span);
+  // **03.11(ג) (תיקון "החלפת גופן לא עושה כלום"):** גודל/גופן השורה מההגדרות —
+  // אותו מקור (line-font) כמו הפרויקטור. בלי זה התצוגה מציגה הכול בגודל/גופן
+  // שורש המסמך והתצוגה אינה מגיבה לשינויי גופן/גודל.
+  const lnPt = lineFontSizePt(ln, settings);
+  if (Number.isFinite(lnPt) && lnPt > 0) el.style.fontSize = `${ptToPx(lnPt)}px`;
+  const lnFont = lineFontFamily(ln, settings);
+  if (lnFont) el.style.fontFamily = fontStack(lnFont);
+  // **S73 (צבע פר-גופן — נתיב DP):** כותרת ⇒ heading-N-color; גוף ⇒ body-color.
+  // שחור ⇒ אין style (ירושת ברירת המחדל) — תצוגה=ייצוא (אפס אופרטורי rg ב-PDF).
+  if (ln.kind === 'heading' && ln.level != null) {
+    const hc = nonBlack(settings[`heading-${ln.level}-color`]);
+    if (hc) el.style.color = hc;
+  } else {
+    const bc = nonBlack(settings['body-color']);
+    if (bc) el.style.color = bc;
   }
-  return el;
-}
-
-// ─── עיטור: דיו מהמודל בלבד (§2.2) ───
-function renderModelDecoration(d, doc, diags) {
-  const el = doc.createElement('div');
-  el.className = d.cssClass || 'orn';
-  if (d.slot) el.dataset.slot = d.slot;
-  if (d.kindStyle) el.dataset.kindStyle = d.kindStyle;
-  el.style.position = 'absolute';
-  el.style.left = `${px2(d.x)}px`;
-  el.style.top = `${px2(d.y)}px`;
-  el.style.width = `${px2(d.w)}px`;
-  el.style.height = `${px2(d.h)}px`;
-  if (d.ornId) el.dataset.ornId = d.ornId;
-  if (d.zOrder != null) el.style.zIndex = String(d.zOrder);
-  const ink = d.ink || (d.image ? { type: 'image', uri: null, ref: d.image } : null);
-  if (ink && ink.type === 'image') {
-    const uri = (ink.ref ? (resolveAssetRef(ink.ref) || {}).uri : null) || ink.uri || (d.image ? (resolveAssetRef(d.image) || {}).uri : null);
-    if (uri) {
-      el.style.backgroundImage = `url("${uri}")`;
-      el.style.backgroundSize = '100% 100%';
-      el.style.backgroundRepeat = 'no-repeat';
-    } else {
-      el.dataset.inkMissing = '1';
-      diags.push({ kind: 'pmr-decoration-ink-missing', ornId: d.ornId || null, slot: d.slot || null });
+  // **EXT-20 (AQ אנכי אמיתי):** מקדם ה-AQ הוא מקדם גובה-שורה — כאן הוא
+  // מיושם כ-line-height מפורש (px) כמו בפרויקטור וב-PDF. בעבר הוחל כאן
+  // wordSpacing אופקי (‏(factor−1)×4px) — שלושה נתיבים, שלוש פרשנויות,
+  // והגובה מעולם לא השתנה. כעת: שדה אחד, משמעות אחת.
+  // **S6.0 (R4-C1):** line-height מהמודל ל**כל** שורה — לא רק ב-AQ. בלי
+  // זה הדפדפן משתמש ב-normal (~1.15–1.25em) והטור נערם בפיץ שונה מהמודל
+  // ומה-PDF (~4–5px לשורה, עד ~120px בתחתית הטור) — תצוגה≠ייצוא בכל עמוד DP
+  // (תיקון S5.1 הוחל בנתיב המורשת בלבד ולא כאן).
+  if (Number.isFinite(ln.heightPx)) {
+    el.style.lineHeight = `${Math.round(ln.heightPx * (ln.aqStretch || 1) * 100) / 100}px`;
+  }
+  // **FX-6 (פרוסה 2 — הפער מהחוזה הגיאומטרי):** פער הבלוקים מוקרן מהחותמת
+  // שנקבעה בתכנון (gapBeforePx) — מקור יחיד; המקרין קורא ואינו מוסיף כלום
+  // מעצמו. margin-top (ולא גובה שורה) — הפער אינו מערבב בין גובה השורה
+  // למרווח הבלוק; זהה ביט-לביט להתקדמות ה-y של הפרויקטור ל-PDF.
+  if (ln.gapBeforePx > 0) {
+    el.style.marginTop = `${Math.round(ln.gapBeforePx * 100) / 100}px`;
+  }
+  // **S8 (F-08):** הזמנת עיטורי H2 בתוך תיבת השורה — הטקסט יורד/עולה ב־padding;
+  // הגובה כבר תוקצב בפריסה, הרנדור רק מצייר בתוך התיבה (מקור יחיד — F-09).
+  if (ln.h2OrnPadTop) el.style.paddingTop = `${ln.h2OrnPadTop}px`;
+  if (ln.h2OrnPadBottom) el.style.paddingBottom = `${ln.h2OrnPadBottom}px`;
+  // **S11 (REQ-PAR-06):** הזמנת עיטורים מקושרים של סגנון מותאם — אותו דפוס (F-08).
+  if (ln.csOrnPadTop) el.style.paddingTop = `${ln.csOrnPadTop}px`;
+  if (ln.csOrnPadBottom) el.style.paddingBottom = `${ln.csOrnPadBottom}px`;
+  // **S11 (REQ-PAR-06):** סגנון ברמת הבלוק — class + סגנון מובנה + מונה גלוי בשורה הראשונה.
+  if (ln.customStyle) {
+    el.className += ' custom-style';
+    el.dataset.style = ln.customStyle.id || '';
+    applyCustomStyleSpec(el, ln.customStyle.styleSpec, doc);
+    if (ln.csCounterMark) {
+      const cm = doc.createElement('span');
+      cm.className = 'cs-counter';
+      cm.textContent = ln.csCounterMark;
+      prependChild(el, cm);
     }
-  } else if (ink && ink.type === 'svg' && ink.uri) {
-    el.style.backgroundImage = `url("${ink.uri}")`;
-    el.style.backgroundSize = 'contain';
-    el.style.backgroundPosition = 'center center';
-    el.style.backgroundRepeat = 'no-repeat';
-  } else if (ink && ink.type === 'rule') {
-    el.style.borderTop = '0.75px solid #000';
-    el.style.height = '0px';
-  } else if (ink && ink.type === 'rect' && ink.color) {
-    // **W-7 (27.11, נמצא באימות החי):** ink.color הוא צף 0..1 (מוסכמת PDF —
-    // materialize כותב אותו כמו שהוא ל-pdfOps). CSS rgb() מפרש מספרים בסקלת
-    // 0..255 ⇒ ‏#F0F0F0 (0.941) עוגל ל-rgb(1,1,1) — כמעט-שחור. המרה לסקלת
-    // ה-CSS מיישרת את ה-DOM ל-PDF (תיקון סטיית צבע דומה לזו שתוקנה בשערים).
-    const c255 = (v) => Math.max(0, Math.min(255, Math.round(Number(v) * 255)));
-    el.style.backgroundColor = `rgb(${c255(ink.color[0])}, ${c255(ink.color[1])}, ${c255(ink.color[2])})`;
-  } else if (d.kindStyle && d.kindStyle !== 'none') {
-    el.dataset.inkMissing = '1';
-    diags.push({ kind: 'pmr-decoration-ink-missing', ornId: d.ornId || null, slot: d.slot || null });
   }
-  if (d.inkMissing) { el.dataset.inkMissing = '1'; if (!d.kindStyle) diags.push({ kind: 'pmr-decoration-ink-missing', ornId: d.ornId || null, slot: d.slot || null }); }
+  // **D-42:** מילים בתוך סוגריים — span.w--paren עם font-size בסקאלה (geometry-neutral).
+  // מילים רגילות — span.w אחיד (מיצג גם ב‑DOM אמיתי וגם ב‑shim של הבדיקות).
+  // **S11:** טווחי inline מסגנון מותאך — span.w--custom עם data-style (גודל מוחל כבר במדידה).
+  const parenScale = Number(settings['paren-style-scale']) || 1;
+  const words = (ln.words || []).map(w => scrubPUAText(w));
+  const spans = ln.parenSpans || [];
+  const customs = ln.customSpans || [];
+  if ((spans.length && parenScale !== 1) || customs.length) {
+    for (let i = 0; i < words.length; i++) {
+      const span = doc.createElement('span');
+      const cIdx = customs.findIndex(c => c.wi === i);
+      if (cIdx >= 0) {
+        span.className = 'w w--custom';
+        span.dataset.style = customs[cIdx].styleId;
+      } else if (spans.includes(i)) {
+        span.className = 'w w--paren';
+        span.style.fontSize = `${Math.round(parenScale * 100)}%`;
+      } else {
+        span.className = 'w';
+      }
+      span.textContent = words[i];
+      el.appendChild(span);
+    }
+  } else {
+    el.textContent = words.join(' ');
+  }
+  const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
+  if (tok) el.dataset.token = tok;
   return el;
 }
 
-// ─── עמוד שלם ───
+/** **S11:** הכנסת ילד ראשון — insertBefore כשיש; fallback ל־unshift (תאימות ל־shims של הבדיקות). */
+function prependChild(el, node) {
+  if (typeof el.insertBefore === 'function') el.insertBefore(node, el.firstChild || null);
+  else { (el.children || (el.children = [])).unshift(node); node.parentNode = el; }
+}
+
+/** **S11 (REQ-PAR-06):** החלת סגנון מותאם על יסוד DOM — מקור יחיד לכל מוצרי הדגל. */
+function applyCustomStyleSpec(el, spec, doc) {
+  void doc;
+  if (!spec || typeof spec !== 'object') return;
+  if (spec.fontSizePt) el.style.fontSize = `${spec.fontSizePt}pt`;
+  if (spec.bold) el.style.fontWeight = '700';
+  if (spec.italic) el.style.fontStyle = 'italic';
+  if (spec.color) el.style.color = spec.color;
+  if (spec.background) el.style.background = spec.background;
+  if (spec.border) el.style.borderRight = `3px solid ${typeof spec.border === 'string' ? spec.border : '#1a1a1a'}`;
+  if (spec.indentEm) { el.style.paddingRight = `${spec.indentEm}em`; el.style.marginRight = `${spec.indentEm}em`; }
+  if (spec.align) el.style.textAlign = spec.align === 'stretch' ? 'justify' : spec.align;
+  if (spec.letterSpacingEm) el.style.letterSpacing = `${spec.letterSpacingEm}em`;
+  if (spec.textTransform === 'small-caps') el.style.fontVariant = 'small-caps';
+}
+
+function renderFootnoteArea(page, settings, doc) {
+  if (!settings['footnotes-enabled'] || !page.footnotes.length) return null;
+  const area = doc.createElement('div');
+  area.className = `footnotes footnotes--${settings['fn-layout-mode']}`;
+  // **S5.4 (P-5 — תצוגה=ייצוא):** מיקום המרזב לפי המודל — הרצועה השמורה מעל
+  // תחתית תיבת התוכן, בדיוק כמו שהפרויקטור מקרין ל-PDF. בעבר: bottom:8px
+  // קבוע מה-CSS — התצוגה הציגה את המרזב בשוליים התחתונים בזמן שה-PDF צייר
+  // אותו ברצועה השמורה (פער תצוגה≠ייצוא בפרופיל DP).
+  const tpl = page.template;
+  if (tpl && tpl.contentBox && page.fnReservedHeightPx > 0) {
+    const colsX = (tpl.columns || []).map(c => c.x);
+    const colsR = (tpl.columns || []).map(c => c.x + c.w);
+    const left = colsX.length ? Math.min(...colsX) : 12;
+    const right = colsR.length ? Math.max(...colsR) : (tpl.width - 12);
+    area.style.bottom = 'auto';
+    area.style.top = `${Math.round(tpl.contentBox.bottom - page.fnReservedHeightPx)}px`;
+    area.style.left = `${Math.round(left)}px`;
+    area.style.right = `${Math.max(0, Math.round(tpl.width - right))}px`;
+  }
+  if (settings['footnote-separator-rule'] !== 'none') {
+    const rule = doc.createElement('div');
+    rule.className = `fn-rule fn-rule--${settings['footnote-separator-rule']}`;
+    area.appendChild(rule);
+  }
+  // **שלב 6 פרוסה 2 (§9 — הקרנה מהחותמת):** גוף ההערה מוקרן משורות החותמת
+  // (noteRows/noteWords/lineH מ-notes-model) — תיבת-שורה מפורשת לכל שורה:
+  // פיץ' אנכי מדויק מהמודל (בעבר line-height יחידת-יחס מה-CSS סטה ~0.4px/שורה
+  // מהתקציב ⇒ הערות נחתכו/חפפו בין שורות בתצוגה בעוד ה-PDF והתקציב הסכימו),
+  // והמילים של כל שורה — ממש כפי שנמדדו. הדפדפן משלים את הזרימה האופקית
+  // בתוך תיבת השורה (white-space:nowrap — אין שבירה מחדש של הדפדפן).
+  // חותמה חסרה ⇒ data-stamp-missing + נפילת טקסט חירום (התוכן לעולם לא אובד) —
+  // לא מדידה חלופית שקטה (§9.8).
+  const mkRows = (n) => {
+    const rows = [];
+    const isCont = n.isContinuation === true || n.mode === 'split-rest';
+    for (let li = 0; li < (n.noteRows || []).length; li++) {
+      const row = n.noteRows[li];
+      const div = doc.createElement('div');
+      div.className = 'fn-row';
+      div.style.whiteSpace = 'nowrap';
+      if (Number(n.lineH) > 0) {
+        div.style.lineHeight = `${n.lineH}px`;
+        div.style.height = `${n.lineH}px`;
+      }
+      const parts = [];
+      if (li === 0) {
+        if (isCont) parts.push('(המשך)');
+        if (n.marker != null && String(n.marker) !== '') parts.push(`${n.marker}\u200F`);
+      }
+      for (let i = row.wFrom; i < row.wTo; i++) parts.push(scrubPUAText(String(n.noteWords[i])));
+      div.textContent = parts.join(' ');
+      rows.push(div);
+    }
+    return rows;
+  };
+  const hasStamp = (n) => Array.isArray(n.noteRows) && n.noteRows.length > 0 && Array.isArray(n.noteWords) && Number(n.lineH) > 0;
+  // סמן אחיד (notes/markers) + סימון המשך למקטעי פיצול (S7.1.3 long-note policy)
+  const mkNote = (n) => {
+    const marker = n.marker || markerForSettings(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings);
+    const el = doc.createElement('div');
+    const cont = n.isContinuation || n.mode === 'split-rest';
+    el.className = 'footnote' + (cont ? ' fn--continuation' : '') + (n.customStyle ? ' footnote--custom' : '');
+    if (n.customStyle) el.dataset.style = n.customStyle;
+    el.dir = 'rtl';
+    if (hasStamp(n)) {
+      el.style.margin = '0'; // התקציב אינו כולל שוליים — תצוגה=ייצוא=תקציב
+      for (const r of mkRows(n)) el.appendChild(r);
+    } else {
+      el.dataset.stampMissing = '1'; // diagnostic גלוי — בלי מדידה חלופית שקטה
+      el.textContent = `${cont ? '(המשך) ' : ''}${marker}\u200F ${scrubPUAText(n.text || n)}`;
+    }
+    return el;
+  };
+  // **S70 (fn-continuous ב-DP — סגירת שארית S5.4):** גרסת inline של ההערה —
+  // לזרימה רציפה: הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה (רווח-
+  // כפול בין הערות — כמו המורשת). המודל כבר תיקצב במצב זה בלי הצמדת
+  // תקרה פר-הערה (D-34); התצוגה משלימה את החזות בלבד — הגיאומטריה לא זזה.
+  // **פרוסה 2:** פיץ' השורה גם כאן מהחותמת (px מפורש) — אותו פיץ' של ה-PDF.
+  const mkNoteInline = (n) => {
+    const marker = n.marker || markerForSettings(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings);
+    const el = doc.createElement('span');
+    const cont = n.isContinuation || n.mode === 'split-rest';
+    el.className = 'footnote fn--inline' + (cont ? ' fn--continuation' : '') + (n.customStyle ? ' footnote--custom' : '');
+    if (n.customStyle) el.dataset.style = n.customStyle;
+    el.textContent = `${cont ? '(המשך) ' : ''}${marker}\u200F ${scrubPUAText(n.text || n)}`;
+    return el;
+  };
+  const continuous = settings['fn-layout-mode'] === 'continuous';
+  const flowOf = (notes) => {
+    const flow = doc.createElement('div');
+    flow.className = 'footnotes-flow';
+    flow.dir = 'rtl';
+    const firstStamped = notes.find(hasStamp);
+    if (firstStamped) flow.style.lineHeight = `${firstStamped.lineH}px`; // פיץ' מהחותמת — תצוגה=ייצוא
+    notes.forEach((n, i) => {
+      if (i > 0) flow.appendChild(doc.createTextNode('\u00A0 ')); // רווח-כפול בין הערות
+      flow.appendChild(mkNoteInline(n));
+    });
+    return flow;
+  };
+  // **S5.4 (תצוגה=ייצוא):** שני נתיבים לפי footnote-columns — חלוקת הערות
+  // זהה לתקציב/פרויקטור (LPT דטרמיניסטית) — התצוגה וה-PDF מציגים את אותן
+  // הערות באותם נתיבים. הנתיב הראשון מימין (RTL).
+  const twoLanes = settings['footnote-columns'] === 2
+    && tpl && Array.isArray(tpl.columns) && tpl.columns.length >= 2
+    && page.fnReservedHeightPx > 0;
+  if (twoLanes) {
+    // **שלב 5 (חילוץ שורש מ-#16):** חלוקת הנתיבים — מקור יחיד (footnote-lanes).
+    // שקול מתמטית ל-LPT המקומי הקודם — נעול בבדיקת שקילות; תקציב/הקרנה/תצוגה
+    // משתפים את אותה חלוקה ממקור אחד.
+    const { lanes: idxLanes } = assignFootnoteLanes(page.footnotes);
+    const lanes = [[], []];
+    for (const li of [0, 1]) lanes[li] = idxLanes[li].map(i => page.footnotes[i]);
+    const row = doc.createElement('div');
+    row.style.display = 'flex';
+    row.style.flexDirection = 'row-reverse'; // RTL — הנתיב הראשון מימין
+    row.style.gap = `${Math.round(tpl.gutter || 0)}px`;
+    for (const lane of lanes) {
+      const laneEl = doc.createElement('div');
+      laneEl.className = 'footnotes-lane';
+      laneEl.style.flex = '1 1 0';
+      laneEl.style.minWidth = '0';
+      // **S70:** זרימה רציפה בתוך כל נתיב (עצמאית פר-נתיב — כמו התקציב)
+      if (continuous) laneEl.appendChild(flowOf(lane));
+      else for (const n of lane) laneEl.appendChild(mkNote(n));
+      row.appendChild(laneEl);
+    }
+    area.appendChild(row);
+  } else if (continuous) {
+    // **S70 (fn-continuous ב-DP):** כל הערות העמוד זורמות בבלוק אחד — במקום
+    // בלוקים נפרדים. הזרימה צפופה מסכום הבלוקים ⇒ הרצועה השמורה נשארת
+    // חוקית (שמרנית); שום שורת גוף אינה זזה.
+    area.appendChild(flowOf(page.footnotes));
+  } else {
+    for (const n of page.footnotes) area.appendChild(mkNote(n));
+  }
+  return area;
+}
+
+/** **S9 (D-61):** גיליון עמוד — מקור יחיד לכל סוגי העמודים (בעבר 4 העתקים).
+ * מסגרות CSS (circle/square) מרונדרות כ‑badge עם מחלקה; הטקסטואליות כבר בתוך התצוגה.
+ * **S73:** גופן/גודל/צבע הגיליון מההגדרות (page-num-font/size/color) — כמו המקרנים. */
+function renderFolio(page, settings, doc) {
+  if (!page.folioDisplay || settings['page-num-position'] === 'none') return null;
+  const folio = doc.createElement('footer');
+  folio.className = `folio folio--${settings['page-num-position']} folio--frame-${settings['page-num-frame']}`;
+  // **S73:** גופן/גודל/צבע מההגדרות — ריק/10/שחור = ההתנהגות הקודמת
+  const pnFont = settings['page-num-font'] || '';
+  if (pnFont) folio.style.fontFamily = fontStack(pnFont);
+  const pnSize = Number(settings['page-num-size-pt']);
+  if (Number.isFinite(pnSize) && pnSize > 0) folio.style.fontSize = `${Math.round(pnSize * (96 / 72) * 100) / 100}px`;
+  const pnColor = settings['page-num-color'];
+  if (pnColor && pnColor !== '#000000') folio.style.color = pnColor;
+  if (isCssFrame(settings['page-num-frame'])) {
+    const badge = doc.createElement('span');
+    badge.className = `page-num-badge page-num-frame-${settings['page-num-frame'] === 'circle' ? 'circle' : 'box'}`;
+    badge.textContent = page.folioDisplay;
+    folio.appendChild(badge);
+  } else {
+    folio.textContent = page.folioDisplay;
+  }
+  // **שלב 6 פרוסה 1 (§8 בהוראה — "אין לחשב מיקומם בנפרד ב-DOM וב-PDF"):**
+  // המיקום המפורש מגיע מאותו מקור יחיד של הפרויקטור ל-PDF
+  // (layout/furniture-geometry). ה-class נשאר אחראי לעור בלבד (מסגרת/צבע);
+  // הגיאומטריה — top/line-height מפורשים מהמודל, לא מהתנהגות CSS משוערת.
+  // המדידה בגופן הגיליון כשרשום — אותו אינסטנס שהפרויקטור בונה.
+  const pnFontGeo = settings['page-num-font'] || '';
+  const folioMeasure = pnFontGeo
+    ? new (require('../typography/measure-api').MeasureAPI)({ ...settings, 'body-font': pnFontGeo }, 'font-metrics')
+    : null;
+  if (folioMeasure) {
+    const geo = folioGeometry(page, settings, folioMeasure);
+    if (geo) {
+      folio.style.top = `${Math.round(geo.y * 100) / 100}px`;
+      folio.style.lineHeight = `${geo.lineHeightPx}px`;
+      folio.style.bottom = 'auto';
+    }
+  }
+  return folio;
+}
+
+function renderHeader(header, doc) {
+  if (!header) return null;
+  const el = doc.createElement('div');
+  el.className = `running-head head--sep-${header.separator}`;
+  el.dir = 'rtl';
+  // **S9 (D-61):** צורה חדשה {slots} עם עצמאות מלאה לכל סלוט (מקור/יישור/גופן/גודל/רוחב);
+  // תאימות לאחור לצורה הישנה ({right,center,left}) לבדיקות ≤S8.
+  const slots = header.slots || { right: header.right, center: header.center, left: header.left };
+  for (const pos of ['right', 'center', 'left']) {
+    const s = slots[pos];
+    if (!s) continue;
+    const slot = doc.createElement('span');
+    slot.className = `head-slot head-slot--${pos} align-${s.align}`;
+    slot.style.width = `${s.widthPct}%`;
+    if (s.font) slot.style.fontFamily = s.font;
+    if (s.sizePt) slot.style.fontSize = `${Math.round(s.sizePt * (96 / 72) * 100) / 100}px`;
+    // **S73:** צבע הסלוט מהמודל (headers-builder — מההגדרות; שחור כברירת מחדל)
+    if (s.color) slot.style.color = s.color;
+    slot.textContent = scrubPUAText(s.text || '');
+    el.appendChild(slot);
+  }
+  return el;
+}
+
+/** **S9 (REQ-HDR-05):** תוכן עמוד תוכן־עניינים — שורות עם נקודות מובילות, תווית
+ * גיליון בפורמט המספור, וקישורי עוגן לחיצים (#page‑N; יעדי PDF ייבנו ב‑S12). */
+function renderTocPageContent(page, doc) {
+  const els = [];
+  const t = page.toc || {};
+  if (t.title) {
+    const el = doc.createElement('h2');
+    el.className = 'toc-page-title';
+    el.dir = 'rtl';
+    el.textContent = scrubPUAText(t.title);
+    els.push(el);
+  }
+  const wrap = doc.createElement('div');
+  wrap.className = 'toc-rows';
+  wrap.dir = 'rtl';
+  for (const r of (t.rows || [])) {
+    if (r.kind === 'group') {
+      // קבוצה (inline רצוף): "כותרת – עמוד | כותרת – עמוד" בשורה אחת (IMUD grp-item/grp-sep)
+      const g = doc.createElement('div');
+      g.className = `toc-row toc-row--group toc-lvl-${r.items[0] ? r.items[0].level : 1}`;
+      for (const it of r.items) {
+        const a = doc.createElement('a');
+        a.className = `toc-item toc-lvl-${it.level}`;
+        if (it.targetPage != null) a.setAttribute('href', `#page-${it.targetPage}`);
+        a.setAttribute('data-anchor', it.anchorId || '');
+        const txt = doc.createElement('span'); txt.className = 'grp-title';
+        txt.textContent = scrubPUAText(it.text);
+        const lab = doc.createElement('span'); lab.className = 'grp-page';
+        lab.textContent = it.label || '';
+        a.appendChild(txt); a.appendChild(lab);
+        g.appendChild(a);
+      }
+      wrap.appendChild(g);
+    } else {
+      const a = doc.createElement('a');
+      a.className = `toc-row toc-lvl-${r.level}` + (r.inline ? ' toc-row--inline' : '');
+      if (r.targetPage != null) a.setAttribute('href', `#page-${r.targetPage}`);
+      a.setAttribute('data-anchor', r.anchorId || '');
+      if (r.rowNum != null) {
+        const n = doc.createElement('span'); n.className = 'toc-num'; n.textContent = String(r.rowNum);
+        a.appendChild(n);
+      }
+      const title = doc.createElement('span');
+      title.className = 'toc-title';
+      title.textContent = scrubPUAText(r.wrapped && r.wrapped.length ? r.wrapped.join(' ') : r.text);
+      const dots = doc.createElement('span'); dots.className = 'toc-dots';
+      const label = doc.createElement('span'); label.className = 'toc-label';
+      label.textContent = r.label || '';
+      a.appendChild(title); a.appendChild(dots); a.appendChild(label);
+      wrap.appendChild(a);
+    }
+  }
+  els.push(wrap);
+  return els;
+}
+
+/** חוט מפריד בין טורים (overlay; גובה Math.min −8px — כלל V4; geometry-neutral).
+ * גובה החישוב מקור יחיד: ornament-fit.columnDividerHeightPx (F-09 — לא עותק מקומי). */
+function renderColumnDivider(page, settings, doc) {
+  const style = settings['column-divider-style'];
+  if (!style || style === 'none' || page.columns.length < 2) return null;
+  // **FX-6 (פרוסה 2):** הגובה כולל את פערי הבלוקים — אותה סמנטיקה כמו
+  // usedHeight של האיזון וכמו הפרויקטור ל-PDF (תצוגה = ייצוא).
+  const used = page.columns.map(col => col.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1) + (ln.gapBeforePx || 0), 0));
+  // **S6.0 (R4-M5):** גובה המפריד כולל aqStretch — כמו הפרויקטור/PDF
+  // (בעבר ה-DOM חישב גובה ללא המתיחה ⇒ מפריד באורך שונה בין תצוגה לייצוא).
+  const h = columnDividerHeightPx(used);
+  if (h <= 0) return null;
+  const el = doc.createElement('div');
+  el.className = `col-divider col-divider--${style}`;
+  const c0 = page.template.columns[0], c1 = page.template.columns[1];
+  el.style.left = `${Math.round(c1.x + c1.w + (page.template.gutter || 0) / 2)}px`;
+  el.style.top = `${page.template.contentBox.top}px`;
+  el.style.height = `${h}px`;
+  return el;
+}
+
 /**
- * @param {object} mp — עמוד מתוך PageModel (model.pages[i])
- * @param {object} settings — הגדרות (ברירות מחדל גלובליות בלבד: גוף/רקע/כרום)
- * @param {object} doc — מפעל DOM
- * @param {object} [opts] — { onDiagnostic?: (d)=>void }
- * @returns {HTMLElement} אלמנט העמוד
+ * **S8 (FWD-1):** פס כותרת חוצה־טורים — שורות הכותרת שנמדדו ברוחב מלא,
+ * מרונדרות בפס עליון חוצה־טורים מעל שני הטורים.
  */
-function renderModelPage(mp, settings, doc, opts = {}) {
-  const diags = [];
-  const geo = mp.geometry || {};
+function renderSpanningBand(page, settings, doc) {
+  if (!page.spanning || !page.spanning.lines.length) return null;
+  const band = doc.createElement('div');
+  band.className = 'spanning-band';
+  band.dir = 'rtl';
+  // **S11 (REQ-PAR-06):** פס callout מסגנון מותאם — class + סגנון מובנה (full-width).
+  if (page.spanning.customStyle) {
+    band.className += ' custom-style';
+    band.dataset.style = page.spanning.customStyle.id || '';
+    applyCustomStyleSpec(band, page.spanning.customStyle.styleSpec, doc);
+    if (page.spanning.customStyle.counterMark) {
+      const cm = doc.createElement('span');
+      cm.className = 'cs-counter';
+      cm.textContent = page.spanning.customStyle.counterMark;
+      prependChild(band, cm);
+    }
+  }
+  const spanTop = page.template.contentBox.top;
+  band.style.top = `${spanTop}px`;
+  band.style.height = `${page.spanning.heightPx}px`;
+  // **חוזה H3 + הזמנות עיטור (D-S2H3/F-08):** שורות הפס זורמות אחרי הריפוד
+  // העליון שהוזמן בתכנון (titleTopPadPx — 8px לפס H3 לפי ה-CSS המקורי,
+  // הזמנת עיטור לפס H2) — אותה גאומטריה כמו materialize/PageModel/PDF.
+  if (page.spanning.titleTopPadPx) band.style.paddingTop = `${page.spanning.titleTopPadPx}px`;
+  const left = Math.min(...page.template.columns.map(c => c.x));
+  const right = Math.max(...page.template.columns.map(c => c.x + c.w));
+  band.style.left = `${Math.round(left)}px`;
+  band.style.width = `${Math.round(right - left)}px`;
+  for (const ln of page.spanning.lines) band.appendChild(renderLine(ln, doc, settings));
+  return band;
+}
+
+/**
+ * **S8 (REQ-ORN-01..04):** כל העיטורים נציירים מה־rect שחושב בפאס העיטורים
+ * (ornament-plan) — הרנדרר לא קובע ממדים משלו (F-09: מקור שליטה יחיד).
+ * **EXT-4 (הדיו):** kindStyle מקבל דיו — SVG מובנה/מספרייה כרקע data-URI,
+ * או קו דק (thin). עד כאן התיבות היו בלתי-נראות (אין כללי .orn ב-CSS).
+ */
+function renderDecorations(page, doc) {
+  const els = [];
+  for (const d of (page.decorations || [])) {
+    const el = doc.createElement('div');
+    el.className = d.cssClass || 'orn';
+    el.dataset.slot = d.slot || '';
+    el.dataset.kindStyle = d.kindStyle || '';
+    el.style.left = `${Math.round(d.x)}px`;
+    el.style.top = `${Math.round(d.y)}px`;
+    el.style.width = `${Math.round(d.w)}px`;
+    el.style.height = `${Math.round(d.h)}px`;
+    // **השלמת חוזה העיטורים (שלב 6 — §6.1-6/§6.1-10):** הדיו נצרך מההצהרה
+    // (ornId/ink) שנקבעה בתכנון — המקרן קורא ואינו מחליט מחדש (F-09). נכס
+    // חיצוני (imud:) נפתר כאן בזמן הציור — טעינת משאב, לא החלטת גיאומטריה.
+    // דיו שאינו פתיר — דיאגנוסטיק גלוי (dataset.inkMissing), לא השתקה.
+    if (d.ornId) el.dataset.ornId = d.ornId;
+    const ink = d.ink || (d.image ? { type: 'image', uri: null, ref: d.image } : null);
+    if (ink && ink.type === 'image') {
+      const uri = (ink.ref ? assetUri(ink.ref) : null) || ink.uri || (d.image ? assetUri(d.image) : null);
+      if (uri) {
+        el.style.backgroundImage = `url("${uri}")`;
+        el.style.backgroundSize = '100% 100%';
+        el.style.backgroundRepeat = 'no-repeat';
+      } else {
+        el.dataset.inkMissing = '1'; // asset חיצוני שלא נפתר — מדווח, לא ריק בשקט
+      }
+    } else if (ink && ink.type === 'svg' && ink.uri) {
+      el.style.backgroundImage = `url("${ink.uri}")`;
+      el.style.backgroundSize = 'contain';
+      el.style.backgroundPosition = 'center center';
+      el.style.backgroundRepeat = 'no-repeat';
+    } else if (ink && ink.type === 'rule') {
+      el.style.borderTop = '0.75px solid #000';
+      el.style.height = '0px';
+    } else if (ink && ink.type === 'rect' && ink.color) {
+      el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;
+    } else if (d.kindStyle && d.kindStyle !== 'none') {
+      el.dataset.inkMissing = '1'; // הצהרה בלי דיו פתיר — גלוי, לא ריק בשקט
+    }
+    if (d.inkMissing) el.dataset.inkMissing = '1';
+    els.push(el);
+  }
+  return els;
+}
+
+/** **03.11 (EXT-14):** פתרון נכס — הפניות imud: מתורגמות ל-data-URI מהרישום
+ * (asset-registry); ערכים אחרים (URL/data-URI קיים) עוברים כמו שהם. */
+function assetUri(ref) {
+  if (!ref) return null;
+  const r = resolveAssetRef(ref);
+  return r.uri || null;
+}
+
+/**
+ * **S8 (REQ-ORN-05/08):** רקע עמוד + תיבות שער לפי התוכנית שחושבה (page-decorations)
+ * — רקע לפי מחלקת העמוד עם inset במ״מ; תיבת טקסט של שער ראשי לפי box פתור.
+ * **03.11 (EXT-14):** שלושת השערים (ראשי/משנה/אחורי) — עיצוב ה־SVG במסך מלא +
+ * תיבת כותרת מה-box של העיצוב (רישום נכסים) או מההגדרות.
+ */
+function renderPageBackgroundAndShaar(page, settings, doc, metadata) {
+  const els = [];
+  const plan = planDecorations(page, settings);
+  const inset = plan.background ? plan.background.insetPx : 0;
+  if (plan.background && plan.background.image) {
+    const el = doc.createElement('div');
+    el.className = 'deco deco--page-background';
+    el.style.backgroundImage = `url("${assetUri(plan.background.image) || plan.background.image}")`;
+    el.style.inset = `${inset}px`;
+    els.push(el);
+  }
+  if (plan.background && plan.background.texture) {
+    const el = doc.createElement('div');
+    el.className = 'deco deco--page-texture';
+    el.style.backgroundImage = `url("${assetUri(plan.background.texture) || plan.background.texture}")`;
+    els.push(el);
+  }
+  // עזר: שער במסך מלא מהפניה פתורה + תיבת כותרת לפי box מהעיצוב (אם נרשם)
+  const fullShaar = (slotName, cssClass, boxClass) => {
+    const slot = plan.slots.find(s => s.slot === slotName && s.asset);
+    if (!slot) return;
+    const resolved = resolveAssetRef(slot.asset);
+    const uri = resolved.uri || slot.asset;
+    const bg = doc.createElement('div');
+    bg.className = cssClass;
+    bg.style.backgroundImage = `url("${uri}")`;
+    bg.style.inset = '0';
+    els.push(bg);
+    // תיבת כותרת — מה-box של העיצוב ברישום (מ״מ) או מההגדרות; בלי box מהעיצוב —
+    // ה-fallback המסורתי של resolveShaarBox (REQ-ORN-05: התיבה תמיד נבנית על שער עם תמונה)
+    const designBox = resolved.item && resolved.item.box ? resolved.item.box : null;
+    const boxRef = designBox || settings['shaar-main-box'] || null;
+    {
+      const { box } = resolveShaarBox('main', settings['theme-set-id'] || 'default', { box: boxRef }, null, { top: 40, bottom: 40, right: 30, left: 30 });
+      const tb = doc.createElement('div');
+      tb.className = boxClass;
+      tb.dir = 'rtl';
+      tb.style.top = `${Math.round(box.top * MM_TO_PX)}px`;
+      tb.style.bottom = `${Math.round(box.bottom * MM_TO_PX)}px`;
+      tb.style.left = `${Math.round(box.left * MM_TO_PX)}px`;
+      tb.style.right = `${Math.round(box.right * MM_TO_PX)}px`;
+      const bookName = (settings['imud-book-title'] || (metadata && (metadata['שם הספר'] || metadata['ספר'] || metadata['title']))) || ''; // S4.5: גם המזהה הארוך + על
+      const topic = (settings['imud-book-subtitle'] || (metadata && (metadata['נושא מפורט'] || metadata['נושא']))) || ''; // 03.11: כותרת־משנה מוגדרת
+      tb.textContent = [bookName, topic].filter(Boolean).join(' · ');
+      els.push(tb);
+    }
+  };
+  fullShaar('shaar-main', 'deco deco--shaar-main', 'shaar-main-box');
+  fullShaar('shaar-sub', 'deco deco--shaar-sub', 'shaar-sub-box');
+  fullShaar('shaar-back-frame', 'deco deco--shaar-back', 'shaar-back-box');
+  return els;
+}
+
+/**
+ * **S8 (PT-09):** עמוד מותאם — תוכן קבוע/תיבות/תמונות במיקומים שהוגדרו (מ״מ→פיקסלים).
+ */
+function renderCustomPageContent(page, doc) {
+  const els = [];
+  if (!page.custom) return els;
+  for (const b of (page.custom.boxes || [])) {
+    const el = doc.createElement('div');
+    el.className = 'custom-box';
+    el.dir = 'rtl';
+    el.style.left = `${b.x}px`; el.style.top = `${b.y}px`;
+    el.style.width = `${b.w}px`; el.style.height = `${b.h}px`;
+    el.textContent = scrubPUAText(b.text || '');
+    els.push(el);
+  }
+  for (const im of (page.custom.images || [])) {
+    const el = doc.createElement('div');
+    el.className = 'custom-image';
+    el.style.left = `${im.x}px`; el.style.top = `${im.y}px`;
+    el.style.width = `${im.w}px`; el.style.height = `${im.h}px`;
+    el.style.backgroundImage = `url("${im.src}")`;
+    els.push(el);
+  }
+  return els;
+}
+
+/** **03.11(ד) — תוכן מובנה של עמודי השער (פורט renderMainShaar/renderSubShaar/
+ * renderBackShaar של המקור). המודל (בלוקים/תיבה/פריסה) חי ב-shaar-content.js —
+ * מקור יחיד שצורך גם ההיטל ל-PDF (F-09); כאן רק ההקרנה ל-DOM.
+ * עד כאן עמוד שער בלי עיצוב־תמונה היה עמוד ריק לגמרי — "אין עמודי שער"
+ * מבחינת המשתמש. המבנה, התיבות והגדלים נאמנים למקור. */
+function renderShaarContent(page, settings, doc, metadata) {
+  const model = buildShaarBlocks(page, settings, metadata);
+  if (!model) return [];
+  const els = [];
+  const px = (pt) => `${ptToPx(pt)}px`;
+
+  const wrap = doc.createElement('div');
+  const variant = page.type === 'shaar-main' ? 'main' : page.type === 'shaar-sub' ? 'sub' : 'back';
+  wrap.className = `shaar-content shaar-content--${variant}`;
+  wrap.dir = 'rtl';
+  wrap.style.top = `${model.box.top}px`;
+  wrap.style.bottom = `${model.box.bottom}px`;
+  wrap.style.right = `${model.box.right}px`;
+  wrap.style.left = `${model.box.left}px`;
+
+  for (const b of model.blocks) {
+    if (b.graphic) {
+      const el = doc.createElement('div');
+      el.className = 'shaar-crown';
+      el.innerHTML = b.graphic === 'crown-sub'
+        ? '<svg viewBox="0 0 300 30"><path d="M10,15 Q75,5 140,15 Q145,10 150,5 Q155,10 160,15 Q225,5 290,15 Q225,25 160,15 Q155,20 150,25 Q145,20 140,15 Q75,25 10,15 Z" fill="#222"/></svg>'
+        : '<svg viewBox="0 0 400 40"><circle cx="200" cy="20" r="10" fill="none" stroke="#000" stroke-width="4.5"/><circle cx="200" cy="20" r="4.5" fill="#000"/><path d="M182,20 C182,24 165,27 140,27 C90,27 40,22 5,20 C40,18 90,13 140,13 C165,13 182,16 182,20 Z" fill="#000"/><path d="M218,20 C218,24 235,27 260,27 C310,27 360,22 395,20 C360,18 310,13 260,13 C235,13 218,16 218,20 Z" fill="#000"/></svg>';
+      wrap.appendChild(el);
+      continue;
+    }
+    const el = doc.createElement('div');
+    el.className = b.cls;
+    el.dir = 'rtl';
+    // **Iteration-003 (parity משקל):** משפחה מפורשת מהבלוק (fontFamily — בקשה
+    // מילולית, כמו המשך כותרת שער-משנה ב-David Libre) גוברת על הנגזרת
+    // מההגדרות לפי מחלקה — אותו חוזה כמו החותמת (stampShaarLayout).
+    const fam = (b.fontFamily != null && String(b.fontFamily) !== '')
+      ? String(b.fontFamily)
+      : shaarFontOf(b.cls, settings);
+    if (fam) el.style.fontFamily = fontStack(fam);
+    if (b.sizePt > 0) el.style.fontSize = px(b.sizePt);
+    if (b.bold) el.style.fontWeight = '700';
+    if (b.letterSpacingPx) el.style.letterSpacing = `${b.letterSpacingPx}px`;
+    // **S73 (צבע פר-בלוק מההגדרות):** כמו המקרן — ברירת מחדל שחורה.
+    const col = shaarColorOfCls(b.cls, settings);
+    if (col) el.style.color = col;
+    el.textContent = scrubPUAText(String(b.text == null ? '' : b.text));
+    wrap.appendChild(el);
+  }
+  els.push(wrap);
+  return els;
+}
+
+/** **S73:** צבע בלוק שער לפי מחלקתו — הגדרת הצבע של הגופן המצוין לו
+ * (מקור יחיד סמנטי עם המקרן; גישה מילולית — דרישת סורק phantom-key). */
+function shaarColorOfCls(cls, settings) {
+  if (cls.includes('bsd-header') || cls.includes('publication-footer')) return nonBlack(settings['shaar-year-color']);
+  if (cls.includes('book-title-main')) return nonBlack(settings['shaar-title-color']);
+  if (cls.includes('book-subtitle')) return nonBlack(settings['shaar-subtitle-color']);
+  if (cls.includes('book-description')) return nonBlack(settings['shaar-desc-color']);
+  if (cls.includes('book-sections-summary')) return nonBlack(settings['shaar-sections-color']);
+  if (cls.includes('author-block')) return nonBlack(settings['shaar-author-color']);
+  if (cls.includes('back-shaar-text-line') || cls.includes('back-shaar-copyright-header')) return nonBlack(settings['shaar-back-text-color']);
+  return null;
+}
+
+/** **S73:** החזרת צבע שאינו שחור (ערך כהה/חסר ⇒ null — ירושת שחור ב-CSS). */
+function nonBlack(hex) {
+  return (hex && /^#[0-9a-f]{6}$/i.test(hex) && hex.toLowerCase() !== '#000000') ? hex : null;
+}
+
+/**
+ * רנדור עמוד שלם. @param {object} page - תוצר dp-planner + header + numbersByIndex
+ * **03.11(ד):** header ברירת מחדל = page.header — הצינור מחשב ומצמיד כותרת עליונה
+ * לכל עמוד (pipeline), וכל קורא שלא מעביר ארגומנט מקבל אותה אוטומטית. עד כאן
+ * התצוגה החיה (preview-tab) לא העבירה כלום והייצוא העביר מטא־נתונים בטעות —
+ * שני הנתיבים הציגו עמודים בלי כותרת עליונה בזמן שהבדיקות העבירו את הארגומנט
+ * במפורש ולא תפסו את הנתק (דיווח משתמש 3: "אין כותרות עליונות").
+ */
+function renderPage(page, settings, doc, header) {
+  if (header == null && page && page.header) header = page.header;
+  if (!page.template) {
+    // עמודי הערות שלא חוברו לרצף המספור — תבנית ברירת מחדל חוקית (A4) במקום קריסה
+    page.template = { width: 794, height: 1123, columns: [], margins: { top: 40, bottom: 40, side: 60, outer: 60 }, contentBox: { top: 40, bottom: 1080, height: 1040 }, gutter: 0, counts: false, numbered: false, hasRunningHead: false };
+  }
   const root = doc.createElement('article');
-  root.className = (PT_CLASS[mp.type] || 'page') + ' pmr-page';
-  root.dataset.pageIndex = String(mp.index);
-  root.setAttribute('id', `page-${mp.index}`);
-  root.setAttribute('dir', 'rtl');
-  if (geo.width != null) { root.style.width = `${px2(geo.width)}px`; root.dataset.modelWidth = String(geo.width); }
-  if (geo.height != null) { root.style.height = `${px2(geo.height)}px`; root.dataset.modelHeight = String(geo.height); }
-  // ברירות מחדל גלובליות (הגדרות משתמש — לא החלטות עימוד): גוף/רקע
+  root.className = PT_CLASS[page.type] || 'page';
+  root.dataset.pageIndex = String(page.index);
+  // **S9 (REQ-HDR-05):** עוגן עמוד — יעד לקישורי תוכן־העניינים הלחיצים (#page-N)
+  root.setAttribute('id', `page-${page.index}`);
+  if (page.template.width != null) root.style.width = `${page.template.width}px`;
+  if (page.template.height != null) root.style.height = `${page.template.height}px`;
+  root.dir = 'rtl';
+  // **03.11(ג):** גופן/גודל הגוף על שורש העמוד — התצוגה והייצוא יחד מגיבים
+  // להגדרות body-font/body-font-size-pt (השורות דורסות לפי סוגן — כותרות וכו').
+  // **S73:** צבע הגוף (body-color; שחור ⇒ אין style — ירושת ברירת המחדל).
   const bf = settings['body-font'];
   if (bf) root.style.fontFamily = fontStack(bf);
   const bodyCol = nonBlack(settings['body-color']);
   if (bodyCol) root.style.color = bodyCol;
   const bsPt = Number(settings['body-font-size-pt']);
-  if (Number.isFinite(bsPt) && bsPt > 0) root.style.fontSize = `${px2(bsPt * PT_TO_PX)}px`;
+  if (Number.isFinite(bsPt) && bsPt > 0) root.style.fontSize = `${ptToPx(bsPt)}px`;
+
+  // key: background-color / background-opacity — rgba אמיתי (P0-5)
   const bg = settings['background-color'];
   const bgOp = settings['background-opacity'];
   if (bg && bg !== '#ffffff') root.style.backgroundColor = bgRgba(bg, bgOp != null ? bgOp : 1);
   else if (Number.isFinite(bgOp) && bgOp < 1) root.style.backgroundColor = bgRgba('#ffffff', bgOp);
 
-  // (1) עיטורי רקע (סלוטים מהמודל: page-*/shaar-* — מתחת לתוכן)
-  const decoAll = mp.decorations || [];
-  const isBg = (d) => /^(page-|shaar-)/.test(String(d.slot || '')) || d.kind === 'page-background' || d.kind === 'page-texture' || d.kind === 'shaar-crown';
-  for (const d of decoAll) {
-    if (!isBg(d)) continue;
-    root.appendChild(renderModelDecoration(d, doc, diags));
-  }
-
-  // (2) תיבת השער (כרום בלבד — variant + rect מהמודל) ושורותיה החותמות
-  if (mp.shaar) {
-    const wrap = doc.createElement('div');
-    wrap.className = `shaar-content shaar-content--${mp.shaar.variant}`;
-    wrap.setAttribute('dir', 'rtl');
-    wrap.style.position = 'absolute';
-    wrap.style.left = `${px2(mp.shaar.box.x)}px`;
-    wrap.style.top = `${px2(mp.shaar.box.y)}px`;
-    wrap.style.width = `${px2(mp.shaar.box.w)}px`;
-    wrap.style.height = `${px2(mp.shaar.box.h)}px`;
-    for (const ln of mp.lines.filter(l => l.area === 'structural')) {
-      wrap.appendChild(renderModelLine(ln, doc, mp.shaar.box.x, mp.shaar.box.y));
+  // **עמודי הערות (S7.1.1):** כותרת + רשימת הערות; אין כותרת עליונה/טורי גוף
+  // **S5.4 (P-5 — תצוגה=ייצוא):** ההערות ממוקמות לפי המודל (colIdx/heightPx
+  // מ-buildEndnotePages) במיקום מוחלט בטורי התבנית — כמו שהפרויקטור מקרין
+  // ל-PDF. בעבר: רשימת זרימה אחת ברוחב מלא — התצוגה הציגה טור אחד בזמן
+  // שהמודל קבע שניים. ללא נתוני מודל — נפילה לרשימת הזרימה הישנה.
+  if (page.type === 'endnotes') {
+    let titleEl = null;
+    if (page.heading) {
+      const h = doc.createElement('h2');
+      h.className = 'endnote-title';
+      h.dir = 'rtl';
+      h.textContent = scrubPUAText(page.heading);
+      root.appendChild(h);
+      titleEl = h;
     }
-    root.appendChild(wrap);
-  } else if ((mp.lines || []).some(l => l.area === 'structural')) {
-    // שורות מובנות בלי תיבה (TOC/כותרת הערות) — מוקרנות ישירות בקואורדינטות העמוד
-    for (const ln of mp.lines.filter(l => l.area === 'structural')) {
-      root.appendChild(renderModelLine(ln, doc, 0, 0));
-    }
-  }
-
-  // (3) עמוד מותאם — תיבות ותמונות בגיאומטריה סופית מהמודל
-  if (mp.custom) {
-    for (const b of (mp.custom.boxes || [])) {
-      const el = doc.createElement('div');
-      el.className = 'custom-box';
-      el.setAttribute('dir', 'rtl');
-      el.style.position = 'absolute';
-      el.style.left = `${px2(b.x)}px`; el.style.top = `${px2(b.y)}px`;
-      el.style.width = `${px2(b.w)}px`; el.style.height = `${px2(b.h)}px`;
-      el.textContent = scrubPUAText(b.text || '');
-      root.appendChild(el);
-    }
-    for (const im of (mp.custom.images || [])) {
-      const el = doc.createElement('div');
-      el.className = 'custom-image';
-      el.style.position = 'absolute';
-      el.style.left = `${px2(im.x)}px`; el.style.top = `${px2(im.y)}px`;
-      el.style.width = `${px2(im.w)}px`; el.style.height = `${px2(im.h)}px`;
-      if (im.src) el.style.backgroundImage = `url("${im.src}")`;
-      else { el.dataset.assetMissing = '1'; diags.push({ kind: 'pmr-custom-image-missing' }); }
-      root.appendChild(el);
-    }
-  }
-
-  // (4) פס חוצה-טורים — מלבן הפס מהמודל; שורותיו בתוכו בקואורדינטות יחסיות
-  if (mp.spanning) {
-    const band = doc.createElement('div');
-    band.className = 'spanning-band';
-    band.setAttribute('dir', 'rtl');
-    band.style.position = 'absolute';
-    band.style.left = `${px2(mp.spanning.x)}px`;
-    band.style.top = `${px2(mp.spanning.y)}px`;
-    band.style.width = `${px2(mp.spanning.w)}px`;
-    band.style.height = `${px2(mp.spanning.h)}px`;
-    let firstSpanningLine = true;
-    for (const ln of mp.lines.filter(l => l.area === 'spanning')) {
-      appendLineSep(band, doc, firstSpanningLine); // **RC-A1:** רווח בין שורות הפס
-      firstSpanningLine = false;
-      band.appendChild(renderModelLine(ln, doc, mp.spanning.x, mp.spanning.y));
-    }
-    root.appendChild(band);
-  }
-
-  // **(4.2) Iteration-001 (legacy parity) — פסי H3 באמצע עמוד:** שורות הפס
-  // הן גיאומטריית עמוד (רוחב כל הטורים, ממורכזות) — הן מרונדרות במיכל
-  // עמוד-מוחלט ולא בתוך קופסת טור בודד (בתוך טור היו מקבלות left שלילי
-  // ונחתכות בהקשרי clipping). הקואורדינטות מהמודל — טהור.
-  const midBandLines = mp.lines.filter(l => l.area === 'column' && l.midBand === true && l.projected !== false);
-  let prevMidBandToken = null;
-  if (midBandLines.length) {
-    const mbWrap = doc.createElement('div');
-    mbWrap.className = 'mid-bands';
-    mbWrap.setAttribute('dir', 'rtl');
-    mbWrap.style.position = 'absolute';
-    mbWrap.style.left = '0';
-    mbWrap.style.top = '0';
-    mbWrap.style.width = `${px2(geo.width)}px`;
-    mbWrap.style.height = `${px2(geo.height)}px`;
-    for (const ln of midBandLines) {
-      // **RC-A1:** רווח בין שורות של אותו פס (אותו token) — לא בין פסים שונים
-      appendLineSep(mbWrap, doc, prevMidBandToken == null || ln.sourceTokenId !== prevMidBandToken);
-      prevMidBandToken = ln.sourceTokenId != null ? ln.sourceTokenId : null;
-      mbWrap.appendChild(renderModelLine(ln, doc, 0, 0));
-    }
-    root.appendChild(mbWrap);
-  }
-
-  // (4.5) עמודי הערות-סיום — שורות area=endnotes בקואורדינטות עמוד מוחלטות
-  // מההקרנה (החותמות של buildEndnotePages). הקרנה טהורה — המיקומים סופיים
-  // במודל; הקיבוץ לפי kind/sourceTokenId (נתוני זהות מהמודל) מייצר את
-  // העוגנים שהאודיט והנגישות מצפים להם: .endnote-title + .endnote-note.
-  const enLines = mp.lines.filter(l => l.area === 'endnotes');
-  if (enLines.length) {
-    const enWrap = doc.createElement('div');
-    enWrap.className = 'endnote-list';
-    enWrap.setAttribute('dir', 'rtl');
-    enWrap.style.position = 'absolute';
-    enWrap.style.left = '0';
-    enWrap.style.top = '0';
-    enWrap.style.width = '100%';
-    for (const ln of enLines) {
-      if (ln.kind === 'endnote-title') {
-        const h = doc.createElement('h2');
-        h.className = 'endnote-title';
-        h.setAttribute('dir', 'rtl');
-        h.style.position = 'absolute';
-        h.style.left = `${px2(ln.x)}px`;
-        h.style.top = `${px2(ln.y)}px`;
-        h.style.width = `${px2(ln.w)}px`;
-        h.style.height = `${px2(ln.h)}px`;
-        h.style.lineHeight = `${px2(ln.h)}px`;
-        if (ln.sizePt != null) h.style.fontSize = `${px2(ln.sizePt * PT_TO_PX)}px`;
-        const fam = familyOf((ln.words || [])[0] && ln.words[0].fontKey);
-        if (fam) h.style.fontFamily = fam;
-        h.textContent = scrubPUATText((ln.words || []).map(w => w.text).join(' '));
-        enWrap.appendChild(h);
-        continue;
+    const list = doc.createElement('div');
+    list.className = 'endnote-list';
+    const tplEn = page.template;
+    const haveModel = tplEn && Array.isArray(tplEn.columns) && tplEn.columns.length
+      && Array.isArray(page.columns) && page.columns.some(c => c.length)
+      && page.notes && page.notes.every(n => n.colIdx != null);
+    if (haveModel) {
+      // **S6.0 (R4-M2 — עוגן מיקום שגוי):** הרשימה הייתה position:relative
+      // בזרימה אחרי כותרת ה-h2 ⇒ בלוק ההכלה התחיל ~42px מתחת לראש העמוד
+      // בעוד top-ים של ההערות הם קואורדינטות עמוד ⇒ כל ההערות הוסטו ~42px
+      // מטה מהמודל/PDF (והאחרונות נחתכו). כעת הרשימה absolute בקואורדינטות
+      // העמוד; גם הכותרת ממוקמת מהמודל (ראש תיבת התוכן) ולא בזרימה.
+      list.style.position = 'absolute';
+      list.style.top = '0';
+      list.style.left = '0';
+      list.style.right = '0';
+      const titleAnchor = titleEl;
+      if (titleAnchor) {
+        titleAnchor.style.position = 'absolute';
+        titleAnchor.style.top = `${Math.round(tplEn.contentBox.top)}px`;
+        titleAnchor.style.left = `${Math.round(Math.min(...tplEn.columns.map(c => c.x)))}px`;
+        titleAnchor.style.right = `${Math.round(tplEn.width - Math.max(...tplEn.columns.map(c => c.x + c.w)))}px`;
+        titleAnchor.style.margin = '0';
       }
-      const note = doc.createElement('div');
-      note.className = 'endnote-note';
-      note.setAttribute('dir', 'rtl');
-      if (ln.sourceTokenId != null) note.dataset.token = ln.sourceTokenId;
-      note.style.position = 'absolute';
-      note.style.left = `${px2(ln.x)}px`;
-      note.style.top = `${px2(ln.y)}px`;
-      note.style.width = `${px2(ln.w)}px`;
-      note.appendChild(renderModelLine(ln, doc, ln.x, ln.y));
-      enWrap.appendChild(note);
+      const topEn = tplEn.contentBox.top + (page.titleBandPx || 0);
+      const colsEn = page.columns;
+      // טור-אחד (endnote-columns=1): רוחב תיבת התוכן המלא — כמו הפרויקטור/PDF
+      const singleColEn = colsEn.length === 1;
+      const fullL = Math.min(...tplEn.columns.map(c => c.x));
+      const fullR = Math.max(...tplEn.columns.map(c => c.x + c.w));
+      for (let ci = 0; ci < colsEn.length; ci++) {
+        let y = topEn;
+        for (const n of colsEn[ci] || []) {
+          const col = singleColEn
+            ? { x: fullL, w: fullR - fullL }
+            : (tplEn.columns[ci] || tplEn.columns[0]);
+          const el = doc.createElement('div');
+          el.className = 'endnote-note';
+          el.dir = 'rtl';
+          el.style.position = 'absolute';
+          el.style.left = `${Math.round(col.x)}px`;
+          el.style.top = `${Math.round(y)}px`;
+          el.style.width = `${Math.round(col.w)}px`;
+          // **שלב 6 פרוסה 2 (§9):** שורות ההערה מהחותמת — פיץ' מדויק מהמודל
+          // (בדיוק כמו הפרויקטור ל-PDF וכמו התקציב שקבע buildEndnotePages).
+          const stamped = Array.isArray(n.noteRows) && n.noteRows.length > 0 && Array.isArray(n.noteWords) && Number(n.lineH) > 0;
+          if (stamped) {
+            el.style.margin = '0'; // התקציב אינו כולל שוליים — תצוגה=ייצוא=תקציב
+            el.dataset.rows = String(n.noteRows.length);
+            for (let li = 0; li < n.noteRows.length; li++) {
+              const row = n.noteRows[li];
+              const div = doc.createElement('div');
+              div.className = 'fn-row';
+              div.style.whiteSpace = 'nowrap';
+              div.style.lineHeight = `${n.lineH}px`;
+              div.style.height = `${n.lineH}px`;
+              const parts = [];
+              if (li === 0 && n.marker != null && String(n.marker) !== '') parts.push(`${n.marker}\u200F`);
+              for (let i = row.wFrom; i < row.wTo; i++) parts.push(scrubPUAText(String(n.noteWords[i])));
+              div.textContent = parts.join(' ');
+              el.appendChild(div);
+            }
+          } else {
+            el.dataset.stampMissing = '1'; // diagnostic גלוי (§9.8)
+            el.textContent = `${n.marker || ''}\u200F ${scrubPUAText(n.text || '')}`;
+          }
+          list.appendChild(el);
+          y += (n.heightPx || 0);
+        }
+      }
+    } else {
+      for (const n of page.notes || []) {
+        const el = doc.createElement('div');
+        el.className = 'endnote-note';
+        el.dir = 'rtl';
+        el.textContent = `${n.marker || ''}\u200F ${scrubPUAText(n.text || '')}`;
+        list.appendChild(el);
+      }
     }
-    root.appendChild(enWrap);
+    root.appendChild(list);
+    const folioEn = renderFolio(page, settings, doc);
+    if (folioEn) root.appendChild(folioEn);
+    return root;
   }
 
-  // (5) טורים — התיבות מ-geometry; השורות ילדות ישירות של הטור (עוגן האודיט)
-  const colTops = (geo.columns || []).map(() => (geo.contentBox ? geo.contentBox.top : 0) + (geo.spanOffset || 0));
+  // **S8 (REQ-ORN-05/08):** רקעים/ערכות/תיבות שער — שכבות תשתית לפני התוכן
+  for (const el of renderPageBackgroundAndShaar(page, settings, doc, page._metadata)) root.appendChild(el);
+
+  // **03.11(ד):** תוכן מובנה של עמודי השער (בס״ד/כותרת/כתר/תיאור/מחבר/שנה —
+  // פורט המקור). בלי זה עמוד שער ללא עיצוב־תמונה היה ריק לחלוטין.
+  for (const el of renderShaarContent(page, settings, doc, page._metadata)) root.appendChild(el);
+
+  // **S9 (REQ-HDR-05):** עמודי תוכן־עניינים — שורות + נקודות + עוגנים; אין טורי גוף
+  // **03.11(ד):** כותרת עליונה גם בעמודי התוכן־עניינים — כמקור
+  // (renderPaginatedTOC מרנדר top-header-grid בכל עמודי התוכן).
+  if (page.type === 'toc-general' || page.type === 'toc-detail') {
+    const hToc = renderHeader(header, doc);
+    if (hToc) root.appendChild(hToc);
+    for (const el of renderTocPageContent(page, doc)) root.appendChild(el);
+    const folioToc = renderFolio(page, settings, doc);
+    if (folioToc) root.appendChild(folioToc);
+    return root;
+  }
+
+  // **S8 (PT-09):** עמוד מותאם — תוכן קבוע; אין טורים/כותרת עליונה
+  if (page.type === 'custom') {
+    for (const el of renderCustomPageContent(page, doc)) root.appendChild(el);
+    const folioC = renderFolio(page, settings, doc);
+    if (folioC) root.appendChild(folioC);
+    return root;
+  }
+
+  const h = renderHeader(header, doc);
+  if (h) root.appendChild(h);
+
+  // **S8 (FWD-1):** פס כותרת חוצה־טורים מעל הטורים (H2 full-width)
+  const band = renderSpanningBand(page, settings, doc);
+  if (band) root.appendChild(band);
+
   const colsWrap = doc.createElement('div');
   colsWrap.className = 'columns';
-  (geo.columns || []).forEach((c, ci) => {
+  const spanOffset = page.spanning ? page.spanning.heightPx : 0; // הטורים מתחילים מתחת לפס
+  page.columns.forEach((colLines, ci) => {
     const colEl = doc.createElement('section');
     colEl.className = 'column';
-    colEl.style.position = 'absolute';
-    const colHeight = Math.max(0, (geo.contentBox ? geo.contentBox.height : 0) - (geo.spanOffset || 0));
-    colEl.style.left = `${px2(c.x)}px`;
-    colEl.style.width = `${px2(c.w)}px`;
-    colEl.style.top = `${px2(colTops[ci])}px`;
-    colEl.style.height = `${px2(colHeight)}px`;
-    colEl.dataset.modelX = String(c.x);
-    colEl.dataset.modelW = String(c.w);
-    colEl.dataset.modelTop = String(colTops[ci]);
-    colEl.dataset.modelHeight = String(colHeight);
-    colEl.dataset.modelBottom = String(colTops[ci] + colHeight);
-    for (const ln of mp.lines.filter(l => l.area === 'column' && l.col === ci && l.projected !== false && l.midBand !== true)) {
-      colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci]));
-    }
+    colEl.style.left = `${page.template.columns[ci] ? page.template.columns[ci].x : 0}px`;
+    colEl.style.width = `${page.template.columns[ci] ? page.template.columns[ci].w : 'auto'}px`;
+    colEl.style.top = `${page.template.contentBox.top + spanOffset}px`;
+    colEl.style.height = `${Math.max(0, page.template.contentBox.height - spanOffset)}px`;
+    for (const ln of colLines) colEl.appendChild(renderLine(ln, doc, settings));
     colsWrap.appendChild(colEl);
   });
   root.appendChild(colsWrap);
 
-  // (6) תמונות — מלאי הנכסים בגיאומטריה סופית מהמודל (כולל צפים; §2.2)
-  for (const im of (mp.images || [])) {
-    if (im.x == null || im.y == null) {
-      // נתון חסר במודל — diagnostic גלוי, לא השלמה שקטה (§2.2)
-      diags.push({ kind: 'pmr-image-without-geometry', itemId: im.itemId || null, assetId: im.assetId || null });
-      continue;
-    }
-    const el = doc.createElement('div');
-    el.className = 'pmr-img';
-    el.setAttribute('role', 'img');
-    if (im.altText) el.setAttribute('aria-label', scrubPUAText(im.altText));
-    if (im.itemId != null) el.dataset.itemId = String(im.itemId);
-    if (im.assetId != null) el.dataset.assetId = String(im.assetId);
-    el.style.position = 'absolute';
-    el.style.left = `${px2(im.x)}px`; el.style.top = `${px2(im.y)}px`;
-    el.style.width = `${px2(im.w)}px`; el.style.height = `${px2(im.h)}px`;
-    const ref = im.resourcePath || null;
-    const uri = ref ? (resolveAssetRef(ref) || {}).uri : null;
-    if (uri) {
-      el.style.backgroundImage = `url("${uri}")`;
-      el.style.backgroundSize = '100% 100%';
-      el.style.backgroundRepeat = 'no-repeat';
-    } else {
-      el.dataset.assetMissing = '1';
-      diags.push({ kind: 'pmr-image-asset-unresolved', itemId: im.itemId || null, assetId: im.assetId || null });
-    }
-    root.appendChild(el);
-  }
+  // חוט מפריד בין טורים (overlay — אחרי הטורים, לא מזיז שום דבר)
+  const divider = renderColumnDivider(page, settings, doc);
+  if (divider) root.appendChild(divider);
 
-  // (7) הערות-צד/תיבות מידע — כרום+זהות מהרשומה; שורות הטקסט בתוכה (עוגן
-  // האודיט: .side-note/.margin-note עם textContent לספירת המילים).
-  const marginLines = mp.lines.filter(l => l.area === 'margin');
-  for (const sn of (mp.sideNotes || [])) {
+  const fn = renderFootnoteArea(page, settings, doc);
+  if (fn) root.appendChild(fn);
+
+  const folioMain = renderFolio(page, settings, doc);
+  if (folioMain) root.appendChild(folioMain);
+
+  // **S8 (REQ-ORN-01..04):** עיטורים — ציור מה־rectים בלבד (F-09 מקור יחיד)
+  for (const el of renderDecorations(page, doc)) root.appendChild(el);
+
+  // הערות צד / תיבות מידע: מיקום מוחלט לפי ה‑placement (S7.1.2) — anchor לפסקה המארחת.
+  // **שלב 6 פרוסה 2 (§§9-10):** הגוף מוקרן משורות החותמת — תיבת-שורה מפורשת
+  // לכל שורה (line-height/height = lineH מהמודל; nowrap — הדפדפן אינו שובר
+  // מחדש). בעבר ה-aside עטף טקסט חופשי עם line-height:1.15 יחסי מה-CSS —
+  // סטייה של עד ~0.4px לשורה מהתקציב שצברה על שורות רבות ⇒ חפיפות
+  // SIDE_NOTE_OVERLAP בפועל בעמוד 107 (האודיט החי). תיבת מידע: ריפוד/מסגרת/
+  // רקע מהחוזה (styleSpec+boxChrome) — אותה גיאומטריה שהוקצתה (§11).
+  for (const sn of page.sideNotes || []) {
     const isBox = sn.itemKind === 'info-box';
     const el = doc.createElement('aside');
-    el.className = 'side-note' + (isBox ? ' info-box' : '');
-    if (sn.noteId != null) el.dataset.noteId = String(sn.noteId);
-    if (sn.anchorId != null) el.dataset.anchor = String(sn.anchorId);
-    el.setAttribute('dir', 'rtl');
-    el.style.position = 'absolute';
-    if (sn.x != null) { el.style.left = `${px2(sn.x)}px`; el.style.right = 'auto'; }
-    if (sn.yTop != null) el.style.top = `${px2(sn.yTop)}px`;
-    if (sn.w) el.style.width = `${px2(sn.w)}px`;
-    if (sn.heightPx != null) el.style.height = `${px2(sn.heightPx)}px`;
-    if (sn.boxChrome && isBox) {
-      const ch = sn.boxChrome;
-      if (ch.background) el.style.backgroundColor = ch.background;
-      if (ch.border > 0) el.style.border = `${ch.border}px solid ${ch.borderColor || '#1a1a1a'}`;
-      if (ch.pad) el.style.padding = `${ch.pad}px`;
+    el.className = 'side-note' + (sn.isCustomStyle ? ' side-note--custom' : '') + (isBox ? ' info-box' : '');
+    if (sn.isCustomStyle) el.dataset.style = sn.isCustomStyle;
+    el.dataset.anchor = sn.anchorToken || '';
+    el.dir = 'rtl';
+    if (sn.yTop != null) el.style.top = `${Math.round(sn.yTop)}px`;
+    if (sn.x != null) {
+      el.style.left = `${Math.round(sn.x)}px`;
+      el.style.right = 'auto';
     }
-    // שורות הטקסט של אותה הערה: אותו עמוד-שוליים (x) בטווח התיבה (yTop..yTop+h)
-    const own = marginLines.filter(l => l.x != null && sn.x != null && Math.abs(l.x - sn.x) < 0.01
-      && l.y != null && sn.yTop != null && l.y >= sn.yTop - 0.01 && l.y <= sn.yTop + (sn.heightPx || 0) + 0.01);
-    let firstOwnLine = true; // **RC-A1:** רווח בין שורות הביאור (טקסט אחד לוגי)
-    for (const ln of own) {
-      appendLineSep(el, doc, firstOwnLine);
-      firstOwnLine = false;
-      el.appendChild(renderModelLine(ln, doc, sn.x, sn.yTop));
+    const boxW = (sn.boxSpec && Number(sn.boxSpec.widthPx) > 0) ? sn.boxSpec.widthPx : sn.colWidth;
+    if (boxW) el.style.width = `${Math.round(boxW)}px`;
+    if (isBox) {
+      const chrome = sn.boxChrome || { pad: 0, border: 0 };
+      if (chrome.pad) el.style.padding = `${chrome.pad}px`;
+      if (chrome.border) el.style.border = '1px solid #000';
+      if (sn.styleSpec && sn.styleSpec.background) el.style.backgroundColor = sn.styleSpec.background;
+      if (sn.styleSpec && sn.styleSpec.fontSizePt) el.style.fontSize = `${Math.round(sn.styleSpec.fontSizePt * (96 / 72) * 100) / 100}px`;
     }
-    if (!own.length && sn.text) {
-      // רשומה בלי שורות מוקרנות — דיאגנוסטיק גלוי; הטקסט אינו נעלם (§2.4)
-      diags.push({ kind: 'pmr-side-note-without-lines', noteId: sn.noteId || null, anchorId: sn.anchorId || null });
-      const p = doc.createElement('div');
-      p.className = 'pmr-missing';
-      p.dataset.missing = 'side-note-lines';
-      p.textContent = scrubPUAText(sn.text).slice(0, 200);
-      el.appendChild(p);
-    }
-    root.appendChild(el);
-  }
-  // שורות margin שלא שויכו לשום רשומה — מוקרנות בקואורדינטות העמוד + דיאגנוסטיק
-  const claimed = new Set();
-  for (const sn of (mp.sideNotes || [])) {
-    for (const l of marginLines) {
-      if (l.x != null && sn.x != null && Math.abs(l.x - sn.x) < 0.01
-        && l.y != null && sn.yTop != null && l.y >= sn.yTop - 0.01 && l.y <= sn.yTop + (sn.heightPx || 0) + 0.01) claimed.add(l.id);
-    }
-  }
-  for (const ln of marginLines) {
-    if (claimed.has(ln.id)) continue;
-    diags.push({ kind: 'pmr-margin-line-orphan', lineId: ln.id || null });
-    const el = renderModelLine(ln, doc, 0, 0);
-    el.classList.add('pmr-orphan-margin');
-    root.appendChild(el);
-  }
-
-  // (8) מרזב הערות — אריזת-תצוגה של כיסוי הרשומות (נגזרת מנתוני המודל בלבד);
-  // הקו-המפריד (עיטור fn-rule מהמודל) מוצב בתוכה — כמו שהאודיט בודק.
-  const fnNotes = mp.footnotes || [];
-  if (fnNotes.length) {
-    const fnRules = decoAll.filter(d => d.kind === 'fn-rule');
-    const xs = fnNotes.map(n => n.x).filter(v => v != null).concat(fnRules.map(r => r.x));
-    const ys = fnNotes.map(n => n.y).filter(v => v != null).concat(fnRules.map(r => r.y));
-    const area = doc.createElement('div');
-    area.className = `footnotes footnotes--${settings['fn-layout-mode']}`;
-    area.style.position = 'absolute';
-    if (xs.length && ys.length) {
-      const minX = Math.min(...xs), minY = Math.min(...ys);
-      const maxX = Math.max(...fnNotes.map(n => (n.x != null && n.w != null ? n.x + n.w : null)).filter(v => v != null)
-        .concat(fnRules.map(r => r.x + r.w)));
-      area.style.left = `${px2(minX)}px`;
-      area.style.top = `${px2(minY)}px`;
-      if (maxX != null) area.style.width = `${px2(maxX - minX)}px`;
-      area.style.bottom = 'auto';
-    }
-    for (const r of fnRules) area.appendChild(renderModelDecoration(r, doc, diags));
-    for (const n of fnNotes) {
-      const el = doc.createElement('div');
-      el.className = 'footnote';
-      if (n.noteId != null) el.dataset.noteId = String(n.noteId);
-      if (n.anchorId != null) el.dataset.anchor = String(n.anchorId);
-      if (n.continuationOf != null) el.dataset.continuationOf = String(n.continuationOf);
-      el.setAttribute('dir', 'rtl');
-      el.style.position = 'absolute';
-      if (n.x != null) el.style.left = `${px2(n.x - (xs.length ? Math.min(...xs) : 0))}px`;
-      if (n.y != null) el.style.top = `${px2(n.y - (ys.length ? Math.min(...ys) : 0))}px`;
-      if (n.w) el.style.width = `${px2(n.w)}px`;
-      // שורות ההערה: קיבוץ לפי baselineY (נתון מהמודל) — שורה k בגובה lineH
-      const lineH = n.lineH || 0;
-      const rows = new Map();
-      for (const wd of (n.words || [])) {
-        const key = wd.baselineY != null ? wd.baselineY : 0;
-        if (!rows.has(key)) rows.set(key, []);
-        rows.get(key).push(wd);
+    const stamped = Array.isArray(sn.noteRows) && sn.noteRows.length > 0 && Array.isArray(sn.noteWords) && Number(sn.lineH) > 0;
+    if (stamped) {
+      el.dataset.rows = String(sn.noteRows.length);
+      for (let li = 0; li < sn.noteRows.length; li++) {
+        const row = sn.noteRows[li];
+        const div = doc.createElement('div');
+        div.className = 'sn-row';
+        div.style.whiteSpace = 'nowrap';
+        div.style.lineHeight = `${sn.lineH}px`;
+        div.style.height = `${sn.lineH}px`;
+        const parts = [];
+        if (li === 0 && !isBox && sn.counterMark != null && String(sn.counterMark) !== '') parts.push(String(sn.counterMark));
+        for (let i = row.wFrom; i < row.wTo; i++) parts.push(scrubPUAText(String(sn.noteWords[i])));
+        div.textContent = parts.join(' ');
+        el.appendChild(div);
       }
-      const sortedRows = [...rows.entries()].sort((a, b) => a[0] - b[0]);
-      if (!sortedRows.length && n.text) {
-        diags.push({ kind: 'pmr-footnote-without-words', noteId: n.noteId || null });
-      }
-      sortedRows.forEach(([baselineY, words], k) => {
-        // **RC-A1:** רווח בין שורות ההערה (טקסט אחד לוגי) — textContent שלם
-        appendLineSep(el, doc, k === 0);
-        const row = doc.createElement('div');
-        row.className = 'fn-row';
-        row.style.position = 'relative';
-        if (lineH > 0) { row.style.height = `${px2(lineH)}px`; row.style.lineHeight = `${px2(lineH)}px`; }
-        let firstFnWord = true;
-        for (const wd of words) {
-          if (!firstFnWord && typeof doc.createTextNode === 'function') row.appendChild(doc.createTextNode(' '));
-          firstFnWord = false;
-          const span = doc.createElement('span');
-          span.className = 'w' + (wd.mk ? ' w--fnmarker' : '');
-          span.style.position = 'absolute';
-          span.style.left = `${px2(wd.x - (n.x != null ? n.x : 0))}px`;
-          span.style.top = '0';
-          span.style.whiteSpace = 'pre';
-          if (wd.sizePt != null) span.style.fontSize = `${px2(wd.sizePt * PT_TO_PX)}px`;
-          const fam = familyOf(wd.fontKey);
-          if (fam) span.style.fontFamily = fam;
-          span.textContent = scrubPUAText(wd.text);
-          row.appendChild(span);
-        }
-        void baselineY; void k;
-        el.appendChild(row);
-      });
-      area.appendChild(el);
-    }
-    root.appendChild(area);
-  }
-
-  // (9) כותרת עליונה — סלוטים במיקומים סופיים מהמודל
-  if (mp.header && (mp.header.slots || []).length) {
-    const el = doc.createElement('div');
-    // **W-2 (F-3.1/F-3.2, 27.11):** המפתח האמיתי ברישום הוא header-separator-line
-    // (settings-registry:125; headers-builder:168) — לא header-separator-style
-    // (מפתח-רפאים שהחזיר תמיד 'none'). ה-class הוא סמנטיקה חיה לקוראי DOM בלבד:
-    // אין לו כלל CSS (הוסר מ-BASE_CSS באותו שינוי) — הקו עצמו מצויר מעיטור
-    // hdr-rule של gate-design, בדיוק כמו ב-PDF.
-    el.className = `running-head head--sep-${settings['header-separator-line'] || 'none'}`;
-    el.style.position = 'absolute';
-    el.style.top = `${px2(mp.header.y)}px`;
-    el.style.left = '0';
-    el.style.width = '100%';
-    el.style.height = '14px';
-    for (const s of mp.header.slots) {
-      if (!s.text) continue;
-      const span = doc.createElement('span');
-      span.className = `rh rh--${s.pos}`;
-      span.style.position = 'absolute';
-      // **RC-HDR2-20261127 (התיקון ב-DOM — כהוראת המשתמש):** עד כאן הספאן
-      // ישב בטופ המיכל (mp.header.y=89.2px) — **מתחת** לקו המפריד (hdr-rule
-      // ב-y=82.67px), בסתירה לייחוס (פס גליפים 42.56–57.56pt ⇒ בסיס 71.9px,
-      // **מעל** הקו). כעת: top פר-סלוט = baselineY − ascent×sizePx (ביחס למיכל),
-      // בדיוק הנוסחה של ה-PDF — הכותרת עולה מעל הקו ומתיישרת עם הייצוא.
-      // נפילה להתנהגות הישנה רק בלי בסיס/עלייה מהחותמת (פרופיל DP).
-      if (s.baselineY != null && s.ascentEm != null && s.sizePt != null) {
-        const spanTop = s.baselineY - s.ascentEm * (s.sizePt * PT_TO_PX) - mp.header.y;
-        span.style.top = `${px2(spanTop)}px`;
-      }
-      // **Iteration-006 (G6/RC-F1):** סלוט כותרת = שורה אחת תמיד (חוזה הייחוס —
-      // כותרת-מרכז ארוכה נשארת שורה אחת וחופפת את מילות-הצד, p647-653). בלי
-      // nowrap הדפדפן שובר לשתי שורות בתיבת 14px ⇒ שורות מודבקות זו על זו.
-      span.style.whiteSpace = 'nowrap';
-      if (s.x != null) { span.style.left = `${px2(s.x)}px`; span.style.right = 'auto'; }
-      if (s.w != null) span.style.width = `${px2(s.w)}px`;
-      if (s.align) span.style.textAlign = s.align;
-      if (s.sizePt != null) span.style.fontSize = `${px2(s.sizePt * PT_TO_PX)}px`;
-      const fam = familyOf(s.fontKey);
-      if (fam) span.style.fontFamily = fam;
-      const col = nonBlack(s.color);
-      if (col) span.style.color = col;
-      span.textContent = scrubPUAText(s.text);
-      el.appendChild(span);
-    }
-    root.appendChild(el);
-  }
-
-  // (10) גיליון — מלבן+טקסט+זהות מהמודל; הכרום (מסגרת) מההגדרות
-  if (mp.folio && mp.folio.text && settings['page-num-position'] !== 'none') {
-    const el = doc.createElement('footer');
-    el.className = `folio folio--${settings['page-num-position']} folio--frame-${settings['page-num-frame']}`;
-    el.style.position = 'absolute';
-    if (mp.folio.x != null) { el.style.left = `${px2(mp.folio.x)}px`; el.style.right = 'auto'; }
-    if (mp.folio.y != null) { el.style.top = `${px2(mp.folio.y)}px`; el.style.bottom = 'auto'; }
-    if (mp.folio.w != null) el.style.width = `${px2(mp.folio.w)}px`;
-    if (mp.folio.sizePt != null) el.style.fontSize = `${px2(mp.folio.sizePt * PT_TO_PX)}px`;
-    const fam = familyOf(mp.folio.fontKey);
-    if (fam) el.style.fontFamily = fam;
-    const col = nonBlack(mp.folio.color);
-    if (col) el.style.color = col;
-    if (mp.folio.baselineY != null && mp.folio.y != null) el.style.lineHeight = `${px2(mp.folio.baselineY - mp.folio.y)}px`;
-    if (isCssFrame(settings['page-num-frame'])) {
-      const badge = doc.createElement('span');
-      badge.className = `page-num-badge page-num-frame-${settings['page-num-frame'] === 'circle' ? 'circle' : 'box'}`;
-      badge.textContent = mp.folio.text;
-      el.appendChild(badge);
     } else {
-      el.textContent = mp.folio.text;
+      el.dataset.stampMissing = '1'; // diagnostic גלוי — בלי מדידה חלופית שקטה (§9.8)
+      el.textContent = (sn.counterMark ? `${sn.counterMark} ` : '') + scrubPUAText(sn.text);
     }
     root.appendChild(el);
-  }
-
-  // (11) עיטורי חזית — השאר (מעל התוכן; zOrder מהמודל)
-  for (const d of decoAll) {
-    if (isBg(d) || d.kind === 'fn-rule') continue;
-    root.appendChild(renderModelDecoration(d, doc, diags));
-  }
-
-  // **9c.3 (§4.3 — TOC click בתצוגה החיה):** מלבני הקישור מהמודל
-  // (document.tocLinks) מוקרנים כשכבת-על לחיצה — אותה הקרנה כמו בייצוא
-  // ה-HTML העצמאי. הקריאה מעבירה את הרשימה דרך opts.tocLinks; היעדים
-  // הם ה-id של אלמנטי העמוד (#page-N) — קליק מסונכרן ב-preview-tab.
-  if (Array.isArray(opts.tocLinks)) {
-    for (const l of opts.tocLinks) {
-      if (l.page !== mp.index) continue;
-      const a = doc.createElement('a');
-      a.className = 'toc-link';
-      a.setAttribute('href', `#page-${l.targetPage}`);
-      a.setAttribute('dir', 'rtl');
-      if (a.style) {
-        a.style.position = 'absolute';
-        a.style.left = `${Math.round(l.x * 100) / 100}px`;
-        a.style.top = `${Math.round(l.y * 100) / 100}px`;
-        a.style.width = `${Math.round(l.w * 100) / 100}px`;
-        a.style.height = `${Math.round(l.h * 100) / 100}px`;
-      }
-      root.appendChild(a);
-    }
-  }
-
-  // חשבונאות גלויה (§2.4): פריט שלא מוקרן — diagnostic בר-צפייה, לא היעלמות
-  const projectedLineIds = new Set([...(mp.lines || [])].map(l => l.id));
-  for (const ln of (mp.lines || [])) {
-    if (ln.projected === false) diags.push({ kind: 'pmr-line-not-projected', lineId: ln.id || null });
-  }
-  void projectedLineIds;
-  if (diags.length) {
-    root.dataset.pmDiagnostics = String(diags.length);
-    if (opts.onDiagnostic) for (const d of diags) opts.onDiagnostic(d);
   }
   return root;
 }
 
-function isCssFrame(v) { return v === 'circle' || v === 'square'; }
-
-module.exports = { renderModelPage };
+module.exports = { renderPage, renderLine, scrubPUAText, bgRgba, PT_CLASS, renderSpanningBand, renderDecorations, renderPageBackgroundAndShaar, renderShaarContent, renderCustomPageContent, applyCustomStyleSpec, fontStack };
 
 };
 __modules["src/engine/core/pua-text.js"] = function (require, module, exports) {
@@ -11380,64 +11152,1732 @@ function scrubPUAText(s) {
 module.exports = { ATOMIC_SPACE, PAREN_MARK, MARK_TAG, scrubPUAText };
 
 };
-__modules["src/engine/typography/font-keys.js"] = function (require, module, exports) {
-// src/engine/typography/font-keys.js — מפתח משפחת גופן רשומה ⇒ תת-גופן ייצוא (S73)
+__modules["src/engine/notes/markers.js"] = function (require, module, exports) {
+// src/engine/notes/markers.js — Unified note-marker module (S7.1.5/6, REQ-FN-05/06; D-30/D-41)
 'use strict';
 
 /**
- * **מקור יחיד למיפוי משפחה→מפתח גופן** (הוצא מכפילות: עד כאן היו שני עותקים
- * זהים — core/materialize.js ו-layout/structural-stamps.js — ועותק שלישי
- * במקרן המורשת שייסגר בשלב 9). המיפוי טהור: בדיקת רישום בלבד (registeredFonts),
- * בלי מדידה ובלי תלות ברנדרר.
- *
- * משפחה רשומה ⇒ המשפחה עצמה כמפתח (תת-גופן ייעודי בייצוא); אחרת null
- * (=גוף הטקסט /F1). התפקידים הפונקציונליים (window/fnbody/margin/heading)
- * ממופים לשמות הקצרים של תתי-הגופנים ב-pdf-writer.
+ * מקור־הסמכות היחיד לסמני הערות בכל המוצר: גוף, מרזב, עמודי הערות.
+ * לפני האיחוד היו שלושה ממירים שונים (pipeline `[n]` קשיח, dom-renderer markerFor,
+ * endnote-pages formatMarker) — מה שגרם לאי־עקביות מספור בין גוף לעמודי הערות (P1-3).
+ * כל שינוי סגנון/מדיניות נעשה כאן בלבד; כל הצרכנים קוראים מכאן (single source).
  */
 
-const { registeredFonts } = require('./measure-api');
+const HEB_LETTERS = ['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'];
 
-/** @param {string} fam — שם משפחה מההגדרות (heading-N-font וכו'); ריק ⇒ null */
-function familyFontKeyOf(fam) {
-  if (!fam || !registeredFonts.has(fam)) return null;
-  if (fam === 'Frank Ruhl Libre') return 'fnbody';
-  if (fam === 'Hadassah Friedlaender') return 'margin';
-  if (fam === 'FrankReal-Bold' || fam === 'FrankReal') return 'window';
-  if (fam === 'David Libre' || fam === 'DavidLibre-Bold') return 'heading';
-  return fam;
+/** **S5.2 (תיקון 10 — מוסכמת הגרשיים של הגיליון):** סיומת סמן לפי המוסכמה
+ *  שמממש folio.toHebrewNumber/finish: אות בודדת ⇒ אות+גרש (א׳);
+ *  שתי אותיות ומעלה ⇒ גרשיים **לפני האות האחרונה** (כ״ג — לא כג׳ הישן).
+ *  יישום מקומי בעל אותה צורה (shared-shaped) — בלי ייבוא folio.js
+ *  (מניעת תלות decoration↔notes; נבדק — folio.js אינו דורש את markers,
+ *  כך שאין מעגל, אבל ההפרדה מונעת תלות עתידית). */
+function hebrewMarkFinish(letters) {
+  if (letters.length <= 1) return letters + '\u05F3';            // א׳ — גרש
+  return letters.slice(0, -1) + '\u05F4' + letters.slice(-1);   // כ״ג — גרשיים לפני האחרונה
 }
 
-/** **Iteration-003 (parity משקל בשערים):** בקשת משפחה מילולית — המשפחה הרשומה
- * עצמה היא המפתח, בלי המנהרות התפקידיות. למשל 'David Libre' ⇒ תת-הגופן
- * הרגיל (DavidLibre-Regular) ולא מפתח ה-heading (DavidLibre-Bold).
- * משמש את חותמת השערים בפרופיל IMUD: שורות המהדורה/המחבר/המשך-כותרת-
- * המשנה מופיעות בייחוס ב-David Libre רגיל (נמדד ב-PDF הייחוס:
- * ToraEx4 = "David Libre Regular"), בעוד כותרות ההערות/ה-TOC — שם
- * המנהרה ל-heading נכונה — נשארות ב-familyFontKeyOf. */
-function literalFamilyKeyOf(fam) {
-  if (!fam || !registeredFonts.has(fam)) return null;
-  return fam;
+/** גימטריה בלבד (בלי סיומת) — על בסיס אותיות 22; מעל 999 — חלק אלפים בגרש
+ *  (כמו toGematria של המורשת — הגבול המפורש של D-108 לשדות שאינם פוליו). */
+function hebrewBare(index1Based) {
+  let i = index1Based - 1, s = '';
+  if (i < 0) return 'א';
+  do { s = HEB_LETTERS[i % 22] + s; i = Math.floor(i / 22) - 1; } while (i >= 0);
+  if (index1Based >= 1000) {
+    const th = Math.floor(index1Based / 1000);
+    let j = th - 1, ts = '';
+    do { ts = HEB_LETTERS[j % 22] + ts; j = Math.floor(j / 22) - 1; } while (j >= 0);
+    s = ts + '\u05F3' + hebrewBare(index1Based % 1000 || 1);
+  }
+  return s;
 }
 
-/** **פרוסה 3 (§2.2 — זהות גופן מהמודל):** היפוך המיפוי לצורך הקרנה —
- * מפתח גופן (על שורות/מילים ב-PageModel) ⇒ שם משפחה לתצוגה. משפחה רשומה
- * היא המפתח עצמו; המפתחות הפונקציונליים ממופים למשפחה הקנונית שיצרה אותם
- * (אותה טבלה, כיוון אחד — אין עותק שני של הידע). */
-const KEY_FAMILY = {
-  fnbody: 'Frank Ruhl Libre',
-  margin: 'Hadassah Friedlaender',
-  window: 'FrankReal',
-  heading: 'DavidLibre-Bold'
+/** סמן בודד לפי סגנון הרישום (footnote-marker-style).
+ *  **Iteration-003 (legacy parity):** סגנון 'hebrew' — גימטריה + מפריד הרישום
+ *  (note-num-separator, ברירת מחדל '.') — בדיוק כמו markerWord של המורשת
+ *  (toGematria(n) + sep). הגרש מהמוסכמת של הגיליון (S5.2 תיקון 10) אינו
+ *  חל על סמני הערות — גבול D-108 עצמו ("אין להסיק מכלל זה דבר על ... גרש
+ *  בהערות"); 'hebrew-geresh' נשמר כבחירה מפורשת בלבד. */
+function markerFor(index1Based, style, opts) {
+  const separator = opts && opts.separator != null ? String(opts.separator) : '.';
+  switch (style) {
+    case 'decimal': return String(index1Based);
+    case 'parenthesis': return `(${index1Based})`;
+    case 'asterisk': {
+      const n = ((index1Based - 1) % 3) + 1; // *,**,*** ואז חוזר — policy מקובלת
+      return '*'.repeat(n) + (index1Based > 3 ? String(Math.ceil(index1Based / 3)) : '');
+    }
+    case 'hebrew':
+      return hebrewBare(index1Based) + separator;
+    case 'hebrew-geresh':
+    default: {
+      let i = index1Based - 1, s = '';
+      if (i < 0) return 'א׳';
+      do { s = HEB_LETTERS[i % 22] + s; i = Math.floor(i / 22) - 1; } while (i >= 0);
+      // **S5.2 (תיקון 10):** בעבר תמיד גרש בסוף (כג׳) — בניגוד למוסכמת
+      // הגרשיים של הגיליון. כעת hebrewMarkFinish: א׳/כ״ג.
+      return hebrewMarkFinish(s);
+    }
+  }
+}
+
+/**
+ * מספור לפי מדיניות איפוס (footnote-reset-policy):
+ *  - continuous: מונה כלל־מסמך אחד.
+ *  - page:       איפוס בכל עמוד (מרזב).
+ *  - section/part: איפוס בכל חלק (H1) — ברירת מחדל לעמודי הערות; shaar-sub ייתמך ב‑S8.
+ * מחזיר פונקציית next() שמקבלת הקשר {page, part} ומנפיקה מספור 1‑based.
+ */
+function makeCounter(policy, start = 0) {
+  let counter = start;
+  let lastKey = null;
+  const scopeKey = (ctx) => {
+    switch (policy) {
+      case 'page': return `p${ctx && ctx.page != null ? ctx.page : '?'}`;
+      case 'section':
+      case 'part': return `b${ctx && ctx.part != null ? ctx.part : '?'}`;
+      default: return 'doc'; // continuous
+    }
+  };
+  return function next(ctx = {}) {
+    const key = scopeKey(ctx);
+    if (policy === 'page' || policy === 'section' || policy === 'part') {
+      if (lastKey !== null && key !== lastKey) counter = 0; // איפוס בהחלפת היקף
+    }
+    lastKey = key;
+    counter++;
+    return counter;
+  };
+}
+
+// **S5.2 (תיקון 11):** splitPlaceholder הוסר — קוד מת מלכודתי: פיצול על ':'
+// היה מבתק שעות (12:30) אם אי־פעם היה נעשה בו שימוש חוזר; ה-placeholder
+// האמיתי של D-30 משתמש ב-U+E000 (ראה explodePlaceholderWord ב-pipeline).
+
+/**
+ * **S67 (R2-M4 — סגירת no-op):** מחדש-מספור סמני הערות-שוליים במדיניות
+ * footnote-reset-policy='page'. הרקע: הסמנים מוקצים בזמן הפענוח — בטרם
+ * ידוע לאיזה עמוד כל הערה תיפול — ולכן המונה במדיניות 'page' קיבל תמיד
+ * את אותו מפתח-היקף ('?') והתנהג כ-continuous (no-op). הפתרון: הקצאה
+ * עקבית-מסמך בפענוח (סמנים ישנים ייחודיים), ולאחר תכנון העמודים — כשכל
+ * הערה כבר קשורה לעמוד — מעבר מחדש-מספור לפי עמוד הופעתה הראשון.
+ *
+ * בטיחות גיאומטרית: מספר פר-עמוד תמיד ≤ המספר הרציף ⇒ הסמן רק מתקצר
+ * (או נשאר) ⇒ שום שורה לא מתארכת ואין סיכון עטיפה מחדש; שברי המשך
+ * ('split-rest') והצגות חוזרות יורשים את סמן ההופעה הראשונה (סמן אחיד — D-30).
+ *
+ * @param {Array} pages - עמודי המודל (לאחר planPages; footnotes מצורפות)
+ * @param {object} opts - { markerStyle, markersByToken, customMarks, blocks, eventLog }
+ *   markersByToken: Map tokenId→[{noteIndex,marker}] (הסמנים הישנים — מהפענוח)
+ *   customMarks: Set של סמני סגנונות-מותאמים — בהתנגשות עם סמן ישן מדלגים
+ *                בבטחה (אין דריסה עיוורת של סמן מותאם).
+ * @returns {{renumbered:number, skipped:string|null}} — כמה סמנים הוחלפו; אם דילוג — סיבתו.
+ */
+function renumberPageScopedMarkers(pages, opts) {
+  const { markerStyle, markerSeparator, markersByToken, customMarks, blocks, eventLog } = opts || {};
+  const tokenMark = new Map(); // tokenId → סמן חדש (מופע ראשון)
+
+  // שלב א (תכנון בלבד — בלי מוטציה): מספור פר-עמוד לפי סדר הופעה ראשון
+  let anyChange = false;
+  for (const pg of pages) {
+    let seq = 0;
+    for (const n of (pg.footnotes || [])) {
+      if (!n || n.tokenId == null) continue;
+      if (!tokenMark.has(n.tokenId)) {
+        seq += 1;
+        tokenMark.set(n.tokenId, markerFor(seq, markerStyle, { separator: markerSeparator != null ? markerSeparator : '.' }));
+      }
+      if (n.marker !== tokenMark.get(n.tokenId)) anyChange = true;
+    }
+  }
+  if (!anyChange) return { renumbered: 0, skipped: null };
+
+  // שלב ב: מפת סמן-ישן→סמן-חדש (הסמנים הישנים ייחודיים — הקצאה רציפה).
+  // הבדיקה קודמת לכל מוטציה: התנגשות עם סמן מותאם ⇒ דילוג מלא ונקי.
+  const oldToNew = new Map();
+  for (const [tokenId, assigns] of (markersByToken || new Map())) {
+    const nm = tokenMark.get(tokenId);
+    if (nm == null) continue;
+    for (const a of assigns) {
+      if (a.marker !== nm) oldToNew.set(a.marker, nm);
+    }
+  }
+  for (const oldM of oldToNew.keys()) {
+    if (customMarks && customMarks.has(oldM)) {
+      if (eventLog) eventLog.emit('notes', 'fn-renumber-page-skip', { reason: 'custom-marker-collision', marker: oldM });
+      return { renumbered: 0, skipped: 'custom-marker-collision' };
+    }
+  }
+  if (!oldToNew.size) return { renumbered: 0, skipped: null };
+
+  // שלב ג (החלה): מרזב — כל מופע/שבר/הצגה-חוזרת מקבל את סמן המופע הראשון
+  let renumbered = 0;
+  for (const pg of pages) {
+    for (const n of (pg.footnotes || [])) {
+      if (!n || n.tokenId == null) continue;
+      const nm = tokenMark.get(n.tokenId);
+      if (nm != null && n.marker !== nm) { n.marker = nm; renumbered++; }
+    }
+  }
+
+  // שלב ד: החלפה בגוף המסמך — שתי תבניות מילה:
+  //   (1) סמן מתויג (D-53): …\uE102סמן (לפני NBSP או בסוף המילה)
+  //   (2) הערה שנדחתה לגוף: סמן\uE000טקסט (בראש המילה)
+  const esc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const res = [];
+  for (const [oldM, newM] of oldToNew) {
+    res.push([new RegExp('\\uE102' + esc(oldM) + '(?=\\u00A0|$)', 'g'), '\uE102' + newM]);
+    res.push([new RegExp('^' + esc(oldM) + '\\uE000'), newM + '\uE000']);
+  }
+  let touchedWords = 0;
+  for (const pg of pages) {
+    for (const col of (pg.columns || [])) {
+      for (const ln of col) {
+        if (!Array.isArray(ln.words)) continue;
+        for (let wi = 0; wi < ln.words.length; wi++) {
+          const w = ln.words[wi];
+          if (typeof w !== 'string') continue;
+          let out = w;
+          for (const [re, to] of res) out = out.replace(re, to);
+          if (out !== w) { ln.words[wi] = out; touchedWords++; }
+        }
+      }
+    }
+  }
+
+  // שלב ה: עדכון הרישומים (noteAssignments/rejectedNotes של הבלוקים) — אמת-דיווח
+  for (const [, assigns] of (markersByToken || new Map())) {
+    for (const a of assigns) {
+      const nm = oldToNew.get(a.marker);
+      if (nm != null) a.marker = nm;
+    }
+  }
+  for (const b of (blocks || [])) {
+    for (const n of (b.rejectedNotes || [])) {
+      const nm = oldToNew.get(n.marker);
+      if (nm != null) n.marker = nm;
+    }
+  }
+  if (eventLog) eventLog.emit('notes', 'fn-renumber-page', { renumbered, touchedWords });
+  return { renumbered, touchedWords, skipped: null };
+}
+
+/**
+ * **שלב 5 (חילוץ שורש מ-PR #16, S78/D-107 — עוזר זיהוי סמן מתויג):**
+ * חילוץ טקסט הסמן ממילת גוף — אותו פענוח של ה-pipeline (countKnown) ושל
+ * המתכנן (הערות עוקבות-עוגן): מקור יחיד לתבנית D-53.
+ *  - מילה עם E000 (הערה שנדחתה לגוף): הסמן הוא הפרגמנט שלפני ה-E000
+ *    (עשוי להיות ממוזג לעוגן ב-NBSP — מנורמל לרווח לפני הפיצול).
+ *  - מילה עם תג \uE102 (סמן מתויג): הפרגמנט שאחרי התג עד NBSP/רווח.
+ * @returns {string|null} — טקסט הסמן או null אם המילה אינה נושאת סמן.
+ */
+function markerFragmentOf(word) {
+  const sw = String(word);
+  if (sw.includes('\uE000')) {
+    const at = sw.indexOf('\uE000');
+    const frags = sw.slice(0, at).replace(/\u00A0/g, ' ').split(' ').filter(Boolean);
+    return frags.length ? frags[frags.length - 1] : null;
+  }
+  if (!sw.includes('\uE102')) return null;
+  const at = sw.indexOf('\uE102');
+  const frag = sw.slice(at + 1).split(/[\u00A0 ]/)[0];
+  return frag || null;
+}
+
+/** **Iteration-003:** סמן לפי ההגדרות המלאות — סגנון + מפריד (note-num-separator
+ *  מה-raw של IMUD כשקיים; ברירת מחדל '.') — מקור אחד לכל הצרכנים עם settings. */
+function markerForSettings(index1Based, settings) {
+  const s = settings || {};
+  const style = s['footnote-marker-style'];
+  const sep = s['note-num-separator'] != null ? s['note-num-separator']
+    : (s._imudRaw && s._imudRaw['note-num-separator'] != null ? s._imudRaw['note-num-separator'] : '.');
+  return markerFor(index1Based, style, { separator: sep });
+}
+
+module.exports = { markerFor, markerForSettings, makeCounter, hebrewMarkFinish, hebrewBare, HEB_LETTERS, renumberPageScopedMarkers, markerFragmentOf, MARK_TAG: '\uE102' };
+
+};
+__modules["src/engine/decoration/page-decorations.js"] = function (require, module, exports) {
+// src/engine/decoration/page-decorations.js — Theme/shaar/background box placement (S6, REQ-ORN-06/08, PT-03)
+'use strict';
+
+/**
+ * מקום יחיד שבו מלוי עיטורי־דף נקבע: ערכת נושא, שערים (ראשי/משנה/אחורי),
+ * ורקעים לפי סוג דף. אין פיצול ל‑"shaar boxes" נפרד — מנגנון אחד, צרכן אחד.
+ *
+ * עקרונות נגד באגי העבר (מ‑Gold/Green/Orange):
+ * - D-11: אין הצטברות עיטורים; כל תבנית מקבלת מקום אחד בלבד לכל מלוי.
+ * - F-09: אין !important; השליטה רק דרך מחלקות + inline שנכתב מכאן.
+ * - PT-03: ארבעת מקטעי shaar_back הם עצמאיים — כל אחד נכבה בנפרד.
+ *
+ * **S8 (REQ-ORN-08):** פאנל רקעים מוזג לתוך פאנל נושאים — 3 סוגי עמודים
+ * (רגיל / פתיחת הקדמה / פתיחת סימן); color/texture/image + opacity; insets במ"מ.
+ */
+
+/** 4 המקטעים העצמאיים של שער אחורי (PT-03). */
+const SHAAR_BACK_SEGMENTS = ['frame', 'title-box', 'body-box', 'footer-ornament'];
+
+/** 3 סוגי העמודים לרקעים (REQ-ORN-08). */
+const BACKGROUND_PAGE_CLASSES = ['regular', 'preface-open', 'sign-open'];
+
+const { MM_TO_PX } = require('../layout/page-templates');
+
+/** תנאי התאמת סוג־עמוד למחלקת רקע. */
+function backgroundClassForPage(page) {
+  if (page.type === 'preface' && page.chapterOpening) return 'preface-open';
+  if (page.type === 'sign-open') return 'sign-open';
+  return 'regular';
+}
+
+/**
+ * החלטת רקע לפי מחלקת העמוד (REQ-ORN-08): הרקע שהוגדר למחלקה שאליה
+ * העמוד שייך בלבד. inset במ"מ מומר לפיקסלים כאן — מקור יחיד.
+ * @returns {{image:string|null, texture:string|null, insetPx:number}|null}
+ */
+function planBackground(page, settings) {
+  const cls = backgroundClassForPage(page);
+  const target = settings['background-page-type'] || 'regular';
+  if (cls !== target) return null; // הרקע שייך למחלקה אחרת
+  const image = settings['background-image'] || null;
+  const texture = settings['background-texture'] || null;
+  if (!image && !texture) return null;
+  const insetMm = Math.max(0, Number(settings['background-inset-mm']) || 0);
+  return { image, texture, insetPx: Math.round(insetMm * MM_TO_PX) };
+}
+
+/**
+ * החלטת מלוי לעימוד דף — פונקציה טהורה (ללא DOM), דטרמיניסטית.
+ * @param {object} page - { type: 'regular'|'shaar-main'|'shaar-sub'|'shaar-back'|... , index }
+ * @param {object} settings - registry defaults+user
+ * @returns {{ slots: Array<{slot:string, asset:string|null, cssClass:string}>, themeSetId:string, background:object|null }}
+ */
+function planDecorations(page, settings) {
+  const themeSetId = settings['theme-set-id'] || 'default';
+  const slots = [];
+
+  // **S4.5/EXT-14 (03.11):** הפניות עיצובי IMUD — מזהי הספרייה גוברים על השדות
+  // הישנים (הפניה imud:<collection>:<id> נפתרת ברינדור דרך asset-registry).
+  // צריכה מפורשת כאן — גם ערכת נושא נחשבת פעילה כשנבחר עיצוב ספרייה.
+  const imudMain = settings['imud-shaar-main'] || '';
+  const imudSub = settings['imud-shaar-sub'] || '';
+  const imudBack = settings['imud-shaar-back'] || '';
+
+  const push = (slot, asset, modifier) => {
+    // הגנה D-11: slot תפוס כבר → לא מוסיפים שוב
+    if (slots.some(s => s.slot === slot)) return;
+    slots.push({
+      slot,
+      asset: asset || null,
+      cssClass: `deco deco--${slot}${modifier ? ` ${modifier}` : ''}${asset ? '' : ' deco--empty'}`
+    });
+  };
+
+  switch (page.type) {
+    case 'shaar-main': {
+      const img = imudMain || settings['shaar-main-image'];
+      push('shaar-main', img, 'deco--themed');
+      break;
+    }
+    case 'shaar-sub': {
+      push('shaar-sub', imudSub || settings['shaar-sub-image'] || null, 'deco--themed');
+      break;
+    }
+    case 'shaar-back': {
+      // PT-03: אם הכבה ראשית — אף מקטע לא מוצב; אחרת 4 מקטעים עצמאיים.
+      // **03.11 (EXT-14):** מקטע המסגרת מקבל את תמונת השער האחורי (עיצוב IMUD) —
+      // שאר המקטעים נשארים ריקים (ממולאים ע"י העיצוב עצמו, לא בנפרד).
+      if (settings['shaar-back-enabled'] !== false) {
+        const backImg = imudBack || settings['shaar-back-image'] || null;
+        for (const seg of SHAAR_BACK_SEGMENTS) push(`shaar-back-${seg}`, seg === 'frame' ? backImg : null, 'deco--segment');
+      }
+      break;
+    }
+    default: {
+      // regular / preface / sign-open …: רקע לפי מחלקת העמוד (REQ-ORN-08)
+      const bg = planBackground(page, settings);
+      if (bg && bg.image) push('page-background', bg.image, 'deco--background');
+      if (bg && bg.texture) push('page-texture', bg.texture, 'deco--texture');
+      break;
+    }
+  }
+
+  return { slots, themeSetId, background: planBackground(page, settings) };
+}
+
+/**
+ * החלת התוכנית על דם־DOM (אלמנט השורש של הדף). נקי: מוחק קודם, מציב פעם אחת.
+ * @param {object} rootEl - article.page
+ * @param {object} doc - document
+ * @param {Array} slots - מתוצר planDecorations
+ */
+function applyDecorationSlots(rootEl, doc, slots) {
+  // ניקוי מקומי — מונע כפילויות בין ריצות (rollback-aware)
+  for (const old of Array.from(rootEl.querySelectorAll('.deco'))) old.remove();
+  for (const s of slots) {
+    if (!s.asset) continue; // deco--empty נשמר לתיעוד בלבד, לא יוצר node
+    const el = doc.createElement('div');
+    el.className = s.cssClass;
+    el.dataset.slot = s.slot;
+    el.style.backgroundImage = `url("${s.asset}")`;
+    rootEl.appendChild(el);
+  }
+}
+
+module.exports = {
+  planDecorations, applyDecorationSlots, planBackground, backgroundClassForPage,
+  SHAAR_BACK_SEGMENTS, BACKGROUND_PAGE_CLASSES
 };
 
-/** @param {string} key — מפתח מהמודל; null ⇒ null (גוף הטקסט — ירושת שורש) */
-function familyOfFontKey(key) {
-  if (!key) return null;
-  if (key === 'body') return null;
-  return KEY_FAMILY[key] || key;
+};
+__modules["src/engine/decoration/shaar-boxes.js"] = function (require, module, exports) {
+// src/engine/decoration/shaar-boxes.js — Shaar text-box geometry: drag/resize/persist/export (REQ-ORN-05)
+'use strict';
+
+/**
+ * תיבות טקסט של שערים (PT-01/02/03): גרירה + שינוי גודל + שמירה לפי מזהה שער
+ * + הטמעת `box` בייצוא JSON (V4) — עגול־שלם: ייצוא → טעינה מחדש ⇒ מיקומים זהים.
+ *
+ * **לקחי עבר שננעלו כאן:**
+ * - שמירה לפי **מזהה שער פרטני** ולא לפי סוג (בגרסה מוקדמת הוחל מיקום אחד על כל
+ *   השערים מהסוג — Handoff §2.13).
+ * - סדר קדימויות לפתרון מיקום: (1) שדה `box` מוטמע ב־JSON, (2) מיקום שמור בסשן,
+ *   (3) ברירת מחדל — בדיוק כסדר של V4.
+ * - מיקום במ"מ (שלם) — דטרמיניסטי בעיגול־שלם; אין נקודה־צפה מתפזרת בין ריצות.
+ */
+
+/**
+ * פתרון מיקום תיבה לפי סדר הקדימויות של V4 (§2.13).
+ * @param {string} type - 'main' | 'sub' | 'back'
+ * @param {string} shaarId - מזהה שער פרטני (ייחודי — theme-sets.uniqueShaarId)
+ * @param {object} item - פריט השער (עשוי להכיל box מוטמע)
+ * @param {object} savedPositions - { [type]: { [shaarId]: box } } מיקומים שמורים
+ * @param {object} dfltBox - ברירת מחדל {top,bottom,right,left} במ"מ
+ * @returns {{box:object, source:'json'|'saved'|'default'}}
+ */
+function resolveShaarBox(type, shaarId, item, savedPositions, dfltBox) {
+  if (item && item.box && isValidBox(item.box)) return { box: normalizeBox(item.box), source: 'json' };
+  const saved = savedPositions && savedPositions[type] && savedPositions[type][shaarId];
+  if (saved && isValidBox(saved)) return { box: normalizeBox(saved), source: 'saved' };
+  return { box: normalizeBox(dfltBox || { top: 40, bottom: 40, right: 30, left: 30 }), source: 'default' };
 }
 
-module.exports = { familyFontKeyOf, literalFamilyKeyOf, familyOfFontKey };
+/** תקינות תיבה: ארבעה שוליים מספריים אי־שליליים. */
+function isValidBox(b) {
+  return Boolean(b) && ['top', 'bottom', 'right', 'left'].every(k => Number.isFinite(Number(b[k])) && Number(b[k]) >= 0);
+}
+
+/** נרמול למ"מ שלמים — דטרמיניזם של עיגול־שלם בעיגול־חוזר. */
+function normalizeBox(b) {
+  return {
+    top: Math.round(Number(b.top)), bottom: Math.round(Number(b.bottom)),
+    right: Math.round(Number(b.right)), left: Math.round(Number(b.left))
+  };
+}
+
+/**
+ * הצמדה לגבולות העמוד (גרירה/שינוי גודל לא יוצאים מהדף).
+ * @param {object} box - {top,bottom,right,left} במ"מ
+ * @param {number} pageWmm, pageHmm - ממדי העמוד במ"מ
+ */
+function clampShaarBox(box, pageWmm, pageHmm) {
+  const b = normalizeBox(box);
+  const maxInsetX = Math.max(0, Math.floor(pageWmm / 2) - 5); // תיבה שומרת רוחב מינימלי 10mm
+  const maxInsetY = Math.max(0, Math.floor(pageHmm / 2) - 5);
+  b.top = Math.min(Math.max(0, b.top), maxInsetY);      // לא שלילי ולא מעבר לחצי
+  b.bottom = Math.min(Math.max(0, b.bottom), maxInsetY);
+  b.right = Math.min(Math.max(0, b.right), maxInsetX);
+  b.left = Math.min(Math.max(0, b.left), maxInsetX);
+  return b;
+}
+
+/**
+ * גרירה: הזזת כל ארבעת השוליים בהפרש (תיבה שומרת על גודלה).
+ * שמירה לפי (type, shaarId) — מזהה פרטני (לקח V4: לא לפי סוג!).
+ * @returns {object} savedPositions חדש (לא מוטציה במקום — רולבק־סייפ)
+ */
+function moveShaarBox(savedPositions, type, shaarId, dxMm, dyMm, pageWmm, pageHmm) {
+  const next = cloneSaved(savedPositions);
+  const cur = (next[type] && next[type][shaarId]) || { top: 40, bottom: 40, right: 30, left: 30 };
+  next[type] = next[type] || {};
+  next[type][shaarId] = clampShaarBox({
+    top: cur.top + dyMm, bottom: cur.bottom - dyMm,
+    right: cur.right - dxMm, left: cur.left + dxMm
+  }, pageWmm, pageHmm);
+  return next;
+}
+
+/**
+ * שינוי גודל דרך ידית (8 ידיות V4): n/s/e/w/ne/nw/se/sw.
+ * @returns {object} savedPositions חדש
+ */
+function resizeShaarBox(savedPositions, type, shaarId, handle, dxMm, dyMm, pageWmm, pageHmm) {
+  const next = cloneSaved(savedPositions);
+  const cur = (next[type] && next[type][shaarId]) || { top: 40, bottom: 40, right: 30, left: 30 };
+  const b = { ...cur };
+  if (handle.includes('n')) b.top += dyMm;
+  if (handle.includes('s')) b.bottom -= dyMm;
+  if (handle.includes('w')) b.left += dxMm;   // RTL: left גדל כשגוררים שמאלה→ימין? — כיוון לפי ציר X החיובי
+  if (handle.includes('e')) b.right -= dxMm;
+  next[type] = next[type] || {};
+  next[type][shaarId] = clampShaarBox(b, pageWmm, pageHmm);
+  return next;
+}
+
+function cloneSaved(savedPositions) {
+  const out = {};
+  for (const [t, byId] of Object.entries(savedPositions || {})) {
+    out[t] = {};
+    for (const [id, box] of Object.entries(byId || {})) out[t][id] = normalizeBox(box);
+  }
+  return out;
+}
+
+/**
+ * ייצוא פריטי שער עם `box` מוטמע (exportShaarJSONWithPositions — פורט V4):
+ * המיקום ששרד בסשן נחרת בקובץ ⇒ עיגול־שלם טעינה→הזזה→ייצוא→טעינה ⇒ מיקומים זהים.
+ * אין אקראיות (מדיניות zero-randomness): id נגזר דטרמיניסטית מאינדקס+שם.
+ */
+function exportShaarItemsWithPositions(items, savedPositions) {
+  return (items || []).map((it, i) => {
+    const id = it.id || `shaar-${i}-${String(it.name || 'anon').replace(/\s+/g, '-').slice(0, 24)}`;
+    const type = it.type || it.role || 'main';
+    const saved = savedPositions && savedPositions[type] && savedPositions[type][id];
+    return { ...it, id, box: normalizeBox(saved || it.box || { top: 40, bottom: 40, right: 30, left: 30 }) };
+  });
+}
+
+/** השוואת תיבות בודדות (עיגול־שלם) או מפות מיקומים {id: box} — בדיקת שער S8.2. */
+function boxPositionsIdentical(a, b) {
+  const isSingle = (x) => x && Number.isFinite(Number(x.top)) && Number.isFinite(Number(x.left));
+  if (isSingle(a) || isSingle(b)) {
+    if (!isSingle(a) || !isSingle(b)) return false;
+    const x = normalizeBox(a), y = normalizeBox(b);
+    return x.top === y.top && x.bottom === y.bottom && x.right === y.right && x.left === y.left;
+  }
+  const keys = Object.keys(a || {}).sort();
+  const keysB = Object.keys(b || {}).sort();
+  if (keys.join(',') !== keysB.join(',')) return false;
+  for (const k of keys) {
+    const x = normalizeBox(a[k]), y = normalizeBox(b[k]);
+    if (x.top !== y.top || x.bottom !== y.bottom || x.right !== y.right || x.left !== y.left) return false;
+  }
+  return true;
+}
+
+module.exports = {
+  resolveShaarBox, isValidBox, normalizeBox, clampShaarBox, moveShaarBox, resizeShaarBox,
+  exportShaarItemsWithPositions, boxPositionsIdentical
+};
+
+};
+__modules["src/engine/decoration/ornament-fit.js"] = function (require, module, exports) {
+// src/engine/decoration/ornament-fit.js — fit-to-text JS measurement + divider height rules (REQ-ORN-01..04)
+'use strict';
+
+/**
+ * מדידת DOM/JS בלבד (CSS fit-content נכשל — V3/V4). מקור שליטה אחד: אין !important מול inline (F-09).
+ *
+ * **S8:** הרחבה מלאה — התאמת עיטורי H2 לרוחב הטקסט, התאמת גובה צדדיים H3 לשורת הכותרת,
+ * עיטור סיום־פרק בתקציב הפנוי (REQ-ORN-03), שמירת סימטריית מרווחים אפקטיביים (F-21),
+ * הרמה אופטית −0.08em לעיטורי צד (שיעור V4), ומשמרות התאמה למפרידי כותרות (REQ-ORN-04).
+ */
+
+/** התאמת עיטור H2 לרוחב הטקסט: מחזיר scalePx; sync re-fit בלי shift. */
+function fitOrnamentToText(ornamentWidthPx, textWidthPx, maxScale = 3) {
+  if (!ornamentWidthPx || ornamentWidthPx <= 0) return 1;
+  const scale = Math.min(maxScale, textWidthPx / ornamentWidthPx);
+  return Math.max(0.25, Number(scale.toFixed(4)));
+}
+
+/**
+ * REQ-ORN-01: re-fit סינכרוני ללא הזזה — לאחר החלת הסקאלה רוחב העיטור
+ * כבר שווה לרוחב הטקסט, ולכן ריצה חוזרת מחזירה סקאלה 1 (מתייצבת מיד —
+ * שיעור F-08: אין פוסט־פרוסס מאוחר שמגלה גובה שלא תוקצב).
+ */
+function refitStable(ornamentWidthPx, textWidthPx, maxScale) {
+  const s1 = fitOrnamentToText(ornamentWidthPx, textWidthPx, maxScale);
+  const appliedWidth = ornamentWidthPx * s1;
+  const s2 = fitOrnamentToText(appliedWidth, textWidthPx, maxScale);
+  return Math.abs(s2 - 1) <= 0.0001; // אחרי ההחלה — אין שינוי נוסף
+}
+
+/** גובה מפריד טורים = Math.min(גובה שני הטורים) − 8px (V4 rule). */
+function columnDividerHeightPx(colUsedHeights) {
+  return Math.max(0, Math.min(...colUsedHeights) - 8);
+}
+
+/**
+ * fits() — בדיקת התאמה לפני הוספת עיטור **בכל** אתרי ההוספה (לקח Orange):
+ * האם לעיטור יש מקום מתחת/מעל הבלוק בלי לגלוש מהטור?
+ */
+function fits(budgetRemainingPx, ornamentHeightPx) {
+  return ornamentHeightPx > 0 && budgetRemainingPx >= ornamentHeightPx;
+}
+
+/** עיטורי H3 צדדיים: יישור למרכז־גופן (cap-height centering), לא baseline. */
+function sideOrnamentOffsetY(lineHeightPx, ornamentHeightPx) {
+  return Math.round((lineHeightPx - ornamentHeightPx) / 2);
+}
+
+/**
+ * F-21 (שיעור מרווחים): מרווחי עיטורי H2 עליון/תחתון **שווים אפקטיבית**.
+ * בזרימת flex-column אין התמטטות שוליים — השוואה חייבת להיעשות על הסכום
+ * המצטבר (שולי כותרת + שולי עיטור), לא על ערכי CSS בודדים. כאן מקור אחד:
+ * שני המרווחים נקבעים מאותה פונקציה ⇒ שווים מבנית.
+ * @param {number} fontPx - גודל גופן הכותרת בפיקסלים
+ * @returns {{top:number, bottom:number}} מרווחים אפקטיביים שווים (px)
+ */
+function h2OrnamentMarginsPx(fontPx) {
+  const m = Math.max(2, Math.round(fontPx * 0.1)); // 0.1em — מרווח נשימה מינימלי
+  return { top: m, bottom: m }; // שווים מבנית — מקור אחד, אין צבירה לא־סימטרית
+}
+
+/**
+ * שיעור V4 (F-09/H3): הרמה אופטית של עיטורי צד — margin-top: −0.08em.
+ * עיטורים שממורכזים גיאומטרית נראים נמוכים לעין; ההרמה מפצה.
+ * @param {number} fontPx - גודל גופן השורה המארחת
+ */
+function sideOrnamentLiftPx(fontPx) {
+  return -Math.round(fontPx * 0.08 * 100) / 100; // −0.08em — שיעור מתועד (Handoff 2.12)
+}
+
+/**
+ * **F-08 (שיעור הלב):** גובה שעיטורי H2 צורך חייב להיות **מוזמן בזמן הפריסה**
+ * (L4) בגודלו הסופי — לא כ‑overlay מאוחר שמגלה גובה שלא תוקצב (זה שורש
+ * "עמוד פתיחת כותרת 2 ארוך מדי"). מחשב את ההזמנה הנדרשת מעל/מתחת לכותרת
+ * לפי הממדים הסופיים (אחרי fit-to-text) — מקור יחיד למידות ולהזמנה.
+ * @param {number} titleWidthPx - רוחב הכותרת הנמדד (JS — לא CSS)
+ * @param {object} settings
+ * @param {number} h2FontPx - גוף הכותרת בפיקסלים
+ */
+function h2OrnamentReservedHeight(titleWidthPx, settings, h2FontPx) {
+  const scope = h2OrnamentScope(settings);
+  if (!scope.any) return { topPx: 0, bottomPx: 0, scale: 1, ornW: 0, ornH: 0, margins: h2OrnamentMarginsPx(h2FontPx), scope };
+  const naturalW = H2_ORN_W_EM * h2FontPx, naturalH = H2_ORN_H_EM * h2FontPx;
+  const scale = settings['h2-orn-fit-to-text'] !== false ? fitOrnamentToText(naturalW, titleWidthPx) : 1;
+  const ornH = naturalH * scale, ornW = naturalW * scale;
+  const margins = h2OrnamentMarginsPx(h2FontPx);
+  const topPx = scope.signTop ? Math.round(ornH + margins.top) : 0;
+  const bottomPx = scope.signBottom ? Math.round(ornH + margins.bottom) : 0;
+  return { topPx, bottomPx, scale, ornW: Math.round(ornW), ornH: Math.round(ornH), margins, scope };
+}
+
+/**
+ * REQ-ORN-02: היקף עיטורי H2 — סימן בלבד / כותרת בלבד / שניהם.
+ * מצבי עיטור עצמאיים: עליון/תחתון לסימן + צדדיים לכותרת (V4).
+ * @returns {{signTop:boolean, signBottom:boolean, titleSide:boolean, any:boolean, why:string}}
+ */
+function h2OrnamentScope(settings) {
+  const scope = settings['h2-orn-scope'] || 'both';
+  const top = settings['h2-orn-top'] || 'none';
+  const bottom = settings['h2-orn-bottom'] || 'none';
+  const side = settings['h2-orn-side'] || 'none';
+  const sign = scope === 'sign' || scope === 'both';
+  const title = scope === 'title' || scope === 'both';
+  const signTop = sign && top !== 'none';
+  const signBottom = sign && bottom !== 'none';
+  const titleSide = title && side !== 'none';
+  return {
+    signTop, signBottom, titleSide,
+    any: signTop || signBottom || titleSide,
+    why: !sign && !title ? 'scope-off' : (signTop || signBottom || titleSide) ? 'on' : 'kinds-all-none'
+  };
+}
+
+/** סוגי עיטור סיום־פרק (REQ-ORN-03; Spec §6.7). */
+const CHAPTER_END_KINDS = ['none', 'pyramid', 'lance', 'shoshanta', 'scroll', 'image'];
+
+/** ממדים טבעיים של עיטורי H2 (em של גופן הכותרת). */
+const H2_ORN_W_EM = 3, H2_ORN_H_EM = 0.6;
+
+/**
+ * REQ-ORN-03: התאמת עיטור סיום־פרק לתקציב הפנוי שנותר בטור.
+ * - אף פעם לא דוחף תוכן ולא חוסם שער גאומטרי (invariant T1): אין מקום ⇒ לא מוצב + סיבה.
+ * - scale יורד עד רצפה (0.5); מתחת לרצפה ⇒ דחייה מתועדת (לא כיווץ עיוור).
+ * @returns {{placed:boolean, scale:number, wPx:number, hPx:number, reason:string}}
+ */
+function chapterEndOrnamentFit(kind, wPx, hPx, budgetPx) {
+  if (!kind || kind === 'none') return { placed: false, scale: 1, wPx: 0, hPx: 0, reason: 'kind-none' };
+  if (!CHAPTER_END_KINDS.includes(kind)) return { placed: false, scale: 1, wPx: 0, hPx: 0, reason: 'kind-unknown' };
+  const w = Math.max(0, Number(wPx) || 0), h = Math.max(0, Number(hPx) || 0);
+  if (w <= 0 || h <= 0) return { placed: false, scale: 1, wPx: 0, hPx: 0, reason: 'dims-invalid' };
+  const budget = Math.max(0, Number(budgetPx) || 0);
+  if (budget <= 0) return { placed: false, scale: 1, wPx: 0, hPx: 0, reason: 'no-budget' };
+  // התאמה: סקאלה אחידה על שני הממדים, עד רצפה 0.5
+  const scale = Math.min(1, budget / h);
+  if (scale < 0.5) return { placed: false, scale, wPx: 0, hPx: 0, reason: 'below-min-scale' };
+  return { placed: true, scale: Number(scale.toFixed(4)), wPx: Math.round(w * scale), hPx: Math.round(h * scale), reason: 'fit' };
+}
+
+/**
+ * REQ-ORN-04 משמרות מפרידי כותרות (שידרוג Orange): מפריד H3–H6 מוצב רק
+ * כשהכותרת אינה בראש טור (אין עיטור תלוי מעל לא־כלום) והטור אינו ריק
+ * (אין מפריד בעמוד ריק), ויש תקציב נמדד בפועל באתר ההצבה.
+ * @param {Array} columnLines - השורות בטור שבו הכותרת הוצבה (לפניה)
+ * @param {number} colIdx - אינדקס הטור
+ * @returns {boolean} מותר להציב מפריד מתחת לכותרת זו
+ */
+function dividerInsertable(columnLines, colIdx) {
+  void colIdx; // משמרת אחידה לכל הטורים — ראש טור 0 נדחה כמו ראש טור 1
+  if (!Array.isArray(columnLines) || columnLines.length === 0) return false; // טור ריק / עמוד ריק
+  if (columnLines.length <= 1) return false; // הכותרת היא ראש הטור — אין עיטור בראש טור
+  const last = columnLines[columnLines.length - 1];
+  return Boolean(last && last.kind === 'heading'); // מפריד רק מתחת לכותרת שהוצבה זה עתה
+}
+
+/**
+ * F-09 single-source: הצהרת מקור־יחיד לממדי עיטור. הגודל נקבע במודל הגיאומטריה
+ * בלבד (כאן); הרנדרר מצייר מה־rect ואסור לו לקבוע ממדים משלו (אין !important מול inline).
+ * @returns {{ok:boolean, reason:string}} אמת כשלעיטור יש מקור יחיד תקין
+ */
+function assertSingleSourceSizing(orn) {
+  if (!orn || typeof orn !== 'object') return { ok: false, reason: 'not-an-ornament' };
+  const hasRect = orn.w != null && orn.h != null && Number.isFinite(orn.w) && Number.isFinite(orn.h);
+  if (!hasRect) return { ok: false, reason: 'missing-rect' };
+  if (orn.cssWidthPx != null || orn.cssHeightPx != null) {
+    return { ok: false, reason: 'dual-source-sizing' }; // שני מקורות — אסור (F-09)
+  }
+  return { ok: true, reason: 'single-source' };
+}
+
+module.exports = {
+  fitOrnamentToText, refitStable, columnDividerHeightPx, fits, sideOrnamentOffsetY,
+  h2OrnamentMarginsPx, sideOrnamentLiftPx, h2OrnamentScope, chapterEndOrnamentFit,
+  h2OrnamentReservedHeight,
+  dividerInsertable, assertSingleSourceSizing, CHAPTER_END_KINDS, H2_ORN_W_EM, H2_ORN_H_EM
+};
+
+};
+__modules["src/engine/decoration/asset-registry.js"] = function (require, module, exports) {
+// src/engine/decoration/asset-registry.js — רישום נכסי עיצוב ופתרון הפניות (03.11, EXT-14)
+'use strict';
+
+/**
+ * רישום מרכזי של נכסי עיצוב (שערים/עיטורים/מפרידים — SVG + תיבות) ופתרון
+ * הפניות «imud:<collection>:<id>» ל-data-URI בטוח לשימוש כרקע/תמונה.
+ *
+ * **אבטחה:** כל SVG עובר חיטוי (svg-sanitize) בעת הרישום — לעולם לא נשמר כמו
+ * שהוא. רישום כפול של אותו מזהה — החדש מחליף (עדכון ספרייה); מזהים לא
+ * חוקיים נדחים ומדווחים — לא בשקט.
+ *
+ * **סביבת-אגנוסטיות:** אין DOM/פetch כאן — המודול טהור ונבדק גם ב-Node;
+ * הטעינה מהרשת חיה ב-UI (imud-library.js).
+ */
+
+const { sanitizeSvg } = require('./svg-sanitize');
+
+/** הרישום עצמו: collection → Map(id → item). */
+const collections = new Map();
+
+/** קידוד SVG כ-data-URI (UTF-8 percent-encoding — תואם url("...") ב-CSS). */
+function svgDataUri(svg) {
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(String(svg));
+}
+
+/** ולידציית שם אוסף/מזהה: [a-zA-Z0-9_-] בלבד — מונע הזרקת תווים להפניה. */
+function validToken(s) {
+  return typeof s === 'string' && /^[A-Za-z0-9_-]+$/.test(s);
+}
+
+/**
+ * רישום אוסף נכסים.
+ * @param {string} collection — שם האוסף (למשל 'shaar-main', 'orn-ud', 'divider')
+ * @param {Array<{id:string, name?:string, svg:string, box?:object}>} items
+ * @returns {{ok:boolean, registered:number, rejected:Array<{id:string, reason:string}>}}
+ */
+function registerAssets(collection, items) {
+  if (!validToken(collection)) return { ok: false, registered: 0, rejected: [{ id: String(collection), reason: 'bad-collection-name' }] };
+  if (!Array.isArray(items)) return { ok: false, registered: 0, rejected: [{ id: collection, reason: 'items-not-array' }] };
+  let map = collections.get(collection);
+  if (!map) { map = new Map(); collections.set(collection, map); }
+  const rejected = [];
+  let registered = 0;
+  for (const it of items) {
+    if (!it || !validToken(it.id)) { rejected.push({ id: it && String(it.id), reason: 'bad-id' }); continue; }
+    const clean = sanitizeSvg(String(it.svg || ''));
+    if (!clean.ok) { rejected.push({ id: it.id, reason: `svg-rejected:${clean.reason}` }); continue; }
+    map.set(it.id, {
+      id: it.id,
+      name: it.name || it.id,
+      svg: clean.svg,
+      dataUri: svgDataUri(clean.svg),
+      box: it.box || null
+    });
+    registered++;
+  }
+  return { ok: rejected.length === 0, registered, rejected };
+}
+
+/** מספר הנכסים הרשומים (לבדיקות ולתצוגה). */
+function assetCount() {
+  let n = 0;
+  for (const m of collections.values()) n += m.size;
+  return n;
+}
+
+/** רשימת פריטי אוסף (מזהה+שם+תיבה — בלי SVG, קל ל-UI). */
+function listCollection(collection) {
+  const map = collections.get(collection);
+  if (!map) return [];
+  return Array.from(map.values()).map((it) => ({ id: it.id, name: it.name, box: it.box }));
+}
+
+/**
+ * פתרון הפניה לפריט. פורמטים נתמכים:
+ *  - 'imud:<collection>:<id>' → פריט מהרישום
+ *  - כל ערך אחר → מוחזר כמו שהוא (URL/data-URI קיים — לא נוגעים)
+ * @returns {{resolved:boolean, uri:string|null, item:object|null}}
+ */
+function resolveAssetRef(ref) {
+  if (typeof ref !== 'string' || !ref.startsWith('imud:')) return { resolved: false, uri: ref || null, item: null };
+  const parts = ref.split(':');
+  if (parts.length !== 3) return { resolved: false, uri: null, item: null };
+  const [, col, id] = parts;
+  const map = collections.get(col);
+  const item = map && map.get(id);
+  if (!item) return { resolved: false, uri: null, item: null };
+  return { resolved: true, uri: item.dataUri, item };
+}
+
+/** האם הפניה היא הפניית imud (גם אם טרם נטענה — להודעות ברורות למשתמש). */
+function isImudRef(ref) {
+  return typeof ref === 'string' && ref.startsWith('imud:');
+}
+
+/** ניקוי מלא (בדיקות/isolation). */
+function resetAssets() {
+  collections.clear();
+}
+
+module.exports = { registerAssets, resolveAssetRef, isImudRef, listCollection, assetCount, resetAssets, svgDataUri };
+
+};
+__modules["src/engine/decoration/svg-sanitize.js"] = function (require, module, exports) {
+// src/engine/decoration/svg-sanitize.js — SVG sanitizer + CSP hook (S8.1 task 10; full pass S13)
+'use strict';
+
+/**
+ * חיטוי SVG (Spec §9.5 "sanitized SVG"): רשימת־היתרים, לא רשימת־חסימות.
+ * נשללים: <script>, <foreignObject>, תגי אנימציה עם לולאות (set/animate עם begin=never/indefinite
+ * אינם סיכון גיאומטרי אך נשללים כאן בשל דטרמיניזם), מאפייני on*, javascript:, data:text/html,
+ * והפניות חיצוניות (href/xlink:href למקור שאינו מקומי).
+ *
+ * מדיניות zero-randomness/דטרמיניזם: הפלט קבוע לקלט נתון.
+ */
+
+/** תגים מותרים (רשימת־היתרים). */
+const ALLOWED_TAGS = new Set([
+  'svg', 'g', 'defs', 'title', 'desc', 'path', 'rect', 'circle', 'ellipse', 'line',
+  'polyline', 'polygon', 'text', 'tspan', 'linearGradient', 'radialGradient', 'stop',
+  'clipPath', 'mask', 'pattern', 'use', 'symbol', 'image', 'marker', 'style'
+]);
+
+/** מאפיינים מותרים כללית (קידומות גם ב־xlink:). */
+const ALLOWED_ATTRS = new Set([
+  'id', 'class', 'd', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'r', 'rx', 'ry',
+  'width', 'height', 'transform', 'viewBox', 'fill', 'fill-opacity', 'fill-rule',
+  'stroke', 'stroke-width', 'stroke-opacity', 'stroke-linecap', 'stroke-linejoin',
+  'stroke-dasharray', 'stroke-dashoffset', 'opacity', 'points', 'gradientUnits',
+  'gradientTransform', 'offset', 'stop-color', 'stop-opacity', 'clip-path',
+  'clip-rule', 'mask', 'clipPathUnits', 'patternUnits', 'preserveAspectRatio',
+  'font-family', 'font-size', 'font-weight', 'text-anchor', 'dominant-baseline',
+  'dx', 'dy', 'rotate', 'textLength', 'lengthAdjust', 'xmlns', 'xmlns:xlink',
+  'version', 'xml:space', 'style'
+]);
+
+/** @returns {{ok:boolean, svg:string, removed:string[], reason?:string}} */
+function sanitizeSvg(svgText) {
+  const src = String(svgText || '');
+  if (!src.trim()) return { ok: false, svg: '', removed: [], reason: 'empty' };
+  if (!/<svg[\s>]/i.test(src)) return { ok: false, svg: '', removed: [], reason: 'not-svg' };
+  const removed = [];
+  let out = src;
+
+  // 1) שלילת בלוקים מסוכנים תחילה (תגים שלמים עם תוכנם) — לפני כל פירוק
+  for (const tag of ['script', 'foreignobject', 'animate', 'animatetransform', 'animatemotion', 'set', 'handler', 'listener']) {
+    const re = new RegExp(`<${tag}(\\s[^>]*)?>[\\s\\S]*?<\\/${tag}\\s*>|<${tag}(\\s[^>]*)?\\/>`, 'gi');
+    out = out.replace(re, () => { removed.push(`tag:${tag}`); return ''; });
+  }
+
+  // 2) מעבר תג־תג: השמטת תגים שאינם ברשימת־ההיתרים (עם תוכנם ליחידים מסוכנים)
+  out = out.replace(/<\/?([a-zA-Z:][-a-zA-Z0-9:_]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g, (whole, tag) => {
+    const t = String(tag).toLowerCase();
+    if (ALLOWED_TAGS.has(t)) return whole;
+    removed.push(`tag:${t}`);
+    return '';
+  });
+
+  // 3) מאפיינים: on*, javascript:, והפניות חיצוניות
+  out = out.replace(/\s([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*("([^"]*)"|'([^']*)')/g, (whole, name, _q, dq, sq) => {
+    const n = String(name).toLowerCase();
+    const val = String(dq != null ? dq : sq);
+    if (n.startsWith('on')) { removed.push(`attr:${n}`); return ''; }
+    if (!ALLOWED_ATTRS.has(n) && !n.startsWith('xlink:')) { removed.push(`attr:${n}`); return ''; }
+    const v = val.trim().toLowerCase();
+    if (v.includes('javascript:') || v.includes('data:text/html') || v.startsWith('vbscript:')) {
+      removed.push(`attr-url:${n}`);
+      return '';
+    }
+    // href/xlink:href: מותרים רק עצמים פנימיים (#id) — אין מקורות חיצוניים
+    if (n === 'href' || n === 'xlink:href') {
+      if (!val.trim().startsWith('#')) { removed.push(`ext-ref:${n}`); return ''; }
+    }
+    return whole;
+  });
+
+  // 4) בלוקי <style>: הסרת url(...) חיצוניים ו־expression()
+  out = out.replace(/<style([^>]*)>([\s\S]*?)<\/style\s*>/gi, (whole, attrs, css) => {
+    if (/url\(\s*['"]?\s*(https?:|file:|\/\/)/i.test(css) || /expression\s*\(/i.test(css)) {
+      removed.push('style:external-url');
+      return '<style></style>';
+    }
+    return whole;
+  });
+
+  if (!/<svg[\s>]/i.test(out)) return { ok: false, svg: '', removed, reason: 'svg-stripped' };
+  return { ok: true, svg: out, removed };
+}
+
+/**
+ * CSP hook (S13 ישלים): מסמך CSP מומלץ להטמעת שערי SVG חיצוניים.
+ * אין eval, אין מקורות חיצוניים; blob/data לתמונות בלבד.
+ */
+function svgCspDirective() {
+  return "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-src 'none'";
+}
+
+module.exports = { sanitizeSvg, svgCspDirective, ALLOWED_TAGS, ALLOWED_ATTRS };
+
+};
+__modules["src/engine/decoration/ornament-ink.js"] = function (require, module, exports) {
+// src/engine/decoration/ornament-ink.js — הדיו של העיטורים: מקור יחיד (EXT-4)
+'use strict';
+
+/**
+ * **EXT-4 (צביעת עיטורים):** עד כאן העיטורים היו rectים נכונים ומבוקרים
+ * (ornament-plan) בלי דיו — אין כללי .orn ב-CSS החי ו-pdf-writer לא צייר
+ * כלום. כאן מוגדר מקור הדיו היחיד: לכל kindStyle — צורה וקטורית מובנית
+ * (פורט מהמקור הצהוב) או SVG מספריית העיצובים (imud:...) או קו דק.
+ * שלושת הצרכנים — ה-DOM (רקע data-URI), הפרויקטור וה-PDF (פענוח וקטורי
+ * לפעולות מילוי) — שותפים לאותו מקור בדיוק.
+ */
+
+const { resolveAssetRef } = require('./asset-registry');
+
+/** הצורות המובנות — פורט נאמן מ-decorations.js של המקור הצהוב:
+ * pyramid = פירמידת וילנא (❖❖❖/❖❖/❖ — כאן כיהורים וקטוריים), lance = רומח
+ * (spear), shoshanta = שושנתא (flourish), scroll = סלסול (swash). */
+const BUILTIN_SVGS = {
+  // פירמידת וילנא — 3+2+1 מעוינים; המקור השתמש בגליף ❖ בגדלים 10/9/8pt.
+  pyramid: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 34">
+<path fill="#000" d="M20 2 L28 10 L20 18 L12 10 Z M60 2 L68 10 L60 18 L52 10 Z M100 2 L108 10 L100 18 L92 10 Z"/>
+<path fill="#000" d="M40 19 L47 26 L40 33 L33 26 Z M80 19 L87 26 L80 33 L73 26 Z"/>
+<path fill="#000" d="M60 24 L66 30 L60 36 L54 30 Z"/>
+</svg>`,
+  // רומח — פורט מהמקור (SECTION_DIVIDERS.spear) עם עיגולי הפתיחה.
+  lance: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 40">
+<circle cx="200" cy="20" r="10" fill="none" stroke="#000" stroke-width="4.5"/>
+<circle cx="200" cy="20" r="4.5" fill="#000"/>
+<path d="M182,20 C182,24 165,27 140,27 C90,27 40,22 5,20 C40,18 90,13 140,13 C165,13 182,16 182,20 Z" fill="#000"/>
+<path d="M165,20 C165,22 150,24 130,24 C95,24 55,21 30,20 C55,19 95,16 130,16 C150,16 165,18 165,20 Z" fill="#fff"/>
+<path d="M218,20 C218,24 235,27 260,27 C310,27 360,22 395,20 C360,18 310,13 260,13 C235,13 218,16 218,20 Z" fill="#000"/>
+<path d="M235,20 C235,22 250,24 270,24 C305,24 345,21 370,20 C345,19 305,16 270,16 C250,16 235,18 235,20 Z" fill="#fff"/>
+</svg>`,
+  // שושנתא — פורט מהמקור (flourish).
+  shoshanta: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 90">
+<path fill="#000" d="M110,48 C105,44 92,30 82,30 C68,30 55,42 42,42 C30,42 22,32 22,22 C22,12 32,5 45,5 C60,5 72,18 78,28 C82,20 88,10 100,10 C108,10 114,16 114,24 C114,35 102,44 88,44 C72,44 58,35 48,22 C42,28 35,35 25,48 C15,62 10,72 20,82 C30,90 48,85 62,72 C78,58 92,54 110,48 Z"/>
+<path fill="#000" d="M130,48 C135,44 148,30 158,30 C172,30 185,42 198,42 C210,42 218,32 218,22 C218,12 208,5 195,5 C180,5 168,18 162,28 C158,20 152,10 140,10 C132,10 126,16 126,24 C126,35 138,44 152,44 C168,44 182,35 192,22 C198,28 205,35 215,48 C225,62 230,72 220,82 C210,90 192,85 178,72 C162,58 148,54 130,48 Z"/>
+</svg>`,
+  // סלסול — פורט מהמקור (swash).
+  scroll: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 28">
+<path fill="#111" d="M10,14 C60,14 85,4 125,4 C145,4 152,11 160,17 C168,11 175,4 195,4 C235,4 260,14 310,14 C260,14 235,24 195,24 C175,24 168,17 160,11 C152,17 145,24 125,24 C85,24 60,14 10,14 Z M160,7 C157.2,7 155,9.2 155,12 C155,14.8 157.2,17 160,17 C162.8,17 165,14.8 165,12 C165,9.2 162.8,7 160,7 Z"/>
+</svg>`,
+  // **D-89 (עיצוב שערים):** גל השער-משנה המובנה של המקור — פורט מדויק
+  // מ-defaultSubShaarOrnament ב-decorations.js (רוחב 140px, דיו #222;
+  // מדגם הייחוס: מדדנו את הדיו ב-(33,33,33) ≈ #212121 על עמ' 7).
+  'shaar-wave': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 30">
+<path fill="#222" d="M10,15 Q75,5 140,15 Q145,10 150,5 Q155,10 160,15 Q225,5 290,15 Q225,25 160,15 Q155,20 150,25 Q145,20 140,15 Q75,25 10,15 Z"/>
+</svg>`,
+  // **D-89 (עיצוב שערים):** עיטור השער הראשי המובנה — פורט מ-defaultShaarMainOrnament
+  // (עיגול מוקף בשתי כנפיים, 180×24px). העיגול המקורי מוכתם (stroke) — כאן
+  // ממומש כטבעת בשכבות מילוי (שחור→לבן→שחור, סדר ציור = סדר מסמך) — אותו
+  // דיו בדיוק במדגם שלנו (חד-כיווני מילוי). מכויל מהייחוס עמ' 1: הדיו ב-x
+  // 231.5-363.3pt, y 265-272pt (מרכז 297.4pt = מרכז העמוד).
+  'shaar-main-orn': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 40">
+<circle cx="200" cy="20" r="12.25" fill="#000"/>
+<circle cx="200" cy="20" r="7.75" fill="#fff"/>
+<circle cx="200" cy="20" r="4.5" fill="#000"/>
+<path fill="#000" d="M182,20 C182,24 165,27 140,27 C90,27 40,22 5,20 C40,18 90,13 140,13 C165,13 182,16 182,20 Z"/>
+<path fill="#000" d="M218,20 C218,24 235,27 260,27 C310,27 360,22 395,20 C360,18 310,13 260,13 C235,13 218,16 218,20 Z"/>
+</svg>`,
+  // **D-89 (עיצוב שערים):** שרשרת העלים של מסגרת השער הראשי — דפוס הנושא
+  // של הייחוס (עמ' 1: פס העלים החוזר בשולי הפאנלים, x≈81-88pt, עלה ≈6.7pt
+  // רוחב, מחזור ≈7.8pt). נבנה דטרמיניסטית בטעינת המודול: עלי דפה מחודדים
+  // מתחלפים (מעלה/מטה) במפגש בסיס-בבסיס + נקודה בכל צומת, לכל גובה העמוד.
+  'shaar-frame-chain': null,
+};
+
+/** בניית שרשרת העלים (1122.5px גובה) — נקרא פעם אחת בטעינה.
+ * **D-89 (כיול מדוקדק מהייחוס, עמ' 1, רצועה x=73-95pt ב-300dpi):** המוטיב
+ * המדויק — אלמנטים רחבים מעוגלים (רימון/עלה, ~26px רוחב × 40px גובה,
+ * קודקוד-לקודקוד במפגשי הקצוות) באפור בהיר, עם "עין" עגולה בצבע הפס
+ * (#FAFAFA) בכל אלמנט שני. */
+function buildShaarFrameChain() {
+  // **המוטיב (מפוענח ממפת הדיו של הייחוס ב-ASCII):** יחידה בת ~56px — שתי
+  // אונות מעוגלות (שמאל+ימין) שמתמזגות לפס מלא-רוחב, מתחתיו הדיו מתפצל
+  // לשתי רגליים המתכנסות לנקודת מרכז, וממנה יורד מעוין מרכזי לקודקוד
+  // (שרשרת פלר-דה-ליס); "העין" הלבנה = הרווח בין הרגליים למעוין.
+  const W = 30, H = 1122.5, UNIT = 56, cx = W / 2, F = '#D8D8D8';
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">`;
+  for (let y = 0; y + UNIT <= H + 0.01; y += UNIT) {
+    // שתי האונות העליונות
+    s += `<ellipse cx="${cx - 7.5}" cy="${y + 9}" rx="5.8" ry="7.5" fill="${F}"/>`;
+    s += `<ellipse cx="${cx + 7.5}" cy="${y + 9}" rx="5.8" ry="7.5" fill="${F}"/>`;
+    // הפס המלא-רוחב שאליו האונות מתמזגות
+    s += `<rect x="2" y="${y + 12}" width="26" height="11" rx="3.5" fill="${F}"/>`;
+    // שתי רגליים מתכנסות למרכז (שברון)
+    s += `<path fill="${F}" d="M2,${y + 22} L${cx},${y + 37} L28,${y + 22} L28,${y + 27} L${cx},${y + 42} L2,${y + 27} Z"/>`;
+    // המעוין המרכזי היורד לקודקוד
+    s += `<path fill="${F}" d="M${cx},${y + 35} L${cx + 5.5},${y + 43} L${cx},${y + 52} L${cx - 5.5},${y + 43} Z"/>`;
+  }
+  return s + '</svg>';
+}
+BUILTIN_SVGS['shaar-frame-chain'] = buildShaarFrameChain();
+
+/** הדיו של kindStyle — מקור יחיד.
+ * @returns {{type:'svg', svg:string, uri:string}|{type:'rule'}|{type:'rect', color:number[]}|{type:'image', uri:string}|null} */
+function ornamentInk(kindStyle) {
+  const s = String(kindStyle || '');
+  if (!s || s === 'none' || s === 'custom_img') return null;
+  if (s === 'thin' || s === 'line') return { type: 'rule' };
+  // **D-89 (עיצוב שערים):** מלבן בצבע אחיד — rect:<#hex> — רקעי הפאנלים
+  // (#F4F4F4 של שער המשנה/האחורי, מסגרות השער הראשי, כלל הכותרת).
+  if (s.startsWith('rect:')) {
+    const col = parseColor(s.slice(5).trim());
+    return col ? { type: 'rect', color: col } : null;
+  }
+  if (BUILTIN_SVGS[s]) {
+    return { type: 'svg', svg: BUILTIN_SVGS[s], uri: svgToDataUri(BUILTIN_SVGS[s]) };
+  }
+  // הפניית ספריית עיצובים (imud:<collection>:<id>) — ה-SVG החיטוי מהרישום
+  if (s.startsWith('imud:') || s.startsWith('data:image/svg') || /\.svg($|\?)/i.test(s)) {
+    const r = resolveAssetRef(s);
+    if (r && (r.uri || '').startsWith('data:image/svg')) {
+      return { type: 'svg', svg: r.item ? r.item.svg : decodeDataUriSvg(r.uri), uri: r.uri };
+    }
+    if ((r && r.uri || '').startsWith('data:')) return { type: 'image', uri: r.uri };
+    return null;
+  }
+  if (/^https?:|^data:image\/(png|jpe?g|gif|webp)/i.test(s)) return { type: 'image', uri: s };
+  return null;
+}
+
+/** data-URI ל-SVG (percent-encoding — תואם url("...") ב-CSS). */
+function svgToDataUri(svg) {
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(String(svg));
+}
+function decodeDataUriSvg(uri) {
+  try { return decodeURIComponent(String(uri).replace(/^data:image\/svg\+xml;charset=utf-8,/, '')); }
+  catch (e) { return null; }
+}
+
+// ---------------------------------------------------------------------------
+// פענוח SVG → רשימת ציור (תת-קבוצת ה-SVG שקיימת בפועל בקטלוגים ובצורות):
+// viewBox, <g transform="translate(a,b) scale(sx,sy)">, <path d> בפקודות
+// M m L l H h V v C c Q q S s T t A a Z, <circle>, <rect>, <ellipse>,
+// <polygon>, <polyline>; מילוי בלבד (stroke=none בכל הקטלוג — נבדק).
+// ---------------------------------------------------------------------------
+
+/** מפענח מספרים ממחרוזת פקודות נתיב. */
+function parsePathD(d) {
+  const segs = [];
+  const re = /([MmLlHhVvCcSsQqTtAaZz])|(-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)/g;
+  let m, cmd = null, args = [];
+  const flush = () => {
+    if (cmd) segs.push({ cmd: cmd.toUpperCase(), rel: cmd !== cmd.toUpperCase(), args });
+    cmd = null; args = [];
+  };
+  while ((m = re.exec(String(d || '')))) {
+    if (m[1]) { flush(); cmd = m[1]; }
+    else args.push(parseFloat(m[2]));
+  }
+  flush();
+  return segs;
+}
+
+/** המרת פקודות נתיב לרצף נקודות/בזייה במרחב ה-viewBox (absolute).
+ * @returns {{subpaths: Array<Array<{op:'M'|'L'|'C', pts:number[]}>>, x0:number,y0:number}} */
+function pathToSubpaths(d, transform) {
+  const segs = parsePathD(d);
+  const subpaths = [];
+  let cur = null;      // תת-נתיב נוכחי
+  let x = 0, y = 0;    // נקודה נוכחית (מרחב מקורי, לפני transform)
+  let sx = 0, sy = 0;  // נקודת פתיחה של תת-הנתיב
+  let lastC2x = 0, lastC2y = 0, haveLastC = false;
+  const push = (op, pts) => {
+    if (!cur) { cur = []; subpaths.push(cur); }
+    cur.push({ op, pts: transform(pts) });
+  };
+  const cubicTo = (x1, y1, x2, y2, x3, y3) => { push('C', [x, y, x1, y1, x2, y2, x3, y3]); x = x3; y = y3; };
+  const quadTo = (x1, y1, x2, y2) => {
+    // Q → שני C (עליית מדרגה הרמיטית)
+    const cx1 = x + 2 / 3 * (x1 - x), cy1 = y + 2 / 3 * (y1 - y);
+    const cx2 = x2 + 2 / 3 * (x1 - x2), cy2 = y2 + 2 / 3 * (y1 - y2);
+    cubicTo(cx1, cy1, cx2, cy2, x2, y2);
+  };
+  const arcTo = (rx, ry, rot, laf, sf, x2, y2) => {
+    // קירוב קשת ב-8 מקטעי בזייה (דיוק חזותי מלא בגדלי עיטור) — endpoint→center
+    const x1 = x, y1 = y;
+    if (rx === 0 || ry === 0 || (x1 === x2 && y1 === y2)) { push('L', [x1, y1, x2, y2]); x = x2; y = y2; return; }
+    rx = Math.abs(rx); ry = Math.abs(ry);
+    const phi = rot * Math.PI / 180;
+    const cosP = Math.cos(phi), sinP = Math.sin(phi);
+    const dx2 = (x1 - x2) / 2, dy2 = (y1 - y2) / 2;
+    const x1p = cosP * dx2 + sinP * dy2, y1p = -sinP * dx2 + cosP * dy2;
+    const lam = (x1p * x1p) / (rx * rx) + (y1p * y1p) / (ry * ry);
+    if (lam > 1) { const s = Math.sqrt(lam); rx *= s; ry *= s; }
+    let num = rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p;
+    const den = rx * rx * y1p * y1p + ry * ry * x1p * x1p;
+    let co = Math.sqrt(Math.max(0, num / den));
+    if (laf === sf) co = -co;
+    const cxp = co * rx * y1p / ry, cyp = -co * ry * x1p / rx;
+    const cx = cosP * cxp - sinP * cyp + (x1 + x2) / 2;
+    const cy = sinP * cxp + cosP * cyp + (y1 + y2) / 2;
+    const ang = (ux, uy, vx, vy) => {
+      const dot = ux * vx + uy * vy, len = Math.sqrt(ux * ux + uy * uy) * Math.sqrt(vx * vx + vy * vy);
+      let a = Math.acos(Math.max(-1, Math.min(1, dot / (len || 1))));
+      if (ux * vy - uy * vx < 0) a = -a;
+      return a;
+    };
+    const theta1 = ang(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry);
+    let dTheta = ang((x1p - cxp) / rx, (y1p - cyp) / ry, (-x1p - cxp) / rx, (-y1p - cyp) / ry);
+    if (!sf && dTheta > 0) dTheta -= 2 * Math.PI;
+    if (sf && dTheta < 0) dTheta += 2 * Math.PI;
+    const N = 8;
+    const delta = dTheta / N;
+    const t = theta1;
+    let px = x1, py = y1;
+    for (let i = 1; i <= N; i++) {
+      const t2 = t + delta * i;
+      const px2 = cx + rx * Math.cos(t2) * cosP - ry * Math.sin(t2) * sinP;
+      const py2 = cy + rx * Math.cos(t2) * sinP + ry * Math.sin(t2) * cosP;
+      const tm = t + delta * (i - 0.5);
+      const cmx = cx + rx * Math.cos(tm) * cosP - ry * Math.sin(tm) * sinP;
+      const cmy = cy + rx * Math.cos(tm) * sinP + ry * Math.sin(tm) * cosP;
+      // נקודת בקרה בזייה לקשת מעגלית: k = 4/3·tan(δ/4)
+      const k = 4 / 3 * Math.tan(delta / 4);
+      const c1x = px + k * (-rx * Math.cos(t + delta * (i - 1)) * sinP - ry * Math.sin(t + delta * (i - 1)) * cosP);
+      const c1y = py + k * (rx * Math.cos(t + delta * (i - 1)) * cosP - ry * Math.sin(t + delta * (i - 1)) * sinP);
+      const c2x = px2 - k * (-rx * Math.cos(t2) * sinP - ry * Math.sin(t2) * cosP);
+      const c2y = py2 - k * (rx * Math.cos(t2) * cosP - ry * Math.sin(t2) * sinP);
+      void cmx; void cmy;
+      cubicTo(c1x, c1y, c2x, c2y, px2, py2);
+      px = px2; py = py2;
+    }
+  };
+  for (const { cmd, rel, args } of segs) {
+    const a = args;
+    switch (cmd) {
+      case 'M':
+        for (let i = 0; i + 1 < a.length; i += 2) {
+          x = rel ? x + a[i] : a[i]; y = rel ? y + a[i + 1] : a[i + 1];
+          if (i === 0) { cur = null; push('M', [x, y]); sx = x; sy = y; }
+          else push('L', [x, y, x, y]);
+        }
+        haveLastC = false;
+        break;
+      case 'L':
+        for (let i = 0; i + 1 < a.length; i += 2) {
+          const nx = rel ? x + a[i] : a[i], ny = rel ? y + a[i + 1] : a[i + 1];
+          push('L', [x, y, nx, ny]); x = nx; y = ny;
+        }
+        haveLastC = false;
+        break;
+      case 'H':
+        for (const v of a) { const nx = rel ? x + v : v; push('L', [x, y, nx, y]); x = nx; }
+        haveLastC = false;
+        break;
+      case 'V':
+        for (const v of a) { const ny = rel ? y + v : v; push('L', [x, y, x, ny]); y = ny; }
+        haveLastC = false;
+        break;
+      case 'C':
+        for (let i = 0; i + 5 < a.length; i += 6) {
+          const x1 = rel ? x + a[i] : a[i], y1 = rel ? y + a[i + 1] : a[i + 1];
+          const x2 = rel ? x + a[i + 2] : a[i + 2], y2 = rel ? y + a[i + 3] : a[i + 3];
+          const x3 = rel ? x + a[i + 4] : a[i + 4], y3 = rel ? y + a[i + 5] : a[i + 5];
+          cubicTo(x1, y1, x2, y2, x3, y3);
+          lastC2x = x2; lastC2y = y2; haveLastC = true;
+        }
+        break;
+      case 'S':
+        for (let i = 0; i + 3 < a.length; i += 4) {
+          const x2 = rel ? x + a[i] : a[i], y2 = rel ? y + a[i + 1] : a[i + 1];
+          const x3 = rel ? x + a[i + 2] : a[i + 2], y3 = rel ? y + a[i + 3] : a[i + 3];
+          const x1 = haveLastC ? 2 * x - lastC2x : x, y1 = haveLastC ? 2 * y - lastC2y : y;
+          cubicTo(x1, y1, x2, y2, x3, y3);
+          lastC2x = x2; lastC2y = y2; haveLastC = true;
+        }
+        break;
+      case 'Q':
+        for (let i = 0; i + 3 < a.length; i += 4) {
+          const x1 = rel ? x + a[i] : a[i], y1 = rel ? y + a[i + 1] : a[i + 1];
+          const x2 = rel ? x + a[i + 2] : a[i + 2], y2 = rel ? y + a[i + 3] : a[i + 3];
+          quadTo(x1, y1, x2, y2);
+          lastC2x = x1; lastC2y = y1; haveLastC = false;
+        }
+        break;
+      case 'T':
+        for (let i = 0; i + 1 < a.length; i += 2) {
+          const x2 = rel ? x + a[i] : a[i], y2 = rel ? y + a[i + 1] : a[i + 1];
+          const x1 = haveLastC ? 2 * x - lastC2x : x, y1 = haveLastC ? 2 * y - lastC2y : y;
+          quadTo(x1, y1, x2, y2);
+          lastC2x = x1; lastC2y = y1;
+        }
+        break;
+      case 'A':
+        for (let i = 0; i + 6 < a.length; i += 7) {
+          const rx = a[i], ry = a[i + 1], rot = a[i + 2];
+          const laf = a[i + 3], sf = a[i + 4];
+          const x2 = rel ? x + a[i + 5] : a[i + 5], y2 = rel ? y + a[i + 6] : a[i + 6];
+          arcTo(rx, ry, rot, laf, sf, x2, y2);
+        }
+        haveLastC = false;
+        break;
+      case 'Z':
+        if (cur && cur.length) push('L', [x, y, sx, sy]);
+        x = sx; y = sy;
+        haveLastC = false;
+        break;
+    }
+  }
+  return { subpaths, x, y };
+}
+
+/** פענוח SVG שלם → { vbW, vbH, shapes: [{subpaths, fill}] } (מרחב viewBox). */
+function parseSvgPaint(svg) {
+  const s = String(svg || '');
+  if (!s) return null;
+  const vb = /viewBox\s*=\s*"([^"]+)"/.exec(s);
+  let vbW = 0, vbH = 0;
+  if (vb) {
+    const p = vb[1].trim().split(/[\s,]+/).map(Number);
+    vbW = p[2] || 0; vbH = p[3] || 0;
+  }
+  const wm = /width\s*=\s*"([\d.]+)/.exec(s), hm = /height\s*=\s*"([\d.]+)/.exec(s);
+  if (!vbW && wm) vbW = parseFloat(wm[1]);
+  if (!vbH && hm) vbH = parseFloat(hm[1]);
+  if (!vbW || !vbH) return null;
+
+  // transform של <g> — **S70 (R6):** תמיכה מלאה ב-translate/scale/matrix
+  // (כולל רשימות) עם הרכבה לפי סדר SVG: הפונקציה השמאלית מוחלת אחרונה.
+  let tx = 0, ty = 0, sx = 1, sy = 1;
+  let mtx = null; // [a,b,c,d,e,f] כאשר x' = a·x + c·y + e ; y' = b·x + d·y + f
+  const gt = /<g\b[^>]*transform\s*=\s*"([^"]+)"/.exec(s);
+  if (gt) {
+    const tr = gt[1];
+    const funcs = [];
+    const fre = /(matrix|translate|scale)\s*\(\s*([^)]+)\)/g;
+    let fm;
+    while ((fm = fre.exec(tr))) {
+      const a = fm[2].split(/[\s,]+/).map(Number);
+      if (fm[1] === 'matrix' && a.length >= 6) funcs.push([a[0], a[1], a[2], a[3], a[4], a[5]]);
+      else if (fm[1] === 'translate') funcs.push([1, 0, 0, 1, a[0] || 0, a[1] || 0]);
+      else if (fm[1] === 'scale') {
+        const kx = a[0] != null ? a[0] : 1, ky = a[1] != null ? a[1] : (a[0] != null ? a[0] : 1);
+        funcs.push([kx, 0, 0, ky, 0, 0]);
+      }
+    }
+    // הרכבה לפי סדר SVG: השמאלית חיצונית (מוחלת אחרונה) — acc_new = acc ∘ F
+    // (אימות: "translate(10,0) scale(2)" ⇒ x'=2x+10 ✓)
+    let acc = [1, 0, 0, 1, 0, 0];
+    for (const F of funcs) {
+      acc = [
+        acc[0] * F[0] + acc[2] * F[1],
+        acc[1] * F[0] + acc[3] * F[1],
+        acc[0] * F[2] + acc[2] * F[3],
+        acc[1] * F[2] + acc[3] * F[3],
+        acc[0] * F[4] + acc[2] * F[5] + acc[4],
+        acc[1] * F[4] + acc[3] * F[5] + acc[5],
+      ];
+    }
+    mtx = acc;
+    // תאימות לאחור: טרנספורמציה בודדת translate/scale — שמירת tx/ty/sx/sy
+    const tm = /translate\(\s*([-\d.]+)[\s,]+([-\d.]+)/.exec(tr);
+    if (tm) { tx = parseFloat(tm[1]); ty = parseFloat(tm[2]); }
+    const sm = /scale\(\s*([-\d.]+)(?:[\s,]+([-\d.]+))?\)/.exec(tr);
+    if (sm) { sx = parseFloat(sm[1]); sy = sm[2] != null ? parseFloat(sm[2]) : sx; }
+  }
+  const transform = (pts) => {
+    const out = [];
+    for (let i = 0; i + 1 < pts.length; i += 2) {
+      if (mtx) {
+        out.push(mtx[0] * pts[i] + mtx[2] * pts[i + 1] + mtx[4], mtx[1] * pts[i] + mtx[3] * pts[i + 1] + mtx[5]);
+      } else {
+        out.push(pts[i] * sx + tx, pts[i + 1] * sy + ty);
+      }
+    }
+    return out;
+  };
+
+  const shapes = [];
+  const pushShape = (d, fillAttr, strokeAttr) => {
+    if (strokeAttr && strokeAttr !== 'none') return; // קווים חיצוניים — מחוץ לתת-הקבוצה (לא קיימים בקטלוג)
+    const { subpaths } = pathToSubpaths(d, transform);
+    if (!subpaths.length) return;
+    shapes.push({ subpaths, fill: parseColor(fillAttr) });
+  };
+
+  // <path> — fill מהאלמנט או מה-<g> שעוטף (inherit)
+  const gFill = /<g\b[^>]*\bfill\s*=\s*"([^"]+)"/.exec(s);
+  const gStroke = /<g\b[^>]*\bstroke\s*=\s*"([^"]+)"/.exec(s);
+  const pathRe = /<path\b([^>]*)>/g;
+  let m;
+  while ((m = pathRe.exec(s))) {
+    const attrs = m[1];
+    const d = /d\s*=\s*"([^"]+)"/.exec(attrs);
+    if (!d) continue;
+    const fill = /fill\s*=\s*"([^"]+)"/.exec(attrs);
+    const stroke = /stroke\s*=\s*"([^"]+)"/.exec(attrs);
+    pushShape(d[1], fill ? fill[1] : (gFill ? gFill[1] : '#000'), stroke ? stroke[1] : (gStroke ? gStroke[1] : 'none'));
+  }
+  // <circle>/<ellipse> — ארבע קשתות בזייה
+  const circRe = /<(circle|ellipse)\b([^>]*)>/g;
+  while ((m = circRe.exec(s))) {
+    const at = m[2];
+    const num = (k) => { const r = new RegExp(`\\b${k}\\s*=\\s*"([\\d.]+)"`).exec(at); return r ? parseFloat(r[1]) : null; };
+    const cx = num('cx') || 0, cy = num('cy') || 0;
+    const rx = m[1] === 'circle' ? (num('r') || 0) : (num('rx') || 0);
+    const ry = m[1] === 'circle' ? (num('r') || 0) : (num('ry') || 0);
+    if (!rx || !ry) continue;
+    const k = 0.5522847498;
+    const d = `M ${cx - rx} ${cy} C ${cx - rx} ${cy - ry * k} ${cx - rx * k} ${cy - ry} ${cx} ${cy - ry} `
+      + `C ${cx + rx * k} ${cy - ry} ${cx + rx} ${cy - ry * k} ${cx + rx} ${cy} `
+      + `C ${cx + rx} ${cy + ry * k} ${cx + rx * k} ${cy + ry} ${cx} ${cy + ry} `
+      + `C ${cx - rx * k} ${cy + ry} ${cx - rx} ${cy + ry * k} ${cx - rx} ${cy} Z`;
+    const fill = /fill\s*=\s*"([^"]+)"/.exec(at);
+    const stroke = /stroke\s*=\s*"([^"]+)"/.exec(at);
+    pushShape(d, fill ? fill[1] : '#000', stroke ? stroke[1] : 'none');
+  }
+  // <rect>
+  const rectRe = /<rect\b([^>]*)>/g;
+  while ((m = rectRe.exec(s))) {
+    const at = m[1];
+    const num = (k) => { const r = new RegExp(`\\b${k}\\s*=\\s*"([\\d.]+)"`).exec(at); return r ? parseFloat(r[1]) : 0; };
+    const x0 = num('x'), y0 = num('y'), w = num('width'), h = num('height');
+    if (!w || !h) continue;
+    const fill = /fill\s*=\s*"([^"]+)"/.exec(at);
+    pushShape(`M ${x0} ${y0} L ${x0 + w} ${y0} L ${x0 + w} ${y0 + h} L ${x0} ${y0 + h} Z`, fill ? fill[1] : '#000', 'none');
+  }
+  // **S70 (R6):** <polygon>/<polyline> — points לנתיב; polygon נסגר (Z)
+  // וממולא כברירת מחדל; polyline נצבע רק אם יש לו fill מפורש (קו-בלבד
+  // מחוץ לתת-הקבוצה — כמו stroked paths — תיעוד בראש המודול).
+  const polyRe = /<(polygon|polyline)\b([^>]*)>/g;
+  while ((m = polyRe.exec(s))) {
+    const at = m[2];
+    const ptsM = /points\s*=\s*"([^"]+)"/.exec(at);
+    if (!ptsM) continue;
+    const nums = ptsM[1].trim().split(/[\s,]+/).map(Number).filter((v) => Number.isFinite(v));
+    if (nums.length < 4) continue;
+    const fill = /fill\s*=\s*"([^"]+)"/.exec(at);
+    const stroke = /stroke\s*=\s*"([^"]+)"/.exec(at);
+    if (m[1] === 'polyline' && !fill && !gFill) continue;
+    let d = `M ${nums[0]} ${nums[1]}`;
+    for (let i = 2; i + 1 < nums.length; i += 2) d += ` L ${nums[i]} ${nums[i + 1]}`;
+    if (m[1] === 'polygon') d += ' Z';
+    pushShape(d, fill ? fill[1] : (gFill ? gFill[1] : '#000'), stroke ? stroke[1] : (gStroke ? gStroke[1] : 'none'));
+  }
+  if (!shapes.length) return null;
+  return { vbW, vbH, shapes };
+}
+
+/** צבע מילוי → [r,g,b] 0..1 ('#abc', '#aabbcc', שמות בסיסיים). */
+function parseColor(c) {
+  const s = String(c || '').trim();
+  if (!s || s === 'none' || s === 'transparent') return null;
+  // **תיקון url(#…):** מילוי דפוס (pattern) אינו צבע אחיד — עד כאן נפל
+  // לברירת המחדל והצורה נצבעה שחור בנתיב הווקטורי של ה-PDF (רקעים שלמים
+  // נמרחו שחור). אין ריצוף דפוס בנתיב זה — הצורה מדולגת (הר�סטר מכסה אותה
+  // בעיצובים העשירים).
+  if (/^url\(/i.test(s)) return null;
+  if (s === 'currentColor') return [0, 0, 0];
+  let m = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(s);
+  if (m) return [parseInt(m[1] + m[1], 16) / 255, parseInt(m[2] + m[2], 16) / 255, parseInt(m[3] + m[3], 16) / 255];
+  m = /^#([0-9a-f]{6})$/i.exec(s);
+  if (m) {
+    const n = parseInt(m[1], 16);
+    return [(n >> 16) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+  }
+  const named = { black: [0, 0, 0], white: [1, 1, 1], red: [1, 0, 0], blue: [0, 0, 1] };
+  if (named[s.toLowerCase()]) return named[s.toLowerCase()];
+  return [0, 0, 0]; // ברירת מחדל — שחור (כמו SVG)
+}
+
+/** פליטת פעולות PDF לציור העיטור בתוך rect (px, מרחב עמוד) עם התאמת
+ * 'meet' (preserveAspectRatio) — מרכז התמונה במרכז התיבה בלי עיוות.
+ * @param {object} paint — פלט parseSvgPaint
+ * @param {{x,y,w,h}} rectPx — יעד בפיקסלים (שיטת הפרויקטור)
+ * @param {number} hPt — גובה העמוד ב-pt (היפוך y)
+ * @param {number} PX_TO_PT
+ * @returns {string[]} פעולות PDF (m/l/c/h/f + rg) */
+function svgToPdfOps(paint, rectPx, hPt, PX_TO_PT) {
+  const { vbW, vbH, shapes } = paint;
+  // meet: סקייל אחיד מרבי שנכנס, ממורכז
+  const s = Math.min(rectPx.w / vbW, rectPx.h / vbH);
+  const drawW = vbW * s, drawH = vbH * s;
+  const offX = rectPx.x + (rectPx.w - drawW) / 2;
+  const offY = rectPx.y + (rectPx.h - drawH) / 2;
+  const X = (vx) => (offX + vx * s) * PX_TO_PT;
+  const Y = (vy) => hPt - (offY + vy * s) * PX_TO_PT;
+  const r2 = (v) => Math.round(v * 100) / 100;
+  const ops = [];
+  for (const sh of shapes) {
+    const col = sh.fill || [0, 0, 0];
+    ops.push(`${r2(col[0])} ${r2(col[1])} ${r2(col[2])} rg`);
+    for (const sub of sh.subpaths) {
+      let started = false;
+      for (const seg of sub) {
+        const p = seg.pts;
+        if (seg.op === 'M') {
+          if (started) ops.push('h f');
+          ops.push(`${r2(X(p[0]))} ${r2(Y(p[1]))} m`);
+          started = true;
+        } else if (seg.op === 'L') {
+          if (!started) { ops.push(`${r2(X(p[0]))} ${r2(Y(p[1]))} m`); started = true; }
+          ops.push(`${r2(X(p[2]))} ${r2(Y(p[3]))} l`);
+        } else if (seg.op === 'C') {
+          if (!started) { ops.push(`${r2(X(p[0]))} ${r2(Y(p[1]))} m`); started = true; }
+          ops.push(`${r2(X(p[2]))} ${r2(Y(p[3]))} ${r2(X(p[4]))} ${r2(Y(p[5]))} ${r2(X(p[6]))} ${r2(Y(p[7]))} c`);
+        }
+      }
+      if (started) ops.push('h f');
+    }
+  }
+  return ops;
+}
+
+/** תיבת הדיו **המדויקת** של הצורות הממוקמות בתוך rect (אותה התאמת
+ * 'meet' כמו svgToPdfOps) — לחישוב inkBounds של המודל מול הרסטר.
+ * @returns {{minX,minY,maxX,maxY}|null} בפיקסלים (מרחב עמוד) */
+function svgInkBBox(paint, rectPx) {
+  const { vbW, vbH, shapes } = paint;
+  const s = Math.min(rectPx.w / vbW, rectPx.h / vbH);
+  const drawW = vbW * s, drawH = vbH * s;
+  const offX = rectPx.x + (rectPx.w - drawW) / 2;
+  const offY = rectPx.y + (rectPx.h - drawH) / 2;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const sh of shapes) {
+    if (sh.fill == null) continue; // צורה בלי מילוי — אין דיו
+    for (const sub of sh.subpaths) {
+      for (const seg of sub) {
+        const p = seg.pts;
+        for (let i = 0; i + 1 < p.length; i += 2) {
+          const x = offX + p[i] * s, y = offY + p[i + 1] * s;
+          if (x < minX) minX = x; if (x > maxX) maxX = x;
+          if (y < minY) minY = y; if (y > maxY) maxY = y;
+        }
+      }
+    }
+  }
+  if (minX === Infinity) return null;
+  return { minX, minY, maxX, maxY };
+}
+
+module.exports = {
+  BUILTIN_SVGS, ornamentInk, svgToDataUri,
+  parseSvgPaint, svgToPdfOps, svgInkBBox, parsePathD, pathToSubpaths, parseColor
+};
+
+};
+__modules["src/engine/layout/footnote-lanes.js"] = function (require, module, exports) {
+// src/engine/layout/footnote-lanes.js — מקור-אמת יחיד לחלוקת נתיבי מרזב ההערות (שלב 5; חילוץ שורש מ-PR #16, S78/D-107)
+'use strict';
+
+/**
+ * **חלוקת LPT דטרמיניסטית — מימוש אחד, שלושה צרכנים.**
+ *
+ * עד כאן היו שלושה העתקים מקבילים של אותו אלגוריתם:
+ *  1. `footnote-budget.getFootnotesReservedHeight` — התקציב בזמן ההצבה
+ *     (סכום גבהים ממוין ⇐ מקסימום שני הנתיבים);
+ *  2. `geometry-projector.projectFootnoteGutter` — הקרנת ה-PDF;
+ *  3. `dom-renderer.renderFootnoteArea` — התצוגה החיה.
+ *
+ * מחלקת הכשל (ההיסטוריה של S70/S71.1): כל העתק שאינו מתוחזק בדיוק כמו
+ * חבריו מייצר מצב "תקציב ≠ תצוגה ≠ ייצוא" — ההערה מתוקצבת בנתיב אחד
+ * ומוצגת בנתיב אחר. כעת: הצרכנים קוראים `assignFootnoteLanes` בלבד.
+ *
+ * האלגוריתם (זהה מתמטית לשלושת המימושים הקודמים — נעול בבדיקת שקילות):
+ *  - סדר עיבוד: לפי גובה יורד; שווי-גובה לפי אינדקס עולה (סדר מסמך).
+ *  - הצבה חמדנית: כל הערה נכנסת לנתיב שסכומו המצטבר הנמוך; תיקו ⇒ נתיב 0
+ *    (הנתיב הימני ב-RTL — "הראשון").
+ *  - הסדר הפנימי בכל נתיב נשמר (סדר מסמך).
+ *
+ * @param {Array} notes - רשימת הערות (כל אובייקט; הגובה נקרא דרך heightOf)
+ * @param {(n:object, i:number)=>number} [heightOf] - גובה אפקטיבי;
+ *   ברירת מחדל (n) => n.heightPx || 0 (כמו המקרנים). התקציב מעביר נפילה
+ *   ל-noteHeight — שקילות המימושים נשמרת כי בעמודי DP כל הערה חתומה
+ *   ב-heightPx (ראה תיקון הניקוז בסוף המסמך ב-dp-planner).
+ * @returns {{lanes:[number[], number[]], totals:[number, number]}}
+ *   lanes[i] = אינדקסים ברשימת הקלט (בסדר מסמך) שהוקצו לנתיב i.
+ */
+function assignFootnoteLanes(notes, heightOf) {
+  const h = typeof heightOf === 'function' ? heightOf : (n) => (n && n.heightPx) || 0;
+  const n = (notes || []).length;
+  const lanes = [[], []];
+  const totals = [0, 0];
+  if (!n) return { lanes, totals };
+  const order = notes.map((note, i) => ({ i, h: h(note, i) }))
+    .sort((a, b) => (b.h - a.h) || (a.i - b.i));
+  for (const s of order) {
+    const li = totals[0] <= totals[1] ? 0 : 1;
+    lanes[li].push(s.i);
+    totals[li] += s.h;
+  }
+  return { lanes, totals };
+}
+
+module.exports = { assignFootnoteLanes };
+
+};
+__modules["src/engine/output/line-font.js"] = function (require, module, exports) {
+// src/engine/output/line-font.js — מפרט גופן/גודל של שורה לפי סוגה (03.11(ג))
+'use strict';
+
+/**
+ * **מקור יחיד** לגודל/גופן של שורה לפי סוגה — נצרך גם על ידי geometry-projector
+ * (הקרנת PDF) וגם על ידי dom-renderer (תצוגה חיה + ייצוא HTML). בעבר הפרויקטור
+ * ידע לחשב את גודל הכותרת אך ה-DOM לא — והתצוגה הציגה כותרות בגודל הגוף
+ * והתעלמה מהחלפת גופן הגוף (דיווח משתמש 03.11: "ניסיתי להחליף גופן, בתצוגה
+ * לא השתנה כלום").
+ */
+
+/** גודל גופן (pt) של שורה לפי סוגה (מקור: מפתחות heading-N-size-pt של הרישום).
+ * **S6.3:** המודל קובע — ln.sizePt שנישא על השורה (הקדמה 11.5pt, הערות,
+ * כותרות inline) גובר; רק בהיעדרו נופלים להגדרות. בלי זה גוף ההקדמה
+ * הוצג ב-12pt בעוד המנוע מדד 11.5pt — סחף מדידה↔רינדור. */
+function lineFontSizePt(ln, settings) {
+  if (ln && ln.sizePt != null && Number.isFinite(Number(ln.sizePt)) && Number(ln.sizePt) > 0) {
+    return Number(ln.sizePt);
+  }
+  if (ln && ln.kind === 'heading') {
+    const s = settings[`heading-${ln.level}-size-pt`];
+    return s || settings['body-font-size-pt'];
+  }
+  return settings['body-font-size-pt'];
+}
+
+/** משפחת גופן של שורה לפי סוגה (heading-N-font; ריק ⇒ גופן הגוף).
+ * **S6.3:** ln.font שנישא על השורה (גוף ההקדמה ⇒ Frank Ruhl Libre) גובר —
+ * הרינדור באותו גופן שבו המנוע מדד (prefaceApi). */
+function lineFontFamily(ln, settings) {
+  if (ln && ln.font) return ln.font;
+  if (ln && ln.kind === 'heading') {
+    const f = settings[`heading-${ln.level}-font`];
+    if (f) return f;
+  }
+  return settings['body-font'] || '';
+}
+
+/** pt → px (96/72) עם עיגול יציב (אותו נוסח בכל הנתיבים). */
+function ptToPx(pt) {
+  return Math.round(Number(pt) * (96 / 72) * 100) / 100;
+}
+
+/** **S73 (צבע פר-גופן מההגדרות):** '#RRGGBB'/'#RGB' → [r,g,b] בטווח 0..1
+ * ל-pdf-writer (rg) ול-DOM. ערך חסר/בלתי-תקין ⇒ null (=שחור, ברירת המחדל
+ * של כל ההגדרות — ברירת מחדל שחורה פולטת 0 בתים ב-PDF: אין אופרטור rg). */
+function hexColorToRgb(hex) {
+  const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex || '').trim());
+  if (!m) return null;
+  let h = m[1];
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  return [
+    parseInt(h.slice(0, 2), 16) / 255,
+    parseInt(h.slice(2, 4), 16) / 255,
+    parseInt(h.slice(4, 6), 16) / 255
+  ];
+}
+
+module.exports = { lineFontSizePt, lineFontFamily, ptToPx, hexColorToRgb };
+
+};
+__modules["src/engine/output/shaar-content.js"] = function (require, module, exports) {
+// src/engine/output/shaar-content.js — מודל תוכן עמודי השער (03.11(ד))
+'use strict';
+
+/**
+ * **מקור יחיד (F-09) לתוכן המובנה של עמודי השער** — פורט renderMainShaar/
+ * renderSubShaar/renderBackShaar של הפרויקט המקורי. נצרך על ידי שני הנתיבים:
+ * dom-renderer (תצוגה חיה + ייצוא HTML) ו-geometry-projector (ייצוא PDF) —
+ * כך שהשער נראה אותו דבר בכל הפלטים (עד כאן ההיטל לא כלל את תוכן השער
+ * וה־PDF הראה עמודים ריקים).
+ *
+ * **Iteration-003 (legacy parity — חוזה השערים של המקור):**
+ *  - מקור התוכן של השער הראשי = המטא-דאטה של המסמך (כמו gateLinesFor במורשת:
+ *    meta.bookTitle/subject/desc/edition/author). הגדרות imud-book-* הן שדות
+ *    טופס שברירת המחדל שלהן ב-default_settings.json היא שמות מקום — הן
+ *    גיבוי בלבד כשאין מטא. השער האחורי — להפך (שדות הפאנל קודם, מטא ממלא —
+ *    כמו cfg.backCopyright || meta.copyright במורשת).
+ *  - מיקומים אנכיים מכוילים מהייחוס (px@96dpi; המקור במ"מ — pt(v)=v×4/3):
+ *    ראשי — כותרת 170.8, משנה 300.3, תיאור 547.1, מהדורה 744.0, מחבר 951.3;
+ *    אחורי — כותרת-זכויות 255.7, זכויות 288.5, הוצאה 476.4, קשר 667.9,
+ *    נוספים 859.1; משנה — כותרת 460.9, המשך 626.3.
+ *  - גודל כותרת שער-המשנה = s-h1 (heading-1-size-pt, 50pt במקור) — לא 36
+ *    קבוע. גופן ההמשך של שער-המשנה = David Libre (כמו ההקשחה המכוילת
+ *    במורשת — הייחוס מציג אותו, לא את f-sh-sub).
+ *  - אין בס״ד/שנה בשער הראשי ואין כתרים גרפיים — העיטורים הם רקע השער
+ *    המכויל (decoration/gate-design.js) כמו במקור.
+ */
+
+const MM_TO_PX = 96 / 25.4;
+const PT = (v) => v * (96 / 72); // "mm-ish" units of the legacy calibration → px
+
+/** תיבת השער לפי הסוג — מיקומי המקור (מ"מ → פיקסלים). */
+function shaarBoxOf(type, settings) {
+  const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+  const mode = imudProf ? 'fixed' : null;
+  const mm = (v) => Math.round(v * MM_TO_PX);
+  if (type === 'shaar-main') {
+    return { top: mm(20), bottom: mm(16), right: mm(15), left: mm(15), mode: mode || 'between' };
+  }
+  if (type === 'shaar-sub') {
+    return { top: mm(20), bottom: mm(20), right: mm(95), left: mm(15), mode: mode || 'center' };
+  }
+  // shaar-back
+  return { top: mm(22), bottom: mm(18), right: mm(15), left: mm(95), mode: mode || 'center' };
+}
+
+/** פיצול מקף של כותרת חלק (renderSubShaar המקורי): main=לפני, sub=אחרי. */
+function splitPartTitle(text) {
+  let titleMain = String(text || '');
+  let titleSub = '';
+  if (/[-–—]/.test(titleMain)) {
+    const parts = titleMain.split(/[-–—]/);
+    titleMain = parts[0].trim();
+    titleSub = parts.slice(1).join(' - ').trim();
+  }
+  return { titleMain, titleSub };
+}
+
+/**
+ * בניית בלוקי תוכן השער. גישה מילולית להגדרות (דרישת סורק ה-phantom-key).
+ * @param {object} page - עמוד CP5 (shaarInfo.title לשער־משנה, _metadata למטא)
+ * @param {object} settings
+ * @param {object} [metadata] - מטא המסמך (גובר _metadata)
+ * @returns {{mode:string, box:object, blocks:Array<{cls,text,sizePt,bold,yTop,followGap?,fontFamily?}>}|null}
+ */
+function buildShaarBlocks(page, settings, metadata) {
+  if (!page || !page.type || !/^shaar-/.test(page.type)) return null;
+  const meta = metadata || page._metadata || {};
+  const num = (v) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : 12; };
+  const box = shaarBoxOf(page.type, settings);
+  const B = [];
+
+  if (page.type === 'shaar-main') {
+    // **Iteration-003:** מקור התוכן = המטא של המסמך (כמו המורשת); ההגדרות גיבוי.
+    const bookTitle = meta['שם הספר'] || meta['ספר'] || meta['title'] || settings['imud-book-title'] || 'שם הספר';
+    const subtitle = meta['נושא'] || settings['imud-book-subtitle'] || '';
+    const desc = meta['נושא מפורט'] || settings['imud-book-desc'] || '';
+    const sections = meta['פרטי מהדורא'] || settings['imud-book-sections'] || '';
+    const author = meta['שם המחבר'] || settings['imud-book-author'] || '';
+    // **Iteration-003 (legacy parity):** בס״ד/שורת-שנה — תכונת פרופיל DP בלבד.
+    // שער ה-IMUD של המקור אינו מציג אף אחד מהם (נמדד בייחוס עמ' 1: חמש
+    // שורות בלבד — כותרת/נושא/תיאור/מהדורה/מחבר).
+    const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+    if (!imudProf) {
+      B.push({ cls: 'bsd-header', text: 'בס״ד', sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 5 });
+    }
+    // **Iteration-006 (G8/F11 — עוגן כותרת השער הראשי):** בייחוס עמ' 1 שורת
+    // הכותרת «מקום בינה» (46pt) ב-y=123.5pt; העוגן הקודם (PT(128.1)) הניח
+    // אותה ב-142.4pt — נמוכה ב-18.9pt. הותאם ב-−18.9pt (bbox השורה נבדק
+    // מול הייחוס ברגרסיה). שאר הבלוקים (משנה/תיאור/מהדורה/מחבר) נשארים
+    // על עוגניהם — הם כבר תואמים (נמדד: 236.3 מול 237.4; 420.3 מול 420.9).
+    B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']), ...(imudProf ? { yTop: PT(109.2) } : {}) });
+    // **Iteration-003 (parity משקל):** בייחוס IMUD כותרת-המשנה ב-Livorna רגיל
+    // (ToraEx6="Livorna", לא Bold) — ההדגשה נשארת לעיצוב DP בלבד.
+    B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: !imudProf, ...(imudProf ? { yTop: PT(225.2), followGap: 25 } : {}) });
+    if (!imudProf) {
+      B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-main' });
+    }
+    B.push({ cls: 'book-description', text: desc, sizePt: num(settings['shaar-desc-size-pt']), ...(imudProf ? { yTop: PT(410.3) } : {}) });
+    // **Iteration-003 (parity משקל):** שורת פרטי-המהדורא בייחוס ב-David Libre
+    // רגיל (נמדד: ToraEx4="David Libre Regular", 11.5pt) — לא מודגש.
+    B.push({ cls: 'book-sections-summary', text: sections, sizePt: num(settings['shaar-sections-size-pt']), bold: !imudProf, ...(imudProf ? { yTop: PT(558.0) } : {}) });
+    B.push({ cls: 'author-block', text: author, sizePt: num(settings['shaar-author-size-pt']), ...(imudProf ? { yTop: PT(713.5) } : {}) });
+    if (!imudProf) {
+      const year = settings['imud-book-year'] || meta['מקום ושנת הוצאה'] || '';
+      if (year) B.push({ cls: 'publication-footer', text: year, sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 1 });
+    }
+  } else if (page.type === 'shaar-sub') {
+    const { titleMain, titleSub } = splitPartTitle(page.shaarInfo && page.shaarInfo.title);
+    const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+    if (imudProf) {
+      // **Iteration-003:** גודל הכותרת מההגדרות (s-h1 ⇒ heading-1-size-pt; 50 במקור)
+      const h1Size = num(settings['heading-1-size-pt']);
+      B.push({ cls: 'book-title-main', text: titleMain, sizePt: h1Size, yTop: PT(345.7) });
+      if (titleSub) {
+        // ההמשך ב-David Libre המכויל (כמו ההקשחה במורשת — הייחוס בגופן זה);
+        // **Iteration-003 (parity משקל):** בייחוס רגיל (ToraEx4="David Libre
+        // Regular"), לא מודגש — המפתח המילולי בחותמת מביא את הקובץ הרגיל.
+        B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: false, yTop: PT(469.7), followGap: 40.8, fontFamily: 'David Libre' });
+      }
+    } else {
+      B.push({ cls: 'book-title-main', text: titleMain, sizePt: 36 });
+      if (titleSub) {
+        B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-sub' });
+        B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true });
+      }
+    }
+  } else {
+    // **9b.5 (D-107 + F-9a-8):** ארבעת מקטעי השער האחורי — פורט renderBackShaar
+    // של המקור. מקור הערך: שדה ההגדרה גובר (ייבוא inp-book-back-*;
+    // shaar-back-text ההיסטורי לזכויות); נפילה למטא המסמך (כמו המורשת).
+    // **אין כותרת-ספר/מחבר/שנה בשער האחורי** ו**אין ערכים מומצאים**.
+    const copyright = settings['imud-book-back-copyright'] || settings['shaar-back-text'] || meta['שמירת זכויות'] || '';
+    const publisher = settings['imud-book-back-publishing'] || meta['פרטי הוצאה לאור'] || '';
+    const contact = settings['imud-book-back-contact'] || meta['פרטי קשר'] || '';
+    const extra = settings['imud-book-back-extra'] || meta['פרטים נוספים'] || '';
+    const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
+    const pushSection = (value, sizePt, yTop) => {
+      String(value).split('\n').map(l => l.trim()).filter(Boolean)
+        .forEach(l => B.push({ cls: 'back-shaar-text-line', text: l, sizePt, ...(imudProf && yTop != null ? { yTop } : {}) }));
+    };
+    if (copyright) B.push({ cls: 'back-shaar-copyright-header', text: 'כל הזכויות שמורות', sizePt: 13.5, bold: !imudProf, ...(imudProf ? { yTop: PT(191.8) } : {}) });
+    pushSection(copyright, 10, PT(216.4));
+    pushSection(publisher, 11, PT(357.3));
+    pushSection(contact, 10, PT(500.9));
+    pushSection(extra, 9.5, PT(644.3));
+  }
+  return { mode: box.mode, box, blocks: B.filter(b => String(b.text || '').length || b.graphic) };
+}
+
+/** משפחות הגופן של הבלוקים — לפי ההגדרות (גישה מילולית לסורק). */
+function shaarFontOf(cls, settings) {
+  switch (true) {
+    case cls.includes('bsd-header'):
+    case cls.includes('publication-footer'): return settings['shaar-year-font'];
+    case cls.includes('book-title-main'): return settings['shaar-title-font'];
+    case cls.includes('book-subtitle'): return settings['shaar-subtitle-font'];
+    case cls.includes('book-description'): return settings['shaar-desc-font'];
+    case cls.includes('book-sections-summary'): return settings['shaar-sections-font'];
+    case cls.includes('author-block'): return settings['shaar-author-font'];
+    case cls.includes('back-shaar-copyright-header'):
+    case cls.includes('back-shaar-text-line'): return settings['shaar-back-text-font'];
+    default: return '';
+  }
+}
+
+/** **פרוסה 3 (§2.2 — הדיו מגיע מהמודל):** SVG הכתרים של השערים — מקור יחיד.
+ * הוסרו מהתוכן ב-Iteration-003: עיטורי השער באים מעיצוב השער המכויל
+ * (decoration/gate-design.js) כמו במקור — לא כבלוק גרפי בזרימת התוכן.
+ * נשמר לצרכנים חיצוניים קיימים (בדיקות/תאימות). */
+function crownSvgOf(graphic) {
+  if (graphic === 'crown-sub') {
+    return '<svg viewBox="0 0 300 30" xmlns="http://www.w3.org/2000/svg"><path d="M10,15 Q75,5 140,15 Q145,10 150,5 Q155,10 160,15 Q225,5 290,15 Q225,25 160,15 Q155,20 150,25 Q145,20 140,15 Q75,25 10,15 Z" fill="#222"/></svg>';
+  }
+  return '<svg viewBox="0 0 400 40" xmlns="http://www.w3.org/2000/svg"><circle cx="200" cy="20" r="10" fill="none" stroke="#000" stroke-width="4.5"/><circle cx="200" cy="20" r="4.5" fill="#000"/><path d="M182,20 C182,24 165,27 140,27 C90,27 40,22 5,20 C40,18 90,13 140,13 C165,13 182,16 182,20 Z" fill="#000"/><path d="M218,20 C218,24 235,27 260,27 C310,27 360,22 395,20 C360,18 310,13 260,13 C235,13 218,16 218,20 Z" fill="#000"/></svg>';
+}
+
+module.exports = { buildShaarBlocks, shaarBoxOf, shaarFontOf, crownSvgOf, splitPartTitle, MM_TO_PX };
 
 };
 __modules["src/engine/typography/measure-api.js"] = function (require, module, exports) {
@@ -14017,2746 +15457,691 @@ module.exports = {
 };
 
 };
-__modules["src/engine/decoration/asset-registry.js"] = function (require, module, exports) {
-// src/engine/decoration/asset-registry.js — רישום נכסי עיצוב ופתרון הפניות (03.11, EXT-14)
+__modules["src/engine/output/pagemodel-dom-renderer.js"] = function (require, module, exports) {
+// src/engine/output/pagemodel-dom-renderer.js — **שלב 8 פרוסה 3 (§2): מקרין DOM טהור מ-PageModel בלבד.**
 'use strict';
 
 /**
- * רישום מרכזי של נכסי עיצוב (שערים/עיטורים/מפרידים — SVG + תיבות) ופתרון
- * הפניות «imud:<collection>:<id>» ל-data-URI בטוח לשימוש כרקע/תמונה.
+ * חוזה (הוראת שלב 8 §2.2): המקרין הזה מקבל **עמוד מתוך PageModel** ומצייר
+ * אותו בלבד. אסור לו למדוד גופנים/מילים, לחשב רוחבים, לשבור שורות, לבצע
+ * wrapping/reflow, להחליט מיקום/סדר, לחשב מחדש חלוקת הערות, גיאומטריית
+ * עיטורים, מידות תמונות או fit — ולא להשלים מידע חסר ב-fallback שקט.
  *
- * **אבטחה:** כל SVG עובר חיטוי (svg-sanitize) בעת הרישום — לעולם לא נשמר כמו
- * שהוא. רישום כפול של אותו מזהה — החדש מחליף (עדכון ספרייה); מזהים לא
- * חוקיים נדחים ומדווחים — לא בשקט.
+ * כל x/y/w/h, baseline, מידות, סדר שכבות, מפתח גופן, צבע, asset identity
+ * ועוגן מגיעים מהמודל. מה שמותר: טעינת/פענוח משאבים לצורך ציור (תמונות,
+ * data-URI של SVG) ואריזת-תצוגה בלבד (מחלקות CSS, כרום). אם חסר מידע
+ * חיוני — המקרין מדווח diagnostic גלוי (dataset + onDiagnostic) ולא משלים
+ * בעצמו (התיקון שייך לבונה המודל).
  *
- * **סביבת-אגנוסטיות:** אין DOM/פetch כאן — המודול טהור ונבדק גם ב-Node;
- * הטעינה מהרשת חיה ב-UI (imud-library.js).
+ * מבנה ה-DOM שומר במכוון על אותם עוגנים שהאודיט החי בודק (.page/.column/
+ * .line/.footnotes/.fn-rule/.side-note/.orn) — כך שכל כלי הבדיקה הקיימים
+ * עובדים על הפרופיל המאוחד בלי שכפול מנגנונים.
  */
 
-const { sanitizeSvg } = require('./svg-sanitize');
-
-/** הרישום עצמו: collection → Map(id → item). */
-const collections = new Map();
-
-/** קידוד SVG כ-data-URI (UTF-8 percent-encoding — תואם url("...") ב-CSS). */
-function svgDataUri(svg) {
-  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(String(svg));
-}
-
-/** ולידציית שם אוסף/מזהה: [a-zA-Z0-9_-] בלבד — מונע הזרקת תווים להפניה. */
-function validToken(s) {
-  return typeof s === 'string' && /^[A-Za-z0-9_-]+$/.test(s);
-}
-
-/**
- * רישום אוסף נכסים.
- * @param {string} collection — שם האוסף (למשל 'shaar-main', 'orn-ud', 'divider')
- * @param {Array<{id:string, name?:string, svg:string, box?:object}>} items
- * @returns {{ok:boolean, registered:number, rejected:Array<{id:string, reason:string}>}}
- */
-function registerAssets(collection, items) {
-  if (!validToken(collection)) return { ok: false, registered: 0, rejected: [{ id: String(collection), reason: 'bad-collection-name' }] };
-  if (!Array.isArray(items)) return { ok: false, registered: 0, rejected: [{ id: collection, reason: 'items-not-array' }] };
-  let map = collections.get(collection);
-  if (!map) { map = new Map(); collections.set(collection, map); }
-  const rejected = [];
-  let registered = 0;
-  for (const it of items) {
-    if (!it || !validToken(it.id)) { rejected.push({ id: it && String(it.id), reason: 'bad-id' }); continue; }
-    const clean = sanitizeSvg(String(it.svg || ''));
-    if (!clean.ok) { rejected.push({ id: it.id, reason: `svg-rejected:${clean.reason}` }); continue; }
-    map.set(it.id, {
-      id: it.id,
-      name: it.name || it.id,
-      svg: clean.svg,
-      dataUri: svgDataUri(clean.svg),
-      box: it.box || null
-    });
-    registered++;
-  }
-  return { ok: rejected.length === 0, registered, rejected };
-}
-
-/** מספר הנכסים הרשומים (לבדיקות ולתצוגה). */
-function assetCount() {
-  let n = 0;
-  for (const m of collections.values()) n += m.size;
-  return n;
-}
-
-/** רשימת פריטי אוסף (מזהה+שם+תיבה — בלי SVG, קל ל-UI). */
-function listCollection(collection) {
-  const map = collections.get(collection);
-  if (!map) return [];
-  return Array.from(map.values()).map((it) => ({ id: it.id, name: it.name, box: it.box }));
-}
-
-/**
- * פתרון הפניה לפריט. פורמטים נתמכים:
- *  - 'imud:<collection>:<id>' → פריט מהרישום
- *  - כל ערך אחר → מוחזר כמו שהוא (URL/data-URI קיים — לא נוגעים)
- * @returns {{resolved:boolean, uri:string|null, item:object|null}}
- */
-function resolveAssetRef(ref) {
-  if (typeof ref !== 'string' || !ref.startsWith('imud:')) return { resolved: false, uri: ref || null, item: null };
-  const parts = ref.split(':');
-  if (parts.length !== 3) return { resolved: false, uri: null, item: null };
-  const [, col, id] = parts;
-  const map = collections.get(col);
-  const item = map && map.get(id);
-  if (!item) return { resolved: false, uri: null, item: null };
-  return { resolved: true, uri: item.dataUri, item };
-}
-
-/** האם הפניה היא הפניית imud (גם אם טרם נטענה — להודעות ברורות למשתמש). */
-function isImudRef(ref) {
-  return typeof ref === 'string' && ref.startsWith('imud:');
-}
-
-/** ניקוי מלא (בדיקות/isolation). */
-function resetAssets() {
-  collections.clear();
-}
-
-module.exports = { registerAssets, resolveAssetRef, isImudRef, listCollection, assetCount, resetAssets, svgDataUri };
-
-};
-__modules["src/engine/decoration/svg-sanitize.js"] = function (require, module, exports) {
-// src/engine/decoration/svg-sanitize.js — SVG sanitizer + CSP hook (S8.1 task 10; full pass S13)
-'use strict';
-
-/**
- * חיטוי SVG (Spec §9.5 "sanitized SVG"): רשימת־היתרים, לא רשימת־חסימות.
- * נשללים: <script>, <foreignObject>, תגי אנימציה עם לולאות (set/animate עם begin=never/indefinite
- * אינם סיכון גיאומטרי אך נשללים כאן בשל דטרמיניזם), מאפייני on*, javascript:, data:text/html,
- * והפניות חיצוניות (href/xlink:href למקור שאינו מקומי).
- *
- * מדיניות zero-randomness/דטרמיניזם: הפלט קבוע לקלט נתון.
- */
-
-/** תגים מותרים (רשימת־היתרים). */
-const ALLOWED_TAGS = new Set([
-  'svg', 'g', 'defs', 'title', 'desc', 'path', 'rect', 'circle', 'ellipse', 'line',
-  'polyline', 'polygon', 'text', 'tspan', 'linearGradient', 'radialGradient', 'stop',
-  'clipPath', 'mask', 'pattern', 'use', 'symbol', 'image', 'marker', 'style'
-]);
-
-/** מאפיינים מותרים כללית (קידומות גם ב־xlink:). */
-const ALLOWED_ATTRS = new Set([
-  'id', 'class', 'd', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'r', 'rx', 'ry',
-  'width', 'height', 'transform', 'viewBox', 'fill', 'fill-opacity', 'fill-rule',
-  'stroke', 'stroke-width', 'stroke-opacity', 'stroke-linecap', 'stroke-linejoin',
-  'stroke-dasharray', 'stroke-dashoffset', 'opacity', 'points', 'gradientUnits',
-  'gradientTransform', 'offset', 'stop-color', 'stop-opacity', 'clip-path',
-  'clip-rule', 'mask', 'clipPathUnits', 'patternUnits', 'preserveAspectRatio',
-  'font-family', 'font-size', 'font-weight', 'text-anchor', 'dominant-baseline',
-  'dx', 'dy', 'rotate', 'textLength', 'lengthAdjust', 'xmlns', 'xmlns:xlink',
-  'version', 'xml:space', 'style'
-]);
-
-/** @returns {{ok:boolean, svg:string, removed:string[], reason?:string}} */
-function sanitizeSvg(svgText) {
-  const src = String(svgText || '');
-  if (!src.trim()) return { ok: false, svg: '', removed: [], reason: 'empty' };
-  if (!/<svg[\s>]/i.test(src)) return { ok: false, svg: '', removed: [], reason: 'not-svg' };
-  const removed = [];
-  let out = src;
-
-  // 1) שלילת בלוקים מסוכנים תחילה (תגים שלמים עם תוכנם) — לפני כל פירוק
-  for (const tag of ['script', 'foreignobject', 'animate', 'animatetransform', 'animatemotion', 'set', 'handler', 'listener']) {
-    const re = new RegExp(`<${tag}(\\s[^>]*)?>[\\s\\S]*?<\\/${tag}\\s*>|<${tag}(\\s[^>]*)?\\/>`, 'gi');
-    out = out.replace(re, () => { removed.push(`tag:${tag}`); return ''; });
-  }
-
-  // 2) מעבר תג־תג: השמטת תגים שאינם ברשימת־ההיתרים (עם תוכנם ליחידים מסוכנים)
-  out = out.replace(/<\/?([a-zA-Z:][-a-zA-Z0-9:_]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g, (whole, tag) => {
-    const t = String(tag).toLowerCase();
-    if (ALLOWED_TAGS.has(t)) return whole;
-    removed.push(`tag:${t}`);
-    return '';
-  });
-
-  // 3) מאפיינים: on*, javascript:, והפניות חיצוניות
-  out = out.replace(/\s([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*("([^"]*)"|'([^']*)')/g, (whole, name, _q, dq, sq) => {
-    const n = String(name).toLowerCase();
-    const val = String(dq != null ? dq : sq);
-    if (n.startsWith('on')) { removed.push(`attr:${n}`); return ''; }
-    if (!ALLOWED_ATTRS.has(n) && !n.startsWith('xlink:')) { removed.push(`attr:${n}`); return ''; }
-    const v = val.trim().toLowerCase();
-    if (v.includes('javascript:') || v.includes('data:text/html') || v.startsWith('vbscript:')) {
-      removed.push(`attr-url:${n}`);
-      return '';
-    }
-    // href/xlink:href: מותרים רק עצמים פנימיים (#id) — אין מקורות חיצוניים
-    if (n === 'href' || n === 'xlink:href') {
-      if (!val.trim().startsWith('#')) { removed.push(`ext-ref:${n}`); return ''; }
-    }
-    return whole;
-  });
-
-  // 4) בלוקי <style>: הסרת url(...) חיצוניים ו־expression()
-  out = out.replace(/<style([^>]*)>([\s\S]*?)<\/style\s*>/gi, (whole, attrs, css) => {
-    if (/url\(\s*['"]?\s*(https?:|file:|\/\/)/i.test(css) || /expression\s*\(/i.test(css)) {
-      removed.push('style:external-url');
-      return '<style></style>';
-    }
-    return whole;
-  });
-
-  if (!/<svg[\s>]/i.test(out)) return { ok: false, svg: '', removed, reason: 'svg-stripped' };
-  return { ok: true, svg: out, removed };
-}
-
-/**
- * CSP hook (S13 ישלים): מסמך CSP מומלץ להטמעת שערי SVG חיצוניים.
- * אין eval, אין מקורות חיצוניים; blob/data לתמונות בלבד.
- */
-function svgCspDirective() {
-  return "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-src 'none'";
-}
-
-module.exports = { sanitizeSvg, svgCspDirective, ALLOWED_TAGS, ALLOWED_ATTRS };
-
-};
-__modules["src/engine/output/dom-renderer.js"] = function (require, module, exports) {
-// src/engine/output/dom-renderer.js — DOM render (browser) + PUA scrub invariant (REQ-PAR-05, BRZ-13)
-'use strict';
-
-/**
- * **W-2 (השלמת כריתת 9c.4, 27.11) — תפקיל אמת:** מרנדר את עמודי ה-LineModel
- * הפנימיים של התוצאה (result.pages — ייצוג הביניים שממנו נבנה ה-PageModel).
- * צרכניו כיום: בדיקות (אורקל רינדור — s9-headers, s14, s8d ועוד) ופונקציות
- * הייצוא המורשתיות exportPdf/exportHtml של export-api. **אינו נצרך עוד בנתיב
- * המוצר** — התצוגה החיה (preview-tab), ייצוא ה-HTML וייצוא ה-PDF מהמנוע
- * קוראים כולם למקרין הטהור מה-PageModel (pagemodel-dom-renderer) מאז
- * השלמת 9c.4. מחיקת הקובץ כרוכה בהסרת exportPdf/exportHtml ובהסבת
- * אורקלי הבדיקות — שלב 13 (cutover), לא W-2.
- *
- * רנדור עמודים ל‑DOM. כללי יסוד:
- * - U+E000/U+E101 חייבים להיעלם מה‑DOM הסופי (scrub לפני render; נשמרים רק לשלב המדידה).
- * - כיווניות RTL מלאה; no !important על inline של עיטורים (F-09 — מקור שליטה יחיד).
- * - מיפוי סוג עמוד → מחלקת CSS: regular/shaar/preface/sign-open/endnotes/toc/filler.
- *
- * **עדכוני סגירת S7:**
- *  - סמני הערות מ‑notes/markers (מקור אחיד — P1-3); מקטעי פיצול הערה ארוכה
- *    מסומנים class fn--continuation עם תוספת "(המשך)".
- *  - background-opacity ⇒ rgba() אמיתי (בעבר נכתב לתכונת CSS בלתי קיימת — P0-5).
- *  - paren-style-scale ⇒ מילים בתוך סוגריים ב‑span.w--paren (D-42).
- *  - column-divider-style ⇒ חוט מפריד בין הטורים, גובה Math.min−8px (overlay — geometry-neutral).
- *  - עמודי הערות: כותרת + רשימת הערות (S7.1.1).
- *  - הערות צד: מיקום מוחלט לפי yTop/x מה‑placement (S7.1.2).
- */
-
-const PT_CLASS = {
-  'regular': 'page page--regular',
-  'shaar-main': 'page page--shaar page--shaar-main',
-  'shaar-sub': 'page page--shaar page--shaar-sub',
-  'shaar-back': 'page page--shaar page--shaar-back',
-  'preface': 'page page--preface',
-  'sign-open': 'page page--sign-open',
-  'h3-spread': 'page page--h3-spread',
-  'endnotes': 'page page--endnotes',
-  'toc-general': 'page page--toc page--toc-general',
-  'toc-detail': 'page page--toc page--toc-detail',
-  'custom': 'page page--custom',
-  'filler': 'page page--filler',
-  // **Iteration-006 (RC-B1 — עמודי מילוי ריקים בפרופיל המאוחד):** המודל
-  // המאוחד מייצר עמודי blank (מילוי לפני שער-משנה שחייב recto — נמדד:
-  // 8 עמודים כאלה ב-very_long, תמיד צמודים ל-shaar-sub). בלי המיפוי הם
-  // קיבלו className='page' בלי page--* ⇒ TYPE_UNKNOWN באודיט החי (סיווג
-  // העמוד לא זיהה אף מחלקה). מחלקת CSS ייעודית לכל סוג עמוד.
-  'blank': 'page page--blank'
-};
-
-// **שלב 8 פרוסה 1-ביקורת (§3.1):** scrubPUAText עבר למודול הניטרלי core/pua-text —
-// הליבה (materialize) כבר אינה מייבאת מהרנדרר. כאן נצרך מהמקור היחיד ומיוצא
-// הלאה לצרכנים קיימים (חוזה המודול נשמר: scrubPUAText ב-export).
 const { scrubPUAText } = require('../core/pua-text');
-
-/** rgba() אמיתי מ‑background-color + background-opacity (תיקון P0-5). */
-function bgRgba(color, opacity) {
-  const hex = String(color || '#ffffff');
-  const m = hex.match(/^#([0-9a-f]{6})$/i);
-  const op = Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : 1;
-  if (!m) return hex; // שם־צבע/תבנית אחרת — כמו שהוא
-  const n = parseInt(m[1], 16);
-  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  return `rgba(${r}, ${g}, ${b}, ${op})`;
-}
-
-/**
- * S7 — צריכת footnote-marker-style (enum) דרך מקור אחיד: notes/markers.
- * (בעבר היה כאן ממיר מקומי שני — אי־עקביות מספור, P1-3.)
- */
-const { markerForSettings } = require('../notes/markers');
-const { planDecorations } = require('../decoration/page-decorations');
-const { resolveShaarBox } = require('../decoration/shaar-boxes');
-const { columnDividerHeightPx } = require('../decoration/ornament-fit');const { folioGeometry } = require('../layout/furniture-geometry'); // **שלב 6:** גיאומטריית הגיליון — מקור יחיד עם הפרויקטור ל-PDF
-
+const { familyOfFontKey } = require('../typography/font-keys');
 const { resolveAssetRef } = require('../decoration/asset-registry');
-const { ornamentInk } = require('../decoration/ornament-ink'); // **03.11:** imud: → data-URI
-const { MM_TO_PX } = require('../layout/page-templates');
-const { isCssFrame } = require('../decoration/folio'); // **S9:** מסגרות גיליון CSS (circle/square)
-const { assignFootnoteLanes } = require('../layout/footnote-lanes'); // **שלב 5:** מקור-אמת יחיד לחלוקת נתיבי המרזב
-const { lineFontSizePt, lineFontFamily, ptToPx } = require('./line-font');
-const { buildShaarBlocks, shaarFontOf } = require('./shaar-content'); // **03.11(ד)** // **03.11(ג):** מקור יחיד לגופן/גודל שורה
+const { PT_CLASS, bgRgba, fontStack } = require('./dom-renderer');
 
-/** S9 — body-last-line-align (center|right|stretch): יישור שורה אחרונה של פסקה. */
-function lastLineClass(ln, settings) {
-  if (!ln.isLast) return '';
-  const mode = settings['body-last-line-align'] || 'center';
-  if (mode === 'right') return ' line--last-right';
-  if (mode === 'stretch') return ' line--last-stretch';
-  return ' line--last-center';
+const PT_TO_PX = 96 / 72;
+const px2 = (v) => Math.round(v * 100) / 100;
+
+/** צבע שאינו שחור — null אחרת (כמו הרנדרר הקיים; שחור ⇒ ירושת ברירת מחדל). */
+function nonBlack(c) {
+  if (!c || typeof c !== 'string') return null;
+  const s = c.trim().toLowerCase();
+  if (s === '#000' || s === '#000000' || s === 'black' || s === 'rgb(0, 0, 0)') return null;
+  return c;
 }
 
-/** **03.11(ד):** מחסנית גופן — תומכת גם בערך מרובה־משפחות ("'A', 'B', serif"
- * מהמקור). גרשיים מנוטרלים (הזרקה בטוחה ל-CSS), משפחות גנריות (serif/sans-serif)
- * עוברות כמו שהן, ופולבאקים עבריים נוספים רק אם אינם כבר ברשימה. */
-function fontStack(family) {
-  // ניקוי לפי משפחה: גרשיים מוסרים, ותווים מסוכנים להזרקת CSS (; : { } / וכו')
-  // נפסלים — נשארים אותיות (לטיניות ועבריות), ספרות, רווחים ומקפים בלבד.
-  const safe = (x) => String(x || '').replace(/'/g, '').replace(/[^\w\u0590-\u05FF\uFB1D-\uFB4F\s-]/g, '').trim();
-  const parts = String(family || '').split(',').map(safe).filter(Boolean);
-  if (!parts.length) return '';
-  const out = [];
-  const GENERIC = /^(serif|sans-serif|monospace|cursive|fantasy|system-ui)$/i;
-  for (const p of parts) {
-    out.push(GENERIC.test(p) ? p : `'${p}'`);
-  }
-  for (const fb of ['Frank Ruhl Libre', 'David', 'serif']) {
-    const plain = `'${fb}'`;
-    if (!out.includes(plain) && !out.includes(fb)) out.push(GENERIC.test(fb) ? fb : plain);
-  }
-  return out.join(', ');
+/** משפחת תצוגה למפתח גופן מהמודל (§2.2 — זהות מהמודל; 'body'/null ⇒ ירושת שורש). */
+function familyOf(key) {
+  const fam = familyOfFontKey(key);
+  return fam ? fontStack(fam) : null;
 }
 
-function renderLine(ln, doc, settings = {}) {
+// ─── שורת טקסט: תיבה ממוקמת מהמודל + מילים ממוקמות מהמודל ───
+/**
+ * כל שורה = div.line ממוקם ב-(x,y,w,h) מהמודל; כל מילה = span.w ממוקם
+ * ב-x הסופי שלה (כולל הקצאת דבק/יישור שנקבעה בתכנון). הדפדפר אינו זז
+ * דבר — גם לא מילים בתוך השורה. הקו-בסיס נופל באותה נוסחת half-leading
+ * שבה הסמכות (attachBaselines) חישבה את baselineY במודל.
+ */
+/** **RC-A1 (i006 — רווח בין שורות של אותו טקסט לוגי):** השורות ממוקמות-מוחלט
+ *  ואין ביניהן רווחי-זרימה; בתוך שורה מוכנסת צומת רווח (renderModelLine),
+ *  אך בין שורות באותו מיכל לוגי — ביאור-צד, שורות הערה, פס — לא נוסף
+ *  דבר, ו-textContent מתמזג בכל צומת-שורה (נמדד: 8,848 מילים מודבקות
+ *  בביאורי-הצד + 626 בהערות-הגוף ב-very_long ⇒ רצפת הנפח של האודיט החי
+ *  נכשלה 341,160 < 345,999; גם העתקה ונגישות נפגעות). מקור אחד לכל
+ *  המיכלים: צומת רווח לפני כל שורה שאינה הראשונה באותו טקסט. הרווח
+ *  אינו נראה (whitespace בתחילת מיכל ממוקט-מוחלט מתמוטם). */
+function appendLineSep(container, doc, isFirstLogicalLine) {
+  if (!isFirstLogicalLine && typeof doc.createTextNode === 'function') {
+    container.appendChild(doc.createTextNode(' '));
+  }
+}
+
+function renderModelLine(ml, doc, relX, relY) {
   const el = doc.createElement('div');
-  el.className = 'line' + (ln.isLast ? ' line--last' + lastLineClass(ln, settings) : '');
+  el.className = 'line'
+    + (ml.isLast ? ' line--last' : '')
+    + (ml.kind === 'heading' ? ' line--heading' : '')
+    + (ml.kind === 'toc-title' ? ' toc-title' : '')
+    // **Iteration-006 (RC-W1 — חלון קלאסי שקוע):** שורת ההמשך של פסקת-חלון
+    // (window בלי windowWords) נמדדה ברוחב מוקטן — השפה הימנית תפוסה
+    // בכוונה ע"י החלון המרחף (חוזה המקור: float height:1.25em על שתי
+    // השורות; מדידת ייחוס p44: שורה 2 מסתיימת ב-472 מול קצה טור 513).
+    // המחלקה מסמנת לאודיט החי לדלג על בדיקת היישור — אותה החלטה כמו
+    // line--window-wrap במקרין המורשת (dom-renderer S4.26); הגיאומטריה
+    // עצמה כבר מצומצמת במודל (w=colW−windowW, עוגן שמאלי בשפת הטור).
+    + (ml.window && !ml.windowWords && ml.windowW ? ' line--window-wrap' : '');
   el.setAttribute('dir', 'rtl');
-  // **03.11(ג) (תיקון "החלפת גופן לא עושה כלום"):** גודל/גופן השורה מההגדרות —
-  // אותו מקור (line-font) כמו הפרויקטור. בלי זה התצוגה מציגה הכול בגודל/גופן
-  // שורש המסמך והתצוגה אינה מגיבה לשינויי גופן/גודל.
-  const lnPt = lineFontSizePt(ln, settings);
-  if (Number.isFinite(lnPt) && lnPt > 0) el.style.fontSize = `${ptToPx(lnPt)}px`;
-  const lnFont = lineFontFamily(ln, settings);
-  if (lnFont) el.style.fontFamily = fontStack(lnFont);
-  // **S73 (צבע פר-גופן — נתיב DP):** כותרת ⇒ heading-N-color; גוף ⇒ body-color.
-  // שחור ⇒ אין style (ירושת ברירת המחדל) — תצוגה=ייצוא (אפס אופרטורי rg ב-PDF).
-  if (ln.kind === 'heading' && ln.level != null) {
-    const hc = nonBlack(settings[`heading-${ln.level}-color`]);
-    if (hc) el.style.color = hc;
-  } else {
-    const bc = nonBlack(settings['body-color']);
-    if (bc) el.style.color = bc;
+  el.style.position = 'absolute';
+  el.style.left = `${px2(ml.x - relX)}px`;
+  el.style.top = `${px2(ml.y - relY)}px`;
+  el.style.width = `${px2(ml.w)}px`;
+  el.style.height = `${px2(ml.h)}px`;
+  el.style.lineHeight = `${px2(ml.h)}px`;
+  if (ml.align) el.style.textAlign = ml.align === 'stretch' ? 'justify' : ml.align;
+  if (ml.sizePt != null) el.style.fontSize = `${px2(ml.sizePt * PT_TO_PX)}px`;
+  if (ml.bold) el.style.fontWeight = '700';
+  if (ml.letterSpacingPx) el.style.letterSpacing = `${px2(ml.letterSpacingPx)}px`;
+  // Diagnostic provenance from the immutable PageModel; no layout behavior changes.
+  el.dataset.modelY = String(ml.y);
+  el.dataset.modelH = String(ml.h);
+  el.dataset.modelAQ = String(ml.aqStretch != null ? ml.aqStretch : 1);
+  el.dataset.modelGap = String(ml.gapBeforePx != null ? ml.gapBeforePx : 0);
+  if (ml.sourceTokenId != null) el.dataset.sourceTokenId = String(ml.sourceTokenId);
+  if (ml.styleClass) el.dataset.styleClass = ml.styleClass;
+  if (ml.id) el.dataset.id = ml.id;
+  const tok = ml.sourceTokenId != null ? ml.sourceTokenId : null;
+  if (tok != null) el.dataset.token = tok;
+  // **תוויות רווח בין המילים:** המילים ממוקמות-מוחלט ולכן אין רווחי-זרימה
+  // ביניהן; בלי צומת רווח מפורשת textContent מתמזג למילה אחת — שובר
+  // ספירת נפח (רצפת האודיט), העתקה ונגישות. הרווח אינו נראה.
+  let firstWord = true;
+  for (const wd of (ml.words || [])) {
+    if (!firstWord && typeof doc.createTextNode === 'function') el.appendChild(doc.createTextNode(' '));
+    firstWord = false;
+    const span = doc.createElement('span');
+    // **Iteration-006 (RC-W1):** מילת-החלון (fontKey 'window') מסומנת
+    // w--window — כמו במקרין המורשת; האודיט החי בודק את מיקומה (צמודה
+    // לקצה הימני, הדיו הראשון בשורה) דרך המחלקה הזו בדיוק.
+    span.className = 'w' + (wd.mk ? ' w--fnmarker' : '') + (wd.fontKey === 'window' ? ' w--window' : '');
+    span.style.position = 'absolute';
+    span.style.left = `${px2(wd.x - ml.x)}px`;
+    span.style.top = '0';
+    span.style.whiteSpace = 'pre';
+    if (wd.sizePt != null) span.style.fontSize = `${px2(wd.sizePt * PT_TO_PX)}px`;
+    const fam = familyOf(wd.fontKey);
+    if (fam) span.style.fontFamily = fam;
+    const col = nonBlack(wd.color);
+    if (col) span.style.color = col;
+    span.textContent = scrubPUAText(wd.text);
+    el.appendChild(span);
   }
-  // **EXT-20 (AQ אנכי אמיתי):** מקדם ה-AQ הוא מקדם גובה-שורה — כאן הוא
-  // מיושם כ-line-height מפורש (px) כמו בפרויקטור וב-PDF. בעבר הוחל כאן
-  // wordSpacing אופקי (‏(factor−1)×4px) — שלושה נתיבים, שלוש פרשנויות,
-  // והגובה מעולם לא השתנה. כעת: שדה אחד, משמעות אחת.
-  // **S6.0 (R4-C1):** line-height מהמודל ל**כל** שורה — לא רק ב-AQ. בלי
-  // זה הדפדפן משתמש ב-normal (~1.15–1.25em) והטור נערם בפיץ שונה מהמודל
-  // ומה-PDF (~4–5px לשורה, עד ~120px בתחתית הטור) — תצוגה≠ייצוא בכל עמוד DP
-  // (תיקון S5.1 הוחל בנתיב המורשת בלבד ולא כאן).
-  if (Number.isFinite(ln.heightPx)) {
-    el.style.lineHeight = `${Math.round(ln.heightPx * (ln.aqStretch || 1) * 100) / 100}px`;
-  }
-  // **FX-6 (פרוסה 2 — הפער מהחוזה הגיאומטרי):** פער הבלוקים מוקרן מהחותמת
-  // שנקבעה בתכנון (gapBeforePx) — מקור יחיד; המקרין קורא ואינו מוסיף כלום
-  // מעצמו. margin-top (ולא גובה שורה) — הפער אינו מערבב בין גובה השורה
-  // למרווח הבלוק; זהה ביט-לביט להתקדמות ה-y של הפרויקטור ל-PDF.
-  if (ln.gapBeforePx > 0) {
-    el.style.marginTop = `${Math.round(ln.gapBeforePx * 100) / 100}px`;
-  }
-  // **S8 (F-08):** הזמנת עיטורי H2 בתוך תיבת השורה — הטקסט יורד/עולה ב־padding;
-  // הגובה כבר תוקצב בפריסה, הרנדור רק מצייר בתוך התיבה (מקור יחיד — F-09).
-  if (ln.h2OrnPadTop) el.style.paddingTop = `${ln.h2OrnPadTop}px`;
-  if (ln.h2OrnPadBottom) el.style.paddingBottom = `${ln.h2OrnPadBottom}px`;
-  // **S11 (REQ-PAR-06):** הזמנת עיטורים מקושרים של סגנון מותאם — אותו דפוס (F-08).
-  if (ln.csOrnPadTop) el.style.paddingTop = `${ln.csOrnPadTop}px`;
-  if (ln.csOrnPadBottom) el.style.paddingBottom = `${ln.csOrnPadBottom}px`;
-  // **S11 (REQ-PAR-06):** סגנון ברמת הבלוק — class + סגנון מובנה + מונה גלוי בשורה הראשונה.
-  if (ln.customStyle) {
-    el.className += ' custom-style';
-    el.dataset.style = ln.customStyle.id || '';
-    applyCustomStyleSpec(el, ln.customStyle.styleSpec, doc);
-    if (ln.csCounterMark) {
-      const cm = doc.createElement('span');
-      cm.className = 'cs-counter';
-      cm.textContent = ln.csCounterMark;
-      prependChild(el, cm);
-    }
-  }
-  // **D-42:** מילים בתוך סוגריים — span.w--paren עם font-size בסקאלה (geometry-neutral).
-  // מילים רגילות — span.w אחיד (מיצג גם ב‑DOM אמיתי וגם ב‑shim של הבדיקות).
-  // **S11:** טווחי inline מסגנון מותאך — span.w--custom עם data-style (גודל מוחל כבר במדידה).
-  const parenScale = Number(settings['paren-style-scale']) || 1;
-  const words = (ln.words || []).map(w => scrubPUAText(w));
-  const spans = ln.parenSpans || [];
-  const customs = ln.customSpans || [];
-  if ((spans.length && parenScale !== 1) || customs.length) {
-    for (let i = 0; i < words.length; i++) {
-      const span = doc.createElement('span');
-      const cIdx = customs.findIndex(c => c.wi === i);
-      if (cIdx >= 0) {
-        span.className = 'w w--custom';
-        span.dataset.style = customs[cIdx].styleId;
-      } else if (spans.includes(i)) {
-        span.className = 'w w--paren';
-        span.style.fontSize = `${Math.round(parenScale * 100)}%`;
-      } else {
-        span.className = 'w';
-      }
-      span.textContent = words[i];
-      el.appendChild(span);
-    }
-  } else {
-    el.textContent = words.join(' ');
-  }
-  const tok = ln.tokenId != null ? ln.tokenId : (ln.meta && ln.meta.tokenId);
-  if (tok) el.dataset.token = tok;
   return el;
 }
 
-/** **S11:** הכנסת ילד ראשון — insertBefore כשיש; fallback ל־unshift (תאימות ל־shims של הבדיקות). */
-function prependChild(el, node) {
-  if (typeof el.insertBefore === 'function') el.insertBefore(node, el.firstChild || null);
-  else { (el.children || (el.children = [])).unshift(node); node.parentNode = el; }
-}
-
-/** **S11 (REQ-PAR-06):** החלת סגנון מותאם על יסוד DOM — מקור יחיד לכל מוצרי הדגל. */
-function applyCustomStyleSpec(el, spec, doc) {
-  void doc;
-  if (!spec || typeof spec !== 'object') return;
-  if (spec.fontSizePt) el.style.fontSize = `${spec.fontSizePt}pt`;
-  if (spec.bold) el.style.fontWeight = '700';
-  if (spec.italic) el.style.fontStyle = 'italic';
-  if (spec.color) el.style.color = spec.color;
-  if (spec.background) el.style.background = spec.background;
-  if (spec.border) el.style.borderRight = `3px solid ${typeof spec.border === 'string' ? spec.border : '#1a1a1a'}`;
-  if (spec.indentEm) { el.style.paddingRight = `${spec.indentEm}em`; el.style.marginRight = `${spec.indentEm}em`; }
-  if (spec.align) el.style.textAlign = spec.align === 'stretch' ? 'justify' : spec.align;
-  if (spec.letterSpacingEm) el.style.letterSpacing = `${spec.letterSpacingEm}em`;
-  if (spec.textTransform === 'small-caps') el.style.fontVariant = 'small-caps';
-}
-
-function renderFootnoteArea(page, settings, doc) {
-  if (!settings['footnotes-enabled'] || !page.footnotes.length) return null;
-  const area = doc.createElement('div');
-  area.className = `footnotes footnotes--${settings['fn-layout-mode']}`;
-  // **S5.4 (P-5 — תצוגה=ייצוא):** מיקום המרזב לפי המודל — הרצועה השמורה מעל
-  // תחתית תיבת התוכן, בדיוק כמו שהפרויקטור מקרין ל-PDF. בעבר: bottom:8px
-  // קבוע מה-CSS — התצוגה הציגה את המרזב בשוליים התחתונים בזמן שה-PDF צייר
-  // אותו ברצועה השמורה (פער תצוגה≠ייצוא בפרופיל DP).
-  const tpl = page.template;
-  if (tpl && tpl.contentBox && page.fnReservedHeightPx > 0) {
-    const colsX = (tpl.columns || []).map(c => c.x);
-    const colsR = (tpl.columns || []).map(c => c.x + c.w);
-    const left = colsX.length ? Math.min(...colsX) : 12;
-    const right = colsR.length ? Math.max(...colsR) : (tpl.width - 12);
-    area.style.bottom = 'auto';
-    area.style.top = `${Math.round(tpl.contentBox.bottom - page.fnReservedHeightPx)}px`;
-    area.style.left = `${Math.round(left)}px`;
-    area.style.right = `${Math.max(0, Math.round(tpl.width - right))}px`;
-  }
-  if (settings['footnote-separator-rule'] !== 'none') {
-    const rule = doc.createElement('div');
-    rule.className = `fn-rule fn-rule--${settings['footnote-separator-rule']}`;
-    area.appendChild(rule);
-  }
-  // **שלב 6 פרוסה 2 (§9 — הקרנה מהחותמת):** גוף ההערה מוקרן משורות החותמת
-  // (noteRows/noteWords/lineH מ-notes-model) — תיבת-שורה מפורשת לכל שורה:
-  // פיץ' אנכי מדויק מהמודל (בעבר line-height יחידת-יחס מה-CSS סטה ~0.4px/שורה
-  // מהתקציב ⇒ הערות נחתכו/חפפו בין שורות בתצוגה בעוד ה-PDF והתקציב הסכימו),
-  // והמילים של כל שורה — ממש כפי שנמדדו. הדפדפן משלים את הזרימה האופקית
-  // בתוך תיבת השורה (white-space:nowrap — אין שבירה מחדש של הדפדפן).
-  // חותמה חסרה ⇒ data-stamp-missing + נפילת טקסט חירום (התוכן לעולם לא אובד) —
-  // לא מדידה חלופית שקטה (§9.8).
-  const mkRows = (n) => {
-    const rows = [];
-    const isCont = n.isContinuation === true || n.mode === 'split-rest';
-    for (let li = 0; li < (n.noteRows || []).length; li++) {
-      const row = n.noteRows[li];
-      const div = doc.createElement('div');
-      div.className = 'fn-row';
-      div.style.whiteSpace = 'nowrap';
-      if (Number(n.lineH) > 0) {
-        div.style.lineHeight = `${n.lineH}px`;
-        div.style.height = `${n.lineH}px`;
-      }
-      const parts = [];
-      if (li === 0) {
-        if (isCont) parts.push('(המשך)');
-        if (n.marker != null && String(n.marker) !== '') parts.push(`${n.marker}\u200F`);
-      }
-      for (let i = row.wFrom; i < row.wTo; i++) parts.push(scrubPUAText(String(n.noteWords[i])));
-      div.textContent = parts.join(' ');
-      rows.push(div);
-    }
-    return rows;
-  };
-  const hasStamp = (n) => Array.isArray(n.noteRows) && n.noteRows.length > 0 && Array.isArray(n.noteWords) && Number(n.lineH) > 0;
-  // סמן אחיד (notes/markers) + סימון המשך למקטעי פיצול (S7.1.3 long-note policy)
-  const mkNote = (n) => {
-    const marker = n.marker || markerForSettings(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings);
-    const el = doc.createElement('div');
-    const cont = n.isContinuation || n.mode === 'split-rest';
-    el.className = 'footnote' + (cont ? ' fn--continuation' : '') + (n.customStyle ? ' footnote--custom' : '');
-    if (n.customStyle) el.dataset.style = n.customStyle;
-    el.dir = 'rtl';
-    if (hasStamp(n)) {
-      el.style.margin = '0'; // התקציב אינו כולל שוליים — תצוגה=ייצוא=תקציב
-      for (const r of mkRows(n)) el.appendChild(r);
-    } else {
-      el.dataset.stampMissing = '1'; // diagnostic גלוי — בלי מדידה חלופית שקטה
-      el.textContent = `${cont ? '(המשך) ' : ''}${marker}\u200F ${scrubPUAText(n.text || n)}`;
-    }
-    return el;
-  };
-  // **S70 (fn-continuous ב-DP — סגירת שארית S5.4):** גרסת inline של ההערה —
-  // לזרימה רציפה: הערה הבאה פותחת באותה שורה שבה הסתיימה קודמתה (רווח-
-  // כפול בין הערות — כמו המורשת). המודל כבר תיקצב במצב זה בלי הצמדת
-  // תקרה פר-הערה (D-34); התצוגה משלימה את החזות בלבד — הגיאומטריה לא זזה.
-  // **פרוסה 2:** פיץ' השורה גם כאן מהחותמת (px מפורש) — אותו פיץ' של ה-PDF.
-  const mkNoteInline = (n) => {
-    const marker = n.marker || markerForSettings(Number.isInteger(n.docIndex) ? n.docIndex : (n.markerNum || 1), settings);
-    const el = doc.createElement('span');
-    const cont = n.isContinuation || n.mode === 'split-rest';
-    el.className = 'footnote fn--inline' + (cont ? ' fn--continuation' : '') + (n.customStyle ? ' footnote--custom' : '');
-    if (n.customStyle) el.dataset.style = n.customStyle;
-    el.textContent = `${cont ? '(המשך) ' : ''}${marker}\u200F ${scrubPUAText(n.text || n)}`;
-    return el;
-  };
-  const continuous = settings['fn-layout-mode'] === 'continuous';
-  const flowOf = (notes) => {
-    const flow = doc.createElement('div');
-    flow.className = 'footnotes-flow';
-    flow.dir = 'rtl';
-    const firstStamped = notes.find(hasStamp);
-    if (firstStamped) flow.style.lineHeight = `${firstStamped.lineH}px`; // פיץ' מהחותמת — תצוגה=ייצוא
-    notes.forEach((n, i) => {
-      if (i > 0) flow.appendChild(doc.createTextNode('\u00A0 ')); // רווח-כפול בין הערות
-      flow.appendChild(mkNoteInline(n));
-    });
-    return flow;
-  };
-  // **S5.4 (תצוגה=ייצוא):** שני נתיבים לפי footnote-columns — חלוקת הערות
-  // זהה לתקציב/פרויקטור (LPT דטרמיניסטית) — התצוגה וה-PDF מציגים את אותן
-  // הערות באותם נתיבים. הנתיב הראשון מימין (RTL).
-  const twoLanes = settings['footnote-columns'] === 2
-    && tpl && Array.isArray(tpl.columns) && tpl.columns.length >= 2
-    && page.fnReservedHeightPx > 0;
-  if (twoLanes) {
-    // **שלב 5 (חילוץ שורש מ-#16):** חלוקת הנתיבים — מקור יחיד (footnote-lanes).
-    // שקול מתמטית ל-LPT המקומי הקודם — נעול בבדיקת שקילות; תקציב/הקרנה/תצוגה
-    // משתפים את אותה חלוקה ממקור אחד.
-    const { lanes: idxLanes } = assignFootnoteLanes(page.footnotes);
-    const lanes = [[], []];
-    for (const li of [0, 1]) lanes[li] = idxLanes[li].map(i => page.footnotes[i]);
-    const row = doc.createElement('div');
-    row.style.display = 'flex';
-    row.style.flexDirection = 'row-reverse'; // RTL — הנתיב הראשון מימין
-    row.style.gap = `${Math.round(tpl.gutter || 0)}px`;
-    for (const lane of lanes) {
-      const laneEl = doc.createElement('div');
-      laneEl.className = 'footnotes-lane';
-      laneEl.style.flex = '1 1 0';
-      laneEl.style.minWidth = '0';
-      // **S70:** זרימה רציפה בתוך כל נתיב (עצמאית פר-נתיב — כמו התקציב)
-      if (continuous) laneEl.appendChild(flowOf(lane));
-      else for (const n of lane) laneEl.appendChild(mkNote(n));
-      row.appendChild(laneEl);
-    }
-    area.appendChild(row);
-  } else if (continuous) {
-    // **S70 (fn-continuous ב-DP):** כל הערות העמוד זורמות בבלוק אחד — במקום
-    // בלוקים נפרדים. הזרימה צפופה מסכום הבלוקים ⇒ הרצועה השמורה נשארת
-    // חוקית (שמרנית); שום שורת גוף אינה זזה.
-    area.appendChild(flowOf(page.footnotes));
-  } else {
-    for (const n of page.footnotes) area.appendChild(mkNote(n));
-  }
-  return area;
-}
-
-/** **S9 (D-61):** גיליון עמוד — מקור יחיד לכל סוגי העמודים (בעבר 4 העתקים).
- * מסגרות CSS (circle/square) מרונדרות כ‑badge עם מחלקה; הטקסטואליות כבר בתוך התצוגה.
- * **S73:** גופן/גודל/צבע הגיליון מההגדרות (page-num-font/size/color) — כמו המקרנים. */
-function renderFolio(page, settings, doc) {
-  if (!page.folioDisplay || settings['page-num-position'] === 'none') return null;
-  const folio = doc.createElement('footer');
-  folio.className = `folio folio--${settings['page-num-position']} folio--frame-${settings['page-num-frame']}`;
-  // **S73:** גופן/גודל/צבע מההגדרות — ריק/10/שחור = ההתנהגות הקודמת
-  const pnFont = settings['page-num-font'] || '';
-  if (pnFont) folio.style.fontFamily = fontStack(pnFont);
-  const pnSize = Number(settings['page-num-size-pt']);
-  if (Number.isFinite(pnSize) && pnSize > 0) folio.style.fontSize = `${Math.round(pnSize * (96 / 72) * 100) / 100}px`;
-  const pnColor = settings['page-num-color'];
-  if (pnColor && pnColor !== '#000000') folio.style.color = pnColor;
-  if (isCssFrame(settings['page-num-frame'])) {
-    const badge = doc.createElement('span');
-    badge.className = `page-num-badge page-num-frame-${settings['page-num-frame'] === 'circle' ? 'circle' : 'box'}`;
-    badge.textContent = page.folioDisplay;
-    folio.appendChild(badge);
-  } else {
-    folio.textContent = page.folioDisplay;
-  }
-  // **שלב 6 פרוסה 1 (§8 בהוראה — "אין לחשב מיקומם בנפרד ב-DOM וב-PDF"):**
-  // המיקום המפורש מגיע מאותו מקור יחיד של הפרויקטור ל-PDF
-  // (layout/furniture-geometry). ה-class נשאר אחראי לעור בלבד (מסגרת/צבע);
-  // הגיאומטריה — top/line-height מפורשים מהמודל, לא מהתנהגות CSS משוערת.
-  // המדידה בגופן הגיליון כשרשום — אותו אינסטנס שהפרויקטור בונה.
-  const pnFontGeo = settings['page-num-font'] || '';
-  const folioMeasure = pnFontGeo
-    ? new (require('../typography/measure-api').MeasureAPI)({ ...settings, 'body-font': pnFontGeo }, 'font-metrics')
-    : null;
-  if (folioMeasure) {
-    const geo = folioGeometry(page, settings, folioMeasure);
-    if (geo) {
-      folio.style.top = `${Math.round(geo.y * 100) / 100}px`;
-      folio.style.lineHeight = `${geo.lineHeightPx}px`;
-      folio.style.bottom = 'auto';
-    }
-  }
-  return folio;
-}
-
-function renderHeader(header, doc) {
-  if (!header) return null;
+// ─── עיטור: דיו מהמודל בלבד (§2.2) ───
+function renderModelDecoration(d, doc, diags) {
   const el = doc.createElement('div');
-  el.className = `running-head head--sep-${header.separator}`;
-  el.dir = 'rtl';
-  // **S9 (D-61):** צורה חדשה {slots} עם עצמאות מלאה לכל סלוט (מקור/יישור/גופן/גודל/רוחב);
-  // תאימות לאחור לצורה הישנה ({right,center,left}) לבדיקות ≤S8.
-  const slots = header.slots || { right: header.right, center: header.center, left: header.left };
-  for (const pos of ['right', 'center', 'left']) {
-    const s = slots[pos];
-    if (!s) continue;
-    const slot = doc.createElement('span');
-    slot.className = `head-slot head-slot--${pos} align-${s.align}`;
-    slot.style.width = `${s.widthPct}%`;
-    if (s.font) slot.style.fontFamily = s.font;
-    if (s.sizePt) slot.style.fontSize = `${Math.round(s.sizePt * (96 / 72) * 100) / 100}px`;
-    // **S73:** צבע הסלוט מהמודל (headers-builder — מההגדרות; שחור כברירת מחדל)
-    if (s.color) slot.style.color = s.color;
-    slot.textContent = scrubPUAText(s.text || '');
-    el.appendChild(slot);
-  }
-  return el;
-}
-
-/** **S9 (REQ-HDR-05):** תוכן עמוד תוכן־עניינים — שורות עם נקודות מובילות, תווית
- * גיליון בפורמט המספור, וקישורי עוגן לחיצים (#page‑N; יעדי PDF ייבנו ב‑S12). */
-function renderTocPageContent(page, doc) {
-  const els = [];
-  const t = page.toc || {};
-  if (t.title) {
-    const el = doc.createElement('h2');
-    el.className = 'toc-page-title';
-    el.dir = 'rtl';
-    el.textContent = scrubPUAText(t.title);
-    els.push(el);
-  }
-  const wrap = doc.createElement('div');
-  wrap.className = 'toc-rows';
-  wrap.dir = 'rtl';
-  for (const r of (t.rows || [])) {
-    if (r.kind === 'group') {
-      // קבוצה (inline רצוף): "כותרת – עמוד | כותרת – עמוד" בשורה אחת (IMUD grp-item/grp-sep)
-      const g = doc.createElement('div');
-      g.className = `toc-row toc-row--group toc-lvl-${r.items[0] ? r.items[0].level : 1}`;
-      for (const it of r.items) {
-        const a = doc.createElement('a');
-        a.className = `toc-item toc-lvl-${it.level}`;
-        if (it.targetPage != null) a.setAttribute('href', `#page-${it.targetPage}`);
-        a.setAttribute('data-anchor', it.anchorId || '');
-        const txt = doc.createElement('span'); txt.className = 'grp-title';
-        txt.textContent = scrubPUAText(it.text);
-        const lab = doc.createElement('span'); lab.className = 'grp-page';
-        lab.textContent = it.label || '';
-        a.appendChild(txt); a.appendChild(lab);
-        g.appendChild(a);
-      }
-      wrap.appendChild(g);
-    } else {
-      const a = doc.createElement('a');
-      a.className = `toc-row toc-lvl-${r.level}` + (r.inline ? ' toc-row--inline' : '');
-      if (r.targetPage != null) a.setAttribute('href', `#page-${r.targetPage}`);
-      a.setAttribute('data-anchor', r.anchorId || '');
-      if (r.rowNum != null) {
-        const n = doc.createElement('span'); n.className = 'toc-num'; n.textContent = String(r.rowNum);
-        a.appendChild(n);
-      }
-      const title = doc.createElement('span');
-      title.className = 'toc-title';
-      title.textContent = scrubPUAText(r.wrapped && r.wrapped.length ? r.wrapped.join(' ') : r.text);
-      const dots = doc.createElement('span'); dots.className = 'toc-dots';
-      const label = doc.createElement('span'); label.className = 'toc-label';
-      label.textContent = r.label || '';
-      a.appendChild(title); a.appendChild(dots); a.appendChild(label);
-      wrap.appendChild(a);
-    }
-  }
-  els.push(wrap);
-  return els;
-}
-
-/** חוט מפריד בין טורים (overlay; גובה Math.min −8px — כלל V4; geometry-neutral).
- * גובה החישוב מקור יחיד: ornament-fit.columnDividerHeightPx (F-09 — לא עותק מקומי). */
-function renderColumnDivider(page, settings, doc) {
-  const style = settings['column-divider-style'];
-  if (!style || style === 'none' || page.columns.length < 2) return null;
-  // **FX-6 (פרוסה 2):** הגובה כולל את פערי הבלוקים — אותה סמנטיקה כמו
-  // usedHeight של האיזון וכמו הפרויקטור ל-PDF (תצוגה = ייצוא).
-  const used = page.columns.map(col => col.reduce((s, ln) => s + (ln.heightPx || 0) * (ln.aqStretch || 1) + (ln.gapBeforePx || 0), 0));
-  // **S6.0 (R4-M5):** גובה המפריד כולל aqStretch — כמו הפרויקטור/PDF
-  // (בעבר ה-DOM חישב גובה ללא המתיחה ⇒ מפריד באורך שונה בין תצוגה לייצוא).
-  const h = columnDividerHeightPx(used);
-  if (h <= 0) return null;
-  const el = doc.createElement('div');
-  el.className = `col-divider col-divider--${style}`;
-  const c0 = page.template.columns[0], c1 = page.template.columns[1];
-  el.style.left = `${Math.round(c1.x + c1.w + (page.template.gutter || 0) / 2)}px`;
-  el.style.top = `${page.template.contentBox.top}px`;
-  el.style.height = `${h}px`;
-  return el;
-}
-
-/**
- * **S8 (FWD-1):** פס כותרת חוצה־טורים — שורות הכותרת שנמדדו ברוחב מלא,
- * מרונדרות בפס עליון חוצה־טורים מעל שני הטורים.
- */
-function renderSpanningBand(page, settings, doc) {
-  if (!page.spanning || !page.spanning.lines.length) return null;
-  const band = doc.createElement('div');
-  band.className = 'spanning-band';
-  band.dir = 'rtl';
-  // **S11 (REQ-PAR-06):** פס callout מסגנון מותאם — class + סגנון מובנה (full-width).
-  if (page.spanning.customStyle) {
-    band.className += ' custom-style';
-    band.dataset.style = page.spanning.customStyle.id || '';
-    applyCustomStyleSpec(band, page.spanning.customStyle.styleSpec, doc);
-    if (page.spanning.customStyle.counterMark) {
-      const cm = doc.createElement('span');
-      cm.className = 'cs-counter';
-      cm.textContent = page.spanning.customStyle.counterMark;
-      prependChild(band, cm);
-    }
-  }
-  const spanTop = page.template.contentBox.top;
-  band.style.top = `${spanTop}px`;
-  band.style.height = `${page.spanning.heightPx}px`;
-  // **חוזה H3 + הזמנות עיטור (D-S2H3/F-08):** שורות הפס זורמות אחרי הריפוד
-  // העליון שהוזמן בתכנון (titleTopPadPx — 8px לפס H3 לפי ה-CSS המקורי,
-  // הזמנת עיטור לפס H2) — אותה גאומטריה כמו materialize/PageModel/PDF.
-  if (page.spanning.titleTopPadPx) band.style.paddingTop = `${page.spanning.titleTopPadPx}px`;
-  const left = Math.min(...page.template.columns.map(c => c.x));
-  const right = Math.max(...page.template.columns.map(c => c.x + c.w));
-  band.style.left = `${Math.round(left)}px`;
-  band.style.width = `${Math.round(right - left)}px`;
-  for (const ln of page.spanning.lines) band.appendChild(renderLine(ln, doc, settings));
-  return band;
-}
-
-/**
- * **S8 (REQ-ORN-01..04):** כל העיטורים נציירים מה־rect שחושב בפאס העיטורים
- * (ornament-plan) — הרנדרר לא קובע ממדים משלו (F-09: מקור שליטה יחיד).
- * **EXT-4 (הדיו):** kindStyle מקבל דיו — SVG מובנה/מספרייה כרקע data-URI,
- * או קו דק (thin). עד כאן התיבות היו בלתי-נראות (אין כללי .orn ב-CSS).
- */
-function renderDecorations(page, doc) {
-  const els = [];
-  for (const d of (page.decorations || [])) {
-    const el = doc.createElement('div');
-    el.className = d.cssClass || 'orn';
-    el.dataset.slot = d.slot || '';
-    el.dataset.kindStyle = d.kindStyle || '';
-    el.style.left = `${Math.round(d.x)}px`;
-    el.style.top = `${Math.round(d.y)}px`;
-    el.style.width = `${Math.round(d.w)}px`;
-    el.style.height = `${Math.round(d.h)}px`;
-    // **השלמת חוזה העיטורים (שלב 6 — §6.1-6/§6.1-10):** הדיו נצרך מההצהרה
-    // (ornId/ink) שנקבעה בתכנון — המקרן קורא ואינו מחליט מחדש (F-09). נכס
-    // חיצוני (imud:) נפתר כאן בזמן הציור — טעינת משאב, לא החלטת גיאומטריה.
-    // דיו שאינו פתיר — דיאגנוסטיק גלוי (dataset.inkMissing), לא השתקה.
-    if (d.ornId) el.dataset.ornId = d.ornId;
-    const ink = d.ink || (d.image ? { type: 'image', uri: null, ref: d.image } : null);
-    if (ink && ink.type === 'image') {
-      const uri = (ink.ref ? assetUri(ink.ref) : null) || ink.uri || (d.image ? assetUri(d.image) : null);
-      if (uri) {
-        el.style.backgroundImage = `url("${uri}")`;
-        el.style.backgroundSize = '100% 100%';
-        el.style.backgroundRepeat = 'no-repeat';
-      } else {
-        el.dataset.inkMissing = '1'; // asset חיצוני שלא נפתר — מדווח, לא ריק בשקט
-      }
-    } else if (ink && ink.type === 'svg' && ink.uri) {
-      el.style.backgroundImage = `url("${ink.uri}")`;
-      el.style.backgroundSize = 'contain';
-      el.style.backgroundPosition = 'center center';
+  el.className = d.cssClass || 'orn';
+  if (d.slot) el.dataset.slot = d.slot;
+  if (d.kindStyle) el.dataset.kindStyle = d.kindStyle;
+  el.style.position = 'absolute';
+  el.style.left = `${px2(d.x)}px`;
+  el.style.top = `${px2(d.y)}px`;
+  el.style.width = `${px2(d.w)}px`;
+  el.style.height = `${px2(d.h)}px`;
+  if (d.ornId) el.dataset.ornId = d.ornId;
+  if (d.zOrder != null) el.style.zIndex = String(d.zOrder);
+  const ink = d.ink || (d.image ? { type: 'image', uri: null, ref: d.image } : null);
+  if (ink && ink.type === 'image') {
+    const uri = (ink.ref ? (resolveAssetRef(ink.ref) || {}).uri : null) || ink.uri || (d.image ? (resolveAssetRef(d.image) || {}).uri : null);
+    if (uri) {
+      el.style.backgroundImage = `url("${uri}")`;
+      el.style.backgroundSize = '100% 100%';
       el.style.backgroundRepeat = 'no-repeat';
-    } else if (ink && ink.type === 'rule') {
-      el.style.borderTop = '0.75px solid #000';
-      el.style.height = '0px';
-    } else if (ink && ink.type === 'rect' && ink.color) {
-      // **W-7 (27.11):** אותו תיקון סקלה (0..1 ⇒ 0..255) כמו ב-pagemodel-dom-renderer — האורקל והמוצר זהים.
-      const c255 = (v) => Math.max(0, Math.min(255, Math.round(Number(v) * 255)));
-      el.style.backgroundColor = `rgb(${c255(ink.color[0])}, ${c255(ink.color[1])}, ${c255(ink.color[2])})`;
-    } else if (d.kindStyle && d.kindStyle !== 'none') {
-      el.dataset.inkMissing = '1'; // הצהרה בלי דיו פתיר — גלוי, לא ריק בשקט
+    } else {
+      el.dataset.inkMissing = '1';
+      diags.push({ kind: 'pmr-decoration-ink-missing', ornId: d.ornId || null, slot: d.slot || null });
     }
-    if (d.inkMissing) el.dataset.inkMissing = '1';
-    els.push(el);
+  } else if (ink && ink.type === 'svg' && ink.uri) {
+    el.style.backgroundImage = `url("${ink.uri}")`;
+    el.style.backgroundSize = 'contain';
+    el.style.backgroundPosition = 'center center';
+    el.style.backgroundRepeat = 'no-repeat';
+  } else if (ink && ink.type === 'rule') {
+    el.style.borderTop = '0.75px solid #000';
+    el.style.height = '0px';
+  } else if (ink && ink.type === 'rect' && ink.color) {
+    el.style.backgroundColor = `rgb(${ink.color[0]}, ${ink.color[1]}, ${ink.color[2]})`;
+  } else if (d.kindStyle && d.kindStyle !== 'none') {
+    el.dataset.inkMissing = '1';
+    diags.push({ kind: 'pmr-decoration-ink-missing', ornId: d.ornId || null, slot: d.slot || null });
   }
-  return els;
+  if (d.inkMissing) { el.dataset.inkMissing = '1'; if (!d.kindStyle) diags.push({ kind: 'pmr-decoration-ink-missing', ornId: d.ornId || null, slot: d.slot || null }); }
+  return el;
 }
 
-/** **03.11 (EXT-14):** פתרון נכס — הפניות imud: מתורגמות ל-data-URI מהרישום
- * (asset-registry); ערכים אחרים (URL/data-URI קיים) עוברים כמו שהם. */
-function assetUri(ref) {
-  if (!ref) return null;
-  const r = resolveAssetRef(ref);
-  return r.uri || null;
-}
-
+// ─── עמוד שלם ───
 /**
- * **S8 (REQ-ORN-05/08):** רקע עמוד + תיבות שער לפי התוכנית שחושבה (page-decorations)
- * — רקע לפי מחלקת העמוד עם inset במ״מ; תיבת טקסט של שער ראשי לפי box פתור.
- * **03.11 (EXT-14):** שלושת השערים (ראשי/משנה/אחורי) — עיצוב ה־SVG במסך מלא +
- * תיבת כותרת מה-box של העיצוב (רישום נכסים) או מההגדרות.
+ * @param {object} mp — עמוד מתוך PageModel (model.pages[i])
+ * @param {object} settings — הגדרות (ברירות מחדל גלובליות בלבד: גוף/רקע/כרום)
+ * @param {object} doc — מפעל DOM
+ * @param {object} [opts] — { onDiagnostic?: (d)=>void }
+ * @returns {HTMLElement} אלמנט העמוד
  */
-function renderPageBackgroundAndShaar(page, settings, doc, metadata) {
-  const els = [];
-  const plan = planDecorations(page, settings);
-  const inset = plan.background ? plan.background.insetPx : 0;
-  if (plan.background && plan.background.image) {
-    const el = doc.createElement('div');
-    el.className = 'deco deco--page-background';
-    el.style.backgroundImage = `url("${assetUri(plan.background.image) || plan.background.image}")`;
-    el.style.inset = `${inset}px`;
-    els.push(el);
-  }
-  if (plan.background && plan.background.texture) {
-    const el = doc.createElement('div');
-    el.className = 'deco deco--page-texture';
-    el.style.backgroundImage = `url("${assetUri(plan.background.texture) || plan.background.texture}")`;
-    els.push(el);
-  }
-  // עזר: שער במסך מלא מהפניה פתורה + תיבת כותרת לפי box מהעיצוב (אם נרשם)
-  const fullShaar = (slotName, cssClass, boxClass) => {
-    const slot = plan.slots.find(s => s.slot === slotName && s.asset);
-    if (!slot) return;
-    const resolved = resolveAssetRef(slot.asset);
-    const uri = resolved.uri || slot.asset;
-    const bg = doc.createElement('div');
-    bg.className = cssClass;
-    bg.style.backgroundImage = `url("${uri}")`;
-    bg.style.inset = '0';
-    els.push(bg);
-    // תיבת כותרת — מה-box של העיצוב ברישום (מ״מ) או מההגדרות; בלי box מהעיצוב —
-    // ה-fallback המסורתי של resolveShaarBox (REQ-ORN-05: התיבה תמיד נבנית על שער עם תמונה)
-    const designBox = resolved.item && resolved.item.box ? resolved.item.box : null;
-    const boxRef = designBox || settings['shaar-main-box'] || null;
-    {
-      const { box } = resolveShaarBox('main', settings['theme-set-id'] || 'default', { box: boxRef }, null, { top: 40, bottom: 40, right: 30, left: 30 });
-      const tb = doc.createElement('div');
-      tb.className = boxClass;
-      tb.dir = 'rtl';
-      tb.style.top = `${Math.round(box.top * MM_TO_PX)}px`;
-      tb.style.bottom = `${Math.round(box.bottom * MM_TO_PX)}px`;
-      tb.style.left = `${Math.round(box.left * MM_TO_PX)}px`;
-      tb.style.right = `${Math.round(box.right * MM_TO_PX)}px`;
-      const bookName = (settings['imud-book-title'] || (metadata && (metadata['שם הספר'] || metadata['ספר'] || metadata['title']))) || ''; // S4.5: גם המזהה הארוך + על
-      const topic = (settings['imud-book-subtitle'] || (metadata && (metadata['נושא מפורט'] || metadata['נושא']))) || ''; // 03.11: כותרת־משנה מוגדרת
-      tb.textContent = [bookName, topic].filter(Boolean).join(' · ');
-      els.push(tb);
-    }
-  };
-  fullShaar('shaar-main', 'deco deco--shaar-main', 'shaar-main-box');
-  fullShaar('shaar-sub', 'deco deco--shaar-sub', 'shaar-sub-box');
-  fullShaar('shaar-back-frame', 'deco deco--shaar-back', 'shaar-back-box');
-  return els;
-}
-
-/**
- * **S8 (PT-09):** עמוד מותאם — תוכן קבוע/תיבות/תמונות במיקומים שהוגדרו (מ״מ→פיקסלים).
- */
-function renderCustomPageContent(page, doc) {
-  const els = [];
-  if (!page.custom) return els;
-  for (const b of (page.custom.boxes || [])) {
-    const el = doc.createElement('div');
-    el.className = 'custom-box';
-    el.dir = 'rtl';
-    el.style.left = `${b.x}px`; el.style.top = `${b.y}px`;
-    el.style.width = `${b.w}px`; el.style.height = `${b.h}px`;
-    el.textContent = scrubPUAText(b.text || '');
-    els.push(el);
-  }
-  for (const im of (page.custom.images || [])) {
-    const el = doc.createElement('div');
-    el.className = 'custom-image';
-    el.style.left = `${im.x}px`; el.style.top = `${im.y}px`;
-    el.style.width = `${im.w}px`; el.style.height = `${im.h}px`;
-    el.style.backgroundImage = `url("${im.src}")`;
-    els.push(el);
-  }
-  return els;
-}
-
-/** **03.11(ד) — תוכן מובנה של עמודי השער (פורט renderMainShaar/renderSubShaar/
- * renderBackShaar של המקור). המודל (בלוקים/תיבה/פריסה) חי ב-shaar-content.js —
- * מקור יחיד שצורך גם ההיטל ל-PDF (F-09); כאן רק ההקרנה ל-DOM.
- * עד כאן עמוד שער בלי עיצוב־תמונה היה עמוד ריק לגמרי — "אין עמודי שער"
- * מבחינת המשתמש. המבנה, התיבות והגדלים נאמנים למקור. */
-function renderShaarContent(page, settings, doc, metadata) {
-  const model = buildShaarBlocks(page, settings, metadata);
-  if (!model) return [];
-  const els = [];
-  const px = (pt) => `${ptToPx(pt)}px`;
-
-  const wrap = doc.createElement('div');
-  const variant = page.type === 'shaar-main' ? 'main' : page.type === 'shaar-sub' ? 'sub' : 'back';
-  wrap.className = `shaar-content shaar-content--${variant}`;
-  wrap.dir = 'rtl';
-  wrap.style.top = `${model.box.top}px`;
-  wrap.style.bottom = `${model.box.bottom}px`;
-  wrap.style.right = `${model.box.right}px`;
-  wrap.style.left = `${model.box.left}px`;
-
-  for (const b of model.blocks) {
-    if (b.graphic) {
-      const el = doc.createElement('div');
-      el.className = 'shaar-crown';
-      el.innerHTML = b.graphic === 'crown-sub'
-        ? '<svg viewBox="0 0 300 30"><path d="M10,15 Q75,5 140,15 Q145,10 150,5 Q155,10 160,15 Q225,5 290,15 Q225,25 160,15 Q155,20 150,25 Q145,20 140,15 Q75,25 10,15 Z" fill="#222"/></svg>'
-        : '<svg viewBox="0 0 400 40"><circle cx="200" cy="20" r="10" fill="none" stroke="#000" stroke-width="4.5"/><circle cx="200" cy="20" r="4.5" fill="#000"/><path d="M182,20 C182,24 165,27 140,27 C90,27 40,22 5,20 C40,18 90,13 140,13 C165,13 182,16 182,20 Z" fill="#000"/><path d="M218,20 C218,24 235,27 260,27 C310,27 360,22 395,20 C360,18 310,13 260,13 C235,13 218,16 218,20 Z" fill="#000"/></svg>';
-      wrap.appendChild(el);
-      continue;
-    }
-    const el = doc.createElement('div');
-    el.className = b.cls;
-    el.dir = 'rtl';
-    // **Iteration-003 (parity משקל):** משפחה מפורשת מהבלוק (fontFamily — בקשה
-    // מילולית, כמו המשך כותרת שער-משנה ב-David Libre) גוברת על הנגזרת
-    // מההגדרות לפי מחלקה — אותו חוזה כמו החותמת (stampShaarLayout).
-    const fam = (b.fontFamily != null && String(b.fontFamily) !== '')
-      ? String(b.fontFamily)
-      : shaarFontOf(b.cls, settings);
-    if (fam) el.style.fontFamily = fontStack(fam);
-    if (b.sizePt > 0) el.style.fontSize = px(b.sizePt);
-    if (b.bold) el.style.fontWeight = '700';
-    if (b.letterSpacingPx) el.style.letterSpacing = `${b.letterSpacingPx}px`;
-    // **S73 (צבע פר-בלוק מההגדרות):** כמו המקרן — ברירת מחדל שחורה.
-    const col = shaarColorOfCls(b.cls, settings);
-    if (col) el.style.color = col;
-    el.textContent = scrubPUAText(String(b.text == null ? '' : b.text));
-    wrap.appendChild(el);
-  }
-  els.push(wrap);
-  return els;
-}
-
-/** **S73:** צבע בלוק שער לפי מחלקתו — הגדרת הצבע של הגופן המצוין לו
- * (מקור יחיד סמנטי עם המקרן; גישה מילולית — דרישת סורק phantom-key). */
-function shaarColorOfCls(cls, settings) {
-  if (cls.includes('bsd-header') || cls.includes('publication-footer')) return nonBlack(settings['shaar-year-color']);
-  if (cls.includes('book-title-main')) return nonBlack(settings['shaar-title-color']);
-  if (cls.includes('book-subtitle')) return nonBlack(settings['shaar-subtitle-color']);
-  if (cls.includes('book-description')) return nonBlack(settings['shaar-desc-color']);
-  if (cls.includes('book-sections-summary')) return nonBlack(settings['shaar-sections-color']);
-  if (cls.includes('author-block')) return nonBlack(settings['shaar-author-color']);
-  if (cls.includes('back-shaar-text-line') || cls.includes('back-shaar-copyright-header')) return nonBlack(settings['shaar-back-text-color']);
-  return null;
-}
-
-/** **S73:** החזרת צבע שאינו שחור (ערך כהה/חסר ⇒ null — ירושת שחור ב-CSS). */
-function nonBlack(hex) {
-  return (hex && /^#[0-9a-f]{6}$/i.test(hex) && hex.toLowerCase() !== '#000000') ? hex : null;
-}
-
-/**
- * רנדור עמוד שלם. @param {object} page - תוצר dp-planner + header + numbersByIndex
- * **03.11(ד):** header ברירת מחדל = page.header — הצינור מחשב ומצמיד כותרת עליונה
- * לכל עמוד (pipeline), וכל קורא שלא מעביר ארגומנט מקבל אותה אוטומטית. עד כאן
- * התצוגה החיה (preview-tab) לא העבירה כלום והייצוא העביר מטא־נתונים בטעות —
- * שני הנתיבים הציגו עמודים בלי כותרת עליונה בזמן שהבדיקות העבירו את הארגומנט
- * במפורש ולא תפסו את הנתק (דיווח משתמש 3: "אין כותרות עליונות").
- */
-function renderPage(page, settings, doc, header) {
-  if (header == null && page && page.header) header = page.header;
-  if (!page.template) {
-    // עמודי הערות שלא חוברו לרצף המספור — תבנית ברירת מחדל חוקית (A4) במקום קריסה
-    page.template = { width: 794, height: 1123, columns: [], margins: { top: 40, bottom: 40, side: 60, outer: 60 }, contentBox: { top: 40, bottom: 1080, height: 1040 }, gutter: 0, counts: false, numbered: false, hasRunningHead: false };
-  }
+function renderModelPage(mp, settings, doc, opts = {}) {
+  const diags = [];
+  const geo = mp.geometry || {};
   const root = doc.createElement('article');
-  root.className = PT_CLASS[page.type] || 'page';
-  root.dataset.pageIndex = String(page.index);
-  // **S9 (REQ-HDR-05):** עוגן עמוד — יעד לקישורי תוכן־העניינים הלחיצים (#page-N)
-  root.setAttribute('id', `page-${page.index}`);
-  if (page.template.width != null) root.style.width = `${page.template.width}px`;
-  if (page.template.height != null) root.style.height = `${page.template.height}px`;
-  root.dir = 'rtl';
-  // **03.11(ג):** גופן/גודל הגוף על שורש העמוד — התצוגה והייצוא יחד מגיבים
-  // להגדרות body-font/body-font-size-pt (השורות דורסות לפי סוגן — כותרות וכו').
-  // **S73:** צבע הגוף (body-color; שחור ⇒ אין style — ירושת ברירת המחדל).
+  root.className = (PT_CLASS[mp.type] || 'page') + ' pmr-page';
+  root.dataset.pageIndex = String(mp.index);
+  root.setAttribute('id', `page-${mp.index}`);
+  root.setAttribute('dir', 'rtl');
+  if (geo.width != null) { root.style.width = `${px2(geo.width)}px`; root.dataset.modelWidth = String(geo.width); }
+  if (geo.height != null) { root.style.height = `${px2(geo.height)}px`; root.dataset.modelHeight = String(geo.height); }
+  // ברירות מחדל גלובליות (הגדרות משתמש — לא החלטות עימוד): גוף/רקע
   const bf = settings['body-font'];
   if (bf) root.style.fontFamily = fontStack(bf);
   const bodyCol = nonBlack(settings['body-color']);
   if (bodyCol) root.style.color = bodyCol;
   const bsPt = Number(settings['body-font-size-pt']);
-  if (Number.isFinite(bsPt) && bsPt > 0) root.style.fontSize = `${ptToPx(bsPt)}px`;
-
-  // key: background-color / background-opacity — rgba אמיתי (P0-5)
+  if (Number.isFinite(bsPt) && bsPt > 0) root.style.fontSize = `${px2(bsPt * PT_TO_PX)}px`;
   const bg = settings['background-color'];
   const bgOp = settings['background-opacity'];
   if (bg && bg !== '#ffffff') root.style.backgroundColor = bgRgba(bg, bgOp != null ? bgOp : 1);
   else if (Number.isFinite(bgOp) && bgOp < 1) root.style.backgroundColor = bgRgba('#ffffff', bgOp);
 
-  // **עמודי הערות (S7.1.1):** כותרת + רשימת הערות; אין כותרת עליונה/טורי גוף
-  // **S5.4 (P-5 — תצוגה=ייצוא):** ההערות ממוקמות לפי המודל (colIdx/heightPx
-  // מ-buildEndnotePages) במיקום מוחלט בטורי התבנית — כמו שהפרויקטור מקרין
-  // ל-PDF. בעבר: רשימת זרימה אחת ברוחב מלא — התצוגה הציגה טור אחד בזמן
-  // שהמודל קבע שניים. ללא נתוני מודל — נפילה לרשימת הזרימה הישנה.
-  if (page.type === 'endnotes') {
-    let titleEl = null;
-    if (page.heading) {
-      const h = doc.createElement('h2');
-      h.className = 'endnote-title';
-      h.dir = 'rtl';
-      h.textContent = scrubPUAText(page.heading);
-      root.appendChild(h);
-      titleEl = h;
+  // (1) עיטורי רקע (סלוטים מהמודל: page-*/shaar-* — מתחת לתוכן)
+  const decoAll = mp.decorations || [];
+  const isBg = (d) => /^(page-|shaar-)/.test(String(d.slot || '')) || d.kind === 'page-background' || d.kind === 'page-texture' || d.kind === 'shaar-crown';
+  for (const d of decoAll) {
+    if (!isBg(d)) continue;
+    root.appendChild(renderModelDecoration(d, doc, diags));
+  }
+
+  // (2) תיבת השער (כרום בלבד — variant + rect מהמודל) ושורותיה החותמות
+  if (mp.shaar) {
+    const wrap = doc.createElement('div');
+    wrap.className = `shaar-content shaar-content--${mp.shaar.variant}`;
+    wrap.setAttribute('dir', 'rtl');
+    wrap.style.position = 'absolute';
+    wrap.style.left = `${px2(mp.shaar.box.x)}px`;
+    wrap.style.top = `${px2(mp.shaar.box.y)}px`;
+    wrap.style.width = `${px2(mp.shaar.box.w)}px`;
+    wrap.style.height = `${px2(mp.shaar.box.h)}px`;
+    for (const ln of mp.lines.filter(l => l.area === 'structural')) {
+      wrap.appendChild(renderModelLine(ln, doc, mp.shaar.box.x, mp.shaar.box.y));
     }
-    const list = doc.createElement('div');
-    list.className = 'endnote-list';
-    const tplEn = page.template;
-    const haveModel = tplEn && Array.isArray(tplEn.columns) && tplEn.columns.length
-      && Array.isArray(page.columns) && page.columns.some(c => c.length)
-      && page.notes && page.notes.every(n => n.colIdx != null);
-    if (haveModel) {
-      // **S6.0 (R4-M2 — עוגן מיקום שגוי):** הרשימה הייתה position:relative
-      // בזרימה אחרי כותרת ה-h2 ⇒ בלוק ההכלה התחיל ~42px מתחת לראש העמוד
-      // בעוד top-ים של ההערות הם קואורדינטות עמוד ⇒ כל ההערות הוסטו ~42px
-      // מטה מהמודל/PDF (והאחרונות נחתכו). כעת הרשימה absolute בקואורדינטות
-      // העמוד; גם הכותרת ממוקמת מהמודל (ראש תיבת התוכן) ולא בזרימה.
-      list.style.position = 'absolute';
-      list.style.top = '0';
-      list.style.left = '0';
-      list.style.right = '0';
-      const titleAnchor = titleEl;
-      if (titleAnchor) {
-        titleAnchor.style.position = 'absolute';
-        titleAnchor.style.top = `${Math.round(tplEn.contentBox.top)}px`;
-        titleAnchor.style.left = `${Math.round(Math.min(...tplEn.columns.map(c => c.x)))}px`;
-        titleAnchor.style.right = `${Math.round(tplEn.width - Math.max(...tplEn.columns.map(c => c.x + c.w)))}px`;
-        titleAnchor.style.margin = '0';
-      }
-      const topEn = tplEn.contentBox.top + (page.titleBandPx || 0);
-      const colsEn = page.columns;
-      // טור-אחד (endnote-columns=1): רוחב תיבת התוכן המלא — כמו הפרויקטור/PDF
-      const singleColEn = colsEn.length === 1;
-      const fullL = Math.min(...tplEn.columns.map(c => c.x));
-      const fullR = Math.max(...tplEn.columns.map(c => c.x + c.w));
-      for (let ci = 0; ci < colsEn.length; ci++) {
-        let y = topEn;
-        for (const n of colsEn[ci] || []) {
-          const col = singleColEn
-            ? { x: fullL, w: fullR - fullL }
-            : (tplEn.columns[ci] || tplEn.columns[0]);
-          const el = doc.createElement('div');
-          el.className = 'endnote-note';
-          el.dir = 'rtl';
-          el.style.position = 'absolute';
-          el.style.left = `${Math.round(col.x)}px`;
-          el.style.top = `${Math.round(y)}px`;
-          el.style.width = `${Math.round(col.w)}px`;
-          // **שלב 6 פרוסה 2 (§9):** שורות ההערה מהחותמת — פיץ' מדויק מהמודל
-          // (בדיוק כמו הפרויקטור ל-PDF וכמו התקציב שקבע buildEndnotePages).
-          const stamped = Array.isArray(n.noteRows) && n.noteRows.length > 0 && Array.isArray(n.noteWords) && Number(n.lineH) > 0;
-          if (stamped) {
-            el.style.margin = '0'; // התקציב אינו כולל שוליים — תצוגה=ייצוא=תקציב
-            el.dataset.rows = String(n.noteRows.length);
-            for (let li = 0; li < n.noteRows.length; li++) {
-              const row = n.noteRows[li];
-              const div = doc.createElement('div');
-              div.className = 'fn-row';
-              div.style.whiteSpace = 'nowrap';
-              div.style.lineHeight = `${n.lineH}px`;
-              div.style.height = `${n.lineH}px`;
-              const parts = [];
-              if (li === 0 && n.marker != null && String(n.marker) !== '') parts.push(`${n.marker}\u200F`);
-              for (let i = row.wFrom; i < row.wTo; i++) parts.push(scrubPUAText(String(n.noteWords[i])));
-              div.textContent = parts.join(' ');
-              el.appendChild(div);
-            }
-          } else {
-            el.dataset.stampMissing = '1'; // diagnostic גלוי (§9.8)
-            el.textContent = `${n.marker || ''}\u200F ${scrubPUAText(n.text || '')}`;
-          }
-          list.appendChild(el);
-          y += (n.heightPx || 0);
-        }
-      }
-    } else {
-      for (const n of page.notes || []) {
-        const el = doc.createElement('div');
-        el.className = 'endnote-note';
-        el.dir = 'rtl';
-        el.textContent = `${n.marker || ''}\u200F ${scrubPUAText(n.text || '')}`;
-        list.appendChild(el);
-      }
+    root.appendChild(wrap);
+  } else if ((mp.lines || []).some(l => l.area === 'structural')) {
+    // שורות מובנות בלי תיבה (TOC/כותרת הערות) — מוקרנות ישירות בקואורדינטות העמוד
+    for (const ln of mp.lines.filter(l => l.area === 'structural')) {
+      root.appendChild(renderModelLine(ln, doc, 0, 0));
     }
-    root.appendChild(list);
-    const folioEn = renderFolio(page, settings, doc);
-    if (folioEn) root.appendChild(folioEn);
-    return root;
   }
 
-  // **S8 (REQ-ORN-05/08):** רקעים/ערכות/תיבות שער — שכבות תשתית לפני התוכן
-  for (const el of renderPageBackgroundAndShaar(page, settings, doc, page._metadata)) root.appendChild(el);
-
-  // **03.11(ד):** תוכן מובנה של עמודי השער (בס״ד/כותרת/כתר/תיאור/מחבר/שנה —
-  // פורט המקור). בלי זה עמוד שער ללא עיצוב־תמונה היה ריק לחלוטין.
-  for (const el of renderShaarContent(page, settings, doc, page._metadata)) root.appendChild(el);
-
-  // **S9 (REQ-HDR-05):** עמודי תוכן־עניינים — שורות + נקודות + עוגנים; אין טורי גוף
-  // **03.11(ד):** כותרת עליונה גם בעמודי התוכן־עניינים — כמקור
-  // (renderPaginatedTOC מרנדר top-header-grid בכל עמודי התוכן).
-  if (page.type === 'toc-general' || page.type === 'toc-detail') {
-    const hToc = renderHeader(header, doc);
-    if (hToc) root.appendChild(hToc);
-    for (const el of renderTocPageContent(page, doc)) root.appendChild(el);
-    const folioToc = renderFolio(page, settings, doc);
-    if (folioToc) root.appendChild(folioToc);
-    return root;
+  // (3) עמוד מותאם — תיבות ותמונות בגיאומטריה סופית מהמודל
+  if (mp.custom) {
+    for (const b of (mp.custom.boxes || [])) {
+      const el = doc.createElement('div');
+      el.className = 'custom-box';
+      el.setAttribute('dir', 'rtl');
+      el.style.position = 'absolute';
+      el.style.left = `${px2(b.x)}px`; el.style.top = `${px2(b.y)}px`;
+      el.style.width = `${px2(b.w)}px`; el.style.height = `${px2(b.h)}px`;
+      el.textContent = scrubPUAText(b.text || '');
+      root.appendChild(el);
+    }
+    for (const im of (mp.custom.images || [])) {
+      const el = doc.createElement('div');
+      el.className = 'custom-image';
+      el.style.position = 'absolute';
+      el.style.left = `${px2(im.x)}px`; el.style.top = `${px2(im.y)}px`;
+      el.style.width = `${px2(im.w)}px`; el.style.height = `${px2(im.h)}px`;
+      if (im.src) el.style.backgroundImage = `url("${im.src}")`;
+      else { el.dataset.assetMissing = '1'; diags.push({ kind: 'pmr-custom-image-missing' }); }
+      root.appendChild(el);
+    }
   }
 
-  // **S8 (PT-09):** עמוד מותאם — תוכן קבוע; אין טורים/כותרת עליונה
-  if (page.type === 'custom') {
-    for (const el of renderCustomPageContent(page, doc)) root.appendChild(el);
-    const folioC = renderFolio(page, settings, doc);
-    if (folioC) root.appendChild(folioC);
-    return root;
+  // (4) פס חוצה-טורים — מלבן הפס מהמודל; שורותיו בתוכו בקואורדינטות יחסיות
+  if (mp.spanning) {
+    const band = doc.createElement('div');
+    band.className = 'spanning-band';
+    band.setAttribute('dir', 'rtl');
+    band.style.position = 'absolute';
+    band.style.left = `${px2(mp.spanning.x)}px`;
+    band.style.top = `${px2(mp.spanning.y)}px`;
+    band.style.width = `${px2(mp.spanning.w)}px`;
+    band.style.height = `${px2(mp.spanning.h)}px`;
+    let firstSpanningLine = true;
+    for (const ln of mp.lines.filter(l => l.area === 'spanning')) {
+      appendLineSep(band, doc, firstSpanningLine); // **RC-A1:** רווח בין שורות הפס
+      firstSpanningLine = false;
+      band.appendChild(renderModelLine(ln, doc, mp.spanning.x, mp.spanning.y));
+    }
+    root.appendChild(band);
   }
 
-  const h = renderHeader(header, doc);
-  if (h) root.appendChild(h);
+  // **(4.2) Iteration-001 (legacy parity) — פסי H3 באמצע עמוד:** שורות הפס
+  // הן גיאומטריית עמוד (רוחב כל הטורים, ממורכזות) — הן מרונדרות במיכל
+  // עמוד-מוחלט ולא בתוך קופסת טור בודד (בתוך טור היו מקבלות left שלילי
+  // ונחתכות בהקשרי clipping). הקואורדינטות מהמודל — טהור.
+  const midBandLines = mp.lines.filter(l => l.area === 'column' && l.midBand === true && l.projected !== false);
+  let prevMidBandToken = null;
+  if (midBandLines.length) {
+    const mbWrap = doc.createElement('div');
+    mbWrap.className = 'mid-bands';
+    mbWrap.setAttribute('dir', 'rtl');
+    mbWrap.style.position = 'absolute';
+    mbWrap.style.left = '0';
+    mbWrap.style.top = '0';
+    mbWrap.style.width = `${px2(geo.width)}px`;
+    mbWrap.style.height = `${px2(geo.height)}px`;
+    for (const ln of midBandLines) {
+      // **RC-A1:** רווח בין שורות של אותו פס (אותו token) — לא בין פסים שונים
+      appendLineSep(mbWrap, doc, prevMidBandToken == null || ln.sourceTokenId !== prevMidBandToken);
+      prevMidBandToken = ln.sourceTokenId != null ? ln.sourceTokenId : null;
+      mbWrap.appendChild(renderModelLine(ln, doc, 0, 0));
+    }
+    root.appendChild(mbWrap);
+  }
 
-  // **S8 (FWD-1):** פס כותרת חוצה־טורים מעל הטורים (H2 full-width)
-  const band = renderSpanningBand(page, settings, doc);
-  if (band) root.appendChild(band);
+  // (4.5) עמודי הערות-סיום — שורות area=endnotes בקואורדינטות עמוד מוחלטות
+  // מההקרנה (החותמות של buildEndnotePages). הקרנה טהורה — המיקומים סופיים
+  // במודל; הקיבוץ לפי kind/sourceTokenId (נתוני זהות מהמודל) מייצר את
+  // העוגנים שהאודיט והנגישות מצפים להם: .endnote-title + .endnote-note.
+  const enLines = mp.lines.filter(l => l.area === 'endnotes');
+  if (enLines.length) {
+    const enWrap = doc.createElement('div');
+    enWrap.className = 'endnote-list';
+    enWrap.setAttribute('dir', 'rtl');
+    enWrap.style.position = 'absolute';
+    enWrap.style.left = '0';
+    enWrap.style.top = '0';
+    enWrap.style.width = '100%';
+    for (const ln of enLines) {
+      if (ln.kind === 'endnote-title') {
+        const h = doc.createElement('h2');
+        h.className = 'endnote-title';
+        h.setAttribute('dir', 'rtl');
+        h.style.position = 'absolute';
+        h.style.left = `${px2(ln.x)}px`;
+        h.style.top = `${px2(ln.y)}px`;
+        h.style.width = `${px2(ln.w)}px`;
+        h.style.height = `${px2(ln.h)}px`;
+        h.style.lineHeight = `${px2(ln.h)}px`;
+        if (ln.sizePt != null) h.style.fontSize = `${px2(ln.sizePt * PT_TO_PX)}px`;
+        const fam = familyOf((ln.words || [])[0] && ln.words[0].fontKey);
+        if (fam) h.style.fontFamily = fam;
+        h.textContent = scrubPUATText((ln.words || []).map(w => w.text).join(' '));
+        enWrap.appendChild(h);
+        continue;
+      }
+      const note = doc.createElement('div');
+      note.className = 'endnote-note';
+      note.setAttribute('dir', 'rtl');
+      if (ln.sourceTokenId != null) note.dataset.token = ln.sourceTokenId;
+      note.style.position = 'absolute';
+      note.style.left = `${px2(ln.x)}px`;
+      note.style.top = `${px2(ln.y)}px`;
+      note.style.width = `${px2(ln.w)}px`;
+      note.appendChild(renderModelLine(ln, doc, ln.x, ln.y));
+      enWrap.appendChild(note);
+    }
+    root.appendChild(enWrap);
+  }
 
+  // (5) טורים — התיבות מ-geometry; השורות ילדות ישירות של הטור (עוגן האודיט)
+  const colTops = (geo.columns || []).map(() => (geo.contentBox ? geo.contentBox.top : 0) + (geo.spanOffset || 0));
   const colsWrap = doc.createElement('div');
   colsWrap.className = 'columns';
-  const spanOffset = page.spanning ? page.spanning.heightPx : 0; // הטורים מתחילים מתחת לפס
-  page.columns.forEach((colLines, ci) => {
+  (geo.columns || []).forEach((c, ci) => {
     const colEl = doc.createElement('section');
     colEl.className = 'column';
-    colEl.style.left = `${page.template.columns[ci] ? page.template.columns[ci].x : 0}px`;
-    colEl.style.width = `${page.template.columns[ci] ? page.template.columns[ci].w : 'auto'}px`;
-    colEl.style.top = `${page.template.contentBox.top + spanOffset}px`;
-    colEl.style.height = `${Math.max(0, page.template.contentBox.height - spanOffset)}px`;
-    for (const ln of colLines) colEl.appendChild(renderLine(ln, doc, settings));
+    colEl.style.position = 'absolute';
+    const colHeight = Math.max(0, (geo.contentBox ? geo.contentBox.height : 0) - (geo.spanOffset || 0));
+    colEl.style.left = `${px2(c.x)}px`;
+    colEl.style.width = `${px2(c.w)}px`;
+    colEl.style.top = `${px2(colTops[ci])}px`;
+    colEl.style.height = `${px2(colHeight)}px`;
+    colEl.dataset.modelX = String(c.x);
+    colEl.dataset.modelW = String(c.w);
+    colEl.dataset.modelTop = String(colTops[ci]);
+    colEl.dataset.modelHeight = String(colHeight);
+    colEl.dataset.modelBottom = String(colTops[ci] + colHeight);
+    for (const ln of mp.lines.filter(l => l.area === 'column' && l.col === ci && l.projected !== false && l.midBand !== true)) {
+      colEl.appendChild(renderModelLine(ln, doc, c.x, colTops[ci]));
+    }
     colsWrap.appendChild(colEl);
   });
   root.appendChild(colsWrap);
 
-  // חוט מפריד בין טורים (overlay — אחרי הטורים, לא מזיז שום דבר)
-  const divider = renderColumnDivider(page, settings, doc);
-  if (divider) root.appendChild(divider);
-
-  const fn = renderFootnoteArea(page, settings, doc);
-  if (fn) root.appendChild(fn);
-
-  const folioMain = renderFolio(page, settings, doc);
-  if (folioMain) root.appendChild(folioMain);
-
-  // **S8 (REQ-ORN-01..04):** עיטורים — ציור מה־rectים בלבד (F-09 מקור יחיד)
-  for (const el of renderDecorations(page, doc)) root.appendChild(el);
-
-  // הערות צד / תיבות מידע: מיקום מוחלט לפי ה‑placement (S7.1.2) — anchor לפסקה המארחת.
-  // **שלב 6 פרוסה 2 (§§9-10):** הגוף מוקרן משורות החותמת — תיבת-שורה מפורשת
-  // לכל שורה (line-height/height = lineH מהמודל; nowrap — הדפדפן אינו שובר
-  // מחדש). בעבר ה-aside עטף טקסט חופשי עם line-height:1.15 יחסי מה-CSS —
-  // סטייה של עד ~0.4px לשורה מהתקציב שצברה על שורות רבות ⇒ חפיפות
-  // SIDE_NOTE_OVERLAP בפועל בעמוד 107 (האודיט החי). תיבת מידע: ריפוד/מסגרת/
-  // רקע מהחוזה (styleSpec+boxChrome) — אותה גיאומטריה שהוקצתה (§11).
-  for (const sn of page.sideNotes || []) {
-    const isBox = sn.itemKind === 'info-box';
-    const el = doc.createElement('aside');
-    el.className = 'side-note' + (sn.isCustomStyle ? ' side-note--custom' : '') + (isBox ? ' info-box' : '');
-    if (sn.isCustomStyle) el.dataset.style = sn.isCustomStyle;
-    el.dataset.anchor = sn.anchorToken || '';
-    el.dir = 'rtl';
-    if (sn.yTop != null) el.style.top = `${Math.round(sn.yTop)}px`;
-    if (sn.x != null) {
-      el.style.left = `${Math.round(sn.x)}px`;
-      el.style.right = 'auto';
+  // (6) תמונות — מלאי הנכסים בגיאומטריה סופית מהמודל (כולל צפים; §2.2)
+  for (const im of (mp.images || [])) {
+    if (im.x == null || im.y == null) {
+      // נתון חסר במודל — diagnostic גלוי, לא השלמה שקטה (§2.2)
+      diags.push({ kind: 'pmr-image-without-geometry', itemId: im.itemId || null, assetId: im.assetId || null });
+      continue;
     }
-    const boxW = (sn.boxSpec && Number(sn.boxSpec.widthPx) > 0) ? sn.boxSpec.widthPx : sn.colWidth;
-    if (boxW) el.style.width = `${Math.round(boxW)}px`;
-    if (isBox) {
-      const chrome = sn.boxChrome || { pad: 0, border: 0 };
-      if (chrome.pad) el.style.padding = `${chrome.pad}px`;
-      if (chrome.border) el.style.border = '1px solid #000';
-      if (sn.styleSpec && sn.styleSpec.background) el.style.backgroundColor = sn.styleSpec.background;
-      if (sn.styleSpec && sn.styleSpec.fontSizePt) el.style.fontSize = `${Math.round(sn.styleSpec.fontSizePt * (96 / 72) * 100) / 100}px`;
-    }
-    const stamped = Array.isArray(sn.noteRows) && sn.noteRows.length > 0 && Array.isArray(sn.noteWords) && Number(sn.lineH) > 0;
-    if (stamped) {
-      el.dataset.rows = String(sn.noteRows.length);
-      for (let li = 0; li < sn.noteRows.length; li++) {
-        const row = sn.noteRows[li];
-        const div = doc.createElement('div');
-        div.className = 'sn-row';
-        div.style.whiteSpace = 'nowrap';
-        div.style.lineHeight = `${sn.lineH}px`;
-        div.style.height = `${sn.lineH}px`;
-        const parts = [];
-        if (li === 0 && !isBox && sn.counterMark != null && String(sn.counterMark) !== '') parts.push(String(sn.counterMark));
-        for (let i = row.wFrom; i < row.wTo; i++) parts.push(scrubPUAText(String(sn.noteWords[i])));
-        div.textContent = parts.join(' ');
-        el.appendChild(div);
-      }
+    const el = doc.createElement('div');
+    el.className = 'pmr-img';
+    el.setAttribute('role', 'img');
+    if (im.altText) el.setAttribute('aria-label', scrubPUAText(im.altText));
+    if (im.itemId != null) el.dataset.itemId = String(im.itemId);
+    if (im.assetId != null) el.dataset.assetId = String(im.assetId);
+    el.style.position = 'absolute';
+    el.style.left = `${px2(im.x)}px`; el.style.top = `${px2(im.y)}px`;
+    el.style.width = `${px2(im.w)}px`; el.style.height = `${px2(im.h)}px`;
+    const ref = im.resourcePath || null;
+    const uri = ref ? (resolveAssetRef(ref) || {}).uri : null;
+    if (uri) {
+      el.style.backgroundImage = `url("${uri}")`;
+      el.style.backgroundSize = '100% 100%';
+      el.style.backgroundRepeat = 'no-repeat';
     } else {
-      el.dataset.stampMissing = '1'; // diagnostic גלוי — בלי מדידה חלופית שקטה (§9.8)
-      el.textContent = (sn.counterMark ? `${sn.counterMark} ` : '') + scrubPUAText(sn.text);
+      el.dataset.assetMissing = '1';
+      diags.push({ kind: 'pmr-image-asset-unresolved', itemId: im.itemId || null, assetId: im.assetId || null });
     }
     root.appendChild(el);
+  }
+
+  // (7) הערות-צד/תיבות מידע — כרום+זהות מהרשומה; שורות הטקסט בתוכה (עוגן
+  // האודיט: .side-note/.margin-note עם textContent לספירת המילים).
+  const marginLines = mp.lines.filter(l => l.area === 'margin');
+  for (const sn of (mp.sideNotes || [])) {
+    const isBox = sn.itemKind === 'info-box';
+    const el = doc.createElement('aside');
+    el.className = 'side-note' + (isBox ? ' info-box' : '');
+    if (sn.noteId != null) el.dataset.noteId = String(sn.noteId);
+    if (sn.anchorId != null) el.dataset.anchor = String(sn.anchorId);
+    el.setAttribute('dir', 'rtl');
+    el.style.position = 'absolute';
+    if (sn.x != null) { el.style.left = `${px2(sn.x)}px`; el.style.right = 'auto'; }
+    if (sn.yTop != null) el.style.top = `${px2(sn.yTop)}px`;
+    if (sn.w) el.style.width = `${px2(sn.w)}px`;
+    if (sn.heightPx != null) el.style.height = `${px2(sn.heightPx)}px`;
+    if (sn.boxChrome && isBox) {
+      const ch = sn.boxChrome;
+      if (ch.background) el.style.backgroundColor = ch.background;
+      if (ch.border > 0) el.style.border = `${ch.border}px solid ${ch.borderColor || '#1a1a1a'}`;
+      if (ch.pad) el.style.padding = `${ch.pad}px`;
+    }
+    // שורות הטקסט של אותה הערה: אותו עמוד-שוליים (x) בטווח התיבה (yTop..yTop+h)
+    const own = marginLines.filter(l => l.x != null && sn.x != null && Math.abs(l.x - sn.x) < 0.01
+      && l.y != null && sn.yTop != null && l.y >= sn.yTop - 0.01 && l.y <= sn.yTop + (sn.heightPx || 0) + 0.01);
+    let firstOwnLine = true; // **RC-A1:** רווח בין שורות הביאור (טקסט אחד לוגי)
+    for (const ln of own) {
+      appendLineSep(el, doc, firstOwnLine);
+      firstOwnLine = false;
+      el.appendChild(renderModelLine(ln, doc, sn.x, sn.yTop));
+    }
+    if (!own.length && sn.text) {
+      // רשומה בלי שורות מוקרנות — דיאגנוסטיק גלוי; הטקסט אינו נעלם (§2.4)
+      diags.push({ kind: 'pmr-side-note-without-lines', noteId: sn.noteId || null, anchorId: sn.anchorId || null });
+      const p = doc.createElement('div');
+      p.className = 'pmr-missing';
+      p.dataset.missing = 'side-note-lines';
+      p.textContent = scrubPUAText(sn.text).slice(0, 200);
+      el.appendChild(p);
+    }
+    root.appendChild(el);
+  }
+  // שורות margin שלא שויכו לשום רשומה — מוקרנות בקואורדינטות העמוד + דיאגנוסטיק
+  const claimed = new Set();
+  for (const sn of (mp.sideNotes || [])) {
+    for (const l of marginLines) {
+      if (l.x != null && sn.x != null && Math.abs(l.x - sn.x) < 0.01
+        && l.y != null && sn.yTop != null && l.y >= sn.yTop - 0.01 && l.y <= sn.yTop + (sn.heightPx || 0) + 0.01) claimed.add(l.id);
+    }
+  }
+  for (const ln of marginLines) {
+    if (claimed.has(ln.id)) continue;
+    diags.push({ kind: 'pmr-margin-line-orphan', lineId: ln.id || null });
+    const el = renderModelLine(ln, doc, 0, 0);
+    el.classList.add('pmr-orphan-margin');
+    root.appendChild(el);
+  }
+
+  // (8) מרזב הערות — אריזת-תצוגה של כיסוי הרשומות (נגזרת מנתוני המודל בלבד);
+  // הקו-המפריד (עיטור fn-rule מהמודל) מוצב בתוכה — כמו שהאודיט בודק.
+  const fnNotes = mp.footnotes || [];
+  if (fnNotes.length) {
+    const fnRules = decoAll.filter(d => d.kind === 'fn-rule');
+    const xs = fnNotes.map(n => n.x).filter(v => v != null).concat(fnRules.map(r => r.x));
+    const ys = fnNotes.map(n => n.y).filter(v => v != null).concat(fnRules.map(r => r.y));
+    const area = doc.createElement('div');
+    area.className = `footnotes footnotes--${settings['fn-layout-mode']}`;
+    area.style.position = 'absolute';
+    if (xs.length && ys.length) {
+      const minX = Math.min(...xs), minY = Math.min(...ys);
+      const maxX = Math.max(...fnNotes.map(n => (n.x != null && n.w != null ? n.x + n.w : null)).filter(v => v != null)
+        .concat(fnRules.map(r => r.x + r.w)));
+      area.style.left = `${px2(minX)}px`;
+      area.style.top = `${px2(minY)}px`;
+      if (maxX != null) area.style.width = `${px2(maxX - minX)}px`;
+      area.style.bottom = 'auto';
+    }
+    for (const r of fnRules) area.appendChild(renderModelDecoration(r, doc, diags));
+    for (const n of fnNotes) {
+      const el = doc.createElement('div');
+      el.className = 'footnote';
+      if (n.noteId != null) el.dataset.noteId = String(n.noteId);
+      if (n.anchorId != null) el.dataset.anchor = String(n.anchorId);
+      if (n.continuationOf != null) el.dataset.continuationOf = String(n.continuationOf);
+      el.setAttribute('dir', 'rtl');
+      el.style.position = 'absolute';
+      if (n.x != null) el.style.left = `${px2(n.x - (xs.length ? Math.min(...xs) : 0))}px`;
+      if (n.y != null) el.style.top = `${px2(n.y - (ys.length ? Math.min(...ys) : 0))}px`;
+      if (n.w) el.style.width = `${px2(n.w)}px`;
+      // שורות ההערה: קיבוץ לפי baselineY (נתון מהמודל) — שורה k בגובה lineH
+      const lineH = n.lineH || 0;
+      const rows = new Map();
+      for (const wd of (n.words || [])) {
+        const key = wd.baselineY != null ? wd.baselineY : 0;
+        if (!rows.has(key)) rows.set(key, []);
+        rows.get(key).push(wd);
+      }
+      const sortedRows = [...rows.entries()].sort((a, b) => a[0] - b[0]);
+      if (!sortedRows.length && n.text) {
+        diags.push({ kind: 'pmr-footnote-without-words', noteId: n.noteId || null });
+      }
+      sortedRows.forEach(([baselineY, words], k) => {
+        // **RC-A1:** רווח בין שורות ההערה (טקסט אחד לוגי) — textContent שלם
+        appendLineSep(el, doc, k === 0);
+        const row = doc.createElement('div');
+        row.className = 'fn-row';
+        row.style.position = 'relative';
+        if (lineH > 0) { row.style.height = `${px2(lineH)}px`; row.style.lineHeight = `${px2(lineH)}px`; }
+        let firstFnWord = true;
+        for (const wd of words) {
+          if (!firstFnWord && typeof doc.createTextNode === 'function') row.appendChild(doc.createTextNode(' '));
+          firstFnWord = false;
+          const span = doc.createElement('span');
+          span.className = 'w' + (wd.mk ? ' w--fnmarker' : '');
+          span.style.position = 'absolute';
+          span.style.left = `${px2(wd.x - (n.x != null ? n.x : 0))}px`;
+          span.style.top = '0';
+          span.style.whiteSpace = 'pre';
+          if (wd.sizePt != null) span.style.fontSize = `${px2(wd.sizePt * PT_TO_PX)}px`;
+          const fam = familyOf(wd.fontKey);
+          if (fam) span.style.fontFamily = fam;
+          span.textContent = scrubPUAText(wd.text);
+          row.appendChild(span);
+        }
+        void baselineY; void k;
+        el.appendChild(row);
+      });
+      area.appendChild(el);
+    }
+    root.appendChild(area);
+  }
+
+  // (9) כותרת עליונה — סלוטים במיקומים סופיים מהמודל
+  if (mp.header && (mp.header.slots || []).length) {
+    const el = doc.createElement('div');
+    el.className = `running-head head--sep-${settings['header-separator-style'] || 'none'}`;
+    el.style.position = 'absolute';
+    el.style.top = `${px2(mp.header.y)}px`;
+    el.style.left = '0';
+    el.style.width = '100%';
+    el.style.height = '14px';
+    for (const s of mp.header.slots) {
+      if (!s.text) continue;
+      const span = doc.createElement('span');
+      span.className = `rh rh--${s.pos}`;
+      span.style.position = 'absolute';
+      // **Iteration-006 (G6/RC-F1):** סלוט כותרת = שורה אחת תמיד (חוזה הייחוס —
+      // כותרת-מרכז ארוכה נשארת שורה אחת וחופפת את מילות-הצד, p647-653). בלי
+      // nowrap הדפדפן שובר לשתי שורות בתיבת 14px ⇒ שורות מודבקות זו על זו.
+      span.style.whiteSpace = 'nowrap';
+      if (s.x != null) { span.style.left = `${px2(s.x)}px`; span.style.right = 'auto'; }
+      if (s.w != null) span.style.width = `${px2(s.w)}px`;
+      if (s.align) span.style.textAlign = s.align;
+      if (s.sizePt != null) span.style.fontSize = `${px2(s.sizePt * PT_TO_PX)}px`;
+      const fam = familyOf(s.fontKey);
+      if (fam) span.style.fontFamily = fam;
+      const col = nonBlack(s.color);
+      if (col) span.style.color = col;
+      span.textContent = scrubPUAText(s.text);
+      el.appendChild(span);
+    }
+    root.appendChild(el);
+  }
+
+  // (10) גיליון — מלבן+טקסט+זהות מהמודל; הכרום (מסגרת) מההגדרות
+  if (mp.folio && mp.folio.text && settings['page-num-position'] !== 'none') {
+    const el = doc.createElement('footer');
+    el.className = `folio folio--${settings['page-num-position']} folio--frame-${settings['page-num-frame']}`;
+    el.style.position = 'absolute';
+    if (mp.folio.x != null) { el.style.left = `${px2(mp.folio.x)}px`; el.style.right = 'auto'; }
+    if (mp.folio.y != null) { el.style.top = `${px2(mp.folio.y)}px`; el.style.bottom = 'auto'; }
+    if (mp.folio.w != null) el.style.width = `${px2(mp.folio.w)}px`;
+    if (mp.folio.sizePt != null) el.style.fontSize = `${px2(mp.folio.sizePt * PT_TO_PX)}px`;
+    const fam = familyOf(mp.folio.fontKey);
+    if (fam) el.style.fontFamily = fam;
+    const col = nonBlack(mp.folio.color);
+    if (col) el.style.color = col;
+    if (mp.folio.baselineY != null && mp.folio.y != null) el.style.lineHeight = `${px2(mp.folio.baselineY - mp.folio.y)}px`;
+    if (isCssFrame(settings['page-num-frame'])) {
+      const badge = doc.createElement('span');
+      badge.className = `page-num-badge page-num-frame-${settings['page-num-frame'] === 'circle' ? 'circle' : 'box'}`;
+      badge.textContent = mp.folio.text;
+      el.appendChild(badge);
+    } else {
+      el.textContent = mp.folio.text;
+    }
+    root.appendChild(el);
+  }
+
+  // (11) עיטורי חזית — השאר (מעל התוכן; zOrder מהמודל)
+  for (const d of decoAll) {
+    if (isBg(d) || d.kind === 'fn-rule') continue;
+    root.appendChild(renderModelDecoration(d, doc, diags));
+  }
+
+  // **9c.3 (§4.3 — TOC click בתצוגה החיה):** מלבני הקישור מהמודל
+  // (document.tocLinks) מוקרנים כשכבת-על לחיצה — אותה הקרנה כמו בייצוא
+  // ה-HTML העצמאי. הקריאה מעבירה את הרשימה דרך opts.tocLinks; היעדים
+  // הם ה-id של אלמנטי העמוד (#page-N) — קליק מסונכרן ב-preview-tab.
+  if (Array.isArray(opts.tocLinks)) {
+    for (const l of opts.tocLinks) {
+      if (l.page !== mp.index) continue;
+      const a = doc.createElement('a');
+      a.className = 'toc-link';
+      a.setAttribute('href', `#page-${l.targetPage}`);
+      a.setAttribute('dir', 'rtl');
+      if (a.style) {
+        a.style.position = 'absolute';
+        a.style.left = `${Math.round(l.x * 100) / 100}px`;
+        a.style.top = `${Math.round(l.y * 100) / 100}px`;
+        a.style.width = `${Math.round(l.w * 100) / 100}px`;
+        a.style.height = `${Math.round(l.h * 100) / 100}px`;
+      }
+      root.appendChild(a);
+    }
+  }
+
+  // חשבונאות גלויה (§2.4): פריט שלא מוקרן — diagnostic בר-צפייה, לא היעלמות
+  const projectedLineIds = new Set([...(mp.lines || [])].map(l => l.id));
+  for (const ln of (mp.lines || [])) {
+    if (ln.projected === false) diags.push({ kind: 'pmr-line-not-projected', lineId: ln.id || null });
+  }
+  void projectedLineIds;
+  if (diags.length) {
+    root.dataset.pmDiagnostics = String(diags.length);
+    if (opts.onDiagnostic) for (const d of diags) opts.onDiagnostic(d);
   }
   return root;
 }
 
-module.exports = { renderPage, renderLine, scrubPUAText, bgRgba, PT_CLASS, renderSpanningBand, renderDecorations, renderPageBackgroundAndShaar, renderShaarContent, renderCustomPageContent, applyCustomStyleSpec, fontStack };
+function isCssFrame(v) { return v === 'circle' || v === 'square'; }
+
+module.exports = { renderModelPage };
 
 };
-__modules["src/engine/notes/markers.js"] = function (require, module, exports) {
-// src/engine/notes/markers.js — Unified note-marker module (S7.1.5/6, REQ-FN-05/06; D-30/D-41)
+__modules["src/engine/typography/font-keys.js"] = function (require, module, exports) {
+// src/engine/typography/font-keys.js — מפתח משפחת גופן רשומה ⇒ תת-גופן ייצוא (S73)
 'use strict';
 
 /**
- * מקור־הסמכות היחיד לסמני הערות בכל המוצר: גוף, מרזב, עמודי הערות.
- * לפני האיחוד היו שלושה ממירים שונים (pipeline `[n]` קשיח, dom-renderer markerFor,
- * endnote-pages formatMarker) — מה שגרם לאי־עקביות מספור בין גוף לעמודי הערות (P1-3).
- * כל שינוי סגנון/מדיניות נעשה כאן בלבד; כל הצרכנים קוראים מכאן (single source).
- */
-
-const HEB_LETTERS = ['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'];
-
-/** **S5.2 (תיקון 10 — מוסכמת הגרשיים של הגיליון):** סיומת סמן לפי המוסכמה
- *  שמממש folio.toHebrewNumber/finish: אות בודדת ⇒ אות+גרש (א׳);
- *  שתי אותיות ומעלה ⇒ גרשיים **לפני האות האחרונה** (כ״ג — לא כג׳ הישן).
- *  יישום מקומי בעל אותה צורה (shared-shaped) — בלי ייבוא folio.js
- *  (מניעת תלות decoration↔notes; נבדק — folio.js אינו דורש את markers,
- *  כך שאין מעגל, אבל ההפרדה מונעת תלות עתידית). */
-function hebrewMarkFinish(letters) {
-  if (letters.length <= 1) return letters + '\u05F3';            // א׳ — גרש
-  return letters.slice(0, -1) + '\u05F4' + letters.slice(-1);   // כ״ג — גרשיים לפני האחרונה
-}
-
-/** גימטריה בלבד (בלי סיומת) — על בסיס אותיות 22; מעל 999 — חלק אלפים בגרש
- *  (כמו toGematria של המורשת — הגבול המפורש של D-108 לשדות שאינם פוליו). */
-function hebrewBare(index1Based) {
-  let i = index1Based - 1, s = '';
-  if (i < 0) return 'א';
-  do { s = HEB_LETTERS[i % 22] + s; i = Math.floor(i / 22) - 1; } while (i >= 0);
-  if (index1Based >= 1000) {
-    const th = Math.floor(index1Based / 1000);
-    let j = th - 1, ts = '';
-    do { ts = HEB_LETTERS[j % 22] + ts; j = Math.floor(j / 22) - 1; } while (j >= 0);
-    s = ts + '\u05F3' + hebrewBare(index1Based % 1000 || 1);
-  }
-  return s;
-}
-
-/** סמן בודד לפי סגנון הרישום (footnote-marker-style).
- *  **Iteration-003 (legacy parity):** סגנון 'hebrew' — גימטריה + מפריד הרישום
- *  (note-num-separator, ברירת מחדל '.') — בדיוק כמו markerWord של המורשת
- *  (toGematria(n) + sep). הגרש מהמוסכמת של הגיליון (S5.2 תיקון 10) אינו
- *  חל על סמני הערות — גבול D-108 עצמו ("אין להסיק מכלל זה דבר על ... גרש
- *  בהערות"); 'hebrew-geresh' נשמר כבחירה מפורשת בלבד. */
-function markerFor(index1Based, style, opts) {
-  const separator = opts && opts.separator != null ? String(opts.separator) : '.';
-  switch (style) {
-    case 'decimal': return String(index1Based);
-    case 'parenthesis': return `(${index1Based})`;
-    case 'asterisk': {
-      const n = ((index1Based - 1) % 3) + 1; // *,**,*** ואז חוזר — policy מקובלת
-      return '*'.repeat(n) + (index1Based > 3 ? String(Math.ceil(index1Based / 3)) : '');
-    }
-    case 'hebrew':
-      return hebrewBare(index1Based) + separator;
-    case 'hebrew-geresh':
-    default: {
-      let i = index1Based - 1, s = '';
-      if (i < 0) return 'א׳';
-      do { s = HEB_LETTERS[i % 22] + s; i = Math.floor(i / 22) - 1; } while (i >= 0);
-      // **S5.2 (תיקון 10):** בעבר תמיד גרש בסוף (כג׳) — בניגוד למוסכמת
-      // הגרשיים של הגיליון. כעת hebrewMarkFinish: א׳/כ״ג.
-      return hebrewMarkFinish(s);
-    }
-  }
-}
-
-/**
- * מספור לפי מדיניות איפוס (footnote-reset-policy):
- *  - continuous: מונה כלל־מסמך אחד.
- *  - page:       איפוס בכל עמוד (מרזב).
- *  - section/part: איפוס בכל חלק (H1) — ברירת מחדל לעמודי הערות; shaar-sub ייתמך ב‑S8.
- * מחזיר פונקציית next() שמקבלת הקשר {page, part} ומנפיקה מספור 1‑based.
- */
-function makeCounter(policy, start = 0) {
-  let counter = start;
-  let lastKey = null;
-  const scopeKey = (ctx) => {
-    switch (policy) {
-      case 'page': return `p${ctx && ctx.page != null ? ctx.page : '?'}`;
-      case 'section':
-      case 'part': return `b${ctx && ctx.part != null ? ctx.part : '?'}`;
-      default: return 'doc'; // continuous
-    }
-  };
-  return function next(ctx = {}) {
-    const key = scopeKey(ctx);
-    if (policy === 'page' || policy === 'section' || policy === 'part') {
-      if (lastKey !== null && key !== lastKey) counter = 0; // איפוס בהחלפת היקף
-    }
-    lastKey = key;
-    counter++;
-    return counter;
-  };
-}
-
-// **S5.2 (תיקון 11):** splitPlaceholder הוסר — קוד מת מלכודתי: פיצול על ':'
-// היה מבתק שעות (12:30) אם אי־פעם היה נעשה בו שימוש חוזר; ה-placeholder
-// האמיתי של D-30 משתמש ב-U+E000 (ראה explodePlaceholderWord ב-pipeline).
-
-/**
- * **S67 (R2-M4 — סגירת no-op):** מחדש-מספור סמני הערות-שוליים במדיניות
- * footnote-reset-policy='page'. הרקע: הסמנים מוקצים בזמן הפענוח — בטרם
- * ידוע לאיזה עמוד כל הערה תיפול — ולכן המונה במדיניות 'page' קיבל תמיד
- * את אותו מפתח-היקף ('?') והתנהג כ-continuous (no-op). הפתרון: הקצאה
- * עקבית-מסמך בפענוח (סמנים ישנים ייחודיים), ולאחר תכנון העמודים — כשכל
- * הערה כבר קשורה לעמוד — מעבר מחדש-מספור לפי עמוד הופעתה הראשון.
+ * **מקור יחיד למיפוי משפחה→מפתח גופן** (הוצא מכפילות: עד כאן היו שני עותקים
+ * זהים — core/materialize.js ו-layout/structural-stamps.js — ועותק שלישי
+ * במקרן המורשת שייסגר בשלב 9). המיפוי טהור: בדיקת רישום בלבד (registeredFonts),
+ * בלי מדידה ובלי תלות ברנדרר.
  *
- * בטיחות גיאומטרית: מספר פר-עמוד תמיד ≤ המספר הרציף ⇒ הסמן רק מתקצר
- * (או נשאר) ⇒ שום שורה לא מתארכת ואין סיכון עטיפה מחדש; שברי המשך
- * ('split-rest') והצגות חוזרות יורשים את סמן ההופעה הראשונה (סמן אחיד — D-30).
- *
- * @param {Array} pages - עמודי המודל (לאחר planPages; footnotes מצורפות)
- * @param {object} opts - { markerStyle, markersByToken, customMarks, blocks, eventLog }
- *   markersByToken: Map tokenId→[{noteIndex,marker}] (הסמנים הישנים — מהפענוח)
- *   customMarks: Set של סמני סגנונות-מותאמים — בהתנגשות עם סמן ישן מדלגים
- *                בבטחה (אין דריסה עיוורת של סמן מותאם).
- * @returns {{renumbered:number, skipped:string|null}} — כמה סמנים הוחלפו; אם דילוג — סיבתו.
- */
-function renumberPageScopedMarkers(pages, opts) {
-  const { markerStyle, markerSeparator, markersByToken, customMarks, blocks, eventLog } = opts || {};
-  const tokenMark = new Map(); // tokenId → סמן חדש (מופע ראשון)
-
-  // שלב א (תכנון בלבד — בלי מוטציה): מספור פר-עמוד לפי סדר הופעה ראשון
-  let anyChange = false;
-  for (const pg of pages) {
-    let seq = 0;
-    for (const n of (pg.footnotes || [])) {
-      if (!n || n.tokenId == null) continue;
-      if (!tokenMark.has(n.tokenId)) {
-        seq += 1;
-        tokenMark.set(n.tokenId, markerFor(seq, markerStyle, { separator: markerSeparator != null ? markerSeparator : '.' }));
-      }
-      if (n.marker !== tokenMark.get(n.tokenId)) anyChange = true;
-    }
-  }
-  if (!anyChange) return { renumbered: 0, skipped: null };
-
-  // שלב ב: מפת סמן-ישן→סמן-חדש (הסמנים הישנים ייחודיים — הקצאה רציפה).
-  // הבדיקה קודמת לכל מוטציה: התנגשות עם סמן מותאם ⇒ דילוג מלא ונקי.
-  const oldToNew = new Map();
-  for (const [tokenId, assigns] of (markersByToken || new Map())) {
-    const nm = tokenMark.get(tokenId);
-    if (nm == null) continue;
-    for (const a of assigns) {
-      if (a.marker !== nm) oldToNew.set(a.marker, nm);
-    }
-  }
-  for (const oldM of oldToNew.keys()) {
-    if (customMarks && customMarks.has(oldM)) {
-      if (eventLog) eventLog.emit('notes', 'fn-renumber-page-skip', { reason: 'custom-marker-collision', marker: oldM });
-      return { renumbered: 0, skipped: 'custom-marker-collision' };
-    }
-  }
-  if (!oldToNew.size) return { renumbered: 0, skipped: null };
-
-  // שלב ג (החלה): מרזב — כל מופע/שבר/הצגה-חוזרת מקבל את סמן המופע הראשון
-  let renumbered = 0;
-  for (const pg of pages) {
-    for (const n of (pg.footnotes || [])) {
-      if (!n || n.tokenId == null) continue;
-      const nm = tokenMark.get(n.tokenId);
-      if (nm != null && n.marker !== nm) { n.marker = nm; renumbered++; }
-    }
-  }
-
-  // שלב ד: החלפה בגוף המסמך — שתי תבניות מילה:
-  //   (1) סמן מתויג (D-53): …\uE102סמן (לפני NBSP או בסוף המילה)
-  //   (2) הערה שנדחתה לגוף: סמן\uE000טקסט (בראש המילה)
-  const esc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const res = [];
-  for (const [oldM, newM] of oldToNew) {
-    res.push([new RegExp('\\uE102' + esc(oldM) + '(?=\\u00A0|$)', 'g'), '\uE102' + newM]);
-    res.push([new RegExp('^' + esc(oldM) + '\\uE000'), newM + '\uE000']);
-  }
-  let touchedWords = 0;
-  for (const pg of pages) {
-    for (const col of (pg.columns || [])) {
-      for (const ln of col) {
-        if (!Array.isArray(ln.words)) continue;
-        for (let wi = 0; wi < ln.words.length; wi++) {
-          const w = ln.words[wi];
-          if (typeof w !== 'string') continue;
-          let out = w;
-          for (const [re, to] of res) out = out.replace(re, to);
-          if (out !== w) { ln.words[wi] = out; touchedWords++; }
-        }
-      }
-    }
-  }
-
-  // שלב ה: עדכון הרישומים (noteAssignments/rejectedNotes של הבלוקים) — אמת-דיווח
-  for (const [, assigns] of (markersByToken || new Map())) {
-    for (const a of assigns) {
-      const nm = oldToNew.get(a.marker);
-      if (nm != null) a.marker = nm;
-    }
-  }
-  for (const b of (blocks || [])) {
-    for (const n of (b.rejectedNotes || [])) {
-      const nm = oldToNew.get(n.marker);
-      if (nm != null) n.marker = nm;
-    }
-  }
-  if (eventLog) eventLog.emit('notes', 'fn-renumber-page', { renumbered, touchedWords });
-  return { renumbered, touchedWords, skipped: null };
-}
-
-/**
- * **שלב 5 (חילוץ שורש מ-PR #16, S78/D-107 — עוזר זיהוי סמן מתויג):**
- * חילוץ טקסט הסמן ממילת גוף — אותו פענוח של ה-pipeline (countKnown) ושל
- * המתכנן (הערות עוקבות-עוגן): מקור יחיד לתבנית D-53.
- *  - מילה עם E000 (הערה שנדחתה לגוף): הסמן הוא הפרגמנט שלפני ה-E000
- *    (עשוי להיות ממוזג לעוגן ב-NBSP — מנורמל לרווח לפני הפיצול).
- *  - מילה עם תג \uE102 (סמן מתויג): הפרגמנט שאחרי התג עד NBSP/רווח.
- * @returns {string|null} — טקסט הסמן או null אם המילה אינה נושאת סמן.
- */
-function markerFragmentOf(word) {
-  const sw = String(word);
-  if (sw.includes('\uE000')) {
-    const at = sw.indexOf('\uE000');
-    const frags = sw.slice(0, at).replace(/\u00A0/g, ' ').split(' ').filter(Boolean);
-    return frags.length ? frags[frags.length - 1] : null;
-  }
-  if (!sw.includes('\uE102')) return null;
-  const at = sw.indexOf('\uE102');
-  const frag = sw.slice(at + 1).split(/[\u00A0 ]/)[0];
-  return frag || null;
-}
-
-/** **Iteration-003:** סמן לפי ההגדרות המלאות — סגנון + מפריד (note-num-separator
- *  מה-raw של IMUD כשקיים; ברירת מחדל '.') — מקור אחד לכל הצרכנים עם settings. */
-function markerForSettings(index1Based, settings) {
-  const s = settings || {};
-  const style = s['footnote-marker-style'];
-  const sep = s['note-num-separator'] != null ? s['note-num-separator']
-    : (s._imudRaw && s._imudRaw['note-num-separator'] != null ? s._imudRaw['note-num-separator'] : '.');
-  return markerFor(index1Based, style, { separator: sep });
-}
-
-module.exports = { markerFor, markerForSettings, makeCounter, hebrewMarkFinish, hebrewBare, HEB_LETTERS, renumberPageScopedMarkers, markerFragmentOf, MARK_TAG: '\uE102' };
-
-};
-__modules["src/engine/decoration/page-decorations.js"] = function (require, module, exports) {
-// src/engine/decoration/page-decorations.js — Theme/shaar/background box placement (S6, REQ-ORN-06/08, PT-03)
-'use strict';
-
-/**
- * מקום יחיד שבו מלוי עיטורי־דף נקבע: ערכת נושא, שערים (ראשי/משנה/אחורי),
- * ורקעים לפי סוג דף. אין פיצול ל‑"shaar boxes" נפרד — מנגנון אחד, צרכן אחד.
- *
- * עקרונות נגד באגי העבר (מ‑Gold/Green/Orange):
- * - D-11: אין הצטברות עיטורים; כל תבנית מקבלת מקום אחד בלבד לכל מלוי.
- * - F-09: אין !important; השליטה רק דרך מחלקות + inline שנכתב מכאן.
- * - PT-03: ארבעת מקטעי shaar_back הם עצמאיים — כל אחד נכבה בנפרד.
- *
- * **S8 (REQ-ORN-08):** פאנל רקעים מוזג לתוך פאנל נושאים — 3 סוגי עמודים
- * (רגיל / פתיחת הקדמה / פתיחת סימן); color/texture/image + opacity; insets במ"מ.
+ * משפחה רשומה ⇒ המשפחה עצמה כמפתח (תת-גופן ייעודי בייצוא); אחרת null
+ * (=גוף הטקסט /F1). התפקידים הפונקציונליים (window/fnbody/margin/heading)
+ * ממופים לשמות הקצרים של תתי-הגופנים ב-pdf-writer.
  */
 
-/** 4 המקטעים העצמאיים של שער אחורי (PT-03). */
-const SHAAR_BACK_SEGMENTS = ['frame', 'title-box', 'body-box', 'footer-ornament'];
+const { registeredFonts } = require('./measure-api');
 
-/** 3 סוגי העמודים לרקעים (REQ-ORN-08). */
-const BACKGROUND_PAGE_CLASSES = ['regular', 'preface-open', 'sign-open'];
-
-const { MM_TO_PX } = require('../layout/page-templates');
-
-/** תנאי התאמת סוג־עמוד למחלקת רקע. */
-function backgroundClassForPage(page) {
-  if (page.type === 'preface' && page.chapterOpening) return 'preface-open';
-  if (page.type === 'sign-open') return 'sign-open';
-  return 'regular';
+/** @param {string} fam — שם משפחה מההגדרות (heading-N-font וכו'); ריק ⇒ null */
+function familyFontKeyOf(fam) {
+  if (!fam || !registeredFonts.has(fam)) return null;
+  if (fam === 'Frank Ruhl Libre') return 'fnbody';
+  if (fam === 'Hadassah Friedlaender') return 'margin';
+  if (fam === 'FrankReal-Bold' || fam === 'FrankReal') return 'window';
+  if (fam === 'David Libre' || fam === 'DavidLibre-Bold') return 'heading';
+  return fam;
 }
 
-/**
- * החלטת רקע לפי מחלקת העמוד (REQ-ORN-08): הרקע שהוגדר למחלקה שאליה
- * העמוד שייך בלבד. inset במ"מ מומר לפיקסלים כאן — מקור יחיד.
- * @returns {{image:string|null, texture:string|null, insetPx:number}|null}
- */
-function planBackground(page, settings) {
-  const cls = backgroundClassForPage(page);
-  const target = settings['background-page-type'] || 'regular';
-  if (cls !== target) return null; // הרקע שייך למחלקה אחרת
-  const image = settings['background-image'] || null;
-  const texture = settings['background-texture'] || null;
-  if (!image && !texture) return null;
-  const insetMm = Math.max(0, Number(settings['background-inset-mm']) || 0);
-  return { image, texture, insetPx: Math.round(insetMm * MM_TO_PX) };
+/** **Iteration-003 (parity משקל בשערים):** בקשת משפחה מילולית — המשפחה הרשומה
+ * עצמה היא המפתח, בלי המנהרות התפקידיות. למשל 'David Libre' ⇒ תת-הגופן
+ * הרגיל (DavidLibre-Regular) ולא מפתח ה-heading (DavidLibre-Bold).
+ * משמש את חותמת השערים בפרופיל IMUD: שורות המהדורה/המחבר/המשך-כותרת-
+ * המשנה מופיעות בייחוס ב-David Libre רגיל (נמדד ב-PDF הייחוס:
+ * ToraEx4 = "David Libre Regular"), בעוד כותרות ההערות/ה-TOC — שם
+ * המנהרה ל-heading נכונה — נשארות ב-familyFontKeyOf. */
+function literalFamilyKeyOf(fam) {
+  if (!fam || !registeredFonts.has(fam)) return null;
+  return fam;
 }
 
-/**
- * החלטת מלוי לעימוד דף — פונקציה טהורה (ללא DOM), דטרמיניסטית.
- * @param {object} page - { type: 'regular'|'shaar-main'|'shaar-sub'|'shaar-back'|... , index }
- * @param {object} settings - registry defaults+user
- * @returns {{ slots: Array<{slot:string, asset:string|null, cssClass:string}>, themeSetId:string, background:object|null }}
- */
-function planDecorations(page, settings) {
-  const themeSetId = settings['theme-set-id'] || 'default';
-  const slots = [];
-
-  // **S4.5/EXT-14 (03.11):** הפניות עיצובי IMUD — מזהי הספרייה גוברים על השדות
-  // הישנים (הפניה imud:<collection>:<id> נפתרת ברינדור דרך asset-registry).
-  // צריכה מפורשת כאן — גם ערכת נושא נחשבת פעילה כשנבחר עיצוב ספרייה.
-  const imudMain = settings['imud-shaar-main'] || '';
-  const imudSub = settings['imud-shaar-sub'] || '';
-  const imudBack = settings['imud-shaar-back'] || '';
-
-  const push = (slot, asset, modifier) => {
-    // הגנה D-11: slot תפוס כבר → לא מוסיפים שוב
-    if (slots.some(s => s.slot === slot)) return;
-    slots.push({
-      slot,
-      asset: asset || null,
-      cssClass: `deco deco--${slot}${modifier ? ` ${modifier}` : ''}${asset ? '' : ' deco--empty'}`
-    });
-  };
-
-  switch (page.type) {
-    case 'shaar-main': {
-      const img = imudMain || settings['shaar-main-image'];
-      push('shaar-main', img, 'deco--themed');
-      break;
-    }
-    case 'shaar-sub': {
-      push('shaar-sub', imudSub || settings['shaar-sub-image'] || null, 'deco--themed');
-      break;
-    }
-    case 'shaar-back': {
-      // PT-03: אם הכבה ראשית — אף מקטע לא מוצב; אחרת 4 מקטעים עצמאיים.
-      // **03.11 (EXT-14):** מקטע המסגרת מקבל את תמונת השער האחורי (עיצוב IMUD) —
-      // שאר המקטעים נשארים ריקים (ממולאים ע"י העיצוב עצמו, לא בנפרד).
-      if (settings['shaar-back-enabled'] !== false) {
-        const backImg = imudBack || settings['shaar-back-image'] || null;
-        for (const seg of SHAAR_BACK_SEGMENTS) push(`shaar-back-${seg}`, seg === 'frame' ? backImg : null, 'deco--segment');
-      }
-      break;
-    }
-    default: {
-      // regular / preface / sign-open …: רקע לפי מחלקת העמוד (REQ-ORN-08)
-      const bg = planBackground(page, settings);
-      if (bg && bg.image) push('page-background', bg.image, 'deco--background');
-      if (bg && bg.texture) push('page-texture', bg.texture, 'deco--texture');
-      break;
-    }
-  }
-
-  return { slots, themeSetId, background: planBackground(page, settings) };
-}
-
-/**
- * החלת התוכנית על דם־DOM (אלמנט השורש של הדף). נקי: מוחק קודם, מציב פעם אחת.
- * @param {object} rootEl - article.page
- * @param {object} doc - document
- * @param {Array} slots - מתוצר planDecorations
- */
-function applyDecorationSlots(rootEl, doc, slots) {
-  // ניקוי מקומי — מונע כפילויות בין ריצות (rollback-aware)
-  for (const old of Array.from(rootEl.querySelectorAll('.deco'))) old.remove();
-  for (const s of slots) {
-    if (!s.asset) continue; // deco--empty נשמר לתיעוד בלבד, לא יוצר node
-    const el = doc.createElement('div');
-    el.className = s.cssClass;
-    el.dataset.slot = s.slot;
-    el.style.backgroundImage = `url("${s.asset}")`;
-    rootEl.appendChild(el);
-  }
-}
-
-module.exports = {
-  planDecorations, applyDecorationSlots, planBackground, backgroundClassForPage,
-  SHAAR_BACK_SEGMENTS, BACKGROUND_PAGE_CLASSES
+/** **פרוסה 3 (§2.2 — זהות גופן מהמודל):** היפוך המיפוי לצורך הקרנה —
+ * מפתח גופן (על שורות/מילים ב-PageModel) ⇒ שם משפחה לתצוגה. משפחה רשומה
+ * היא המפתח עצמו; המפתחות הפונקציונליים ממופים למשפחה הקנונית שיצרה אותם
+ * (אותה טבלה, כיוון אחד — אין עותק שני של הידע). */
+const KEY_FAMILY = {
+  fnbody: 'Frank Ruhl Libre',
+  margin: 'Hadassah Friedlaender',
+  window: 'FrankReal',
+  heading: 'DavidLibre-Bold'
 };
 
-};
-__modules["src/engine/decoration/shaar-boxes.js"] = function (require, module, exports) {
-// src/engine/decoration/shaar-boxes.js — Shaar text-box geometry: drag/resize/persist/export (REQ-ORN-05)
-'use strict';
-
-/**
- * תיבות טקסט של שערים (PT-01/02/03): גרירה + שינוי גודל + שמירה לפי מזהה שער
- * + הטמעת `box` בייצוא JSON (V4) — עגול־שלם: ייצוא → טעינה מחדש ⇒ מיקומים זהים.
- *
- * **לקחי עבר שננעלו כאן:**
- * - שמירה לפי **מזהה שער פרטני** ולא לפי סוג (בגרסה מוקדמת הוחל מיקום אחד על כל
- *   השערים מהסוג — Handoff §2.13).
- * - סדר קדימויות לפתרון מיקום: (1) שדה `box` מוטמע ב־JSON, (2) מיקום שמור בסשן,
- *   (3) ברירת מחדל — בדיוק כסדר של V4.
- * - מיקום במ"מ (שלם) — דטרמיניסטי בעיגול־שלם; אין נקודה־צפה מתפזרת בין ריצות.
- */
-
-/**
- * פתרון מיקום תיבה לפי סדר הקדימויות של V4 (§2.13).
- * @param {string} type - 'main' | 'sub' | 'back'
- * @param {string} shaarId - מזהה שער פרטני (ייחודי — theme-sets.uniqueShaarId)
- * @param {object} item - פריט השער (עשוי להכיל box מוטמע)
- * @param {object} savedPositions - { [type]: { [shaarId]: box } } מיקומים שמורים
- * @param {object} dfltBox - ברירת מחדל {top,bottom,right,left} במ"מ
- * @returns {{box:object, source:'json'|'saved'|'default'}}
- */
-function resolveShaarBox(type, shaarId, item, savedPositions, dfltBox) {
-  if (item && item.box && isValidBox(item.box)) return { box: normalizeBox(item.box), source: 'json' };
-  const saved = savedPositions && savedPositions[type] && savedPositions[type][shaarId];
-  if (saved && isValidBox(saved)) return { box: normalizeBox(saved), source: 'saved' };
-  return { box: normalizeBox(dfltBox || { top: 40, bottom: 40, right: 30, left: 30 }), source: 'default' };
+/** @param {string} key — מפתח מהמודל; null ⇒ null (גוף הטקסט — ירושת שורש) */
+function familyOfFontKey(key) {
+  if (!key) return null;
+  if (key === 'body') return null;
+  return KEY_FAMILY[key] || key;
 }
 
-/** תקינות תיבה: ארבעה שוליים מספריים אי־שליליים. */
-function isValidBox(b) {
-  return Boolean(b) && ['top', 'bottom', 'right', 'left'].every(k => Number.isFinite(Number(b[k])) && Number(b[k]) >= 0);
-}
-
-/** נרמול למ"מ שלמים — דטרמיניזם של עיגול־שלם בעיגול־חוזר. */
-function normalizeBox(b) {
-  return {
-    top: Math.round(Number(b.top)), bottom: Math.round(Number(b.bottom)),
-    right: Math.round(Number(b.right)), left: Math.round(Number(b.left))
-  };
-}
-
-/**
- * הצמדה לגבולות העמוד (גרירה/שינוי גודל לא יוצאים מהדף).
- * @param {object} box - {top,bottom,right,left} במ"מ
- * @param {number} pageWmm, pageHmm - ממדי העמוד במ"מ
- */
-function clampShaarBox(box, pageWmm, pageHmm) {
-  const b = normalizeBox(box);
-  const maxInsetX = Math.max(0, Math.floor(pageWmm / 2) - 5); // תיבה שומרת רוחב מינימלי 10mm
-  const maxInsetY = Math.max(0, Math.floor(pageHmm / 2) - 5);
-  b.top = Math.min(Math.max(0, b.top), maxInsetY);      // לא שלילי ולא מעבר לחצי
-  b.bottom = Math.min(Math.max(0, b.bottom), maxInsetY);
-  b.right = Math.min(Math.max(0, b.right), maxInsetX);
-  b.left = Math.min(Math.max(0, b.left), maxInsetX);
-  return b;
-}
-
-/**
- * גרירה: הזזת כל ארבעת השוליים בהפרש (תיבה שומרת על גודלה).
- * שמירה לפי (type, shaarId) — מזהה פרטני (לקח V4: לא לפי סוג!).
- * @returns {object} savedPositions חדש (לא מוטציה במקום — רולבק־סייפ)
- */
-function moveShaarBox(savedPositions, type, shaarId, dxMm, dyMm, pageWmm, pageHmm) {
-  const next = cloneSaved(savedPositions);
-  const cur = (next[type] && next[type][shaarId]) || { top: 40, bottom: 40, right: 30, left: 30 };
-  next[type] = next[type] || {};
-  next[type][shaarId] = clampShaarBox({
-    top: cur.top + dyMm, bottom: cur.bottom - dyMm,
-    right: cur.right - dxMm, left: cur.left + dxMm
-  }, pageWmm, pageHmm);
-  return next;
-}
-
-/**
- * שינוי גודל דרך ידית (8 ידיות V4): n/s/e/w/ne/nw/se/sw.
- * @returns {object} savedPositions חדש
- */
-function resizeShaarBox(savedPositions, type, shaarId, handle, dxMm, dyMm, pageWmm, pageHmm) {
-  const next = cloneSaved(savedPositions);
-  const cur = (next[type] && next[type][shaarId]) || { top: 40, bottom: 40, right: 30, left: 30 };
-  const b = { ...cur };
-  if (handle.includes('n')) b.top += dyMm;
-  if (handle.includes('s')) b.bottom -= dyMm;
-  if (handle.includes('w')) b.left += dxMm;   // RTL: left גדל כשגוררים שמאלה→ימין? — כיוון לפי ציר X החיובי
-  if (handle.includes('e')) b.right -= dxMm;
-  next[type] = next[type] || {};
-  next[type][shaarId] = clampShaarBox(b, pageWmm, pageHmm);
-  return next;
-}
-
-function cloneSaved(savedPositions) {
-  const out = {};
-  for (const [t, byId] of Object.entries(savedPositions || {})) {
-    out[t] = {};
-    for (const [id, box] of Object.entries(byId || {})) out[t][id] = normalizeBox(box);
-  }
-  return out;
-}
-
-/**
- * ייצוא פריטי שער עם `box` מוטמע (exportShaarJSONWithPositions — פורט V4):
- * המיקום ששרד בסשן נחרת בקובץ ⇒ עיגול־שלם טעינה→הזזה→ייצוא→טעינה ⇒ מיקומים זהים.
- * אין אקראיות (מדיניות zero-randomness): id נגזר דטרמיניסטית מאינדקס+שם.
- */
-function exportShaarItemsWithPositions(items, savedPositions) {
-  return (items || []).map((it, i) => {
-    const id = it.id || `shaar-${i}-${String(it.name || 'anon').replace(/\s+/g, '-').slice(0, 24)}`;
-    const type = it.type || it.role || 'main';
-    const saved = savedPositions && savedPositions[type] && savedPositions[type][id];
-    return { ...it, id, box: normalizeBox(saved || it.box || { top: 40, bottom: 40, right: 30, left: 30 }) };
-  });
-}
-
-/** השוואת תיבות בודדות (עיגול־שלם) או מפות מיקומים {id: box} — בדיקת שער S8.2. */
-function boxPositionsIdentical(a, b) {
-  const isSingle = (x) => x && Number.isFinite(Number(x.top)) && Number.isFinite(Number(x.left));
-  if (isSingle(a) || isSingle(b)) {
-    if (!isSingle(a) || !isSingle(b)) return false;
-    const x = normalizeBox(a), y = normalizeBox(b);
-    return x.top === y.top && x.bottom === y.bottom && x.right === y.right && x.left === y.left;
-  }
-  const keys = Object.keys(a || {}).sort();
-  const keysB = Object.keys(b || {}).sort();
-  if (keys.join(',') !== keysB.join(',')) return false;
-  for (const k of keys) {
-    const x = normalizeBox(a[k]), y = normalizeBox(b[k]);
-    if (x.top !== y.top || x.bottom !== y.bottom || x.right !== y.right || x.left !== y.left) return false;
-  }
-  return true;
-}
-
-module.exports = {
-  resolveShaarBox, isValidBox, normalizeBox, clampShaarBox, moveShaarBox, resizeShaarBox,
-  exportShaarItemsWithPositions, boxPositionsIdentical
-};
-
-};
-__modules["src/engine/decoration/ornament-fit.js"] = function (require, module, exports) {
-// src/engine/decoration/ornament-fit.js — fit-to-text JS measurement + divider height rules (REQ-ORN-01..04)
-'use strict';
-
-/**
- * מדידת DOM/JS בלבד (CSS fit-content נכשל — V3/V4). מקור שליטה אחד: אין !important מול inline (F-09).
- *
- * **S8:** הרחבה מלאה — התאמת עיטורי H2 לרוחב הטקסט, התאמת גובה צדדיים H3 לשורת הכותרת,
- * עיטור סיום־פרק בתקציב הפנוי (REQ-ORN-03), שמירת סימטריית מרווחים אפקטיביים (F-21),
- * הרמה אופטית −0.08em לעיטורי צד (שיעור V4), ומשמרות התאמה למפרידי כותרות (REQ-ORN-04).
- */
-
-/** התאמת עיטור H2 לרוחב הטקסט: מחזיר scalePx; sync re-fit בלי shift. */
-function fitOrnamentToText(ornamentWidthPx, textWidthPx, maxScale = 3) {
-  if (!ornamentWidthPx || ornamentWidthPx <= 0) return 1;
-  const scale = Math.min(maxScale, textWidthPx / ornamentWidthPx);
-  return Math.max(0.25, Number(scale.toFixed(4)));
-}
-
-/**
- * REQ-ORN-01: re-fit סינכרוני ללא הזזה — לאחר החלת הסקאלה רוחב העיטור
- * כבר שווה לרוחב הטקסט, ולכן ריצה חוזרת מחזירה סקאלה 1 (מתייצבת מיד —
- * שיעור F-08: אין פוסט־פרוסס מאוחר שמגלה גובה שלא תוקצב).
- */
-function refitStable(ornamentWidthPx, textWidthPx, maxScale) {
-  const s1 = fitOrnamentToText(ornamentWidthPx, textWidthPx, maxScale);
-  const appliedWidth = ornamentWidthPx * s1;
-  const s2 = fitOrnamentToText(appliedWidth, textWidthPx, maxScale);
-  return Math.abs(s2 - 1) <= 0.0001; // אחרי ההחלה — אין שינוי נוסף
-}
-
-/** גובה מפריד טורים = Math.min(גובה שני הטורים) − 8px (V4 rule). */
-function columnDividerHeightPx(colUsedHeights) {
-  return Math.max(0, Math.min(...colUsedHeights) - 8);
-}
-
-/**
- * fits() — בדיקת התאמה לפני הוספת עיטור **בכל** אתרי ההוספה (לקח Orange):
- * האם לעיטור יש מקום מתחת/מעל הבלוק בלי לגלוש מהטור?
- */
-function fits(budgetRemainingPx, ornamentHeightPx) {
-  return ornamentHeightPx > 0 && budgetRemainingPx >= ornamentHeightPx;
-}
-
-/** עיטורי H3 צדדיים: יישור למרכז־גופן (cap-height centering), לא baseline. */
-function sideOrnamentOffsetY(lineHeightPx, ornamentHeightPx) {
-  return Math.round((lineHeightPx - ornamentHeightPx) / 2);
-}
-
-/**
- * F-21 (שיעור מרווחים): מרווחי עיטורי H2 עליון/תחתון **שווים אפקטיבית**.
- * בזרימת flex-column אין התמטטות שוליים — השוואה חייבת להיעשות על הסכום
- * המצטבר (שולי כותרת + שולי עיטור), לא על ערכי CSS בודדים. כאן מקור אחד:
- * שני המרווחים נקבעים מאותה פונקציה ⇒ שווים מבנית.
- * @param {number} fontPx - גודל גופן הכותרת בפיקסלים
- * @returns {{top:number, bottom:number}} מרווחים אפקטיביים שווים (px)
- */
-function h2OrnamentMarginsPx(fontPx) {
-  const m = Math.max(2, Math.round(fontPx * 0.1)); // 0.1em — מרווח נשימה מינימלי
-  return { top: m, bottom: m }; // שווים מבנית — מקור אחד, אין צבירה לא־סימטרית
-}
-
-/**
- * שיעור V4 (F-09/H3): הרמה אופטית של עיטורי צד — margin-top: −0.08em.
- * עיטורים שממורכזים גיאומטרית נראים נמוכים לעין; ההרמה מפצה.
- * @param {number} fontPx - גודל גופן השורה המארחת
- */
-function sideOrnamentLiftPx(fontPx) {
-  return -Math.round(fontPx * 0.08 * 100) / 100; // −0.08em — שיעור מתועד (Handoff 2.12)
-}
-
-/**
- * **F-08 (שיעור הלב):** גובה שעיטורי H2 צורך חייב להיות **מוזמן בזמן הפריסה**
- * (L4) בגודלו הסופי — לא כ‑overlay מאוחר שמגלה גובה שלא תוקצב (זה שורש
- * "עמוד פתיחת כותרת 2 ארוך מדי"). מחשב את ההזמנה הנדרשת מעל/מתחת לכותרת
- * לפי הממדים הסופיים (אחרי fit-to-text) — מקור יחיד למידות ולהזמנה.
- * @param {number} titleWidthPx - רוחב הכותרת הנמדד (JS — לא CSS)
- * @param {object} settings
- * @param {number} h2FontPx - גוף הכותרת בפיקסלים
- */
-function h2OrnamentReservedHeight(titleWidthPx, settings, h2FontPx) {
-  const scope = h2OrnamentScope(settings);
-  if (!scope.any) return { topPx: 0, bottomPx: 0, scale: 1, ornW: 0, ornH: 0, margins: h2OrnamentMarginsPx(h2FontPx), scope };
-  const naturalW = H2_ORN_W_EM * h2FontPx, naturalH = H2_ORN_H_EM * h2FontPx;
-  const scale = settings['h2-orn-fit-to-text'] !== false ? fitOrnamentToText(naturalW, titleWidthPx) : 1;
-  const ornH = naturalH * scale, ornW = naturalW * scale;
-  const margins = h2OrnamentMarginsPx(h2FontPx);
-  const topPx = scope.signTop ? Math.round(ornH + margins.top) : 0;
-  const bottomPx = scope.signBottom ? Math.round(ornH + margins.bottom) : 0;
-  return { topPx, bottomPx, scale, ornW: Math.round(ornW), ornH: Math.round(ornH), margins, scope };
-}
-
-/**
- * REQ-ORN-02: היקף עיטורי H2 — סימן בלבד / כותרת בלבד / שניהם.
- * מצבי עיטור עצמאיים: עליון/תחתון לסימן + צדדיים לכותרת (V4).
- * @returns {{signTop:boolean, signBottom:boolean, titleSide:boolean, any:boolean, why:string}}
- */
-function h2OrnamentScope(settings) {
-  const scope = settings['h2-orn-scope'] || 'both';
-  const top = settings['h2-orn-top'] || 'none';
-  const bottom = settings['h2-orn-bottom'] || 'none';
-  const side = settings['h2-orn-side'] || 'none';
-  const sign = scope === 'sign' || scope === 'both';
-  const title = scope === 'title' || scope === 'both';
-  const signTop = sign && top !== 'none';
-  const signBottom = sign && bottom !== 'none';
-  const titleSide = title && side !== 'none';
-  return {
-    signTop, signBottom, titleSide,
-    any: signTop || signBottom || titleSide,
-    why: !sign && !title ? 'scope-off' : (signTop || signBottom || titleSide) ? 'on' : 'kinds-all-none'
-  };
-}
-
-/** סוגי עיטור סיום־פרק (REQ-ORN-03; Spec §6.7). */
-const CHAPTER_END_KINDS = ['none', 'pyramid', 'lance', 'shoshanta', 'scroll', 'image'];
-
-/** ממדים טבעיים של עיטורי H2 (em של גופן הכותרת). */
-const H2_ORN_W_EM = 3, H2_ORN_H_EM = 0.6;
-
-/**
- * REQ-ORN-03: התאמת עיטור סיום־פרק לתקציב הפנוי שנותר בטור.
- * - אף פעם לא דוחף תוכן ולא חוסם שער גאומטרי (invariant T1): אין מקום ⇒ לא מוצב + סיבה.
- * - scale יורד עד רצפה (0.5); מתחת לרצפה ⇒ דחייה מתועדת (לא כיווץ עיוור).
- * @returns {{placed:boolean, scale:number, wPx:number, hPx:number, reason:string}}
- */
-function chapterEndOrnamentFit(kind, wPx, hPx, budgetPx) {
-  if (!kind || kind === 'none') return { placed: false, scale: 1, wPx: 0, hPx: 0, reason: 'kind-none' };
-  if (!CHAPTER_END_KINDS.includes(kind)) return { placed: false, scale: 1, wPx: 0, hPx: 0, reason: 'kind-unknown' };
-  const w = Math.max(0, Number(wPx) || 0), h = Math.max(0, Number(hPx) || 0);
-  if (w <= 0 || h <= 0) return { placed: false, scale: 1, wPx: 0, hPx: 0, reason: 'dims-invalid' };
-  const budget = Math.max(0, Number(budgetPx) || 0);
-  if (budget <= 0) return { placed: false, scale: 1, wPx: 0, hPx: 0, reason: 'no-budget' };
-  // התאמה: סקאלה אחידה על שני הממדים, עד רצפה 0.5
-  const scale = Math.min(1, budget / h);
-  if (scale < 0.5) return { placed: false, scale, wPx: 0, hPx: 0, reason: 'below-min-scale' };
-  return { placed: true, scale: Number(scale.toFixed(4)), wPx: Math.round(w * scale), hPx: Math.round(h * scale), reason: 'fit' };
-}
-
-/**
- * REQ-ORN-04 משמרות מפרידי כותרות (שידרוג Orange): מפריד H3–H6 מוצב רק
- * כשהכותרת אינה בראש טור (אין עיטור תלוי מעל לא־כלום) והטור אינו ריק
- * (אין מפריד בעמוד ריק), ויש תקציב נמדד בפועל באתר ההצבה.
- * @param {Array} columnLines - השורות בטור שבו הכותרת הוצבה (לפניה)
- * @param {number} colIdx - אינדקס הטור
- * @returns {boolean} מותר להציב מפריד מתחת לכותרת זו
- */
-function dividerInsertable(columnLines, colIdx) {
-  void colIdx; // משמרת אחידה לכל הטורים — ראש טור 0 נדחה כמו ראש טור 1
-  if (!Array.isArray(columnLines) || columnLines.length === 0) return false; // טור ריק / עמוד ריק
-  if (columnLines.length <= 1) return false; // הכותרת היא ראש הטור — אין עיטור בראש טור
-  const last = columnLines[columnLines.length - 1];
-  return Boolean(last && last.kind === 'heading'); // מפריד רק מתחת לכותרת שהוצבה זה עתה
-}
-
-/**
- * F-09 single-source: הצהרת מקור־יחיד לממדי עיטור. הגודל נקבע במודל הגיאומטריה
- * בלבד (כאן); הרנדרר מצייר מה־rect ואסור לו לקבוע ממדים משלו (אין !important מול inline).
- * @returns {{ok:boolean, reason:string}} אמת כשלעיטור יש מקור יחיד תקין
- */
-function assertSingleSourceSizing(orn) {
-  if (!orn || typeof orn !== 'object') return { ok: false, reason: 'not-an-ornament' };
-  const hasRect = orn.w != null && orn.h != null && Number.isFinite(orn.w) && Number.isFinite(orn.h);
-  if (!hasRect) return { ok: false, reason: 'missing-rect' };
-  if (orn.cssWidthPx != null || orn.cssHeightPx != null) {
-    return { ok: false, reason: 'dual-source-sizing' }; // שני מקורות — אסור (F-09)
-  }
-  return { ok: true, reason: 'single-source' };
-}
-
-module.exports = {
-  fitOrnamentToText, refitStable, columnDividerHeightPx, fits, sideOrnamentOffsetY,
-  h2OrnamentMarginsPx, sideOrnamentLiftPx, h2OrnamentScope, chapterEndOrnamentFit,
-  h2OrnamentReservedHeight,
-  dividerInsertable, assertSingleSourceSizing, CHAPTER_END_KINDS, H2_ORN_W_EM, H2_ORN_H_EM
-};
-
-};
-__modules["src/engine/decoration/ornament-ink.js"] = function (require, module, exports) {
-// src/engine/decoration/ornament-ink.js — הדיו של העיטורים: מקור יחיד (EXT-4)
-'use strict';
-
-/**
- * **EXT-4 (צביעת עיטורים):** עד כאן העיטורים היו rectים נכונים ומבוקרים
- * (ornament-plan) בלי דיו — אין כללי .orn ב-CSS החי ו-pdf-writer לא צייר
- * כלום. כאן מוגדר מקור הדיו היחיד: לכל kindStyle — צורה וקטורית מובנית
- * (פורט מהמקור הצהוב) או SVG מספריית העיצובים (imud:...) או קו דק.
- * שלושת הצרכנים — ה-DOM (רקע data-URI), הפרויקטור וה-PDF (פענוח וקטורי
- * לפעולות מילוי) — שותפים לאותו מקור בדיוק.
- */
-
-const { resolveAssetRef } = require('./asset-registry');
-
-/** הצורות המובנות — פורט נאמן מ-decorations.js של המקור הצהוב:
- * pyramid = פירמידת וילנא (❖❖❖/❖❖/❖ — כאן כיהורים וקטוריים), lance = רומח
- * (spear), shoshanta = שושנתא (flourish), scroll = סלסול (swash). */
-const BUILTIN_SVGS = {
-  // פירמידת וילנא — 3+2+1 מעוינים; המקור השתמש בגליף ❖ בגדלים 10/9/8pt.
-  pyramid: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 34">
-<path fill="#000" d="M20 2 L28 10 L20 18 L12 10 Z M60 2 L68 10 L60 18 L52 10 Z M100 2 L108 10 L100 18 L92 10 Z"/>
-<path fill="#000" d="M40 19 L47 26 L40 33 L33 26 Z M80 19 L87 26 L80 33 L73 26 Z"/>
-<path fill="#000" d="M60 24 L66 30 L60 36 L54 30 Z"/>
-</svg>`,
-  // רומח — פורט מהמקור (SECTION_DIVIDERS.spear) עם עיגולי הפתיחה.
-  lance: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 40">
-<circle cx="200" cy="20" r="10" fill="none" stroke="#000" stroke-width="4.5"/>
-<circle cx="200" cy="20" r="4.5" fill="#000"/>
-<path d="M182,20 C182,24 165,27 140,27 C90,27 40,22 5,20 C40,18 90,13 140,13 C165,13 182,16 182,20 Z" fill="#000"/>
-<path d="M165,20 C165,22 150,24 130,24 C95,24 55,21 30,20 C55,19 95,16 130,16 C150,16 165,18 165,20 Z" fill="#fff"/>
-<path d="M218,20 C218,24 235,27 260,27 C310,27 360,22 395,20 C360,18 310,13 260,13 C235,13 218,16 218,20 Z" fill="#000"/>
-<path d="M235,20 C235,22 250,24 270,24 C305,24 345,21 370,20 C345,19 305,16 270,16 C250,16 235,18 235,20 Z" fill="#fff"/>
-</svg>`,
-  // שושנתא — פורט מהמקור (flourish).
-  shoshanta: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 90">
-<path fill="#000" d="M110,48 C105,44 92,30 82,30 C68,30 55,42 42,42 C30,42 22,32 22,22 C22,12 32,5 45,5 C60,5 72,18 78,28 C82,20 88,10 100,10 C108,10 114,16 114,24 C114,35 102,44 88,44 C72,44 58,35 48,22 C42,28 35,35 25,48 C15,62 10,72 20,82 C30,90 48,85 62,72 C78,58 92,54 110,48 Z"/>
-<path fill="#000" d="M130,48 C135,44 148,30 158,30 C172,30 185,42 198,42 C210,42 218,32 218,22 C218,12 208,5 195,5 C180,5 168,18 162,28 C158,20 152,10 140,10 C132,10 126,16 126,24 C126,35 138,44 152,44 C168,44 182,35 192,22 C198,28 205,35 215,48 C225,62 230,72 220,82 C210,90 192,85 178,72 C162,58 148,54 130,48 Z"/>
-</svg>`,
-  // סלסול — פורט מהמקור (swash).
-  scroll: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 28">
-<path fill="#111" d="M10,14 C60,14 85,4 125,4 C145,4 152,11 160,17 C168,11 175,4 195,4 C235,4 260,14 310,14 C260,14 235,24 195,24 C175,24 168,17 160,11 C152,17 145,24 125,24 C85,24 60,14 10,14 Z M160,7 C157.2,7 155,9.2 155,12 C155,14.8 157.2,17 160,17 C162.8,17 165,14.8 165,12 C165,9.2 162.8,7 160,7 Z"/>
-</svg>`,
-  // **D-89 (עיצוב שערים):** גל השער-משנה המובנה של המקור — פורט מדויק
-  // מ-defaultSubShaarOrnament ב-decorations.js (רוחב 140px, דיו #222;
-  // מדגם הייחוס: מדדנו את הדיו ב-(33,33,33) ≈ #212121 על עמ' 7).
-  'shaar-wave': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 30">
-<path fill="#222" d="M10,15 Q75,5 140,15 Q145,10 150,5 Q155,10 160,15 Q225,5 290,15 Q225,25 160,15 Q155,20 150,25 Q145,20 140,15 Q75,25 10,15 Z"/>
-</svg>`,
-  // **D-89 (עיצוב שערים):** עיטור השער הראשי המובנה — פורט מ-defaultShaarMainOrnament
-  // (עיגול מוקף בשתי כנפיים, 180×24px). העיגול המקורי מוכתם (stroke) — כאן
-  // ממומש כטבעת בשכבות מילוי (שחור→לבן→שחור, סדר ציור = סדר מסמך) — אותו
-  // דיו בדיוק במדגם שלנו (חד-כיווני מילוי). מכויל מהייחוס עמ' 1: הדיו ב-x
-  // 231.5-363.3pt, y 265-272pt (מרכז 297.4pt = מרכז העמוד).
-  'shaar-main-orn': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 40">
-<circle cx="200" cy="20" r="12.25" fill="#000"/>
-<circle cx="200" cy="20" r="7.75" fill="#fff"/>
-<circle cx="200" cy="20" r="4.5" fill="#000"/>
-<path fill="#000" d="M182,20 C182,24 165,27 140,27 C90,27 40,22 5,20 C40,18 90,13 140,13 C165,13 182,16 182,20 Z"/>
-<path fill="#000" d="M218,20 C218,24 235,27 260,27 C310,27 360,22 395,20 C360,18 310,13 260,13 C235,13 218,16 218,20 Z"/>
-</svg>`,
-  // **D-89 (עיצוב שערים):** שרשרת העלים של מסגרת השער הראשי — דפוס הנושא
-  // של הייחוס (עמ' 1: פס העלים החוזר בשולי הפאנלים, x≈81-88pt, עלה ≈6.7pt
-  // רוחב, מחזור ≈7.8pt). נבנה דטרמיניסטית בטעינת המודול: עלי דפה מחודדים
-  // מתחלפים (מעלה/מטה) במפגש בסיס-בבסיס + נקודה בכל צומת, לכל גובה העמוד.
-  'shaar-frame-chain': null,
-};
-
-/** בניית שרשרת העלים (1122.5px גובה) — נקרא פעם אחת בטעינה.
- * **D-89 (כיול מדוקדק מהייחוס, עמ' 1, רצועה x=73-95pt ב-300dpi):** המוטיב
- * המדויק — אלמנטים רחבים מעוגלים (רימון/עלה, ~26px רוחב × 40px גובה,
- * קודקוד-לקודקוד במפגשי הקצוות) באפור בהיר, עם "עין" עגולה בצבע הפס
- * (#FAFAFA) בכל אלמנט שני. */
-function buildShaarFrameChain() {
-  // **המוטיב (מפוענח ממפת הדיו של הייחוס ב-ASCII):** יחידה בת ~56px — שתי
-  // אונות מעוגלות (שמאל+ימין) שמתמזגות לפס מלא-רוחב, מתחתיו הדיו מתפצל
-  // לשתי רגליים המתכנסות לנקודת מרכז, וממנה יורד מעוין מרכזי לקודקוד
-  // (שרשרת פלר-דה-ליס); "העין" הלבנה = הרווח בין הרגליים למעוין.
-  const W = 30, H = 1122.5, UNIT = 56, cx = W / 2, F = '#D8D8D8';
-  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">`;
-  for (let y = 0; y + UNIT <= H + 0.01; y += UNIT) {
-    // שתי האונות העליונות
-    s += `<ellipse cx="${cx - 7.5}" cy="${y + 9}" rx="5.8" ry="7.5" fill="${F}"/>`;
-    s += `<ellipse cx="${cx + 7.5}" cy="${y + 9}" rx="5.8" ry="7.5" fill="${F}"/>`;
-    // הפס המלא-רוחב שאליו האונות מתמזגות
-    s += `<rect x="2" y="${y + 12}" width="26" height="11" rx="3.5" fill="${F}"/>`;
-    // שתי רגליים מתכנסות למרכז (שברון)
-    s += `<path fill="${F}" d="M2,${y + 22} L${cx},${y + 37} L28,${y + 22} L28,${y + 27} L${cx},${y + 42} L2,${y + 27} Z"/>`;
-    // המעוין המרכזי היורד לקודקוד
-    s += `<path fill="${F}" d="M${cx},${y + 35} L${cx + 5.5},${y + 43} L${cx},${y + 52} L${cx - 5.5},${y + 43} Z"/>`;
-  }
-  return s + '</svg>';
-}
-BUILTIN_SVGS['shaar-frame-chain'] = buildShaarFrameChain();
-
-/** הדיו של kindStyle — מקור יחיד.
- * @returns {{type:'svg', svg:string, uri:string}|{type:'rule'}|{type:'rect', color:number[]}|{type:'image', uri:string}|null} */
-function ornamentInk(kindStyle) {
-  const s = String(kindStyle || '');
-  if (!s || s === 'none' || s === 'custom_img') return null;
-  if (s === 'thin' || s === 'line') return { type: 'rule' };
-  // **D-89 (עיצוב שערים):** מלבן בצבע אחיד — rect:<#hex> — רקעי הפאנלים
-  // (#F4F4F4 של שער המשנה/האחורי, מסגרות השער הראשי, כלל הכותרת).
-  if (s.startsWith('rect:')) {
-    const col = parseColor(s.slice(5).trim());
-    return col ? { type: 'rect', color: col } : null;
-  }
-  if (BUILTIN_SVGS[s]) {
-    return { type: 'svg', svg: BUILTIN_SVGS[s], uri: svgToDataUri(BUILTIN_SVGS[s]) };
-  }
-  // הפניית ספריית עיצובים (imud:<collection>:<id>) — ה-SVG החיטוי מהרישום
-  if (s.startsWith('imud:') || s.startsWith('data:image/svg') || /\.svg($|\?)/i.test(s)) {
-    const r = resolveAssetRef(s);
-    if (r && (r.uri || '').startsWith('data:image/svg')) {
-      return { type: 'svg', svg: r.item ? r.item.svg : decodeDataUriSvg(r.uri), uri: r.uri };
-    }
-    if ((r && r.uri || '').startsWith('data:')) return { type: 'image', uri: r.uri };
-    return null;
-  }
-  if (/^https?:|^data:image\/(png|jpe?g|gif|webp)/i.test(s)) return { type: 'image', uri: s };
-  return null;
-}
-
-/** data-URI ל-SVG (percent-encoding — תואם url("...") ב-CSS). */
-function svgToDataUri(svg) {
-  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(String(svg));
-}
-function decodeDataUriSvg(uri) {
-  try { return decodeURIComponent(String(uri).replace(/^data:image\/svg\+xml;charset=utf-8,/, '')); }
-  catch (e) { return null; }
-}
-
-// ---------------------------------------------------------------------------
-// פענוח SVG → רשימת ציור (תת-קבוצת ה-SVG שקיימת בפועל בקטלוגים ובצורות):
-// viewBox, <g transform="translate(a,b) scale(sx,sy)">, <path d> בפקודות
-// M m L l H h V v C c Q q S s T t A a Z, <circle>, <rect>, <ellipse>,
-// <polygon>, <polyline>; מילוי בלבד (stroke=none בכל הקטלוג — נבדק).
-// ---------------------------------------------------------------------------
-
-/** מפענח מספרים ממחרוזת פקודות נתיב. */
-function parsePathD(d) {
-  const segs = [];
-  const re = /([MmLlHhVvCcSsQqTtAaZz])|(-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)/g;
-  let m, cmd = null, args = [];
-  const flush = () => {
-    if (cmd) segs.push({ cmd: cmd.toUpperCase(), rel: cmd !== cmd.toUpperCase(), args });
-    cmd = null; args = [];
-  };
-  while ((m = re.exec(String(d || '')))) {
-    if (m[1]) { flush(); cmd = m[1]; }
-    else args.push(parseFloat(m[2]));
-  }
-  flush();
-  return segs;
-}
-
-/** המרת פקודות נתיב לרצף נקודות/בזייה במרחב ה-viewBox (absolute).
- * @returns {{subpaths: Array<Array<{op:'M'|'L'|'C', pts:number[]}>>, x0:number,y0:number}} */
-function pathToSubpaths(d, transform) {
-  const segs = parsePathD(d);
-  const subpaths = [];
-  let cur = null;      // תת-נתיב נוכחי
-  let x = 0, y = 0;    // נקודה נוכחית (מרחב מקורי, לפני transform)
-  let sx = 0, sy = 0;  // נקודת פתיחה של תת-הנתיב
-  let lastC2x = 0, lastC2y = 0, haveLastC = false;
-  const push = (op, pts) => {
-    if (!cur) { cur = []; subpaths.push(cur); }
-    cur.push({ op, pts: transform(pts) });
-  };
-  const cubicTo = (x1, y1, x2, y2, x3, y3) => { push('C', [x, y, x1, y1, x2, y2, x3, y3]); x = x3; y = y3; };
-  const quadTo = (x1, y1, x2, y2) => {
-    // Q → שני C (עליית מדרגה הרמיטית)
-    const cx1 = x + 2 / 3 * (x1 - x), cy1 = y + 2 / 3 * (y1 - y);
-    const cx2 = x2 + 2 / 3 * (x1 - x2), cy2 = y2 + 2 / 3 * (y1 - y2);
-    cubicTo(cx1, cy1, cx2, cy2, x2, y2);
-  };
-  const arcTo = (rx, ry, rot, laf, sf, x2, y2) => {
-    // קירוב קשת ב-8 מקטעי בזייה (דיוק חזותי מלא בגדלי עיטור) — endpoint→center
-    const x1 = x, y1 = y;
-    if (rx === 0 || ry === 0 || (x1 === x2 && y1 === y2)) { push('L', [x1, y1, x2, y2]); x = x2; y = y2; return; }
-    rx = Math.abs(rx); ry = Math.abs(ry);
-    const phi = rot * Math.PI / 180;
-    const cosP = Math.cos(phi), sinP = Math.sin(phi);
-    const dx2 = (x1 - x2) / 2, dy2 = (y1 - y2) / 2;
-    const x1p = cosP * dx2 + sinP * dy2, y1p = -sinP * dx2 + cosP * dy2;
-    const lam = (x1p * x1p) / (rx * rx) + (y1p * y1p) / (ry * ry);
-    if (lam > 1) { const s = Math.sqrt(lam); rx *= s; ry *= s; }
-    let num = rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p;
-    const den = rx * rx * y1p * y1p + ry * ry * x1p * x1p;
-    let co = Math.sqrt(Math.max(0, num / den));
-    if (laf === sf) co = -co;
-    const cxp = co * rx * y1p / ry, cyp = -co * ry * x1p / rx;
-    const cx = cosP * cxp - sinP * cyp + (x1 + x2) / 2;
-    const cy = sinP * cxp + cosP * cyp + (y1 + y2) / 2;
-    const ang = (ux, uy, vx, vy) => {
-      const dot = ux * vx + uy * vy, len = Math.sqrt(ux * ux + uy * uy) * Math.sqrt(vx * vx + vy * vy);
-      let a = Math.acos(Math.max(-1, Math.min(1, dot / (len || 1))));
-      if (ux * vy - uy * vx < 0) a = -a;
-      return a;
-    };
-    const theta1 = ang(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry);
-    let dTheta = ang((x1p - cxp) / rx, (y1p - cyp) / ry, (-x1p - cxp) / rx, (-y1p - cyp) / ry);
-    if (!sf && dTheta > 0) dTheta -= 2 * Math.PI;
-    if (sf && dTheta < 0) dTheta += 2 * Math.PI;
-    const N = 8;
-    const delta = dTheta / N;
-    const t = theta1;
-    let px = x1, py = y1;
-    for (let i = 1; i <= N; i++) {
-      const t2 = t + delta * i;
-      const px2 = cx + rx * Math.cos(t2) * cosP - ry * Math.sin(t2) * sinP;
-      const py2 = cy + rx * Math.cos(t2) * sinP + ry * Math.sin(t2) * cosP;
-      const tm = t + delta * (i - 0.5);
-      const cmx = cx + rx * Math.cos(tm) * cosP - ry * Math.sin(tm) * sinP;
-      const cmy = cy + rx * Math.cos(tm) * sinP + ry * Math.sin(tm) * cosP;
-      // נקודת בקרה בזייה לקשת מעגלית: k = 4/3·tan(δ/4)
-      const k = 4 / 3 * Math.tan(delta / 4);
-      const c1x = px + k * (-rx * Math.cos(t + delta * (i - 1)) * sinP - ry * Math.sin(t + delta * (i - 1)) * cosP);
-      const c1y = py + k * (rx * Math.cos(t + delta * (i - 1)) * cosP - ry * Math.sin(t + delta * (i - 1)) * sinP);
-      const c2x = px2 - k * (-rx * Math.cos(t2) * sinP - ry * Math.sin(t2) * cosP);
-      const c2y = py2 - k * (rx * Math.cos(t2) * cosP - ry * Math.sin(t2) * sinP);
-      void cmx; void cmy;
-      cubicTo(c1x, c1y, c2x, c2y, px2, py2);
-      px = px2; py = py2;
-    }
-  };
-  for (const { cmd, rel, args } of segs) {
-    const a = args;
-    switch (cmd) {
-      case 'M':
-        for (let i = 0; i + 1 < a.length; i += 2) {
-          x = rel ? x + a[i] : a[i]; y = rel ? y + a[i + 1] : a[i + 1];
-          if (i === 0) { cur = null; push('M', [x, y]); sx = x; sy = y; }
-          else push('L', [x, y, x, y]);
-        }
-        haveLastC = false;
-        break;
-      case 'L':
-        for (let i = 0; i + 1 < a.length; i += 2) {
-          const nx = rel ? x + a[i] : a[i], ny = rel ? y + a[i + 1] : a[i + 1];
-          push('L', [x, y, nx, ny]); x = nx; y = ny;
-        }
-        haveLastC = false;
-        break;
-      case 'H':
-        for (const v of a) { const nx = rel ? x + v : v; push('L', [x, y, nx, y]); x = nx; }
-        haveLastC = false;
-        break;
-      case 'V':
-        for (const v of a) { const ny = rel ? y + v : v; push('L', [x, y, x, ny]); y = ny; }
-        haveLastC = false;
-        break;
-      case 'C':
-        for (let i = 0; i + 5 < a.length; i += 6) {
-          const x1 = rel ? x + a[i] : a[i], y1 = rel ? y + a[i + 1] : a[i + 1];
-          const x2 = rel ? x + a[i + 2] : a[i + 2], y2 = rel ? y + a[i + 3] : a[i + 3];
-          const x3 = rel ? x + a[i + 4] : a[i + 4], y3 = rel ? y + a[i + 5] : a[i + 5];
-          cubicTo(x1, y1, x2, y2, x3, y3);
-          lastC2x = x2; lastC2y = y2; haveLastC = true;
-        }
-        break;
-      case 'S':
-        for (let i = 0; i + 3 < a.length; i += 4) {
-          const x2 = rel ? x + a[i] : a[i], y2 = rel ? y + a[i + 1] : a[i + 1];
-          const x3 = rel ? x + a[i + 2] : a[i + 2], y3 = rel ? y + a[i + 3] : a[i + 3];
-          const x1 = haveLastC ? 2 * x - lastC2x : x, y1 = haveLastC ? 2 * y - lastC2y : y;
-          cubicTo(x1, y1, x2, y2, x3, y3);
-          lastC2x = x2; lastC2y = y2; haveLastC = true;
-        }
-        break;
-      case 'Q':
-        for (let i = 0; i + 3 < a.length; i += 4) {
-          const x1 = rel ? x + a[i] : a[i], y1 = rel ? y + a[i + 1] : a[i + 1];
-          const x2 = rel ? x + a[i + 2] : a[i + 2], y2 = rel ? y + a[i + 3] : a[i + 3];
-          quadTo(x1, y1, x2, y2);
-          lastC2x = x1; lastC2y = y1; haveLastC = false;
-        }
-        break;
-      case 'T':
-        for (let i = 0; i + 1 < a.length; i += 2) {
-          const x2 = rel ? x + a[i] : a[i], y2 = rel ? y + a[i + 1] : a[i + 1];
-          const x1 = haveLastC ? 2 * x - lastC2x : x, y1 = haveLastC ? 2 * y - lastC2y : y;
-          quadTo(x1, y1, x2, y2);
-          lastC2x = x1; lastC2y = y1;
-        }
-        break;
-      case 'A':
-        for (let i = 0; i + 6 < a.length; i += 7) {
-          const rx = a[i], ry = a[i + 1], rot = a[i + 2];
-          const laf = a[i + 3], sf = a[i + 4];
-          const x2 = rel ? x + a[i + 5] : a[i + 5], y2 = rel ? y + a[i + 6] : a[i + 6];
-          arcTo(rx, ry, rot, laf, sf, x2, y2);
-        }
-        haveLastC = false;
-        break;
-      case 'Z':
-        if (cur && cur.length) push('L', [x, y, sx, sy]);
-        x = sx; y = sy;
-        haveLastC = false;
-        break;
-    }
-  }
-  return { subpaths, x, y };
-}
-
-/** פענוח SVG שלם → { vbW, vbH, shapes: [{subpaths, fill}] } (מרחב viewBox). */
-function parseSvgPaint(svg) {
-  const s = String(svg || '');
-  if (!s) return null;
-  const vb = /viewBox\s*=\s*"([^"]+)"/.exec(s);
-  let vbW = 0, vbH = 0;
-  if (vb) {
-    const p = vb[1].trim().split(/[\s,]+/).map(Number);
-    vbW = p[2] || 0; vbH = p[3] || 0;
-  }
-  const wm = /width\s*=\s*"([\d.]+)/.exec(s), hm = /height\s*=\s*"([\d.]+)/.exec(s);
-  if (!vbW && wm) vbW = parseFloat(wm[1]);
-  if (!vbH && hm) vbH = parseFloat(hm[1]);
-  if (!vbW || !vbH) return null;
-
-  // transform של <g> — **S70 (R6):** תמיכה מלאה ב-translate/scale/matrix
-  // (כולל רשימות) עם הרכבה לפי סדר SVG: הפונקציה השמאלית מוחלת אחרונה.
-  let tx = 0, ty = 0, sx = 1, sy = 1;
-  let mtx = null; // [a,b,c,d,e,f] כאשר x' = a·x + c·y + e ; y' = b·x + d·y + f
-  const gt = /<g\b[^>]*transform\s*=\s*"([^"]+)"/.exec(s);
-  if (gt) {
-    const tr = gt[1];
-    const funcs = [];
-    const fre = /(matrix|translate|scale)\s*\(\s*([^)]+)\)/g;
-    let fm;
-    while ((fm = fre.exec(tr))) {
-      const a = fm[2].split(/[\s,]+/).map(Number);
-      if (fm[1] === 'matrix' && a.length >= 6) funcs.push([a[0], a[1], a[2], a[3], a[4], a[5]]);
-      else if (fm[1] === 'translate') funcs.push([1, 0, 0, 1, a[0] || 0, a[1] || 0]);
-      else if (fm[1] === 'scale') {
-        const kx = a[0] != null ? a[0] : 1, ky = a[1] != null ? a[1] : (a[0] != null ? a[0] : 1);
-        funcs.push([kx, 0, 0, ky, 0, 0]);
-      }
-    }
-    // הרכבה לפי סדר SVG: השמאלית חיצונית (מוחלת אחרונה) — acc_new = acc ∘ F
-    // (אימות: "translate(10,0) scale(2)" ⇒ x'=2x+10 ✓)
-    let acc = [1, 0, 0, 1, 0, 0];
-    for (const F of funcs) {
-      acc = [
-        acc[0] * F[0] + acc[2] * F[1],
-        acc[1] * F[0] + acc[3] * F[1],
-        acc[0] * F[2] + acc[2] * F[3],
-        acc[1] * F[2] + acc[3] * F[3],
-        acc[0] * F[4] + acc[2] * F[5] + acc[4],
-        acc[1] * F[4] + acc[3] * F[5] + acc[5],
-      ];
-    }
-    mtx = acc;
-    // תאימות לאחור: טרנספורמציה בודדת translate/scale — שמירת tx/ty/sx/sy
-    const tm = /translate\(\s*([-\d.]+)[\s,]+([-\d.]+)/.exec(tr);
-    if (tm) { tx = parseFloat(tm[1]); ty = parseFloat(tm[2]); }
-    const sm = /scale\(\s*([-\d.]+)(?:[\s,]+([-\d.]+))?\)/.exec(tr);
-    if (sm) { sx = parseFloat(sm[1]); sy = sm[2] != null ? parseFloat(sm[2]) : sx; }
-  }
-  const transform = (pts) => {
-    const out = [];
-    for (let i = 0; i + 1 < pts.length; i += 2) {
-      if (mtx) {
-        out.push(mtx[0] * pts[i] + mtx[2] * pts[i + 1] + mtx[4], mtx[1] * pts[i] + mtx[3] * pts[i + 1] + mtx[5]);
-      } else {
-        out.push(pts[i] * sx + tx, pts[i + 1] * sy + ty);
-      }
-    }
-    return out;
-  };
-
-  const shapes = [];
-  const pushShape = (d, fillAttr, strokeAttr) => {
-    if (strokeAttr && strokeAttr !== 'none') return; // קווים חיצוניים — מחוץ לתת-הקבוצה (לא קיימים בקטלוג)
-    const { subpaths } = pathToSubpaths(d, transform);
-    if (!subpaths.length) return;
-    shapes.push({ subpaths, fill: parseColor(fillAttr) });
-  };
-
-  // <path> — fill מהאלמנט או מה-<g> שעוטף (inherit)
-  const gFill = /<g\b[^>]*\bfill\s*=\s*"([^"]+)"/.exec(s);
-  const gStroke = /<g\b[^>]*\bstroke\s*=\s*"([^"]+)"/.exec(s);
-  const pathRe = /<path\b([^>]*)>/g;
-  let m;
-  while ((m = pathRe.exec(s))) {
-    const attrs = m[1];
-    const d = /d\s*=\s*"([^"]+)"/.exec(attrs);
-    if (!d) continue;
-    const fill = /fill\s*=\s*"([^"]+)"/.exec(attrs);
-    const stroke = /stroke\s*=\s*"([^"]+)"/.exec(attrs);
-    pushShape(d[1], fill ? fill[1] : (gFill ? gFill[1] : '#000'), stroke ? stroke[1] : (gStroke ? gStroke[1] : 'none'));
-  }
-  // <circle>/<ellipse> — ארבע קשתות בזייה
-  const circRe = /<(circle|ellipse)\b([^>]*)>/g;
-  while ((m = circRe.exec(s))) {
-    const at = m[2];
-    const num = (k) => { const r = new RegExp(`\\b${k}\\s*=\\s*"([\\d.]+)"`).exec(at); return r ? parseFloat(r[1]) : null; };
-    const cx = num('cx') || 0, cy = num('cy') || 0;
-    const rx = m[1] === 'circle' ? (num('r') || 0) : (num('rx') || 0);
-    const ry = m[1] === 'circle' ? (num('r') || 0) : (num('ry') || 0);
-    if (!rx || !ry) continue;
-    const k = 0.5522847498;
-    const d = `M ${cx - rx} ${cy} C ${cx - rx} ${cy - ry * k} ${cx - rx * k} ${cy - ry} ${cx} ${cy - ry} `
-      + `C ${cx + rx * k} ${cy - ry} ${cx + rx} ${cy - ry * k} ${cx + rx} ${cy} `
-      + `C ${cx + rx} ${cy + ry * k} ${cx + rx * k} ${cy + ry} ${cx} ${cy + ry} `
-      + `C ${cx - rx * k} ${cy + ry} ${cx - rx} ${cy + ry * k} ${cx - rx} ${cy} Z`;
-    const fill = /fill\s*=\s*"([^"]+)"/.exec(at);
-    const stroke = /stroke\s*=\s*"([^"]+)"/.exec(at);
-    pushShape(d, fill ? fill[1] : '#000', stroke ? stroke[1] : 'none');
-  }
-  // <rect>
-  const rectRe = /<rect\b([^>]*)>/g;
-  while ((m = rectRe.exec(s))) {
-    const at = m[1];
-    const num = (k) => { const r = new RegExp(`\\b${k}\\s*=\\s*"([\\d.]+)"`).exec(at); return r ? parseFloat(r[1]) : 0; };
-    const x0 = num('x'), y0 = num('y'), w = num('width'), h = num('height');
-    if (!w || !h) continue;
-    const fill = /fill\s*=\s*"([^"]+)"/.exec(at);
-    pushShape(`M ${x0} ${y0} L ${x0 + w} ${y0} L ${x0 + w} ${y0 + h} L ${x0} ${y0 + h} Z`, fill ? fill[1] : '#000', 'none');
-  }
-  // **S70 (R6):** <polygon>/<polyline> — points לנתיב; polygon נסגר (Z)
-  // וממולא כברירת מחדל; polyline נצבע רק אם יש לו fill מפורש (קו-בלבד
-  // מחוץ לתת-הקבוצה — כמו stroked paths — תיעוד בראש המודול).
-  const polyRe = /<(polygon|polyline)\b([^>]*)>/g;
-  while ((m = polyRe.exec(s))) {
-    const at = m[2];
-    const ptsM = /points\s*=\s*"([^"]+)"/.exec(at);
-    if (!ptsM) continue;
-    const nums = ptsM[1].trim().split(/[\s,]+/).map(Number).filter((v) => Number.isFinite(v));
-    if (nums.length < 4) continue;
-    const fill = /fill\s*=\s*"([^"]+)"/.exec(at);
-    const stroke = /stroke\s*=\s*"([^"]+)"/.exec(at);
-    if (m[1] === 'polyline' && !fill && !gFill) continue;
-    let d = `M ${nums[0]} ${nums[1]}`;
-    for (let i = 2; i + 1 < nums.length; i += 2) d += ` L ${nums[i]} ${nums[i + 1]}`;
-    if (m[1] === 'polygon') d += ' Z';
-    pushShape(d, fill ? fill[1] : (gFill ? gFill[1] : '#000'), stroke ? stroke[1] : (gStroke ? gStroke[1] : 'none'));
-  }
-  if (!shapes.length) return null;
-  return { vbW, vbH, shapes };
-}
-
-/** צבע מילוי → [r,g,b] 0..1 ('#abc', '#aabbcc', שמות בסיסיים). */
-function parseColor(c) {
-  const s = String(c || '').trim();
-  if (!s || s === 'none' || s === 'transparent') return null;
-  // **תיקון url(#…):** מילוי דפוס (pattern) אינו צבע אחיד — עד כאן נפל
-  // לברירת המחדל והצורה נצבעה שחור בנתיב הווקטורי של ה-PDF (רקעים שלמים
-  // נמרחו שחור). אין ריצוף דפוס בנתיב זה — הצורה מדולגת (הר�סטר מכסה אותה
-  // בעיצובים העשירים).
-  if (/^url\(/i.test(s)) return null;
-  if (s === 'currentColor') return [0, 0, 0];
-  let m = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(s);
-  if (m) return [parseInt(m[1] + m[1], 16) / 255, parseInt(m[2] + m[2], 16) / 255, parseInt(m[3] + m[3], 16) / 255];
-  m = /^#([0-9a-f]{6})$/i.exec(s);
-  if (m) {
-    const n = parseInt(m[1], 16);
-    return [(n >> 16) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
-  }
-  const named = { black: [0, 0, 0], white: [1, 1, 1], red: [1, 0, 0], blue: [0, 0, 1] };
-  if (named[s.toLowerCase()]) return named[s.toLowerCase()];
-  return [0, 0, 0]; // ברירת מחדל — שחור (כמו SVG)
-}
-
-/** פליטת פעולות PDF לציור העיטור בתוך rect (px, מרחב עמוד) עם התאמת
- * 'meet' (preserveAspectRatio) — מרכז התמונה במרכז התיבה בלי עיוות.
- * @param {object} paint — פלט parseSvgPaint
- * @param {{x,y,w,h}} rectPx — יעד בפיקסלים (שיטת הפרויקטור)
- * @param {number} hPt — גובה העמוד ב-pt (היפוך y)
- * @param {number} PX_TO_PT
- * @returns {string[]} פעולות PDF (m/l/c/h/f + rg) */
-function svgToPdfOps(paint, rectPx, hPt, PX_TO_PT) {
-  const { vbW, vbH, shapes } = paint;
-  // meet: סקייל אחיד מרבי שנכנס, ממורכז
-  const s = Math.min(rectPx.w / vbW, rectPx.h / vbH);
-  const drawW = vbW * s, drawH = vbH * s;
-  const offX = rectPx.x + (rectPx.w - drawW) / 2;
-  const offY = rectPx.y + (rectPx.h - drawH) / 2;
-  const X = (vx) => (offX + vx * s) * PX_TO_PT;
-  const Y = (vy) => hPt - (offY + vy * s) * PX_TO_PT;
-  const r2 = (v) => Math.round(v * 100) / 100;
-  const ops = [];
-  for (const sh of shapes) {
-    const col = sh.fill || [0, 0, 0];
-    ops.push(`${r2(col[0])} ${r2(col[1])} ${r2(col[2])} rg`);
-    for (const sub of sh.subpaths) {
-      let started = false;
-      for (const seg of sub) {
-        const p = seg.pts;
-        if (seg.op === 'M') {
-          if (started) ops.push('h f');
-          ops.push(`${r2(X(p[0]))} ${r2(Y(p[1]))} m`);
-          started = true;
-        } else if (seg.op === 'L') {
-          if (!started) { ops.push(`${r2(X(p[0]))} ${r2(Y(p[1]))} m`); started = true; }
-          ops.push(`${r2(X(p[2]))} ${r2(Y(p[3]))} l`);
-        } else if (seg.op === 'C') {
-          if (!started) { ops.push(`${r2(X(p[0]))} ${r2(Y(p[1]))} m`); started = true; }
-          ops.push(`${r2(X(p[2]))} ${r2(Y(p[3]))} ${r2(X(p[4]))} ${r2(Y(p[5]))} ${r2(X(p[6]))} ${r2(Y(p[7]))} c`);
-        }
-      }
-      if (started) ops.push('h f');
-    }
-  }
-  return ops;
-}
-
-/** תיבת הדיו **המדויקת** של הצורות הממוקמות בתוך rect (אותה התאמת
- * 'meet' כמו svgToPdfOps) — לחישוב inkBounds של המודל מול הרסטר.
- * @returns {{minX,minY,maxX,maxY}|null} בפיקסלים (מרחב עמוד) */
-function svgInkBBox(paint, rectPx) {
-  const { vbW, vbH, shapes } = paint;
-  const s = Math.min(rectPx.w / vbW, rectPx.h / vbH);
-  const drawW = vbW * s, drawH = vbH * s;
-  const offX = rectPx.x + (rectPx.w - drawW) / 2;
-  const offY = rectPx.y + (rectPx.h - drawH) / 2;
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for (const sh of shapes) {
-    if (sh.fill == null) continue; // צורה בלי מילוי — אין דיו
-    for (const sub of sh.subpaths) {
-      for (const seg of sub) {
-        const p = seg.pts;
-        for (let i = 0; i + 1 < p.length; i += 2) {
-          const x = offX + p[i] * s, y = offY + p[i + 1] * s;
-          if (x < minX) minX = x; if (x > maxX) maxX = x;
-          if (y < minY) minY = y; if (y > maxY) maxY = y;
-        }
-      }
-    }
-  }
-  if (minX === Infinity) return null;
-  return { minX, minY, maxX, maxY };
-}
-
-module.exports = {
-  BUILTIN_SVGS, ornamentInk, svgToDataUri,
-  parseSvgPaint, svgToPdfOps, svgInkBBox, parsePathD, pathToSubpaths, parseColor
-};
-
-};
-__modules["src/engine/layout/footnote-lanes.js"] = function (require, module, exports) {
-// src/engine/layout/footnote-lanes.js — מקור-אמת יחיד לחלוקת נתיבי מרזב ההערות (שלב 5; חילוץ שורש מ-PR #16, S78/D-107)
-'use strict';
-
-/**
- * **חלוקת LPT דטרמיניסטית — מימוש אחד, שלושה צרכנים.**
- *
- * עד כאן היו שלושה העתקים מקבילים של אותו אלגוריתם:
- *  1. `footnote-budget.getFootnotesReservedHeight` — התקציב בזמן ההצבה
- *     (סכום גבהים ממוין ⇐ מקסימום שני הנתיבים);
- *  2. `geometry-projector.projectFootnoteGutter` — הקרנת ה-PDF;
- *  3. `dom-renderer.renderFootnoteArea` — התצוגה החיה.
- *
- * מחלקת הכשל (ההיסטוריה של S70/S71.1): כל העתק שאינו מתוחזק בדיוק כמו
- * חבריו מייצר מצב "תקציב ≠ תצוגה ≠ ייצוא" — ההערה מתוקצבת בנתיב אחד
- * ומוצגת בנתיב אחר. כעת: הצרכנים קוראים `assignFootnoteLanes` בלבד.
- *
- * האלגוריתם (זהה מתמטית לשלושת המימושים הקודמים — נעול בבדיקת שקילות):
- *  - סדר עיבוד: לפי גובה יורד; שווי-גובה לפי אינדקס עולה (סדר מסמך).
- *  - הצבה חמדנית: כל הערה נכנסת לנתיב שסכומו המצטבר הנמוך; תיקו ⇒ נתיב 0
- *    (הנתיב הימני ב-RTL — "הראשון").
- *  - הסדר הפנימי בכל נתיב נשמר (סדר מסמך).
- *
- * @param {Array} notes - רשימת הערות (כל אובייקט; הגובה נקרא דרך heightOf)
- * @param {(n:object, i:number)=>number} [heightOf] - גובה אפקטיבי;
- *   ברירת מחדל (n) => n.heightPx || 0 (כמו המקרנים). התקציב מעביר נפילה
- *   ל-noteHeight — שקילות המימושים נשמרת כי בעמודי DP כל הערה חתומה
- *   ב-heightPx (ראה תיקון הניקוז בסוף המסמך ב-dp-planner).
- * @returns {{lanes:[number[], number[]], totals:[number, number]}}
- *   lanes[i] = אינדקסים ברשימת הקלט (בסדר מסמך) שהוקצו לנתיב i.
- */
-function assignFootnoteLanes(notes, heightOf) {
-  const h = typeof heightOf === 'function' ? heightOf : (n) => (n && n.heightPx) || 0;
-  const n = (notes || []).length;
-  const lanes = [[], []];
-  const totals = [0, 0];
-  if (!n) return { lanes, totals };
-  const order = notes.map((note, i) => ({ i, h: h(note, i) }))
-    .sort((a, b) => (b.h - a.h) || (a.i - b.i));
-  for (const s of order) {
-    const li = totals[0] <= totals[1] ? 0 : 1;
-    lanes[li].push(s.i);
-    totals[li] += s.h;
-  }
-  return { lanes, totals };
-}
-
-module.exports = { assignFootnoteLanes };
-
-};
-__modules["src/engine/output/line-font.js"] = function (require, module, exports) {
-// src/engine/output/line-font.js — מפרט גופן/גודל של שורה לפי סוגה (03.11(ג))
-'use strict';
-
-/**
- * **מקור יחיד** לגודל/גופן של שורה לפי סוגה — נצרך גם על ידי geometry-projector
- * (הקרנת PDF) וגם על ידי dom-renderer (תצוגה חיה + ייצוא HTML). בעבר הפרויקטור
- * ידע לחשב את גודל הכותרת אך ה-DOM לא — והתצוגה הציגה כותרות בגודל הגוף
- * והתעלמה מהחלפת גופן הגוף (דיווח משתמש 03.11: "ניסיתי להחליף גופן, בתצוגה
- * לא השתנה כלום").
- */
-
-/** גודל גופן (pt) של שורה לפי סוגה (מקור: מפתחות heading-N-size-pt של הרישום).
- * **S6.3:** המודל קובע — ln.sizePt שנישא על השורה (הקדמה 11.5pt, הערות,
- * כותרות inline) גובר; רק בהיעדרו נופלים להגדרות. בלי זה גוף ההקדמה
- * הוצג ב-12pt בעוד המנוע מדד 11.5pt — סחף מדידה↔רינדור. */
-function lineFontSizePt(ln, settings) {
-  if (ln && ln.sizePt != null && Number.isFinite(Number(ln.sizePt)) && Number(ln.sizePt) > 0) {
-    return Number(ln.sizePt);
-  }
-  if (ln && ln.kind === 'heading') {
-    const s = settings[`heading-${ln.level}-size-pt`];
-    return s || settings['body-font-size-pt'];
-  }
-  return settings['body-font-size-pt'];
-}
-
-/** משפחת גופן של שורה לפי סוגה (heading-N-font; ריק ⇒ גופן הגוף).
- * **S6.3:** ln.font שנישא על השורה (גוף ההקדמה ⇒ Frank Ruhl Libre) גובר —
- * הרינדור באותו גופן שבו המנוע מדד (prefaceApi). */
-function lineFontFamily(ln, settings) {
-  if (ln && ln.font) return ln.font;
-  if (ln && ln.kind === 'heading') {
-    const f = settings[`heading-${ln.level}-font`];
-    if (f) return f;
-  }
-  return settings['body-font'] || '';
-}
-
-/** pt → px (96/72) עם עיגול יציב (אותו נוסח בכל הנתיבים). */
-function ptToPx(pt) {
-  return Math.round(Number(pt) * (96 / 72) * 100) / 100;
-}
-
-/** **S73 (צבע פר-גופן מההגדרות):** '#RRGGBB'/'#RGB' → [r,g,b] בטווח 0..1
- * ל-pdf-writer (rg) ול-DOM. ערך חסר/בלתי-תקין ⇒ null (=שחור, ברירת המחדל
- * של כל ההגדרות — ברירת מחדל שחורה פולטת 0 בתים ב-PDF: אין אופרטור rg). */
-function hexColorToRgb(hex) {
-  const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex || '').trim());
-  if (!m) return null;
-  let h = m[1];
-  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
-  return [
-    parseInt(h.slice(0, 2), 16) / 255,
-    parseInt(h.slice(2, 4), 16) / 255,
-    parseInt(h.slice(4, 6), 16) / 255
-  ];
-}
-
-module.exports = { lineFontSizePt, lineFontFamily, ptToPx, hexColorToRgb };
-
-};
-__modules["src/engine/output/shaar-content.js"] = function (require, module, exports) {
-// src/engine/output/shaar-content.js — מודל תוכן עמודי השער (03.11(ד))
-'use strict';
-
-/**
- * **מקור יחיד (F-09) לתוכן המובנה של עמודי השער** — פורט renderMainShaar/
- * renderSubShaar/renderBackShaar של הפרויקט המקורי. נצרך על ידי שני הנתיבים:
- * dom-renderer (תצוגה חיה + ייצוא HTML) ו-geometry-projector (ייצוא PDF) —
- * כך שהשער נראה אותו דבר בכל הפלטים (עד כאן ההיטל לא כלל את תוכן השער
- * וה־PDF הראה עמודים ריקים).
- *
- * **Iteration-003 (legacy parity — חוזה השערים של המקור):**
- *  - מקור התוכן של השער הראשי = המטא-דאטה של המסמך (כמו gateLinesFor במורשת:
- *    meta.bookTitle/subject/desc/edition/author). הגדרות imud-book-* הן שדות
- *    טופס שברירת המחדל שלהן ב-default_settings.json היא שמות מקום — הן
- *    גיבוי בלבד כשאין מטא. השער האחורי — להפך (שדות הפאנל קודם, מטא ממלא —
- *    כמו cfg.backCopyright || meta.copyright במורשת).
- *  - מיקומים אנכיים מכוילים מהייחוס (px@96dpi; המקור במ"מ — pt(v)=v×4/3):
- *    ראשי — כותרת 170.8, משנה 300.3, תיאור 547.1, מהדורה 744.0, מחבר 951.3;
- *    אחורי — כותרת-זכויות 255.7, זכויות 288.5, הוצאה 476.4, קשר 667.9,
- *    נוספים 859.1; משנה — כותרת 460.9, המשך 626.3.
- *  - גודל כותרת שער-המשנה = s-h1 (heading-1-size-pt, 50pt במקור) — לא 36
- *    קבוע. גופן ההמשך של שער-המשנה = David Libre (כמו ההקשחה המכוילת
- *    במורשת — הייחוס מציג אותו, לא את f-sh-sub).
- *  - אין בס״ד/שנה בשער הראשי ואין כתרים גרפיים — העיטורים הם רקע השער
- *    המכויל (decoration/gate-design.js) כמו במקור.
- */
-
-const MM_TO_PX = 96 / 25.4;
-const PT = (v) => v * (96 / 72); // "mm-ish" units of the legacy calibration → px
-
-/** תיבת השער לפי הסוג — מיקומי המקור (מ"מ → פיקסלים). */
-function shaarBoxOf(type, settings) {
-  const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
-  const mode = imudProf ? 'fixed' : null;
-  const mm = (v) => Math.round(v * MM_TO_PX);
-  if (type === 'shaar-main') {
-    return { top: mm(20), bottom: mm(16), right: mm(15), left: mm(15), mode: mode || 'between' };
-  }
-  if (type === 'shaar-sub') {
-    return { top: mm(20), bottom: mm(20), right: mm(95), left: mm(15), mode: mode || 'center' };
-  }
-  // shaar-back
-  return { top: mm(22), bottom: mm(18), right: mm(15), left: mm(95), mode: mode || 'center' };
-}
-
-/** פיצול מקף של כותרת חלק (renderSubShaar המקורי): main=לפני, sub=אחרי. */
-function splitPartTitle(text) {
-  let titleMain = String(text || '');
-  let titleSub = '';
-  if (/[-–—]/.test(titleMain)) {
-    const parts = titleMain.split(/[-–—]/);
-    titleMain = parts[0].trim();
-    titleSub = parts.slice(1).join(' - ').trim();
-  }
-  return { titleMain, titleSub };
-}
-
-/**
- * בניית בלוקי תוכן השער. גישה מילולית להגדרות (דרישת סורק ה-phantom-key).
- * @param {object} page - עמוד CP5 (shaarInfo.title לשער־משנה, _metadata למטא)
- * @param {object} settings
- * @param {object} [metadata] - מטא המסמך (גובר _metadata)
- * @returns {{mode:string, box:object, blocks:Array<{cls,text,sizePt,bold,yTop,followGap?,fontFamily?}>}|null}
- */
-function buildShaarBlocks(page, settings, metadata) {
-  if (!page || !page.type || !/^shaar-/.test(page.type)) return null;
-  const meta = metadata || page._metadata || {};
-  const num = (v) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : 12; };
-  const box = shaarBoxOf(page.type, settings);
-  const B = [];
-
-  if (page.type === 'shaar-main') {
-    // **Iteration-003:** מקור התוכן = המטא של המסמך (כמו המורשת); ההגדרות גיבוי.
-    const bookTitle = meta['שם הספר'] || meta['ספר'] || meta['title'] || settings['imud-book-title'] || 'שם הספר';
-    const subtitle = meta['נושא'] || settings['imud-book-subtitle'] || '';
-    const desc = meta['נושא מפורט'] || settings['imud-book-desc'] || '';
-    const sections = meta['פרטי מהדורא'] || settings['imud-book-sections'] || '';
-    const author = meta['שם המחבר'] || settings['imud-book-author'] || '';
-    // **Iteration-003 (legacy parity):** בס״ד/שורת-שנה — תכונת פרופיל DP בלבד.
-    // שער ה-IMUD של המקור אינו מציג אף אחד מהם (נמדד בייחוס עמ' 1: חמש
-    // שורות בלבד — כותרת/נושא/תיאור/מהדורה/מחבר).
-    const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
-    if (!imudProf) {
-      B.push({ cls: 'bsd-header', text: 'בס״ד', sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 5 });
-    }
-    // **Iteration-006 (G8/F11 — עוגן כותרת השער הראשי):** בייחוס עמ' 1 שורת
-    // הכותרת «מקום בינה» (46pt) ב-y=123.5pt; העוגן הקודם (PT(128.1)) הניח
-    // אותה ב-142.4pt — נמוכה ב-18.9pt. הותאם ב-−18.9pt (bbox השורה נבדק
-    // מול הייחוס ברגרסיה). שאר הבלוקים (משנה/תיאור/מהדורה/מחבר) נשארים
-    // על עוגניהם — הם כבר תואמים (נמדד: 236.3 מול 237.4; 420.3 מול 420.9).
-    B.push({ cls: 'book-title-main', text: bookTitle, sizePt: num(settings['shaar-title-size-pt']), ...(imudProf ? { yTop: PT(109.2) } : {}) });
-    // **Iteration-003 (parity משקל):** בייחוס IMUD כותרת-המשנה ב-Livorna רגיל
-    // (ToraEx6="Livorna", לא Bold) — ההדגשה נשארת לעיצוב DP בלבד.
-    B.push({ cls: 'book-subtitle', text: subtitle, sizePt: num(settings['shaar-subtitle-size-pt']), bold: !imudProf, ...(imudProf ? { yTop: PT(225.2), followGap: 25 } : {}) });
-    if (!imudProf) {
-      B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-main' });
-    }
-    B.push({ cls: 'book-description', text: desc, sizePt: num(settings['shaar-desc-size-pt']), ...(imudProf ? { yTop: PT(410.3) } : {}) });
-    // **Iteration-003 (parity משקל):** שורת פרטי-המהדורא בייחוס ב-David Libre
-    // רגיל (נמדד: ToraEx4="David Libre Regular", 11.5pt) — לא מודגש.
-    B.push({ cls: 'book-sections-summary', text: sections, sizePt: num(settings['shaar-sections-size-pt']), bold: !imudProf, ...(imudProf ? { yTop: PT(558.0) } : {}) });
-    B.push({ cls: 'author-block', text: author, sizePt: num(settings['shaar-author-size-pt']), ...(imudProf ? { yTop: PT(713.5) } : {}) });
-    if (!imudProf) {
-      const year = settings['imud-book-year'] || meta['מקום ושנת הוצאה'] || '';
-      if (year) B.push({ cls: 'publication-footer', text: year, sizePt: num(settings['shaar-year-size-pt']), bold: true, letterSpacingPx: 1 });
-    }
-  } else if (page.type === 'shaar-sub') {
-    const { titleMain, titleSub } = splitPartTitle(page.shaarInfo && page.shaarInfo.title);
-    const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
-    if (imudProf) {
-      // **Iteration-003:** גודל הכותרת מההגדרות (s-h1 ⇒ heading-1-size-pt; 50 במקור)
-      const h1Size = num(settings['heading-1-size-pt']);
-      B.push({ cls: 'book-title-main', text: titleMain, sizePt: h1Size, yTop: PT(345.7) });
-      if (titleSub) {
-        // ההמשך ב-David Libre המכויל (כמו ההקשחה במורשת — הייחוס בגופן זה);
-        // **Iteration-003 (parity משקל):** בייחוס רגיל (ToraEx4="David Libre
-        // Regular"), לא מודגש — המפתח המילולי בחותמת מביא את הקובץ הרגיל.
-        B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: false, yTop: PT(469.7), followGap: 40.8, fontFamily: 'David Libre' });
-      }
-    } else {
-      B.push({ cls: 'book-title-main', text: titleMain, sizePt: 36 });
-      if (titleSub) {
-        B.push({ cls: 'shaar-crown', text: '', sizePt: 0, graphic: 'crown-sub' });
-        B.push({ cls: 'book-subtitle', text: titleSub, sizePt: num(settings['shaar-subtitle-size-pt']), bold: true });
-      }
-    }
-  } else {
-    // **9b.5 (D-107 + F-9a-8):** ארבעת מקטעי השער האחורי — פורט renderBackShaar
-    // של המקור. מקור הערך: שדה ההגדרה גובר (ייבוא inp-book-back-*;
-    // shaar-back-text ההיסטורי לזכויות); נפילה למטא המסמך (כמו המורשת).
-    // **אין כותרת-ספר/מחבר/שנה בשער האחורי** ו**אין ערכים מומצאים**.
-    const copyright = settings['imud-book-back-copyright'] || settings['shaar-back-text'] || meta['שמירת זכויות'] || '';
-    const publisher = settings['imud-book-back-publishing'] || meta['פרטי הוצאה לאור'] || '';
-    const contact = settings['imud-book-back-contact'] || meta['פרטי קשר'] || '';
-    const extra = settings['imud-book-back-extra'] || meta['פרטים נוספים'] || '';
-    const imudProf = !!(settings && (settings['_layout-profile'] === 'imud' || settings._imudRaw));
-    const pushSection = (value, sizePt, yTop) => {
-      String(value).split('\n').map(l => l.trim()).filter(Boolean)
-        .forEach(l => B.push({ cls: 'back-shaar-text-line', text: l, sizePt, ...(imudProf && yTop != null ? { yTop } : {}) }));
-    };
-    if (copyright) B.push({ cls: 'back-shaar-copyright-header', text: 'כל הזכויות שמורות', sizePt: 13.5, bold: !imudProf, ...(imudProf ? { yTop: PT(191.8) } : {}) });
-    pushSection(copyright, 10, PT(216.4));
-    pushSection(publisher, 11, PT(357.3));
-    pushSection(contact, 10, PT(500.9));
-    pushSection(extra, 9.5, PT(644.3));
-  }
-  return { mode: box.mode, box, blocks: B.filter(b => String(b.text || '').length || b.graphic) };
-}
-
-/** משפחות הגופן של הבלוקים — לפי ההגדרות (גישה מילולית לסורק). */
-function shaarFontOf(cls, settings) {
-  switch (true) {
-    case cls.includes('bsd-header'):
-    case cls.includes('publication-footer'): return settings['shaar-year-font'];
-    case cls.includes('book-title-main'): return settings['shaar-title-font'];
-    case cls.includes('book-subtitle'): return settings['shaar-subtitle-font'];
-    case cls.includes('book-description'): return settings['shaar-desc-font'];
-    case cls.includes('book-sections-summary'): return settings['shaar-sections-font'];
-    case cls.includes('author-block'): return settings['shaar-author-font'];
-    case cls.includes('back-shaar-copyright-header'):
-    case cls.includes('back-shaar-text-line'): return settings['shaar-back-text-font'];
-    default: return '';
-  }
-}
-
-/** **פרוסה 3 (§2.2 — הדיו מגיע מהמודל):** SVG הכתרים של השערים — מקור יחיד.
- * הוסרו מהתוכן ב-Iteration-003: עיטורי השער באים מעיצוב השער המכויל
- * (decoration/gate-design.js) כמו במקור — לא כבלוק גרפי בזרימת התוכן.
- * נשמר לצרכנים חיצוניים קיימים (בדיקות/תאימות). */
-function crownSvgOf(graphic) {
-  if (graphic === 'crown-sub') {
-    return '<svg viewBox="0 0 300 30" xmlns="http://www.w3.org/2000/svg"><path d="M10,15 Q75,5 140,15 Q145,10 150,5 Q155,10 160,15 Q225,5 290,15 Q225,25 160,15 Q155,20 150,25 Q145,20 140,15 Q75,25 10,15 Z" fill="#222"/></svg>';
-  }
-  return '<svg viewBox="0 0 400 40" xmlns="http://www.w3.org/2000/svg"><circle cx="200" cy="20" r="10" fill="none" stroke="#000" stroke-width="4.5"/><circle cx="200" cy="20" r="4.5" fill="#000"/><path d="M182,20 C182,24 165,27 140,27 C90,27 40,22 5,20 C40,18 90,13 140,13 C165,13 182,16 182,20 Z" fill="#000"/><path d="M218,20 C218,24 235,27 260,27 C310,27 360,22 395,20 C360,18 310,13 260,13 C235,13 218,16 218,20 Z" fill="#000"/></svg>';
-}
-
-module.exports = { buildShaarBlocks, shaarBoxOf, shaarFontOf, crownSvgOf, splitPartTitle, MM_TO_PX };
+module.exports = { familyFontKeyOf, literalFamilyKeyOf, familyOfFontKey };
 
 };
 __modules["src/ui/testing-tab.js"] = function (require, module, exports) {
@@ -22674,13 +22059,7 @@ function exportPdf(text, settingsIn, fontBytes, fontName, env) {
       const profile = registeredFontsRef.get(fam);
       if (!profile) continue; // נבדק ב-collectFam — הגנה כפולה
       const words = [...famWords.get(fam)].join(' ');
-      // **W-11 (תצוגה=ייצוא, גילוי 27.11 — דפוס S5.2-O1 של F1):** תו שחסר במשפחה
-      // (למשל טעם U+05A8 שאינו ב-FrankReal של מילת-החלון) הכשיל את כל
-      // ה-subset (tofu) ⇒ הגופן כולו נפל ל-/F1 והמילה נצבעה בגוף בעוד ה-DOM
-      // מציג אותה בגופן התפקיד. כעת: המלאי = תווים שקיימים בפועל במשפחה;
-      // החסרים נופלים בכותב לרשת הפר-תו (תפקיד→F1→F4) — כמו המחסנית בדפדפן.
-      const famInventory = charInventory(words).filter(ch => glyphIdOf(profile, ch) !== 0);
-      const sub = buildSubset(profile, famInventory);
+      const sub = buildSubset(profile, charInventory(words));
       if (!sub.ok) continue; // נפילה שקטה ל-/F1 — מתועם בכותב (משפחה בלי תווי המילה)
       const c2g = subsetNewCmap(sub);
       extraFonts.push({
@@ -22884,13 +22263,7 @@ function exportPdfFromModel(model, settingsIn, fontBytes, fontName, opts = {}) {
       if (!prof) return null;
       const parts = wordsByRole.get(roleKey) || [];
       if (!parts.length) return null;
-      // **W-11 (תצוגה=ייצוא, 27.11):** מלאי התפקיד = תווים שקיימים בפועל בגופן
-      // התפקיד (דפוס S5.2-O1 של F1). בעבר תו חסר אחד (טעם במילת-חלון מנוקדת)
-      // הכשיל את כל ה-subset ב-tofu ⇒ כל מילות התפקיד נצבעו בגוף הטקסט
-      // ב-PDF בעוד ה-DOM הציגן בגופן התפקיד. החסרים נופלים בכותב לרשת
-      // הפר-תו (תפקיד→F1→F4) — כמו נפילת המחסנית בדפדפן.
-      const roleInventory = charInventory(parts.join(' ')).filter(ch => glyphIdOf(prof, ch) !== 0);
-      const sub = buildSubset(prof, roleInventory);
+      const sub = buildSubset(prof, charInventory(parts.join(' ')));
       return sub.ok ? mkFont(sub) : null;
     };
     // **Iteration-003 (מילת-חלון):** משפחת החלון — FrankReal-Bold כשרשומה
@@ -23148,14 +22521,9 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
    "הקדמה" נדבקת לקצה הימני — אסימטריה 494px). :not(.band) מחזיר את
    המרכוז; רינדור ה-DOM גם קובע text-align-last:auto ישירות ב-mkLine. */
 .band{text-align-last:auto}
-/* **W-2 (השלמת כריתת 9c.4, 27.11 — F-3.1/F-3.4):** כללי ההקרנה של ראנדרר
-   המורשת הוסרו מכאן (.running-head{display:flex} + .head--sep-gray/black).
-   מקור הקו המפריד האמיתי בנתיב המאוחד הוא עיטור hdr-rule מ-gate-design
-   (נצבע ב-PageModel — ב-DOM החי וב-PDF כאחד); מיכל הכותרת של המקרין
-   (pagemodel-dom-renderer) נושא position/left/width/height inline וסלוטיו
-   אבסולוטיים — ה-flex לא פעל מעולם בנתיב זה. class ה-head--sep-* נשאר
-   על האלמנט כסמנטיקה חיה בלבד (F-3.2) — בלי כלל CSS, כדי שתיקון שם
-   המפתח לא יצייר קו-שני פנטום בתחתית המיכל. */
+.running-head{display:flex;width:100%}
+.head--sep-gray{border-bottom:1px solid #999}
+.head--sep-black{border-bottom:1.5px solid #000}
 .footnotes{position:absolute;bottom:8px;left:12px;right:12px;border-top:1px solid transparent;font-size:.8em}
 .footnotes--continuous{border-top:none}
 .fn-rule--regular{border-top:1px solid #000;height:0}
@@ -23260,9 +22628,7 @@ html,body,.page,.line,.rh,.band,.footnote,.footnotes,.endnote-note,.endnote-list
 
 /** בניית מסמך HTML עצמאי מעמודי ה‑DOM שכבר רוכמו (string-level; עובד גם Node-side). */
 function buildStandaloneHtml(pagesHtml, settings, meta = {}) {
-  // **W-7 (F-4.1, 27.11):** 'book-name' הוא מפתח-רפאים (מעולם לא נרשם/הוצב) —
-  // המקור הרשום לשם הספר הוא imud-book-title.
-  const title = meta.title || settings['imud-book-title'] || 'ספר';
+  const title = meta.title || settings['book-name'] || 'ספר';
   // **S12 (REQ-EXP-02):** כללי @page מרישום גדלי העמוד — הדפסה מדויקת מהקובץ העצמאי (אין רשת)
   const pageRules = meta.pageRules || '';
   // **03.11:** @font-face מוטמעים (data-URI) — מסופקים מה-UI; עוברים את offline-guard (אין http)
@@ -23801,6 +23167,524 @@ function createImudLibrary(engine) {
 }
 
 module.exports = { createImudLibrary, DESIGN_FILES };
+
+};
+__modules["src/engine/core/legacy-settings-map.js"] = function (require, module, exports) {
+// src/engine/core/legacy-settings-map.js — S4.5-ד: מיפוי מלא של הגדרות IMUD_TORANI (03.11)
+'use strict';
+
+/**
+ * **רקע (ביקורת 03.11, סקירה 2):** תוכנית העבודה (S4) דרשה רישום־על של כל
+ * ההגדרות מכל הגרסאות והגירה ללא אובדן. בפועל נבנה רישום RED עקבי אך 264
+ * מפתחות default_settings.json של המקור לא קיבלו disposition מפורש. המודול
+ * הזה הוא טבלת האמת: **לכל מפתח מקור** — מיפוי למפתח RED (מלא/בטרנספורם),
+ * איחוד, מצב-UI (ללא אפקט מנועתי), או הסרה מנומקת (עם הפניית מעקב).
+ *
+ * עקרונות:
+ * - אין מפתח "לא מוכר" — הכל מקבל שורה; שער הקבלה: 100% disposition.
+ * - ערכי המקור מוחלים בעת ייבוא (importImudSettings); ברירות המחדל של RED
+ *   עצמן נשארות כהחלטות RED המתועדות — ההחלפה מפורשת והפיכה.
+ * - טרנספורמים מתועדים (יחידות/סמנטיקה), לא רק שמות.
+ */
+
+/** חילוץ משפחת הגופן הראשונה מערך CSS: "'Guttman Rashi', 'Frank Ruhl Libre', serif" ⇒ "Guttman Rashi". */
+function firstFamily(css) {
+  const m = String(css || '').match(/'([^']+)'/);
+  return m ? m[1] : String(css || '').split(',')[0].trim();
+}
+
+/** **03.11(ד):** פתרון מחסנית גופנים של המקור מול הספרייה הזמינה.
+ * ערכי המקור הם מחסניות CSS ("'AlphaBlack', 'David Libre', serif") — המשפחה
+ * הראשונה בדרך כלל אינה מותקנת והדפדפן נופל להמשך הרשימה. כאן מחליטים מראש:
+ * המשפחה הראשונה שקיימת ב-availableFonts (קטלוג הספרייה שהועבר ב-ctx) היא
+ * הערך; בלי קטלוג — מחזירים את הראשונה (התנהגות firstFamily הישנה). */
+function resolveStack(css, ctx) {
+  const raw = String(css || '').replace(/'/g, '');
+  const parts = raw.split(',').map(s => s.trim()).filter(Boolean)
+    .filter(p => !/^(serif|sans-serif|monospace|cursive|fantasy|system-ui)$/i.test(p));
+  if (!parts.length) return String(css || '');
+  const avail = ctx && ctx.availableFonts;
+  if (avail instanceof Set) {
+    for (const p of parts) if (avail.has(p)) return p;
+  }
+  return parts[0];
+}
+
+/** **S4.6 (ביקורת 3):** אחוזים ⇒ פיקסלים לפי גובה תיבת התוכן **בפועל** שנמסר
+ * בהקשר הייבוא (ctx.contentHeightPx). ברירת המחדל 1040px (A4 של RED) נשמרת
+ * לתאימות — אך מסלול הטעינה ב-UI מעביר את הגיאומטריה האמיתית של המסמך. */
+function pctToPx(v, ctxOrHeight) {
+  const h = (typeof ctxOrHeight === 'number' && ctxOrHeight > 0)
+    ? ctxOrHeight
+    : (ctxOrHeight && Number(ctxOrHeight.contentHeightPx) > 0)
+      ? Number(ctxOrHeight.contentHeightPx)
+      : 1040;
+  return Math.round(h * (parseFloat(v) / 100));
+}
+
+/** סגנונות פתיחה של המקור ⇒ מצבי RED (headings-escort). */
+const OPEN_MODE_MAP = {
+  'new_page_1col': 'new-page',
+  'span_1col': 'full-width',
+  'inline_2col': 'regular',
+  'side_note': 'side-note',
+  'sub_shaar': 'new-page' // שער-משנה מובנה: show-shaar-sub נלווה ב-merge
+};
+
+/** **S77 (בקשה 3):** סוגי סלוטי כותרת-עליונה של המקור ⇒ מקורות header-*.
+ * ערך לא מוכר (למשל 'spear' — עיטור חנית של v19) ⇒ undefined — אינו דורס
+ * את ברירת המחדל של RED (הייבוא מדלג עליו; הערך הגולמי נשמר ב-_imudRaw). */
+function hdrSlotTypeMap(v) {
+  const t = String(v == null ? '' : v).trim();
+  switch (t) {
+    case 'book_title_split_r': return 'book-name-first-half';
+    case 'book_title_split_l': return 'book-name-second-half';
+    case 'h2_without_siman': return 'h2';
+    case 'h2': return 'h2';
+    case 'h1': return 'h1';
+    case 'book_title': return 'book-name';
+    case 'custom': return 'custom';
+    case 'none':
+    case '': return 'none';
+    default: return undefined;
+  }
+}
+
+/** עמדות עיצוב-מפריד של המקור ⇒ סגנונות RED. */
+const DIVIDER_MAP = { 'none': 'none', 'thin': 'thin', 'dashed': 'dashed', 'double': 'double', 'spear': 'thin' };
+
+/** מיקומי מספור של המקור ⇒ RED. */
+const NUMPOS_MAP = {
+  // **S5.1:** ערכי האינום של RED בלבד — בעבר יוצרו 'bottom-outer'/'bottom-left'/
+  // 'bottom-right'/'top-center'/'top-outer' שאינם ברישום והוגדרים בשקט לברירת
+  // המחדל. 'outer' חדש: מיקום חיצוני מודע-זוגיות — כמו pos-outer של המקור
+  // (typesetter.js:506 + style.css:1367-1369: odd=flex-end=שמאל, even=ימין).
+  'bottom_center': 'bottom-center', 'bottom_outer': 'outer', 'bottom_left': 'outer-left', 'bottom_right': 'outer-right',
+  'top_center': 'top', 'top_outer': 'top', 'in_header': 'in-header'
+};
+
+/**
+ * טבלת ה-disposition. kind:
+ *  - 'mapped'   → to (מפתח RED) + transform אופציונלי — ערך מוחל בייבוא
+ *  - 'merged'   → מוזג למפתח אחר/כמה מפתחות — מתועד ב-reason
+ *  - 'ui-state' → מצב פאנל של האפליקציה הישנה; נשמר כנתון, אין אפקט מנועתי
+ *  - 'removed'  → לא ב-RED; סיבה מנומקת + מזהה מעקב (ISSUE_REGISTRY)
+ */
+const DISPOSITIONS = {
+  // ============ טיפוגרפיה של הגוף ============
+  'font-body': { kind: 'mapped', to: 'body-font', transform: resolveStack, reason: 'מחסנית CSS של המקור — נפתרת מול הקטלוג המוטמע כשהוא זמין (EXT-9: גוף המקור "\'Guttman Rashi\', \'Frank Ruhl Libre\'" ⇒ Frank Ruhl Libre המוטמע); בלי קטלוג — המשפחה הראשונה (התנהגות היסטורית). בלי זה המדידה נפלה לטבלה בעוד התצוגה בגופן אמיתי — סחף live↔ייצוא מסוג EXT-13' },
+  'size-body': { kind: 'mapped', to: 'body-font-size-pt', transform: parseFloat, reason: 'pt (המקור 12; RED 14 — ההפרש מתועד כהחלטת RED)' },
+  'line-height-body': { kind: 'mapped', to: 'body-line-height', transform: parseFloat },
+  // **F09 (parity iteration-002):** גודל הסוגריים של המקור — הגדרת ספר אמיתית
+  // (s-paren-mode='relative', s-paren='-2' ⇒ size-body−2 = 10pt בגוף 12). עד כאן
+  // נפלה תחת כלל המשפחה /^s-/ (ui-state) בטענה "מומש במפתחות RED המקבילים" —
+  // אך שום מיפוי לא הציב ערך, והמנוע המאוחד מדד והדפיס סוגריים בגודל הגוף
+  // המלא (12pt מול 10pt במקור; נמדד: ‎−11 עמודים בספר ההשוואה). ההמרה למנגנון
+  // האחיד הקיים — paren-style-scale (advanceFactor במדידה + סקאלת גודל ברינדור,
+  // מקור אחד) — משחזרת את החוזה: גופן הגוף (f-paren ריק), גודל body+delta.
+  's-paren': {
+    kind: 'mapped', to: 'paren-style-scale',
+    transform: (v, ctx) => {
+      if (!ctx || ctx.parenMode !== 'relative') return undefined; // S77: מצב לא מוכר — אין דריסה
+      const bodyPt = Number(ctx.bodyPt) > 0 ? Number(ctx.bodyPt) : 12;
+      const delta = parseFloat(v);
+      if (!Number.isFinite(delta)) return undefined;
+      const scale = (bodyPt + delta) / bodyPt;
+      return Math.max(0.8, Math.min(1, scale)); // טווח הרישום 0.8–1
+    },
+    reason: 'F09 (parity iter-002): סוגריים יחסיות במקור (‎-2pt על גוף 12 ⇒ 10pt) — מומר ל-scale של מנגנון RED האחיד (מדידה+רינדור יחד); בלי זה הסוגריים בגודל הגוף המלא'
+  },
+  's-paren-mode': { kind: 'ui-state', reason: 'נצרך על ידי מיפוי s-paren (relative=דלתא-pt מגוף הטקסט); נשמר כנתון' },
+  'body-last-line-align': { kind: 'mapped', to: 'body-last-line-align' },
+
+  // ============ מילה ראשונה ============
+  'drop-word-mode': { kind: 'mapped', to: 'first-word-mode', transform: (v) => ({ 'window': 'drop', 'drop': 'drop', 'inline': 'inline', 'bold': 'bold', 'none': 'none' }[v] || 'drop'), reason: 'window ⇒ drop (אותו מנגנון חלון)' },
+  'drop-word-count': { kind: 'mapped', to: 'first-word-length', transform: parseInt },
+  'drop-word-min-lines': { kind: 'mapped', to: 'first-word-threshold-lines', transform: parseInt, reason: 'המקור 2; RED 3 — הייבוא משחזר את המקור' },
+  'font-first-word': { kind: 'mapped', to: 'first-word-font', transform: firstFamily, reason: 'S4.5: מפתח חדש ב-RED (היה חסר)' },
+  'size-first-word': { kind: 'mapped', to: 'first-word-size-em', transform: parseFloat, reason: 'S4.5: מפתח חדש ב-RED (היה כפול 2 מוקשה)' },
+
+  // ============ דיבור המתחיל ============
+  'auto-dh': { kind: 'mapped', to: 'dh-auto-detect', transform: (v) => v === true || v === 'true' },
+  'font-dh': { kind: 'mapped', to: 'dh-font', transform: firstFamily },
+
+  // ============ מצבי כותרות H0–H7 ============
+  'mode-h0': { kind: 'mapped', to: 'heading-0-mode', transform: (v) => OPEN_MODE_MAP[v] || 'full-width' },
+  'mode-h1': { kind: 'merged', to: 'heading-1-mode', transform: (v) => OPEN_MODE_MAP[v] || 'new-page', reason: 'sub_shaar ⇒ new-page + show-shaar-sub=true (השער המשנה מובנה ב-S8)' },
+  'mode-h2': { kind: 'mapped', to: 'heading-2-mode', transform: (v) => OPEN_MODE_MAP[v] || 'full-width' },
+  'mode-h3': { kind: 'mapped', to: 'heading-3-mode', transform: (v) => OPEN_MODE_MAP[v] || 'full-width' },
+  'mode-h4': { kind: 'mapped', to: 'heading-4-mode', transform: (v) => OPEN_MODE_MAP[v] || 'regular' },
+  'mode-h5': { kind: 'mapped', to: 'heading-5-mode', transform: (v) => OPEN_MODE_MAP[v] || 'regular' },
+  'mode-h6': { kind: 'mapped', to: 'heading-6-mode', transform: (v) => OPEN_MODE_MAP[v] || 'regular' },
+  'mode-h7': { kind: 'mapped', to: 'heading-7-mode', transform: (v) => OPEN_MODE_MAP[v] || 'side-note' },
+  // **S4.20 (סגירת EXT-15/16):** שלושת המפתחות ממומשים עתה בפרופיל ה-legacy
+  // (legacy-imud-flow): ‏ensureOddPageStart כללי (הליכה על הסדר הסופי לפני
+  // עמוד פתיחת-מקטע מסומן שנוחת בגב) + המונה האוטומטי והאיפוס (autoSimanH2/
+  // resetSimanOnH1) — היו קיימים ב-flow אך סומנו בטעות כ-removed.
+  'odd-h0': { kind: 'ui-state', reason: 'פתיחת H0 בעמוד אי-זוגי — ensureOddPageStart של המקור, מיושם בהרכבת ה-legacy (עמוד ריק לפני פתיחת מקטע בגב) — S4.20', issue: 'EXT-15' },
+  'odd-h1': { kind: 'ui-state', reason: 'פתיחת H1 בעמוד אי-זוגי — כמו odd-h0 (החליף את המקרה הפרטי של שער-המשנה) — S4.20', issue: 'EXT-15' },
+  'odd-h2': { kind: 'ui-state', reason: 'פתיחת H2 בעמוד אי-זוגי — ברירת המחדל של המקור כבויה — S4.20', issue: 'EXT-15' },
+  'h2-auto-siman': { kind: 'ui-state', reason: 'מספור סימן אוטומטי (א-ב-ג) — מיושם ב-legacy-imud-flow (autoSimanH2) — S4.20/EXT-16' },
+  'h2-reset-siman': { kind: 'ui-state', reason: 'איפוס מונה סימנים לכל פרק — מיושם ב-legacy-imud-flow (resetSimanOnH1) — S4.20/EXT-16' },
+  'h2-top-distance': { kind: 'mapped', to: 'h2-top-offset', transform: pctToPx, reason: '22% מגובה תיבת התוכן (1040px ב-A4 של RED) ⇒ פיקסלים' },
+
+  // ============ מזהי הערות (S4.5-ג — הוטמעו זה עתה) ============
+  'en-line-prefix': { kind: 'mapped', to: 'en-line-prefix' },
+  'fn-delim-open': { kind: 'mapped', to: 'fn-delim-open' },
+  'fn-delim-close': { kind: 'mapped', to: 'fn-delim-close' },
+
+  // ============ **S4.6 (ביקורת 3):** הגדרות עיצוב אמיתיות שסווגו בטעות כ-ui-state ============
+  // לא לסווג משפחה שלמה לפי קידומת בלבד — לכל מפתח עם יעד RED קיים יש מיפוי מפורש.
+  // ההגדרות האלה מגיעות עכשיו למנוע בפועל (heading-N-font/size, header-slot, שער).
+  'f-h0': { kind: 'mapped', to: 'heading-0-font', transform: resolveStack, reason: 'S4.6: גופן כותרת H0 — קיים ברישום RED (heading-0-font)' },
+  'f-h1': { kind: 'mapped', to: 'heading-1-font', transform: resolveStack, reason: 'S4.6: גופן H1' },
+  'f-h2': { kind: 'mapped', to: 'heading-2-font', transform: resolveStack, reason: 'S4.6: גופן H2' },
+  'f-h3': { kind: 'mapped', to: 'heading-3-font', transform: resolveStack, reason: 'S4.6: גופן H3' },
+  'f-h4': { kind: 'mapped', to: 'heading-4-font', transform: resolveStack, reason: 'S4.6: גופן H4' },
+  'f-h5': { kind: 'mapped', to: 'heading-5-font', transform: resolveStack, reason: 'S4.6: גופן H5' },
+  'f-h6': { kind: 'mapped', to: 'heading-6-font', transform: resolveStack, reason: 'S4.6: גופן H6' },
+  'f-h7': { kind: 'mapped', to: 'heading-7-font', transform: resolveStack, reason: 'S4.6: גופן H7' },
+  's-h0': { kind: 'mapped', to: 'heading-0-size-pt', transform: parseFloat, reason: 'S4.6: גודל H0 (26 ⇒ 26pt; חריגת טווח מדווחת במיזוג ולא מושמטת)' },
+  's-h1': { kind: 'mapped', to: 'heading-1-size-pt', transform: parseFloat, reason: 'S4.6: גודל H1 (50 במקור — נשמר נאמן למקור; חריגת טווח מדווחת)' },
+  's-h2': { kind: 'mapped', to: 'heading-2-size-pt', transform: parseFloat, reason: 'S4.6: גודל H2' },
+  's-h3': { kind: 'mapped', to: 'heading-3-size-pt', transform: parseFloat, reason: 'S4.6: גודל H3' },
+  's-h4': { kind: 'mapped', to: 'heading-4-size-pt', transform: parseFloat, reason: 'S4.6: גודל H4' },
+  's-h5': { kind: 'mapped', to: 'heading-5-size-pt', transform: parseFloat, reason: 'S4.6: גודל H5' },
+  's-h6': { kind: 'mapped', to: 'heading-6-size-pt', transform: parseFloat, reason: 'S4.6: גודל H6' },
+  's-h7': { kind: 'mapped', to: 'heading-7-size-pt', transform: parseFloat, reason: 'S4.6: גודל H7 (6 במקור; חריגת טווח מדווחת)' },
+  'f-note-body': { kind: 'mapped', to: 'f-note-body-font', transform: (v, ctx) => {
+    // **S74 (בעיה 5 — בקשת משתמש 12.11):** ברירת המחדל של המקור בהגדרות
+    // ('Frank Ruhl Libre') לא חוברה לרינדור בפועל בגרסה הישנה — גוף ההערה
+    // רונדר ב-Assistant ExtraLight (נמדד בייחוס עמ' 31/37: כל שורות גוף
+    // ההערה Assistant-ExtraLight 8.5pt; הסמן בלבד FRL 8pt). הרינדור הוא
+    // המפרט: ערך ברירת המחדל מתורגם לגופן הרינדור האמיתי; ערך שהמשתמש
+    // בחר במפורש (כל ערך אחר) נשמר כמו שהוא דרך resolveStack.
+    return /Frank Ruhl Libre/i.test(String(v || '')) ? 'אסיסטנט קל מאוד' : resolveStack(v, ctx);
+  }, reason: 'S74: גוף ההערה — ברירת המחדל = הרינדור בפועל של המקור (Assistant ExtraLight, נמדד בייחוס)' },
+  'f-hdr-r': { kind: 'mapped', to: ['header-recto-right-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט ימין בכותרת עליונה (recto)' },
+  'f-hdr-c': { kind: 'mapped', to: ['header-recto-center-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט מרכז (recto)' },
+  'f-hdr-l': { kind: 'mapped', to: ['header-recto-left-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט שמאל (recto)' },
+  's-hdr-r': { kind: 'mapped', to: ['header-recto-right-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט ימין (recto)' },
+  's-hdr-c': { kind: 'mapped', to: ['header-recto-center-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט מרכז (recto)' },
+  's-hdr-l': { kind: 'mapped', to: ['header-recto-left-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט שמאל (recto)' },
+  'f-hdr-verso-r': { kind: 'mapped', to: ['header-verso-right-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט ימין (verso)' },
+  'f-hdr-verso-c': { kind: 'mapped', to: ['header-verso-center-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט מרכז (verso)' },
+  'f-hdr-verso-l': { kind: 'mapped', to: ['header-verso-left-font'], transform: resolveStack, reason: 'S4.6: גופן סלוט שמאל (verso)' },
+  's-hdr-verso-r': { kind: 'mapped', to: ['header-verso-right-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט ימין (verso)' },
+  's-hdr-verso-c': { kind: 'mapped', to: ['header-verso-center-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט מרכז (verso)' },
+  's-hdr-verso-l': { kind: 'mapped', to: ['header-verso-left-size-pt'], transform: parseFloat, reason: 'S4.6: גודל סלוט שמאל (verso)' },
+  // **S77 (בקשה 3 — חיבור הגדרות הכותרת העליונה לנתיב המורשת):** סוגי הסלוטים
+  // של המקור (hdr-{r,c,l,verso-*}-type) ממופים למקורות header-{side}-{pos}-source.
+  // book_title_split_r/l = החצאים הקבועים (לפי מילים, ללא תלות בצד — ההחלפה
+  // היא hdr-alternating נפרד) ⇒ ההתנהגות המכוילת של המנוע המורשת משוחזרת
+  // במדויק דרך ההגדרות החיות. ערך לא מוכר (למשל 'spear' של v19 — עיטור) אינו
+  // דורס את ברירת המחדל של RED (transform מחזיר undefined ⇒ דילוג).
+  'hdr-r-type': { kind: 'mapped', to: ['header-recto-right-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט ימין (recto) ⇒ מקור חי בנתיב המורשת' },
+  'hdr-l-type': { kind: 'mapped', to: ['header-recto-left-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט שמאל (recto) ⇒ מקור חי בנתיב המורשת' },
+  'hdr-c-type': { kind: 'mapped', to: ['header-recto-center-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט מרכז (recto) ⇒ מקור חי בנתיב המורשת' },
+  'hdr-verso-r-type': { kind: 'mapped', to: ['header-verso-right-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט ימין (verso) ⇒ מקור חי בנתיב המורשת' },
+  'hdr-verso-l-type': { kind: 'mapped', to: ['header-verso-left-source'], transform: hdrSlotTypeMap, reason: 'S77: סוג סלוט שמאל (verso) ⇒ מקור חי בנתיב המורשת' },
+  // hdr-verso-c-type אינו ממופה בכוונה: הייחוס המכויל מציג את הפרק (h2) במרכז
+  // גם בעמודי verso (הערך 'h1' בקובץ המקור אינו משתקף בפלט המכויל); שליטה
+  // חיה דרך header-verso-center-source (ברירת המחדל שלו h2).
+  'hdr-r-custom': { kind: 'mapped', to: ['header-recto-right-custom-text'], reason: 'S77: טקסט מותאם סלוט ימין (recto)' },
+  'hdr-c-custom': { kind: 'mapped', to: ['header-recto-center-custom-text'], reason: 'S77: טקסט מותאם סלוט מרכז (recto)' },
+  'hdr-l-custom': { kind: 'mapped', to: ['header-recto-left-custom-text'], reason: 'S77: טקסט מותאם סלוט שמאל (recto)' },
+  'hdr-verso-r-custom': { kind: 'mapped', to: ['header-verso-right-custom-text'], reason: 'S77: טקסט מותאם סלוט ימין (verso)' },
+  'hdr-verso-c-custom': { kind: 'mapped', to: ['header-verso-center-custom-text'], reason: 'S77: טקסט מותאם סלוט מרכז (verso)' },
+  'hdr-verso-l-custom': { kind: 'mapped', to: ['header-verso-left-custom-text'], reason: 'S77: טקסט מותאם סלוט שמאל (verso)' },
+  'inp-book-title': { kind: 'mapped', to: 'imud-book-title', reason: 'S4.6: כותרת הספר — נצרכת בשער הראשי (dom-renderer)' },
+  'inp-book-subtitle': { kind: 'mapped', to: 'imud-book-subtitle', reason: 'S4.6: כותרת־משנה — נצרכת בשער הראשי' },
+  // **03.11(ד) — דיווח משתמש 3 / בקשת על מה-01.11: "הטמע את כל ברירות המחדל
+  // של הפרויקט המקורי".** מתגי השערים ונתוני הספר נפלו ל-ui-state לפי כלל
+  // הקידומת הגס (^(show|inp)-) והושמטו מהמנוע — לכן "אין עמודי שער" גם אחרי
+  // ייבוא ברירות המחדל. עתה מיפוי מפורש למפתחות RED האמיתיים.
+  'show-main-shaar': { kind: 'mapped', to: 'shaar-main-enabled', transform: (v) => v !== false && v !== 'false', reason: '03.11(ד): מתג שער ראשי — ברירת המחדל במקור true (השער חלק ממבנה הספר, לא אופציה)' },
+  'show-sub-shaar': { kind: 'mapped', to: 'shaar-sub-enabled', transform: (v) => v !== false && v !== 'false', reason: '03.11(ד): מתג שער־משנה — ברירת מחדל true כמקור' },
+  'show-back-shaar': { kind: 'mapped', to: 'shaar-back-enabled', transform: (v) => v !== false && v !== 'false', reason: '03.11(ד): מתג שער אחורי — ברירת מחדל true כמקור' },
+  'f-sh-title': { kind: 'mapped', to: 'shaar-title-font', transform: resolveStack, reason: '03.11(ד): גופן כותרת השער (מקור: Lia Sgula → Bellefair המוטמע)' },
+  's-sh-title': { kind: 'mapped', to: 'shaar-title-size-pt', transform: parseFloat, reason: '03.11(ד): גודל כותרת השער (מקור: 46)' },
+  'f-sh-sub': { kind: 'mapped', to: 'shaar-subtitle-font', transform: resolveStack, reason: '03.11(ד): גופן כותרת־משנה בשער (מקור: Livorna → David Libre)' },
+  's-sh-sub': { kind: 'mapped', to: 'shaar-subtitle-size-pt', transform: parseFloat, reason: '03.11(ד): גודל כותרת־משנה (מקור: 21)' },
+  'f-sh-desc': { kind: 'mapped', to: 'shaar-desc-font', transform: resolveStack, reason: '03.11(ד): גופן התיאור (מקור: Livorna → Frank Ruhl Libre)' },
+  's-sh-desc': { kind: 'mapped', to: 'shaar-desc-size-pt', transform: parseFloat, reason: '03.11(ד): גודל התיאור (מקור: 12)' },
+  'f-sh-sec': { kind: 'mapped', to: 'shaar-sections-font', transform: resolveStack, reason: '03.11(ד): גופן פרטי המהדורא (מקור: David Libre)' },
+  's-sh-sec': { kind: 'mapped', to: 'shaar-sections-size-pt', transform: parseFloat, reason: '03.11(ד): גודל פרטי המהדורא (מקור: 11.5)' },
+  'f-sh-author': { kind: 'mapped', to: 'shaar-author-font', transform: resolveStack, reason: '03.11(ד): גופן שם המחבר (מקור: David Libre)' },
+  's-sh-author': { kind: 'mapped', to: 'shaar-author-size-pt', transform: parseFloat, reason: '03.11(ד): גודל שם המחבר (מקור: 15)' },
+  'f-sh-year': { kind: 'mapped', to: 'shaar-year-font', transform: resolveStack, reason: '03.11(ד): גופן השנה/בס״ד (מקור: David Libre)' },
+  's-sh-year': { kind: 'mapped', to: 'shaar-year-size-pt', transform: parseFloat, reason: '03.11(ד): גודל השנה (מקור: 12)' },
+  'inp-book-desc': { kind: 'mapped', to: 'imud-book-desc', reason: '03.11(ד): תיאור הספר בשער (מקור: inp-book-desc ← «נושא מפורט»)' },
+  'inp-book-sections': { kind: 'mapped', to: 'imud-book-sections', reason: '03.11(ד): פרטי מהדורא בשער (מקור: inp-book-sections ← «פרטי מהדורא»)' },
+  'inp-book-author': { kind: 'mapped', to: 'imud-book-author', reason: '03.11(ד): שם המחבר בשערים (מקור: inp-book-author ← «שם המחבר»)' },
+  'inp-book-year': { kind: 'mapped', to: 'imud-book-year', reason: '03.11(ד): מקום ושנה בשערים (מקור: inp-book-year ← «מקום ושנת הוצאה»)' },
+  'inp-back-shaar-text': { kind: 'mapped', to: 'shaar-back-text', reason: '03.11(ד): טקסט השער האחורי (שמירת זכויות)' },
+
+  // ============ הערות שוליים ============
+  // **S5.2 (S2):** מפתח RED-מקורי שנכנס בטעות לנכס ברירות-המחדל המוטמע
+  // (הנכס = v21 + שתי דריסות D-91 מתועדות + מפתח זה) — רישום disposition
+  // מפורש במקום 'unmapped' בייבוא החי.
+  'fn-bar-max-height-px': { kind: 'removed', reason: 'מפתח RED-מקורי (תקרת מרזב ההערות) — נקרא מהמרשם עצמו; אינו מפתח מקור', issue: 'S5.2-S2' },
+  'fn-columns': { kind: 'mapped', to: 'footnote-columns', transform: parseInt },
+  'fn-layout-mode': { kind: 'mapped', to: 'fn-layout-mode' },
+  // **S5.2 (S2):** transform חסר — 'siman' של המקור נחת כערך לא-חוקי בצד
+  // RED (הenum: continuous/page/section/part) והפאנל הציג ערך שבור.
+  'fn-reset-mode': { kind: 'mapped', to: 'footnote-reset-policy', transform: (v) => ({ 'siman': 'section', 'chapter': 'section', 'page': 'page', 'continuous': 'continuous', 'part': 'part' }[v] || 'page') },
+  'fn-title-text': { kind: 'mapped', to: 'endnote-title-text' },
+  'note-numbering-style': { kind: 'mapped', to: 'footnote-marker-style', transform: (v) => ({ 'gematria': 'hebrew', 'hebrew': 'hebrew', 'decimal': 'decimal', 'asterisk': 'asterisk', 'parenthesis': 'parenthesis' }[v] || 'hebrew') },
+  // **S5.2 (S2):** note-marker-type ('super') אינו סגנון סמן — הוא העלאת
+  // בסיס (עניין רינדור). בעבר מופה merged ל-footnote-marker-style בלי
+  // transform והערך הגולמי 'super' דרס את הסגנון החוקי (ערך מחוץ ל-enum;
+  // ניצל רק בזכות ה-default-branch של markerFor). כעת ui-state — נשמר
+  // להצגה, לא מזהם את ה-enum.
+  'note-marker-type': { kind: 'ui-state', reason: 'סוג הסמן (super) — עניין העלאת-בסיס ברינדור, לא סגנון מספור; הסגנון מגיע מ-note-numbering-style' },
+  'note-marker-size': { kind: 'ui-state', reason: 'גודל מילת-הסמן בגוף (ברירת מחדל 8) — מיושם בפרויקטור ה-legacy (S4.20/EXT-17)', issue: 'EXT-17' },
+  'note-listing-num-size': { kind: 'ui-state', reason: 'גודל סמן הרישום ברשימת ההערות — מיושם בפרויקטור ה-legacy — S4.20/EXT-17' },
+  'note-num-separator': { kind: 'ui-state', reason: 'המפריד אחרי מספר ההערה (ברירת מחדל .) — מיושם ב-markerWord — S4.20/EXT-17; Iteration-003: נצרך גם ב-markerFor(hebrew) של המאוחד' },
+  // **Iteration-003 (legacy parity — נמדד בייחוס):** המנוע הישן אינו מצייר חוט
+  // מפריד מעל מרזב ההערות (עמודי ההערות ב-PDF הייחוס נפתחים ישירות בסמן,
+  // ללא כל קו/כוכב). ערך המקור נשמר ב-_imudRaw; הייבוא מכבה את הציור.
+  'note-rule-style': { kind: 'mapped', to: 'footnote-separator-rule', transform: () => 'none', reason: 'Iteration-003: הייחוס ללא חוט מפריד — הערך הגולמי נשמר ב-_imudRaw בלבד' },
+  'note-header-orn-r': { kind: 'removed', reason: 'עיטור בצד ימין של כותרת עמודי-ההערות — טרם ממומש ב-RED', issue: 'EXT-4' },
+  'note-header-orn-l': { kind: 'removed', reason: 'עיטור בצד שמאל של כותרת עמודי-ההערות — טרם ממומש ב-RED', issue: 'EXT-4' },
+
+  // ============ הגנות שורות ============
+  'avoid-orphans': { kind: 'merged', to: 'prevent-orphans-top', transform: (v) => v !== false, reason: 'RED מפריד יתומים עליונים/תחתונים בנפרד' },
+  'avoid-widows': { kind: 'merged', to: 'prevent-widows-top', transform: (v) => v !== false, reason: 'כנ"ל' },
+  'avoid-runt-word': { kind: 'mapped', to: 'runt-min-width-pct', transform: (v) => (v === false || v === 'false') ? 0 : 20, reason: 'בוליאני המקור ⇒ סף אחוז ב-RED (כבוי=0; דלוק=20%)' },
+
+  // ============ עיטורים ============
+  'h2-ornament-set': { kind: 'merged', to: 'h2-orn-top', transform: (v) => v !== 'none' ? v : 'none', reason: 'ערכת עיטורים כללית ⇒ העיטור העליון; ערכות IMUD דרך imud-orn-*' },
+  'h2-ornament-top-style': { kind: 'mapped', to: 'h2-orn-top' },
+  'h2-ornament-bottom-style': { kind: 'mapped', to: 'h2-orn-bottom' },
+  'h2-title-orn-mode': { kind: 'mapped', to: 'h2-orn-scope', onlyIfAbsent: true, transform: (v) => ({ 'sign': 'sign', 'title': 'title', 'both': 'both', 'none': 'none' }[v] || 'both'), reason: 'S4.6 (ביקורת 3): none נשמר כ-none — בעבר הומר ל-both (היפוך הגדרת המקור); enum RED כעת כולל none. onlyIfAbsent: כשהקובץ מכיל גם את המפתח הישיר h2-orn-scope — הישיר גובר (קדימות מפורשת, לא סדר איטרציה)' },
+  'h2-title-ornament-top-style': { kind: 'merged', to: 'h2-orn-top', reason: 'עיטור כותרת-הסימן — מוזג לעיטור הסימן (RED מאחד)' },
+  'h2-title-ornament-bottom-style': { kind: 'merged', to: 'h2-orn-bottom', reason: 'עיטור כותרת-הסימן התחתון — מוזג לעיטור הסימן ב-RED' },
+  'h2-title-ornament-r': { kind: 'mapped', to: 'h2-orn-side' },
+  'h2-title-ornament-l': { kind: 'merged', to: 'h2-orn-side', reason: 'RED מציב עיטור צד אחד לשני הצדדים' },
+  'h2-orn-fit-text': { kind: 'mapped', to: 'h2-orn-fit-to-text' },
+  'h3-ornament-set': { kind: 'merged', to: 'h3-side-orn', reason: 'ערכת H3 ⇒ עיטור הצד של H3' },
+  'h3-ornament-r': { kind: 'mapped', to: 'h3-side-orn' },
+  'h3-ornament-l': { kind: 'merged', to: 'h3-side-orn', reason: 'עיטור צד שמאל של H3 — RED מאחד לעיטור צד יחיד' },
+  'section-divider-style': { kind: 'merged', to: 'imud-divider', reason: 'מפרידי סעיפים מעוצבים — דרך ספריית IMUD (image) או heading-dividers-h3-h6; spear ⇒ עיצוב ספרייה' },
+  'heading-divider-h3': { kind: 'mapped', to: 'heading-dividers-h3-h6', transform: (v) => v !== 'none' },
+  'h2-orn-scope': { kind: 'mapped', to: 'h2-orn-scope' },
+  'col-divider-style': { kind: 'mapped', to: 'column-divider-style', transform: (v) => DIVIDER_MAP[v] || 'none' },
+
+  // ============ מספור ============
+  'page-num-position': { kind: 'mapped', to: 'page-num-position', transform: (v) => NUMPOS_MAP[v] || 'bottom-center' },
+  'page-num-format': { kind: 'mapped', to: 'page-num-format' },
+  'page-num-frame': { kind: 'mapped', to: 'page-num-frame' },
+  'page-num-start-idx': { kind: 'mapped', to: 'page-num-start-idx', transform: parseInt },
+  'page-num-initial-value': { kind: 'mapped', to: 'page-num-initial-value', transform: parseInt },
+  'main-shaar-count-numbering': { kind: 'merged', to: 'count-shaar-pages', reason: 'RED מונה עמודי שער גלובלית (count-shaar-pages); בקרה פר-סוג טרם נפרדה', issue: 'EXT-18' },
+  // **Iteration-003 (legacy parity — מניית הפוליו):** המקור מונה שערי-משנה
+  // (sub=true) אך לא את הראשי/אחורי (main/back=false) — המורשת מונה את
+  // השער-משנה בלבד. עד כאן המיפוי המאוחד לא מיפה כלום ⇒ הפוליו נדחק.
+  // **תיקון המשך (כפילות מפתח):** עד כאן הופיעו כאן גם הערכים הישנים
+  // (merged→count-shaar-pages ל-sub-count, identity ל-toc-count) בשנית —
+  // במפת עצם JS האחרון מנצח, והם דרסו את המיפויים החדשים (בדוק: ייבוא
+  // הניח count-toc-pages=false מול raw=true). הוסרו — מקור אחד לכל מפתח.
+  'sub-shaar-count-numbering': { kind: 'mapped', to: 'count-shaar-sub-pages', transform: (v) => v !== false && v !== 'false', reason: 'מניית שער-משנה בפוליו — כמו המקור' },
+  'general-toc-count-numbering': { kind: 'mapped', to: 'count-toc-pages', transform: (v) => v !== false && v !== 'false', reason: 'Iteration-003: במקור = מניית עמודי התוכן בפוליו (לא מספרי שורות — המורשת לא מציגה אותם מעולם)' },
+  'detailed-toc-count-numbering': { kind: 'mapped', to: 'count-toc-pages', transform: (v) => v !== false && v !== 'false', reason: 'Iteration-003: מניית עמודי התוכן המפורט בפוליו' },
+  // **Iteration-003 (הפרדת סמנטיקה):** מפתחות ה-show כותבים עד כאן אל
+  // count-shaar-pages (דגל מנייה!) — הצגה ומנייה הן שתי סמנטיקות שונות;
+  // במנוע המאוחד השערים אינם מציגים גיליון ממילא (chapterOpening ⇒ דיכוי
+  // תצוגה). הערכים נשמרים כ-ui-state (EXT-18) ואינם משחיתים את דגל המנייה.
+  'main-shaar-show-number': { kind: 'ui-state', reason: 'הצגת מספר בשער ראשי — השערים אינם מציגים גיליון במנוע המאוחד (chapterOpening); Iteration-003: הוסר הכתיב אל count-shaar-pages (הפרדת show מ-count)', issue: 'EXT-18' },
+  'back-shaar-count-numbering': { kind: 'merged', to: 'count-shaar-pages', reason: 'מניית שער אחורי — RED מונה עמודי שער גלובלית', issue: 'EXT-18' },
+  'back-shaar-show-number': { kind: 'ui-state', reason: 'הצגת מספר בשער אחורי — כנ"ל main-shaar-show-number; Iteration-003: הוסר הכתיב אל count-shaar-pages', issue: 'EXT-18' },
+  'sub-shaar-show-number': { kind: 'ui-state', reason: 'הצגת מספר בשער-משנה — השער נספר (count-shaar-sub-pages) אך אינו מציג (chapterOpening); Iteration-003: הוסר הכתיב אל count-shaar-pages', issue: 'EXT-18' },
+  'general-toc-show-numbering': { kind: 'mapped', to: 'general-toc-show-numbering' },
+  'detailed-toc-show-numbering': { kind: 'mapped', to: 'detailed-toc-show-numbering' },
+  // **S77 (בקשה 3 — הגשר החי):** מתגי הפעלת התכנים — עד כאן ui-state (לא
+  // הגיעו למנוע); כעת ממופים למפתחות הרישום שהגשר קורא (ברירת המחדל
+  // של המקור — שניהם true — משומרת; קובץ מקור עם כיבוי יכובד).
+  'enable-general-toc': { kind: 'mapped', to: 'toc-general-enabled', transform: (v) => v !== false && v !== 'false', reason: 'S77: מתג תוכן-עניינים כללי — חי בנתיב המורשת' },
+  'enable-detailed-toc': { kind: 'mapped', to: 'toc-detail-enabled', transform: (v) => v !== false && v !== 'false', reason: 'S77: מתג תוכן-עניינים מפורט — חי בנתיב המורשת' },
+
+  // ============ שערים/ערכות נושא (בוררי האפליקציה הישנה) ============
+  'style-set-select': { kind: 'ui-state', reason: 'בורר סגנון כללי בפאנל הישן; ב-RED: תבניות/ערכות נושא' },
+  'active-theme-select': { kind: 'ui-state', reason: 'ערכת נושא פעילה — ב-RED: theme-set-id / imud-shaar-*' },
+
+  // ============ **S6.3 (חיבור הגדרות — "וכמויות של הגדרות שלא מחוברות")** ============
+  // מפתחות שהיו נופלים לכללי המשפחה (^aq-, ^inp-…) ואינם ממופים למפתח
+  // רישום — עתה ממופים במפורש (aq-*) או מתועדים כנצרכים דרך ה-raw.
+  'aq-enabled': { kind: 'mapped', to: 'aq-enabled', transform: (v) => v === true || v === 'true', reason: 'S6.3: מתג AutoQuality של המקור ⇒ מפתח הרישום (ברירת מחדל במקור true)' },
+  'aq-word-spacing': { kind: 'mapped', to: 'aq-enabled', transform: (v) => v !== false && v !== 'false', reason: 'S6.3: שכבת מרווחי-מילים (דלוקה במקור) — משורטטת למתג הכולל של ה-AQ' },
+  'aq-word-spacing-min': { kind: 'mapped', to: 'aq-word-spacing-min', transform: parseFloat, reason: 'S6.3: גבול תחתון (0.95 במקור וברישום כאחד)' },
+  'aq-word-spacing-max': { kind: 'mapped', to: 'aq-word-spacing-max', transform: parseFloat, reason: 'S6.3: גבול עליון (1.05)' },
+  'aq-word-spacing-threshold': { kind: 'ui-state', reason: 'S6.3: סף הפעלת מרווחי-מילים במקור — מנגנון ה-AQ של RED מופעל מתמטית (מדידת הפרש); נשמר כנתון', issue: 'S6.3-AQ' },
+  'aq-word-spacing-max-diff': { kind: 'ui-state', reason: 'S6.3: הפרש מקסימלי בין שורות במקור — ב-RED ה-clamp המרכזי aq-overshoot-clamp-px; נשמר כנתון', issue: 'S6.3-AQ' },
+  'aq-para-spacing': { kind: 'ui-state', reason: 'S6.3: מתיחת מרווחי-פסקה במקור — נצרכת דרך ה-raw בפרופיל המורשת כשתמומש; נשמרת כנתון', issue: 'S6.3-AQ' },
+  'aq-para-spacing-max': { kind: 'ui-state', reason: 'S6.3: תקרת מרווחי-פסקה — כנ"ל', issue: 'S6.3-AQ' },
+  'aq-line-height': { kind: 'ui-state', reason: 'S6.3: מתיחת גובה-שורה במקור — מנגנון EXT-20 של RED (aqStretch) פועל מההפרש הנמדד; נשמר כנתון', issue: 'S6.3-AQ' },
+  'aq-line-height-max': { kind: 'ui-state', reason: 'S6.3: תקרת מתיחת שורה (3% במקור) — ב-RED נקלטת דרך aq-letter-spacing-max המרכזי; נשמר כנתון', issue: 'S6.3-AQ' },
+  'aq-shared-load': { kind: 'mapped', to: 'aq-shared-load', transform: (v) => v !== false && v !== 'false', reason: 'S6.3: עומס משותף בין השכבות (true במקור וברישום)' },
+  // **9b.5 (D-107 + F-9a-8):** ארבעת מקטעי השער האחורי — חיבור לנתיב המאוחד
+  // (עד כאן סווגו ui-state ולא מופו; buildShaarBlocks לא ראה אותם כלל).
+  // המקור גובר על המטא של המסמך (כמו inp-book-title בשער הראשי).
+  'inp-book-back-copyright': { kind: 'mapped', to: 'imud-book-back-copyright', reason: '9b.5: זכויות יוצרים בשער האחורי — נצרכת ב-buildShaarBlocks (D-107: ארבעת המקטעים)' },
+  'inp-book-back-publishing': { kind: 'mapped', to: 'imud-book-back-publishing', reason: '9b.5: פרטי הוצאה לאור בשער האחורי (D-107)' },
+  'inp-book-back-contact': { kind: 'mapped', to: 'imud-book-back-contact', reason: '9b.5: פרטי קשר בשער האחורי (D-107)' },
+  'inp-book-back-extra': { kind: 'mapped', to: 'imud-book-back-extra', reason: '9b.5: פרטים נוספים בשער האחורי (D-107)' },
+  's-note-body': { kind: 'ui-state', reason: 'S6.3: גודל גוף ההערה — נקרא מה-raw (readConfig ⇒ SZ.fnBody; ברירת המחדל של המקור 9)' },
+  's-h0': { kind: 'mapped', to: 'heading-0-size-pt', transform: parseFloat, reason: 'S6.3: גודל H0 — גם נקרא מה-raw בפרופיל המורשת (SZ.h0Title; במקור 26pt)' },
+  's-h1': { kind: 'mapped', to: 'heading-1-size-pt', transform: parseFloat, reason: 'S6.3: גודל H1 — נקרא מה-raw לשער-המשנה (cfg.h1Size; במקור 50pt)' },
+  's-sh-title': { kind: 'mapped', to: 'shaar-title-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shTitle)' },
+  's-sh-sub': { kind: 'mapped', to: 'shaar-subtitle-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shSub)' },
+  's-sh-desc': { kind: 'mapped', to: 'shaar-desc-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shDesc)' },
+  's-sh-sec': { kind: 'mapped', to: 'shaar-sections-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shSec)' },
+  's-sh-author': { kind: 'mapped', to: 'shaar-author-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shAuthor)' },
+  's-sh-year': { kind: 'mapped', to: 'shaar-year-size-pt', transform: parseFloat, reason: 'S6.3: גם נקרא מה-raw (cfg.shYear)' },
+  'f-note-title': { kind: 'mapped', to: 'endnote-title-font', transform: resolveStack, reason: 'S6.3: גופן כותרת ההערות' },
+  'f-h0-body': { kind: 'mapped', to: 'heading-0-body-font', transform: resolveStack, reason: 'S6.3: גופן גוף ההקדמה (Frank Ruhl Libre במקור)' },
+  's-h0-body': { kind: 'mapped', to: 'heading-0-body-size-pt', transform: parseFloat, reason: 'RC-2a (i004): גודל גוף ההקדמה (s-h0-body=11.5 במקור) — עד כאן לא מופה ייבוא ⇒ ההקדמה זרמה ב-12pt במקום 11.5 (הוכח מה-PDF הישן: p43 כולו 11.5pt בפיץ׳ 15.5 בקירוב)' },
+
+  // ============ כותרות עליונות (25 מפתחות hdr-*) ============
+  'hdr-title-split': { kind: 'ui-state', reason: 'פיצול שם הספר לחצאים בכותרת העליונה — מיושם תמידית ב-legacy (hdrR/hdrL) כמו בייחוס — S4.20/EXT-19' },
+  'hdr-alternating': { kind: 'ui-state', reason: 'החלפת החצאים בעמודים זוגיים-פיזיים — מיושם בהרכבת ה-legacy (S4.20/EXT-19)', issue: 'EXT-19' },
+};
+
+/** כללי משפחה — מצבי UI של האפליקציה הישנה (נשמרים כנתונים, אין אפקט מנועתי). */
+const FAMILY_RULES = [
+  { re: /^f-/, kind: 'ui-state', reason: 'גודל/גופן רכיב בפאנל הישן — חלק מפונקציונליות שמומשה במפתחות RED המקבילים; השאר במעקב EXT-17' },
+  { re: /^s-/, kind: 'ui-state', reason: 'גודל/סגנון רכיב בפאנל הישן — מומש במפתחות RED המקבילים; השאר במעקב EXT-17' },
+  { re: /^data-/, kind: 'ui-state', reason: 'נתוני בורר עיצובים/תמונות באפליקציה הישנה — ב-RED: הפניות imud: בספריית הנכסים' },
+  { re: /^hdr-/, kind: 'ui-state', reason: 'קונפיגורציית כותרות עליונות בפאנל הישן — המנגנון ב-RED: header-recto/verso-*-source' },
+  { re: /^builder-/, kind: 'ui-state', reason: 'מצבי בורר העיצובים (assets picker) של האפליקציה הישנה' },
+  { re: /^dim-/, kind: 'ui-state', reason: 'ממדי עמוד בפאנל הישן — RED: page-size + grid-*' },
+  { re: /^aq-/, kind: 'ui-state', reason: 'מצבי AutoQuality בפאנל הישן — RED: משפחת aq-*' },
+  { re: /^inp-/, kind: 'ui-state', reason: 'שדות קלט בפאנל הישן (כותרות ספר וכו) — RED: imud-book-title/subtitle + מטא המסמך' },
+  { re: /^(cbg|data-cbg)-/, kind: 'ui-state', reason: 'רקעי עמודים לפי מחלקה — RED: background-page-type/image/texture (REQ-ORN-08)' },
+  { re: /^prop-/, kind: 'ui-state', reason: 'מאפייני עיצוב בבורר הישן' },
+  { re: /^page-/, kind: 'ui-state', reason: 'הגדרות עמוד בפאנל הישן' },
+  { re: /^(show|enable|select|main|back|sub|shaar|general|detailed|font|size|mode)-/, kind: 'ui-state', reason: 'מצבי UI של האפליקציה הישנה' },
+  // **EXT-14 (05.11, ערכות הסגנון):** שדות העלאת-קבצים של האפליקציה הישנה — קיימים
+  // ב-setting_sets (תלמוד/פרשנות/קונטרס) אך לא ב-default_settings (הועלו רק בערכות):
+  // קבצי SVG של בונה השערים, תמונות רקע לפי מחלקת עמוד, תמונת מרכז-הכותרת,
+  // תמונת מפריד הסעיפים ותיקיית הנכסים. ב-RED: הפניות imud: מהספרייה המוטמעת
+  // (asset-registry) או נכסי משתמש — ערך הקובץ עצמו אינו מצב מנוע.
+  { re: /^file-/, kind: 'ui-state', reason: 'שדה העלאת קובץ באפליקציה הישנה (builder/cbg/hdr/sec-div) — ב-RED: הפניות imud: מהספרייה' },
+  { re: /^assets-folder-/, kind: 'ui-state', reason: 'תיקיית נכסים חיצונית באפליקציה הישנה — ב-RED: הספרייה המוטמעת' },
+  { re: /^heading-divider-h[3-9]$/, kind: 'mapped', to: 'heading-dividers-h3-h6', transform: (v) => v !== 'none', reason: 'מפרידי כותרות H3–H6 — RED מפעיל/מכבה את המשפחה כולה' }
+];
+
+/** קבלת disposition למפתח — מפורש מהטבלה, או כלל משפחה. @returns {object|null} */
+function dispositionOf(oldKey) {
+  if (DISPOSITIONS[oldKey]) return DISPOSITIONS[oldKey];
+  // **S5.1:** כלל משפחה מחזיר גם to/transform — בעבר הושמטו ו-heading-divider-h4/h5/h6
+  // (למשל) נספרו כ"מטופלים" בלי ששום דבר הוחל (מיפוי-מת).
+  for (const r of FAMILY_RULES) if (r.re.test(oldKey)) return { kind: r.kind, to: r.to, transform: r.transform, reason: r.reason };
+  return null;
+}
+
+/**
+ * ייבוא קובץ הגדרות IMUD (או תבנית משתמש ישנה) להגדרות RED.
+ * **S4.6 (ביקורת 3) — שימור מלא:** ערכי ui-state כבר לא רק נספרים — הם נשמרים
+ * כנתונים במבנה מוגדר: אובייקט uiState בפלט + settings['_legacy-ui-state']
+ * (מפתח פנימי עם קידומת קו-תחתון — לא נכנס לייצוא ZIP, שורד בתבניות ה-UI).
+ * @param {object} legacy — אובייקט ההגדרות הישן (key→value)
+ * @param {object} [registryKeys] — Set/מערך מפתחות RED חוקיים (לסינון); אם לא — ללא סינון
+ * @param {{contentHeightPx?:number}} [opts] — גיאומטריה אמיתית להמרות אחוז⇒פיקסל (ברירת מחדל 1040)
+ * @returns {{settings:object, uiState:object, dispositions:object, unmapped:string[], report:{mapped:number,merged:number,uiState:number,removed:number}}}
+ */
+function importImudSettings(legacy, registryKeys, opts = {}) {
+  const settings = {};
+  const uiState = {};
+  const dispositions = {};
+  const unmapped = [];
+  const report = { mapped: 0, merged: 0, uiState: 0, removed: 0 };
+  const valid = registryKeys instanceof Set ? registryKeys : (Array.isArray(registryKeys) ? new Set(registryKeys) : null);
+  // **F09 (parity iter-002):** הקשר גודל-הגוף ומצב הסוגריים לטרנספורם של s-paren —
+  // מקור אחד (size-body/s-paren-mode של אותו קובץ הגדרות), לא קבוע מקומי.
+  const ctx = {
+    contentHeightPx: Number(opts.contentHeightPx) > 0 ? Number(opts.contentHeightPx) : 1040,
+    bodyPt: parseFloat(legacy && legacy['size-body']) || 12,
+    parenMode: String((legacy && legacy['s-paren-mode']) || 'relative')
+  };
+  // **03.11(ד):** קטלוג הגופנים הזמין (אם הועבר) — לפתרון מחסניות הגופן של המקור
+  // מול מה שבאמת קיים בספרייה המוטמעת (f-h0="'AlphaBlack', 'David Libre', serif"
+  // ⇒ David Libre כש-AlphaBlack אינה בספרייה — בדיוק כמו שהדפדפן היה נופל).
+  if (opts.availableFonts instanceof Set) ctx.availableFonts = opts.availableFonts;
+  else if (Array.isArray(opts.availableFonts)) ctx.availableFonts = new Set(opts.availableFonts);
+  // **S4.6:** שני מעברים — ממירים מותנים (onlyIfAbsent, כגון h2-title-orn-mode)
+  // מוחלים רק אם מפתח ישיר לא קבע כבר את היעד. קדימות מפורשת ולא תלוית-סדר.
+  const deferred = [];
+  const applyDisposition = (k, v, d) => {
+    dispositions[k] = d;
+    if ((d.kind === 'mapped' || d.kind === 'merged') && d.to) {
+      const targets = Array.isArray(d.to) ? d.to : [d.to];
+      const transformed = d.transform ? d.transform(v, ctx) : v;
+      // **S77:** transform שמחזיר undefined מסמן "אין דריסה" (ערך מקור לא
+      // מוכר שאין לו מקביל RED — למשל hdr-c-type='spear'). בלי ההגנה הזו
+      // היעד היה נקבע ל-undefined ודורס את ברירת המחדל של הרישום. המפתח
+      // עדיין נספר בדוח (קיבל disposition מלא; הערך הגולמי נשמר ב-_imudRaw).
+      if (transformed === undefined) {
+        dispositions[k] = { ...d, note: 'ערך לא מוכר — ללא דריסה (S77)' };
+        report[d.kind]++;
+        return;
+      }
+      let anyApplied = false;
+      let anyBlocked = false;
+      for (const t of targets) {
+        if (valid && !valid.has(t)) { unmapped.push(`${k}->${t}(!)`); continue; }
+        if (d.onlyIfAbsent && settings[t] !== undefined) { anyBlocked = true; continue; }
+        settings[t] = transformed;
+        anyApplied = true;
+      }
+      if (anyApplied) report[d.kind]++;
+      else if (anyBlocked) report[d.kind]++; // נספר — קיבל disposition מלא (נחסם בכוונה ע"י מפתח ישיר)
+    } else if (d.kind === 'ui-state') {
+      // **S4.6:** הערך נשמר כנתון — לא רק מונה. החזרה נפרדת + הטמעה בהגדרות
+      // (מפתח פנימי; לא מגיע למנוע, לא נמחק).
+      uiState[k] = v;
+      report.uiState++;
+    } else if (d.kind === 'removed') {
+      report.removed++;
+    } else {
+      report.merged++;
+    }
+  };
+  for (const [k, v] of Object.entries(legacy || {})) {
+    const d = dispositionOf(k);
+    if (!d) { unmapped.push(k); continue; }
+    if (d.onlyIfAbsent) { deferred.push([k, v, d]); continue; }
+    applyDisposition(k, v, d);
+  }
+  for (const [k, v, d] of deferred) applyDisposition(k, v, d);
+  // מיזוג משלים: mode-h1=sub_shaar ⇒ שער משנה דלוק (הסמנטיקה המקורית)
+  if (legacy && legacy['mode-h1'] === 'sub_shaar') settings['show-shaar-sub'] = true;
+  if (Object.keys(uiState).length) settings['_legacy-ui-state'] = uiState;
+  // **S4.9 (פרופיל העימוד המקורי):** קלט שנראה כמו default_settings.json המלא
+  // של המקור ⇒ ה-JSON הגולמי מוצמד תחת _imudRaw והפרופיל מסומן 'imud'.
+  // המנוע המרכזי (typeset) מפנה אז לפורט הנאמן (legacy-imud-flow) — התנהגות
+  // המקור היא המפרט (בקשת המשתמש 03.11: "בדיקה מתמטית ומוחלטת").
+  if (legacy && typeof legacy === 'object'
+    && legacy['fn-delim-open'] !== undefined
+    && legacy['size-body'] !== undefined
+    && legacy['line-height-body'] !== undefined) {
+    settings['_imudRaw'] = legacy;
+    settings['_layout-profile'] = 'imud';
+    // **S77 (בקשה 3 — חיבור הגדרות תוכן-העניינים לנתיב המורשת):** דגלי
+    // toc-level-N-show נגזרים מרשימות המקור (gtoc-show/dtoc-show; ברירות
+    // המחדל [1..6]/[2..6]) — כך ברירת המחדל המיובאת משמרת את הפלט המכויל
+    // במדויק, והדגלים החיים שולטים מעתה (הסרה/הוספה של רמות בשני התכנים).
+    // inline נפתח כבוי בכל הרמות — ה-TOC של המורשת אינו ממזג שורות כברירת
+    // מחדל; הפעלה מפורשת ממזגת רשומות רצופות לשורת ההורה.
+    // הפרש המשתמש השמור מוחל אחרי הייבוא — דגל שהמשתמש שינה גובר על הנגזר.
+    const gtocList = Array.isArray(legacy['gtoc-show']) ? legacy['gtoc-show'] : [1, 2, 3, 4, 5, 6];
+    const dtocList = Array.isArray(legacy['dtoc-show']) ? legacy['dtoc-show'] : [2, 3, 4, 5, 6];
+    for (let n = 1; n <= 7; n++) {
+      settings[`toc-level-${n}-show`] = gtocList.includes(n) || dtocList.includes(n);
+      settings[`toc-level-${n}-inline`] = false;
+    }
+  }
+  return { settings, uiState, dispositions, unmapped, report };
+}
+
+module.exports = { DISPOSITIONS, dispositionOf, importImudSettings, firstFamily, resolveStack, pctToPx };
 
 };
 
